@@ -3,7 +3,6 @@
 exports[`keen render > draws the initial frame with cage clues and the grid backing 1`] = `
 [
   {
-    "color": 0,
     "h": 244,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 0,
   },
   {
-    "color": 1,
     "h": 195,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -28,7 +26,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 28,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -37,7 +34,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 28,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -48,7 +44,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
   {
     "align": "left",
     "baseline": "alphabetic",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -61,7 +56,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -77,7 +71,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 28,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -86,7 +79,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 28,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -95,7 +87,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 73,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -114,7 +105,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 28,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -123,7 +113,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 28,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -132,7 +121,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 73,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -143,7 +131,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
   {
     "align": "left",
     "baseline": "alphabetic",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -156,7 +143,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -172,7 +158,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 28,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -181,7 +166,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 28,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -200,7 +184,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 76,
   },
   {
-    "color": 8,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -209,7 +192,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 76,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -218,7 +200,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -229,7 +210,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
   {
     "align": "left",
     "baseline": "alphabetic",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -249,7 +229,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 76,
   },
   {
-    "color": 8,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -258,7 +237,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 76,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -267,7 +245,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -276,7 +253,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -285,7 +261,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 121,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -296,7 +271,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
   {
     "align": "left",
     "baseline": "alphabetic",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -316,7 +290,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 76,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -325,7 +298,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 76,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -334,7 +306,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -343,7 +314,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -352,7 +322,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 121,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -363,7 +332,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
   {
     "align": "left",
     "baseline": "alphabetic",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -376,7 +344,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -392,7 +359,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 76,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -401,7 +367,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 76,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -410,7 +375,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -422,7 +386,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -438,7 +401,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -447,7 +409,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -456,7 +417,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -468,7 +428,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -484,7 +443,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 8,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -493,7 +451,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -502,7 +459,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -511,7 +467,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -520,7 +475,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 169,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -539,7 +493,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 124,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -548,7 +501,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 124,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -557,7 +509,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -566,7 +517,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -577,7 +527,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
   {
     "align": "left",
     "baseline": "alphabetic",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -590,7 +539,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -606,7 +554,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 124,
   },
   {
-    "color": 8,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -615,7 +562,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 124,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -624,7 +570,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -636,7 +581,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -652,7 +596,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 171,
   },
   {
-    "color": 8,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -661,7 +604,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 171,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -680,7 +622,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 172,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -689,7 +630,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 172,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -698,7 +638,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 171,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -709,7 +648,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
   {
     "align": "left",
     "baseline": "alphabetic",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -722,7 +660,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -738,7 +675,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 172,
   },
   {
-    "color": 8,
     "h": 45,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -747,7 +683,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 172,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -756,7 +691,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 171,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -768,7 +702,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -784,7 +717,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "y": 171,
   },
   {
-    "color": 8,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -796,7 +728,6 @@ exports[`keen render > draws the initial frame with cage clues and the grid back
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

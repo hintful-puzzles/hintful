@@ -3,7 +3,6 @@
 exports[`separate hint frame > rings the edges, hatches one region and outlines the other 1`] = `
 [
   {
-    "color": 0,
     "h": 292,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 0,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -21,7 +19,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -30,7 +27,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -39,7 +35,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -48,7 +43,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -57,7 +51,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -66,7 +59,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -75,7 +67,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -84,7 +75,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -93,7 +83,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -102,7 +91,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -111,7 +99,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -120,7 +107,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -129,7 +115,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -138,7 +123,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -147,7 +131,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -156,7 +139,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -165,7 +147,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -174,7 +155,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -183,7 +163,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -192,7 +171,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -201,7 +179,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -210,7 +187,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -219,7 +195,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -228,7 +203,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -237,7 +211,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -246,7 +219,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -255,7 +227,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -264,7 +235,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -273,7 +243,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -282,7 +251,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -291,7 +259,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -300,7 +267,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -309,7 +275,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -318,7 +283,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -327,7 +291,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -343,7 +306,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -352,7 +314,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 28,
   },
   {
-    "color": 11,
     "h": 44,
     "op": "hatch",
     "period": 16,
@@ -364,7 +325,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -374,7 +334,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -383,7 +342,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 4,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(127, 127, 127)",
@@ -392,7 +350,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 28,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -401,7 +358,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -420,7 +376,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -429,7 +384,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 28,
   },
   {
-    "color": 11,
     "h": 44,
     "op": "hatch",
     "period": 16,
@@ -441,7 +395,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -451,7 +404,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -460,7 +412,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -469,7 +420,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 28,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -478,7 +428,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 4,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(127, 127, 127)",
@@ -487,7 +436,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 28,
   },
   {
-    "color": 10,
     "h": 11,
     "op": "ring",
     "radius": 6,
@@ -505,7 +453,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 69,
   },
   {
-    "color": 10,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -527,7 +474,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -538,7 +484,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -548,7 +493,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -557,7 +501,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -566,7 +509,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 28,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -575,7 +517,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -594,7 +535,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -605,7 +545,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -615,7 +554,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -624,7 +562,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -633,7 +570,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 28,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -642,7 +578,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -661,7 +596,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -672,7 +606,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -682,7 +615,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -691,7 +623,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 24,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -700,7 +631,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 28,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -709,7 +639,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -728,7 +657,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -739,7 +667,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -749,7 +676,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 98,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -758,7 +684,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -767,7 +692,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -776,7 +700,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -795,7 +718,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -804,7 +726,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -813,7 +734,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 7,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -822,7 +742,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -831,7 +750,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 117,
   },
   {
-    "color": 7,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -842,7 +760,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -852,7 +769,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 98,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -861,7 +777,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -870,7 +785,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -879,7 +793,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -888,7 +801,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 10,
     "h": 11,
     "op": "ring",
     "radius": 6,
@@ -906,7 +818,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 69,
   },
   {
-    "color": 10,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -928,7 +839,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -939,7 +849,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -949,7 +858,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 98,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -958,7 +866,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -967,7 +874,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -976,7 +882,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -995,7 +900,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1006,7 +910,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1016,7 +919,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 98,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1025,7 +927,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1034,7 +935,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1043,7 +943,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1062,7 +961,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1073,7 +971,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1083,7 +980,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 98,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1092,7 +988,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 72,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1101,7 +996,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1110,7 +1004,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1129,7 +1022,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1140,7 +1032,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1150,7 +1041,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1159,7 +1049,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1168,7 +1057,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1177,7 +1065,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1196,7 +1083,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1207,7 +1093,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1217,7 +1102,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 146,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1226,7 +1110,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1235,7 +1118,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1244,7 +1126,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1263,7 +1144,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1274,7 +1154,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1284,7 +1163,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1293,7 +1171,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1302,7 +1179,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 124,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1311,7 +1187,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1330,7 +1205,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1341,7 +1215,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1351,7 +1224,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1360,7 +1232,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1369,7 +1240,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1378,7 +1248,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1397,7 +1266,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1408,7 +1276,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1418,7 +1285,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1427,7 +1293,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 120,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1436,7 +1301,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1445,7 +1309,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1464,7 +1327,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1475,7 +1337,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1485,7 +1346,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1494,7 +1354,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1503,7 +1362,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1512,7 +1370,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1531,7 +1388,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1542,7 +1398,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1552,7 +1407,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1561,7 +1415,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1570,7 +1423,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1579,7 +1431,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1598,7 +1449,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1609,7 +1459,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1619,7 +1468,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 194,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1628,7 +1476,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1637,7 +1484,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1646,7 +1492,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1665,7 +1510,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1676,7 +1520,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1686,7 +1529,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1695,7 +1537,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1704,7 +1545,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 172,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1713,7 +1553,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1732,7 +1571,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1743,7 +1581,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1753,7 +1590,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1762,7 +1598,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 168,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1771,7 +1606,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1780,7 +1614,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1799,7 +1632,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1810,7 +1642,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1820,7 +1651,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1829,7 +1659,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1838,7 +1667,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1847,7 +1675,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1866,7 +1693,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1877,7 +1703,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1887,7 +1712,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1896,7 +1720,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1905,7 +1728,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1914,7 +1736,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1933,7 +1754,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1944,7 +1764,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1954,7 +1773,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1963,7 +1781,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1972,7 +1789,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1981,7 +1797,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -2000,7 +1815,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2011,7 +1825,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2021,7 +1834,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 242,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2030,7 +1842,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2039,7 +1850,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2048,7 +1858,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -2067,7 +1876,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2078,7 +1886,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2088,7 +1895,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -2097,7 +1903,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 216,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2106,7 +1911,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2115,7 +1919,6 @@ exports[`separate hint frame > rings the edges, hatches one region and outlines 
     "y": 264,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",

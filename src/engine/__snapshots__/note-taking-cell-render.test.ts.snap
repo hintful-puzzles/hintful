@@ -8,7 +8,6 @@ exports[`abcd > matches its recorded frames 1`] = `
   },
   "away": [
     {
-      "color": 13,
       "h": 35,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -17,10 +16,8 @@ exports[`abcd > matches its recorded frames 1`] = `
       "y": 204,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 9,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -42,7 +39,6 @@ exports[`abcd > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -53,7 +49,6 @@ exports[`abcd > matches its recorded frames 1`] = `
   ],
   "entry": [
     {
-      "color": 11,
       "h": 35,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -62,10 +57,8 @@ exports[`abcd > matches its recorded frames 1`] = `
       "y": 204,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 9,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -89,7 +82,6 @@ exports[`abcd > matches its recorded frames 1`] = `
   ],
   "keyboard": [
     {
-      "color": 11,
       "h": 35,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -98,10 +90,8 @@ exports[`abcd > matches its recorded frames 1`] = `
       "y": 204,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 9,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -125,7 +115,6 @@ exports[`abcd > matches its recorded frames 1`] = `
   ],
   "notes": [
     {
-      "color": 13,
       "h": 35,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -134,10 +123,8 @@ exports[`abcd > matches its recorded frames 1`] = `
       "y": 204,
     },
     {
-      "fill": 11,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 11,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -155,10 +142,8 @@ exports[`abcd > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 9,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -180,7 +165,6 @@ exports[`abcd > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -189,10 +173,8 @@ exports[`abcd > matches its recorded frames 1`] = `
       "y": 2,
     },
     {
-      "fill": 10,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 2,
       "outlineRgb": "rgb(128, 128, 128)",
       "points": [
         [
@@ -214,10 +196,8 @@ exports[`abcd > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 2,
       "fillRgb": "rgb(128, 128, 128)",
       "op": "polygon",
-      "outline": 2,
       "outlineRgb": "rgb(128, 128, 128)",
       "points": [
         [
@@ -246,7 +226,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
   },
   "away": [
     {
-      "color": 12,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -255,10 +234,8 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -280,7 +257,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 1,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(128, 128, 128)",
@@ -289,7 +265,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "color": 0,
       "h": 4,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -298,7 +273,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 110,
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -309,7 +283,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
   ],
   "entry": [
     {
-      "color": 12,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -318,10 +291,8 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 24,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -343,7 +314,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 1,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(128, 128, 128)",
@@ -352,7 +322,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 24,
     },
     {
-      "color": 0,
       "h": 4,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -361,7 +330,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 62,
     },
     {
-      "color": 11,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -370,10 +338,8 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -395,7 +361,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 1,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(128, 128, 128)",
@@ -404,7 +369,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "color": 0,
       "h": 4,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -415,7 +379,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
   ],
   "keyboard": [
     {
-      "color": 11,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -424,10 +387,8 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -449,7 +410,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 1,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(128, 128, 128)",
@@ -458,7 +418,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "color": 0,
       "h": 4,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -469,7 +428,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
   ],
   "notes": [
     {
-      "color": 12,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -478,10 +436,8 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "fill": 11,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 11,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -499,10 +455,8 @@ exports[`adjacent > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -524,7 +478,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 1,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(128, 128, 128)",
@@ -533,7 +486,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "color": 0,
       "h": 4,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -542,7 +494,6 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 110,
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -551,10 +502,8 @@ exports[`adjacent > matches its recorded frames 1`] = `
       "y": 2,
     },
     {
-      "fill": 8,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(128, 128, 128)",
       "points": [
         [
@@ -576,10 +525,8 @@ exports[`adjacent > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 1,
       "fillRgb": "rgb(128, 128, 128)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(128, 128, 128)",
       "points": [
         [
@@ -608,7 +555,6 @@ exports[`crossing > matches its recorded frames 1`] = `
   },
   "away": [
     {
-      "color": 2,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -617,7 +563,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -627,7 +572,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -637,7 +581,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -647,7 +590,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -657,7 +599,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 2,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -666,7 +607,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -676,7 +616,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -686,7 +625,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -696,7 +634,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -706,7 +643,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 2,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -715,7 +651,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -725,7 +660,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -735,7 +669,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -745,7 +678,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -755,7 +687,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 2,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -764,7 +695,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -774,7 +704,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -784,7 +713,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -794,7 +722,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -804,7 +731,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 2,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -813,7 +739,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -823,7 +748,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -833,7 +757,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -843,7 +766,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -853,7 +775,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -864,7 +785,6 @@ exports[`crossing > matches its recorded frames 1`] = `
   ],
   "entry": [
     {
-      "color": 17,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -873,7 +793,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -883,7 +802,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -893,7 +811,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -903,7 +820,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -913,7 +829,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 13,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(44, 77, 126)",
@@ -922,7 +837,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -932,7 +846,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -942,7 +855,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -952,7 +864,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -962,7 +873,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 13,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(44, 77, 126)",
@@ -971,7 +881,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -981,7 +890,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -991,7 +899,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1001,7 +908,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1011,7 +917,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 13,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(44, 77, 126)",
@@ -1020,7 +925,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1030,7 +934,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1040,7 +943,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1050,7 +952,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1060,7 +961,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 13,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(44, 77, 126)",
@@ -1069,7 +969,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1079,7 +978,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1089,7 +987,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1099,7 +996,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1111,7 +1007,6 @@ exports[`crossing > matches its recorded frames 1`] = `
   ],
   "keyboard": [
     {
-      "color": 17,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -1120,7 +1015,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1130,7 +1024,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1140,7 +1033,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1150,7 +1042,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1160,7 +1051,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 13,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(44, 77, 126)",
@@ -1169,7 +1059,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1179,7 +1068,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1189,7 +1077,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1199,7 +1086,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1209,7 +1095,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 13,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(44, 77, 126)",
@@ -1218,7 +1103,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1228,7 +1112,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1238,7 +1121,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1248,7 +1130,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1258,7 +1139,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 13,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(44, 77, 126)",
@@ -1267,7 +1147,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1277,7 +1156,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1287,7 +1165,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1297,7 +1174,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1307,7 +1183,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 13,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(44, 77, 126)",
@@ -1316,7 +1191,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1326,7 +1200,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1336,7 +1209,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1346,7 +1218,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1358,7 +1229,6 @@ exports[`crossing > matches its recorded frames 1`] = `
   ],
   "notes": [
     {
-      "color": 2,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -1367,10 +1237,8 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 26,
     },
     {
-      "fill": 17,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 17,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -1388,7 +1256,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1398,7 +1265,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1408,7 +1274,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1418,7 +1283,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 66,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1428,7 +1292,6 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y2": 26,
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -1437,10 +1300,8 @@ exports[`crossing > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 10,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 8,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -1462,10 +1323,8 @@ exports[`crossing > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 8,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 8,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -1501,7 +1360,6 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 123,
     },
     {
-      "color": 10,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -1510,7 +1368,6 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 123,
     },
     {
-      "color": 6,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1523,7 +1380,6 @@ exports[`group > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -1541,7 +1397,6 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 123,
     },
     {
-      "color": 3,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -1550,7 +1405,6 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 123,
     },
     {
-      "color": 6,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1572,7 +1426,6 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 123,
     },
     {
-      "color": 3,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -1581,7 +1434,6 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 123,
     },
     {
-      "color": 6,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1603,7 +1455,6 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 123,
     },
     {
-      "color": 10,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -1612,10 +1463,8 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 123,
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -1633,7 +1482,6 @@ exports[`group > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 6,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -1646,7 +1494,6 @@ exports[`group > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -1655,10 +1502,8 @@ exports[`group > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 9,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -1680,10 +1525,8 @@ exports[`group > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 1,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -1719,7 +1562,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 76,
     },
     {
-      "color": 8,
       "h": 46,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -1728,7 +1570,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 76,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1737,7 +1578,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1746,7 +1586,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1757,7 +1596,6 @@ exports[`keen > matches its recorded frames 1`] = `
     {
       "align": "left",
       "baseline": "alphabetic",
-      "color": 1,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -1770,7 +1608,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -1788,7 +1625,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 76,
     },
     {
-      "color": 3,
       "h": 46,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -1797,7 +1633,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 76,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1806,7 +1641,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1815,7 +1649,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1826,7 +1659,6 @@ exports[`keen > matches its recorded frames 1`] = `
     {
       "align": "left",
       "baseline": "alphabetic",
-      "color": 1,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -1848,7 +1680,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 76,
     },
     {
-      "color": 3,
       "h": 46,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -1857,7 +1688,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 76,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1866,7 +1696,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1875,7 +1704,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1886,7 +1714,6 @@ exports[`keen > matches its recorded frames 1`] = `
     {
       "align": "left",
       "baseline": "alphabetic",
-      "color": 1,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -1908,7 +1735,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 76,
     },
     {
-      "color": 8,
       "h": 46,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -1917,10 +1743,8 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 76,
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -1938,7 +1762,6 @@ exports[`keen > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1947,7 +1770,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1956,7 +1778,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 1,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -1967,7 +1788,6 @@ exports[`keen > matches its recorded frames 1`] = `
     {
       "align": "left",
       "baseline": "alphabetic",
-      "color": 1,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -1980,7 +1800,6 @@ exports[`keen > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -1989,10 +1808,8 @@ exports[`keen > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 6,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -2014,10 +1831,8 @@ exports[`keen > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 1,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -2053,7 +1868,6 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 67,
     },
     {
-      "color": 2,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -2062,10 +1876,8 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 67,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -2089,17 +1901,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 107,
       "cy": 107,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2111,17 +1920,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 107,
       "cy": 67,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2133,17 +1939,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 67,
       "cy": 107,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2156,7 +1959,6 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -2174,7 +1976,6 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 67,
     },
     {
-      "color": 10,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -2183,10 +1984,8 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 67,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -2210,17 +2009,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 107,
       "cy": 107,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2232,17 +2028,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 107,
       "cy": 67,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2254,17 +2047,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 67,
       "cy": 107,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2286,7 +2076,6 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 67,
     },
     {
-      "color": 10,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -2295,10 +2084,8 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 67,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -2322,17 +2109,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 107,
       "cy": 107,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2344,17 +2128,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 107,
       "cy": 67,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2366,17 +2147,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 67,
       "cy": 107,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2398,7 +2176,6 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 67,
     },
     {
-      "color": 2,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -2407,10 +2184,8 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 67,
     },
     {
-      "fill": 10,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 10,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -2428,10 +2203,8 @@ exports[`mathrax > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -2455,17 +2228,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 107,
       "cy": 107,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2477,17 +2247,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 107,
       "cy": 67,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2499,17 +2266,14 @@ exports[`mathrax > matches its recorded frames 1`] = `
     {
       "cx": 67,
       "cy": 107,
-      "fill": 12,
       "fillRgb": "rgb(237, 237, 237)",
       "op": "circle",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "r": 13,
     },
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 3,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -2522,7 +2286,6 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -2531,10 +2294,8 @@ exports[`mathrax > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 8,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -2556,10 +2317,8 @@ exports[`mathrax > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -2588,7 +2347,6 @@ exports[`rome > matches its recorded frames 1`] = `
   },
   "away": [
     {
-      "color": 14,
       "h": 37,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -2597,7 +2355,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 2,
       "h": 37,
       "op": "rect",
       "rgb": "rgb(237, 237, 237)",
@@ -2606,7 +2363,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2615,7 +2371,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2624,7 +2379,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2633,7 +2387,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2642,7 +2395,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2652,7 +2404,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2662,7 +2413,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2672,7 +2422,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -2683,7 +2432,6 @@ exports[`rome > matches its recorded frames 1`] = `
   ],
   "entry": [
     {
-      "color": 14,
       "h": 37,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -2692,7 +2440,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 13,
       "h": 37,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -2701,7 +2448,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2710,7 +2456,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2719,7 +2464,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2728,7 +2472,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2737,7 +2480,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2747,7 +2489,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2757,7 +2498,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2769,7 +2509,6 @@ exports[`rome > matches its recorded frames 1`] = `
   ],
   "keyboard": [
     {
-      "color": 14,
       "h": 37,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -2778,7 +2517,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 13,
       "h": 37,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -2787,7 +2525,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2796,7 +2533,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2805,7 +2541,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2814,7 +2549,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2823,7 +2557,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2833,7 +2566,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2843,7 +2575,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2855,7 +2586,6 @@ exports[`rome > matches its recorded frames 1`] = `
   ],
   "notes": [
     {
-      "color": 14,
       "h": 37,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -2864,7 +2594,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 2,
       "h": 37,
       "op": "rect",
       "rgb": "rgb(237, 237, 237)",
@@ -2873,10 +2602,8 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "fill": 13,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 13,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -2894,7 +2621,6 @@ exports[`rome > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2903,7 +2629,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2912,7 +2637,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2921,7 +2645,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -2930,7 +2653,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2940,7 +2662,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2950,7 +2671,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 4,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 2,
@@ -2960,7 +2680,6 @@ exports[`rome > matches its recorded frames 1`] = `
       "y2": 88,
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -2969,10 +2688,8 @@ exports[`rome > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 7,
       "fillRgb": "rgb(63, 63, 179)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -2994,10 +2711,8 @@ exports[`rome > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -3026,7 +2741,6 @@ exports[`salad > matches its recorded frames 1`] = `
   },
   "away": [
     {
-      "color": 21,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -3035,10 +2749,8 @@ exports[`salad > matches its recorded frames 1`] = `
       "y": 80,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -3060,7 +2772,6 @@ exports[`salad > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -3071,7 +2782,6 @@ exports[`salad > matches its recorded frames 1`] = `
   ],
   "entry": [
     {
-      "color": 20,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -3080,10 +2790,8 @@ exports[`salad > matches its recorded frames 1`] = `
       "y": 80,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -3107,7 +2815,6 @@ exports[`salad > matches its recorded frames 1`] = `
   ],
   "keyboard": [
     {
-      "color": 20,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -3116,10 +2823,8 @@ exports[`salad > matches its recorded frames 1`] = `
       "y": 80,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -3143,7 +2848,6 @@ exports[`salad > matches its recorded frames 1`] = `
   ],
   "notes": [
     {
-      "color": 21,
       "h": 40,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -3152,10 +2856,8 @@ exports[`salad > matches its recorded frames 1`] = `
       "y": 80,
     },
     {
-      "fill": 20,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 20,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -3173,10 +2875,8 @@ exports[`salad > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -3198,7 +2898,6 @@ exports[`salad > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -3207,10 +2906,8 @@ exports[`salad > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 18,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 4,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -3232,10 +2929,8 @@ exports[`salad > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 4,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 4,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -3271,7 +2966,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 2,
       "h": 36,
       "op": "rect",
       "rgb": "rgb(237, 237, 237)",
@@ -3280,7 +2974,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 69,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3289,7 +2982,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3298,7 +2990,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3309,7 +3000,6 @@ exports[`seismic > matches its recorded frames 1`] = `
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 4,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -3322,7 +3012,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -3340,7 +3029,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 11,
       "h": 36,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -3349,7 +3037,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 69,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3358,7 +3045,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3367,7 +3053,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3378,7 +3063,6 @@ exports[`seismic > matches its recorded frames 1`] = `
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 4,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -3400,7 +3084,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 11,
       "h": 36,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -3409,7 +3092,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 69,
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3418,7 +3100,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3427,7 +3108,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3438,7 +3118,6 @@ exports[`seismic > matches its recorded frames 1`] = `
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 4,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -3460,7 +3139,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 2,
       "h": 36,
       "op": "rect",
       "rgb": "rgb(237, 237, 237)",
@@ -3469,10 +3147,8 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 69,
     },
     {
-      "fill": 11,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 11,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -3490,7 +3166,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 3,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3499,7 +3174,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 68,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3508,7 +3182,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 105,
     },
     {
-      "color": 3,
       "h": 3,
       "op": "rect",
       "rgb": "rgb(0, 0, 0)",
@@ -3519,7 +3192,6 @@ exports[`seismic > matches its recorded frames 1`] = `
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 4,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -3532,7 +3204,6 @@ exports[`seismic > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -3541,10 +3212,8 @@ exports[`seismic > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 9,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -3566,10 +3235,8 @@ exports[`seismic > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -3598,7 +3265,6 @@ exports[`solo > matches its recorded frames 1`] = `
   },
   "away": [
     {
-      "color": 13,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3607,7 +3273,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 13,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3616,7 +3281,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 74,
     },
     {
-      "color": 13,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3632,7 +3296,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 11,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -3644,7 +3307,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -3655,7 +3317,6 @@ exports[`solo > matches its recorded frames 1`] = `
   ],
   "entry": [
     {
-      "color": 13,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3664,7 +3325,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 13,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3673,7 +3333,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 74,
     },
     {
-      "color": 13,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3689,7 +3348,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 5,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -3703,7 +3361,6 @@ exports[`solo > matches its recorded frames 1`] = `
   ],
   "keyboard": [
     {
-      "color": 13,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3712,7 +3369,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 13,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3721,7 +3377,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 74,
     },
     {
-      "color": 13,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3737,7 +3392,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 5,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -3751,7 +3405,6 @@ exports[`solo > matches its recorded frames 1`] = `
   ],
   "notes": [
     {
-      "color": 13,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3760,7 +3413,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 13,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3769,7 +3421,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 74,
     },
     {
-      "color": 13,
       "h": 1,
       "op": "rect",
       "rgb": "rgb(139, 139, 139)",
@@ -3785,7 +3436,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "color": 11,
       "h": 47,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -3794,10 +3444,8 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 75,
     },
     {
-      "fill": 5,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 5,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -3818,7 +3466,6 @@ exports[`solo > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -3827,10 +3474,8 @@ exports[`solo > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 9,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 2,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -3852,10 +3497,8 @@ exports[`solo > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 2,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 2,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -3891,7 +3534,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -3900,7 +3542,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -3910,7 +3551,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -3920,7 +3560,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -3930,7 +3569,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -3939,7 +3577,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -3949,7 +3586,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -3959,7 +3595,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -3969,7 +3604,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -3978,7 +3612,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -3988,7 +3621,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -3998,7 +3630,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4007,7 +3638,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4017,7 +3647,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4037,7 +3666,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4046,7 +3674,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4056,7 +3683,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4066,7 +3692,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4076,7 +3701,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4085,7 +3709,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4095,7 +3718,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4105,7 +3727,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4115,7 +3736,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4124,7 +3744,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4134,7 +3753,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4144,7 +3762,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4153,7 +3770,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4163,7 +3779,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4183,7 +3798,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4192,7 +3806,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4202,7 +3815,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4212,7 +3824,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4221,7 +3832,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4231,7 +3841,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4241,7 +3850,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4250,7 +3858,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4260,7 +3867,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4270,7 +3876,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4279,7 +3884,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4289,7 +3893,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4309,7 +3912,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4318,7 +3920,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4328,7 +3929,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4338,7 +3938,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4347,7 +3946,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4357,7 +3955,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4367,7 +3964,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4376,7 +3972,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4386,7 +3981,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4396,7 +3990,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4405,7 +3998,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4415,7 +4007,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4428,7 +4019,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -4446,7 +4036,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4455,7 +4044,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4465,7 +4053,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4475,7 +4062,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4485,7 +4071,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4494,7 +4079,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4504,7 +4088,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4514,7 +4097,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4524,7 +4106,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 3,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -4533,7 +4114,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4543,7 +4123,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4553,7 +4132,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4562,7 +4140,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4572,7 +4149,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4592,7 +4168,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4601,7 +4176,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4611,7 +4185,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4621,7 +4194,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4631,7 +4203,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4640,7 +4211,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4650,7 +4220,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4660,7 +4229,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4670,7 +4238,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4679,7 +4246,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4689,7 +4255,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4699,7 +4264,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 3,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -4708,7 +4272,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4718,7 +4281,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4738,7 +4300,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 3,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -4747,7 +4308,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4757,7 +4317,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4767,7 +4326,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4776,7 +4334,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4786,7 +4343,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4796,7 +4352,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4805,7 +4360,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4815,7 +4369,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4825,7 +4378,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4834,7 +4386,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4844,7 +4395,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4864,7 +4414,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4873,7 +4422,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4883,7 +4431,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4893,7 +4440,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 3,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -4902,7 +4448,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4912,7 +4457,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4922,7 +4466,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4931,7 +4474,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4941,7 +4483,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4951,7 +4492,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -4960,7 +4500,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4970,7 +4509,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -4992,7 +4530,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5001,7 +4538,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5011,7 +4547,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5021,7 +4556,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5031,7 +4565,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5040,7 +4573,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5050,7 +4582,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5060,7 +4591,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5070,7 +4600,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 3,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -5079,7 +4608,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5089,7 +4617,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5099,7 +4626,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5108,7 +4634,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5118,7 +4643,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5138,7 +4662,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5147,7 +4670,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5157,7 +4679,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5167,7 +4688,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5177,7 +4697,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5186,7 +4705,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5196,7 +4714,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5206,7 +4723,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5216,7 +4732,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5225,7 +4740,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5235,7 +4749,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5245,7 +4758,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 3,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -5254,7 +4766,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5264,7 +4775,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5284,7 +4794,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 3,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -5293,7 +4802,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5303,7 +4811,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5313,7 +4820,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5322,7 +4828,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5332,7 +4837,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5342,7 +4846,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5351,7 +4854,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5361,7 +4863,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5371,7 +4872,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5380,7 +4880,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5390,7 +4889,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5410,7 +4908,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5419,7 +4916,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5429,7 +4925,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5439,7 +4934,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 3,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -5448,7 +4942,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5458,7 +4951,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5468,7 +4960,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5477,7 +4968,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5487,7 +4977,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5497,7 +4986,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5506,7 +4994,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5516,7 +5003,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5538,7 +5024,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5547,7 +5032,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5557,7 +5041,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5567,7 +5050,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5577,7 +5059,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5586,7 +5067,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5596,7 +5076,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5606,7 +5085,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5616,7 +5094,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5625,10 +5102,8 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -5646,7 +5121,6 @@ exports[`towers > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5656,7 +5130,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5666,7 +5139,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5675,7 +5147,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5685,7 +5156,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5705,7 +5175,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5714,7 +5183,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5724,7 +5192,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5734,7 +5201,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5744,7 +5210,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5753,7 +5218,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 54,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5763,7 +5227,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5773,7 +5236,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 101,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5783,7 +5245,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 53,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5792,7 +5253,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5802,7 +5262,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5812,7 +5271,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5821,10 +5279,8 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -5842,7 +5298,6 @@ exports[`towers > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5852,7 +5307,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5872,7 +5326,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5881,10 +5334,8 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -5902,7 +5353,6 @@ exports[`towers > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5912,7 +5362,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5922,7 +5371,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5931,7 +5379,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5941,7 +5388,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5951,7 +5397,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5960,7 +5405,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5970,7 +5414,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5980,7 +5423,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -5989,7 +5431,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -5999,7 +5440,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6019,7 +5459,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -6028,7 +5467,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6038,7 +5476,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6048,7 +5485,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -6057,10 +5493,8 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 102,
     },
     {
-      "fill": 3,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 3,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -6078,7 +5512,6 @@ exports[`towers > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6088,7 +5521,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6098,7 +5530,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 149,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -6107,7 +5538,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6117,7 +5547,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6127,7 +5556,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 9,
       "h": 48,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -6136,7 +5564,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 150,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6146,7 +5573,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "y2": 197,
     },
     {
-      "color": 11,
       "op": "line",
       "rgb": "rgb(139, 139, 139)",
       "thickness": 1,
@@ -6159,7 +5585,6 @@ exports[`towers > matches its recorded frames 1`] = `
       "op": "unclip",
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -6168,10 +5593,8 @@ exports[`towers > matches its recorded frames 1`] = `
       "y": 3,
     },
     {
-      "fill": 7,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -6193,10 +5616,8 @@ exports[`towers > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 1,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -6225,7 +5646,6 @@ exports[`undead > matches its recorded frames 1`] = `
   },
   "away": [
     {
-      "color": 13,
       "h": 63,
       "op": "rect",
       "rgb": "rgb(237, 237, 237)",
@@ -6234,7 +5654,6 @@ exports[`undead > matches its recorded frames 1`] = `
       "y": 177,
     },
     {
-      "color": 2,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 4,
@@ -6244,7 +5663,6 @@ exports[`undead > matches its recorded frames 1`] = `
       "y2": 224,
     },
     {
-      "color": 0,
       "h": 24,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -6255,7 +5673,6 @@ exports[`undead > matches its recorded frames 1`] = `
   ],
   "entry": [
     {
-      "color": 4,
       "h": 63,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -6264,7 +5681,6 @@ exports[`undead > matches its recorded frames 1`] = `
       "y": 177,
     },
     {
-      "color": 2,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 4,
@@ -6276,7 +5692,6 @@ exports[`undead > matches its recorded frames 1`] = `
   ],
   "keyboard": [
     {
-      "color": 4,
       "h": 63,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -6285,7 +5700,6 @@ exports[`undead > matches its recorded frames 1`] = `
       "y": 177,
     },
     {
-      "color": 2,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 4,
@@ -6297,7 +5711,6 @@ exports[`undead > matches its recorded frames 1`] = `
   ],
   "notes": [
     {
-      "color": 13,
       "h": 63,
       "op": "rect",
       "rgb": "rgb(237, 237, 237)",
@@ -6306,10 +5719,8 @@ exports[`undead > matches its recorded frames 1`] = `
       "y": 177,
     },
     {
-      "fill": 4,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 4,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -6327,7 +5738,6 @@ exports[`undead > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 2,
       "op": "line",
       "rgb": "rgb(0, 0, 0)",
       "thickness": 4,
@@ -6337,7 +5747,6 @@ exports[`undead > matches its recorded frames 1`] = `
       "y2": 224,
     },
     {
-      "color": 0,
       "h": 24,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -6346,10 +5755,8 @@ exports[`undead > matches its recorded frames 1`] = `
       "y": 4,
     },
     {
-      "fill": 10,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 2,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -6371,10 +5778,8 @@ exports[`undead > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 2,
       "fillRgb": "rgb(0, 0, 0)",
       "op": "polygon",
-      "outline": 2,
       "outlineRgb": "rgb(0, 0, 0)",
       "points": [
         [
@@ -6403,7 +5808,6 @@ exports[`unequal > matches its recorded frames 1`] = `
   },
   "away": [
     {
-      "color": 12,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -6412,10 +5816,8 @@ exports[`unequal > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -6437,7 +5839,6 @@ exports[`unequal > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -6448,7 +5849,6 @@ exports[`unequal > matches its recorded frames 1`] = `
   ],
   "entry": [
     {
-      "color": 13,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(237, 237, 237)",
@@ -6457,10 +5857,8 @@ exports[`unequal > matches its recorded frames 1`] = `
       "y": 24,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -6484,7 +5882,6 @@ exports[`unequal > matches its recorded frames 1`] = `
     {
       "align": "center",
       "baseline": "mathematical",
-      "color": 2,
       "fontType": "variable",
       "op": "text",
       "rgb": "rgb(0, 0, 0)",
@@ -6494,7 +5891,6 @@ exports[`unequal > matches its recorded frames 1`] = `
       "y": 40,
     },
     {
-      "color": 11,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -6503,10 +5899,8 @@ exports[`unequal > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -6530,7 +5924,6 @@ exports[`unequal > matches its recorded frames 1`] = `
   ],
   "keyboard": [
     {
-      "color": 11,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(181, 169, 105)",
@@ -6539,10 +5932,8 @@ exports[`unequal > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -6566,7 +5957,6 @@ exports[`unequal > matches its recorded frames 1`] = `
   ],
   "notes": [
     {
-      "color": 12,
       "h": 32,
       "op": "rect",
       "rgb": "rgb(194, 194, 194)",
@@ -6575,10 +5965,8 @@ exports[`unequal > matches its recorded frames 1`] = `
       "y": 72,
     },
     {
-      "fill": 11,
       "fillRgb": "rgb(181, 169, 105)",
       "op": "polygon",
-      "outline": 11,
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
@@ -6596,10 +5984,8 @@ exports[`unequal > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": -1,
       "fillRgb": "none",
       "op": "polygon",
-      "outline": 14,
       "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
@@ -6621,7 +6007,6 @@ exports[`unequal > matches its recorded frames 1`] = `
       ],
     },
     {
-      "color": 0,
       "h": 20,
       "op": "rect",
       "rgb": "rgb(211, 211, 211)",
@@ -6630,10 +6015,8 @@ exports[`unequal > matches its recorded frames 1`] = `
       "y": 2,
     },
     {
-      "fill": 8,
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(128, 128, 128)",
       "points": [
         [
@@ -6655,10 +6038,8 @@ exports[`unequal > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fill": 1,
       "fillRgb": "rgb(128, 128, 128)",
       "op": "polygon",
-      "outline": 1,
       "outlineRgb": "rgb(128, 128, 128)",
       "points": [
         [

@@ -3,7 +3,6 @@
 exports[`singles render > draws the initial frame with the grid's lines 1`] = `
 [
   {
-    "color": 0,
     "h": 192,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -21,7 +19,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 15,
   },
   {
-    "color": 1,
     "h": 161,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -30,7 +27,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 15,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -39,7 +35,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -50,7 +45,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -60,7 +54,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -69,7 +62,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -80,7 +72,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -90,7 +81,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -99,7 +89,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -110,7 +99,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -120,7 +108,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -129,7 +116,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -140,7 +126,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -150,7 +135,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -159,7 +143,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -170,7 +153,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -180,7 +162,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -189,7 +170,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -200,7 +180,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -210,7 +189,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -219,7 +197,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -230,7 +207,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -240,7 +216,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -249,7 +224,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -260,7 +234,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -270,7 +243,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -279,7 +251,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -290,7 +261,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -300,7 +270,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -309,7 +278,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -320,7 +288,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -330,7 +297,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -339,7 +305,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -350,7 +315,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -360,7 +324,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -369,7 +332,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -380,7 +342,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -390,7 +351,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -399,7 +359,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -410,7 +369,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -420,7 +378,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -429,7 +386,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -440,7 +396,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -450,7 +405,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -459,7 +413,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -470,7 +423,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -480,7 +432,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -489,7 +440,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -500,7 +450,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -510,7 +459,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -519,7 +467,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -530,7 +477,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -540,7 +486,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -549,7 +494,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -560,7 +504,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -570,7 +513,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -579,7 +521,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -590,7 +531,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -600,7 +540,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -609,7 +548,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -620,7 +558,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -630,7 +567,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -639,7 +575,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -650,7 +585,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -660,7 +594,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -669,7 +602,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -680,7 +612,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -690,7 +621,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -699,7 +629,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -710,7 +639,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -720,7 +648,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -729,7 +656,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -740,7 +666,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -750,7 +675,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -759,7 +683,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -770,7 +693,6 @@ exports[`singles render > draws the initial frame with the grid's lines 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

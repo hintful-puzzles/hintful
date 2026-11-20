@@ -3,7 +3,6 @@
 exports[`net render > opener frame: draws grid borders, wire polygons and the source box 1`] = `
 [
   {
-    "color": 0,
     "h": 209,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 0,
   },
   {
-    "color": 0,
     "h": 209,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -28,7 +26,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -37,7 +34,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -56,7 +52,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -65,7 +60,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -74,7 +68,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -83,7 +76,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -102,7 +94,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -111,7 +102,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -120,7 +110,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -129,7 +118,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -148,7 +136,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -157,7 +144,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -166,7 +152,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -175,7 +160,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -194,7 +178,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -203,7 +186,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -212,7 +194,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -221,7 +202,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -240,7 +220,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -249,7 +228,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -258,7 +236,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -267,7 +244,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -286,7 +262,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -295,7 +270,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -314,7 +288,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -323,7 +296,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -332,7 +304,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -341,7 +312,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -360,7 +330,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -369,7 +338,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -378,7 +346,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -387,10 +354,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -428,7 +393,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -437,7 +401,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -446,7 +409,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -455,7 +417,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -474,7 +435,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -483,7 +443,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -492,7 +451,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -501,10 +459,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -542,7 +498,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -551,7 +506,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -560,7 +514,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -579,7 +532,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -588,7 +540,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -597,7 +548,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -606,10 +556,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -647,7 +595,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -656,7 +603,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -665,7 +611,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -684,7 +629,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -693,7 +637,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -702,7 +645,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -711,10 +653,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -760,7 +700,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -769,7 +708,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -778,7 +716,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -797,7 +734,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -806,7 +742,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -815,7 +750,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -824,7 +758,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -833,7 +766,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 39,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -842,10 +774,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 39,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -875,10 +805,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -900,10 +828,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -925,7 +851,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -934,7 +859,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -943,7 +867,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -952,7 +875,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -971,7 +893,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -980,7 +901,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -989,7 +909,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -998,7 +917,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1007,7 +925,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1016,7 +933,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 24,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1035,7 +951,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1044,7 +959,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1053,7 +967,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1062,7 +975,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1081,7 +993,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1090,7 +1001,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1099,7 +1009,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1108,7 +1017,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1117,7 +1025,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1126,10 +1033,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1159,10 +1064,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1184,10 +1087,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1209,7 +1110,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1218,7 +1118,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1227,7 +1126,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1246,7 +1144,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1255,7 +1152,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1264,7 +1160,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1273,10 +1168,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1332,7 +1225,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1341,7 +1233,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1350,7 +1241,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1359,7 +1249,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1368,7 +1257,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1377,10 +1265,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1436,7 +1322,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1445,7 +1330,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1454,7 +1338,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1463,10 +1346,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1514,7 +1395,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1523,7 +1403,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1532,7 +1411,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1541,7 +1419,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1550,7 +1427,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1559,10 +1435,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1592,10 +1466,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1617,10 +1489,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1642,7 +1512,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1651,7 +1520,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1660,7 +1528,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1679,7 +1546,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1688,7 +1554,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1697,7 +1562,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1706,7 +1570,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1715,7 +1578,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1724,7 +1586,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 56,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1743,7 +1604,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1752,7 +1612,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1761,7 +1620,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1770,7 +1628,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1789,7 +1646,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1798,7 +1654,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1807,7 +1662,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1816,10 +1670,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1849,10 +1701,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1874,10 +1724,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1899,7 +1747,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1908,7 +1755,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1917,7 +1763,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1936,7 +1781,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1945,7 +1789,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1954,7 +1797,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1963,10 +1805,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2014,7 +1854,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2023,7 +1862,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2032,7 +1870,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2041,7 +1878,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2050,7 +1886,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2059,10 +1894,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2108,10 +1941,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -2157,10 +1988,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2182,10 +2011,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2217,7 +2044,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2226,7 +2052,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2235,7 +2060,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2244,10 +2068,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2293,10 +2115,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -2352,7 +2172,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2361,7 +2180,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2370,7 +2188,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2379,10 +2196,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2420,10 +2235,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -2461,7 +2274,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2470,7 +2282,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2479,7 +2290,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2498,7 +2308,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2507,7 +2316,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2516,7 +2324,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2525,7 +2332,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2534,7 +2340,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2543,7 +2348,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 88,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2562,7 +2366,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2571,7 +2374,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2580,7 +2382,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2589,7 +2390,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2608,7 +2408,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2617,7 +2416,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2626,7 +2424,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2635,10 +2432,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2668,10 +2463,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2693,10 +2486,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2718,7 +2509,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2727,7 +2517,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2736,7 +2525,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2755,7 +2543,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2764,7 +2551,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2773,7 +2559,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2782,10 +2567,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2833,7 +2616,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2842,7 +2624,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2851,7 +2632,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2860,7 +2640,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2869,7 +2648,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 5,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -2878,10 +2656,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2929,7 +2705,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2938,7 +2713,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2947,7 +2721,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2956,7 +2729,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2965,7 +2737,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 5,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -2974,10 +2745,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3025,7 +2794,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3034,7 +2802,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3043,7 +2810,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3052,7 +2818,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3061,7 +2826,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 135,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3070,10 +2834,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 135,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3111,7 +2873,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3120,7 +2881,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3129,7 +2889,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3148,7 +2907,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3157,7 +2915,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3166,7 +2923,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3175,7 +2931,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3184,7 +2939,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3193,7 +2947,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 120,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3212,7 +2965,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3221,7 +2973,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3230,7 +2981,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3239,7 +2989,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3258,7 +3007,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3267,7 +3015,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3276,7 +3023,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3285,10 +3031,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3326,7 +3070,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3335,7 +3078,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3344,7 +3086,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 183,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3353,7 +3094,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3372,7 +3112,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3381,7 +3120,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3390,7 +3128,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3399,10 +3136,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3440,7 +3175,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3449,7 +3183,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3458,7 +3191,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3477,7 +3209,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3486,7 +3217,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3495,7 +3225,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3504,10 +3233,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3537,10 +3264,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3562,10 +3287,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3587,7 +3310,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3596,7 +3318,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3605,7 +3326,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3624,7 +3344,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3633,7 +3352,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3642,7 +3360,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3651,10 +3368,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3692,7 +3407,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3701,7 +3415,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3710,7 +3423,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3729,7 +3441,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3738,7 +3449,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3747,7 +3457,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3756,10 +3465,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3789,10 +3496,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3814,10 +3519,8 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3839,7 +3542,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3848,7 +3550,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3857,7 +3558,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 183,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3866,7 +3566,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3885,7 +3584,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3894,7 +3592,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3903,7 +3600,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3912,7 +3608,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3921,7 +3616,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3930,7 +3624,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3949,7 +3642,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3958,7 +3650,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3977,7 +3668,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3986,7 +3676,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3995,7 +3684,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4004,7 +3692,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4013,7 +3700,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4022,7 +3708,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4041,7 +3726,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4050,7 +3734,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4059,7 +3742,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4068,7 +3750,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4077,7 +3758,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4086,7 +3766,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4105,7 +3784,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4114,7 +3792,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4123,7 +3800,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4132,7 +3808,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4141,7 +3816,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4150,7 +3824,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4169,7 +3842,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4178,7 +3850,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4187,7 +3858,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4196,7 +3866,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4205,7 +3874,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4214,7 +3882,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4233,7 +3900,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4242,7 +3908,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4251,7 +3916,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4260,7 +3924,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4269,7 +3932,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4278,7 +3940,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4297,7 +3958,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4306,7 +3966,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4315,7 +3974,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4324,7 +3982,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4336,7 +3993,6 @@ exports[`net render > opener frame: draws grid borders, wire polygons and the so
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

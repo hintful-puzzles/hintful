@@ -3,7 +3,6 @@
 exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
 [
   {
-    "color": 0,
     "h": 296,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -23,7 +21,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -33,7 +30,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 224,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -44,7 +40,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -54,7 +49,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 224,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -65,7 +59,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -75,7 +68,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 224,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -86,7 +78,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -96,7 +87,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 224,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -107,7 +97,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -117,7 +106,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 224,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -128,7 +116,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "alphabetic",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -138,7 +125,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 224,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -149,7 +135,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -159,7 +144,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -170,7 +154,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -180,7 +163,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -191,7 +173,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -201,7 +182,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -212,7 +192,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -222,7 +201,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -233,7 +211,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -243,7 +220,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 144,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -254,7 +230,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -264,7 +239,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 176,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -273,7 +247,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -282,7 +255,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -291,7 +263,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -300,7 +271,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -309,7 +279,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -318,7 +287,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 3,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 195, 239)",
@@ -327,7 +295,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -336,7 +303,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -347,7 +313,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 15,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -359,7 +324,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 15,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -369,7 +333,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 83,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -378,7 +341,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -387,7 +349,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -396,7 +357,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -405,7 +365,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -414,7 +373,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -423,7 +381,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -432,7 +389,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -441,7 +397,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -450,7 +405,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -459,7 +413,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 192,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -468,7 +421,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -477,7 +429,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -486,7 +437,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -495,7 +445,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -504,7 +453,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -513,7 +461,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -522,7 +469,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -531,7 +477,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -540,7 +485,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -549,7 +493,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -558,7 +501,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -567,7 +509,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 18,
     "h": 29,
     "op": "ring",
     "radius": 15,
@@ -587,7 +528,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 18,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -599,7 +539,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 18,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -612,7 +551,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -621,7 +559,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -630,7 +567,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -639,7 +575,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -648,7 +583,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -657,7 +591,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -666,7 +599,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -675,7 +607,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 192,
   },
   {
-    "color": 18,
     "h": 29,
     "op": "ring",
     "radius": 15,
@@ -695,7 +626,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 18,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -707,7 +637,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 18,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -720,7 +649,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -729,7 +657,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -738,7 +665,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -747,7 +673,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -756,7 +681,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -765,7 +689,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -774,7 +697,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -783,7 +705,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -792,7 +713,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -801,7 +721,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -810,7 +729,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -819,7 +737,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -828,7 +745,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -837,7 +753,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -846,7 +761,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -855,7 +769,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 18,
     "h": 29,
     "op": "ring",
     "radius": 15,
@@ -873,7 +786,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 130,
   },
   {
-    "color": 18,
     "h": 18,
     "op": "rect",
     "rgb": "rgb(21, 113, 233)",
@@ -885,7 +797,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "op": "unclip",
   },
   {
-    "color": 14,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -894,7 +805,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -903,7 +813,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -912,7 +821,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -928,10 +836,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -1012,7 +918,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "op": "unclip",
   },
   {
-    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1021,7 +926,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 161,
   },
   {
-    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1030,7 +934,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 161,
   },
   {
-    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1039,7 +942,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 190,
   },
   {
-    "color": 12,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -1048,7 +950,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 161,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1057,7 +958,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1066,7 +966,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1075,7 +974,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1084,7 +982,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1093,7 +990,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1102,7 +998,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1111,7 +1006,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1120,7 +1014,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1129,7 +1022,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1138,7 +1030,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1147,7 +1038,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1156,7 +1046,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 18,
     "h": 29,
     "op": "ring",
     "radius": 15,
@@ -1176,7 +1065,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 18,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -1188,7 +1076,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 18,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -1201,7 +1088,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1210,7 +1096,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1219,7 +1104,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1228,7 +1112,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1237,7 +1120,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1246,7 +1128,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1255,7 +1136,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1264,7 +1144,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 192,
   },
   {
-    "color": 18,
     "h": 29,
     "op": "ring",
     "radius": 15,
@@ -1284,7 +1163,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 18,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -1296,7 +1174,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 18,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -1309,7 +1186,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1318,7 +1194,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1327,7 +1202,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1336,7 +1210,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1345,7 +1218,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1354,7 +1226,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1363,7 +1234,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1372,7 +1242,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1381,7 +1250,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1390,7 +1258,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1399,7 +1266,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1408,7 +1274,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1417,7 +1282,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1426,7 +1290,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1435,7 +1298,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1444,7 +1306,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1453,7 +1314,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1462,7 +1322,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1471,7 +1330,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1480,7 +1338,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 192,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1489,7 +1346,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1498,7 +1354,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1507,7 +1362,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1516,7 +1370,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 0,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1525,7 +1378,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1534,7 +1386,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1543,7 +1394,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1552,7 +1402,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 32,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1561,7 +1410,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1570,7 +1418,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1579,7 +1426,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1588,7 +1434,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 64,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1597,7 +1442,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1606,7 +1450,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1615,7 +1458,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1624,7 +1466,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 96,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1633,7 +1474,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1642,7 +1482,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1651,7 +1490,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1660,7 +1498,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 128,
   },
   {
-    "color": 14,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1669,7 +1506,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1678,7 +1514,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1687,7 +1522,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 33,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1696,7 +1530,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1712,10 +1545,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 160,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -1852,7 +1683,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1861,10 +1691,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 240,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -1966,7 +1794,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1975,10 +1802,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 240,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2080,7 +1905,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2089,10 +1913,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 240,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2194,7 +2016,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2203,10 +2024,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 240,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2268,10 +2087,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2333,7 +2150,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2342,10 +2158,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 240,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2407,10 +2221,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2472,7 +2284,6 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2481,10 +2292,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     "y": 272,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2546,10 +2355,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2571,10 +2378,8 @@ exports[`boats hint — rendering > matches the recorded hint frame 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [

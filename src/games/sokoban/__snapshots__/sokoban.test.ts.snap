@@ -3,7 +3,6 @@
 exports[`Sokoban render > draws grid lines, walls and the player on a generated board 1`] = `
 [
   {
-    "color": 0,
     "h": 321,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 0,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -22,7 +20,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 0,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -32,7 +29,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 32,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -42,7 +38,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 64,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -52,7 +47,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 96,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -62,7 +56,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 128,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -72,7 +65,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 160,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -82,7 +74,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 192,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -92,7 +83,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 224,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -102,7 +92,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 256,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -112,7 +101,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 288,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -122,7 +110,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -132,7 +119,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -142,7 +128,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -152,7 +137,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -162,7 +146,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -172,7 +155,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -182,7 +164,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -192,7 +173,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -202,7 +182,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -212,7 +191,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -222,7 +200,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -232,7 +209,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -242,7 +218,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y2": 320,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -259,7 +234,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -268,7 +242,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -287,7 +260,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -296,7 +268,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -308,7 +279,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -324,7 +294,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -333,7 +302,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -345,7 +313,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -361,7 +328,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -370,7 +336,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -382,7 +347,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -398,7 +362,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -407,7 +370,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -419,7 +381,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -435,7 +396,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -444,7 +404,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -456,7 +415,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -472,7 +430,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -481,7 +438,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -493,7 +449,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -509,7 +464,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -518,7 +472,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -530,7 +483,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -546,7 +498,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -555,7 +506,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -567,7 +517,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -583,7 +532,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -592,7 +540,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -604,7 +551,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -620,7 +566,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -629,7 +574,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -641,7 +585,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -657,7 +600,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -666,7 +608,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 1,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -678,7 +619,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -694,7 +634,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -703,7 +642,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -715,7 +653,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -731,7 +668,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -740,7 +676,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -752,7 +687,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -761,7 +695,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -770,7 +703,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 32,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -786,7 +718,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -795,7 +726,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -807,7 +737,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -816,7 +745,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -825,7 +753,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 32,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -841,7 +768,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -852,20 +778,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 112,
     "cy": 48,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 112,
     "cy": 48,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -880,7 +802,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -899,7 +820,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -918,7 +838,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -927,10 +846,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -1026,7 +943,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1045,7 +961,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1054,7 +969,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1066,7 +980,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1082,7 +995,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1101,7 +1013,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1120,7 +1031,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1129,7 +1039,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 33,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1141,7 +1050,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1157,7 +1065,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1166,7 +1073,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1178,7 +1084,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1194,7 +1099,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1203,7 +1107,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1215,7 +1118,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1224,7 +1126,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1233,7 +1134,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 64,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1249,7 +1149,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1258,7 +1157,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1270,7 +1168,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1279,7 +1176,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1288,7 +1184,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 64,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1304,7 +1199,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1315,20 +1209,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 112,
     "cy": 80,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 112,
     "cy": 80,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -1343,7 +1233,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1352,10 +1241,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -1451,7 +1338,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1470,7 +1356,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1489,7 +1374,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1508,7 +1392,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1527,7 +1410,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1538,20 +1420,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 304,
     "cy": 80,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 304,
     "cy": 80,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -1566,7 +1444,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1585,7 +1462,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1594,7 +1470,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 65,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1606,7 +1481,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1622,7 +1496,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1631,7 +1504,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1643,7 +1515,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1659,7 +1530,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1668,7 +1538,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1680,7 +1549,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1689,7 +1557,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1698,7 +1565,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 96,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1714,7 +1580,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1723,7 +1588,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1735,7 +1599,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1744,7 +1607,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1753,7 +1615,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 96,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1769,7 +1630,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1778,7 +1638,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1790,7 +1649,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1806,7 +1664,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1815,7 +1672,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1827,7 +1683,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1843,7 +1698,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1852,7 +1706,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1864,7 +1717,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1880,7 +1732,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1899,7 +1750,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1908,7 +1758,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -1927,7 +1776,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1946,7 +1794,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1955,10 +1802,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2054,7 +1899,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2065,20 +1909,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 336,
     "cy": 112,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 336,
     "cy": 112,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -2093,7 +1933,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2102,7 +1941,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 97,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2114,7 +1952,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2130,7 +1967,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2139,7 +1975,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2151,7 +1986,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2167,7 +2001,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2178,20 +2011,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 48,
     "cy": 144,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 48,
     "cy": 144,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -2206,7 +2035,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2215,7 +2043,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2227,7 +2054,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2243,7 +2069,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2252,7 +2077,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2264,7 +2088,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2273,7 +2096,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2282,7 +2104,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 128,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2298,7 +2119,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2309,20 +2129,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 144,
     "cy": 144,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 144,
     "cy": 144,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -2337,7 +2153,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2348,20 +2163,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 176,
     "cy": 144,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 176,
     "cy": 144,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -2376,7 +2187,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2385,10 +2195,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2484,7 +2292,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2503,7 +2310,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2522,7 +2328,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2531,10 +2336,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2630,7 +2433,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2641,28 +2443,22 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 336,
     "cy": 144,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 336,
     "cy": 144,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2758,7 +2554,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2767,7 +2562,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 129,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2779,7 +2573,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2795,7 +2588,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2804,7 +2596,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2816,7 +2607,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -2832,7 +2622,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2841,10 +2630,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -2940,7 +2727,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2959,7 +2745,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2978,7 +2763,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2987,10 +2771,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -3086,7 +2868,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3095,10 +2876,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -3194,7 +2973,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3205,20 +2983,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 208,
     "cy": 176,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 208,
     "cy": 176,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -3233,7 +3007,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3252,7 +3025,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3271,7 +3043,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3280,10 +3051,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -3379,7 +3148,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3390,30 +3158,24 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 336,
     "cy": 176,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 336,
     "cy": 176,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
   {
     "cx": 336,
     "cy": 176,
-    "fill": 5,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -3428,7 +3190,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3437,7 +3198,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 161,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3449,7 +3209,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3465,7 +3224,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3474,7 +3232,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3486,7 +3243,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3502,7 +3258,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3521,7 +3276,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3540,7 +3294,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3551,20 +3304,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 112,
     "cy": 208,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 112,
     "cy": 208,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -3579,7 +3328,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3598,7 +3346,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3617,7 +3364,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3636,7 +3382,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3655,7 +3400,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3674,7 +3418,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3693,7 +3436,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3702,10 +3444,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -3801,7 +3541,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3810,7 +3549,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 193,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3822,7 +3560,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3838,7 +3575,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3847,7 +3583,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3859,7 +3594,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -3875,7 +3609,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3884,10 +3617,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -3983,7 +3714,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3992,7 +3722,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4011,7 +3740,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4020,10 +3748,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -4119,7 +3845,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4138,7 +3863,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4147,7 +3871,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4166,7 +3889,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4175,7 +3897,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4187,7 +3908,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4203,7 +3923,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4222,7 +3941,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4231,10 +3949,8 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -4330,7 +4046,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4341,20 +4056,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 304,
     "cy": 240,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 304,
     "cy": 240,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -4369,7 +4080,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4380,20 +4090,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 336,
     "cy": 240,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 336,
     "cy": 240,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -4408,7 +4114,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4417,7 +4122,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 225,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4429,7 +4133,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4445,7 +4148,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4454,7 +4156,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4466,7 +4167,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4482,7 +4182,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4493,20 +4192,16 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
   {
     "cx": 48,
     "cy": 272,
-    "fill": 1,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 13,
   },
   {
     "cx": 48,
     "cy": 272,
-    "fill": 13,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -4521,7 +4216,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4530,7 +4224,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4542,7 +4235,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4558,7 +4250,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4577,7 +4268,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4596,7 +4286,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4605,7 +4294,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4617,7 +4305,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4633,7 +4320,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4642,7 +4328,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4654,7 +4339,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4663,7 +4347,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4672,7 +4355,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 256,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4688,7 +4370,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4697,7 +4378,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4709,7 +4389,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4725,7 +4404,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4734,7 +4412,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4746,7 +4423,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4762,7 +4438,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4771,7 +4446,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4783,7 +4457,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4799,7 +4472,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4808,7 +4480,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4820,7 +4491,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4836,7 +4506,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4845,7 +4514,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4857,7 +4525,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4866,7 +4533,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 257,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4882,7 +4548,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4891,7 +4556,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4903,7 +4567,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4919,7 +4582,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4928,7 +4590,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4940,7 +4601,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4956,7 +4616,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4965,7 +4624,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4977,7 +4635,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -4986,7 +4643,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5002,7 +4658,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5011,7 +4666,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5023,7 +4677,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5039,7 +4692,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5048,7 +4700,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5060,7 +4711,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5076,7 +4726,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5085,7 +4734,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5097,7 +4745,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5106,7 +4753,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5122,7 +4768,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5131,7 +4776,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5143,7 +4787,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5152,7 +4795,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5161,7 +4803,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 288,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5177,7 +4818,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5186,7 +4826,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5198,7 +4837,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5207,7 +4845,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5216,7 +4853,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 288,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5232,7 +4868,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5241,7 +4876,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5253,7 +4887,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5262,7 +4895,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5271,7 +4903,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 288,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5287,7 +4918,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5296,7 +4926,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5308,7 +4937,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5317,7 +4945,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5326,7 +4953,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 288,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5342,7 +4968,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5351,7 +4976,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5363,7 +4987,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5372,7 +4995,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5381,7 +5003,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 288,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5397,7 +5018,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 13,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5406,7 +5026,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5418,7 +5037,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5427,7 +5045,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 289,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -5436,7 +5053,6 @@ exports[`Sokoban render > draws grid lines, walls and the player on a generated 
     "y": 288,
   },
   {
-    "color": 9,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",

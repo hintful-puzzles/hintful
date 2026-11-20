@@ -3,7 +3,6 @@
 exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines the path, struck candidate, clues drawn 1`] = `
 [
   {
-    "color": 0,
     "h": 608,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 0,
   },
   {
-    "color": 1,
     "h": 321,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -21,7 +19,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 176,
   },
   {
-    "color": 0,
     "h": 64,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -30,7 +27,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 48,
   },
   {
-    "color": 0,
     "h": 64,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -48,10 +44,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 69,
     "cy": 80,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 16,
   },
@@ -66,10 +60,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 80,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -116,25 +108,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 62,
     "cy": 77,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 4,
   },
   {
     "cx": 76,
     "cy": 77,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -143,7 +130,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 77,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -154,7 +140,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "left",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -164,7 +149,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 80,
   },
   {
-    "color": 0,
     "h": 64,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -182,10 +166,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 218,
     "cy": 80,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 16,
   },
@@ -202,10 +184,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 212,
     "cy": 80,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -222,10 +202,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 80,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 10,
   },
@@ -242,10 +220,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 218,
     "cy": 80,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 16,
   },
@@ -255,25 +231,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 212,
     "cy": 78,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 224,
     "cy": 78,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -282,7 +253,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 78,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -298,10 +268,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 85,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -319,10 +287,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -342,10 +308,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 218,
     "cy": 72,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 16,
   },
@@ -355,7 +319,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "left",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -365,7 +328,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 80,
   },
   {
-    "color": 0,
     "h": 64,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -376,15 +338,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 367,
     "cy": 80,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 16,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -394,7 +353,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 79,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -404,7 +362,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 79,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -414,7 +371,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 79,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -433,10 +389,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 365,
     "cy": 87,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
@@ -444,7 +398,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -456,7 +409,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "left",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -466,7 +418,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 80,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -477,7 +428,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -487,7 +437,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 144,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -498,7 +447,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -508,7 +456,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 208,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -519,7 +466,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -529,7 +475,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 272,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -540,7 +485,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -550,7 +494,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 400,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -561,7 +504,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -571,7 +513,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 528,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -582,7 +523,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -592,7 +532,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 400,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -603,7 +542,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -613,7 +551,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 464,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -624,7 +561,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -634,7 +570,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 528,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -645,7 +580,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -655,7 +589,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 144,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -666,7 +599,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -676,7 +608,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 208,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -687,7 +618,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -697,7 +627,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 144,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -708,7 +637,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -718,7 +646,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 336,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -729,7 +656,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -739,7 +665,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 528,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -750,7 +675,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -760,7 +684,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 272,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -771,7 +694,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -781,7 +703,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 528,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -792,7 +713,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -802,7 +722,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 336,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -813,7 +732,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -823,7 +741,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 144,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -834,7 +751,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -844,7 +760,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 528,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -855,7 +770,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -865,7 +779,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 144,
   },
   {
-    "color": 0,
     "h": 61,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -876,7 +789,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -886,7 +798,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 464,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -895,7 +806,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 177,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -905,7 +815,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 192,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -923,10 +832,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 128,
     "cy": 256,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -941,10 +848,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 256,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -991,25 +896,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 123,
     "cy": 254,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 133,
     "cy": 254,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1018,7 +918,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 254,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1036,10 +935,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 256,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1056,10 +953,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 156,
     "cy": 256,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -1076,10 +971,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 164,
     "cy": 256,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -1096,10 +989,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 256,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1109,25 +1000,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 156,
     "cy": 254,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 164,
     "cy": 254,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1136,7 +1022,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 254,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1152,10 +1037,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 260,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1173,10 +1056,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1196,10 +1077,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 250,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1209,15 +1088,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 128,
     "cy": 288,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1227,7 +1103,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 288,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1237,7 +1112,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 288,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1247,7 +1121,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 288,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1266,10 +1139,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 126,
     "cy": 293,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -1277,7 +1148,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1287,7 +1157,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 293,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1305,10 +1174,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 128,
     "cy": 320,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1323,10 +1190,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 320,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1373,25 +1238,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 123,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 133,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1400,7 +1260,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1418,10 +1277,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 320,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1438,10 +1295,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 156,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -1458,10 +1313,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 164,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -1478,10 +1331,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1491,25 +1342,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 156,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 164,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1518,7 +1364,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1534,10 +1379,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 324,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1555,10 +1398,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1578,10 +1419,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 314,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1591,15 +1430,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 128,
     "cy": 352,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1609,7 +1445,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1619,7 +1454,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1629,7 +1463,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1648,10 +1481,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 126,
     "cy": 357,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -1659,7 +1490,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -1669,7 +1499,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 357,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1678,7 +1507,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 369,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -1688,7 +1516,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1706,10 +1533,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 128,
     "cy": 448,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1724,10 +1549,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 448,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1774,25 +1597,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 123,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 133,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1801,7 +1619,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 446,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1819,10 +1636,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 448,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1839,10 +1654,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 156,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -1859,10 +1672,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 164,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -1879,10 +1690,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1892,25 +1701,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 156,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 164,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1919,7 +1723,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 446,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1935,10 +1738,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 452,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1956,10 +1757,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1979,10 +1778,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 160,
     "cy": 442,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -1992,15 +1789,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 128,
     "cy": 480,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2010,7 +1804,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2020,7 +1813,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2030,7 +1822,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2049,10 +1840,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 126,
     "cy": 485,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -2060,7 +1849,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2070,7 +1858,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 485,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2079,7 +1866,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 177,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -2089,7 +1875,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 192,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2098,7 +1883,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 241,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -2108,7 +1892,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 288,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2126,10 +1909,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 192,
     "cy": 320,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2144,10 +1925,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 320,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2194,25 +1973,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 187,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 197,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2221,7 +1995,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2239,10 +2012,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 320,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2259,10 +2030,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 220,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -2279,10 +2048,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 228,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -2299,10 +2066,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2312,25 +2077,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 220,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 228,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2339,7 +2099,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2355,10 +2114,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 324,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2376,10 +2133,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2399,10 +2154,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 314,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2412,15 +2165,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 192,
     "cy": 352,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2430,7 +2180,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2440,7 +2189,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2450,7 +2198,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2469,10 +2216,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 190,
     "cy": 357,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -2480,7 +2225,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2490,7 +2234,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 357,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2508,10 +2251,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 192,
     "cy": 384,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2526,10 +2267,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 384,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2576,25 +2315,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 187,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 197,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2603,7 +2337,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 382,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2621,10 +2354,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 384,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2641,10 +2372,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 220,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -2661,10 +2390,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 228,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -2681,10 +2408,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2694,25 +2419,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 220,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 228,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2721,7 +2441,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 382,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2737,10 +2456,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 388,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2758,10 +2475,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2781,10 +2496,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 378,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2794,15 +2507,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 192,
     "cy": 416,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2812,7 +2522,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2822,7 +2531,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2832,7 +2540,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2851,10 +2558,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 190,
     "cy": 421,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -2862,7 +2567,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -2872,7 +2576,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 421,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2890,10 +2593,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 192,
     "cy": 448,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -2908,10 +2609,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 448,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2958,25 +2657,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 187,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 197,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2985,7 +2679,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 446,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3003,10 +2696,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 448,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3023,10 +2714,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 220,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -3043,10 +2732,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 228,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -3063,10 +2750,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3076,25 +2761,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 220,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 228,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3103,7 +2783,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 446,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3119,10 +2798,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 452,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3140,10 +2817,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3163,10 +2838,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 224,
     "cy": 442,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3176,15 +2849,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 192,
     "cy": 480,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3194,7 +2864,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3204,7 +2873,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3214,7 +2882,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3233,10 +2900,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 190,
     "cy": 485,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -3244,7 +2909,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3254,7 +2918,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 485,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3272,10 +2935,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 256,
     "cy": 192,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3290,10 +2951,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 192,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3340,25 +2999,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 251,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 261,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3367,7 +3021,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 190,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3385,10 +3038,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 192,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3405,10 +3056,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 284,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -3425,10 +3074,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 292,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -3445,10 +3092,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3458,25 +3103,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 284,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 292,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3485,7 +3125,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 190,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3501,10 +3140,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 196,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3522,10 +3159,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3545,10 +3180,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 186,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3558,15 +3191,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 256,
     "cy": 224,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3576,7 +3206,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3586,7 +3215,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3596,7 +3224,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3615,10 +3242,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 254,
     "cy": 229,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -3626,7 +3251,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3636,7 +3260,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 229,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3645,7 +3268,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 241,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -3655,7 +3277,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 256,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3673,10 +3294,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 256,
     "cy": 320,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3691,10 +3310,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 320,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3741,25 +3358,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 251,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 261,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3768,7 +3380,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3786,10 +3397,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 320,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3806,10 +3415,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 284,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -3826,10 +3433,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 292,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -3846,10 +3451,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3859,25 +3462,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 284,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 292,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3886,7 +3484,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3902,10 +3499,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 324,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3923,10 +3518,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3946,10 +3539,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 314,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -3959,15 +3550,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 256,
     "cy": 352,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3977,7 +3565,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3987,7 +3574,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -3997,7 +3583,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4016,10 +3601,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 254,
     "cy": 357,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -4027,7 +3610,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4037,7 +3619,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 357,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4055,10 +3636,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 256,
     "cy": 384,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4073,10 +3652,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 384,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4123,25 +3700,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 251,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 261,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4150,7 +3722,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 382,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4168,10 +3739,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 384,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4188,10 +3757,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 284,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -4208,10 +3775,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 292,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -4228,10 +3793,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4241,25 +3804,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 284,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 292,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4268,7 +3826,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 382,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4284,10 +3841,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 388,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4305,10 +3860,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4328,10 +3881,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 288,
     "cy": 378,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4341,15 +3892,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 256,
     "cy": 416,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4359,7 +3907,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4369,7 +3916,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4379,7 +3925,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4398,10 +3943,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 254,
     "cy": 421,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -4409,7 +3952,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4419,7 +3961,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 421,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4428,7 +3969,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 433,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -4438,7 +3978,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 448,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4456,10 +3995,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 320,
     "cy": 192,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4474,10 +4011,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 192,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4524,25 +4059,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 315,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 325,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4551,7 +4081,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 190,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4569,10 +4098,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 192,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4589,10 +4116,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 348,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -4609,10 +4134,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 356,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -4629,10 +4152,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4642,25 +4163,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 348,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 356,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4669,7 +4185,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 190,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4685,10 +4200,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 196,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4706,10 +4219,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4729,10 +4240,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 186,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4742,15 +4251,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 320,
     "cy": 224,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4760,7 +4266,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4770,7 +4275,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4780,7 +4284,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4799,10 +4302,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 318,
     "cy": 229,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -4810,7 +4311,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -4820,7 +4320,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 229,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4838,10 +4337,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 320,
     "cy": 256,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4856,10 +4353,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 256,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4906,25 +4401,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 315,
     "cy": 254,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 325,
     "cy": 254,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4933,7 +4423,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 254,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4951,10 +4440,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 256,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -4971,10 +4458,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 348,
     "cy": 256,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -4991,10 +4476,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 356,
     "cy": 256,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -5011,10 +4494,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 256,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5024,25 +4505,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 348,
     "cy": 254,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 356,
     "cy": 254,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5051,7 +4527,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 254,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5067,10 +4542,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 260,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5088,10 +4561,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5111,10 +4582,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 250,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5124,15 +4593,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 320,
     "cy": 288,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5142,7 +4608,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 288,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5152,7 +4617,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 288,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5162,7 +4626,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 288,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5181,10 +4644,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 318,
     "cy": 293,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -5192,7 +4653,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5202,7 +4662,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 293,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5211,7 +4670,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 305,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -5221,7 +4679,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5239,10 +4696,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 320,
     "cy": 384,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5257,10 +4712,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 384,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5307,25 +4760,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 315,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 325,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5334,7 +4782,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 382,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5352,10 +4799,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 384,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5372,10 +4817,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 348,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -5392,10 +4835,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 356,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -5412,10 +4853,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 384,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5425,25 +4864,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 348,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 356,
     "cy": 382,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5452,7 +4886,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 382,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5468,10 +4901,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 388,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5489,10 +4920,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5512,10 +4941,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 378,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5525,15 +4952,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 320,
     "cy": 416,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5543,7 +4967,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5553,7 +4976,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5563,7 +4985,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5582,10 +5003,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 318,
     "cy": 421,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -5593,7 +5012,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5603,7 +5021,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 421,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5621,10 +5038,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 320,
     "cy": 448,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5639,10 +5054,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 448,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5689,25 +5102,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 315,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 325,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5716,7 +5124,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 446,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5734,10 +5141,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 448,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5754,10 +5159,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 348,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -5774,10 +5177,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 356,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -5794,10 +5195,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5807,25 +5206,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 348,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 356,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5834,7 +5228,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 446,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5850,10 +5243,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 452,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5871,10 +5262,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -5894,10 +5283,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 352,
     "cy": 442,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -5907,15 +5294,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 320,
     "cy": 480,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5925,7 +5309,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5935,7 +5318,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5945,7 +5327,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5964,10 +5345,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 318,
     "cy": 485,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -5975,7 +5354,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -5985,7 +5363,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 485,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6003,10 +5380,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 384,
     "cy": 192,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6021,10 +5396,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 192,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -6071,25 +5444,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 379,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 389,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6098,7 +5466,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 190,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6116,10 +5483,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 192,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6136,10 +5501,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 412,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -6156,10 +5519,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 420,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -6176,10 +5537,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 192,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6189,25 +5548,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 412,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 420,
     "cy": 190,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6216,7 +5570,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 190,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6232,10 +5585,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 196,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -6253,10 +5604,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -6276,10 +5625,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 186,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6289,15 +5636,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 384,
     "cy": 224,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6307,7 +5651,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6317,7 +5660,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6327,7 +5669,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 224,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6346,10 +5687,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 382,
     "cy": 229,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -6357,7 +5696,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6367,7 +5705,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 229,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6376,7 +5713,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 241,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -6386,7 +5722,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 256,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6395,7 +5730,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 305,
   },
   {
-    "color": 16,
     "h": 63,
     "op": "hatch",
     "period": 21,
@@ -6414,10 +5748,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 384,
     "cy": 320,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6432,10 +5764,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 320,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -6482,25 +5812,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 379,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 389,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6509,7 +5834,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6518,7 +5842,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 3,
@@ -6537,10 +5860,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 320,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6557,10 +5878,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 412,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -6577,10 +5896,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 420,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -6597,10 +5914,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 320,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6610,25 +5925,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 412,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 420,
     "cy": 318,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6637,7 +5947,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 318,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6653,10 +5962,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 324,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -6674,10 +5981,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -6697,10 +6002,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 314,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6710,15 +6013,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 384,
     "cy": 352,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6728,7 +6028,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6738,7 +6037,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6748,7 +6046,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 352,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6767,10 +6064,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 382,
     "cy": 357,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -6778,7 +6073,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -6788,7 +6082,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 357,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 3,
@@ -6798,7 +6091,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 358,
   },
   {
-    "color": 13,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6807,7 +6099,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 369,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 4,
@@ -6817,7 +6108,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 416,
   },
   {
-    "color": 12,
     "h": 63,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6835,10 +6125,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 384,
     "cy": 448,
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6853,10 +6141,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 448,
   },
   {
-    "fill": 6,
     "fillRgb": "rgb(105, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -6903,25 +6189,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 379,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
     "cx": 389,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 3,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6930,7 +6211,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 446,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6948,10 +6228,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 448,
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -6968,10 +6246,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 412,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -6988,10 +6264,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 420,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 8,
   },
@@ -7008,10 +6282,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 448,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -7021,25 +6293,20 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 412,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "cx": 420,
     "cy": 446,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -7048,7 +6315,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 446,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -7064,10 +6330,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 452,
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -7085,10 +6349,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     ],
   },
   {
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -7108,10 +6370,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 416,
     "cy": 442,
-    "fill": 8,
     "fillRgb": "rgb(211, 190, 190)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
@@ -7121,15 +6381,12 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 384,
     "cy": 480,
-    "fill": 7,
     "fillRgb": "rgb(105, 211, 105)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 12,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -7139,7 +6396,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -7149,7 +6405,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -7159,7 +6414,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 480,
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -7178,10 +6432,8 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
   {
     "cx": 382,
     "cy": 485,
-    "fill": 0,
     "fillRgb": "rgb(211, 211, 211)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
@@ -7189,7 +6441,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "op": "unclip",
   },
   {
-    "color": 2,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 1,
@@ -7199,7 +6450,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y2": 485,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -7208,7 +6458,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 240,
   },
   {
-    "color": 11,
     "h": 65,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -7217,7 +6466,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 240,
   },
   {
-    "color": 11,
     "h": 65,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -7226,7 +6474,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 240,
   },
   {
-    "color": 11,
     "h": 65,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -7235,7 +6482,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 304,
   },
   {
-    "color": 11,
     "h": 65,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -7244,7 +6490,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 304,
   },
   {
-    "color": 11,
     "h": 65,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -7253,7 +6498,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 368,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -7262,7 +6506,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 430,
   },
   {
-    "color": 11,
     "h": 65,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -7271,7 +6514,6 @@ exports[`undead hint render (tier 2.5) > a sightline-elimination frame outlines 
     "y": 368,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

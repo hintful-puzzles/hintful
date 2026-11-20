@@ -3,7 +3,6 @@
 exports[`adjacent hint render > a bar's elimination outlines the pair and strikes the candidate 1`] = `
 [
   {
-    "color": 0,
     "h": 272,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 0,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -21,10 +19,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -46,7 +42,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -55,7 +50,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -66,7 +60,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -78,7 +71,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -90,7 +82,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -102,7 +93,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -112,7 +102,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 45,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -121,10 +110,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -146,7 +133,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -155,7 +141,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -166,7 +151,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -178,7 +162,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -190,7 +173,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -202,7 +184,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -214,7 +195,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -224,7 +204,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 93,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -233,10 +212,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -258,7 +235,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -267,7 +243,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -278,7 +253,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -290,7 +264,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -302,7 +275,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -314,7 +286,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -324,7 +295,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 141,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -333,10 +303,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -358,7 +326,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -367,7 +334,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -378,7 +344,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -390,7 +355,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -402,7 +366,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -414,7 +377,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -426,7 +388,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -436,7 +397,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 189,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -445,10 +405,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -470,7 +428,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -479,7 +436,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -490,7 +446,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -502,7 +457,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -514,7 +468,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -526,7 +479,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -538,7 +490,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -548,7 +499,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 237,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -557,10 +507,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -582,7 +530,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -591,7 +538,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -602,7 +548,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -614,7 +559,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -626,7 +570,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -638,7 +581,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -648,7 +590,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 45,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -657,10 +598,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -682,7 +621,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -691,7 +629,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -702,7 +639,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -714,7 +650,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -726,7 +661,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -738,7 +672,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -750,7 +683,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -760,7 +692,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 93,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -769,10 +700,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -794,7 +723,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -803,7 +731,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -814,7 +741,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -826,7 +752,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -838,7 +763,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -850,7 +774,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -860,7 +783,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 141,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -869,10 +791,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -894,7 +814,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -903,7 +822,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -914,7 +832,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -926,7 +843,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -938,7 +854,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -950,7 +865,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -962,7 +876,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -972,7 +885,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 189,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -981,10 +893,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1006,7 +916,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1015,7 +924,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1026,7 +934,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1038,7 +945,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1050,7 +956,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1062,7 +967,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1074,7 +978,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1084,7 +987,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 237,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1093,10 +995,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1118,7 +1018,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1127,7 +1026,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1138,7 +1036,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1150,7 +1047,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1162,7 +1058,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1172,7 +1067,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 36,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1181,10 +1075,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1206,7 +1098,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1215,7 +1106,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1226,7 +1116,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1236,7 +1125,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 84,
   },
   {
-    "color": 5,
     "op": "line",
     "rgb": "rgb(63, 63, 179)",
     "thickness": 2,
@@ -1246,7 +1134,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y2": 87,
   },
   {
-    "color": 5,
     "op": "line",
     "rgb": "rgb(63, 63, 179)",
     "thickness": 2,
@@ -1258,7 +1145,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1270,7 +1156,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1282,7 +1167,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1292,7 +1176,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 93,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1301,10 +1184,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1326,7 +1207,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1335,7 +1215,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1346,7 +1225,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1356,7 +1234,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 136,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1365,10 +1242,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1390,7 +1265,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1399,7 +1273,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1410,7 +1283,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1422,7 +1294,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1434,7 +1305,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1446,7 +1316,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1456,7 +1325,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 189,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1465,10 +1333,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1490,7 +1356,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1499,7 +1364,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1510,7 +1374,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1522,7 +1385,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1534,7 +1396,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1546,7 +1407,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1556,7 +1416,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 237,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1565,10 +1424,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1590,7 +1447,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1599,7 +1455,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1610,7 +1465,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1622,7 +1476,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1634,7 +1487,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1646,7 +1498,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1656,7 +1507,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 45,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1665,10 +1515,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1690,7 +1538,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1699,7 +1546,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1710,7 +1556,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1722,7 +1567,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1734,7 +1578,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1746,7 +1589,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1758,7 +1600,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1768,7 +1609,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 93,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1777,10 +1617,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1802,7 +1640,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1811,7 +1648,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1822,7 +1658,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1834,7 +1669,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1846,7 +1680,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1858,7 +1691,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1868,7 +1700,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 141,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1877,10 +1708,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1902,7 +1731,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1911,7 +1739,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1922,7 +1749,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1934,7 +1760,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1946,7 +1771,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1958,7 +1782,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1970,7 +1793,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1980,7 +1802,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 189,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1989,10 +1810,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2014,7 +1833,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2023,7 +1841,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2034,7 +1851,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2046,7 +1862,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2058,7 +1873,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2070,7 +1884,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2082,7 +1895,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2092,7 +1904,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 237,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2101,10 +1912,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2126,7 +1935,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2135,7 +1943,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 24,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2146,7 +1953,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2156,7 +1962,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 40,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2165,10 +1970,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2190,7 +1993,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2199,7 +2001,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 72,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2210,7 +2011,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2222,7 +2022,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2234,7 +2033,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2246,7 +2044,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2256,7 +2053,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 93,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2265,10 +2061,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2290,7 +2084,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2299,7 +2092,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 120,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -2310,7 +2102,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2322,7 +2113,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2334,7 +2124,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2344,7 +2133,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 132,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2353,10 +2141,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2378,7 +2164,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2387,7 +2172,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 168,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2398,7 +2182,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2410,7 +2193,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2422,7 +2204,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2434,7 +2215,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2444,7 +2224,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 189,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2453,10 +2232,8 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2478,7 +2255,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2487,7 +2263,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2498,7 +2273,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2510,7 +2284,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2522,7 +2295,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2534,7 +2306,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2544,7 +2315,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 237,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2553,7 +2323,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 70,
   },
   {
-    "color": 9,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2562,7 +2331,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 70,
   },
   {
-    "color": 9,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2571,7 +2339,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 70,
   },
   {
-    "color": 9,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2580,7 +2347,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 118,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2589,7 +2355,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 152,
   },
   {
-    "color": 9,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2598,7 +2363,6 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 118,
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

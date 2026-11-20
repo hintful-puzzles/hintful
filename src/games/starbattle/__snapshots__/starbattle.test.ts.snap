@@ -3,7 +3,6 @@
 exports[`starbattle frame > draws the board 1`] = `
 [
   {
-    "color": 0,
     "h": 221,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 0,
   },
   {
-    "color": 2,
     "h": 201,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -21,7 +19,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -30,7 +27,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -39,7 +35,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -48,7 +43,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -57,7 +51,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 49,
   },
   {
-    "color": 12,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(170, 235, 230)",
@@ -66,7 +59,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 12,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -75,7 +67,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -84,7 +75,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 12,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(170, 235, 230)",
@@ -93,7 +83,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 12,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -102,7 +91,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 49,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -111,7 +99,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 49,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -120,7 +107,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -129,7 +115,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -138,7 +123,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 49,
   },
   {
-    "color": 12,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(170, 235, 230)",
@@ -147,10 +131,8 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 12,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -196,7 +178,6 @@ exports[`starbattle frame > draws the board 1`] = `
     ],
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -205,7 +186,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -214,7 +194,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -223,7 +202,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 49,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -232,7 +210,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 12,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(170, 235, 230)",
@@ -241,7 +218,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 12,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -250,7 +226,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -259,7 +234,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -268,7 +242,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -277,7 +250,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 10,
   },
   {
-    "color": 14,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(253, 204, 211)",
@@ -286,7 +258,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 12,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -295,7 +266,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -304,7 +274,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -313,7 +282,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -322,7 +290,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 13,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(206, 213, 252)",
@@ -331,7 +298,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 52,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -340,7 +306,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -349,7 +314,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -358,7 +322,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 89,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -367,7 +330,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 12,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(170, 235, 230)",
@@ -376,7 +338,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 51,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -385,7 +346,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -394,7 +354,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -403,7 +362,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 11,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -412,7 +370,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 52,
   },
   {
-    "color": 4,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -422,7 +379,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y2": 79,
   },
   {
-    "color": 4,
     "op": "line",
     "rgb": "rgb(0, 0, 0)",
     "thickness": 2,
@@ -432,7 +388,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y2": 61,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -441,7 +396,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -450,7 +404,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -459,7 +412,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 11,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -468,7 +420,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 52,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -477,7 +428,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -486,7 +436,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -495,7 +444,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 89,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -504,7 +452,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 50,
   },
   {
-    "color": 14,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(253, 204, 211)",
@@ -513,7 +460,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 51,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -522,7 +468,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -531,7 +476,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -540,7 +484,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 129,
   },
   {
-    "color": 13,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(206, 213, 252)",
@@ -549,7 +492,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 91,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -558,7 +500,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -567,7 +508,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -576,7 +516,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -585,7 +524,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 129,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -594,7 +532,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 13,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(206, 213, 252)",
@@ -603,7 +540,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 92,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -612,7 +548,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -621,7 +556,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 11,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -630,7 +564,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 91,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -639,7 +572,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 11,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -648,7 +580,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 91,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -657,7 +588,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -666,7 +596,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -675,7 +604,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -684,7 +612,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 90,
   },
   {
-    "color": 11,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -693,7 +620,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 92,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -702,7 +628,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -711,7 +636,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -720,7 +644,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 14,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(253, 204, 211)",
@@ -729,7 +652,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 132,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -738,7 +660,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 169,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -747,7 +668,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -756,7 +676,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -765,7 +684,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 169,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -774,7 +692,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 14,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(253, 204, 211)",
@@ -783,7 +700,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 132,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -792,7 +708,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -801,7 +716,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 11,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -810,7 +724,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 131,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -819,7 +732,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 11,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -828,7 +740,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 131,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -837,7 +748,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -846,7 +756,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 130,
   },
   {
-    "color": 11,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -855,7 +764,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 131,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -864,7 +772,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -873,7 +780,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -882,7 +788,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 209,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -891,7 +796,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 14,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(253, 204, 211)",
@@ -900,7 +804,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 171,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -909,7 +812,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -918,7 +820,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -927,7 +828,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -936,7 +836,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 209,
   },
   {
-    "color": 11,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -945,7 +844,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 172,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -954,7 +852,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -963,7 +860,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 209,
   },
   {
-    "color": 11,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -972,7 +868,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 171,
   },
   {
-    "color": 2,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -981,7 +876,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -990,7 +884,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -999,7 +892,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 209,
   },
   {
-    "color": 11,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -1008,7 +900,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 171,
   },
   {
-    "color": 1,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1017,7 +908,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1026,7 +916,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 209,
   },
   {
-    "color": 2,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1035,7 +924,6 @@ exports[`starbattle frame > draws the board 1`] = `
     "y": 170,
   },
   {
-    "color": 11,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",

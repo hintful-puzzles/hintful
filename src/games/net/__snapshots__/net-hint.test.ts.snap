@@ -16,7 +16,6 @@ exports[`net: pinned hint positions > says, at each pin 1`] = `
 exports[`refusal and marks > rings the square a step turns and locks 1`] = `
 [
   {
-    "color": 0,
     "h": 209,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -25,7 +24,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
     "h": 209,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -41,7 +39,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -50,7 +47,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -69,7 +65,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -78,7 +73,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -87,7 +81,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -96,7 +89,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -115,7 +107,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -124,7 +115,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -133,7 +123,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -142,7 +131,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -161,7 +149,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -170,7 +157,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -179,7 +165,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -188,7 +173,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -207,7 +191,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -216,7 +199,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -225,7 +207,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -234,7 +215,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -253,7 +233,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -262,7 +241,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -271,7 +249,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -280,7 +257,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -299,7 +275,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 0,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -308,7 +283,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 23,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -327,7 +301,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -336,7 +309,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -345,7 +317,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -354,7 +325,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -373,7 +343,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -382,7 +351,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -391,7 +359,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -400,10 +367,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -433,10 +398,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -458,10 +421,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -483,7 +444,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -492,7 +452,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -501,7 +460,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -510,7 +468,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -529,7 +486,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -538,7 +494,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -547,7 +502,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -556,10 +510,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -597,7 +549,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -606,7 +557,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -615,7 +565,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -634,7 +583,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -643,7 +591,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -652,7 +599,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -661,7 +607,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -670,7 +615,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 39,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -679,10 +623,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 39,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -720,10 +662,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -761,7 +701,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -770,7 +709,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -779,7 +717,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -798,7 +735,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -807,7 +743,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -816,7 +751,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -825,10 +759,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -866,10 +798,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -907,7 +837,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 15,
     "h": 27,
     "op": "ring",
     "radius": 14,
@@ -918,7 +847,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 26,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -927,7 +855,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -936,7 +863,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -955,7 +881,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -964,7 +889,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -973,7 +897,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -982,7 +905,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -991,7 +913,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 38,
   },
   {
-    "color": 5,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -1000,10 +921,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 39,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1033,10 +952,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1058,10 +975,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1083,7 +998,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1092,7 +1006,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1101,7 +1014,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1110,7 +1022,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1129,7 +1040,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1138,7 +1048,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1147,7 +1056,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1156,7 +1064,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1165,7 +1072,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 39,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1174,7 +1080,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 39,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1183,7 +1088,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1192,7 +1096,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 24,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1211,7 +1114,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1220,7 +1122,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1229,7 +1130,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1238,7 +1138,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1257,7 +1156,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1266,7 +1164,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1275,7 +1172,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1284,10 +1180,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1317,10 +1211,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -1350,10 +1242,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1375,10 +1265,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1400,7 +1288,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1409,7 +1296,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1418,7 +1304,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1437,7 +1322,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1446,7 +1330,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1455,7 +1338,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1464,7 +1346,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1473,7 +1354,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1482,10 +1362,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1531,10 +1409,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -1590,7 +1466,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1599,7 +1474,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1608,7 +1482,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1617,10 +1490,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1666,10 +1537,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -1725,7 +1594,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1734,7 +1602,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1743,7 +1610,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1752,10 +1618,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1785,10 +1649,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1810,10 +1672,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1845,7 +1705,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1854,7 +1713,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1863,7 +1721,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1872,7 +1729,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1881,7 +1737,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 71,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1890,10 +1745,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 71,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1923,10 +1776,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1948,10 +1799,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1973,7 +1822,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1982,7 +1830,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -1991,7 +1838,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2010,7 +1856,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2019,7 +1864,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2028,7 +1872,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2037,7 +1880,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2046,7 +1888,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 71,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2055,7 +1896,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 71,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2064,7 +1904,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2073,7 +1912,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 56,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2092,7 +1930,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2101,7 +1938,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2110,7 +1946,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2119,7 +1954,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2138,7 +1972,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2147,7 +1980,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2156,7 +1988,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2165,10 +1996,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2206,7 +2035,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2215,7 +2043,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2224,7 +2051,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2243,7 +2069,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2252,7 +2077,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2261,7 +2085,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2270,10 +2093,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2311,10 +2132,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -2362,7 +2181,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2371,7 +2189,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2380,7 +2197,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2389,10 +2205,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2438,10 +2252,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -2487,10 +2299,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2512,10 +2322,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2547,7 +2355,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2556,7 +2363,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2565,7 +2371,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2574,10 +2379,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2615,10 +2418,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -2666,7 +2467,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2675,7 +2475,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2684,7 +2483,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2693,7 +2491,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2702,7 +2499,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 102,
   },
   {
-    "color": 5,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -2711,10 +2507,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 103,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2752,7 +2546,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2761,7 +2554,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2770,7 +2562,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2789,7 +2580,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2798,7 +2588,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2807,7 +2596,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2816,7 +2604,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2825,7 +2612,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 103,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2834,7 +2620,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 103,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2843,7 +2628,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2852,7 +2636,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 88,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2871,7 +2654,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2880,7 +2662,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2889,7 +2670,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2898,7 +2678,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2917,7 +2696,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2926,7 +2704,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2935,7 +2712,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2944,10 +2720,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -2985,7 +2759,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2994,7 +2767,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3003,7 +2775,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3022,7 +2793,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3031,7 +2801,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3040,7 +2809,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3049,10 +2817,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3108,7 +2874,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3117,7 +2882,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3126,7 +2890,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3135,7 +2898,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3144,7 +2906,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 135,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3153,10 +2914,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 135,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3202,10 +2961,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(235, 210, 47)",
     "points": [
       [
@@ -3261,7 +3018,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3270,7 +3026,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3279,7 +3034,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3288,7 +3042,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3297,7 +3050,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 134,
   },
   {
-    "color": 5,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -3306,10 +3058,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 135,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3365,7 +3115,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3374,7 +3123,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3383,7 +3131,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3392,7 +3139,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3401,7 +3147,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 135,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3410,10 +3155,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 135,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3443,10 +3186,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3468,10 +3209,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3493,7 +3232,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3502,7 +3240,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3511,7 +3248,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3530,7 +3266,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3539,7 +3274,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3548,7 +3282,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3557,7 +3290,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3566,7 +3298,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 135,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3575,7 +3306,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 135,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3584,7 +3314,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3593,7 +3322,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 120,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3612,7 +3340,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3621,7 +3348,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3630,7 +3356,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3639,7 +3364,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3658,7 +3382,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3667,7 +3390,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3676,7 +3398,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3685,10 +3406,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3718,10 +3437,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3743,10 +3460,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3768,7 +3483,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3777,7 +3491,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3786,7 +3499,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 183,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3795,7 +3507,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3814,7 +3525,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3823,7 +3533,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3832,7 +3541,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3841,10 +3549,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3882,7 +3588,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3891,7 +3596,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3900,7 +3604,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3919,7 +3622,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3928,7 +3630,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3937,7 +3638,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3946,7 +3646,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3955,7 +3654,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 5,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -3964,10 +3662,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -3997,10 +3693,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4022,10 +3716,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4047,7 +3739,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4056,7 +3747,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4065,7 +3755,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4084,7 +3773,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4093,7 +3781,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4102,7 +3789,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4111,7 +3797,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4120,7 +3805,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 167,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4129,10 +3813,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 167,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4178,7 +3860,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4187,7 +3868,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4196,7 +3876,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 183,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4215,7 +3894,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4224,7 +3902,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4233,7 +3910,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4242,7 +3918,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4251,7 +3926,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 167,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4260,10 +3934,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 167,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4293,10 +3965,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4318,10 +3988,8 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -4343,7 +4011,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     ],
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4352,7 +4019,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4361,7 +4027,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 183,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4370,7 +4035,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4389,7 +4053,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4398,7 +4061,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4407,7 +4069,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4416,7 +4077,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4425,7 +4085,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4434,7 +4093,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 152,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4453,7 +4111,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4462,7 +4119,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4481,7 +4137,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4490,7 +4145,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4499,7 +4153,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4508,7 +4161,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4517,7 +4169,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4526,7 +4177,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4535,7 +4185,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4544,7 +4193,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4563,7 +4211,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4572,7 +4219,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4581,7 +4227,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4590,7 +4235,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4599,7 +4243,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4608,7 +4251,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4627,7 +4269,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4636,7 +4277,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4645,7 +4285,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4654,7 +4293,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4663,7 +4301,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4672,7 +4309,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4691,7 +4327,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4700,7 +4335,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4709,7 +4343,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4718,7 +4351,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4727,7 +4359,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4736,7 +4367,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4745,7 +4375,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4754,7 +4383,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4773,7 +4401,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4782,7 +4409,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4791,7 +4417,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4800,7 +4425,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4809,7 +4433,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4818,7 +4441,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4837,7 +4459,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 0,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4846,7 +4467,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4855,7 +4475,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4864,7 +4483,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "y": 184,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -4876,7 +4494,6 @@ exports[`refusal and marks > rings the square a step turns and locks 1`] = `
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

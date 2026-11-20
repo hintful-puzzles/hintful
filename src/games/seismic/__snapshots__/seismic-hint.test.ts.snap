@@ -20,7 +20,6 @@ exports[`seismic: pinned hint positions > says, at each pin 1`] = `
 exports[`the frames a hint draws > outlines each struck cell, hatches the starved area, and strikes each note through 1`] = `
 [
   {
-    "color": 0,
     "h": 254,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -29,7 +28,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 0,
   },
   {
-    "color": 3,
     "h": 202,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -45,7 +43,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 28,
   },
   {
-    "color": 8,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -54,7 +51,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -73,7 +69,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 28,
   },
   {
-    "color": 8,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -82,7 +77,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -91,7 +85,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -100,7 +93,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -119,7 +111,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -128,7 +119,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -137,7 +127,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -156,7 +145,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -165,7 +153,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -174,7 +161,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -183,7 +169,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -202,7 +187,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -211,7 +195,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -220,7 +203,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -229,7 +211,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -240,7 +221,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -252,7 +232,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -272,7 +251,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 28,
   },
   {
-    "color": 8,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -281,7 +259,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -290,7 +267,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -299,7 +275,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -308,7 +283,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -327,7 +301,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 28,
   },
   {
-    "color": 8,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -336,7 +309,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -355,7 +327,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -364,7 +335,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 67,
   },
   {
-    "color": 2,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -373,7 +343,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -384,7 +353,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -404,7 +372,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -413,7 +380,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 107,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -422,7 +388,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 69,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -441,7 +406,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 8,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -450,7 +414,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -459,7 +422,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -468,7 +430,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -487,7 +448,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -496,7 +456,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -505,7 +464,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -514,7 +472,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -533,7 +490,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -542,7 +498,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 107,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -551,7 +506,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -560,7 +514,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -569,7 +522,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -578,7 +530,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -597,7 +548,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -606,7 +556,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -615,7 +564,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -624,7 +572,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -633,7 +580,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -644,7 +590,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -656,7 +601,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -676,7 +620,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -685,7 +628,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -694,7 +636,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -703,7 +644,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -722,7 +662,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -731,7 +670,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 107,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -740,7 +678,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 69,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -749,7 +686,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -758,7 +694,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -777,7 +712,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -786,7 +720,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -805,7 +738,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 8,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -814,7 +746,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -823,7 +754,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 147,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -832,7 +762,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -841,7 +770,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -860,7 +788,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -869,7 +796,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 109,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -878,7 +804,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -897,7 +822,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -906,7 +830,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 147,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -915,7 +838,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 109,
   },
   {
-    "color": 15,
     "h": 38,
     "op": "hatch",
     "period": 13,
@@ -925,7 +847,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 109,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -934,7 +855,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -943,7 +863,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -954,7 +873,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -966,7 +884,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -986,7 +903,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -995,7 +911,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1004,7 +919,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1013,7 +927,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1022,7 +935,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 145,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1033,7 +945,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1043,7 +954,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 122,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(63, 63, 179)",
     "thickness": 2,
@@ -1053,7 +963,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y2": 125,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(63, 63, 179)",
     "thickness": 2,
@@ -1065,7 +974,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1085,7 +993,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 8,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1094,7 +1001,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 109,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1103,7 +1009,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 147,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1112,7 +1017,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 109,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1121,7 +1025,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1130,7 +1033,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1141,7 +1043,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1153,7 +1054,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1165,7 +1065,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1185,7 +1084,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1194,7 +1092,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 147,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1203,7 +1100,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 109,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1212,7 +1108,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1221,7 +1116,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1240,7 +1134,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 8,
     "h": 40,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1249,7 +1142,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1258,7 +1150,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 147,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1267,7 +1158,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1276,7 +1166,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1285,7 +1174,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1294,7 +1182,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 145,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1313,7 +1200,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1332,7 +1218,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1341,7 +1226,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1360,7 +1244,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1369,7 +1252,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 187,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1378,7 +1260,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 149,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1387,7 +1268,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1406,7 +1286,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 8,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1415,7 +1294,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 2,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1424,7 +1302,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 15,
     "h": 37,
     "op": "hatch",
     "period": 13,
@@ -1434,7 +1311,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1443,7 +1319,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1452,7 +1327,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1461,7 +1335,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 185,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1472,7 +1345,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1492,7 +1364,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1501,7 +1372,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 149,
   },
   {
-    "color": 15,
     "h": 36,
     "op": "hatch",
     "period": 13,
@@ -1511,7 +1381,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 149,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1520,7 +1389,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1529,7 +1397,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 185,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1540,7 +1407,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1552,7 +1418,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1572,7 +1437,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 8,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1581,7 +1445,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 2,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1590,7 +1453,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1599,7 +1461,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1610,7 +1471,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1630,7 +1490,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1639,7 +1498,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 187,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1648,7 +1506,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1657,7 +1514,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1666,7 +1522,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 185,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1685,7 +1540,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1694,7 +1548,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1703,7 +1556,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1712,7 +1564,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 185,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1731,7 +1582,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 148,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1740,7 +1590,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 187,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1749,7 +1598,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 149,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1768,7 +1616,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 8,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1777,7 +1624,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 189,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1796,7 +1642,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 8,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1805,7 +1650,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1814,7 +1658,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1823,7 +1666,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1842,7 +1684,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1851,7 +1692,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 189,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1870,7 +1710,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 8,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1879,7 +1718,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 189,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1888,7 +1726,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 189,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1897,7 +1734,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1916,7 +1752,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1925,7 +1760,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 189,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1934,7 +1768,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1953,7 +1786,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1962,7 +1794,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1981,7 +1812,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 8,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1990,7 +1820,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 189,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1999,7 +1828,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 189,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2018,7 +1846,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2027,7 +1854,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 188,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2039,7 +1865,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "op": "unclip",
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2048,7 +1873,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 10,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2057,7 +1881,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2066,7 +1889,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 143,
   },
   {
-    "color": 10,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2075,7 +1897,6 @@ exports[`the frames a hint draws > outlines each struck cell, hatches the starve
     "y": 108,
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

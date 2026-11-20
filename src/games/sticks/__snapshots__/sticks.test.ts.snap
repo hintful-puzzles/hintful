@@ -3,7 +3,6 @@
 exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls and clue numbers 1`] = `
 [
   {
-    "color": 0,
     "h": 199,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 0,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -22,7 +20,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y2": 3,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -32,7 +29,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y2": 195,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -42,7 +38,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y2": 195,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -52,7 +47,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y2": 3,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -61,7 +55,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 4,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -70,7 +63,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 4,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -79,7 +71,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 4,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -90,7 +81,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -100,7 +90,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 28,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -109,7 +98,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 4,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -118,7 +106,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 4,
   },
   {
-    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -129,7 +116,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(255, 255, 255)",
@@ -139,7 +125,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 28,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -148,7 +133,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 52,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -159,7 +143,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -169,7 +152,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 76,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -178,7 +160,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 52,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -187,7 +168,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 52,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -196,7 +176,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 52,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -207,7 +186,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -217,7 +195,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 76,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -226,7 +203,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 52,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -237,7 +213,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -247,7 +222,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 76,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -256,7 +230,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 100,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -265,7 +238,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 100,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -274,7 +246,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 100,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -285,7 +256,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -295,7 +265,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 124,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -304,7 +273,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 100,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -313,7 +281,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 100,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -322,7 +289,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 100,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -333,7 +299,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -343,7 +308,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 124,
   },
   {
-    "color": 7,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(53, 53, 53)",
@@ -354,7 +318,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(255, 255, 255)",
@@ -364,7 +327,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 172,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -373,7 +335,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 148,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -382,7 +343,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 148,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -391,7 +351,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 148,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -402,7 +361,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -412,7 +370,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 172,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -421,7 +378,6 @@ exports[`sticks rendering (tier 2.5) > draws the opening frame: backing, walls a
     "y": 148,
   },
   {
-    "color": 8,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

@@ -96,6 +96,8 @@ const KEPT_UNUSED = {
   // vitest calls a global setup file's `setup` by name.
   "scripts/checks/dealt-store.ts::setup":
     "vitest.config.ts names the file as a globalSetup, and vitest calls its setup",
+  "src/engine/testing/draw-op-snapshot.ts::*default*":
+    "vitest.config.ts names the file in snapshotSerializers, and vitest loads its default",
   // The compiler (src/describe/compile.ts) writes calls to these into a
   // compiled module, by name, for a statement that uses the form; no module
   // compiled today does.

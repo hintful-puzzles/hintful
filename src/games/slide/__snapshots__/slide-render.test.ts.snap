@@ -3,7 +3,6 @@
 exports[`slide drag frame > matches its snapshot 1`] = `
 [
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -30,10 +28,8 @@ exports[`slide drag frame > matches its snapshot 1`] = `
   {
     "cx": 68,
     "cy": 36,
-    "fill": 10,
     "fillRgb": "rgb(156, 156, 226)",
     "op": "circle",
-    "outline": 10,
     "outlineRgb": "rgb(156, 156, 226)",
     "r": 2,
   },
@@ -41,7 +37,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -50,7 +45,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -59,7 +53,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -68,7 +61,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 10,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -77,7 +69,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -86,7 +77,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -95,7 +85,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -104,7 +93,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -113,7 +101,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -122,7 +109,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -131,7 +117,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -140,7 +125,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -149,7 +133,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -158,7 +141,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -167,7 +149,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -176,7 +157,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -185,7 +165,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -194,7 +173,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -203,7 +181,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -219,7 +196,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 11,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -228,7 +204,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 36,
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -237,7 +212,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 11,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -246,7 +220,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 35,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -258,7 +231,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -267,7 +239,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -276,7 +247,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -285,7 +255,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 11,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -294,7 +263,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -303,7 +271,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -312,7 +279,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -321,7 +287,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -330,7 +295,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -339,7 +303,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -348,7 +311,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -357,7 +319,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 11,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -366,7 +327,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -375,7 +335,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -384,7 +343,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -393,7 +351,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -402,7 +359,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -411,7 +367,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -420,7 +375,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 10,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -429,7 +383,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -438,7 +391,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -447,7 +399,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -456,7 +407,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 10,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -465,7 +415,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -474,7 +423,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -483,7 +431,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -499,7 +446,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 10,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -508,7 +454,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -517,7 +462,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 10,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -526,7 +470,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 92,
   },
   {
-    "color": 11,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -538,7 +481,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -547,7 +489,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -556,7 +497,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -565,7 +505,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -574,7 +513,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -583,7 +521,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -592,7 +529,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 9,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -601,7 +537,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 11,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -610,7 +545,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -619,7 +553,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -628,7 +561,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 9,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -637,7 +569,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -646,7 +577,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -655,7 +585,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -664,7 +593,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 9,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(122, 122, 216)",
@@ -673,7 +601,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 11,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -682,7 +609,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -691,7 +617,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -700,7 +625,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 11,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(102, 102, 176)",
@@ -718,10 +642,8 @@ exports[`slide drag frame > matches its snapshot 1`] = `
   {
     "cx": 123,
     "cy": 91,
-    "fill": 11,
     "fillRgb": "rgb(102, 102, 176)",
     "op": "circle",
-    "outline": 11,
     "outlineRgb": "rgb(102, 102, 176)",
     "r": 2,
   },
@@ -734,7 +656,6 @@ exports[`slide drag frame > matches its snapshot 1`] = `
 exports[`slide exit gate > matches its snapshot 1`] = `
 [
   {
-    "color": 0,
     "h": 160,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -743,7 +664,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -752,7 +672,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -761,7 +680,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -770,7 +688,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -779,7 +696,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -788,7 +704,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -797,7 +712,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -806,7 +720,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -815,7 +728,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -824,7 +736,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -833,7 +744,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -842,7 +752,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -851,7 +760,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -860,7 +768,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -869,7 +776,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -878,7 +784,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -887,7 +792,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -896,7 +800,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -905,7 +808,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -914,7 +816,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -923,7 +824,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -932,7 +832,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -941,7 +840,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -950,7 +848,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -959,7 +856,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -968,7 +864,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -984,10 +879,8 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "fill": 17,
     "fillRgb": "rgb(80, 80, 80)",
     "op": "polygon",
-    "outline": 17,
     "outlineRgb": "rgb(80, 80, 80)",
     "points": [
       [
@@ -1008,7 +901,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -1024,10 +916,8 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "fill": 16,
     "fillRgb": "rgb(165, 165, 165)",
     "op": "polygon",
-    "outline": 16,
     "outlineRgb": "rgb(165, 165, 165)",
     "points": [
       [
@@ -1048,7 +938,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1057,7 +946,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1066,7 +954,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -1075,7 +962,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -1084,7 +970,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1102,10 +987,8 @@ exports[`slide exit gate > matches its snapshot 1`] = `
   {
     "cx": 36,
     "cy": 36,
-    "fill": 7,
     "fillRgb": "rgb(156, 156, 226)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(156, 156, 226)",
     "r": 2,
   },
@@ -1113,7 +996,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1122,7 +1004,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1131,7 +1012,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1140,7 +1020,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1149,7 +1028,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1158,7 +1036,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1167,7 +1044,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1176,7 +1052,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1185,7 +1060,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1194,7 +1068,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1203,7 +1076,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1212,7 +1084,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1221,7 +1092,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1230,7 +1100,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1239,7 +1108,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1248,7 +1116,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -1257,7 +1124,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1266,7 +1132,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1275,7 +1140,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1291,7 +1155,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1300,7 +1163,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 36,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1309,7 +1171,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1318,7 +1179,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 35,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1330,7 +1190,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1339,7 +1198,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1348,7 +1206,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1357,7 +1214,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 8,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1366,7 +1222,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1375,7 +1230,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1384,7 +1238,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1393,7 +1246,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1402,7 +1254,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1411,7 +1262,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1420,7 +1270,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1429,7 +1278,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1438,7 +1286,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -1447,7 +1294,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1456,7 +1302,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1465,7 +1310,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1474,7 +1318,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1483,7 +1326,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1492,7 +1334,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1501,7 +1342,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 40,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1510,7 +1350,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 48,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1519,7 +1358,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 56,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1528,7 +1366,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1537,7 +1374,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 40,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1546,7 +1382,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 48,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1555,7 +1390,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 56,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1564,7 +1398,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1573,7 +1406,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1582,7 +1414,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -1591,7 +1422,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -1600,7 +1430,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1609,7 +1438,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -1618,7 +1446,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -1627,7 +1454,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -1636,7 +1462,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1645,7 +1470,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1654,7 +1478,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1663,7 +1486,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1672,7 +1494,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1681,7 +1502,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1690,7 +1510,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1699,7 +1518,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1708,7 +1526,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1717,7 +1534,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 7,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1726,7 +1542,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1735,7 +1550,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1744,7 +1558,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1760,7 +1573,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 7,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1769,7 +1581,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1778,7 +1589,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 7,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -1787,7 +1597,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 92,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1799,7 +1608,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1808,7 +1616,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1817,7 +1624,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1826,7 +1632,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -1835,7 +1640,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1844,7 +1648,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1853,7 +1656,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1862,7 +1664,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1871,7 +1672,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1880,7 +1680,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1889,7 +1688,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1898,7 +1696,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1907,7 +1704,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1916,7 +1712,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1925,7 +1720,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -1934,7 +1728,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 8,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1943,7 +1736,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1952,7 +1744,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1961,7 +1752,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -1979,10 +1769,8 @@ exports[`slide exit gate > matches its snapshot 1`] = `
   {
     "cx": 91,
     "cy": 91,
-    "fill": 8,
     "fillRgb": "rgb(75, 75, 151)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(75, 75, 151)",
     "r": 2,
   },
@@ -1990,7 +1778,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -1999,7 +1786,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 15,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2008,7 +1794,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 94,
   },
   {
-    "color": 15,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2017,7 +1802,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 94,
   },
   {
-    "color": 15,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2026,7 +1810,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 94,
   },
   {
-    "color": 15,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2035,7 +1818,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 94,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2044,7 +1826,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2053,7 +1834,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 72,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2062,7 +1842,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 80,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2071,7 +1850,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 88,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2080,7 +1858,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2089,7 +1866,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 72,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2098,7 +1874,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 80,
   },
   {
-    "color": 15,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2107,7 +1882,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 88,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2116,7 +1890,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2125,7 +1898,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2134,7 +1906,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2143,7 +1914,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2152,7 +1922,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2161,7 +1930,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2170,7 +1938,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2179,7 +1946,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2188,7 +1954,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2197,7 +1962,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2206,7 +1970,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2215,7 +1978,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2224,7 +1986,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2233,7 +1994,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2242,7 +2002,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2251,7 +2010,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2260,7 +2018,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2269,7 +2026,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2278,7 +2034,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2287,7 +2042,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2296,7 +2050,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2312,10 +2065,8 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "fill": 16,
     "fillRgb": "rgb(165, 165, 165)",
     "op": "polygon",
-    "outline": 16,
     "outlineRgb": "rgb(165, 165, 165)",
     "points": [
       [
@@ -2336,7 +2087,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2352,10 +2102,8 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "fill": 17,
     "fillRgb": "rgb(80, 80, 80)",
     "op": "polygon",
-    "outline": 17,
     "outlineRgb": "rgb(80, 80, 80)",
     "points": [
       [
@@ -2376,7 +2124,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2385,7 +2132,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2394,7 +2140,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2403,7 +2148,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2412,7 +2156,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2421,7 +2164,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2430,7 +2172,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2439,7 +2180,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2448,7 +2188,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2457,7 +2196,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2466,7 +2204,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2475,7 +2212,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2484,7 +2220,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2493,7 +2228,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2502,7 +2236,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2511,7 +2244,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2520,7 +2252,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2529,7 +2260,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2538,7 +2268,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2547,7 +2276,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2556,7 +2284,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2570,7 +2297,6 @@ exports[`slide exit gate > matches its snapshot 1`] = `
 exports[`slide keyboard frame > matches its snapshot 1`] = `
 [
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -2579,7 +2305,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2597,10 +2322,8 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
   {
     "cx": 132,
     "cy": 36,
-    "fill": 4,
     "fillRgb": "rgb(209, 209, 209)",
     "op": "circle",
-    "outline": 4,
     "outlineRgb": "rgb(209, 209, 209)",
     "r": 2,
   },
@@ -2608,7 +2331,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 4,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -2624,7 +2346,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 5,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(152, 152, 152)",
@@ -2633,7 +2354,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 36,
   },
   {
-    "color": 4,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -2642,7 +2362,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 5,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(152, 152, 152)",
@@ -2651,7 +2370,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 35,
   },
   {
-    "color": 4,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -2663,7 +2381,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -2672,7 +2389,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 3,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(181, 181, 181)",
@@ -2681,7 +2397,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 5,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(152, 152, 152)",
@@ -2697,7 +2412,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 4,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -2706,7 +2420,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 5,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(152, 152, 152)",
@@ -2715,7 +2428,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 4,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -2724,7 +2436,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y": 60,
   },
   {
-    "color": 5,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(152, 152, 152)",
@@ -2736,7 +2447,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 5,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(152, 152, 152)",
@@ -2754,10 +2464,8 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
   {
     "cx": 155,
     "cy": 59,
-    "fill": 5,
     "fillRgb": "rgb(152, 152, 152)",
     "op": "circle",
-    "outline": 5,
     "outlineRgb": "rgb(152, 152, 152)",
     "r": 2,
   },
@@ -2765,7 +2473,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 21,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 2,
@@ -2775,7 +2482,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y2": 42,
   },
   {
-    "color": 21,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 2,
@@ -2785,7 +2491,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y2": 35,
   },
   {
-    "color": 21,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 2,
@@ -2795,7 +2500,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y2": 54,
   },
   {
-    "color": 21,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 2,
@@ -2805,7 +2509,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y2": 61,
   },
   {
-    "color": 21,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 2,
@@ -2815,7 +2518,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y2": 42,
   },
   {
-    "color": 21,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 2,
@@ -2825,7 +2527,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y2": 35,
   },
   {
-    "color": 21,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 2,
@@ -2835,7 +2536,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
     "y2": 54,
   },
   {
-    "color": 21,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 2,
@@ -2850,7 +2550,6 @@ exports[`slide keyboard frame > matches its snapshot 1`] = `
 exports[`slide opening frame > matches its snapshot 1`] = `
 [
   {
-    "color": 0,
     "h": 160,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2859,7 +2558,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2868,7 +2566,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2877,7 +2574,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2886,7 +2582,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2895,7 +2590,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2904,7 +2598,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2913,7 +2606,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2922,7 +2614,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2931,7 +2622,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2940,7 +2630,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2949,7 +2638,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2958,7 +2646,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -2967,7 +2654,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -2976,7 +2662,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2985,7 +2670,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -2994,7 +2678,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -3003,7 +2686,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -3012,7 +2694,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3021,7 +2702,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -3030,7 +2710,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -3039,7 +2718,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -3048,7 +2726,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3057,7 +2734,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -3066,7 +2742,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -3075,7 +2750,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -3084,7 +2758,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -3100,10 +2773,8 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 29,
   },
   {
-    "fill": 17,
     "fillRgb": "rgb(80, 80, 80)",
     "op": "polygon",
-    "outline": 17,
     "outlineRgb": "rgb(80, 80, 80)",
     "points": [
       [
@@ -3124,7 +2795,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -3140,10 +2810,8 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 0,
   },
   {
-    "fill": 16,
     "fillRgb": "rgb(165, 165, 165)",
     "op": "polygon",
-    "outline": 16,
     "outlineRgb": "rgb(165, 165, 165)",
     "points": [
       [
@@ -3164,7 +2832,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3173,7 +2840,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -3182,7 +2848,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -3191,7 +2856,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -3200,7 +2864,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3218,10 +2881,8 @@ exports[`slide opening frame > matches its snapshot 1`] = `
   {
     "cx": 36,
     "cy": 36,
-    "fill": 7,
     "fillRgb": "rgb(156, 156, 226)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(156, 156, 226)",
     "r": 2,
   },
@@ -3229,7 +2890,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3238,7 +2898,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3247,7 +2906,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3256,7 +2914,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3265,7 +2922,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3274,7 +2930,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3283,7 +2938,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3292,7 +2946,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3301,7 +2954,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3310,7 +2962,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3319,7 +2970,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3328,7 +2978,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3337,7 +2986,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3346,7 +2994,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3355,7 +3002,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3364,7 +3010,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -3373,7 +3018,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3382,7 +3026,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3391,7 +3034,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3407,7 +3049,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -3416,7 +3057,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 36,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3425,7 +3065,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -3434,7 +3073,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 35,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3446,7 +3084,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3455,7 +3092,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3464,7 +3100,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3473,7 +3108,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 8,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -3482,7 +3116,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3491,7 +3124,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3500,7 +3132,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3509,7 +3140,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -3518,7 +3148,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3527,7 +3156,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3536,7 +3164,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3545,7 +3172,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -3554,7 +3180,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -3572,10 +3197,8 @@ exports[`slide opening frame > matches its snapshot 1`] = `
   {
     "cx": 100,
     "cy": 36,
-    "fill": 19,
     "fillRgb": "rgb(209, 209, 209)",
     "op": "circle",
-    "outline": 19,
     "outlineRgb": "rgb(209, 209, 209)",
     "r": 2,
   },
@@ -3583,7 +3206,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 19,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -3599,7 +3221,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 20,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(124, 124, 124)",
@@ -3608,7 +3229,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 36,
   },
   {
-    "color": 19,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -3617,7 +3237,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 20,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(124, 124, 124)",
@@ -3626,7 +3245,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 35,
   },
   {
-    "color": 19,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -3638,7 +3256,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 19,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -3647,7 +3264,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 18,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(167, 167, 167)",
@@ -3656,7 +3272,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 20,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(124, 124, 124)",
@@ -3672,7 +3287,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 19,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -3681,7 +3295,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 20,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(124, 124, 124)",
@@ -3690,7 +3303,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 19,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(209, 209, 209)",
@@ -3699,7 +3311,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 60,
   },
   {
-    "color": 20,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(124, 124, 124)",
@@ -3711,7 +3322,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 20,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(124, 124, 124)",
@@ -3729,10 +3339,8 @@ exports[`slide opening frame > matches its snapshot 1`] = `
   {
     "cx": 123,
     "cy": 59,
-    "fill": 20,
     "fillRgb": "rgb(124, 124, 124)",
     "op": "circle",
-    "outline": 20,
     "outlineRgb": "rgb(124, 124, 124)",
     "r": 2,
   },
@@ -3740,7 +3348,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3749,7 +3356,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3758,7 +3364,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -3767,7 +3372,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -3776,7 +3380,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -3785,7 +3388,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3794,7 +3396,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -3803,7 +3404,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -3812,7 +3412,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -3821,7 +3420,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3830,7 +3428,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3839,7 +3436,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3848,7 +3444,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3857,7 +3452,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3866,7 +3460,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3875,7 +3468,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3884,7 +3476,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3893,7 +3484,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3902,7 +3492,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 7,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3911,7 +3500,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3920,7 +3508,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3929,7 +3516,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -3945,7 +3531,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 7,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3954,7 +3539,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -3963,7 +3547,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 7,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -3972,7 +3555,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 92,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -3984,7 +3566,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -3993,7 +3574,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4002,7 +3582,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4011,7 +3590,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -4020,7 +3598,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4029,7 +3606,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4038,7 +3614,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4047,7 +3622,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4056,7 +3630,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4065,7 +3638,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4074,7 +3646,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4083,7 +3654,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4092,7 +3662,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4101,7 +3670,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4110,7 +3678,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 6,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(105, 105, 211)",
@@ -4119,7 +3686,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 8,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4128,7 +3694,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4137,7 +3702,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4146,7 +3710,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4164,10 +3727,8 @@ exports[`slide opening frame > matches its snapshot 1`] = `
   {
     "cx": 91,
     "cy": 91,
-    "fill": 8,
     "fillRgb": "rgb(75, 75, 151)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(75, 75, 151)",
     "r": 2,
   },
@@ -4175,7 +3736,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(203, 253, 203)",
@@ -4184,7 +3744,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4193,7 +3752,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4202,7 +3760,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4211,7 +3768,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4220,7 +3776,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4229,7 +3784,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4238,7 +3792,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4247,7 +3800,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4256,7 +3808,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4265,7 +3816,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4274,7 +3824,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4283,7 +3832,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4292,7 +3840,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4301,7 +3848,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4310,7 +3856,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4319,7 +3864,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4328,7 +3872,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4337,7 +3880,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4346,7 +3888,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4355,7 +3896,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4364,7 +3904,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4373,7 +3912,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4389,10 +3927,8 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "fill": 16,
     "fillRgb": "rgb(165, 165, 165)",
     "op": "polygon",
-    "outline": 16,
     "outlineRgb": "rgb(165, 165, 165)",
     "points": [
       [
@@ -4413,7 +3949,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4429,10 +3964,8 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "fill": 17,
     "fillRgb": "rgb(80, 80, 80)",
     "op": "polygon",
-    "outline": 17,
     "outlineRgb": "rgb(80, 80, 80)",
     "points": [
       [
@@ -4453,7 +3986,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4462,7 +3994,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4471,7 +4002,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4480,7 +4010,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4489,7 +4018,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4498,7 +4026,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4507,7 +4034,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4516,7 +4042,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4525,7 +4050,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4534,7 +4058,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4543,7 +4066,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4552,7 +4074,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4561,7 +4082,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4570,7 +4090,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4579,7 +4098,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4588,7 +4106,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4597,7 +4114,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4606,7 +4122,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(122, 122, 122)",
@@ -4615,7 +4130,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4624,7 +4138,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 128,
   },
   {
-    "color": 17,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(80, 80, 80)",
@@ -4633,7 +4146,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
     "y": 157,
   },
   {
-    "color": 16,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(165, 165, 165)",
@@ -4647,7 +4159,6 @@ exports[`slide opening frame > matches its snapshot 1`] = `
 exports[`slide win flash > matches its snapshot 1`] = `
 [
   {
-    "color": 22,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4665,10 +4176,8 @@ exports[`slide win flash > matches its snapshot 1`] = `
   {
     "cx": 68,
     "cy": 36,
-    "fill": 7,
     "fillRgb": "rgb(156, 156, 226)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(156, 156, 226)",
     "r": 2,
   },
@@ -4676,7 +4185,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4685,7 +4193,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4694,7 +4201,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4703,7 +4209,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4712,7 +4217,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4721,7 +4225,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4730,7 +4233,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4739,7 +4241,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4748,7 +4249,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4757,7 +4257,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4766,7 +4265,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4775,7 +4273,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4784,7 +4281,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4793,7 +4289,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4802,7 +4297,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4811,7 +4305,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 22,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4820,7 +4313,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 32,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4829,7 +4321,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4838,7 +4329,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4854,7 +4344,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4863,7 +4352,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 36,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4872,7 +4360,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 34,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4881,7 +4368,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 35,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -4893,7 +4379,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4902,7 +4387,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4911,7 +4395,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4920,7 +4403,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 8,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4929,7 +4411,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 37,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4938,7 +4419,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4947,7 +4427,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4956,7 +4435,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -4965,7 +4443,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 59,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4974,7 +4451,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4983,7 +4459,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -4992,7 +4467,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5001,7 +4475,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 62,
   },
   {
-    "color": 22,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5010,7 +4483,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 7,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -5019,7 +4491,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5028,7 +4499,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5037,7 +4507,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5046,7 +4515,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -5055,7 +4523,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5064,7 +4531,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5073,7 +4539,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5082,7 +4547,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 7,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -5091,7 +4555,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5100,7 +4563,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5109,7 +4571,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5125,7 +4586,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 7,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -5134,7 +4594,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5143,7 +4602,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 7,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(156, 156, 226)",
@@ -5152,7 +4610,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 92,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5164,7 +4621,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5173,7 +4629,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5182,7 +4637,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5191,7 +4645,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 22,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5200,7 +4653,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5209,7 +4661,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5218,7 +4669,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 22,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5227,7 +4677,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5236,7 +4685,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 64,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5245,7 +4693,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5254,7 +4701,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 22,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5263,7 +4709,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5272,7 +4717,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 66,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5281,7 +4725,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5290,7 +4733,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 22,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -5299,7 +4741,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 8,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5308,7 +4749,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 69,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5317,7 +4757,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5326,7 +4765,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "y": 91,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(75, 75, 151)",
@@ -5344,10 +4782,8 @@ exports[`slide win flash > matches its snapshot 1`] = `
   {
     "cx": 123,
     "cy": 91,
-    "fill": 8,
     "fillRgb": "rgb(75, 75, 151)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(75, 75, 151)",
     "r": 2,
   },
@@ -5355,7 +4791,6 @@ exports[`slide win flash > matches its snapshot 1`] = `
     "op": "unclip",
   },
   {
-    "color": 22,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",

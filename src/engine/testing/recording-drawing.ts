@@ -9,8 +9,10 @@
  *  - coordinates are rounded to integers;
  *  - colors, which a game passes as palette *indices*, are resolved
  *    through the game's `colors(defaultBackground)` palette to a stable
- *    `rgb(r, g, b)` label (the raw index is kept too, so assertions can
- *    still match `op.color === COL_HINT`);
+ *    `rgb(r, g, b)` label. The raw index is kept too, so assertions can
+ *    still match `op.color === COL_HINT`, but a snapshot prints only the
+ *    label (`draw-op-snapshot.ts`), so renumbering a palette changes no
+ *    frame that kept its colors;
  *  - ops are recorded in draw order (the order the game emits them,
  *    which is also their z-order — last drawn on top).
  *

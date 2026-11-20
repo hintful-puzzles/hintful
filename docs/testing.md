@@ -299,6 +299,9 @@ positions").
   `npx vitest run --update=all <file>` and commit the regenerated
   `__snapshots__/*.snap`. Pair every snapshot with a targeted
   assertion, so a careless `-u` cannot erase the guarantee.
+- **A snapshot names a color by what it paints**, never by its palette index
+  ([`draw-op-snapshot.ts`](../src/engine/testing/draw-op-snapshot.ts)), so
+  removing a color changes only the frames that painted in it.
 - **The recorder refuses what the canvas refuses**: a color the palette lacks
   throws, as it would in the app, and a call the canvas paints nothing for
   (a zero-size rect, a zero-thickness line) is not recorded. Both read
@@ -403,9 +406,8 @@ these are the ones that mislead:
   to one op.
 - An op carries `color`, the palette index the game passed, and `rgb`, the
   resolved label. Assert against the game's own constant
-  (`o.color === COL_HINT_CELL`); `rgb` is there so a snapshot diff stays
-  readable when an index moves. A polygon or circle with no fill has
-  `fillRgb` `NO_FILL`.
+  (`o.color === COL_HINT_CELL`); a snapshot prints only `rgb`. A polygon or
+  circle with no fill has `fillRgb` `NO_FILL`.
 - A `drawRing` records a `ring` op in the engine's ink, followed by what its
   `inside` draws between a clip and an unclip; `ringsOf` and `expectRing` in
   `testing/mark-shape.ts` read them.

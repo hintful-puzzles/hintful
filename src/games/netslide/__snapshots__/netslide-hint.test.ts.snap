@@ -3,7 +3,6 @@
 exports[`netslide hint rendering > marks the tile and the arrow to press, and nothing else 1`] = `
 [
   {
-    "color": 0,
     "h": 219,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 0,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -21,7 +19,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -30,7 +27,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -39,7 +35,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -48,7 +43,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -57,7 +51,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -66,7 +59,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -75,7 +67,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -84,7 +75,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -93,7 +83,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -102,7 +91,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 182,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -111,7 +99,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -120,7 +107,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -129,7 +115,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -138,7 +123,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -147,7 +131,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -156,7 +139,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -165,7 +147,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -174,7 +155,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -183,7 +163,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -192,7 +171,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 182,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -201,7 +179,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -210,7 +187,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -219,7 +195,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -228,7 +203,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -237,7 +211,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 36,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -246,7 +219,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -255,7 +227,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -264,7 +235,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -273,7 +243,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -282,7 +251,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 182,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -291,7 +259,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -300,7 +267,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -309,7 +275,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -318,7 +283,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 84,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -327,7 +291,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -336,7 +299,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -345,7 +307,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -354,7 +315,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -363,7 +323,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 84,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -372,7 +331,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -381,7 +339,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -390,7 +347,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -399,7 +355,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -408,7 +363,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 132,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -417,7 +371,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -426,7 +379,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -435,7 +387,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -444,7 +395,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -453,7 +403,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 132,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -462,7 +411,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -471,7 +419,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -480,7 +427,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -489,7 +435,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -498,7 +443,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -507,7 +451,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -516,7 +459,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -525,7 +467,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -534,7 +475,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -543,7 +483,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -552,7 +491,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -561,7 +499,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -570,7 +507,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -579,7 +515,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -588,7 +523,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -597,7 +531,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -606,7 +539,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -615,7 +547,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -624,7 +555,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -633,7 +563,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -642,7 +571,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -651,7 +579,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -660,7 +587,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -669,7 +595,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -678,7 +603,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -687,7 +611,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -696,7 +619,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -705,7 +627,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -714,7 +635,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -723,7 +643,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -732,7 +651,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -741,7 +659,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -750,7 +667,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -759,7 +675,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -768,7 +683,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -777,7 +691,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -786,7 +699,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -795,7 +707,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -804,7 +715,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -813,7 +723,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -822,7 +731,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -831,7 +739,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -840,7 +747,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -849,7 +755,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -858,7 +763,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -867,7 +771,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -876,10 +779,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(169, 169, 169)",
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -913,10 +814,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(169, 169, 169)",
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -950,10 +849,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(169, 169, 169)",
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -987,10 +884,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(169, 169, 169)",
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1024,10 +919,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(169, 169, 169)",
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1061,10 +954,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(169, 169, 169)",
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1098,10 +989,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(169, 169, 169)",
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1135,10 +1024,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(169, 169, 169)",
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1172,7 +1059,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "color": 0,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1181,11 +1067,9 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 183,
   },
   {
-    "fill": 12,
     "fillRgb": "rgb(21, 113, 233)",
     "hintControl": true,
     "op": "polygon",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1226,7 +1110,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1235,7 +1118,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1244,7 +1126,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1253,7 +1134,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1262,10 +1142,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1287,10 +1165,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1312,7 +1188,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1321,7 +1196,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1330,7 +1204,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1339,7 +1212,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1348,7 +1220,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1357,10 +1228,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1382,10 +1251,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1407,7 +1274,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1416,7 +1282,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "color": 12,
     "h": 44,
     "op": "ring",
     "radius": 22,
@@ -1427,7 +1292,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 88,
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1436,7 +1300,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1445,7 +1308,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1454,7 +1316,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1463,7 +1324,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1472,7 +1332,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1481,7 +1340,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1490,7 +1348,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1499,7 +1356,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1508,7 +1364,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1517,7 +1372,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1526,7 +1380,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1535,10 +1388,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1560,10 +1411,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1585,7 +1434,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1594,7 +1442,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 60,
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1603,7 +1450,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1612,7 +1458,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1621,7 +1466,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1630,7 +1474,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 107,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1639,7 +1482,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1648,7 +1490,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 107,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1657,7 +1498,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1666,7 +1506,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 107,
   },
   {
-    "color": 5,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -1675,7 +1514,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "color": 5,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -1684,7 +1522,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "color": 5,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -1693,10 +1530,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1718,10 +1553,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1743,7 +1576,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1752,7 +1584,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1761,7 +1592,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1770,7 +1600,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1779,7 +1608,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1788,7 +1616,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1797,7 +1624,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1806,7 +1632,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1815,7 +1640,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1824,7 +1648,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1833,7 +1656,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1842,7 +1664,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1851,7 +1672,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1860,7 +1680,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1869,7 +1688,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1878,7 +1696,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 60,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1887,7 +1704,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 60,
   },
   {
-    "color": 3,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1896,7 +1712,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 60,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1905,7 +1720,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 60,
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1914,7 +1728,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1923,7 +1736,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1932,7 +1744,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1941,10 +1752,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1966,10 +1775,8 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1991,7 +1798,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     ],
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2000,7 +1806,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2009,7 +1814,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 108,
   },
   {
-    "color": 2,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2018,7 +1822,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2027,7 +1830,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2036,7 +1838,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2045,7 +1846,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2054,7 +1854,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2063,7 +1862,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 156,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2072,7 +1870,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2081,7 +1878,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2090,7 +1886,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2099,7 +1894,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2108,7 +1902,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2117,7 +1910,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 84,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2126,7 +1918,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2135,7 +1926,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 84,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2144,7 +1934,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2153,7 +1942,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2162,7 +1950,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 84,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2171,7 +1958,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2180,7 +1966,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2189,7 +1974,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2198,7 +1982,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2207,7 +1990,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2216,7 +1998,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2225,7 +2006,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2234,7 +2014,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2243,7 +2022,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2252,7 +2030,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2261,7 +2038,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2270,7 +2046,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2279,7 +2054,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 132,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2288,7 +2062,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2297,7 +2070,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2306,7 +2078,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2315,7 +2086,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2324,7 +2094,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2333,7 +2102,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2342,7 +2110,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2351,7 +2118,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2360,7 +2126,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2369,7 +2134,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2378,7 +2142,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2387,7 +2150,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2396,7 +2158,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2405,7 +2166,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2414,7 +2174,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2423,7 +2182,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2432,7 +2190,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2441,7 +2198,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2450,7 +2206,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2459,7 +2214,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2468,7 +2222,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2477,7 +2230,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2486,7 +2238,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2495,7 +2246,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2504,7 +2254,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2513,7 +2262,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2522,7 +2270,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2531,7 +2278,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 84,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2540,7 +2286,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2549,7 +2294,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 84,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2558,7 +2302,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2567,7 +2310,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2576,7 +2318,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2585,7 +2326,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2594,7 +2334,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2603,7 +2342,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2612,7 +2350,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2621,7 +2358,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2630,7 +2366,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2639,7 +2374,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2648,7 +2382,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2657,7 +2390,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2666,7 +2398,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2675,7 +2406,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2684,7 +2414,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2693,7 +2422,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2702,7 +2430,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2711,7 +2438,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2720,7 +2446,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2729,7 +2454,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2738,7 +2462,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2747,7 +2470,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2756,7 +2478,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2765,7 +2486,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2774,7 +2494,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2783,7 +2502,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2792,7 +2510,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2801,7 +2518,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 84,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2810,7 +2526,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2819,7 +2534,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2828,7 +2542,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2837,7 +2550,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2846,7 +2558,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2855,7 +2566,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 38,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2864,7 +2574,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 37,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2873,7 +2582,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2882,7 +2590,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2891,7 +2598,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2900,7 +2606,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 132,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2909,7 +2614,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2918,7 +2622,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 85,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2927,7 +2630,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2936,7 +2638,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 86,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2945,7 +2646,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2954,7 +2654,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2963,7 +2662,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2972,7 +2670,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2981,7 +2678,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2990,7 +2686,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -2999,7 +2694,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3008,7 +2702,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3017,7 +2710,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 180,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3026,7 +2718,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 133,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3035,7 +2726,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3044,7 +2734,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 181,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3053,7 +2742,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",
@@ -3062,7 +2750,6 @@ exports[`netslide hint rendering > marks the tile and the arrow to press, and no
     "y": 134,
   },
   {
-    "color": 6,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(77, 77, 77)",

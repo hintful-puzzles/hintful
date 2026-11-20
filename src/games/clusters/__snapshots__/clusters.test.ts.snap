@@ -3,7 +3,6 @@
 exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable snapshot 1`] = `
 [
   {
-    "color": 0,
     "h": 229,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 0,
   },
   {
-    "color": 1,
     "h": 225,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -21,7 +19,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 2,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -30,7 +27,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -41,25 +37,20 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 19,
     "cy": 19,
-    "fill": 2,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(235, 210, 47)",
     "r": 13,
   },
   {
     "cx": 19,
     "cy": 19,
-    "fill": 4,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 4,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -68,7 +59,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -77,7 +67,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -86,7 +75,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -97,25 +85,20 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 83,
     "cy": 19,
-    "fill": 2,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(235, 210, 47)",
     "r": 13,
   },
   {
     "cx": 83,
     "cy": 19,
-    "fill": 4,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 4,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -124,7 +107,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -133,7 +115,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -142,7 +123,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -151,7 +131,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -160,7 +139,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -169,7 +147,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -178,7 +155,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -187,7 +163,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 3,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -196,7 +171,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -205,7 +179,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -214,7 +187,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -223,7 +195,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -232,7 +203,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -241,7 +211,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -250,7 +219,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -259,7 +227,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -268,7 +235,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -277,7 +243,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -286,7 +251,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -295,7 +259,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -304,7 +267,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -313,10 +275,8 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 35,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -404,15 +364,12 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 211,
     "cy": 51,
-    "fill": 5,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "circle",
-    "outline": 5,
     "outlineRgb": "rgb(255, 255, 255)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -421,7 +378,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -430,7 +386,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -439,7 +394,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -448,7 +402,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -457,7 +410,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -468,25 +420,20 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 83,
     "cy": 83,
-    "fill": 2,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(235, 210, 47)",
     "r": 13,
   },
   {
     "cx": 83,
     "cy": 83,
-    "fill": 4,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 4,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -495,7 +442,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -504,7 +450,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -513,7 +458,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -522,7 +466,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -531,7 +474,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -540,7 +482,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -549,7 +490,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -558,7 +498,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 67,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -567,7 +506,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -576,7 +514,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -585,7 +522,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -594,7 +530,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -603,7 +538,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -612,10 +546,8 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -703,15 +635,12 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 83,
     "cy": 115,
-    "fill": 5,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "circle",
-    "outline": 5,
     "outlineRgb": "rgb(255, 255, 255)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -720,7 +649,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -729,7 +657,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -738,7 +665,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -747,7 +673,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -756,7 +681,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -765,7 +689,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -774,7 +697,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -783,7 +705,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 99,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -792,7 +713,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -801,7 +721,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -810,7 +729,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -819,7 +737,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -828,7 +745,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -837,7 +753,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -846,7 +761,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -855,7 +769,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -864,7 +777,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -873,10 +785,8 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -964,15 +874,12 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 147,
     "cy": 147,
-    "fill": 5,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "circle",
-    "outline": 5,
     "outlineRgb": "rgb(255, 255, 255)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -981,7 +888,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -990,7 +896,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -999,7 +904,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1008,7 +912,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 131,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1017,7 +920,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1026,10 +928,8 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -1117,15 +1017,12 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 19,
     "cy": 179,
-    "fill": 5,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "circle",
-    "outline": 5,
     "outlineRgb": "rgb(255, 255, 255)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1134,7 +1031,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1143,7 +1039,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1152,7 +1047,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1161,7 +1055,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1170,7 +1063,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1179,7 +1071,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1188,7 +1079,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1197,7 +1087,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1206,7 +1095,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1215,7 +1103,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1224,7 +1111,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1233,10 +1119,8 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 163,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -1324,15 +1208,12 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 211,
     "cy": 179,
-    "fill": 5,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "circle",
-    "outline": 5,
     "outlineRgb": "rgb(255, 255, 255)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1341,7 +1222,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1350,7 +1230,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1359,7 +1238,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1368,7 +1246,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1377,7 +1254,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1386,7 +1262,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1395,7 +1270,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1404,7 +1278,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1413,7 +1286,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1424,25 +1296,20 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 147,
     "cy": 211,
-    "fill": 2,
     "fillRgb": "rgb(235, 210, 47)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(235, 210, 47)",
     "r": 13,
   },
   {
     "cx": 147,
     "cy": 211,
-    "fill": 4,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 4,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1451,7 +1318,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 10,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1460,10 +1326,8 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "fill": 3,
     "fillRgb": "rgb(143, 53, 202)",
     "op": "polygon",
-    "outline": 3,
     "outlineRgb": "rgb(143, 53, 202)",
     "points": [
       [
@@ -1551,15 +1415,12 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
   {
     "cx": 179,
     "cy": 211,
-    "fill": 5,
     "fillRgb": "rgb(255, 255, 255)",
     "op": "circle",
-    "outline": 5,
     "outlineRgb": "rgb(255, 255, 255)",
     "r": 4,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1568,7 +1429,6 @@ exports[`render (tier 2.5) > draws the opening frame with dots and grid, stable 
     "y": 195,
   },
   {
-    "color": 9,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",

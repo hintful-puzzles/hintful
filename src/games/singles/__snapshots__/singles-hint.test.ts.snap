@@ -3,7 +3,6 @@
 exports[`singles hint render > rings the hint target, with evidence and numbers 1`] = `
 [
   {
-    "color": 0,
     "h": 224,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 0,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -21,7 +19,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 15,
   },
   {
-    "color": 1,
     "h": 193,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -30,7 +27,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 15,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -39,7 +35,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -50,7 +45,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -60,7 +54,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -69,7 +62,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -80,7 +72,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -90,7 +81,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -99,7 +89,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -110,7 +99,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -120,7 +108,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -129,7 +116,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -140,7 +126,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -150,7 +135,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -159,7 +143,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -170,7 +153,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -180,7 +162,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -189,7 +170,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 176,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -200,7 +180,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -210,7 +189,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 192,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -219,7 +197,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -230,7 +207,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -240,7 +216,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -249,7 +224,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -258,7 +232,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 11,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -267,7 +240,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -276,7 +248,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 11,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -285,7 +256,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 77,
   },
   {
-    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -296,7 +266,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -306,7 +275,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -315,7 +283,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -326,7 +293,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -336,7 +302,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -345,7 +310,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -356,7 +320,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -366,7 +329,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -375,7 +337,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -386,7 +347,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -396,7 +356,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -405,7 +364,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 176,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -416,7 +374,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -426,7 +383,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 192,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -435,7 +391,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -446,7 +401,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -456,7 +410,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -465,7 +418,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -474,7 +426,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 13,
     "h": 29,
     "op": "ring",
     "radius": 15,
@@ -487,7 +438,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -497,7 +447,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -506,7 +455,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -517,7 +465,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -527,7 +474,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -536,7 +482,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -547,7 +492,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -557,7 +501,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -566,7 +509,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -577,7 +519,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -587,7 +528,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -596,7 +536,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 176,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -607,7 +546,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -617,7 +555,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 192,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -626,7 +563,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -637,7 +573,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -647,7 +582,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -656,7 +590,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -665,7 +598,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 11,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -674,7 +606,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -683,7 +614,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 11,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -692,7 +622,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 77,
   },
   {
-    "color": 11,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -703,7 +632,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -713,7 +641,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -722,7 +649,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -733,7 +659,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -743,7 +668,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -752,7 +676,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -763,7 +686,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -773,7 +695,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -782,7 +703,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -793,7 +713,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -803,7 +722,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -812,7 +730,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 176,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -823,7 +740,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -833,7 +749,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 192,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -842,7 +757,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -853,7 +767,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -863,7 +776,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -872,7 +784,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -883,7 +794,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -893,7 +803,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -902,7 +811,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -913,7 +821,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -923,7 +830,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -932,7 +838,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -943,7 +848,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -953,7 +857,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -962,7 +865,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -973,7 +875,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -983,7 +884,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -992,7 +892,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 176,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1003,7 +902,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1013,7 +911,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 192,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1022,7 +919,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 16,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1033,7 +929,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1043,7 +938,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 32,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1052,7 +946,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 48,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1063,7 +956,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1073,7 +965,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 64,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1082,7 +973,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 80,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1093,7 +983,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1103,7 +992,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 96,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1112,7 +1000,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 112,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1123,7 +1010,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1133,7 +1019,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 128,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1142,7 +1027,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 144,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1153,7 +1037,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1163,7 +1046,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 160,
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1172,7 +1054,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
     "y": 176,
   },
   {
-    "color": 2,
     "h": 31,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1183,7 +1064,6 @@ exports[`singles hint render > rings the hint target, with evidence and numbers 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

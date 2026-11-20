@@ -3,7 +3,6 @@
 exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatched line, clues intact 1`] = `
 [
   {
-    "color": 0,
     "h": 384,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 5,
     "h": 241,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -21,7 +19,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -30,7 +27,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -39,7 +35,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -49,7 +44,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -58,7 +52,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -67,7 +60,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -77,7 +69,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -86,7 +77,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -95,7 +85,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -105,7 +94,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -114,7 +102,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -123,7 +110,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -133,7 +119,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -142,7 +127,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -151,7 +135,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -161,7 +144,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 13,
     "h": 21,
     "op": "ring",
     "radius": 10,
@@ -172,7 +154,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 128,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -181,7 +162,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -190,7 +170,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -200,7 +179,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 13,
     "h": 21,
     "op": "ring",
     "radius": 10,
@@ -211,7 +189,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 128,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -220,7 +197,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -229,7 +205,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -239,7 +214,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -248,7 +222,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -257,7 +230,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -267,7 +239,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -276,7 +247,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -285,7 +255,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -295,7 +264,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -304,7 +272,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -313,7 +280,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "hatch",
     "period": 8,
@@ -323,7 +289,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 127,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -332,7 +297,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -341,7 +305,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -350,7 +313,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -359,7 +321,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -368,7 +329,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -377,7 +337,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -386,7 +345,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -395,7 +353,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -404,7 +361,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -413,7 +369,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -422,7 +377,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -431,7 +385,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -440,7 +393,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -449,7 +401,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -458,7 +409,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -467,7 +417,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -476,7 +425,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -485,7 +433,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -494,7 +441,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -503,7 +449,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 151,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -512,7 +457,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -521,7 +465,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -530,7 +473,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -539,7 +481,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -548,7 +489,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -557,7 +497,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -566,7 +505,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -575,7 +513,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -584,7 +521,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -593,7 +529,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -602,7 +537,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -611,7 +545,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -620,7 +553,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -629,7 +561,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -638,7 +569,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -647,7 +577,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -656,7 +585,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -665,7 +593,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -674,7 +601,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -683,7 +609,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 175,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -692,7 +617,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -701,7 +625,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -710,7 +633,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -719,7 +641,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -728,7 +649,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -737,7 +657,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -746,7 +665,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -755,7 +673,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -764,7 +681,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -773,7 +689,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -782,7 +697,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -791,7 +705,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -800,7 +713,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -809,7 +721,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -818,7 +729,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -827,7 +737,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -836,7 +745,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -845,7 +753,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -854,7 +761,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -863,7 +769,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 199,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -872,7 +777,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -881,7 +785,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -890,7 +793,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -899,7 +801,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -908,7 +809,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -917,7 +817,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -926,7 +825,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -935,7 +833,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -944,7 +841,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -953,7 +849,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -962,7 +857,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -971,7 +865,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -980,7 +873,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -989,7 +881,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -998,7 +889,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1007,7 +897,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1016,7 +905,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1025,7 +913,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1034,7 +921,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1043,7 +929,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 223,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1052,7 +937,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1061,7 +945,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1070,7 +953,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1079,7 +961,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1088,7 +969,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1097,7 +977,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1106,7 +985,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1115,7 +993,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1124,7 +1001,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1133,7 +1009,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1142,7 +1017,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1151,7 +1025,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1160,7 +1033,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1169,7 +1041,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1178,7 +1049,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1187,7 +1057,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1196,7 +1065,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1205,7 +1073,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1214,7 +1081,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 4,
     "h": 22,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1223,7 +1089,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 248,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1232,7 +1097,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1241,7 +1105,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1250,7 +1113,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1259,7 +1121,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1268,7 +1129,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1277,7 +1137,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1286,7 +1145,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1295,7 +1153,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1304,7 +1161,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1313,7 +1169,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1322,7 +1177,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1331,7 +1185,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1340,7 +1193,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1349,7 +1201,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1358,7 +1209,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1367,7 +1217,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1376,7 +1225,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1385,7 +1233,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1394,7 +1241,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1403,7 +1249,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 271,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1412,7 +1257,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1421,7 +1265,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1430,7 +1273,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1439,7 +1281,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1448,7 +1289,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1457,7 +1297,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1466,7 +1305,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1475,7 +1313,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1484,7 +1321,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1493,7 +1329,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1502,7 +1337,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1511,7 +1345,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1520,7 +1353,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1529,7 +1361,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1538,7 +1369,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1547,7 +1377,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1556,7 +1385,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1565,7 +1393,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1574,7 +1401,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1583,7 +1409,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 295,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1592,7 +1417,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1601,7 +1425,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1610,7 +1433,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1619,7 +1441,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1628,7 +1449,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1637,7 +1457,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1646,7 +1465,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1655,7 +1473,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1664,7 +1481,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1673,7 +1489,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1682,7 +1497,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1691,7 +1505,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1700,7 +1513,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1709,7 +1521,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1718,7 +1529,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1727,7 +1537,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1736,7 +1545,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1745,7 +1553,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1754,7 +1561,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1763,7 +1569,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 319,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1772,7 +1577,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1781,7 +1585,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1790,7 +1593,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1799,7 +1601,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1808,7 +1609,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1817,7 +1617,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1826,7 +1625,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1835,7 +1633,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1844,7 +1641,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1853,7 +1649,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1862,7 +1657,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1871,7 +1665,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1880,7 +1673,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1889,7 +1681,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1898,7 +1689,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1907,7 +1697,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1916,7 +1705,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1925,7 +1713,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 343,
   },
   {
-    "color": 5,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1934,7 +1721,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 4,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1950,7 +1736,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1961,7 +1746,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1973,7 +1757,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1993,7 +1776,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2004,7 +1786,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2016,7 +1797,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2036,7 +1816,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2047,7 +1826,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2067,7 +1845,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2078,7 +1855,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2090,7 +1866,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2110,7 +1885,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2121,7 +1895,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2133,7 +1906,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2153,7 +1925,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2164,7 +1935,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2176,7 +1946,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2188,7 +1957,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2200,7 +1968,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2220,7 +1987,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2231,7 +1997,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2243,7 +2008,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2255,7 +2019,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2267,7 +2030,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2287,7 +2049,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2298,7 +2059,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2318,7 +2078,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2329,7 +2088,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2341,7 +2099,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2361,7 +2118,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 0,
   },
   {
-    "color": 0,
     "h": 114,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2372,7 +2128,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2392,7 +2147,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2401,7 +2155,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 126,
   },
   {
-    "color": 14,
     "h": 24,
     "op": "hatch",
     "period": 8,
@@ -2413,7 +2166,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 9,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -2433,7 +2185,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 150,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2444,7 +2195,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2464,7 +2214,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 174,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2475,7 +2224,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2495,7 +2243,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 198,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2506,7 +2253,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2526,7 +2272,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 222,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2537,7 +2282,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2557,7 +2301,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 246,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2568,7 +2311,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2588,7 +2330,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 270,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2599,7 +2340,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2619,7 +2359,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 294,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2630,7 +2369,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2650,7 +2388,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 318,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2661,7 +2398,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2681,7 +2417,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
     "y": 342,
   },
   {
-    "color": 0,
     "h": 24,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2692,7 +2427,6 @@ exports[`Pattern hint render scenarios > opener frame: a ringed target on a hatc
   {
     "align": "right",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

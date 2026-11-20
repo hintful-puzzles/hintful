@@ -199,6 +199,7 @@ export default defineConfig({
     projects: projects(),
     ...gameScopeFilter(),
     environment: "node",
+    snapshotSerializers: ["./src/engine/testing/draw-op-snapshot.ts"],
     // The directory through which the workers share the boards they deal.
     globalSetup: ["./scripts/checks/dealt-store.ts"],
     // Dexie reads `globalThis.indexedDB` once, when its module is first

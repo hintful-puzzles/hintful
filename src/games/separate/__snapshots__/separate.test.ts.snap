@@ -3,7 +3,6 @@
 exports[`separate render scenarios > draws the opener frame (letters + grid) and snapshots it 1`] = `
 [
   {
-    "color": 0,
     "h": 292,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 0,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -21,7 +19,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -30,7 +27,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -39,7 +35,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -48,7 +43,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -57,7 +51,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -66,7 +59,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -75,7 +67,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -84,7 +75,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -93,7 +83,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -102,7 +91,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -111,7 +99,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -120,7 +107,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -129,7 +115,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -138,7 +123,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -147,7 +131,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -156,7 +139,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -165,7 +147,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -174,7 +155,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -183,7 +163,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -192,7 +171,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -201,7 +179,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -210,7 +187,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -219,7 +195,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -228,7 +203,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -237,7 +211,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -246,7 +219,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -255,7 +227,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -264,7 +235,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -273,7 +243,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -282,7 +251,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -291,7 +259,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -300,7 +267,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -309,7 +275,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -318,7 +283,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -327,7 +291,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -343,7 +306,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -354,7 +316,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -364,7 +325,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -373,7 +333,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -382,7 +341,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 28,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -391,7 +349,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -410,7 +367,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -421,7 +377,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -431,7 +386,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -440,7 +394,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -449,7 +402,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 28,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -458,7 +410,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -477,7 +428,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -488,7 +438,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -498,7 +447,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -507,7 +455,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -516,7 +463,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 28,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -525,7 +471,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -544,7 +489,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -555,7 +499,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -565,7 +508,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -574,7 +516,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -583,7 +524,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 28,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -592,7 +532,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -611,7 +550,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -622,7 +560,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -632,7 +569,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 50,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -641,7 +577,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 24,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -650,7 +585,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 28,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -659,7 +593,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -678,7 +611,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -689,7 +621,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -699,7 +630,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 98,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -708,7 +638,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -717,7 +646,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -726,7 +654,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -745,7 +672,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -756,7 +682,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -766,7 +691,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 98,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -775,7 +699,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -784,7 +707,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -793,7 +715,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -812,7 +733,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -823,7 +743,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -833,7 +752,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 98,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -842,7 +760,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -851,7 +768,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -860,7 +776,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -879,7 +794,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -890,7 +804,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -900,7 +813,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 98,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -909,7 +821,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -918,7 +829,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -927,7 +837,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -946,7 +855,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -957,7 +865,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -967,7 +874,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 98,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -976,7 +882,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 72,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -985,7 +890,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 76,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -994,7 +898,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1013,7 +916,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1024,7 +926,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1034,7 +935,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1043,7 +943,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1052,7 +951,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1061,7 +959,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1080,7 +977,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1091,7 +987,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1101,7 +996,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1110,7 +1004,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1119,7 +1012,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1128,7 +1020,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1147,7 +1038,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1158,7 +1048,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1168,7 +1057,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1177,7 +1065,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1186,7 +1073,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1195,7 +1081,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1214,7 +1099,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1225,7 +1109,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1235,7 +1118,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1244,7 +1126,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1253,7 +1134,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1262,7 +1142,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1281,7 +1160,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1292,7 +1170,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1302,7 +1179,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 146,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1311,7 +1187,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 120,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1320,7 +1195,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 124,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1329,7 +1203,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1348,7 +1221,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1359,7 +1231,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1369,7 +1240,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1378,7 +1248,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1387,7 +1256,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1396,7 +1264,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1415,7 +1282,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1426,7 +1292,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1436,7 +1301,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1445,7 +1309,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1454,7 +1317,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1463,7 +1325,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1482,7 +1343,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1493,7 +1353,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1503,7 +1362,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1512,7 +1370,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1521,7 +1378,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1530,7 +1386,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1549,7 +1404,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1560,7 +1414,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1570,7 +1423,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1579,7 +1431,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1588,7 +1439,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1597,7 +1447,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1616,7 +1465,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1627,7 +1475,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1637,7 +1484,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 194,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1646,7 +1492,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 168,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1655,7 +1500,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 172,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1664,7 +1508,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1683,7 +1526,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1694,7 +1536,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1704,7 +1545,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1713,7 +1553,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1722,7 +1561,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1731,7 +1569,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1750,7 +1587,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1761,7 +1597,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1771,7 +1606,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1780,7 +1614,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1789,7 +1622,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1798,7 +1630,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1817,7 +1648,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1828,7 +1658,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1838,7 +1667,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1847,7 +1675,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1856,7 +1683,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1865,7 +1691,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1884,7 +1709,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1895,7 +1719,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1905,7 +1728,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1914,7 +1736,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1923,7 +1744,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1932,7 +1752,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1951,7 +1770,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1962,7 +1780,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1972,7 +1789,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 242,
   },
   {
-    "color": 3,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",
@@ -1981,7 +1797,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 216,
   },
   {
-    "color": 2,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1990,7 +1805,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 220,
   },
   {
-    "color": 2,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1999,7 +1813,6 @@ exports[`separate render scenarios > draws the opener frame (letters + grid) and
     "y": 264,
   },
   {
-    "color": 3,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(190, 190, 0)",

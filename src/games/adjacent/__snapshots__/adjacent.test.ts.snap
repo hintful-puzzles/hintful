@@ -3,7 +3,6 @@
 exports[`adjacent render > draws the bars 1`] = `
 [
   {
-    "color": 0,
     "h": 272,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 0,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -21,10 +19,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -46,7 +42,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -55,7 +50,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -64,7 +58,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -73,10 +66,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -98,7 +89,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -107,7 +97,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -116,7 +105,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 110,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -125,10 +113,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -150,7 +136,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -159,7 +144,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -168,7 +152,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 158,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -177,10 +160,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -202,7 +183,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -211,7 +191,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -220,7 +199,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 206,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -229,10 +207,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -254,7 +230,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -263,7 +238,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -272,7 +246,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 254,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -281,10 +254,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -306,7 +277,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -315,7 +285,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -324,7 +293,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -333,10 +301,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -358,7 +324,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -367,7 +332,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -376,7 +340,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 110,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -385,10 +348,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -410,7 +371,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -419,7 +379,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -428,7 +387,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 158,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -437,10 +395,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -462,7 +418,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -471,7 +426,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -480,7 +434,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 206,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -489,10 +442,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -514,7 +465,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -523,7 +473,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -534,7 +483,6 @@ exports[`adjacent render > draws the bars 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -544,7 +492,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 232,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -553,10 +500,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -578,7 +523,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -587,7 +531,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -596,7 +539,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -605,10 +547,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -630,7 +570,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -639,7 +578,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -648,7 +586,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 110,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -657,10 +594,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -682,7 +617,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -691,7 +625,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -700,7 +633,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 158,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -709,10 +641,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -734,7 +664,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -743,7 +672,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -752,7 +680,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 206,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -761,10 +688,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -786,7 +711,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -795,7 +719,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -804,7 +727,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 254,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -813,10 +735,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -838,7 +758,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -847,7 +766,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -856,7 +774,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -865,10 +782,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -890,7 +805,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -899,7 +813,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -908,7 +821,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 110,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -917,10 +829,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -942,7 +852,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -951,7 +860,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -960,7 +868,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 158,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -969,10 +876,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -994,7 +899,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 1,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1003,7 +907,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1012,7 +915,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 206,
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1021,10 +923,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1046,7 +946,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1055,7 +954,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1066,7 +964,6 @@ exports[`adjacent render > draws the bars 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1076,7 +973,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 232,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1085,10 +981,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1110,7 +1004,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1119,7 +1012,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 24,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1128,7 +1020,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1137,10 +1028,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1162,7 +1051,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1171,7 +1059,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 72,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1180,7 +1067,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 110,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1189,10 +1075,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1214,7 +1098,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1223,7 +1106,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 120,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1232,7 +1114,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 158,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1241,10 +1122,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1266,7 +1145,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1275,7 +1153,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 168,
   },
   {
-    "color": 1,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(128, 128, 128)",
@@ -1284,7 +1161,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 206,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1293,10 +1169,8 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1318,7 +1192,6 @@ exports[`adjacent render > draws the bars 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1327,7 +1200,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 216,
   },
   {
-    "color": 0,
     "h": 4,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1336,7 +1208,6 @@ exports[`adjacent render > draws the bars 1`] = `
     "y": 254,
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

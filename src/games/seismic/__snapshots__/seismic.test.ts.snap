@@ -3,7 +3,6 @@
 exports[`seismic rendering > draws the opening frame: wall backing, lifted givens, and no cursor 1`] = `
 [
   {
-    "color": 0,
     "h": 214,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 0,
   },
   {
-    "color": 3,
     "h": 162,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -28,7 +26,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -37,7 +34,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -46,7 +42,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -65,7 +60,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 28,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -74,7 +68,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -83,7 +76,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -102,7 +94,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -111,7 +102,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -120,7 +110,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -129,7 +118,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -148,7 +136,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 28,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -157,7 +144,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -176,7 +162,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -185,7 +170,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 107,
   },
   {
-    "color": 2,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -194,7 +178,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -203,7 +186,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -214,7 +196,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -234,7 +215,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -243,7 +223,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 107,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -252,7 +231,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 69,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -261,7 +239,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -270,7 +247,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -279,7 +255,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -298,7 +273,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -307,7 +281,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 107,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -316,7 +289,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -325,7 +297,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -334,7 +305,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -343,7 +313,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -362,7 +331,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -371,7 +339,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 107,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -380,7 +347,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 69,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -389,7 +355,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -408,7 +373,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -417,7 +381,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 147,
   },
   {
-    "color": 2,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -426,7 +389,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -435,7 +397,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -446,7 +407,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -466,7 +426,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -475,7 +434,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 147,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -484,7 +442,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -493,7 +450,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -502,7 +458,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -511,7 +466,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 145,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -530,7 +484,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -539,7 +492,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -548,7 +500,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -557,7 +508,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -566,7 +516,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 145,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -585,7 +534,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -594,7 +542,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 147,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -603,7 +550,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -622,7 +568,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 148,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -631,7 +576,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -650,7 +594,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 148,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -659,7 +602,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -668,7 +610,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -687,7 +628,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 148,
   },
   {
-    "color": 8,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -696,7 +636,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 149,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -705,7 +644,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 149,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -724,7 +662,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 148,
   },
   {
-    "color": 2,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -733,7 +670,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -744,7 +680,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -757,7 +692,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -771,7 +705,6 @@ exports[`seismic rendering > draws the opening frame: wall backing, lifted given
 exports[`seismic rendering > highlights a mistake on a board that was already drawn 1`] = `
 [
   {
-    "color": 0,
     "h": 214,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -780,7 +713,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 0,
   },
   {
-    "color": 3,
     "h": 162,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -796,7 +728,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -805,7 +736,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -814,7 +744,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -825,7 +754,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 6,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(223, 34, 37)",
@@ -835,7 +763,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 48,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 1,
@@ -845,7 +772,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y2": 30,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 1,
@@ -855,7 +781,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y2": 64,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 1,
@@ -865,7 +790,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y2": 64,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 1,
@@ -875,7 +799,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y2": 30,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 1,
@@ -885,7 +808,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y2": 31,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 1,
@@ -895,7 +817,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y2": 63,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 1,
@@ -905,7 +826,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y2": 63,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(223, 34, 37)",
     "thickness": 1,
@@ -925,7 +845,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 28,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -934,7 +853,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -943,7 +861,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -962,7 +879,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -971,7 +887,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -980,7 +895,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -989,7 +903,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1008,7 +921,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 28,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1017,7 +929,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1036,7 +947,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1045,7 +955,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 107,
   },
   {
-    "color": 2,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1054,7 +963,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1063,7 +971,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1074,7 +981,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1094,7 +1000,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1103,7 +1008,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 107,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1112,7 +1016,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 69,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1121,7 +1024,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1130,7 +1032,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1139,7 +1040,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1158,7 +1058,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1167,7 +1066,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 107,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1176,7 +1074,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1185,7 +1082,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1194,7 +1090,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1203,7 +1098,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1222,7 +1116,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1231,7 +1124,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 107,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1240,7 +1132,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 69,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1249,7 +1140,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1268,7 +1158,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1277,7 +1166,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 147,
   },
   {
-    "color": 2,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1286,7 +1174,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1295,7 +1182,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1306,7 +1192,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1326,7 +1211,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1335,7 +1219,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 147,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1344,7 +1227,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1353,7 +1235,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1362,7 +1243,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1371,7 +1251,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 145,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1390,7 +1269,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1399,7 +1277,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1408,7 +1285,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1417,7 +1293,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1426,7 +1301,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 145,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1445,7 +1319,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1454,7 +1327,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 147,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1463,7 +1335,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1482,7 +1353,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 148,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1491,7 +1361,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1510,7 +1379,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 148,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1519,7 +1387,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1528,7 +1395,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1547,7 +1413,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 148,
   },
   {
-    "color": 8,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1556,7 +1421,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 149,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1565,7 +1429,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 149,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1584,7 +1447,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 148,
   },
   {
-    "color": 2,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1593,7 +1455,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1604,7 +1465,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1617,7 +1477,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1631,7 +1490,6 @@ exports[`seismic rendering > highlights a mistake on a board that was already dr
 exports[`seismic rendering > inks a player's entry differently from a given 1`] = `
 [
   {
-    "color": 0,
     "h": 214,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1640,7 +1498,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 0,
   },
   {
-    "color": 3,
     "h": 162,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1656,7 +1513,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1665,7 +1521,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1674,7 +1529,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1685,7 +1539,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 127, 0)",
@@ -1705,7 +1558,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 28,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1714,7 +1566,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1723,7 +1574,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1742,7 +1592,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 28,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1751,7 +1600,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 67,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1760,7 +1608,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1769,7 +1616,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 65,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1788,7 +1634,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 28,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1797,7 +1642,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 29,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1816,7 +1660,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1825,7 +1668,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 107,
   },
   {
-    "color": 2,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1834,7 +1676,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1843,7 +1684,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1854,7 +1694,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1874,7 +1713,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1883,7 +1721,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 107,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1892,7 +1729,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 69,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1901,7 +1737,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1910,7 +1745,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1919,7 +1753,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1938,7 +1771,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1947,7 +1779,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 107,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1956,7 +1787,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1965,7 +1795,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1974,7 +1803,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1983,7 +1811,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 105,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2002,7 +1829,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2011,7 +1837,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 107,
   },
   {
-    "color": 1,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2020,7 +1845,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 69,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2029,7 +1853,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 68,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2048,7 +1871,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2057,7 +1879,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 147,
   },
   {
-    "color": 2,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2066,7 +1887,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2075,7 +1895,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2086,7 +1905,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2106,7 +1924,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2115,7 +1932,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 147,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2124,7 +1940,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2133,7 +1948,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2142,7 +1956,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2151,7 +1964,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 145,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2170,7 +1982,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2179,7 +1990,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2188,7 +1998,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2197,7 +2006,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2206,7 +2014,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 145,
   },
   {
-    "color": 3,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2225,7 +2032,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2234,7 +2040,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 147,
   },
   {
-    "color": 1,
     "h": 39,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2243,7 +2048,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 108,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2262,7 +2066,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 148,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2271,7 +2074,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2290,7 +2092,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 148,
   },
   {
-    "color": 1,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2299,7 +2100,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2308,7 +2108,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2327,7 +2126,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 148,
   },
   {
-    "color": 8,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2336,7 +2134,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 149,
   },
   {
-    "color": 1,
     "h": 36,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2345,7 +2142,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 149,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2364,7 +2160,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 148,
   },
   {
-    "color": 2,
     "h": 37,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2373,7 +2168,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "y": 148,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2384,7 +2178,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2397,7 +2190,6 @@ exports[`seismic rendering > inks a player's entry differently from a given 1`] 
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

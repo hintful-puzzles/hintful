@@ -3,7 +3,6 @@
 exports[`unequal render > draws greater-than chevrons 1`] = `
 [
   {
-    "color": 0,
     "h": 272,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 0,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -21,10 +19,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -46,7 +42,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -55,10 +50,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 24,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -88,7 +81,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -97,10 +89,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -122,7 +112,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -131,10 +120,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -156,7 +143,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 16,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -165,10 +151,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 104,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -198,7 +182,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -207,10 +190,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -232,7 +213,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -241,10 +221,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -266,7 +244,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -275,10 +252,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -300,7 +275,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -309,10 +283,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -334,7 +306,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -343,10 +314,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -368,7 +337,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -377,10 +345,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -402,7 +368,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -411,10 +376,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -436,7 +399,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -445,10 +407,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -470,7 +430,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -479,10 +438,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 24,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -512,7 +469,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -521,10 +477,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -546,7 +500,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -555,10 +508,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -580,7 +531,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -589,10 +539,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -614,7 +562,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -623,10 +570,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -648,7 +593,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -657,10 +601,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 216,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -690,7 +632,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 13,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -699,10 +640,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -724,7 +663,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -733,10 +671,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 24,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -768,7 +704,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -778,7 +713,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 40,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -787,10 +721,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -812,7 +744,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -821,10 +752,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -846,7 +775,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 16,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -855,10 +783,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 104,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -888,7 +814,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -897,10 +822,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -922,7 +845,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -931,10 +853,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -956,7 +876,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -965,10 +884,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 24,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -990,7 +907,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 16,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -999,10 +915,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 56,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1032,7 +946,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1041,10 +954,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 72,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1066,7 +977,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1075,10 +985,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 120,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1100,7 +1008,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1109,10 +1016,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 168,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1134,7 +1039,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1143,10 +1047,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 216,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1168,7 +1070,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 16,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1177,10 +1078,8 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     "y": 200,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1210,7 +1109,6 @@ exports[`unequal render > draws greater-than chevrons 1`] = `
     ],
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

@@ -3,7 +3,6 @@
 exports[`rect render scenarios > opener frame: number text drawn, and only the clues' squares filled 1`] = `
 [
   {
-    "color": 0,
     "h": 171,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 0,
   },
   {
-    "color": 1,
     "h": 171,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -21,7 +19,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 0,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -30,7 +27,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -39,7 +35,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 2,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -48,7 +43,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -57,7 +51,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -66,7 +59,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -75,7 +67,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 26,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -84,7 +75,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -93,7 +83,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -102,7 +91,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 50,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -111,7 +99,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -120,7 +107,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 15,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(253, 204, 211)",
@@ -131,7 +117,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -141,7 +126,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 85,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -150,7 +134,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -159,7 +142,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -168,7 +150,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 98,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -177,7 +158,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -186,7 +166,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -195,7 +174,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 122,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -204,7 +182,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -213,7 +190,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 145,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -222,7 +198,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 146,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -231,7 +206,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 168,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -240,7 +214,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 145,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -249,7 +222,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(206, 213, 252)",
@@ -260,7 +232,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -270,7 +241,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 13,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -279,7 +249,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -288,7 +257,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -297,7 +265,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 26,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -306,7 +273,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -315,7 +281,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 50,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -324,7 +289,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -333,7 +297,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 74,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -342,7 +305,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -351,7 +313,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 98,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -360,7 +321,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -369,7 +329,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 122,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -378,7 +337,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 145,
   },
   {
-    "color": 13,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(170, 235, 230)",
@@ -389,7 +347,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -399,7 +356,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 157,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -408,7 +364,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 168,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -417,7 +372,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -426,7 +380,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 2,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -435,7 +388,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -444,7 +396,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -453,7 +404,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 26,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -462,7 +412,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -471,7 +420,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 50,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -480,7 +428,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -489,7 +436,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 74,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -498,7 +444,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -507,7 +452,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 98,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -516,7 +460,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 12,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -527,7 +470,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -537,7 +479,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 133,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -546,7 +487,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 145,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -555,7 +495,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 146,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -564,7 +503,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 168,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -573,7 +511,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -582,7 +519,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 2,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -591,7 +527,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -600,7 +535,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -609,7 +543,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 26,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -618,7 +551,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -627,7 +559,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 50,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -636,7 +567,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -645,7 +575,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 74,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -654,7 +583,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(206, 213, 252)",
@@ -665,7 +593,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -675,7 +602,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 109,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -684,7 +610,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 15,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(253, 204, 211)",
@@ -695,7 +620,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -705,7 +629,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 133,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -714,7 +637,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 145,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -723,7 +645,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 146,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -732,7 +653,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 168,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -741,7 +661,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 12,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -752,7 +671,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -762,7 +680,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 13,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -771,7 +688,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -780,7 +696,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 13,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(170, 235, 230)",
@@ -791,7 +706,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -801,7 +715,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 37,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -810,7 +723,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -819,7 +731,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 50,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -828,7 +739,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -837,7 +747,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 74,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -846,7 +755,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -855,7 +763,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 98,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -864,7 +771,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -873,7 +779,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 122,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -882,7 +787,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 145,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -891,7 +795,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 146,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -900,7 +803,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 168,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -909,7 +811,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -918,7 +819,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 2,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -927,7 +827,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -936,7 +835,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -945,7 +843,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 26,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -954,7 +851,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -963,7 +859,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 50,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -972,7 +867,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -981,7 +875,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 74,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -990,7 +883,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 12,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(246, 235, 175)",
@@ -1001,7 +893,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1011,7 +902,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 109,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1020,7 +910,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1029,7 +918,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 122,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1038,7 +926,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 145,
   },
   {
-    "color": 13,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(170, 235, 230)",
@@ -1049,7 +936,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1059,7 +945,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 157,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1068,7 +953,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 168,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1077,7 +961,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1086,7 +969,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 2,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1095,7 +977,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1104,7 +985,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 1,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1113,7 +993,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1122,7 +1001,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 26,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1131,7 +1009,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 25,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1140,7 +1017,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 15,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(253, 204, 211)",
@@ -1151,7 +1027,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1161,7 +1036,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 61,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1170,7 +1044,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 49,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1179,7 +1052,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1188,7 +1060,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 74,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1197,7 +1068,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 73,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1206,7 +1076,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1215,7 +1084,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 98,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1224,7 +1092,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 97,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1233,7 +1100,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 14,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(206, 213, 252)",
@@ -1244,7 +1110,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 2,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1254,7 +1119,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 133,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1263,7 +1127,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 121,
   },
   {
-    "color": 3,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1272,7 +1135,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 145,
   },
   {
-    "color": 9,
     "h": 23,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1281,7 +1143,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 146,
   },
   {
-    "color": 1,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1290,7 +1151,6 @@ exports[`rect render scenarios > opener frame: number text drawn, and only the c
     "y": 168,
   },
   {
-    "color": 1,
     "h": 25,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",

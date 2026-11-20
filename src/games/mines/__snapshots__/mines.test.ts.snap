@@ -3,7 +3,6 @@
 exports[`mines render > paints the opened board: numbers on two flat surfaces, and no bevel 1`] = `
 [
   {
-    "color": 0,
     "h": 186,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 0,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -22,7 +20,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y2": 3,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -32,7 +29,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y2": 183,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -42,7 +38,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y2": 183,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -59,7 +54,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -68,7 +62,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -87,7 +80,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -96,7 +88,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -115,7 +106,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -124,7 +114,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -135,7 +124,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -155,7 +143,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -164,7 +151,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -183,7 +169,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -192,7 +177,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -211,7 +195,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -220,7 +203,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -239,7 +221,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -248,7 +229,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -267,7 +247,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -276,7 +255,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -295,7 +273,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -304,7 +281,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 3,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -323,7 +299,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -332,7 +307,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -351,7 +325,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -360,7 +333,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -379,7 +351,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -388,7 +359,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -399,7 +369,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -419,7 +388,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -428,7 +396,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -439,7 +406,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(33, 167, 73)",
@@ -459,7 +425,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -468,7 +433,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -487,7 +451,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -496,7 +459,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -515,7 +477,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -524,7 +485,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -543,7 +503,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -552,7 +511,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -571,7 +529,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -580,7 +537,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 23,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -599,7 +555,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -608,7 +563,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -627,7 +581,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -636,7 +589,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -655,7 +607,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -664,7 +615,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -683,7 +633,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -692,7 +641,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -703,7 +651,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -723,7 +670,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -732,7 +678,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -743,7 +688,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -763,7 +707,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -772,7 +715,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -783,7 +725,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -803,7 +744,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -812,7 +752,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -823,7 +762,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -843,7 +781,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -852,7 +789,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -871,7 +807,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -880,7 +815,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 43,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -899,7 +833,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -908,7 +841,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -927,7 +859,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -936,7 +867,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -955,7 +885,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -964,7 +893,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -983,7 +911,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -992,7 +919,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1011,7 +937,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1020,7 +945,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1039,7 +963,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1048,7 +971,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1067,7 +989,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1076,7 +997,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1087,7 +1007,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(33, 167, 73)",
@@ -1107,7 +1026,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1116,7 +1034,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1135,7 +1052,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1144,7 +1060,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 63,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1163,7 +1078,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1172,7 +1086,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1191,7 +1104,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1200,7 +1112,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1219,7 +1130,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1228,7 +1138,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1247,7 +1156,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1256,7 +1164,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1275,7 +1182,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1284,7 +1190,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1303,7 +1208,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1312,7 +1216,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1331,7 +1234,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1340,7 +1242,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1351,7 +1252,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(33, 167, 73)",
@@ -1371,7 +1271,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1380,7 +1279,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1399,7 +1297,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1408,7 +1305,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 83,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1427,7 +1323,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1436,7 +1331,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1455,7 +1349,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1464,7 +1357,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1483,7 +1375,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1492,7 +1383,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1511,7 +1401,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1520,7 +1409,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1539,7 +1427,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1548,7 +1435,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1567,7 +1453,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1576,7 +1461,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1595,7 +1479,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1604,7 +1487,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1615,7 +1497,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(33, 167, 73)",
@@ -1635,7 +1516,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1644,7 +1524,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1663,7 +1542,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1672,7 +1550,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 103,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1691,7 +1568,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1700,7 +1576,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1719,7 +1594,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1728,7 +1602,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1747,7 +1620,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1756,7 +1628,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1775,7 +1646,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1784,7 +1654,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1803,7 +1672,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1812,7 +1680,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1831,7 +1698,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1840,7 +1706,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1859,7 +1724,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1868,7 +1732,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1879,7 +1742,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(33, 167, 73)",
@@ -1899,7 +1761,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1908,7 +1769,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1927,7 +1787,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1936,7 +1795,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 123,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1955,7 +1813,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1964,7 +1821,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1983,7 +1839,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1992,7 +1847,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2011,7 +1865,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2020,7 +1873,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2039,7 +1891,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2048,7 +1899,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2067,7 +1917,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2076,7 +1925,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2087,7 +1935,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -2107,7 +1954,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2116,7 +1962,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2127,7 +1972,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 5,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(33, 167, 73)",
@@ -2147,7 +1991,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2156,7 +1999,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2167,7 +2009,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -2187,7 +2028,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2196,7 +2036,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2215,7 +2054,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2224,7 +2062,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 143,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2243,7 +2080,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2252,7 +2088,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2271,7 +2106,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2280,7 +2114,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2299,7 +2132,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2308,7 +2140,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2327,7 +2158,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2336,7 +2166,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2355,7 +2184,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2364,7 +2192,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 2,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2375,7 +2202,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(21, 113, 233)",
@@ -2395,7 +2221,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2404,7 +2229,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2423,7 +2247,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2432,7 +2255,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2451,7 +2273,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2460,7 +2281,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2479,7 +2299,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 1,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2488,7 +2307,6 @@ exports[`mines render > paints the opened board: numbers on two flat surfaces, a
     "y": 163,
   },
   {
-    "color": 3,
     "h": 19,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",

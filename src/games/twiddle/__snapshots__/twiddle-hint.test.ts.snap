@@ -3,7 +3,6 @@
 exports[`the frames a hint draws > rings the block's pivot round the turn's arrow, and outlines the tile it serves 1`] = `
 [
   {
-    "color": 0,
     "h": 192,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,10 +11,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 0,
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -41,10 +38,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -70,10 +65,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -91,10 +84,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -112,10 +103,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -133,10 +122,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -154,7 +141,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -163,10 +149,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 26,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -186,7 +170,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -196,10 +179,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 48,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -217,10 +198,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -238,10 +217,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -259,10 +236,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -280,7 +255,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -289,10 +263,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 26,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -312,7 +284,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -322,10 +293,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 48,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -343,10 +312,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -364,10 +331,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -385,10 +350,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -406,7 +369,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -415,10 +377,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 26,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -438,7 +398,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -448,10 +407,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 48,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -469,10 +426,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -490,10 +445,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -511,10 +464,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -532,7 +483,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -541,10 +491,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 74,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -564,7 +512,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -574,10 +521,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 96,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -595,10 +540,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -616,10 +559,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -637,10 +578,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -658,7 +597,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -667,10 +605,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 74,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -690,7 +626,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -700,10 +635,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 96,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -721,10 +654,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -742,10 +673,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -763,10 +692,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -784,7 +711,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -793,10 +719,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 74,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -816,7 +740,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -826,10 +749,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 96,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -847,10 +768,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -868,10 +787,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -889,10 +806,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -910,7 +825,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -919,10 +833,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 122,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -942,7 +854,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -952,7 +863,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 144,
   },
   {
-    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -961,7 +871,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 122,
   },
   {
-    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -970,7 +879,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 164,
   },
   {
-    "color": 12,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -979,7 +887,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 122,
   },
   {
-    "color": 12,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -988,10 +895,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 122,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -1009,10 +914,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -1030,10 +933,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -1051,10 +952,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -1072,7 +971,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1081,10 +979,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 122,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -1104,7 +1000,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1114,10 +1009,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 144,
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -1135,10 +1028,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 4,
     "fillRgb": "rgb(168, 168, 168)",
     "op": "polygon",
-    "outline": 4,
     "outlineRgb": "rgb(168, 168, 168)",
     "points": [
       [
@@ -1156,10 +1047,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -1177,10 +1066,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 2,
     "fillRgb": "rgb(253, 253, 253)",
     "op": "polygon",
-    "outline": 2,
     "outlineRgb": "rgb(253, 253, 253)",
     "points": [
       [
@@ -1198,7 +1085,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "color": 8,
     "h": 44,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1207,10 +1093,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 122,
   },
   {
-    "fill": 5,
     "fillRgb": "rgb(190, 190, 190)",
     "op": "polygon",
-    "outline": 5,
     "outlineRgb": "rgb(190, 190, 190)",
     "points": [
       [
@@ -1230,7 +1114,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1240,7 +1123,6 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 144,
   },
   {
-    "color": 14,
     "h": 45,
     "op": "ring",
     "radius": 23,
@@ -1258,10 +1140,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     "y": 98,
   },
   {
-    "fill": 14,
     "fillRgb": "rgb(21, 113, 233)",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(21, 113, 233)",
     "points": [
       [
@@ -1467,10 +1347,8 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
     ],
   },
   {
-    "fill": 14,
     "fillRgb": "rgb(21, 113, 233)",
     "op": "polygon",
-    "outline": 14,
     "outlineRgb": "rgb(21, 113, 233)",
     "points": [
       [
@@ -1493,40 +1371,32 @@ exports[`the frames a hint draws > rings the block's pivot round the turn's arro
   {
     "cx": 72,
     "cy": 72,
-    "fill": 13,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 13,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 2,
   },
   {
     "cx": 120,
     "cy": 72,
-    "fill": 13,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 13,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 2,
   },
   {
     "cx": 72,
     "cy": 120,
-    "fill": 13,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 13,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 2,
   },
   {
     "cx": 120,
     "cy": 120,
-    "fill": 13,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 13,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 2,
   },

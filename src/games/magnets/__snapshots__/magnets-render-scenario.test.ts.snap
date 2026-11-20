@@ -3,7 +3,6 @@
 exports[`magnets render scenarios > a \`?\` step rings the domino as one shape and recolors the line's clues 1`] = `
 [
   {
-    "color": 0,
     "h": 224,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 0,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -21,7 +19,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 14,
   },
   {
-    "color": 3,
     "h": 17,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -30,7 +27,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 8,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -39,7 +35,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 206,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -50,25 +45,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 38,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -77,7 +67,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -86,7 +75,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -97,25 +85,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 89,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -124,7 +107,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -133,7 +115,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -144,25 +125,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 102,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 102,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -171,7 +147,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -180,7 +155,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -191,25 +165,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 153,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -218,7 +187,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -227,7 +195,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -238,25 +205,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 166,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 166,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -265,7 +227,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -276,7 +237,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -286,7 +246,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -297,25 +256,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 217,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -324,7 +278,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -333,7 +286,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 38,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "hatch",
     "period": 11,
@@ -345,7 +297,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -355,7 +306,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -366,25 +316,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 38,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -393,7 +338,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -402,7 +346,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -413,25 +356,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 89,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -440,7 +378,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -449,7 +386,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -460,25 +396,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 102,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 121,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -487,7 +418,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 66,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -496,7 +426,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -507,25 +436,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 134,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 134,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -534,7 +458,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -543,7 +466,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -554,25 +476,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 185,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 185,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -581,7 +498,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -590,7 +506,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -601,25 +516,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 198,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -628,7 +538,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 66,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -637,7 +546,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 70,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "hatch",
     "period": 11,
@@ -649,7 +557,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -659,7 +566,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -670,25 +576,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 38,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -697,7 +598,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 98,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -706,7 +606,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -717,25 +616,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 89,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -744,7 +638,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 98,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -753,7 +646,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -764,25 +656,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 102,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 121,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -791,7 +678,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 96,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -800,7 +686,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -811,25 +696,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 134,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -838,7 +718,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 98,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -847,7 +726,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -858,25 +736,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 166,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 185,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -885,7 +758,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 98,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -894,7 +766,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -905,25 +776,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 198,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -932,7 +798,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 96,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -941,7 +806,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 96,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "hatch",
     "period": 11,
@@ -953,7 +817,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -963,7 +826,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -974,25 +836,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 38,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1001,7 +858,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 130,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1010,7 +866,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1021,25 +876,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 89,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1048,7 +898,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 130,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1057,7 +906,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1068,25 +916,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 102,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 121,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1095,7 +938,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 130,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1104,7 +946,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1115,25 +956,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 134,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1142,7 +978,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 128,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1151,7 +986,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 128,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1162,25 +996,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 166,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 185,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1189,7 +1018,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 128,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1198,7 +1026,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 128,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1209,25 +1036,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 198,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1236,7 +1058,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 130,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1245,7 +1066,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 134,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "hatch",
     "period": 11,
@@ -1255,7 +1075,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 128,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1266,25 +1085,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 38,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1293,7 +1107,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1302,7 +1115,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1313,25 +1125,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 89,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1340,7 +1147,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1349,7 +1155,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1360,25 +1165,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 102,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 121,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1387,7 +1187,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 160,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1396,7 +1195,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 160,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1407,25 +1205,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 134,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 134,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1434,7 +1227,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1443,7 +1235,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1454,25 +1245,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 185,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 185,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1481,7 +1267,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1490,7 +1275,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1501,25 +1285,20 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "cx": 198,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1528,7 +1307,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 160,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1537,7 +1315,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 160,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "hatch",
     "period": 11,
@@ -1547,7 +1324,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 160,
   },
   {
-    "color": 14,
     "h": 62,
     "op": "ring",
     "radius": 15,
@@ -1558,7 +1334,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 129,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1569,7 +1344,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1579,7 +1353,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1590,7 +1363,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1600,7 +1372,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1611,7 +1382,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1621,7 +1391,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1632,7 +1401,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1642,7 +1410,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1653,7 +1420,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1663,7 +1429,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1672,7 +1437,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 0,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "hatch",
     "period": 11,
@@ -1684,7 +1448,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -1694,7 +1457,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1705,7 +1467,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1715,7 +1476,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1726,7 +1486,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1736,7 +1495,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1747,7 +1505,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1757,7 +1514,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1768,7 +1524,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1778,7 +1533,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 144,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1789,7 +1543,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1799,7 +1552,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 176,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1810,7 +1562,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1820,7 +1571,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1831,7 +1581,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1841,7 +1590,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1852,7 +1600,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1862,7 +1609,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1873,7 +1619,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1883,7 +1628,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1894,7 +1638,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1904,7 +1647,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1913,7 +1655,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 192,
   },
   {
-    "color": 15,
     "h": 32,
     "op": "hatch",
     "period": 11,
@@ -1925,7 +1666,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 12,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(40, 132, 32)",
@@ -1935,7 +1675,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1946,7 +1685,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1956,7 +1694,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1967,7 +1704,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1977,7 +1713,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1988,7 +1723,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1998,7 +1732,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2009,7 +1742,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2019,7 +1751,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
     "y": 144,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2030,7 +1761,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2045,7 +1775,6 @@ exports[`magnets render scenarios > a \`?\` step rings the domino as one shape a
 exports[`magnets render scenarios > a placement rings the one square it decides and marks its evidence beside it 1`] = `
 [
   {
-    "color": 0,
     "h": 224,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2054,7 +1783,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 0,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2063,7 +1791,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 14,
   },
   {
-    "color": 3,
     "h": 17,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2072,7 +1799,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 8,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2081,7 +1807,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 206,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2092,25 +1817,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 38,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2119,7 +1839,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2128,7 +1847,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2139,25 +1857,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 89,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2166,7 +1879,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2175,7 +1887,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2186,25 +1897,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 102,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 102,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2213,7 +1919,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2222,7 +1927,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2233,25 +1937,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 153,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2260,7 +1959,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2269,7 +1967,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2280,25 +1977,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 166,
     "cy": 38,
-    "fill": 9,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "circle",
-    "outline": 9,
     "outlineRgb": "rgb(223, 34, 37)",
     "r": 4,
   },
   {
     "cx": 166,
     "cy": 57,
-    "fill": 9,
     "fillRgb": "rgb(223, 34, 37)",
     "op": "circle",
-    "outline": 9,
     "outlineRgb": "rgb(223, 34, 37)",
     "r": 4,
   },
   {
-    "color": 9,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(223, 34, 37)",
@@ -2307,7 +1999,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 34,
   },
   {
-    "color": 9,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(223, 34, 37)",
@@ -2316,7 +2007,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 38,
   },
   {
-    "color": 0,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2325,7 +2015,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 46,
   },
   {
-    "color": 0,
     "h": 17,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2334,7 +2023,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 40,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2345,25 +2033,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 217,
     "cy": 38,
-    "fill": 8,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 57,
-    "fill": 8,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 8,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 4,
   },
   {
-    "color": 8,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2372,7 +2055,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 34,
   },
   {
-    "color": 8,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2381,7 +2063,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 38,
   },
   {
-    "color": 0,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2390,7 +2071,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 46,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2401,25 +2081,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 38,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2428,7 +2103,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2437,7 +2111,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2448,25 +2121,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 89,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2475,7 +2143,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2484,7 +2151,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2495,25 +2161,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 102,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 102,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2522,7 +2183,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2531,7 +2191,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2542,25 +2201,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 153,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2569,7 +2223,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2578,7 +2231,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2589,25 +2241,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 166,
     "cy": 70,
-    "fill": 7,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 4,
   },
   {
     "cx": 185,
     "cy": 70,
-    "fill": 7,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 4,
   },
   {
-    "color": 7,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(33, 167, 73)",
@@ -2616,7 +2263,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 66,
   },
   {
-    "color": 7,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(33, 167, 73)",
@@ -2625,7 +2271,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 70,
   },
   {
-    "color": 0,
     "op": "line",
     "rgb": "rgb(211, 211, 211)",
     "thickness": 1,
@@ -2635,7 +2280,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y2": 88,
   },
   {
-    "color": 0,
     "op": "line",
     "rgb": "rgb(211, 211, 211)",
     "thickness": 1,
@@ -2645,7 +2289,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y2": 88,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2656,25 +2299,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 198,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2683,7 +2321,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 66,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2694,7 +2331,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -2704,7 +2340,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2715,25 +2350,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 38,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2742,7 +2372,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 98,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2751,7 +2380,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2762,25 +2390,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 89,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2789,7 +2412,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 98,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2798,7 +2420,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2809,25 +2430,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 102,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 102,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2836,7 +2452,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 98,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2845,7 +2460,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2856,25 +2470,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 153,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2883,7 +2492,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 98,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2892,7 +2500,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2903,25 +2510,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 166,
     "cy": 121,
-    "fill": 7,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 4,
   },
   {
     "cx": 185,
     "cy": 121,
-    "fill": 7,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 4,
   },
   {
-    "color": 7,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(33, 167, 73)",
@@ -2930,7 +2532,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 96,
   },
   {
-    "color": 7,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(33, 167, 73)",
@@ -2939,7 +2540,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 96,
   },
   {
-    "color": 0,
     "op": "line",
     "rgb": "rgb(211, 211, 211)",
     "thickness": 1,
@@ -2949,7 +2549,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y2": 120,
   },
   {
-    "color": 0,
     "op": "line",
     "rgb": "rgb(211, 211, 211)",
     "thickness": 1,
@@ -2959,7 +2558,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y2": 120,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2970,25 +2568,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 198,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2997,7 +2590,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 96,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3008,7 +2600,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -3018,7 +2609,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3029,25 +2619,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 38,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3056,7 +2641,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 130,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3065,7 +2649,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3076,25 +2659,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 89,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3103,7 +2681,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 130,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3112,7 +2689,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3123,25 +2699,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 102,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 121,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3150,7 +2721,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 130,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3159,7 +2729,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3170,25 +2739,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 134,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3197,7 +2761,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 130,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3206,7 +2769,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3217,25 +2779,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 166,
     "cy": 134,
-    "fill": 7,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 4,
   },
   {
     "cx": 185,
     "cy": 134,
-    "fill": 7,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 4,
   },
   {
-    "color": 7,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(33, 167, 73)",
@@ -3244,7 +2801,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 130,
   },
   {
-    "color": 7,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(33, 167, 73)",
@@ -3253,7 +2809,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 134,
   },
   {
-    "color": 0,
     "op": "line",
     "rgb": "rgb(211, 211, 211)",
     "thickness": 1,
@@ -3263,7 +2818,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y2": 152,
   },
   {
-    "color": 0,
     "op": "line",
     "rgb": "rgb(211, 211, 211)",
     "thickness": 1,
@@ -3273,7 +2827,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y2": 152,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3284,25 +2837,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 198,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3311,7 +2859,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 130,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3320,7 +2867,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3331,25 +2877,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 38,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3358,7 +2899,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3367,7 +2907,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3378,25 +2917,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 89,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3405,7 +2939,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3414,7 +2947,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3425,25 +2957,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 102,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 121,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3452,7 +2979,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 160,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3461,7 +2987,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 160,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3472,25 +2997,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 134,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3499,7 +3019,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 160,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3508,7 +3027,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 160,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3519,25 +3037,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 166,
     "cy": 185,
-    "fill": 7,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 4,
   },
   {
     "cx": 185,
     "cy": 185,
-    "fill": 7,
     "fillRgb": "rgb(33, 167, 73)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(33, 167, 73)",
     "r": 4,
   },
   {
-    "color": 7,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(33, 167, 73)",
@@ -3546,7 +3059,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 160,
   },
   {
-    "color": 7,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(33, 167, 73)",
@@ -3555,7 +3067,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 160,
   },
   {
-    "color": 0,
     "op": "line",
     "rgb": "rgb(211, 211, 211)",
     "thickness": 1,
@@ -3565,7 +3076,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y2": 184,
   },
   {
-    "color": 0,
     "op": "line",
     "rgb": "rgb(211, 211, 211)",
     "thickness": 1,
@@ -3575,7 +3085,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y2": 184,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3586,25 +3095,20 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "cx": 198,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3613,7 +3117,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 160,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3622,7 +3125,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 160,
   },
   {
-    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3631,7 +3133,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 32,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3640,7 +3141,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 32,
   },
   {
-    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3649,7 +3149,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 62,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3658,7 +3157,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 32,
   },
   {
-    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3667,7 +3165,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 96,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3676,7 +3173,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 96,
   },
   {
-    "color": 12,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3685,7 +3181,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 126,
   },
   {
-    "color": 12,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -3694,7 +3189,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 96,
   },
   {
-    "color": 14,
     "h": 30,
     "op": "ring",
     "radius": 15,
@@ -3705,7 +3199,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 65,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3716,7 +3209,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3726,7 +3218,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3737,7 +3228,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3747,7 +3237,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3758,7 +3247,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3768,7 +3256,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3779,7 +3266,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3789,7 +3275,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3800,7 +3285,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3810,7 +3294,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3821,7 +3304,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3831,7 +3313,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3842,7 +3323,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3852,7 +3332,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3863,7 +3342,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3873,7 +3351,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3884,7 +3361,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3894,7 +3370,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3905,7 +3380,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3915,7 +3389,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 144,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3926,7 +3399,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3936,7 +3408,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 176,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3947,7 +3418,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3957,7 +3427,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3968,7 +3437,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3978,7 +3446,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3989,7 +3456,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3999,7 +3465,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4010,7 +3475,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4020,7 +3484,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4031,7 +3494,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4041,7 +3503,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4052,7 +3513,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4062,7 +3522,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4073,7 +3532,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4083,7 +3541,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4094,7 +3551,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4104,7 +3560,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4115,7 +3570,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4125,7 +3579,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4136,7 +3589,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4146,7 +3598,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
     "y": 144,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4157,7 +3608,6 @@ exports[`magnets render scenarios > a placement rings the one square it decides 
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4180,7 +3630,6 @@ exports[`magnets render scenarios > magnets: pinned hint positions > says, at ea
 exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`] = `
 [
   {
-    "color": 0,
     "h": 224,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4189,7 +3638,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 0,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4198,7 +3646,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 14,
   },
   {
-    "color": 3,
     "h": 17,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4207,7 +3654,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 8,
   },
   {
-    "color": 3,
     "h": 5,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4216,7 +3662,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 206,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4227,25 +3672,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 38,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4254,7 +3694,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4263,7 +3702,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4274,25 +3712,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 89,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4301,7 +3734,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4310,7 +3742,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4321,25 +3752,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 102,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 102,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4348,7 +3774,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4357,7 +3782,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4368,25 +3792,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 153,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4395,7 +3814,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4404,7 +3822,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4415,25 +3832,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 166,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 166,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4442,7 +3854,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4451,7 +3862,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4462,25 +3872,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 217,
     "cy": 38,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 57,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4489,7 +3894,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 34,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4498,7 +3902,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 38,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4509,25 +3912,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 38,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 57,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4536,7 +3934,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 66,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4545,7 +3942,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4556,25 +3952,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 70,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4583,7 +3974,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 66,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4592,7 +3982,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4603,25 +3992,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 102,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 102,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4630,7 +4014,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4639,7 +4022,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4650,25 +4032,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 153,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4677,7 +4054,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4686,7 +4062,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4697,25 +4072,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 166,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 166,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4724,7 +4094,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4733,7 +4102,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4744,25 +4112,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 217,
     "cy": 70,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 89,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4771,7 +4134,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 66,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4780,7 +4142,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 70,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4791,25 +4152,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 38,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 57,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4818,7 +4174,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 96,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4827,7 +4182,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4838,25 +4192,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 70,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4865,7 +4214,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 96,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4874,7 +4222,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 96,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4885,25 +4232,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 102,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 121,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4912,7 +4254,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 98,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4921,7 +4262,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4932,25 +4272,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 134,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4959,7 +4294,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 98,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4968,7 +4302,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -4979,25 +4312,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 166,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 166,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5006,7 +4334,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 98,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5015,7 +4342,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5026,25 +4352,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 217,
     "cy": 102,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 121,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5053,7 +4374,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 98,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5062,7 +4382,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 102,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5073,25 +4392,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 38,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5100,7 +4414,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 130,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5109,7 +4422,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5120,25 +4432,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 89,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5147,7 +4454,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 130,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5156,7 +4462,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5167,25 +4472,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 102,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 121,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5194,7 +4494,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 128,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5203,7 +4502,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 128,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5214,25 +4512,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 134,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 30,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5241,7 +4534,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 128,
   },
   {
-    "color": 2,
     "h": 26,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5250,7 +4542,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 128,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5261,25 +4552,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 166,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 166,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5288,7 +4574,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 130,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5297,7 +4582,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5308,25 +4592,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 217,
     "cy": 134,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 153,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5335,7 +4614,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 130,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5344,7 +4622,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 134,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5355,25 +4632,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 38,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 38,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5382,7 +4654,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5391,7 +4662,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5402,25 +4672,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 89,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 89,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5429,7 +4694,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5438,7 +4702,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5449,25 +4712,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 102,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 102,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5476,7 +4734,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5485,7 +4742,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5496,25 +4752,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 153,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 153,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5523,7 +4774,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5532,7 +4782,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5543,25 +4792,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 166,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 166,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5570,7 +4814,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5579,7 +4822,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5590,25 +4832,20 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "cx": 217,
     "cy": 166,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
     "cx": 217,
     "cy": 185,
-    "fill": 2,
     "fillRgb": "rgb(194, 194, 194)",
     "op": "circle",
-    "outline": 2,
     "outlineRgb": "rgb(194, 194, 194)",
     "r": 4,
   },
   {
-    "color": 2,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5617,7 +4854,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 162,
   },
   {
-    "color": 2,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5626,7 +4862,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 166,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5637,7 +4872,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5647,7 +4881,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5658,7 +4891,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5668,7 +4900,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5679,7 +4910,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5689,7 +4919,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5700,7 +4929,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5710,7 +4938,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5721,7 +4948,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5731,7 +4957,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5742,7 +4967,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5752,7 +4976,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 16,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5763,7 +4986,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5773,7 +4995,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5784,7 +5005,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5794,7 +5014,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5805,7 +5024,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5815,7 +5033,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5826,7 +5043,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5836,7 +5052,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 144,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5847,7 +5062,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5857,7 +5071,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 176,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5868,7 +5081,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5878,7 +5090,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5889,7 +5100,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5899,7 +5109,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5910,7 +5119,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5920,7 +5128,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5931,7 +5138,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5941,7 +5147,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5952,7 +5157,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5962,7 +5166,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5973,7 +5176,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5983,7 +5185,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 208,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -5994,7 +5195,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -6004,7 +5204,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 48,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -6015,7 +5214,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -6025,7 +5223,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 80,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -6036,7 +5233,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -6046,7 +5242,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 112,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -6057,7 +5252,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -6067,7 +5261,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
     "y": 144,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -6078,7 +5271,6 @@ exports[`magnets render scenarios > opener frame: domino fills + clue numbers 1`
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

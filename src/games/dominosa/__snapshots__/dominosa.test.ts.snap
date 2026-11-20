@@ -3,7 +3,6 @@
 exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL_REFERENCE (and nowhere without one) 1`] = `
 [
   {
-    "color": 0,
     "h": 156,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -19,7 +18,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -28,7 +26,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": -2,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -37,7 +34,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 0,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -46,7 +42,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 26,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -55,7 +50,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 0,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -66,7 +60,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -86,7 +79,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -97,7 +89,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -117,7 +108,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -128,7 +118,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -148,7 +137,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -159,7 +147,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -179,7 +166,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -190,7 +176,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -210,7 +195,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -221,7 +205,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -241,7 +224,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -250,7 +232,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -259,7 +240,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 32,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -268,7 +248,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 58,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -277,7 +256,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 32,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -288,7 +266,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -308,7 +285,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -319,7 +295,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -339,7 +314,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -348,7 +322,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -357,7 +330,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 32,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -366,7 +338,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 58,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -375,7 +346,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 32,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -386,7 +356,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -406,7 +375,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -415,7 +383,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -424,7 +391,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 32,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -433,7 +399,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 58,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -442,7 +407,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 32,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -453,7 +417,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -473,7 +436,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -484,7 +446,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -504,7 +465,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -515,7 +475,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -535,7 +494,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -546,7 +504,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -566,7 +523,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -577,7 +533,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -597,7 +552,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -606,7 +560,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 62,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -615,7 +568,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 64,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -624,7 +576,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 90,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -633,7 +584,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 64,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -644,7 +594,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -664,7 +613,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -673,7 +621,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 62,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -682,7 +629,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 64,
   },
   {
-    "color": 10,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -691,7 +637,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 90,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -700,7 +645,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 64,
   },
   {
-    "color": 10,
     "h": 28,
     "op": "rect",
     "rgb": "rgb(235, 210, 47)",
@@ -711,7 +655,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -731,7 +674,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -742,7 +684,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -762,7 +703,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -773,7 +713,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -793,7 +732,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -804,7 +742,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -824,7 +761,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -835,7 +771,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -855,7 +790,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -866,7 +800,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -886,7 +819,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -897,7 +829,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -917,7 +848,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -928,7 +858,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -948,7 +877,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -959,7 +887,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -979,7 +906,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -990,7 +916,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1010,7 +935,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1021,7 +945,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1041,7 +964,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1052,7 +974,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1072,7 +993,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1083,7 +1003,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1103,7 +1022,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1114,7 +1032,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1134,7 +1051,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1145,7 +1061,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1163,7 +1078,6 @@ exports[`dominosa reference aid > boxes a selected pair's candidate cells in COL
 exports[`dominosa render > renders a stable opener frame (numbers, background) for a fixed board 1`] = `
 [
   {
-    "color": 0,
     "h": 156,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1179,7 +1093,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1190,7 +1103,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1210,7 +1122,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1221,7 +1132,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1241,7 +1151,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1252,7 +1161,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1272,7 +1180,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1283,7 +1190,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1303,7 +1209,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1314,7 +1219,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1334,7 +1238,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": -2,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1345,7 +1248,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1365,7 +1267,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1376,7 +1277,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1396,7 +1296,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1407,7 +1306,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1427,7 +1325,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1438,7 +1335,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1458,7 +1354,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1469,7 +1364,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1489,7 +1383,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1500,7 +1393,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1520,7 +1412,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 30,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1531,7 +1422,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1551,7 +1441,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1562,7 +1451,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1582,7 +1470,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1593,7 +1480,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1613,7 +1499,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1624,7 +1509,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1644,7 +1528,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1655,7 +1538,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1675,7 +1557,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1686,7 +1567,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1706,7 +1586,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 62,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1717,7 +1596,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1737,7 +1615,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1748,7 +1625,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1768,7 +1644,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1779,7 +1654,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1799,7 +1673,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1810,7 +1683,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1830,7 +1702,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1841,7 +1712,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1861,7 +1731,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1872,7 +1741,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1892,7 +1760,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 94,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1903,7 +1770,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1923,7 +1789,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1934,7 +1799,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1954,7 +1818,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1965,7 +1828,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1985,7 +1847,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1996,7 +1857,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2016,7 +1876,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2027,7 +1886,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2047,7 +1905,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2058,7 +1915,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2078,7 +1934,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
     "y": 126,
   },
   {
-    "color": 0,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2089,7 +1944,6 @@ exports[`dominosa render > renders a stable opener frame (numbers, background) f
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

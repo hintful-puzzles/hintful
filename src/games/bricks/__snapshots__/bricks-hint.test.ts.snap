@@ -3,7 +3,6 @@
 exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines the evidence COL_HINT_CELL 1`] = `
 [
   {
-    "color": 0,
     "h": 289,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 0,
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -28,7 +26,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 0,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -37,10 +34,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -64,7 +59,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -74,7 +68,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 24,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -83,7 +76,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "color": 7,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -92,7 +84,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "color": 7,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -101,7 +92,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 45,
   },
   {
-    "color": 7,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -120,7 +110,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 0,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -129,10 +118,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -154,7 +141,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     ],
   },
   {
-    "color": 14,
     "h": 43,
     "op": "ring",
     "radius": 22,
@@ -175,7 +161,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 0,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -184,10 +169,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -219,7 +202,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 0,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -228,10 +210,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -263,7 +243,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 0,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -272,10 +251,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -299,7 +276,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -319,7 +295,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 0,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -328,10 +303,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -355,7 +328,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -368,7 +340,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -384,7 +355,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 0,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -393,10 +363,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 1,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -421,7 +389,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -437,7 +404,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 48,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -446,10 +412,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 49,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -481,7 +445,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 48,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -490,10 +453,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 49,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -525,7 +486,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 48,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -534,10 +494,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 49,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -561,7 +519,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -581,7 +538,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 48,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -590,10 +546,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 49,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -625,7 +579,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 48,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -634,10 +587,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 49,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -669,7 +620,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 48,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -678,10 +628,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 49,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -706,7 +654,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -722,7 +669,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 48,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -731,10 +677,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 49,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -758,7 +702,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -771,7 +714,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -787,7 +729,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 96,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -796,10 +737,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 97,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -823,7 +762,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -843,7 +781,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 96,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -852,10 +789,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 97,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -887,7 +822,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 96,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -896,10 +830,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 97,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -931,7 +863,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 96,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -940,10 +871,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 97,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -975,7 +904,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 96,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -984,10 +912,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 97,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1019,7 +945,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 96,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1028,10 +953,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 97,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1056,7 +979,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1072,7 +994,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 96,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1081,10 +1002,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 97,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1109,7 +1028,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1125,7 +1043,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 144,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1134,10 +1051,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 145,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1169,7 +1084,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 144,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1178,10 +1092,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 145,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1213,7 +1125,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 144,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1222,10 +1133,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 145,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1249,7 +1158,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1269,7 +1177,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 144,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1278,10 +1185,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 145,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1305,7 +1210,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1325,7 +1229,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 144,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1334,10 +1237,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 145,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1369,7 +1270,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 144,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1378,10 +1278,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 145,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1405,7 +1303,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1418,7 +1315,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1434,7 +1330,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 144,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1443,10 +1338,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 145,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1471,7 +1364,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1487,7 +1379,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 192,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1496,10 +1387,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 193,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1523,7 +1412,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1543,7 +1431,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 192,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1552,10 +1439,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 193,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1587,7 +1472,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 192,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1596,10 +1480,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 193,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1631,7 +1513,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 192,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1640,10 +1521,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 193,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1675,7 +1554,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 192,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1684,10 +1562,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 193,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1719,7 +1595,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 192,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1728,10 +1603,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 193,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1756,7 +1629,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1772,7 +1644,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 192,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1781,10 +1652,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 193,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1809,7 +1678,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1825,7 +1693,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 240,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1834,10 +1701,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 241,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1869,7 +1734,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 240,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1878,10 +1742,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 241,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1913,7 +1775,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 240,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1922,10 +1783,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 241,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -1949,7 +1808,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1969,7 +1827,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 240,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1978,10 +1835,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 241,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2013,7 +1868,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 240,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2022,10 +1876,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 241,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2049,7 +1901,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2069,7 +1920,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 240,
   },
   {
-    "color": 2,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2078,10 +1928,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 241,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2106,7 +1954,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2122,7 +1969,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 240,
   },
   {
-    "color": 3,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2131,10 +1977,8 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
     "y": 241,
   },
   {
-    "fill": -1,
     "fillRgb": "none",
     "op": "polygon",
-    "outline": 1,
     "outlineRgb": "rgb(139, 139, 139)",
     "points": [
       [
@@ -2158,7 +2002,6 @@ exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines th
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",

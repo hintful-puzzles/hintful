@@ -3,7 +3,6 @@
 exports[`filling hint render scenario > rings the target(s) and hatches the region the sentence names 1`] = `
 [
   {
-    "color": 0,
     "h": 256,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 0,
   },
   {
-    "color": 8,
     "h": 227,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -28,7 +26,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -37,7 +34,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -47,7 +43,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -57,7 +52,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -66,7 +60,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -85,7 +78,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -94,7 +86,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -104,7 +95,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -114,7 +104,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -133,7 +122,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -142,7 +130,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -152,7 +139,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -162,7 +148,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -171,7 +156,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -190,7 +174,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -199,7 +182,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -209,7 +191,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -221,7 +202,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -231,7 +211,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 32,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -240,7 +219,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -259,7 +237,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -268,7 +245,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -278,7 +254,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -288,7 +263,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -297,7 +271,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -316,7 +289,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -325,7 +297,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -335,7 +306,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -345,7 +315,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -364,7 +333,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -373,7 +341,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -383,7 +350,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -393,7 +359,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -412,7 +377,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -421,7 +385,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -431,7 +394,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -443,7 +405,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -453,7 +414,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 32,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -472,7 +432,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -481,7 +440,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -491,7 +449,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 16,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -501,7 +458,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -510,7 +466,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 16,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -529,7 +484,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -538,7 +492,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -548,7 +501,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -558,7 +510,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -567,7 +518,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -586,7 +536,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -595,7 +544,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -605,7 +553,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -617,7 +564,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -627,7 +573,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 64,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -646,7 +591,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -655,7 +599,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -665,7 +608,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -675,7 +617,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -684,7 +625,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -703,7 +643,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -712,7 +651,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -722,7 +660,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -734,7 +671,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -744,7 +680,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 64,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -753,7 +688,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -762,7 +696,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 79,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -771,7 +704,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 79,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -790,7 +722,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -799,7 +730,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -809,7 +739,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -819,7 +748,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -828,7 +756,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -847,7 +774,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -856,7 +782,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -866,7 +791,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -876,7 +800,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -895,7 +818,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -904,7 +826,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -914,7 +835,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -924,7 +844,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -943,7 +862,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -952,7 +870,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -962,7 +879,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -972,7 +888,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -991,7 +906,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1000,7 +914,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1010,7 +923,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 48,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1022,7 +934,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1032,7 +943,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 64,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1041,7 +951,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 48,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1060,7 +969,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1069,7 +977,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1079,7 +986,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1091,7 +997,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1101,7 +1006,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 96,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1110,7 +1014,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1129,7 +1032,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1138,7 +1040,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1148,7 +1049,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1160,7 +1060,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1170,7 +1069,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 96,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1189,7 +1087,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1198,7 +1095,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1208,7 +1104,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1220,7 +1115,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1230,7 +1124,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 96,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1239,7 +1132,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1248,7 +1140,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1267,7 +1158,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 3,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(233, 212, 253)",
@@ -1276,7 +1166,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1286,7 +1175,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1298,7 +1186,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1308,7 +1195,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 96,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1317,7 +1203,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1326,7 +1211,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1335,7 +1219,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1344,7 +1227,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 111,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1363,7 +1245,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1372,7 +1253,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1382,7 +1262,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1392,7 +1271,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1401,7 +1279,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1410,7 +1287,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1419,7 +1295,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 111,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1438,7 +1313,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1447,7 +1321,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1457,7 +1330,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1469,7 +1341,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1479,7 +1350,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 96,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1488,7 +1358,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1507,7 +1376,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1516,7 +1384,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1526,7 +1393,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1538,7 +1404,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1548,7 +1413,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 96,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1557,7 +1421,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1576,7 +1439,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1585,7 +1447,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1595,7 +1456,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1605,7 +1465,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1624,7 +1483,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1633,7 +1491,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1643,7 +1500,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 80,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1655,7 +1511,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1665,7 +1520,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 96,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1674,7 +1528,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 80,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1693,7 +1546,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1702,7 +1554,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1712,7 +1563,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1722,7 +1572,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1731,7 +1580,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1750,7 +1598,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1759,7 +1606,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1769,7 +1615,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1779,7 +1624,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1798,7 +1642,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1807,7 +1650,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1817,7 +1659,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1827,7 +1668,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1836,7 +1676,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1845,7 +1684,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1864,7 +1702,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 3,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(233, 212, 253)",
@@ -1873,7 +1710,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1883,7 +1719,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1895,7 +1730,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1905,7 +1739,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 128,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1914,7 +1747,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1923,7 +1755,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1932,7 +1763,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1941,7 +1771,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1950,7 +1779,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 143,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1969,7 +1797,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1978,7 +1805,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1988,7 +1814,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1998,7 +1823,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2007,7 +1831,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2016,7 +1839,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2025,7 +1847,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2044,7 +1865,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2053,7 +1873,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2063,7 +1882,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2075,7 +1893,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2085,7 +1902,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 128,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2094,7 +1910,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2113,7 +1928,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2122,7 +1936,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2132,7 +1945,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2142,7 +1954,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2161,7 +1972,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2170,7 +1980,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2180,7 +1989,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2192,7 +2000,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2212,7 +2019,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2221,7 +2027,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2231,7 +2036,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 112,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2241,7 +2045,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2260,7 +2063,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2269,7 +2071,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2279,7 +2080,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2289,7 +2089,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2308,7 +2107,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2317,7 +2115,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2327,7 +2124,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2339,7 +2135,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2359,7 +2154,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2368,7 +2162,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2378,7 +2171,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2390,7 +2182,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2400,7 +2191,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 160,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2409,7 +2199,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2418,7 +2207,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2437,7 +2225,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 3,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(233, 212, 253)",
@@ -2446,7 +2233,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2456,7 +2242,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2468,7 +2253,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2478,7 +2262,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 160,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2487,7 +2270,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2496,7 +2278,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2505,7 +2286,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 175,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2514,7 +2294,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2523,7 +2302,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2532,7 +2310,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 175,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2551,7 +2328,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2560,7 +2336,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2570,7 +2345,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2580,7 +2354,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2589,7 +2362,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2598,7 +2370,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 175,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2607,7 +2378,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2616,7 +2386,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 175,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2635,7 +2404,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2644,7 +2412,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2654,7 +2421,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2666,7 +2432,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2676,7 +2441,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 160,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2685,7 +2449,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 175,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2694,7 +2457,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 175,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2713,7 +2475,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2722,7 +2483,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2732,7 +2492,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2742,7 +2501,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2751,7 +2509,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 175,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2760,7 +2517,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 175,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2779,7 +2535,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2788,7 +2543,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2798,7 +2552,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2808,7 +2561,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2827,7 +2579,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2836,7 +2587,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2846,7 +2596,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 144,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2856,7 +2605,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2875,7 +2623,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2884,7 +2631,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2894,7 +2640,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2906,7 +2651,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2916,7 +2660,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 192,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2935,7 +2678,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2944,7 +2686,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2954,7 +2695,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2974,7 +2714,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2983,7 +2722,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2993,7 +2731,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3003,7 +2740,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3012,7 +2748,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3021,7 +2756,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3040,7 +2774,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 3,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(233, 212, 253)",
@@ -3049,7 +2782,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3059,7 +2791,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3071,7 +2802,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3081,7 +2811,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 192,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3090,7 +2819,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3099,7 +2827,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3108,7 +2835,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 207,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3117,7 +2843,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3126,7 +2851,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3145,7 +2869,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 3,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(233, 212, 253)",
@@ -3154,7 +2877,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3164,7 +2886,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3176,7 +2897,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3186,7 +2906,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 192,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3195,7 +2914,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3204,7 +2922,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3213,7 +2930,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 207,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3222,7 +2938,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3231,7 +2946,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3250,7 +2964,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3259,7 +2972,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 14,
     "h": 32,
     "op": "hatch",
     "period": 11,
@@ -3269,7 +2981,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3279,7 +2990,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3291,7 +3001,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3301,7 +3010,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 192,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3310,7 +3018,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3319,7 +3026,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3328,7 +3034,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3337,7 +3042,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3346,7 +3050,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3355,7 +3058,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 207,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3374,7 +3076,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 3,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(233, 212, 253)",
@@ -3383,7 +3084,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3393,7 +3093,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3405,7 +3104,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3415,7 +3113,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 192,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3424,7 +3121,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3433,7 +3129,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3442,7 +3137,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3451,7 +3145,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3460,7 +3153,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 207,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3479,7 +3171,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3488,7 +3179,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3498,7 +3188,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3510,7 +3199,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3520,7 +3208,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 192,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3529,7 +3216,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3538,7 +3224,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3557,7 +3242,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3566,7 +3250,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3576,7 +3259,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 176,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3586,7 +3268,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3605,7 +3286,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3614,7 +3294,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3624,7 +3303,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3634,7 +3312,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 240,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3643,7 +3320,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3662,7 +3338,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 10,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3671,7 +3346,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3681,7 +3355,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3693,7 +3366,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3703,7 +3375,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 224,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3722,7 +3393,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3731,7 +3401,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3741,7 +3410,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3751,7 +3419,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 240,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3760,7 +3427,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 239,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3779,7 +3445,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3788,7 +3453,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3798,7 +3462,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3808,7 +3471,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 240,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3817,7 +3479,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3826,7 +3487,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 239,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3835,7 +3495,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3854,7 +3513,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3863,7 +3521,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3873,7 +3530,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3883,7 +3539,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 240,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3892,7 +3547,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3901,7 +3555,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 239,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3910,7 +3563,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3929,7 +3581,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3938,7 +3589,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3948,7 +3598,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3958,7 +3607,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 240,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3967,7 +3615,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3976,7 +3623,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 239,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3985,7 +3631,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4004,7 +3649,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 3,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(233, 212, 253)",
@@ -4013,7 +3657,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -4023,7 +3666,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -4035,7 +3677,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 8,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4045,7 +3686,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 224,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4054,7 +3694,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4063,7 +3702,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4072,7 +3710,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 239,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4081,7 +3718,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4100,7 +3736,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4109,7 +3744,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -4119,7 +3753,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -4129,7 +3762,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 240,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4138,7 +3770,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4147,7 +3778,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 239,
   },
   {
-    "color": 8,
     "h": 2,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4166,7 +3796,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 9,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4175,7 +3804,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -4185,7 +3813,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 208,
   },
   {
-    "color": 1,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -4195,7 +3822,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y2": 240,
   },
   {
-    "color": 8,
     "h": 32,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4204,7 +3830,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 208,
   },
   {
-    "color": 8,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4216,7 +3841,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 30,
     "op": "ring",
     "radius": 15,
@@ -4227,7 +3851,6 @@ exports[`filling hint render scenario > rings the target(s) and hatches the regi
     "y": 209,
   },
   {
-    "color": 13,
     "h": 30,
     "op": "ring",
     "radius": 15,

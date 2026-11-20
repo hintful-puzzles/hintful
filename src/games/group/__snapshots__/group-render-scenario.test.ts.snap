@@ -3,7 +3,6 @@
 exports[`group render scenarios > a subgroup divider adds thick grid edges the opener lacks 1`] = `
 [
   {
-    "color": 0,
     "h": 390,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 0,
   },
   {
-    "color": 12,
     "h": 289,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -28,7 +26,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 79,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -39,7 +36,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -59,7 +55,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -70,7 +65,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -90,7 +84,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 127,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -101,7 +94,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -121,7 +113,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -132,7 +123,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -152,7 +142,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 175,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -163,7 +152,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -183,7 +171,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -194,7 +181,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -214,7 +200,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 223,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -225,7 +210,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -245,7 +229,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -256,7 +239,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -276,7 +258,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 271,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -287,7 +268,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -307,7 +287,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -318,7 +297,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -338,7 +316,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 319,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -349,7 +326,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -369,7 +345,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -380,7 +355,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -400,7 +374,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -409,7 +382,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -419,7 +391,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y2": 121,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -428,7 +399,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 121,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -439,7 +409,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -459,7 +428,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -468,7 +436,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -477,7 +444,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 121,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -488,7 +454,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -508,7 +473,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -517,7 +481,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -528,7 +491,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -548,7 +510,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -557,7 +518,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -568,7 +528,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -588,7 +547,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -597,7 +555,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -608,7 +565,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -628,7 +584,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -637,7 +592,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 75,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -648,7 +602,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -668,7 +621,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -677,7 +629,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -686,7 +637,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -697,7 +647,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -717,7 +666,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -726,7 +674,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -736,7 +683,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y2": 169,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -745,7 +691,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -764,7 +709,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -773,7 +717,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -792,7 +735,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -801,7 +743,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -820,7 +761,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -829,7 +769,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -848,7 +787,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -857,7 +795,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 123,
   },
   {
-    "color": 1,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -876,7 +813,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -885,7 +821,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -896,7 +831,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -916,7 +850,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -925,7 +858,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -944,7 +876,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -953,7 +884,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -973,7 +903,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -992,7 +921,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1011,7 +939,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 171,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1022,7 +949,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1042,7 +968,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1051,7 +976,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1062,7 +986,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1082,7 +1005,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1091,7 +1013,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1110,7 +1031,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1129,7 +1049,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1138,7 +1057,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1158,7 +1076,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1177,7 +1094,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1196,7 +1112,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1205,7 +1120,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1216,7 +1130,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1236,7 +1149,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1245,7 +1157,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1264,7 +1175,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1275,7 +1185,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1295,7 +1204,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1314,7 +1222,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1323,7 +1230,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1343,7 +1249,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1362,7 +1267,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1371,7 +1275,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1382,7 +1285,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1402,7 +1304,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1411,7 +1312,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 1,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1422,7 +1322,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1442,7 +1341,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1461,7 +1359,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1480,7 +1377,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1499,7 +1395,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1508,7 +1403,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "y": 315,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1521,7 +1415,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1535,7 +1428,6 @@ exports[`group render scenarios > a subgroup divider adds thick grid edges the o
 exports[`group render scenarios > an associativity hint frame rings the target and shades the known products 1`] = `
 [
   {
-    "color": 0,
     "h": 390,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1544,7 +1436,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 0,
   },
   {
-    "color": 12,
     "h": 289,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1560,7 +1451,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 79,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1571,7 +1461,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1591,7 +1480,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1602,7 +1490,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1622,7 +1509,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 127,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1633,7 +1519,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1653,7 +1538,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1664,7 +1548,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1684,7 +1567,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 175,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1695,7 +1577,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1715,7 +1596,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1726,7 +1606,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1746,7 +1625,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 223,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1757,7 +1635,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1777,7 +1654,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1788,7 +1664,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1808,7 +1683,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 271,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1819,7 +1693,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1839,7 +1712,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1850,7 +1722,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1870,7 +1741,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 319,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1881,7 +1751,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1901,7 +1770,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -1912,7 +1780,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1932,7 +1799,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1941,7 +1807,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 75,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -1953,7 +1818,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1973,7 +1837,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1984,7 +1847,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2004,7 +1866,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2015,7 +1876,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2035,7 +1895,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2046,7 +1905,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2066,7 +1924,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2077,7 +1934,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2097,7 +1953,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2108,7 +1963,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2128,7 +1982,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 123,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2139,7 +1992,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2159,7 +2011,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2168,7 +2019,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 123,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2188,7 +2038,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2207,7 +2056,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2226,7 +2074,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2245,7 +2092,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2264,7 +2110,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 171,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2275,7 +2120,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2295,7 +2139,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2314,7 +2157,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2323,7 +2165,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 171,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2343,7 +2184,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2362,7 +2202,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2381,7 +2220,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2400,7 +2238,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2411,7 +2248,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2431,7 +2267,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2450,7 +2285,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2469,7 +2303,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2478,7 +2311,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 219,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2498,7 +2330,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2509,7 +2340,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2529,7 +2359,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2548,7 +2377,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 267,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2559,7 +2387,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2579,7 +2406,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2598,7 +2424,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2617,7 +2442,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2636,7 +2460,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 267,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2645,7 +2468,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 267,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2657,7 +2479,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2677,7 +2498,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2696,7 +2516,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 315,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2707,7 +2526,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2727,7 +2545,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 315,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2738,7 +2555,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2758,7 +2574,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2777,7 +2592,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2796,7 +2610,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2815,7 +2628,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2824,7 +2636,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 315,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -2837,7 +2648,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "op": "unclip",
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2846,7 +2656,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 74,
   },
   {
-    "color": 8,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2855,7 +2664,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 74,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2864,7 +2672,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 120,
   },
   {
-    "color": 8,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2873,7 +2680,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 74,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2882,7 +2688,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 218,
   },
   {
-    "color": 8,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2891,7 +2696,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 218,
   },
   {
-    "color": 8,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2900,7 +2704,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 218,
   },
   {
-    "color": 8,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2909,7 +2712,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 266,
   },
   {
-    "color": 8,
     "h": 3,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2918,7 +2720,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 312,
   },
   {
-    "color": 8,
     "h": 49,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
@@ -2927,7 +2728,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 266,
   },
   {
-    "color": 15,
     "h": 44,
     "op": "ring",
     "radius": 22,
@@ -2938,7 +2738,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 221,
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2952,7 +2751,6 @@ exports[`group render scenarios > an associativity hint frame rings the target a
 exports[`group render scenarios > opener frame draws the legend, the stroked diagonal, and digits 1`] = `
 [
   {
-    "color": 0,
     "h": 390,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2961,7 +2759,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 0,
   },
   {
-    "color": 12,
     "h": 289,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2977,7 +2774,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 79,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -2988,7 +2784,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3008,7 +2803,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3019,7 +2813,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3039,7 +2832,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 127,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3050,7 +2842,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3070,7 +2861,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3081,7 +2871,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3101,7 +2890,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 175,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3112,7 +2900,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3132,7 +2919,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3143,7 +2929,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3163,7 +2948,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 223,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3174,7 +2958,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3194,7 +2977,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3205,7 +2987,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3225,7 +3006,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 271,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3236,7 +3016,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3256,7 +3035,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3267,7 +3045,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3287,7 +3064,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 319,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3298,7 +3074,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3318,7 +3093,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 31,
   },
   {
-    "color": 0,
     "h": 38,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -3329,7 +3103,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3349,7 +3122,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3358,7 +3130,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 75,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3370,7 +3141,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3390,7 +3160,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3401,7 +3170,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3421,7 +3189,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3432,7 +3199,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3452,7 +3218,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3463,7 +3228,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3483,7 +3247,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3494,7 +3257,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3514,7 +3276,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3525,7 +3286,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3545,7 +3305,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 123,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3556,7 +3315,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3576,7 +3334,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3585,7 +3342,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 123,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3605,7 +3361,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3624,7 +3379,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3643,7 +3397,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3662,7 +3415,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 123,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3681,7 +3433,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 171,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3692,7 +3443,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3712,7 +3462,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3731,7 +3480,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3740,7 +3488,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 171,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3760,7 +3507,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3779,7 +3525,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 171,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3798,7 +3543,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 171,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3809,7 +3553,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3829,7 +3572,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3840,7 +3582,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3860,7 +3601,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3879,7 +3619,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3898,7 +3637,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3907,7 +3645,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 219,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -3927,7 +3664,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3946,7 +3682,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 219,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3965,7 +3700,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 267,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3976,7 +3710,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3996,7 +3729,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4015,7 +3747,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 267,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4026,7 +3757,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4046,7 +3776,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4065,7 +3794,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4074,7 +3802,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 267,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -4094,7 +3821,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 267,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4113,7 +3839,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 315,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4124,7 +3849,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4144,7 +3868,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 315,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4155,7 +3878,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 1,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4175,7 +3897,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4194,7 +3915,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4213,7 +3933,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4232,7 +3951,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 315,
   },
   {
-    "color": 10,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4241,7 +3959,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "y": 315,
   },
   {
-    "color": 6,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -4254,7 +3971,6 @@ exports[`group render scenarios > opener frame draws the legend, the stroked dia
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",

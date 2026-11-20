@@ -3,7 +3,6 @@
 exports[`signpost hint frame > rings the arrow, drawn inside, and its target, and stripes the line 1`] = `
 [
   {
-    "color": 0,
     "h": 242,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 0,
   },
   {
-    "color": 3,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -22,7 +20,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y2": 0,
   },
   {
-    "color": 3,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -32,7 +29,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y2": 241,
   },
   {
-    "color": 3,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -42,7 +38,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y2": 241,
   },
   {
-    "color": 3,
     "op": "line",
     "rgb": "rgb(139, 139, 139)",
     "thickness": 1,
@@ -52,7 +47,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y2": 0,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -61,10 +55,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -100,15 +92,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 15,
     "cy": 35,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -117,7 +106,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -126,7 +114,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 52,
     "h": 48,
     "op": "hatch",
     "period": 16,
@@ -136,10 +123,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -175,15 +160,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 15,
     "cy": 83,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 51,
     "h": 46,
     "op": "ring",
     "radius": 23,
@@ -194,7 +176,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 50,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -203,7 +184,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -212,10 +192,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -251,15 +229,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 15,
     "cy": 131,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -268,7 +243,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -277,10 +251,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -316,15 +288,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 15,
     "cy": 179,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -333,7 +302,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -342,10 +310,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -381,15 +347,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 15,
     "cy": 227,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -398,7 +361,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -407,10 +369,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -446,15 +406,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 63,
     "cy": 35,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -463,7 +420,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -472,7 +428,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -481,7 +436,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 52,
     "h": 48,
     "op": "hatch",
     "period": 16,
@@ -491,10 +445,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -530,7 +482,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "align": "left",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -540,7 +491,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 61,
   },
   {
-    "color": 2,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -549,7 +499,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -558,7 +507,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -567,10 +515,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -606,17 +552,14 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 63,
     "cy": 131,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "align": "left",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -626,7 +569,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 109,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -635,7 +577,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -644,7 +585,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -653,10 +593,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -692,15 +630,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 63,
     "cy": 179,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -709,7 +644,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -718,7 +652,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -727,10 +660,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -766,15 +697,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 63,
     "cy": 227,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -783,7 +711,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -792,10 +719,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -831,15 +756,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 111,
     "cy": 35,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -848,7 +770,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -857,7 +778,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -868,15 +788,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 111,
     "cy": 83,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 51,
     "h": 26,
     "op": "ring",
     "radius": 13,
@@ -894,10 +811,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 70,
   },
   {
-    "fill": 51,
     "fillRgb": "rgb(21, 113, 233)",
     "op": "polygon",
-    "outline": 51,
     "outlineRgb": "rgb(21, 113, 233)",
     "points": [
       [
@@ -934,7 +849,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "op": "unclip",
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -943,7 +857,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -952,7 +865,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -961,10 +873,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1000,15 +910,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 111,
     "cy": 131,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1017,7 +924,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1026,7 +932,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1035,10 +940,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1074,15 +977,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 111,
     "cy": 179,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 2,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1091,7 +991,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1100,7 +999,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1109,10 +1007,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1160,17 +1056,14 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 111,
     "cy": 227,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
     "align": "left",
     "baseline": "mathematical",
-    "color": 10,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(44, 77, 126)",
@@ -1180,7 +1073,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 205,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1189,7 +1081,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1198,10 +1089,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1237,15 +1126,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 159,
     "cy": 35,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1254,7 +1140,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1263,7 +1148,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1272,10 +1156,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1311,15 +1193,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 159,
     "cy": 83,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1328,7 +1207,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1337,7 +1215,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1346,10 +1223,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1385,15 +1260,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 159,
     "cy": 131,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1402,7 +1274,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1411,7 +1282,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1420,10 +1290,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1459,15 +1327,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 159,
     "cy": 179,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1476,7 +1341,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1485,7 +1349,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1494,10 +1357,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1533,15 +1394,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 159,
     "cy": 227,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1550,7 +1408,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1559,10 +1416,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 1,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1598,15 +1453,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 207,
     "cy": 35,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1615,7 +1467,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1624,7 +1475,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1633,10 +1483,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 49,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1672,15 +1520,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 207,
     "cy": 83,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1689,7 +1534,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1698,7 +1542,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1707,10 +1550,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 97,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1746,15 +1587,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 207,
     "cy": 131,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1763,7 +1601,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1772,7 +1609,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1781,10 +1617,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 145,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1820,15 +1654,12 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 207,
     "cy": 179,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },
   {
-    "color": 1,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1837,7 +1668,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1846,7 +1676,6 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "color": 3,
     "h": 48,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1855,10 +1684,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
     "y": 193,
   },
   {
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "polygon",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "points": [
       [
@@ -1894,10 +1721,8 @@ exports[`signpost hint frame > rings the arrow, drawn inside, and its target, an
   {
     "cx": 207,
     "cy": 227,
-    "fill": 7,
     "fillRgb": "rgb(0, 0, 0)",
     "op": "circle",
-    "outline": 7,
     "outlineRgb": "rgb(0, 0, 0)",
     "r": 2,
   },

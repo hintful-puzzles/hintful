@@ -3,7 +3,6 @@
 exports[`solo hint render > a deductive elimination hatches its region and strikes the candidate 1`] = `
 [
   {
-    "color": 0,
     "h": 484,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
@@ -12,7 +11,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 0,
   },
   {
-    "color": 2,
     "h": 435,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -28,7 +26,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -39,7 +36,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -51,7 +47,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -63,7 +58,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -75,7 +69,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -88,7 +81,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -104,7 +96,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -115,7 +106,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -127,7 +117,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -139,7 +128,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -151,7 +139,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -164,7 +151,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -180,7 +166,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -189,7 +174,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -200,7 +184,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -220,7 +203,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -229,7 +211,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -240,7 +221,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -253,7 +233,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -269,7 +248,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -278,7 +256,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 17,
     "h": 46,
     "op": "hatch",
     "period": 16,
@@ -290,7 +267,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -303,7 +279,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -319,7 +294,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -328,7 +302,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -339,7 +312,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -351,7 +323,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -363,7 +334,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -383,7 +353,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -392,7 +361,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -403,7 +371,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -415,7 +382,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -427,7 +393,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -440,7 +405,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -456,7 +420,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -467,7 +430,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -479,7 +441,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -491,7 +452,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -503,7 +463,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -515,7 +474,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -528,7 +486,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -544,7 +501,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 28,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -555,7 +511,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -567,7 +522,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -579,7 +533,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -591,7 +544,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -603,7 +555,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -616,7 +567,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -632,7 +582,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -643,7 +592,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -655,7 +603,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -667,7 +614,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -680,7 +626,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -689,7 +634,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -698,7 +642,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 74,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -714,7 +657,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -725,7 +667,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -737,7 +678,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -749,7 +689,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -762,7 +701,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -771,7 +709,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -780,7 +717,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 74,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -796,7 +732,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -805,7 +740,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -814,7 +748,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -825,7 +758,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -838,7 +770,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -854,7 +785,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -863,7 +793,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -872,7 +801,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -883,7 +811,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -896,7 +823,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -905,7 +831,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -914,7 +839,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 74,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -930,7 +854,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -939,7 +862,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 17,
     "h": 47,
     "op": "hatch",
     "period": 16,
@@ -951,7 +873,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -963,7 +884,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -976,7 +896,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -985,7 +904,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -994,7 +912,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 74,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1010,7 +927,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1019,7 +935,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1028,7 +943,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1039,7 +953,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1051,7 +964,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1064,7 +976,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1080,7 +991,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1089,7 +999,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1098,7 +1007,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1109,7 +1017,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 127, 0)",
@@ -1122,7 +1029,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1131,7 +1037,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1140,7 +1045,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 74,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1156,7 +1060,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1167,7 +1070,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1180,7 +1082,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1189,7 +1090,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1198,7 +1098,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 74,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1214,7 +1113,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 75,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1225,7 +1123,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1238,7 +1135,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1254,7 +1150,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1263,7 +1158,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1274,7 +1168,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 127, 0)",
@@ -1287,7 +1180,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1296,7 +1188,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1305,7 +1196,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 122,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1321,7 +1211,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1330,7 +1219,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1339,7 +1227,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 169,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1350,7 +1237,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1362,7 +1248,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1374,7 +1259,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1387,7 +1271,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1396,7 +1279,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1405,7 +1287,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 122,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1421,7 +1302,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1430,7 +1310,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1439,7 +1318,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1448,7 +1326,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 169,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1459,7 +1336,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1471,7 +1347,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1483,7 +1358,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1495,7 +1369,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1508,7 +1381,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1524,7 +1396,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1533,7 +1404,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1542,7 +1412,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1551,7 +1420,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 169,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1562,7 +1430,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1574,7 +1441,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1586,7 +1452,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1598,7 +1463,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1610,7 +1474,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1623,7 +1486,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1632,7 +1494,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1641,7 +1502,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 122,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1657,7 +1517,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1666,7 +1525,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 17,
     "h": 46,
     "op": "hatch",
     "period": 16,
@@ -1676,7 +1534,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1685,7 +1542,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 169,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1696,7 +1552,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1709,7 +1564,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1718,7 +1572,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1727,7 +1580,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 122,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1743,7 +1595,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1752,7 +1603,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1761,7 +1611,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1770,7 +1619,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 169,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1781,7 +1629,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1793,7 +1640,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1805,7 +1651,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1817,7 +1662,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1830,7 +1674,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1846,7 +1689,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -1855,7 +1697,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1864,7 +1705,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1873,7 +1713,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 169,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1884,7 +1723,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -1897,7 +1735,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1906,7 +1743,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1915,7 +1751,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 122,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -1931,7 +1766,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -1940,7 +1774,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1949,7 +1782,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 169,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -1960,7 +1792,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1972,7 +1803,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1984,7 +1814,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -1996,7 +1825,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2008,7 +1836,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2021,7 +1848,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2030,7 +1856,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2039,7 +1864,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 122,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2055,7 +1879,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2064,7 +1887,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 123,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2075,7 +1897,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2087,7 +1908,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2099,7 +1919,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2111,7 +1930,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2123,7 +1941,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2143,7 +1960,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2152,7 +1968,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2163,7 +1978,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2176,7 +1990,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2192,7 +2005,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2201,7 +2013,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2210,7 +2021,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2221,7 +2031,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 127, 0)",
@@ -2234,7 +2043,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2250,7 +2058,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2259,7 +2066,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2268,7 +2074,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2277,7 +2082,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2288,7 +2092,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2300,7 +2103,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2320,7 +2122,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2329,7 +2130,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2338,7 +2138,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2347,7 +2146,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2358,7 +2156,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2371,7 +2168,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2387,7 +2183,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2396,7 +2191,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 17,
     "h": 46,
     "op": "hatch",
     "period": 16,
@@ -2406,7 +2200,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2415,7 +2208,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2426,7 +2218,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2438,7 +2229,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2451,7 +2241,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2467,7 +2256,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2476,7 +2264,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2485,7 +2272,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2494,7 +2280,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2505,7 +2290,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 127, 0)",
@@ -2525,7 +2309,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2534,7 +2317,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2543,7 +2325,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2552,7 +2333,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2563,7 +2343,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2576,7 +2355,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2592,7 +2370,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2601,7 +2378,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2610,7 +2386,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 171,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2621,7 +2396,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2633,7 +2407,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2645,7 +2418,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2657,7 +2429,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2670,7 +2441,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2686,7 +2456,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2695,7 +2464,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 172,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2706,7 +2474,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2718,7 +2485,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2730,7 +2496,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2743,7 +2508,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2759,7 +2523,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -2770,7 +2533,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -2783,7 +2545,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2792,7 +2553,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2801,7 +2561,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 218,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2817,7 +2576,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2828,7 +2586,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2840,7 +2597,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2852,7 +2608,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2864,7 +2619,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2877,7 +2631,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2886,7 +2639,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2895,7 +2647,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 218,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2911,7 +2662,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -2920,7 +2670,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2929,7 +2678,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -2940,7 +2688,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2952,7 +2699,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2964,7 +2710,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -2977,7 +2722,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -2993,7 +2737,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3002,7 +2745,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3011,7 +2753,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3022,7 +2763,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3034,7 +2774,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3044,7 +2783,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 236,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(63, 63, 179)",
     "thickness": 2,
@@ -3054,7 +2792,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y2": 240,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(63, 63, 179)",
     "thickness": 2,
@@ -3066,7 +2803,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3079,7 +2815,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3088,7 +2823,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3097,7 +2831,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 218,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3113,7 +2846,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3122,7 +2854,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 17,
     "h": 47,
     "op": "hatch",
     "period": 16,
@@ -3134,7 +2865,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3147,7 +2877,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3156,7 +2885,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3165,7 +2893,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 218,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3181,7 +2908,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3190,7 +2916,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3199,7 +2924,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3210,7 +2934,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 127, 0)",
@@ -3223,7 +2946,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3239,7 +2961,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3248,7 +2969,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3257,7 +2977,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3268,7 +2987,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3280,7 +2998,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3292,7 +3009,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3305,7 +3021,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3314,7 +3029,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3323,7 +3037,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 218,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3339,7 +3052,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3350,7 +3062,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3362,7 +3073,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3374,7 +3084,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3386,7 +3095,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3399,7 +3107,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3408,7 +3115,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3417,7 +3123,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 218,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3433,7 +3138,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 219,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3444,7 +3148,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3457,7 +3160,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3473,7 +3175,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3482,7 +3183,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3493,7 +3193,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3505,7 +3204,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3517,7 +3215,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3530,7 +3227,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3539,7 +3235,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3548,7 +3243,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 266,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3564,7 +3258,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3573,7 +3266,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3582,7 +3274,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 313,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3593,7 +3284,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3605,7 +3295,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3617,7 +3306,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3630,7 +3318,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3639,7 +3326,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3648,7 +3334,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 266,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3664,7 +3349,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -3673,7 +3357,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3682,7 +3365,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3691,7 +3373,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 313,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3702,7 +3383,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -3715,7 +3395,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3731,7 +3410,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3740,7 +3418,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3749,7 +3426,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3758,7 +3434,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 313,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3769,7 +3444,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3781,7 +3455,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3791,7 +3464,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 284,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(63, 63, 179)",
     "thickness": 2,
@@ -3801,7 +3473,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y2": 288,
   },
   {
-    "color": 7,
     "op": "line",
     "rgb": "rgb(63, 63, 179)",
     "thickness": 2,
@@ -3813,7 +3484,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3825,7 +3495,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3838,7 +3507,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3847,7 +3515,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3856,7 +3523,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 266,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3872,7 +3538,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -3881,7 +3546,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 17,
     "h": 46,
     "op": "hatch",
     "period": 16,
@@ -3891,7 +3555,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3900,7 +3563,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 313,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -3911,7 +3573,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3923,7 +3584,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3935,7 +3595,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3947,7 +3606,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -3960,7 +3618,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3969,7 +3626,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3978,7 +3634,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 266,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -3994,7 +3649,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4003,7 +3657,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4012,7 +3665,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4021,7 +3673,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 313,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4032,7 +3683,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4045,7 +3695,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4061,7 +3710,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4070,7 +3718,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4079,7 +3726,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4088,7 +3734,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 313,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4099,7 +3744,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4111,7 +3755,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4123,7 +3766,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4136,7 +3778,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4145,7 +3786,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4154,7 +3794,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 266,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4170,7 +3809,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4179,7 +3817,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4188,7 +3825,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 313,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4199,7 +3835,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4211,7 +3846,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4223,7 +3857,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4235,7 +3868,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4247,7 +3879,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4260,7 +3891,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4269,7 +3899,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4278,7 +3907,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 266,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4294,7 +3922,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4303,7 +3930,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 267,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4314,7 +3940,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4334,7 +3959,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4343,7 +3967,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4354,7 +3977,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4366,7 +3988,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4378,7 +3999,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4391,7 +4011,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4407,7 +4026,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4416,7 +4034,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4425,7 +4042,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4436,7 +4052,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4448,7 +4063,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4460,7 +4074,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4472,7 +4085,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4484,7 +4096,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4497,7 +4108,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4513,7 +4123,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4522,7 +4131,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4531,7 +4139,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4540,7 +4147,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4551,7 +4157,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4571,7 +4176,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4580,7 +4184,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4589,7 +4192,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4598,7 +4200,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4609,7 +4210,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4621,7 +4221,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4633,7 +4232,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4645,7 +4243,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4657,7 +4254,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4670,7 +4266,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4686,7 +4281,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -4695,7 +4289,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 17,
     "h": 46,
     "op": "hatch",
     "period": 16,
@@ -4705,7 +4298,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4714,7 +4306,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4725,7 +4316,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -4738,7 +4328,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4754,7 +4343,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4763,7 +4351,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4772,7 +4359,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4781,7 +4367,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4792,7 +4377,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4804,7 +4388,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4816,7 +4399,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4828,7 +4410,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4848,7 +4429,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4857,7 +4437,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4866,7 +4445,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4875,7 +4453,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4886,7 +4463,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4898,7 +4474,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4910,7 +4485,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4923,7 +4497,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -4939,7 +4512,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -4948,7 +4520,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4957,7 +4528,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 315,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -4968,7 +4538,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4980,7 +4549,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -4992,7 +4560,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5004,7 +4571,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5016,7 +4582,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5029,7 +4594,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5045,7 +4609,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5054,7 +4617,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 316,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5065,7 +4627,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5077,7 +4638,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5089,7 +4649,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5101,7 +4660,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5114,7 +4672,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5130,7 +4687,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5141,7 +4697,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5154,7 +4709,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5163,7 +4717,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5172,7 +4725,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 362,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5188,7 +4740,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5199,7 +4750,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5212,7 +4762,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5221,7 +4770,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5230,7 +4778,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 362,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5246,7 +4793,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5255,7 +4801,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5264,7 +4809,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5275,7 +4819,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5287,7 +4830,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5299,7 +4841,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5312,7 +4853,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5328,7 +4868,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5337,7 +4876,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5346,7 +4884,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5357,7 +4894,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5369,7 +4905,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5382,7 +4917,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5391,7 +4925,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5400,7 +4933,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 362,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5416,7 +4948,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5425,7 +4956,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 17,
     "h": 47,
     "op": "hatch",
     "period": 16,
@@ -5437,7 +4967,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5449,7 +4978,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5462,7 +4990,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5471,7 +4998,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5480,7 +5006,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 362,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5496,7 +5021,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5505,7 +5029,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5514,7 +5037,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5525,7 +5047,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5538,7 +5059,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5554,7 +5074,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 12,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -5563,7 +5082,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5572,7 +5090,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5583,7 +5100,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -5596,7 +5112,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5605,7 +5120,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5614,7 +5128,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 362,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5630,7 +5143,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5641,7 +5153,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 4,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 127, 0)",
@@ -5654,7 +5165,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5663,7 +5173,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5672,7 +5181,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 362,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5688,7 +5196,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 363,
   },
   {
-    "color": 11,
     "h": 47,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5699,7 +5206,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5711,7 +5217,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5723,7 +5228,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5736,7 +5240,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5752,7 +5255,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5763,7 +5265,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5775,7 +5276,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5787,7 +5287,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5800,7 +5299,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5809,7 +5307,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5818,7 +5315,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 410,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5834,7 +5330,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5845,7 +5340,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5857,7 +5351,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5869,7 +5362,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5881,7 +5373,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5894,7 +5385,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5903,7 +5393,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5912,7 +5401,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 410,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5928,7 +5416,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5937,7 +5424,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -5948,7 +5434,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5960,7 +5445,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -5973,7 +5457,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -5989,7 +5472,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -5998,7 +5480,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6009,7 +5490,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6021,7 +5501,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6033,7 +5512,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6045,7 +5523,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6058,7 +5535,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6067,7 +5543,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6076,7 +5551,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 410,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6092,7 +5566,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6101,7 +5574,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 17,
     "h": 46,
     "op": "hatch",
     "period": 16,
@@ -6113,7 +5585,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -6126,7 +5597,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6135,7 +5605,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6144,7 +5613,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 410,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6160,7 +5628,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6169,7 +5636,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6180,7 +5646,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -6193,7 +5658,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6209,7 +5673,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 12,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(237, 237, 237)",
@@ -6218,7 +5681,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 2,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(0, 0, 0)",
@@ -6229,7 +5691,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 3,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(0, 0, 0)",
@@ -6242,7 +5703,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6251,7 +5711,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6260,7 +5719,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 410,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6276,7 +5734,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6287,7 +5744,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6299,7 +5755,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6311,7 +5766,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6323,7 +5777,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6335,7 +5788,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6348,7 +5800,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 13,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6357,7 +5808,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6366,7 +5816,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 410,
   },
   {
-    "color": 13,
     "h": 1,
     "op": "rect",
     "rgb": "rgb(139, 139, 139)",
@@ -6382,7 +5831,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "y": 411,
   },
   {
-    "color": 11,
     "h": 46,
     "op": "rect",
     "rgb": "rgb(194, 194, 194)",
@@ -6393,7 +5841,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6405,7 +5852,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6417,7 +5863,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6429,7 +5874,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
   {
     "align": "center",
     "baseline": "mathematical",
-    "color": 7,
     "fontType": "variable",
     "op": "text",
     "rgb": "rgb(63, 63, 179)",
@@ -6442,7 +5886,6 @@ exports[`solo hint render > a deductive elimination hatches its region and strik
     "op": "unclip",
   },
   {
-    "color": 0,
     "h": 20,
     "op": "rect",
     "rgb": "rgb(211, 211, 211)",
