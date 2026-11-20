@@ -439,6 +439,7 @@ if (SHARE_LATIN.length > 0)
     // cages, Group's hidden identity.
     for (const [name, game] of SHARE_LATIN) {
       it(`${name}: "ruled out in this cell" only on a genuine naked single`, () => {
+        let judged = 0;
         for (const { title, params } of gatePresets(game)) {
           const at = `${name}/${title}`;
           const { desc, aux } = dealt(game, params);
@@ -448,38 +449,49 @@ if (SHARE_LATIN.length > 0)
           // biome-ignore lint/suspicious/noExplicitAny: structural state access.
           const w = Math.sqrt((state as any).grid.length);
           expect(Number.isInteger(w), `${at}: a grid that is not square`).toBe(true);
+          // Each plan is followed step by step, as a player following the
+          // hint meets it, and asked again only when it runs out: a plan is
+          // most of the board, and asking it again after each move cost
+          // Solo's Killer board half a minute.
           for (
-            let moves = 0;
-            moves < 2000 && game.status(state) === "ongoing";
-            moves++
+            let plans = 0;
+            plans < 200 && game.status(state) === "ongoing";
+            plans++
           ) {
             const res = game.hint?.(state, aux);
             if (!res?.ok) break;
-            const step = res.steps[0];
-            // biome-ignore lint/suspicious/noExplicitAny: structural move/state access.
-            const m = step.move as any;
-            if (
-              m.type === "set" &&
-              !m.pencil &&
-              /ruled out in this cell/.test(step.explanation)
-            ) {
-              // Group's `set` carries a cell list; the others carry `x`/`y`.
-              const { x, y } = (m.cells?.[0] ?? m) as { x: number; y: number };
-              // A note-less cell's single is the library's `regionsFull`, which
-              // names the placed values; this sentence is for notes down to one.
-              // biome-ignore lint/suspicious/noExplicitAny: structural state access.
-              const pen = (state as any).pencil[y * w + x] as number;
-              const ncand = Array.from({ length: w }, (_, k) => k + 1).filter(
-                (n) => pen & (1 << n),
-              ).length;
-              expect(
-                ncand,
-                `${at}: naked-single narration on a cell with ${ncand} candidates`,
-              ).toBe(1);
+            for (const step of res.steps) {
+              // biome-ignore lint/suspicious/noExplicitAny: structural move/state access.
+              const m = step.move as any;
+              if (
+                m.type === "set" &&
+                !m.pencil &&
+                // A game names its cell in its own noun (Salad's "square").
+                /ruled out in this (cell|square)/.test(step.explanation)
+              ) {
+                // Group's `set` carries a cell list; the others carry `x`/`y`.
+                const { x, y } = (m.cells?.[0] ?? m) as { x: number; y: number };
+                // A note-less cell's single is the library's `regionsFull`, which
+                // names the placed values; this sentence is for notes down to one.
+                // Counted as set bits, which holds whichever bit a game gives a
+                // value (Salad's symbol n is bit n-1, its empty mark a note too).
+                // biome-ignore lint/suspicious/noExplicitAny: structural state access.
+                const pen = (state as any).pencil[y * w + x] as number;
+                let ncand = 0;
+                for (let rest = pen; rest !== 0; rest &= rest - 1) ncand++;
+                expect(
+                  ncand,
+                  `${at}: naked-single narration on a cell with ${ncand} candidates`,
+                ).toBe(1);
+                judged++;
+              }
+              state = game.executeMove(state, step.move);
             }
-            state = game.executeMove(state, step.move);
           }
         }
+        // A regex over the game's own words empties without a sound when the
+        // sentence is reworded; every game walked here narrates a single.
+        expect(judged, `${name}: no naked-single sentence was met`).toBeGreaterThan(0);
       });
     }
   });
