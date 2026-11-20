@@ -86,7 +86,7 @@
       border-grid-render (palisade, separate), inertia, path, rect, slide,
       sokoban, pegs, signpost; of the multi-family games, abcd, pattern,
       magnets, blackbox, tents, boats, tracks, salad, group, crossing,
-      subsets.
+      subsets, bridges, guess, undead.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -141,9 +141,19 @@
       Subsets' arrow flags stay a record of their own: they are per arrow
       bit, not per tile, and read the cell cache's first frame. A test title
       that names a slot keys its snapshot, so a rename prunes the old entry
-      (`--update` on that file) after checking the bodies match. Next:
-      bridges, guess, undead. Then the multi-family games, then
-      the neighbor-painting ones. Not tiles, keeping the explicit form:
+      (`--update` on that file) after checking the bodies match. Bridges'
+      three lanes (descriptor, hint word, flash lead) are one three-word key.
+      Guess keys pegs (the solution as the row after the last guess),
+      feedback and answer slots in three caches; its ready-to-mark wash was
+      upstream's `COL_FLASH` and is `COL_READY`, its ink cursor
+      `COL_INK_CURSOR`. Undead's cell key holds the highlight, so the
+      cursor's "did it move" bookkeeping went, and not `cell_errors`, which
+      nothing draws. Dropping Bridges' unused filler slot left `GRID_MID`
+      imported by Abcd alone in `src/games/`; `palette-source.test.ts`'s
+      shared-role count now reads `gameSourceFiles`, which credits
+      edge-clue-latin's renderer to Adjacent and Unequal. Next: the
+      neighbor-painting games (ascent, bricks, fifteen, net, netslide,
+      sixteen, spokes, twiddle, map). Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;
       code and edges to go.

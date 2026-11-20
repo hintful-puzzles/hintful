@@ -6,7 +6,7 @@
  * diagonal), a placed monster (a drawn ghost/vampire/zombie shape, or a letter
  * in ASCII mode), or a 2×2 grid of pencil notes. The count blocks and edge clues
  * recolor red on error and dim when complete / struck. Cells are diffed against
- * a per-monster-cell cache; the Check & Save mistake overlay rides a sidecar in
+ * a per-cell key in a tile cache; the Check & Save mistake overlay rides a sidecar in
  * the diff key (docs/rendering.md § "The tile cache and the diff key"). The
  * fork's pencil-mode indicator sits in the top-right border corner.
  *
@@ -18,11 +18,7 @@
 import {
   cellSurface,
   clueDoneColor,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -33,6 +29,13 @@ import {
   undeadVampire,
   undeadZombie,
 } from "../../engine/color/palette-games.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
@@ -53,8 +56,8 @@ import {
   pencilIndicatorReach,
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
-import { type GridCursor, newCursor } from "../../engine/pointer.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import {
@@ -78,7 +81,7 @@ import {
  * docs/hints-marks.md § "The engine colors the marks". Coordinates are
  * interior (1-based) grid cells, matching `redraw`/`findMistakes`. */
 export interface UndeadHint {
-  /** The driving sightline's bounce path, outlined `COL_HINT_CELL` (evidence). */
+  /** The driving sightline's bounce path, outlined `COL_HINT_OUTLINE` (evidence). */
   area: Point[];
   /** The cell(s) the deduction acts on, ringed. */
   targets: Point[];
@@ -93,45 +96,33 @@ const idiv = (a: number, b: number): number => Math.trunc(a / b);
 
 // --- palette ---------------------------------------------------------------
 
-const COL_BACKGROUND = 0; // the board around the grid
-const COL_GRID = 1; // the line between two cells, and the frame
-export const COL_TEXT = 2;
-const COL_ERROR = 3;
-const COL_HIGHLIGHT = 4;
-export const COL_FLASH = 5;
-const COL_GHOST = 6;
-const COL_ZOMBIE = 7;
-const COL_VAMPIRE = 8;
-const COL_DONE = 9;
-const COL_PENCIL_BODY = 10;
-// The explained-hint legend (docs/hints-marks.md § "The engine colors the
-// marks"); the ring on the cell(s) the deduction acts on is the engine's.
-export const COL_HINT_CELL = 11; // the driving sightline's bounce path (evidence)
-const COL_CELL = 12; // the surface of a cell the player fills
+// The hint's evidence (`COL_HINT_OUTLINE`) is the driving sightline's bounce
+// path; the ring on the cell(s) the deduction acts on is the engine's.
+const COL_GRID = FIRST_GAME_SLOT; // the line between two cells, and the frame
+export const COL_TEXT = FIRST_GAME_SLOT + 1;
+const COL_HIGHLIGHT = FIRST_GAME_SLOT + 2;
+const COL_GHOST = FIRST_GAME_SLOT + 3;
+const COL_ZOMBIE = FIRST_GAME_SLOT + 4;
+const COL_VAMPIRE = FIRST_GAME_SLOT + 5;
+const COL_DONE = FIRST_GAME_SLOT + 6;
+const COL_PENCIL_BODY = FIRST_GAME_SLOT + 7;
+const COL_CELL = FIRST_GAME_SLOT + 8; // the surface of a cell the player fills
 /** The lifted surface of what the puzzle fixed: a mirror, or a given monster. */
-const COL_GIVEN = 13;
-/** The ground of a cell, a clue or a count the win flash's leading edge is
- * on; its body is {@link COL_FLASH}. */
-export const COL_FLASH_LEAD = 14;
+const COL_GIVEN = FIRST_GAME_SLOT + 9;
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = bg;
+  const out = rolePalette(bg);
   out[COL_GRID] = surfaceGrid(bg);
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_TEXT] = INK;
-  out[COL_ERROR] = ERROR;
   out[COL_HIGHLIGHT] = highlightWash(bg);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GHOST] = undeadGhost(bg);
   out[COL_ZOMBIE] = undeadZombie(bg);
   out[COL_VAMPIRE] = undeadVampire(bg);
   out[COL_DONE] = clueDoneColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -158,27 +149,17 @@ export function computeSize(p: { w: number; h: number }, ts: number): Size {
 // --- draw state ------------------------------------------------------------
 
 export interface UndeadDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  /** `numTotal` last-drawn monster bitmasks. */
-  monsters: Int8Array;
-  /** `numTotal` last-drawn pencil bitmasks. */
-  pencil: Uint8Array;
-  /** `wh` last-drawn cell-error flags (staleness only — see file note). */
-  cellErrors: Uint8Array;
-  /** `2·numPaths` last-drawn edge-clue error / done flags. */
-  hintErrors: Uint8Array;
-  hintsDone: Uint8Array;
-  countErrors: Uint8Array;
-  countPlaced: Int32Array;
-  cursor: GridCursor;
-  pencilMode: boolean;
-  /** The win flash's tone on each cell and edge clue as last drawn,
-   * indexed as the grid is, and on each of the three counts. */
-  lit: Uint8Array;
-  countLit: Uint8Array;
+  /** Per grid position (the border included, as `xy` indexes it), a cell's
+   * {@link cellKey}, with both overlays registered. Owns the first frame. */
+  cells: TileCache;
+  /** Per edge clue (`2·numPaths`), its error and done flags and the win
+   * flash's tone. */
+  clues: TileCache;
+  /** Per monster count: its look, and the number placed. */
+  counts: TileCache;
   ascii: boolean;
   countStyle: number;
   countFontsize: number;
@@ -186,11 +167,10 @@ export interface UndeadDrawState {
   countGap: number;
   countPadding: number;
   /** `wh` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
-   * evidence area, and the struck-monster mask in its `struck` lane. Owns the
-   * repack/stale/commit dance that keeps the overlay in the cache diff key
-   * (docs/rendering.md § "The tile cache and the diff key"). */
+   * evidence area, and the struck-monster mask in its `struck` lane.
+   * Registered with `cells`, which keeps it in the diff key. */
   hint: OverlaySidecar;
-  /** `wh` mistake-overlay sidecar (Check & Save) — same dance. */
+  /** `wh` mistake-overlay sidecar (Check & Save), registered likewise. */
   wrong: OverlaySidecar;
   /** The hint target's ring and the evidence area's outline (fork additions),
    * drawn after the cell loop. See {@link markBand}. */
@@ -200,30 +180,23 @@ export interface UndeadDrawState {
 
 export function newDrawState(state: UndeadState, tileSize: number): UndeadDrawState {
   const common = state.common;
+  const hint = new OverlaySidecar(common.wh);
+  const wrong = new OverlaySidecar(common.wh);
   return {
-    started: false,
     tileSize,
     w: common.w,
     h: common.h,
-    monsters: new Int8Array(common.numTotal).fill(7),
-    pencil: new Uint8Array(common.numTotal),
-    cellErrors: new Uint8Array(common.wh),
-    hintErrors: new Uint8Array(2 * common.numPaths),
-    hintsDone: new Uint8Array(2 * common.numPaths),
-    countErrors: new Uint8Array(3),
-    countPlaced: new Int32Array(3),
-    cursor: newCursor(),
-    pencilMode: false,
-    lit: new Uint8Array(common.wh),
-    countLit: new Uint8Array(3),
+    cells: new TileCache(common.wh, { overlays: [hint, wrong] }),
+    clues: new TileCache(2 * common.numPaths),
+    counts: new TileCache(3, { words: 2 }),
     ascii: false,
     countStyle: COUNT_STYLE_TOTAL,
     countFontsize: 0,
     countW: 0,
     countGap: 0,
     countPadding: 0,
-    hint: new OverlaySidecar(common.wh),
-    wrong: new OverlaySidecar(common.wh),
+    hint,
+    wrong,
     marks: new HintMarks(),
     pencilModeShown: null,
   };
@@ -633,6 +606,7 @@ function drawMonsterCount(
   ds: UndeadDrawState,
   state: UndeadState,
   c: number,
+  placed: number,
   hflash: WinTone,
 ): void {
   const ts = ds.tileSize;
@@ -641,7 +615,6 @@ function drawMonsterCount(
   const dw = ds.countW;
   const dh = ts;
   const msize = idiv(2 * ts, 3);
-  const placed = ds.countPlaced[c];
   const common = state.common;
   const total = [common.numGhosts, common.numVampires, common.numZombies][c];
   const bufm = c === 0 ? "G" : c === 1 ? "V" : "Z";
@@ -665,7 +638,7 @@ function drawMonsterCount(
 
   dr.drawRect(
     { x: dx, y: dy, w: dw + ds.countGap, h: dh },
-    hflash ? winSlot(hflash, COL_FLASH, COL_FLASH_LEAD) : COL_BACKGROUND,
+    hflash ? winSlot(hflash) : COL_BACKGROUND,
   );
   if (!ds.ascii) {
     drawMonster(dr, dx + f(msize / 2), dy + f(dh / 2), msize, 1 << c);
@@ -711,7 +684,7 @@ function drawClue(
   const dx = border(ts) + x * ts;
   const dy = border(ts) + y * ts + ts;
   const box = { x: dx + 2, y: dy + 2, w: ts - 3, h: ts - 3 };
-  dr.drawRect(box, lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_BACKGROUND);
+  dr.drawRect(box, lit ? winSlot(lit) : COL_BACKGROUND);
   dr.drawText(
     { x: dx + f(ts / 2), y: dy + f(ts / 2) },
     glyphFont(idiv(ts, 2)),
@@ -771,30 +744,16 @@ export function redraw(
   const h = ds.h;
   const stride = common.w + 2;
   const b = border(ts);
-  // The win flash's tone on the cell or edge clue at grid `(x, y)`, and
-  // whether that differs from the frame last drawn.
-  const light = (x: number, y: number): { lit: WinTone; changed: boolean } => {
-    const xy = x + y * stride;
-    const lit = flash.win(sweepStep(x, y));
-    const changed = ds.lit[xy] !== lit;
-    ds.lit[xy] = lit;
-    return { lit, changed };
-  };
+  const first = ds.cells.firstFrame();
 
-  if (!ds.started) {
+  if (first) {
     // The backing the cells leave showing as the grid: one pixel between two
     // cells, and one round the outside, so the frame is a grid line.
     dr.drawRect({ x: b + ts, y: b + 2 * ts, w: w * ts + 1, h: h * ts + 1 }, COL_GRID);
     ds.marks.reset(); // the backing rect just erased every grid line
   }
 
-  const hchanged =
-    ds.cursor.x !== ui.cursor.x ||
-    ds.cursor.y !== ui.cursor.y ||
-    ds.cursor.visible !== ui.cursor.visible ||
-    ds.pencilMode !== ui.pencilMode;
-  const changedAscii = ds.ascii !== ui.ascii;
-  if (changedAscii) ds.ascii = ui.ascii;
+  ds.ascii = ui.ascii;
   const changedCountStyle = ds.countStyle !== ui.countStyle;
   if (changedCountStyle) ds.countStyle = ui.countStyle;
 
@@ -807,40 +766,22 @@ export function redraw(
   }
 
   if (changedCountStyle) drawMonsterCountBackground(dr, ds);
-  if (changedCountStyle || !ds.started) calculateCountLayout(ds);
+  if (changedCountStyle || first) calculateCountLayout(ds);
 
   for (let i = 0; i < 3; i++) {
     // A count sits in the row above the top clues, at its own column.
     const column = (countX(ds, i) + ds.countW / 2 - b) / ts - 0.5;
     const hflash = flash.win(sweepStep(column, -1));
-    let stale =
-      !ds.started || ds.countLit[i] !== hflash || changedAscii || changedCountStyle;
-    ds.countLit[i] = hflash;
-    if (ds.countErrors[i] !== state.countErrors[i]) {
-      stale = true;
-      ds.countErrors[i] = state.countErrors[i];
-    }
-    if (ds.countPlaced[i] !== placed[i]) {
-      stale = true;
-      ds.countPlaced[i] = placed[i];
-    }
-    if (stale) drawMonsterCount(dr, ds, state, i, hflash);
+    const look =
+      (state.countErrors[i] ? 1 : 0) |
+      (hflash << 1) |
+      ((ui.ascii ? 1 : 0) << 3) |
+      (ui.countStyle << 4);
+    if (ds.counts.changed(i, look, placed[i]))
+      drawMonsterCount(dr, ds, state, i, placed[i], hflash);
   }
 
   // The edge clues.
-  const isClueStale = (index: number, litChanged: boolean): boolean => {
-    let ret = litChanged;
-    if (!ds.started) ret = true;
-    if (ds.hintErrors[index] !== state.hintErrors[index]) {
-      ds.hintErrors[index] = state.hintErrors[index];
-      ret = true;
-    }
-    if (ds.hintsDone[index] !== state.hintsDone[index]) {
-      ds.hintsDone[index] = state.hintsDone[index];
-      ret = true;
-    }
-    return ret;
-  };
   const clueColor = (index: number): number => {
     if (state.hintErrors[index]) return COL_ERROR;
     if (state.hintsDone[index]) return COL_DONE;
@@ -848,9 +789,11 @@ export function redraw(
   };
   const drawClueAt = (index: number, clue: number): void => {
     const g = range2grid(index, common.w, common.h);
-    const { lit, changed } = light(g.x, g.y);
-    if (!isClueStale(index, changed)) return;
-    drawClue(dr, ds, g.x, g.y, clueColor(index), clue, lit);
+    const lit = flash.win(sweepStep(g.x, g.y));
+    const key =
+      (state.hintErrors[index] ? 1 : 0) | (state.hintsDone[index] ? 2 : 0) | (lit << 2);
+    if (ds.clues.changed(index, key))
+      drawClue(dr, ds, g.x, g.y, clueColor(index), clue, lit);
   };
   for (const path of common.paths) {
     drawClueAt(path.gridStart, path.sightingsStart);
@@ -875,7 +818,7 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
     text: (x: number, y: number) => cellText(ds, state, ui.ascii, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   };
   const underErased = new Uint8Array(ds.hint.packed.length);
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
@@ -889,30 +832,21 @@ export function redraw(
       const xi = common.xinfo[xy];
       const c = common.grid[xy];
 
-      const { lit: hflash, changed } = light(x, y);
-      let stale = !ds.started || changed || changedAscii || underErased[xy] === 1;
-      if (
-        hchanged &&
-        ((x === ui.cursor.x && y === ui.cursor.y) ||
-          (x === ds.cursor.x && y === ds.cursor.y))
-      )
-        stale = true;
-      if (xi >= 0 && state.guess[xi] !== ds.monsters[xi]) {
-        stale = true;
-        ds.monsters[xi] = state.guess[xi];
-      }
-      if (xi >= 0 && state.pencil[xi] !== ds.pencil[xi]) {
-        stale = true;
-        ds.pencil[xi] = state.pencil[xi];
-      }
-      if (state.cellErrors[xy] !== ds.cellErrors[xy]) {
-        stale = true;
-        ds.cellErrors[xy] = state.cellErrors[xy];
-      }
-      if (ds.hint.stale(xy)) stale = true;
-      if (ds.wrong.stale(xy)) stale = true;
+      const highlight =
+        winHighlight(flash.win(sweepStep(x, y))) ?? cellHighlight(ui, x, y);
+      // The monster, the notes, the highlight and the ASCII preference: what
+      // the cell shows. Upstream's `cell_errors` is not drawn (file note), so
+      // it is no part of the key.
+      const key =
+        xi < 0
+          ? highlight << 6
+          : state.guess[xi] |
+            (state.pencil[xi] << 3) |
+            (highlight << 6) |
+            ((ui.ascii ? 1 : 0) << 9);
+      if (underErased[xy] === 1) ds.cells.forget(xy);
 
-      if (stale) {
+      if (ds.cells.changed(xy, key)) {
         const struck = ds.hint.struck[xy];
         // Both hint marks are drawn after this loop, the ring round the cell
         // and the outline on its border, so the cell paints its ordinary
@@ -925,11 +859,9 @@ export function redraw(
         drawCellBackground(
           dr,
           cell,
-          winHighlight(hflash) ?? cellHighlight(ui, x, y),
+          highlight,
           COL_HIGHLIGHT,
           given ? COL_GIVEN : COL_CELL,
-          COL_FLASH,
-          COL_FLASH_LEAD,
         );
         ds.hint.drawHatch(dr, xy, cell, ds.tileSize);
         dr.drawUpdate(cell);
@@ -954,8 +886,6 @@ export function redraw(
           }
           dr.drawUpdate(cellRect(ds, x, y));
         }
-        ds.hint.commit(xy);
-        ds.wrong.commit(xy);
       }
     }
   }
@@ -966,10 +896,4 @@ export function redraw(
 
   // Pencil-mode indicator (fork addition).
   repaintPencilIndicator(dr, ds, ui.pencilMode, PENCIL_BOX(ds), PENCIL_STYLE);
-
-  ds.cursor.x = ui.cursor.x;
-  ds.cursor.y = ui.cursor.y;
-  ds.cursor.visible = ui.cursor.visible;
-  ds.pencilMode = ui.pencilMode;
-  ds.started = true;
 }

@@ -8,6 +8,7 @@
  * a sightline-elimination frame.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { strikeReach } from "../../engine/draw.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, NOTE, stepMarks } from "../../engine/hint-words.ts";
@@ -25,12 +26,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { undeadGame } from "./index.ts";
-import {
-  COL_HINT_CELL,
-  COL_TEXT,
-  PREFERRED_TILE_SIZE,
-  type UndeadHint,
-} from "./render.ts";
+import { COL_TEXT, PREFERRED_TILE_SIZE, type UndeadHint } from "./render.ts";
 import {
   MON_GHOST,
   MON_NONE,
@@ -367,9 +363,9 @@ describe("undead hint render (tier 2.5)", () => {
       { defaultBackground: DEFAULT_BACKGROUND },
     );
     const ops = recording.ops;
-    // The sightline's bounce path is **outlined** COL_HINT_CELL, not shaded —
+    // The sightline's bounce path is **outlined** COL_HINT_OUTLINE, not shaded —
     // the cells on it carry penciled monsters the player has to read.
-    const evidence = markSides(ops, COL_HINT_CELL);
+    const evidence = markSides(ops, COL_HINT_OUTLINE);
     expect(evidence.length).toBeGreaterThan(0);
     for (const s of evidence) expect(isThin(s)).toBe(true);
     // The struck cell is marked by its strikes, never ringed: a ring would

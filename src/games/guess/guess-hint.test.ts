@@ -10,6 +10,7 @@
  * Standard answer rather than a handful.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { GAME_OVER } from "../../engine/hint-refusal.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
@@ -34,7 +35,7 @@ import {
   guessRefreshHintStep,
 } from "./hint.ts";
 import { guessGame } from "./index.ts";
-import { answerSlotAt, COL_HINT_CELL } from "./render.ts";
+import { answerSlotAt } from "./render.ts";
 import {
   decodeParams,
   defaultParams,
@@ -598,7 +599,9 @@ describe("the hint frame", () => {
     for (const r of ringsOf(ops)) expect(r.thickness).toBeLessThanOrEqual(2);
     // The row is hatched, not outlined: its whole strip, then each peg and the
     // score box again over their own backgrounds, all on one strip of the board.
-    expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);
+    expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toEqual(
+      [],
+    );
     const hatches = opsOfKind(ops, "hatch");
     expect(hatches).toHaveLength(1 + p.npegs + 1);
     const [strip] = hatches;

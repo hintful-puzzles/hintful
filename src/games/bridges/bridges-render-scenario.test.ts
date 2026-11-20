@@ -9,6 +9,7 @@
  * Bridges deduction points at is a cell whose border box means anything.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import {
@@ -29,13 +30,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { bridgesGame } from "./index.ts";
-import {
-  border,
-  COL_FOREGROUND,
-  COL_HINT_CELL,
-  COL_SELECTED,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
+import { border, COL_FOREGROUND, COL_SELECTED, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   type BridgesMove,
   type BridgesOp,
@@ -133,11 +128,11 @@ describe("Bridges render scenarios", () => {
     // the color is on the outer circle's `fill`/`outline` and what survives is
     // a ring the width of one line.
     expect(
-      recording.ops.some((o) => o.op === "circle" && o.outline === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "circle" && o.outline === COL_HINT_OUTLINE),
       "the focus island's rim is not in the outline's ink",
     ).toBe(true);
     expect(
-      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_OUTLINE),
       "the focus island's clue digit is not in the outline's ink",
     ).toBe(true);
 
@@ -146,7 +141,7 @@ describe("Bridges render scenarios", () => {
     // (docs/hints-marks.md § "Shade vs ring").
     for (const o of recording.ops) {
       if (o.op !== "rect") continue;
-      if (o.color !== ringInk && o.color !== COL_HINT_CELL) continue;
+      if (o.color !== ringInk && o.color !== COL_HINT_OUTLINE) continue;
       const short = Math.min(o.w, o.h);
       expect(
         short * 4 < Math.max(o.w, o.h) || short < PREFERRED_TILE_SIZE / 2,
@@ -163,7 +158,7 @@ describe("Bridges render scenarios", () => {
     // color, and an island's arcs intrude into its four neighbor tiles, which
     // is why the count is a floor rather than an equality.
     const rims = recording.ops.filter(
-      (o) => o.op === "circle" && o.outline === COL_HINT_CELL,
+      (o) => o.op === "circle" && o.outline === COL_HINT_OUTLINE,
     );
     expect(rims.length).toBeGreaterThanOrEqual(cited.length);
   });

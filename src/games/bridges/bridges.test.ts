@@ -3,6 +3,7 @@
  * generator/solver differential is `bridges-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
   puzzleDescError,
@@ -32,14 +33,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
-import {
-  border,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_ISLAND,
-  COL_MARK,
-  newDrawState,
-} from "./render.ts";
+import { border, COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
   type BridgesMove,

@@ -35,6 +35,7 @@
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { gameSourceFiles } from "../testing/enrollment.ts";
 import * as colors from "./colors.ts";
 import * as roles from "./palette.ts";
 import * as gameTokens from "./palette-games.ts";
@@ -354,15 +355,19 @@ it("no game holds the ring's ink", () => {
  *
  * A hint ink owes no game: the engine reads every one (`HINT_INK`), and draws
  * the stripes in its own (`resolvePalette`).
+ *
+ * Counted by game id over `gameSourceFiles`, which credits a shared family's
+ * renderer (`engine/edge-clue-latin/`) to every game that draws with it.
  */
 it("declares no shared role fewer than two games take", () => {
   const takenBy = new Map<string, Set<string>>();
-  for (const { rel, src } of gameSources())
-    for (const m of src.matchAll(
-      /^import\s*\{([^}]*)\}\s*from\s*"[^"]*\/palette\.ts"/gm,
-    ))
-      for (const name of m[1].split(",").map((n) => n.trim()))
-        takenBy.set(name, (takenBy.get(name) ?? new Set()).add(rel.split("/")[0]));
+  for (const [id, files] of gameSourceFiles)
+    for (const { text } of files)
+      for (const m of text.matchAll(
+        /^import\s*\{([^}]*)\}\s*from\s*"[^"]*\/palette\.ts"/gm,
+      ))
+        for (const name of m[1].split(",").map((n) => n.trim()))
+          takenBy.set(name, (takenBy.get(name) ?? new Set()).add(id));
   const lonely = Object.keys(roles)
     .map((name) => ({
       name,

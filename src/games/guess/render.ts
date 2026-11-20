@@ -14,16 +14,15 @@
  */
 
 import { BLACK, FREE, PINK_WASH, TEAL_WASH, WHITE } from "../../engine/color/colors.ts";
-import {
-  cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
-  INK,
-  surfaceGrid,
-} from "../../engine/color/palette.ts";
+import { cellSurface, INK, surfaceGrid } from "../../engine/color/palette.ts";
 import { guessAnswerWell, guessBoard } from "../../engine/color/palette-games.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -35,6 +34,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -57,31 +57,30 @@ import {
   type PegRow,
 } from "./state.ts";
 
-// --- color indices (upstream enum) -----------------------------------
+// --- color indices ----------------------------------------------------
+//
+// The win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is the box of a peg or a hole
+// it is on; the hint's evidence (`COL_HINT_OUTLINE`) an outline round an answer
+// slot it reads; a mistake (`COL_ERROR`) the frame round an answer slot ruling
+// out its own color.
 
-const COL_BACKGROUND = 0;
-const COL_FRAME = 1;
-export const COL_CURSOR = 2;
-const COL_FLASH = 3;
-export const COL_HOLD = 4;
-const COL_EMPTY = 5; // must be COL_1 - 1
-export const COL_1 = 6; // COL_1..COL_10 = 6..15
-export const COL_CORRECTPLACE = 16;
-const COL_CORRECTCOLOR = 17;
-/** The hint's evidence: an outline round an answer slot it reads. */
-export const COL_HINT_CELL = 18;
+const COL_FRAME = FIRST_GAME_SLOT;
+/** The keyboard cursor, in ink (see `colors`). */
+export const COL_INK_CURSOR = FIRST_GAME_SLOT + 1;
+/** The feedback holes of a row that is ready to mark: upstream's `COL_FLASH`. */
+const COL_READY = FIRST_GAME_SLOT + 2;
+export const COL_HOLD = FIRST_GAME_SLOT + 3;
+export const COL_CORRECTPLACE = FIRST_GAME_SLOT + 4;
+const COL_CORRECTCOLOR = FIRST_GAME_SLOT + 5;
 /** The answer row's well, darker than every peg color in both schemes. */
-const COL_WELL = 19;
-/** A mistake: the frame round an answer slot ruling out its own color. */
-export const COL_WRONG = 20;
+const COL_WELL = FIRST_GAME_SLOT + 6;
 /** The rim of an empty hole, which with {@link COL_EMPTY} inside it is a cell
  * of the collection's quiet surface, drawn round. */
-const COL_HOLE_RIM = 21;
-/** The box of a peg or a hole the win flash is on: under the highlight's
- * body, and under its leading edge. */
-export const COL_LIT = 22;
-export const COL_LIT_LEAD = 23;
-const NCOLORS = 24;
+const COL_HOLE_RIM = FIRST_GAME_SLOT + 7;
+/** An empty hole, and the run of the ten peg colors after it: a peg's value
+ * `c` is painted in `COL_EMPTY + c`. */
+const COL_EMPTY = FIRST_GAME_SLOT + 8;
+export const COL_1 = COL_EMPTY + 1;
 
 // --- peg overlay flags (upstream PEG_*) -------------------------------
 
@@ -229,22 +228,19 @@ export interface GuessDrawState extends Geom {
   /** How many cells an answer slot holds — the one thing the board's size does
    * not depend on and the answer row's layout does. */
   ncolors: number;
-  started: boolean;
   solved: number;
   nextGo: number;
-  /** Per-row caches of last-drawn pegs (with PEG_* flags) + feedback. */
-  guessesCache: PegRow[];
-  solutionCache: PegRow;
-  /** Per answer slot, the last-drawn {@link answerKey}; `-1` = never drawn. */
-  answerCache: number[];
+  /** Per peg position, row by row and the revealed solution as the row after
+   * the last guess: the peg with its PEG_* flags. Owns the first frame. */
+  pegs: TileCache;
+  /** Per feedback hole, row by row. */
+  feedback: TileCache;
+  /** Per answer slot, its {@link answerKey}. */
+  answer: TileCache;
   /** The rows the last frame hatched for a hint, as a key. */
   hintRowsShown: string;
   /** What the pencil-mode indicator shows; `null` = never painted. */
   pencilModeShown: boolean | null;
-}
-
-function invalidRow(n: number): PegRow {
-  return { pegs: new Array(n).fill(-1), feedback: new Array(n).fill(-1) };
 }
 
 export function newDrawState(s: GuessState, tileSize: number): GuessDrawState {
@@ -252,12 +248,11 @@ export function newDrawState(s: GuessState, tileSize: number): GuessDrawState {
   return {
     ...computeGeometry(p, tileSize),
     ncolors: p.ncolors,
-    started: false,
     solved: 0,
     nextGo: 0,
-    guessesCache: Array.from({ length: p.nguesses }, () => invalidRow(p.npegs)),
-    solutionCache: invalidRow(p.npegs),
-    answerCache: new Array(p.npegs).fill(-1),
+    pegs: new TileCache((p.nguesses + 1) * p.npegs),
+    feedback: new TileCache(p.nguesses * p.npegs),
+    answer: new TileCache(p.npegs),
     hintRowsShown: "",
     pencilModeShown: null,
   };
@@ -433,11 +428,11 @@ function drawAnswerSlot(
   }
   // Both marks sit in the margin round the well, where the ink cursor reads on
   // the board in either scheme; the well itself is too dark for it in light mode.
-  if (key & ANSWER_PREMISE) outline(dr, area, cg, COL_HINT_CELL);
-  if (key & ANSWER_CURSOR) outline(dr, area, cg, COL_CURSOR);
+  if (key & ANSWER_PREMISE) outline(dr, area, cg, COL_HINT_OUTLINE);
+  if (key & ANSWER_CURSOR) outline(dr, area, cg, COL_INK_CURSOR);
   // Over the cursor: the slot just marked is the likeliest to be wrong and to
   // hold the cursor, and the frame lasts only until the next move.
-  if (key & ANSWER_MISTAKE) outline(dr, area, cg, COL_WRONG);
+  if (key & ANSWER_MISTAKE) outline(dr, area, cg, COL_ERROR);
   dr.drawUpdate(area);
 }
 
@@ -460,9 +455,7 @@ function answerRowRedraw(
     const key =
       answerKey(s.ruledOut[pos], framed, cursor, premise, ui.showLabels) |
       (wrong ? ANSWER_MISTAKE : 0);
-    if (ds.answerCache[pos] === key) continue;
-    ds.answerCache[pos] = key;
-    drawAnswerSlot(dr, ds, pos, key);
+    if (ds.answer.changed(pos, key)) drawAnswerSlot(dr, ds, pos, key);
   }
 }
 
@@ -478,7 +471,8 @@ function rowBox(ds: GuessDrawState, gi: number): Rect {
 // --- colors ----------------------------------------------------------
 
 export function colors(defaultBackground: Color): Color[] {
-  const ret: Color[] = new Array(NCOLORS);
+  const board = guessBoard(defaultBackground);
+  const ret = rolePalette(board);
 
   for (let i = 0; i < 10; i++) ret[COL_1 + i] = FREE[i];
 
@@ -486,26 +480,19 @@ export function colors(defaultBackground: Color): Color[] {
   // Not `CURSOR`: the cursor is a hairline ring round a peg, on the board's
   // surface, where a green hairline reads far weaker than ink beside a teal
   // or a mint peg.
-  ret[COL_CURSOR] = INK;
-  // The win flash is `COL_LIT` and `COL_LIT_LEAD`; upstream's `COL_FLASH` slot lights the feedback
-  // holes of a row that is ready to mark. It and the held-peg slot are washes,
-  // not pegs (so not `HELD`, a mark's full strength): they sit *behind* a peg
-  // and must not be mistaken for one.
-  ret[COL_FLASH] = TEAL_WASH;
+  ret[COL_INK_CURSOR] = INK;
+  // The ready-to-mark holes and the held-peg slot are washes, not pegs (so
+  // not `HELD`, a mark's full strength): they sit *behind* a peg and must not
+  // be mistaken for one.
+  ret[COL_READY] = TEAL_WASH;
   ret[COL_HOLD] = PINK_WASH;
   ret[COL_CORRECTPLACE] = BLACK;
   ret[COL_CORRECTCOLOR] = WHITE;
-  const board = guessBoard(defaultBackground);
-  ret[COL_BACKGROUND] = board;
   // An empty hole is where a peg goes and no state of its own, so it is the
   // quiet surface inside its thin line and the pegs are the color on the board.
   ret[COL_EMPTY] = cellSurface(board);
   ret[COL_HOLE_RIM] = surfaceGrid(board);
-  ret[COL_LIT] = FLASH;
-  ret[COL_LIT_LEAD] = FLASH_LEAD;
   ret[COL_WELL] = guessAnswerWell(defaultBackground);
-  ret[COL_HINT_CELL] = HINT_OUTLINE;
-  ret[COL_WRONG] = ERROR;
 
   return ret;
 }
@@ -538,7 +525,7 @@ function drawPeg(
   const box = rect(cx - cg, cy - cg, ts + cg * 2, ts + cg * 2);
   // Lit, the whole box is a flash color and an empty hole with it: a peg
   // fills all of its box but the corners, and keeps its own color.
-  const lit = tone !== WIN_NONE ? winSlot(tone, COL_LIT, COL_LIT_LEAD) : null;
+  const lit = tone !== WIN_NONE ? winSlot(tone) : null;
   dr.drawRect(box, lit ?? COL_BACKGROUND);
   if (hatched) dr.drawHatch(box, hatchPeriod(ts));
   const fill = col ? COL_EMPTY + col : (lit ?? COL_EMPTY);
@@ -566,7 +553,7 @@ function drawPeg(
 function drawCursor(dr: GameDrawing, ds: GuessDrawState, x: number, y: number): void {
   const ts = ds.tileSize;
   const cg = cgap(ds);
-  dr.drawCircle(pt(x + ds.pegrad, y + ds.pegrad), ds.pegrad + cg, -1, COL_CURSOR);
+  dr.drawCircle(pt(x + ds.pegrad, y + ds.pegrad), ds.pegrad + cg, -1, COL_INK_CURSOR);
   dr.drawUpdate(rect(x - cg, y - cg, ts + cg * 2, ts + cg * 2));
 }
 
@@ -584,16 +571,14 @@ function guessRedraw(
   hatched = false,
   flash: Flash = NO_FLASH,
 ): void {
-  let dest: PegRow;
+  const row = guess === -1 ? ds.nguesses : guess;
   let rowx: number;
   let rowy: number;
   if (guess === -1) {
-    dest = ds.solutionCache;
     rowx = SOLN_OX(ds);
     // Centered in the answer row, which is taller than a peg.
     rowy = SOLN_OY(ds) + idiv(ds.answerh - ds.tileSize, 2);
   } else {
-    dest = ds.guessesCache[guess];
     rowx = guessX(ds, 0);
     rowy = guessY(ds, guess);
     // The whole strip, so the stripe runs through the gaps no peg repaints.
@@ -603,7 +588,7 @@ function guessRedraw(
     }
   }
 
-  for (let i = 0; i < dest.pegs.length; i++) {
+  for (let i = 0; i < ds.npegs; i++) {
     let scol = src ? src.pegs[i] : 0;
     if (i === curCol) scol |= PEG_CURSOR;
     if (holds?.[i]) scol |= PEG_HOLD;
@@ -612,9 +597,8 @@ function guessRedraw(
     // last guess. An empty hole lights too: a quick win leaves the winning
     // row and the answer a board apart, with nothing between them to carry
     // the highlight across.
-    scol |=
-      flash.win(sweepStep(i, guess === -1 ? ds.nguesses : guess)) << PEG_WIN_SHIFT;
-    if (dest.pegs[i] !== scol || force) {
+    scol |= flash.win(sweepStep(i, row)) << PEG_WIN_SHIFT;
+    if (ds.pegs.changed(row * ds.npegs + i, scol) || force) {
       drawPeg(
         dr,
         ds,
@@ -646,7 +630,6 @@ function guessRedraw(
         ),
       );
     }
-    dest.pegs[i] = scol;
   }
 }
 
@@ -660,19 +643,19 @@ function hintRedraw(
   markable: boolean,
   hatched = false,
 ): void {
-  const dest = ds.guessesCache[guess];
-  const npegs = dest.feedback.length;
-  const emptycol = markable ? COL_FLASH : COL_EMPTY;
+  const npegs = ds.npegs;
+  const emptycol = markable ? COL_READY : COL_EMPTY;
   const hintlen = idiv(npegs + 1, 2);
 
-  // Redraw all-or-none (the cursor box wraps the whole section).
-  let needRedraw = false;
+  // Redraw all-or-none (the cursor box wraps the whole section). Every hole is
+  // asked, not only up to the first miss, so each records what the section's
+  // repaint paints.
+  let needRedraw = force;
   for (let i = 0; i < npegs; i++) {
     let scol = src ? src.feedback[i] : 0;
     if (i === 0 && cursor) scol |= PEG_CURSOR;
     if (i === 0 && markable) scol |= PEG_HOLD;
-    if (scol !== dest.feedback[i] || force) needRedraw = true;
-    dest.feedback[i] = scol;
+    if (ds.feedback.changed(guess * npegs + i, scol)) needRedraw = true;
   }
   if (!needRedraw) return;
 
@@ -719,10 +702,10 @@ function hintRedraw(
     const y1 = hy + cg;
     const x2 = hx + hw - cg;
     const y2 = hy + hh - cg;
-    dr.drawLine(pt(x1, y1), pt(x2, y1), COL_CURSOR, 1);
-    dr.drawLine(pt(x2, y1), pt(x2, y2), COL_CURSOR, 1);
-    dr.drawLine(pt(x2, y2), pt(x1, y2), COL_CURSOR, 1);
-    dr.drawLine(pt(x1, y2), pt(x1, y1), COL_CURSOR, 1);
+    dr.drawLine(pt(x1, y1), pt(x2, y1), COL_INK_CURSOR, 1);
+    dr.drawLine(pt(x2, y1), pt(x2, y2), COL_INK_CURSOR, 1);
+    dr.drawLine(pt(x2, y2), pt(x1, y2), COL_INK_CURSOR, 1);
+    dr.drawLine(pt(x1, y2), pt(x1, y1), COL_INK_CURSOR, 1);
   }
   dr.drawUpdate(rect(hx, hy, hw, hh));
 }
@@ -754,7 +737,8 @@ export function redraw(
   hint?: HintStep<GuessMove>,
   mistakes?: readonly GuessMistake[],
 ): void {
-  const newMove = s.nextGo !== ds.nextGo || !ds.started;
+  const first = ds.pegs.firstFrame();
+  const newMove = s.nextGo !== ds.nextGo || first;
   const marks = stepMarks(hint);
 
   // A row the sentence reads is hatched, gaps included. When the set changes,
@@ -764,7 +748,7 @@ export function redraw(
   const hintRows = marks.of("stripes", ROW).filter((gi) => gi < s.params.nguesses);
   const hintRowsKey = hintRows.join(",");
   const forceRows = hintRowsKey !== ds.hintRowsShown;
-  if (forceRows && ds.started) {
+  if (forceRows && !first) {
     for (const gi of ds.hintRowsShown ? ds.hintRowsShown.split(",").map(Number) : []) {
       dr.drawRect(rowBox(ds, gi), COL_BACKGROUND);
       dr.drawUpdate(rowBox(ds, gi));
@@ -773,7 +757,7 @@ export function redraw(
   ds.hintRowsShown = hintRowsKey;
   const hatchedRow = new Set(hintRows);
 
-  if (!ds.started) {
+  if (first) {
     dr.drawRect(
       rect(SOLN_OX(ds), SOLN_OY(ds) - ds.gapsz - 1, SOLN_W(ds), 2),
       COL_FRAME,
@@ -847,10 +831,10 @@ export function redraw(
   if (!solved) currmoveRedraw(dr, ds, s.nextGo, COL_HOLD);
 
   // The solution box (or its reveal).
-  if ((solved === 0) !== (ds.solved === 0) || !ds.started) {
+  if ((solved === 0) !== (ds.solved === 0) || first) {
     dr.drawRect(answerArea(ds), COL_BACKGROUND);
     dr.drawUpdate(answerArea(ds));
-    ds.answerCache.fill(-1);
+    ds.answer.forgetAll();
   }
   if (!solved) answerRowRedraw(dr, ds, s, ui, marks, mistakes ?? []);
   else {
@@ -877,5 +861,4 @@ export function redraw(
 
   ds.solved = solved;
   ds.nextGo = s.nextGo;
-  ds.started = true;
 }

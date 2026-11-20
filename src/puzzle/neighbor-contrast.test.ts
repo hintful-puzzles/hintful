@@ -44,13 +44,13 @@ const CLOSE_ON_PURPOSE: Record<string, Record<string, string>> = {
     "mark:15:8": "a white dot's ink rim, white in the dark scheme; the dot carries it",
   },
   guess: {
-    "mark:1:17": "the outline of a white peg, which is white",
+    "mark:6:11": "the outline of a white peg, which is white",
   },
   pearl: {
     "area:9:15": "a white pearl on the loop; its black outline carries it",
   },
   undead: {
-    "area:0:8": "a vampire's body on the board; its ink outline carries it",
+    "area:0:11": "a vampire's body on the board; its ink outline carries it",
   },
 };
 

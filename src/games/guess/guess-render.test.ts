@@ -6,6 +6,7 @@
  * solution reveal appearing only once the game is over.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -15,11 +16,8 @@ import { guessGame } from "./index.ts";
 import {
   COL_1,
   COL_CORRECTPLACE,
-  COL_CURSOR,
   COL_HOLD,
-  COL_LIT,
-  COL_LIT_LEAD,
-  COL_WRONG,
+  COL_INK_CURSOR,
   type GuessDrawState,
   pegOff,
   redraw,
@@ -119,7 +117,7 @@ describe("Guess redraw", () => {
      * `column,row`, the answer the row under the last guess. */
     const tones = new Set<number>();
     const lit = (color: number) =>
-      (color === COL_LIT || color === COL_LIT_LEAD) && tones.add(color) !== null;
+      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color) !== null;
     const run = winFlashRun(
       (flash: Flash) => {
         const { dr } = recordingDrawing();
@@ -145,7 +143,7 @@ describe("Guess redraw", () => {
       const [x, y] = key.split(",").map(Number);
       return sweepStep(x, y);
     });
-    expect([...tones].sort()).toEqual([COL_LIT, COL_LIT_LEAD]);
+    expect([...tones].sort()).toEqual([COL_FLASH, COL_FLASH_LEAD]);
     // From the answer's first peg to the end of the first guess.
     expect(run.frames[0]).toEqual([`0,${params.nguesses}`]);
     expect(run.frames.at(-1)).toEqual([`${params.npegs - 1},0`]);
@@ -162,11 +160,12 @@ describe("Guess redraw", () => {
     /** A peg is a circle in one of the ten peg colors, wherever it is drawn. The
      * answer row paints every color there too, as square blocks, and a block
      * must never read as a revealed peg. */
+    const isPegColor = (c: number) => c >= COL_1 && c < COL_1 + 10;
     const pegsBelow = (ops: RecordingDrawing["ops"], y: number) =>
-      opsOfKind(ops, "circle").some((o) => o.fill >= 6 && o.fill <= 15 && o.cy >= y);
+      opsOfKind(ops, "circle").some((o) => isPegColor(o.fill) && o.cy >= y);
     expect(pegsBelow(opsA, dsA.solny)).toBe(false);
     const blocks = opsOfKind(opsA, "rect").filter(
-      (o) => o.color >= 6 && o.color <= 15 && o.y >= dsA.solny,
+      (o) => isPegColor(o.color) && o.y >= dsA.solny,
     );
     expect(blocks.length).toBe(params.ncolors * params.npegs);
     for (const b of blocks) expect(Math.max(b.w, b.h) * 2).toBeLessThan(dsA.tileSize);
@@ -224,10 +223,10 @@ describe("Guess's check", () => {
     const settled = paint().length;
     const framed = paint(guessGame.findMistakes?.(wrong));
     expect(framed.length).toBeGreaterThan(settled);
-    expect(framed.some((o) => o.op === "rect" && o.color === COL_WRONG)).toBe(true);
+    expect(framed.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
     const cleared = paint();
     expect(cleared.length).toBeGreaterThan(settled);
-    expect(cleared.some((o) => "color" in o && o.color === COL_WRONG)).toBe(false);
+    expect(cleared.some((o) => "color" in o && o.color === COL_ERROR)).toBe(false);
   });
 
   it("draws the frame over the notes cursor on the slot just marked", () => {
@@ -239,7 +238,7 @@ describe("Guess's check", () => {
     redraw(rec, freshDs(), null, wrong, 1, ui, 0, NO_FLASH, undefined, [{ pos: 0 }]);
     const last = (color: number) =>
       rec.ops.findLastIndex((o) => o.op === "rect" && o.color === color);
-    expect(last(COL_CURSOR)).toBeGreaterThanOrEqual(0);
-    expect(last(COL_WRONG)).toBeGreaterThan(last(COL_CURSOR));
+    expect(last(COL_INK_CURSOR)).toBeGreaterThanOrEqual(0);
+    expect(last(COL_ERROR)).toBeGreaterThan(last(COL_INK_CURSOR));
   });
 });

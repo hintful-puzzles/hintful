@@ -8,6 +8,7 @@
  * together.
  */
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -30,14 +31,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { undeadGame } from "./index.ts";
-import {
-  border,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  countBlockAt,
-  newDrawState,
-  redraw,
-} from "./render.ts";
+import { border, countBlockAt, newDrawState, redraw } from "./render.ts";
 import {
   findUndeadSolution,
   isUniquelySolvable,

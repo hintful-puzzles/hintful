@@ -15,19 +15,24 @@ import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import {
   cellSurface,
   ERROR_WASH,
-  FLASH,
-  FLASH_LEAD,
-  GRID_MID,
   givenSurface,
   HELD,
-  HINT_OUTLINE,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
@@ -59,32 +64,31 @@ export function border(tileSize: number): number {
 }
 
 // --- Colors ---
-const COL_BACKGROUND = 0;
-export const COL_FOREGROUND = 1;
-/** What the win flash is on: an island's face, and a bridge's bars. */
-export const COL_FLASH = 2;
-export const COL_SELECTED = 4;
+// The win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is on an island's face and a
+// bridge's bars; the hint's evidence (`COL_HINT_OUTLINE`) is the islands and
+// bridges the argument counts, and the span a step decides is ringed by the
+// engine.
+export const COL_FOREGROUND = FIRST_GAME_SLOT;
+export const COL_SELECTED = FIRST_GAME_SLOT + 1;
 /** **Settled**: the face of an island marked completed, or whose count is
  * met, and the band under a bridge such a mark has locked. The lifted
  * surface, since a settled island is fixed as a given is. */
-export const COL_MARK = 5;
+export const COL_MARK = FIRST_GAME_SLOT + 2;
 /**
  * Upstream's `COL_HINT`, renamed. It is the bevel shade the "Show possible
  * bridge locations" preference draws a span in, and has nothing to do with the
  * hint system: it says *a bridge could go here*, not *this one must*, and a
  * reader of a name beginning `COL_HINT` would take it for a hint's ink.
  */
-const COL_POSSIBLE = 6;
-const COL_WARNING = 8;
-const COL_CURSOR = 9;
-/** The hint's evidence color: the islands and bridges the argument counts.
- * The span a step decides is ringed by the engine. */
-export const COL_HINT_CELL = 10;
+const COL_POSSIBLE = FIRST_GAME_SLOT + 3;
+/** A broken rule, or a bridge Check & Save found wrong: the error's wash, not
+ * its full red, because it is the ink of bars and clue digits. */
+const COL_WARNING = FIRST_GAME_SLOT + 4;
+/** The keyboard cursor, a wash and not the cursor's green (see `colors`). */
+const COL_CURSOR_WASH = FIRST_GAME_SLOT + 5;
 /** The face of an island that still has bridges to take: the quiet surface,
  * a step off the board, so a settled island's lift reads against it. */
-export const COL_ISLAND = 11;
-/** What the leading edge of the win flash is on. */
-export const COL_FLASH_LEAD = 12;
+export const COL_ISLAND = FIRST_GAME_SLOT + 6;
 
 // A tile's lead word: whether the win flash's leading edge, and not its body,
 // is on the square itself and on each of its four neighbors. A tile draws
@@ -147,9 +151,8 @@ const D_L_LIMIT_SHIFT_V = 30;
 
 // --- Hint draw flags -------------------------------------------------------
 //
-// A second `Int32Array` beside `grid`, compared in the same per-tile diff test:
-// that is what puts the overlay in the tile cache's diff key, which is the
-// whole of the bug class `hint-overlay.test.ts` guards
+// The second word of a tile's key in the tile cache: that is what puts the
+// overlay in the diff key, which is the whole of the bug class `hint-overlay.test.ts` guards
 // (docs/rendering.md § "The tile cache and the diff key"). There is no
 // room in the packed word — an island square already reaches bit 29 — and a
 // lane of its own is what `engine/overlay-sidecar.ts` reaches for too.
@@ -189,14 +192,11 @@ const H_L_LIMIT_SHIFT_V = 22;
 
 export interface BridgesDrawState {
   tileSize: number;
-  /** Per-cell packed draw descriptor from the last paint; -1 forces a redraw. */
-  grid: Int32Array;
+  /** Per square, keyed by its packed descriptor, its hint word and its lead
+   * word. */
+  tiles: TileCache;
   /** Scratch descriptor grid for the current frame (avoids per-frame alloc). */
   newgrid: Int32Array;
-  /** Per-cell hint word from the last paint; part of the diff key. */
-  hint: Int32Array;
-  /** Per-cell lead word from the last paint; part of the diff key. */
-  lead: Uint8Array;
   /** Scratch for the current frame: whether the flash's lead is on each cell. */
   newlead: Uint8Array;
 }
@@ -205,10 +205,8 @@ export function newDrawState(state: BridgesState, tileSize: number): BridgesDraw
   const n = state.w * state.h;
   return {
     tileSize,
-    grid: new Int32Array(n).fill(-1),
+    tiles: new TileCache(n, { words: 3 }),
     newgrid: new Int32Array(n),
-    hint: new Int32Array(n).fill(-1),
-    lead: new Uint8Array(n),
     newlead: new Uint8Array(n),
   };
 }
@@ -223,24 +221,18 @@ export function computeSize(
 
 export function colors(defaultBackground: Color): Color[] {
   const { background, lowlight } = mkhighlight(defaultBackground);
-  return [
-    background, // COL_BACKGROUND
-    INK, // COL_FOREGROUND
-    FLASH, // COL_FLASH
-    lowlight, // drawn in by nothing; holds its place for the slots after it
-    HELD, // COL_SELECTED
-    givenSurface(background), // COL_MARK
-    lowlight, // COL_POSSIBLE (= LOWLIGHT): the "possible bridge" bevel line
-    GRID_MID, // drawn in by nothing; holds its place for the slots after it
-    ERROR_WASH, // COL_WARNING (also the mistake overlay color)
-    // COL_CURSOR — not `CURSOR`: green is the island a bridge is being drawn
-    // from, and the cursor *fills* the island under its clue digit, which is
-    // the "you are here" wash Solo's family draws its cursor cell with.
-    highlightWash(background),
-    HINT_OUTLINE, // COL_HINT_CELL
-    cellSurface(background), // COL_ISLAND
-    FLASH_LEAD, // COL_FLASH_LEAD
-  ];
+  const out = rolePalette(background);
+  out[COL_FOREGROUND] = INK;
+  out[COL_SELECTED] = HELD;
+  out[COL_MARK] = givenSurface(background);
+  out[COL_POSSIBLE] = lowlight;
+  out[COL_WARNING] = ERROR_WASH;
+  // Not `CURSOR`: green is the island a bridge is being drawn from, and the
+  // cursor *fills* the island under its clue digit, which is the "you are
+  // here" wash Solo's family draws its cursor cell with.
+  out[COL_CURSOR_WASH] = highlightWash(background);
+  out[COL_ISLAND] = cellSurface(background);
+  return out;
 }
 
 // --- geometry helpers (all args positive, so integer division is trunc) ---
@@ -429,7 +421,7 @@ function lineColor(ldata: number, flashCol: number): number {
  * step wants bridged is drawn as the bundle it would become, with the bars the
  * step *adds* in `hintInk` over the ones already there; a span it wants
  * blocked takes the game's own pair of crosses in `hintInk`; and a bridge the
- * argument merely counts keeps its shape and takes `COL_HINT_CELL`. `hintInk`
+ * argument merely counts keeps its shape and takes `COL_HINT_OUTLINE`. `hintInk`
  * is the ring's, inside the ring round the span, and null everywhere else,
  * where what the step adds is left out.
  */
@@ -461,7 +453,7 @@ function drawGeneralLine(
     count === DL_COUNT_POSSIBLE
       ? COL_POSSIBLE
       : hdata & HL_CITED
-        ? COL_HINT_CELL
+        ? COL_HINT_OUTLINE
         : (ldata & DL_COLMASK) === DL_COL_SELECTED
           ? COL_SELECTED
           : (ldata & DL_COLMASK) === DL_COL_FLASH
@@ -606,7 +598,7 @@ function drawIsland(
   const irad = orad - lineWidth(ts);
   const fg =
     ihint & HI_CITED
-      ? COL_HINT_CELL
+      ? COL_HINT_OUTLINE
       : (idata & DI_COLMASK) === DI_COL_SELECTED
         ? COL_SELECTED
         : (idata & DI_COLMASK) === DI_COL_WARNING
@@ -617,7 +609,7 @@ function drawIsland(
     (idata & DI_COLMASK) === DI_COL_FLASH
       ? flashCol
       : (idata & DI_BGMASK) === DI_BG_CURSOR
-        ? COL_CURSOR
+        ? COL_CURSOR_WASH
         : (idata & DI_BGMASK) === DI_BG_MARK
           ? COL_MARK
           : COL_ISLAND;
@@ -1236,8 +1228,7 @@ export function redrawBridges(
       // The hint word is part of the diff key, not a second overlay pass: a
       // frame whose board is unchanged and whose hint is not must still
       // repaint (`hint-overlay.test.ts`).
-      if (ds.grid[c] === newval && ds.hint[c] === newhintval && ds.lead[c] === lead)
-        continue;
+      if (!ds.tiles.changed(c, newval, newhintval, lead)) continue;
       const v = s.gridAt(x, y);
       if (v & G_ISLAND) {
         const is = s.islandAt(x, y);
@@ -1252,9 +1243,6 @@ export function redrawBridges(
           spanRing(s, ts, b, x, y, horizontal, newgrid, newhint),
         );
       }
-      ds.grid[c] = newval;
-      ds.lead[c] = lead;
-      ds.hint[c] = newhintval;
     }
   }
 }
