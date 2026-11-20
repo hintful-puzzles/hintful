@@ -14,6 +14,7 @@
  *     bottom left to the top right.
  */
 
+import { COL_FLASH, COL_FLASH_LEAD } from "./color/roles.ts";
 import type { Point } from "./types.ts";
 
 /** What `Game.redraw` is told about a flash. */
@@ -47,12 +48,13 @@ export const WIN_LEAD = 2;
  */
 export type WinTone = typeof WIN_NONE | typeof WIN_BODY | typeof WIN_LEAD;
 
-/** The palette index a lit element is painted with: the slot the game gave
- * the `FLASH` role for the body, the slot it gave `FLASH_LEAD` for the lead. */
+/** The palette index a lit element is painted with: the engine's `FLASH`
+ * slot for the body and its `FLASH_LEAD` slot for the lead, unless a game
+ * names a pair of its own. */
 export function winSlot(
   tone: typeof WIN_BODY | typeof WIN_LEAD,
-  body: number,
-  lead: number,
+  body: number = COL_FLASH,
+  lead: number = COL_FLASH_LEAD,
 ): number {
   return tone === WIN_LEAD ? lead : body;
 }

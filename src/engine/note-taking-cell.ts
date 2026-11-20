@@ -36,6 +36,7 @@
  * data, which is where the line is.
  */
 
+import { COL_FLASH, COL_FLASH_LEAD } from "./color/roles.ts";
 import { glyphFont } from "./draw.ts";
 import { type GameDrawing, UI_UPDATE, type UiUpdate } from "./game.ts";
 import { click, key, type PointerAction } from "./hint-gesture.ts";
@@ -457,15 +458,15 @@ export function winHighlight(tone: WinTone): CellHighlight | null {
 
 /** The color a cell's background is filled with: the wash under an entry
  * highlight, a flash color under the win flash, the game's own background
- * otherwise. `flash` and `flashLead` are the palette indices the game gave
- * the `FLASH` and `FLASH_LEAD` roles. Exported for the game that paints more
- * of the cell than its rect (Towers' 3D faces). */
+ * otherwise. The flash colors are the engine's roles unless a game names a
+ * pair of its own. Exported for the game that paints more of the cell than
+ * its rect (Towers' 3D faces). */
 export function highlightFill(
   highlight: CellHighlight,
   wash: number,
   background: number,
-  flash: number,
-  flashLead: number,
+  flash: number = COL_FLASH,
+  flashLead: number = COL_FLASH_LEAD,
 ): number {
   if (highlight === HIGHLIGHT_WIN) return flash;
   if (highlight === HIGHLIGHT_WIN_LEAD) return flashLead;
@@ -489,8 +490,8 @@ export function drawCellBackground(
   highlight: CellHighlight,
   wash: number,
   background: number,
-  flash: number,
-  flashLead: number,
+  flash: number = COL_FLASH,
+  flashLead: number = COL_FLASH_LEAD,
 ): void {
   dr.drawRect(rect, highlightFill(highlight, wash, background, flash, flashLead));
   if (highlight !== HIGHLIGHT_NOTES) return;

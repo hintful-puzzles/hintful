@@ -8,6 +8,7 @@
  * the clue's line of sight hatched, clues still drawn).
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeHintKindPins,
@@ -26,7 +27,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newTowersDesc } from "./generator.ts";
 import { towersGame } from "./index.ts";
-import { COL_HINT_CELL, COL_PENCIL } from "./render.ts";
+import { COL_PENCIL } from "./render.ts";
 import {
   type Difficulty,
   newState,
@@ -502,7 +503,7 @@ describe("towers hint render", () => {
     const { recording, hint } = hintFrame("lowerBound");
 
     // The line of sight is hatched through both clue slots, in one strip; the
-    // clue it is read from is the one cell outlined, COL_HINT_CELL.
+    // clue it is read from is the one cell outlined, COL_HINT_OUTLINE.
     // Distinct cells, since a changed tile repaints the neighbors its tower
     // overlaps and so paints a hatched neighbor again.
     const hatches = opsOfKind(recording.ops, "hatch");
@@ -516,7 +517,7 @@ describe("towers hint render", () => {
     const xs = new Set(line.map((c) => c.x));
     const ys = new Set(line.map((c) => c.y));
     expect(Math.min(xs.size, ys.size)).toBe(1);
-    const evidence = markSides(recording.ops, COL_HINT_CELL);
+    const evidence = markSides(recording.ops, COL_HINT_OUTLINE);
     expect(evidence).toHaveLength(4);
     for (const s of evidence) expect(isThin(s)).toBe(true);
     // The struck candidate keeps its normal pencil color (legible) and is

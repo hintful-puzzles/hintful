@@ -10,14 +10,14 @@
  * `hint-overlay.test.ts`) and the mistake overlay (Towers' Check & Save
  * highlighted nothing because `ds.wrong` was missing from the diff key).
  *
- * Usage in a game's `redraw`, one instance per overlay:
+ * Usage, one instance per overlay, registered on the game's `TileCache` when
+ * the draw state is built (`new TileCache(n, { overlays: [hint, wrong] })`),
+ * which tests and commits it with each tile's key. In `redraw`:
  *   - pack once per frame — `ds.hint.pack(stepMarks(step), index, markBits)`
  *     for the marks the hint's words name, `ds.wrong.packCells(mistakes ?? null, index)`
  *     for the `findMistakes` cell list, or `clear()` + `add()` for a game whose
  *     overlay has its own topology (Galaxies' four wall bits per tile);
- *   - `ds.<overlay>.stale(i)` as one clause of the per-cell cache-miss test;
- *   - `ds.<overlay>.packed[i]` handed to the cell painter;
- *   - `ds.<overlay>.commit(i)` after the cell is drawn.
+ *   - `ds.<overlay>.packed[i]` handed to the cell painter.
  */
 
 import type { GameDrawing } from "./game.ts";

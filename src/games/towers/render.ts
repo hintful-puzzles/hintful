@@ -18,11 +18,7 @@ import type { CandidateHighlights } from "../../engine/candidate-hint.ts";
 import {
   cellSurface,
   clueDoneColor,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -30,6 +26,13 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -61,6 +64,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
@@ -73,49 +77,35 @@ import {
 
 export const PREFERRED_TILE_SIZE = 48;
 
-// --- palette (index-for-index with the upstream COL_* enum) ----------------
+// --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
-const COL_USER = 2;
-const COL_HIGHLIGHT = 3;
-export const COL_ERROR = 4;
-export const COL_PENCIL = 5;
-const COL_DONE = 6;
-// Fork addition: the yellow body of the pencil-mode indicator glyph (a classic
-// #2 school pencil). Appended past the upstream enum.
-export const COL_PENCIL_BODY = 7;
-// Fork additions: the explained-hint legend (see docs/hints-marks.md § "The engine colors the marks").
-/** The driving clue's line of sight, outlined (drawn once per frame in
- * redraw). */
-export const COL_HINT_CELL = 8;
-const COL_CELL = 9; // the surface of a play cell, and of a tower built on it
-const COL_GIVEN = 10; // the lifted surface of a given tower
+const COL_GRID = FIRST_GAME_SLOT;
+const COL_USER = FIRST_GAME_SLOT + 1;
+const COL_HIGHLIGHT = FIRST_GAME_SLOT + 2;
+export const COL_PENCIL = FIRST_GAME_SLOT + 3;
+const COL_DONE = FIRST_GAME_SLOT + 4;
+/** The yellow body of the pencil-mode indicator glyph (a classic #2 school
+ * pencil). */
+export const COL_PENCIL_BODY = FIRST_GAME_SLOT + 5;
+/** The surface of a play cell, and of a tower built on it. */
+const COL_CELL = FIRST_GAME_SLOT + 6;
+/** The lifted surface of a given tower. */
+const COL_GIVEN = FIRST_GAME_SLOT + 7;
 /** The line between two play cells. A tower's own edges are content and stay
  * `COL_GRID`. */
-const COL_LINE = 11;
-/** The ground of a square the win flash is on. */
-export const COL_FLASH = 12;
-/** The ground of a square the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 13;
+const COL_LINE = FIRST_GAME_SLOT + 8;
 
-export function colors(defaultBackground: Color): Color[] {
-  const bg = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = bg;
+export function colors(bg: Color): Color[] {
+  const out = rolePalette(bg);
   out[COL_GRID] = INK;
   out[COL_USER] = playerEntryColor(bg);
   out[COL_HIGHLIGHT] = highlightWash(bg);
-  out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_DONE] = clueDoneColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_GIVEN] = givenSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -158,17 +148,16 @@ export interface TowersDrawState {
   w: number;
   /** `(w+2)²` scratch tile values, rebuilt each redraw. */
   tiles: Int32Array;
-  /** `(w+2)² × 4` last-drawn four-corner cache (-1 = never drawn). */
-  drawn: Int32Array;
+  /** What each `(w+2)²` clip shows: the four tile values it paints, the
+   * upstream four-corner key. */
+  drawn: TileCache;
   /** `(w+2)²` error flags, refilled each redraw by `markErrors`. */
   errtmp: Uint8Array;
-  /** `(w+2)²` hint-overlay sidecar (fork addition): bit 0 = target cell,
-   * bit 1 = evidence area, and the struck candidates at `valueBit(height)` in
-   * its `struck` lane. */
+  /** `(w+2)²` hint-overlay sidecar: bit 0 = target cell, bit 1 = evidence
+   * area, and the struck candidates at `valueBit(height)` in its `struck`
+   * lane. */
   hint: OverlaySidecar;
-  /** `(w+2)²` mistake-overlay sidecar (fork addition). Neither overlay changes
-   * a cell's tile value, so both are in the diff key (docs/rendering.md
-   * § "The tile cache and the diff key"). */
+  /** `(w+2)²` mistake-overlay sidecar. */
   wrong: OverlaySidecar;
   /** The hint target's ring and the evidence area's outline (fork additions),
    * drawn once per frame after the tile loop. See {@link markBand}. */
@@ -180,14 +169,16 @@ export interface TowersDrawState {
 export function newDrawState(state: TowersState, tileSize: number): TowersDrawState {
   const w = state.w;
   const W = w + 2;
+  const hint = new OverlaySidecar(W * W);
+  const wrong = new OverlaySidecar(W * W);
   return {
     tileSize,
     w,
     tiles: new Int32Array(W * W),
-    drawn: new Int32Array(W * W * 4).fill(-1),
+    drawn: new TileCache(W * W, { words: 4, overlays: [hint, wrong] }),
     errtmp: new Uint8Array(W * W),
-    hint: new OverlaySidecar(W * W),
-    wrong: new OverlaySidecar(W * W),
+    hint,
+    wrong,
     marks: new HintMarks(),
     pencilModeShown: null,
   };
@@ -256,13 +247,7 @@ function drawTile(
   // The faces take the top's fill, so a raised tower reads as one selected cell.
   const surface =
     tile & DF_IMMUTABLE ? COL_GIVEN : tile & DF_PLAYAREA ? COL_CELL : COL_BACKGROUND;
-  const bg = highlightFill(
-    highlight,
-    COL_HIGHLIGHT,
-    surface,
-    COL_FLASH,
-    COL_FLASH_LEAD,
-  );
+  const bg = highlightFill(highlight, COL_HIGHLIGHT, surface);
   const tower = isTower(threeD, tile);
 
   // 3D tower: left + bottom faces under the top face at `tx`/`ty`.
@@ -301,8 +286,6 @@ function drawTile(
     highlight,
     COL_HIGHLIGHT,
     surface,
-    COL_FLASH,
-    COL_FLASH_LEAD,
   );
   // On a raised tower's top face, so the line reads at the height the tower is.
   if (hatched) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
@@ -488,7 +471,7 @@ function cellText(
 // --- hint overlay ----------------------------------------------------------
 
 /** Highlight payload a Towers hint step carries (built in `index.ts`): the
- * evidence outlined `COL_HINT_CELL`, the targets ringed by the engine, and the
+ * evidence outlined `COL_HINT_OUTLINE`, the targets ringed by the engine, and the
  * struck candidates crossed through. */
 export type TowersHint = CandidateHighlights;
 
@@ -564,8 +547,7 @@ export function redraw(
   // not only its own: a 3D tower's top face spills into the clips up and to the
   // right of it. Taken before the loop, which commits as it goes.
   const overlayMoved = new Uint8Array(W * W);
-  for (let i = 0; i < W * W; i++)
-    overlayMoved[i] = ds.hint.stale(i) || ds.wrong.stale(i) ? 1 : 0;
+  for (let i = 0; i < W * W; i++) overlayMoved[i] = ds.drawn.overlayMoved(i) ? 1 : 0;
   // The indicator sits in the clue ring's top-right corner square, inside that
   // square's clip, whose repaint fills over it. Forgetting what it showed makes
   // `repaintPencilIndicator` paint it again after the loop.
@@ -583,12 +565,10 @@ export function redraw(
       const br = y === w + 1 ? 0 : ds.tiles[(y + 1) * W + x];
       const bl = x === 0 || y === w + 1 ? 0 : ds.tiles[(y + 1) * W + (x - 1)];
 
+      // `changed` first: it records what this clip shows whatever a
+      // neighbor's overlay says.
       if (
-        ds.drawn[i * 4] !== tl ||
-        ds.drawn[i * 4 + 1] !== tr ||
-        ds.drawn[i * 4 + 2] !== bl ||
-        ds.drawn[i * 4 + 3] !== br ||
-        overlayMoved[i] ||
+        ds.drawn.changed(i, tl, tr, bl, br) ||
         (x > 0 && overlayMoved[i - 1]) ||
         (y <= w && overlayMoved[i + W]) ||
         (x > 0 && y <= w && overlayMoved[i + W - 1])
@@ -602,13 +582,6 @@ export function redraw(
         dr.drawUpdate({ x: coord(x - 1, ts), y: coord(y - 1, ts), w: ts, h: ts });
         if (coversPencilBox(coord(x - 1, ts), coord(y - 1, ts)))
           ds.pencilModeShown = null;
-
-        ds.drawn[i * 4] = tl;
-        ds.drawn[i * 4 + 1] = tr;
-        ds.drawn[i * 4 + 2] = bl;
-        ds.drawn[i * 4 + 3] = br;
-        ds.hint.commit(i);
-        ds.wrong.commit(i);
       }
     }
   }
@@ -638,7 +611,7 @@ export function redraw(
       return { ...band, box: { ...band.box, x: face.x, y: face.y } };
     },
     text: (x, y) => cellText(ds, threeD, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   });
 
   repaintPencilIndicator(dr, ds, ui.pencilMode, pencilBox, PENCIL_STYLE);

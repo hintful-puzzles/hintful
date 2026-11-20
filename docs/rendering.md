@@ -17,26 +17,28 @@ step draws is [`hints.md`](./hints.md), and the render test harness is
 The skeleton's [`render.ts`](../src/skeleton/grid/render.ts) does steps 1 to
 8; a copy changes what a square holds and keeps the shape.
 
-1. Name the palette slots as `COL_*` indices, slot 0 the board, and fill
-   them in `colors(defaultBackground)` from the meanings in
+1. Start `colors(background)` from `rolePalette`: the roles every board
+   shares (the board, the win flash, the hint's outline, an error, the
+   cursor) are the engine's slots, in
+   [`engine/color/roles.ts`](../src/engine/color/roles.ts). Number your own
+   `COL_*` slots from `FIRST_GAME_SLOT` and fill them from the meanings in
    `engine/color/palette.ts`. See § "The palette: three layers, meaning
    first".
 2. Write `computeSize(params, tileSize)` with the border it uses, and export
    the preferred tile size. See § "Sizing".
-3. In `newDrawState`, return `started`, `tileSize`, an `Int32Array` cache
-   filled with -1, an `OverlaySidecar` for the hint and a `HintMarks`. See
-   § "The tile cache and the diff key" and § "Overlay sidecars".
-4. In `redraw`, on the first frame, draw only what is the game's own (the
-   grid's frame). The ground is already laid. See § "The first frame and a
-   fresh draw state".
+3. In `newDrawState`, return `tileSize`, a `TileCache` with every overlay
+   sidecar registered on it, the sidecars and a `HintMarks`. See § "The tile
+   cache and the diff key" and § "Overlay sidecars".
+4. In `redraw`, when `ds.tiles.firstFrame()`, draw only what is the game's
+   own (the grid's frame). The ground is already laid. See § "The first
+   frame and a fresh draw state".
 5. Read the displayed step's marks with `stepMarks(hint)`, put them in the
    sidecar, and call `eraseBeforeTiles` before the tile loop. See
    `hints-marks.md` § "Where the band goes, and who rubs it out".
 6. For each tile, work out what it should show, the mistake flag, the cursor
-   and `flash.win(sweepStep(x, y))` included, and pack it into a key. Skip
-   the tile when the cache holds that key and the sidecar is not stale;
-   otherwise paint it, record the key and `commit` the sidecar. See § "The
-   win flash".
+   and `flash.win(sweepStep(x, y))` included, and pack it into a key. Paint
+   the tile when `ds.tiles.changed(i, key)` says so: it compares the key and
+   every registered overlay, and records both. See § "The win flash".
 7. In `drawTile`, paint inside the tile's own box, with the shapes of
    `engine/draw.ts` and `engine/piece.ts`, and end with `drawUpdate`. See
    § "A warm frame must match a fresh one" and § "What a board looks like:
@@ -122,18 +124,27 @@ full coverage.
 
 The draw state holds one packed word per tile of what the canvas shows. Each
 frame works out what the tile should show, repaints only on a mismatch, and
-records what it painted. The skeleton's `redraw` is the shape.
+records what it painted. The skeleton's `redraw` is the shape, and
+[`engine/tile-cache.ts`](../src/engine/tile-cache.ts) is the cache: a game
+never holds a bare cache array or a `started` flag.
+
+- **The engine owns the per-tile test, and the walk is the game's.** A ring
+  of clues, a second family of tiles (a clue margin, a panel) and a clip that
+  paints its neighbors are loops a game writes around `changed`, with one
+  `TileCache` per family. A tile that paints into its neighbors reads
+  `overlayMoved` for them before the loop and `forget`s what it painted
+  over. Exemplar: [`towers/render.ts`](../src/games/towers/render.ts).
+- **A board that is not tiles keeps its own form**: a full repaint each
+  frame (Cube, Loopy, Untangle) has no cache to own.
 
 - **Every word of the key is an `Int32Array` element, never a
   `BigInt64Array` one.** `BigInt` is expensive on the hot path. A key that
-  needs more bits grows by a second `Int32Array` beside the first, an overlay
-  sidecar or a parallel array, compared together (§ "When the packed key runs
-  out of bits"). Exemplars:
-  [`galaxies/render.ts`](../src/games/galaxies/render.ts),
-  [`range/render.ts`](../src/games/range/render.ts).
-- **When the candidate set alone exceeds about 26 bits, keep two parallel
-  cache arrays** compared together, not a digit and a pencil bitmap in one
-  word. A `1 << n` mark for `n` up to 31 still fits an `Int32`, sign bit and
+  needs more bits grows by a word: a `TileCache` built with `words` (up to
+  four) compares them together, or an overlay sidecar carries it (§ "When
+  the packed key runs out of bits"). Exemplar:
+  [`towers/render.ts`](../src/games/towers/render.ts).
+- **When the candidate set alone exceeds about 26 bits, key it in a word of
+  its own**, not a digit and a pencil bitmap in one word. A `1 << n` mark for `n` up to 31 still fits an `Int32`, sign bit and
   all. Candidate masks go through `engine/candidate-bits.ts`, which throws
   where a shift would wrap. Exemplar:
   [`solo/render.ts`](../src/games/solo/render.ts) (`SoloDrawState`); Keen
@@ -148,8 +159,9 @@ cell, so an overlay compared nowhere never shows.
 
 **Never hand-write the two-array comparison.** `OverlaySidecar`
 ([`engine/overlay-sidecar.ts`](../src/engine/overlay-sidecar.ts)) owns
-repack, stale and commit, one instance per overlay on the draw state; its
-header gives the four calls a frame makes. Pack a hint step's marks with
+repack, stale and commit, one instance per overlay on the draw state, and
+each is registered on the `TileCache` when the draw state is built, which
+then tests and commits it with the key. Pack a hint step's marks with
 `pack` (no `markBits` in a game without notes), a `findMistakes` list with
 `packCells`, and an overlay with its own topology with `clear` and `add`, as
 Galaxies' `ds.wrongEdges` lights a different bit in each of a wrong wall's

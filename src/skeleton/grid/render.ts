@@ -10,19 +10,21 @@
  */
 
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
   ERROR_WASH,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
@@ -30,6 +32,7 @@ import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { SkeletonMistake } from "./index.ts";
@@ -49,41 +52,29 @@ export const PREFERRED_TILE_SIZE = 40;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
+// The roles every board shares (the board, the flash, the hint's outline, an
+// error, the cursor) are the engine's slots; a game numbers its own after
+// them.
+const COL_GRID = FIRST_GAME_SLOT;
 /** The surface of a square the player decides. */
-const COL_CELL = 2;
+const COL_CELL = FIRST_GAME_SLOT + 1;
 /** The surface under a number. */
-const COL_GIVEN = 3;
-export const COL_SHADED = 4;
-const COL_RULED_OUT = 5;
-const COL_TEXT = 6;
-/** A number the squares beside it can no longer meet. */
-const COL_ERROR = 7;
+const COL_GIVEN = FIRST_GAME_SLOT + 2;
+export const COL_SHADED = FIRST_GAME_SLOT + 3;
+const COL_RULED_OUT = FIRST_GAME_SLOT + 4;
+const COL_TEXT = FIRST_GAME_SLOT + 5;
 /** The surface under a square Check & Save found wrong. */
-export const COL_WRONG = 8;
-const COL_CURSOR = 9;
-/** The outline on the numbers a hint step reasons from. The ring on the
- * squares it decides is the engine's (`GameDrawing.drawRing`). */
-export const COL_HINT_EVIDENCE = 10;
-const COL_FLASH = 11;
-const COL_FLASH_LEAD = 12;
+export const COL_WRONG = FIRST_GAME_SLOT + 6;
 
-export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
-  out[COL_GRID] = surfaceGrid(defaultBackground);
-  out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_GIVEN] = givenSurface(defaultBackground);
+export function colors(bg: Color): Color[] {
+  const out = rolePalette(bg);
+  out[COL_GRID] = surfaceGrid(bg);
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_GIVEN] = givenSurface(bg);
   out[COL_SHADED] = SHADED;
   out[COL_RULED_OUT] = RULED_OUT;
   out[COL_TEXT] = INK;
-  out[COL_ERROR] = ERROR;
   out[COL_WRONG] = ERROR_WASH;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -106,12 +97,11 @@ const F_CURSOR = 1 << 7;
 const K_TONE = 8;
 
 export interface SkeletonDrawState {
-  started: boolean;
   tileSize: number;
-  /** What each square shows on the canvas, as its tile key; -1 before the
-   * first frame. */
-  cache: Int32Array;
-  /** The hint step's marks by square, part of the diff key. */
+  /** What each square shows on the canvas, as its tile key, and the hint's
+   * marks on it. */
+  tiles: TileCache;
+  /** The hint step's marks by square. */
   hint: OverlaySidecar;
   /** The ring and the outline, drawn after the tiles. */
   marks: HintMarks;
@@ -122,11 +112,11 @@ export function newDrawState(
   tileSize: number,
 ): SkeletonDrawState {
   const squares = state.w * state.h;
+  const hint = new OverlaySidecar(squares);
   return {
-    started: false,
     tileSize,
-    cache: new Int32Array(squares).fill(-1),
-    hint: new OverlaySidecar(squares),
+    tiles: new TileCache(squares, { overlays: [hint] }),
+    hint,
     marks: new HintMarks(),
   };
 }
@@ -209,7 +199,7 @@ function drawTile(
     t.wrong
       ? COL_WRONG
       : t.tone
-        ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD)
+        ? winSlot(t.tone)
         : t.clue !== NO_CLUE
           ? COL_GIVEN
           : COL_CELL,
@@ -256,11 +246,10 @@ export function redraw(
   const { w, h, clues, grid } = state;
   const b = border(ts);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The frame: every square draws its top and left line, so this is the
     // bottom and right of the last row and column.
     dr.drawRect({ x: b, y: b, w: w * ts + 1, h: h * ts + 1 }, COL_GRID);
-    ds.started = true;
   }
 
   const wrong = new Set(mistakes?.map((m) => m.y * w + m.x));
@@ -274,12 +263,12 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ts, x, y),
     text: (x: number, y: number) => squareText(state, ts, x, y),
-    evidenceColor: COL_HINT_EVIDENCE,
+    evidenceColor: COL_HINT_OUTLINE,
     // Two numbers side by side are two premises, each outlined by itself.
     joinEvidence: () => false,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
-    if (x >= 0 && x < w && y >= 0 && y < h) ds.cache[y * w + x] = -1;
+    if (x >= 0 && x < w && y >= 0 && y < h) ds.tiles.forget(y * w + x);
   });
 
   for (let y = 0; y < h; y++) {
@@ -301,10 +290,7 @@ export function redraw(
         (tile.wrong ? F_WRONG : 0) |
         (tile.cursor ? F_CURSOR : 0) |
         (tile.tone << K_TONE);
-      if (ds.cache[i] === key && !ds.hint.stale(i)) continue;
-      drawTile(dr, ds, i, x, y, tile);
-      ds.cache[i] = key;
-      ds.hint.commit(i);
+      if (ds.tiles.changed(i, key)) drawTile(dr, ds, i, x, y, tile);
     }
   }
 

@@ -135,6 +135,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `modifier.ts` — the settings that change one rule |
 | – `param-help.ts` — the generated Parameters section |
 | Rendering and affordance helpers |
+| – `tile-cache.ts` — the tile cache and its miss test |
 | – `overlay-sidecar.ts` — the overlay diff-key rule as a type |
 | – `candidate-bits.ts` — one candidate encoding, range-checked |
 | – `draw.ts` — shared drawing primitives |
@@ -1617,11 +1618,22 @@ with that choice's name and throws on one that names no choice.
 Read this part when you are writing `redraw`. How to write a renderer is
 [`rendering.md`](./rendering.md).
 
+### `tile-cache.ts` — the tile cache and its miss test
+
+Reach for it whenever a board is painted as tiles. `TileCache` holds what
+each tile shows (a key of one to four words), the first frame, and the
+overlay sidecars registered on it; `changed(i, key)` is the miss test and
+the record in one call, so no frame tests the key and forgets an overlay.
+The walk over the tiles stays the game's. Exemplars:
+`src/skeleton/grid/render.ts`, and `src/games/towers/render.ts` for a clip
+that paints its neighbors. The palette's shared roles, which a tiled board
+paints with, are `color/roles.ts`.
+
 ### `overlay-sidecar.ts` — the overlay diff-key rule as a type
 
 Reach for it when a tile shows a hint or a mistake. **Never hand-write the
 two-array dance** for an overlay that is not in the packed tile value: `OverlaySidecar` owns the repack, the stale test and the
-commit. Use `pack` for a hint step's highlights, `packCells` for a
+commit, and is registered on the game's `TileCache`. Use `pack` for a hint step's highlights, `packCells` for a
 `findMistakes` list, and `clear()` with `add()` for an overlay with its own
 topology. A step's struck marks go in the `struck` lane, in the game's
 encoding (`valueBit(n)` for a candidate), never in the word beside the

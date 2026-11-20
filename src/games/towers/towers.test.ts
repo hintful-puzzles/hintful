@@ -28,13 +28,11 @@ import { towersGame } from "./index.ts";
 // A 3x3 above Normal.
 describeAbsentTiers(towersGame, ["3dx", "3du"]);
 
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { tiers as ladderTiers } from "../../generated/games/towers/towers.compiled.ts";
 import {
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_PENCIL_BODY,
   coord,
   newDrawState,

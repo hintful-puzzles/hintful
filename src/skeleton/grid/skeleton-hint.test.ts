@@ -6,6 +6,7 @@
  * (docs/testing.md § "Pinning a hint's positions").
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -13,7 +14,6 @@ import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { skeletonGame } from "./index.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -118,6 +118,6 @@ describe("skeleton hint frame", () => {
     const { recording, step } = renderPinnedHint(skeletonGame, pinned("shared"));
     expect(stepMarks(step).of("outline", CELL)).toHaveLength(2);
     expectRing(recording.ops, { rings: stepMarks(step).of("ring", CELL).length });
-    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
+    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_OUTLINE))).toBe(true);
   });
 });
