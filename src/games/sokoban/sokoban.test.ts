@@ -11,6 +11,7 @@
  * differential never touches (execute/win/pits).
  */
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -42,10 +43,9 @@ import { executeMove, sokobanGame } from "./index.ts";
 import {
   COL_AIM,
   COL_BARREL,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_FLOOR,
   COL_PLAYER,
+  COL_TARGET,
   COL_WALL,
   type SokobanDrawState,
 } from "./render.ts";
@@ -658,7 +658,7 @@ describe("Sokoban render", () => {
       settle: true,
     });
     // The barrel now on the target cell (3,1) draws as the target's ring (a
-    // disc in palette index 1, then the floor inside it) with the
+    // disc in the target's color, then the floor inside it) with the
     // barrel's square over it.
     const ts = (size.w - 1) / 5;
     const here = (x: number, y: number) => x === 3.5 * ts && y === 1.5 * ts;
@@ -669,7 +669,7 @@ describe("Sokoban render", () => {
           ? [o.fill]
           : [],
     );
-    expect(fills).toEqual([1, COL_FLOOR, COL_BARREL]);
+    expect(fills).toEqual([COL_TARGET, COL_FLOOR, COL_BARREL]);
   });
 });
 

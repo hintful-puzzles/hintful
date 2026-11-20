@@ -43,6 +43,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/pointer.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/types.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { newSignpostDesc } from "./generator.ts";
@@ -396,14 +397,11 @@ function computeSize(p: SignpostParams, ts: number): Size {
 
 function newDrawState(s: SignpostState, tileSize: number): SignpostDrawState {
   return {
-    started: false,
     tileSize,
     w: s.w,
     h: s.h,
     n: s.n,
-    cache: new Int32Array(s.n).fill(-1),
-    nums: new Int32Array(s.n).fill(-1),
-    dirp: new Int32Array(s.n).fill(-2),
+    tiles: new TileCache(s.n, { words: 3 }),
     route: false,
     dragging: false,
     dragBackground: null,

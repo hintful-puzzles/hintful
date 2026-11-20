@@ -15,6 +15,7 @@
  * a cold frame would not prove it.
  */
 import { describe, expect, it } from "vitest";
+import { COL_BACKGROUND, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
@@ -32,14 +33,12 @@ import type { Color } from "../../engine/types.ts";
 import { type Flash, NO_FLASH, sweepStep, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { slideGame } from "./index.ts";
 import {
-  COL_BACKGROUND,
   COL_BLOCK,
-  COL_CURSOR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
+  COL_FLOOR,
   COL_GRABBED,
   COL_MAIN,
   COL_MAIN_GRABBED,
+  COL_RED_CURSOR,
   COL_TARGET,
   COL_WALL,
   COL_WALL_HIGHLIGHT,
@@ -228,18 +227,19 @@ describe("slide opening frame", () => {
     // from a single `game_mkhighlight` trio, so a board could only be read off
     // its bevels.
     const ops = capture(newBoard());
-    const floor = ops[0]; // the opening background fill
-    expect(floor).toMatchObject({ op: "rect", color: COL_BACKGROUND });
+    const ground = ops[0]; // the opening background fill, in the floor's color
+    expect(ground).toMatchObject({ op: "rect", color: COL_BACKGROUND });
+    expect(PALETTE[COL_BACKGROUND]).toEqual(PALETTE[COL_FLOOR]);
 
     // The *last* full-tile rect, not the first: `draw_tile` lays the floor down
     // under every square before the wall goes on top of it.
     const fullTile = rectsInTile(ops, 0, 0).filter((o) => o.w === TS && o.h === TS);
     const wall = fullTile.at(-1);
-    expect(fullTile[0]?.color).toBe(COL_BACKGROUND);
+    expect(fullTile[0]?.color).toBe(COL_FLOOR);
     expect(wall?.color).toBe(COL_WALL);
     const block = pieceFillColor(ops, 3, 1);
 
-    const distinct = new Set([COL_BACKGROUND, wall?.color, block, COL_MAIN]);
+    const distinct = new Set([COL_FLOOR, wall?.color, block, COL_MAIN]);
     expect(distinct.size).toBe(4);
   });
 
@@ -251,13 +251,13 @@ describe("slide opening frame", () => {
     // minimum separation, not the constants.
     const l = (i: number) => lightness(PALETTE[i]);
 
-    expect(l(COL_TARGET)).toBeGreaterThan(l(COL_BACKGROUND));
-    expect(l(COL_BACKGROUND)).toBeGreaterThan(l(COL_BLOCK));
+    expect(l(COL_TARGET)).toBeGreaterThan(l(COL_FLOOR));
+    expect(l(COL_FLOOR)).toBeGreaterThan(l(COL_BLOCK));
     expect(l(COL_BLOCK)).toBeGreaterThan(l(COL_WALL));
 
     for (const [a, b] of [
-      [COL_TARGET, COL_BACKGROUND],
-      [COL_BACKGROUND, COL_BLOCK],
+      [COL_TARGET, COL_FLOOR],
+      [COL_FLOOR, COL_BLOCK],
       [COL_BLOCK, COL_WALL],
     ] as const) {
       expect(l(a) - l(b), `${a} vs ${b}`).toBeGreaterThan(0.05);
@@ -326,7 +326,7 @@ describe("slide keyboard frame", () => {
     return ops.filter(
       (o) =>
         o.op === "line" &&
-        o.color === COL_CURSOR &&
+        o.color === COL_RED_CURSOR &&
         o.x1 >= x0 &&
         o.x1 < x0 + TS &&
         o.y1 >= y0 &&
@@ -347,9 +347,9 @@ describe("slide keyboard frame", () => {
 
   it("draws nothing until the first cursor key", () => {
     const ops = capture(newBoard());
-    expect(ops.filter((o) => o.op === "line" && o.color === COL_CURSOR)).toHaveLength(
-      0,
-    );
+    expect(
+      ops.filter((o) => o.op === "line" && o.color === COL_RED_CURSOR),
+    ).toHaveLength(0);
   });
 
   it("marks the cursor's cell, and only that cell", () => {
@@ -357,9 +357,9 @@ describe("slide keyboard frame", () => {
     expect(cursorLines(ops, 3, 1)).toHaveLength(8);
     // A vacuity guard: count every cursor stroke in the frame, so "no cursor
     // drawn anywhere" cannot pass as "drawn in one place".
-    expect(ops.filter((o) => o.op === "line" && o.color === COL_CURSOR)).toHaveLength(
-      8,
-    );
+    expect(
+      ops.filter((o) => o.op === "line" && o.color === COL_RED_CURSOR),
+    ).toHaveLength(8);
   });
 
   it("rides the block it has picked up, and lights it as a drag would", () => {
@@ -383,7 +383,7 @@ describe("slide keyboard frame", () => {
     me.processInput(...at(4, 3), LEFT_BUTTON);
     me.processInput(...at(4, 3), LEFT_RELEASE);
     expect(
-      capture(me).filter((o) => o.op === "line" && o.color === COL_CURSOR),
+      capture(me).filter((o) => o.op === "line" && o.color === COL_RED_CURSOR),
     ).toHaveLength(0);
   });
 
@@ -550,7 +550,7 @@ describe("slide win flash", () => {
     me.playMoves([NUDGE, WIN]);
     me.timer(60);
     const ops = capture(me);
-    expect(rectsInTile(ops, 1, 3).find((o) => o.w === TS)?.color).toBe(COL_BACKGROUND);
+    expect(rectsInTile(ops, 1, 3).find((o) => o.w === TS)?.color).toBe(COL_FLOOR);
   });
 
   it("matches its snapshot", () => {

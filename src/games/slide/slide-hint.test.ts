@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { MARK_ALL, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -21,7 +22,6 @@ import { newSlideDesc } from "./generator.ts";
 import { blockCells, hint, hintKeepTrack } from "./hint.ts";
 import { slideGame } from "./index.ts";
 import { computeReachable, executeMove, status } from "./moves.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import { findExit, solveBoard } from "./solver.ts";
 import {
   encodeDesc,
@@ -223,7 +223,7 @@ describe("slide hint: the frame", () => {
       ringed.every((c) => c.x === ringed[0].x) ||
       ringed.every((c) => c.y === ringed[0].y);
     expectRing(recording.ops, { rings: straight ? 1 : ringed.length });
-    expect(markSides(recording.ops, COL_HINT_EVIDENCE)).toHaveLength(
+    expect(markSides(recording.ops, COL_HINT_OUTLINE)).toHaveLength(
       sidesRound(outlined),
     );
     const hatched = recording.ops.filter((o) => o.op === "hatch");

@@ -11,19 +11,21 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { WHITE } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
   DRAG_ADD,
-  FLASH,
-  FLASH_LEAD,
   GOAL as GOAL_COLOR,
-  HINT_OUTLINE,
   INK,
   MOVED,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
 import { sokobanPit } from "../../engine/color/palette-games.ts";
+import {
+  COL_CURSOR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawMoveArrow, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
@@ -32,6 +34,7 @@ import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece } from "../../engine/piece.ts";
 import { textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import { BARREL, GOAL, PUSH } from "./hint-marks.ts";
@@ -59,34 +62,25 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_TARGET = 1;
-const COL_PIT = 2;
-const COL_DEEP_PIT = 3;
-export const COL_BARREL = 4;
-export const COL_PLAYER = 5;
-const COL_TEXT = 6;
-const COL_GRID = 7;
-const COL_OUTLINE = 8;
-export const COL_WALL = 9;
-export const COL_FLASH = 10;
-/** The floor under the win flash's leading edge, where `COL_FLASH` is under
- * its body. */
-export const COL_FLASH_LEAD = 14;
-export const COL_HINT_EVIDENCE = 11;
+export const COL_TARGET = FIRST_GAME_SLOT;
+const COL_PIT = FIRST_GAME_SLOT + 1;
+const COL_DEEP_PIT = FIRST_GAME_SLOT + 2;
+export const COL_BARREL = FIRST_GAME_SLOT + 3;
+/** The figure the player steers, "where you are": the cursor. */
+export const COL_PLAYER = COL_CURSOR;
+const COL_TEXT = FIRST_GAME_SLOT + 4;
+const COL_GRID = FIRST_GAME_SLOT + 5;
+const COL_OUTLINE = FIRST_GAME_SLOT + 6;
+export const COL_WALL = FIRST_GAME_SLOT + 7;
 /** A drag's aimed push, as Inertia's aimed slide. */
-export const COL_AIM = 12;
+export const COL_AIM = FIRST_GAME_SLOT + 8;
 /** A floor square. */
-export const COL_FLOOR = 13;
-const NCOLORS = 15;
+export const COL_FLOOR = FIRST_GAME_SLOT + 9;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = new Array<Color>(NCOLORS);
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_FLOOR] = cellSurface(defaultBackground);
   out[COL_OUTLINE] = INK;
-  // The figure the player steers: "where you are".
-  out[COL_PLAYER] = CURSOR;
   out[COL_BARREL] = MOVED;
   // A target is a place and not a state of the floor, so it has a hue.
   out[COL_TARGET] = GOAL_COLOR;
@@ -97,9 +91,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_TEXT] = WHITE;
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_WALL] = wallFill(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   out[COL_AIM] = DRAG_ADD;
   return out;
 }
@@ -116,17 +107,20 @@ export function tileCenter(x: number, y: number, ts: number): Point {
 // --- draw state -------------------------------------------------------
 
 export interface SokobanDrawState {
-  started: boolean;
   tileSize: number;
-  /** Per-cell key of what was last drawn there; "" forces a redraw. */
-  tiles: string[];
+  /** Per cell: its value, the win flash's tone, and which of the hint's
+   * marks it carries. */
+  tiles: TileCache;
+  /** Per cell, what no word holds: the push arrows, the aim and the sprites
+   * drawn across it, as a key. */
+  looks: string[];
 }
 
 export function newDrawState(state: SokobanState, tileSize: number): SokobanDrawState {
   return {
-    started: false,
     tileSize,
-    tiles: new Array<string>(state.w * state.h).fill(""),
+    tiles: new TileCache(state.w * state.h, { words: 3 }),
+    looks: new Array<string>(state.w * state.h).fill(""),
   };
 }
 
@@ -257,10 +251,10 @@ function drawTile(
   }
   if (marks.outlined) {
     const r = marks.ringed ? outer - 2 : outer;
-    dr.drawCircle(center, r, -1, COL_HINT_EVIDENCE);
-    dr.drawCircle(center, r - 1, -1, COL_HINT_EVIDENCE);
+    dr.drawCircle(center, r, -1, COL_HINT_OUTLINE);
+    dr.drawCircle(center, r - 1, -1, COL_HINT_OUTLINE);
   }
-  for (const [a, b] of marks.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
+  for (const [a, b] of marks.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_OUTLINE);
   if (marks.aim) drawMoveArrow(dr, ts, marks.aim[0], marks.aim[1], COL_AIM);
   if (marks.ghost) {
     // The barrel's square, as an outline: three nested, for a line that reads.
@@ -304,12 +298,11 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h } = state;
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     for (let y = 0; y <= h; y++)
       dr.drawLine({ x: 0, y: y * ts }, { x: w * ts, y: y * ts }, COL_GRID, 1);
     for (let x = 0; x <= w; x++)
       dr.drawLine({ x: x * ts, y: 0 }, { x: x * ts, y: h * ts }, COL_GRID, 1);
-    ds.started = true;
   }
 
   const marks = stepMarks(hint ?? deadEnd);
@@ -403,23 +396,21 @@ export function redraw(
           : NO_MARKS;
       // The win's highlight is on the floor, which a wall covers.
       const tone = v === WALL ? WIN_NONE : flash.win(sweepStep(x, y));
-      const key = [
-        v,
-        tone,
-        tile.ringed ? "r" : "",
-        tile.outlined ? "o" : "",
-        tile.striped ? "s" : "",
+      const marked =
+        (tile.ringed ? 1 : 0) | (tile.outlined ? 2 : 0) | (tile.striped ? 4 : 0);
+      const look = [
         arrows.map(PUSH.key).join(","),
         tile.aim ? JSON.stringify(ui.aim) : "",
         here.map((s) => `${s.v}@${s.x},${s.y}`).join(","),
       ].join(":");
-      if (ds.tiles[i] !== key) {
+      const lookMoved = ds.looks[i] !== look;
+      if (ds.tiles.changed(i, v, tone, marked) || lookMoved) {
         const left = v === WALL && x > 0 && isWall(i - 1);
         const up = v === WALL && y > 0 && isWall(i - w);
         const join = { left, up, corner: left && up && isWall(i - w - 1) };
-        const floor = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_FLOOR;
+        const floor = tone ? winSlot(tone) : COL_FLOOR;
         drawTile(dr, ds, x, y, v, floor, tile, here, join);
-        ds.tiles[i] = key;
+        ds.looks[i] = look;
       }
     }
 }

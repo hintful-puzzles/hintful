@@ -13,6 +13,7 @@ import { DESC_REPEATED, type DescParse } from "../../engine/desc-error.ts";
 import { readDesc } from "../../engine/desc-reader.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
+import type { TileCache } from "../../engine/tile-cache.ts";
 
 // --- directions ------------------------------------------------------
 
@@ -88,18 +89,13 @@ export type SignpostMove =
   | { type: "solve"; next: number[] };
 
 export interface SignpostDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
   n: number;
-  /** Per-cell packed cache of the last-drawn frame (flags/dir/cursor). */
-  cache: Int32Array;
-  /** Last-drawn derived number per cell (kept separate — up to n·(n+1)
-   * exceeds the packed word). */
-  nums: Int32Array;
-  /** Last-drawn inbound-arrow direction per cell (-1 = none). */
-  dirp: Int32Array;
+  /** Per cell: its flags, its derived number (up to n·(n+1), past the flags'
+   * word) and its inbound arrow's direction (-1 for none). */
+  tiles: TileCache;
   /** Whether the last frame drew the win flash's route, which crosses tiles,
    * so the next repaints every tile to take it off. */
   route: boolean;

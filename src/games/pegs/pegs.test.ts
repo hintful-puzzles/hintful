@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -14,7 +15,6 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { type PegsMove, type PegsParams, pegsGame } from "./index.ts";
-import { COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
 import { type Jump, PegsBoard } from "./solver.ts";
 import { rulesOf } from "./state.ts";
 

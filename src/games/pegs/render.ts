@@ -14,15 +14,17 @@
 
 import { TWO } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  FLASH,
-  FLASH_LEAD,
   GRID_DARK,
   HELD,
-  HINT_OUTLINE,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawMoveArrow, drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE, fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -31,6 +33,7 @@ import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { MOVE, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./kinds.ts";
@@ -57,18 +60,12 @@ const GRID_HINT_OUTLINE = 80;
 
 // --- color indices --------------------------------------------------
 
-const COL_BACKGROUND = 0; // the board around the cells
-const COL_GRID = 1; // the line between two cells, and round the board
-const COL_CELL = 2; // the surface of a cell
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 3;
-export const COL_FLASH_LEAD = 9;
-const COL_HOLE = 4; // the ring that marks an empty hole
-const COL_PEG = 5;
-const COL_CURSOR = 6;
+const COL_GRID = FIRST_GAME_SLOT; // the line between two cells, and round the board
+const COL_CELL = FIRST_GAME_SLOT + 1; // the surface of a cell
+const COL_HOLE = FIRST_GAME_SLOT + 2; // the ring that marks an empty hole
+const COL_PEG = FIRST_GAME_SLOT + 3;
 /** The ring round a peg the keyboard has picked up to jump with. */
-const COL_HELD = 7;
-export const COL_HINT_EVIDENCE = 8;
+const COL_HELD = FIRST_GAME_SLOT + 4;
 
 /** A peg is the pair's disc: the one piece on the board, in a color no mark
  * drawn round it has spent. */
@@ -80,11 +77,12 @@ export interface PegsDrawState {
   dragging: boolean;
   dragX: number;
   dragY: number;
-  /** Per-tile cache of what each square last showed: its value with the
-   * cursor and hint flags, the win flash's tone on it, then the hint jumps
-   * drawn across it. */
-  tiles: string[];
-  started: boolean;
+  /** Per tile: its value with the cursor and hint flags, whether it is
+   * striped, and the win flash's tone on it. */
+  tiles: TileCache;
+  /** Per tile, the key of the hint jumps drawn across it, which no word
+   * holds. */
+  jumps: string[];
 }
 // --- coordinate helpers ----------------------------------------------
 
@@ -108,20 +106,15 @@ export function tileCenter(x: number, ts: number): number {
 // --- colors ---------------------------------------------------------
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   // Strong enough to be a mark on the cell and not a step of its gray.
   out[COL_HOLE] = GRID_DARK;
   out[COL_PEG] = TWO[PAIR_DISC];
   // The cursor's brackets and the held ring are one green and never on the
   // board together: picking a peg up turns the one into the other.
-  out[COL_CURSOR] = CURSOR;
   out[COL_HELD] = HELD;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
   return out;
 }
 
@@ -144,8 +137,8 @@ export function newDrawState(s: PegsState, tileSize: number): PegsDrawState {
     dragging: false,
     dragX: 0,
     dragY: 0,
-    tiles: new Array<string>(s.w * s.h).fill(""),
-    started: false,
+    tiles: new TileCache(s.w * s.h, { words: 3 }),
+    jumps: new Array<string>(s.w * s.h).fill(""),
   };
 }
 
@@ -241,11 +234,11 @@ function drawTile(
     );
   if (outlined) {
     const r = ringed ? outer - 2 : outer;
-    dr.drawCircle({ x: x + half, y: y + half }, r, -1, COL_HINT_EVIDENCE);
-    dr.drawCircle({ x: x + half, y: y + half }, r - 1, -1, COL_HINT_EVIDENCE);
+    dr.drawCircle({ x: x + half, y: y + half }, r, -1, COL_HINT_OUTLINE);
+    dr.drawCircle({ x: x + half, y: y + half }, r - 1, -1, COL_HINT_OUTLINE);
   }
   // Laid over the peg each jumps.
-  for (const [a, b] of jumps.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_EVIDENCE);
+  for (const [a, b] of jumps.arrows) drawMoveArrow(dr, ts, a, b, COL_HINT_OUTLINE);
 
   dr.unclip();
   dr.drawUpdate({ x, y, w: ts, h: ts });
@@ -304,7 +297,7 @@ export function redraw(
     ds.dragging = false;
   }
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // First draw: the grid line round every playable cell. A cell paints the
     // line along its own top and left, so this is what closes the right and
     // the bottom of the board, whatever its shape.
@@ -314,7 +307,6 @@ export function redraw(
           drawRectOutline(dr, coord(x, ts), coord(y, ts), ts + 1, ts + 1, COL_GRID);
       }
     }
-    ds.started = true;
   }
 
   // Incremental redraw: only changed cells.
@@ -334,14 +326,15 @@ export function redraw(
       const i = y * w + x;
       const arrows = arrowsAt.get(i) ?? [];
       const tone = flash.win(sweepStep(x, y));
-      const ground = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_CELL;
-      const key = `${v}${striped.has(i) ? "s" : ""}w${tone}:${arrows.map(JUMP.key).join(",")}`;
-      if (key !== ds.tiles[i]) {
+      const ground = tone ? winSlot(tone) : COL_CELL;
+      const jumps = arrows.map(JUMP.key).join(",");
+      const jumpsMoved = ds.jumps[i] !== jumps;
+      if (ds.tiles.changed(i, v, striped.has(i) ? 1 : 0, tone) || jumpsMoved) {
         drawTile(dr, ds, coord(x, ts), coord(y, ts), v, ground, {
           striped: striped.has(i),
           arrows: arrows.map((j) => [center(j.from), center(j.to)] as const),
         });
-        ds.tiles[i] = key;
+        ds.jumps[i] = jumps;
       }
     }
   }

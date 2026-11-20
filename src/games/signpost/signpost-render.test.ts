@@ -8,6 +8,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -19,7 +20,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH, WIN_BODY, WIN_NONE } from "../../engine/win-wave.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { signpostGame } from "./index.ts";
-import { BORDER, COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
+import { BORDER, COL_GRID } from "./render.ts";
 import { solveState } from "./solver.ts";
 import {
   cloneState,
@@ -28,9 +29,6 @@ import {
   type SignpostMove,
   type SignpostParams,
 } from "./state.ts";
-
-const COL_GRID = 3;
-const COL_ERROR = 5;
 
 function boardId(p: SignpostParams, seed: string): string {
   const { desc } = newSignpostDesc(p, randomNew(seed));

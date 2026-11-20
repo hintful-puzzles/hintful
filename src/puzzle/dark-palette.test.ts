@@ -32,6 +32,7 @@ import {
 import { getTsGame } from "../engine/registry.ts";
 import { REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import type { Color, PuzzleId } from "../engine/types.ts";
+import * as slide from "../games/slide/render.ts";
 import {
   colorToOKLCH,
   darkModeColor,
@@ -199,12 +200,12 @@ describe("slide's board", () => {
    * get only the collection-wide checks.
    */
   const TRIOS = [
-    ["floor", 0],
-    ["dragged block", 3],
-    ["key block", 6],
-    ["dragged key block", 9],
-    ["wall", 15],
-    ["ordinary block", 18],
+    ["floor", slide.COL_FLOOR],
+    ["dragged block", slide.COL_GRABBED],
+    ["key block", slide.COL_MAIN],
+    ["dragged key block", slide.COL_MAIN_GRABBED],
+    ["wall", slide.COL_WALL],
+    ["ordinary block", slide.COL_BLOCK],
   ] as const;
 
   it.each(
@@ -228,7 +229,13 @@ describe("slide's board", () => {
     // violation of it — so the assertion is on the *ordering*, in each scheme's
     // own direction.
     const { light, dark } = schemes("slide");
-    const [FLOOR, MAIN, TARGET, WALL, BLOCK] = [0, 6, 12, 15, 18];
+    const {
+      COL_FLOOR: FLOOR,
+      COL_MAIN: MAIN,
+      COL_TARGET: TARGET,
+      COL_WALL: WALL,
+      COL_BLOCK: BLOCK,
+    } = slide;
 
     // Light: exit palest, then floor, then block, then wall.
     for (const [a, b] of [

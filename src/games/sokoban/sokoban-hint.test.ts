@@ -9,6 +9,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { DESC_NO_SOLUTION } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { isDeadEnd } from "../../engine/hint-refusal.ts";
@@ -31,7 +32,6 @@ import {
 } from "./hint.ts";
 import { BARREL, GOAL, PUSH } from "./hint-marks.ts";
 import { executeMove, sokobanGame } from "./index.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import { DIRS, SokobanBoard, search, searchFrom } from "./solver.ts";
 import {
   encodeBoard,
@@ -560,7 +560,7 @@ describe("rendering the marks (tier 2.5)", () => {
       // A ring round each of the push's two squares, and two strokes round
       // the one outline.
       expectRing(recording.ops, { rings: 2 });
-      expect(rings(recording.ops, COL_HINT_EVIDENCE)).toBe(2);
+      expect(rings(recording.ops, COL_HINT_OUTLINE)).toBe(2);
     }
   });
 
@@ -573,7 +573,7 @@ describe("rendering the marks (tier 2.5)", () => {
     const arrows = st ? stepMarks(st).of("outline", PUSH).length : 0;
     // Each arrow spans two squares, which paint its piece each.
     const heads = recording.ops.filter(
-      (o) => o.op === "polygon" && o.fill === COL_HINT_EVIDENCE,
+      (o) => o.op === "polygon" && o.fill === COL_HINT_OUTLINE,
     ).length;
     expect(arrows).toBeGreaterThan(1);
     expect(heads).toBe(2 * arrows);

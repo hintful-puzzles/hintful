@@ -11,12 +11,8 @@
 import { BLUE_BOLD, PURPLE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
   HELD,
-  HINT_OUTLINE,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
@@ -28,6 +24,14 @@ import {
   signpostArrowDim,
   signpostWashedRegion,
 } from "../../engine/color/palette-games.ts";
+import {
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
@@ -54,31 +58,24 @@ import {
 
 // --- color indices ----------------------------------------------------
 
-const COL_BACKGROUND = 0;
 /** The surface of a square that is in no chain yet. */
-const COL_CELL = 1;
+const COL_CELL = FIRST_GAME_SLOT;
 /** The lifted surface of a square whose number the puzzle fixed. */
-const COL_GIVEN = 2;
-const COL_GRID = 3;
-const COL_CURSOR = 4;
-const COL_ERROR = 5;
-const COL_DRAG_ORIGIN = 6;
-const COL_ARROW = 7;
-const COL_ARROW_BG_DIM = 8;
-const COL_NUMBER = 9;
-const COL_NUMBER_SET = 10;
-const COL_NUMBER_SET_MID = 11;
+const COL_GIVEN = FIRST_GAME_SLOT + 1;
+export const COL_GRID = FIRST_GAME_SLOT + 2;
+/** The keyboard cursor, in its own color (see its assignment). */
+const COL_PURPLE_CURSOR = FIRST_GAME_SLOT + 3;
+const COL_DRAG_ORIGIN = FIRST_GAME_SLOT + 4;
+const COL_ARROW = FIRST_GAME_SLOT + 5;
+const COL_ARROW_BG_DIM = FIRST_GAME_SLOT + 6;
+const COL_NUMBER = FIRST_GAME_SLOT + 7;
+const COL_NUMBER_SET = FIRST_GAME_SLOT + 8;
+const COL_NUMBER_SET_MID = FIRST_GAME_SLOT + 9;
 const NBACKGROUNDS = SIGNPOST_REGION_BACKGROUNDS.length;
-const COL_B0 = 12;
+const COL_B0 = FIRST_GAME_SLOT + 10;
 const COL_M0 = COL_B0 + 1 * NBACKGROUNDS;
 const COL_D0 = COL_B0 + 2 * NBACKGROUNDS;
 const COL_X0 = COL_B0 + 3 * NBACKGROUNDS;
-/** The outline on a square the hint reasons from. */
-const COL_HINT_CELL = COL_X0 + NBACKGROUNDS;
-/** The ground of a square the win flash is on. */
-export const COL_FLASH = COL_HINT_CELL + 1;
-/** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = COL_FLASH + 1;
 
 /** The board's pixel origin (NARROW_BORDERS). Exported so `interpretMove` and
  * `computeSize` read the same number the painter does — one function, both
@@ -121,9 +118,8 @@ const F_FLASH_LEAD = 0x2000;
  * in `palette-games.ts`); what is left here is which slot each one occupies.
  */
 export function buildPalette(background: Color): Color[] {
-  const ret: Color[] = new Array(COL_FLASH_LEAD + 1);
+  const ret = rolePalette(background);
 
-  ret[COL_BACKGROUND] = background;
   ret[COL_CELL] = cellSurface(background);
   ret[COL_GIVEN] = givenSurface(background);
 
@@ -131,19 +127,15 @@ export function buildPalette(background: Color): Color[] {
   ret[COL_ARROW] = INK;
   // Purple, because Signpost has spent the usual two: green is the arrow you
   // are dragging from (and a region wash), blue the fixed numbers.
-  ret[COL_CURSOR] = PURPLE;
+  ret[COL_PURPLE_CURSOR] = PURPLE;
   ret[COL_GRID] = surfaceGrid(background);
   // **This square's number is fixed** — a clue you were given, or one the
   // chain has forced, as opposed to one still floating.
   ret[COL_NUMBER_SET] = BLUE_BOLD;
   ret[COL_NUMBER_SET_MID] = SIGNPOST_NUMBER_SET_MID;
-  ret[COL_ERROR] = ERROR;
   ret[COL_DRAG_ORIGIN] = HELD;
   // A tenth off the surface the chainless square is painted in.
   ret[COL_ARROW_BG_DIM] = signpostArrowDim(cellSurface(background));
-  ret[COL_HINT_CELL] = HINT_OUTLINE;
-  ret[COL_FLASH] = FLASH;
-  ret[COL_FLASH_LEAD] = FLASH_LEAD;
 
   for (let c = 0; c < NBACKGROUNDS; c++) {
     ret[COL_B0 + c] = SIGNPOST_REGION_BACKGROUNDS[c];
@@ -331,7 +323,7 @@ function tileRedraw(
   };
   // The arrow a hint links from is drawn inside its ring, further down.
   if (!(f & F_HINT_ARROW)) glyph(arrowcol);
-  if (f & F_CUR) drawRectCorners(dr, acx, acy, asz + 1, COL_CURSOR);
+  if (f & F_CUR) drawRectCorners(dr, acx, acy, asz + 1, COL_PURPLE_CURSOR);
 
   // Predecessor dot: cell needs a predecessor and doesn't have one.
   const dcx = tx + Math.floor(ts / 2) - asz;
@@ -366,7 +358,12 @@ function tileRedraw(
   }
   if (f & F_HINT_RING) dr.drawRing(tile, clear, thick);
   if (f & F_HINT_OUTLINE)
-    drawMarkSides(dr, { box: tile, outer: 0, inner: thick }, MARK_ALL, COL_HINT_CELL);
+    drawMarkSides(
+      dr,
+      { box: tile, outer: 0, inner: thick },
+      MARK_ALL,
+      COL_HINT_OUTLINE,
+    );
 
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 }
@@ -513,7 +510,7 @@ export function redrawSignpost(
     }
   }
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     const aw = ts * state.w;
     const ah = ts * state.h;
     // The grid frame (upstream `game_redraw` first-draw block).
@@ -534,7 +531,7 @@ export function redrawSignpost(
 
   // The route drawn last frame crosses tiles, so every tile repaints to take
   // it off; the next frame's route, if any, goes on after the tiles.
-  if (ds.route) ds.cache.fill(-1);
+  if (ds.route) ds.tiles.forgetAll();
 
   for (let x = 0; x < state.w; x++) {
     for (let y = 0; y < state.h; y++) {
@@ -580,12 +577,7 @@ export function redrawSignpost(
         );
       }
 
-      if (
-        renderState.nums[i] !== ds.nums[i] ||
-        f !== ds.cache[i] ||
-        dirp !== ds.dirp[i] ||
-        !ds.started
-      ) {
+      if (ds.tiles.changed(i, f, renderState.nums[i], dirp)) {
         tileRedraw(
           dr,
           ds,
@@ -595,9 +587,6 @@ export function redrawSignpost(
           renderState.nums[i],
           f,
         );
-        ds.nums[i] = renderState.nums[i];
-        ds.cache[i] = f;
-        ds.dirp[i] = dirp;
       }
     }
   }
@@ -613,6 +602,4 @@ export function redrawSignpost(
     dr.blitterSave(ds.dragBackground, { x: ds.dragX, y: ds.dragY });
     drawDragIndicator(dr, ds, state, ui, postdropValid);
   }
-
-  if (!ds.started) ds.started = true;
 }

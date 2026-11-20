@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { DESC_NO_SOLUTION } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { isDeadEnd } from "../../engine/hint-refusal.ts";
@@ -35,7 +36,6 @@ import {
 } from "./hint.ts";
 import { pegsGame } from "./index.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./kinds.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import { findFinish, frozenPegs, legalJumps, provedLost } from "./solver.ts";
 import { GRID_HOLE, GRID_PEG, type PegsMove, type PegsState, status } from "./state.ts";
 
@@ -547,7 +547,7 @@ describe("pegs hint", () => {
     // A ring each round the ringed peg and hole, and two strokes round the
     // outlined peg.
     expectRing(recording.ops, { rings: 2 });
-    expect(rings(COL_HINT_EVIDENCE)).toBe(2);
+    expect(rings(COL_HINT_OUTLINE)).toBe(2);
     // The rival's three squares are striped.
     expect(recording.ops.filter((o) => o.op === "hatch").length).toBe(3);
     expect(recording.ops).toMatchSnapshot();
@@ -560,7 +560,7 @@ describe("pegs hint", () => {
     // An arrowhead is drawn once, by the square holding the hole it points at,
     // and clipped away in the other two.
     const heads = recording.ops.filter(
-      (o) => o.op === "polygon" && o.fill === COL_HINT_EVIDENCE,
+      (o) => o.op === "polygon" && o.fill === COL_HINT_OUTLINE,
     );
     expect(heads.length).toBe(arrows.length * 3);
     expect(recording.ops).toMatchSnapshot();

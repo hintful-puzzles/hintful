@@ -45,7 +45,6 @@ import {
   mkhighlightSpecific,
 } from "../../engine/color/color-mkhighlight.ts";
 import { RED } from "../../engine/color/colors.ts";
-import { FLASH, FLASH_LEAD, HINT_OUTLINE } from "../../engine/color/palette.ts";
 import {
   slideBlockBase,
   slideMainBlockBase,
@@ -53,6 +52,13 @@ import {
   slideTargetBase,
   slideWallBase,
 } from "../../engine/color/palette-games.ts";
+import {
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -61,6 +67,7 @@ import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, PaletteScheme, Point, Rect, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -82,34 +89,36 @@ import {
 
 // --- palette (indices C-identical; see the module header) ---------------
 
-export const COL_BACKGROUND = 0;
-const COL_HIGHLIGHT = 1;
-const COL_LOWLIGHT = 2;
-export const COL_GRABBED = 3;
-const COL_GRABBED_HIGHLIGHT = 4;
-const COL_GRABBED_LOWLIGHT = 5;
-export const COL_MAIN = 6;
-const COL_MAIN_HIGHLIGHT = 7;
-const COL_MAIN_LOWLIGHT = 8;
-export const COL_MAIN_GRABBED = 9;
-const COL_MAIN_GRABBED_HIGHLIGHT = 10;
-const COL_MAIN_GRABBED_LOWLIGHT = 11;
-export const COL_TARGET = 12;
-const COL_TARGET_HIGHLIGHT = 13;
-const COL_TARGET_LOWLIGHT = 14;
-export const COL_WALL = 15;
-export const COL_WALL_HIGHLIGHT = 16;
-export const COL_WALL_LOWLIGHT = 17;
-export const COL_BLOCK = 18;
-const COL_BLOCK_HIGHLIGHT = 19;
-const COL_BLOCK_LOWLIGHT = 20;
-/** The keyboard cursor. Flat, so it needs no bevel trio and no swap: the token
- * carries its own dark value. */
-export const COL_CURSOR = 21;
+/** The floor's trio: its own, not the canvas ground's slot, because a trio's
+ * three slots are consecutive and the ones after the ground are roles. */
+export const COL_FLOOR = FIRST_GAME_SLOT;
+const COL_FLOOR_HIGHLIGHT = FIRST_GAME_SLOT + 1;
+const COL_FLOOR_LOWLIGHT = FIRST_GAME_SLOT + 2;
+export const COL_GRABBED = FIRST_GAME_SLOT + 3;
+const COL_GRABBED_HIGHLIGHT = FIRST_GAME_SLOT + 4;
+const COL_GRABBED_LOWLIGHT = FIRST_GAME_SLOT + 5;
+export const COL_MAIN = FIRST_GAME_SLOT + 6;
+const COL_MAIN_HIGHLIGHT = FIRST_GAME_SLOT + 7;
+const COL_MAIN_LOWLIGHT = FIRST_GAME_SLOT + 8;
+export const COL_MAIN_GRABBED = FIRST_GAME_SLOT + 9;
+const COL_MAIN_GRABBED_HIGHLIGHT = FIRST_GAME_SLOT + 10;
+const COL_MAIN_GRABBED_LOWLIGHT = FIRST_GAME_SLOT + 11;
+export const COL_TARGET = FIRST_GAME_SLOT + 12;
+const COL_TARGET_HIGHLIGHT = FIRST_GAME_SLOT + 13;
+const COL_TARGET_LOWLIGHT = FIRST_GAME_SLOT + 14;
+export const COL_WALL = FIRST_GAME_SLOT + 15;
+export const COL_WALL_HIGHLIGHT = FIRST_GAME_SLOT + 16;
+export const COL_WALL_LOWLIGHT = FIRST_GAME_SLOT + 17;
+export const COL_BLOCK = FIRST_GAME_SLOT + 18;
+const COL_BLOCK_HIGHLIGHT = FIRST_GAME_SLOT + 19;
+const COL_BLOCK_LOWLIGHT = FIRST_GAME_SLOT + 20;
+/** The keyboard cursor, in its own color (see its assignment). Flat, so it
+ * needs no bevel trio and no swap: the token carries its own dark value. */
+export const COL_RED_CURSOR = FIRST_GAME_SLOT + 21;
 /** Every material's bevel but the exit's. */
 export const paletteScheme: Partial<PaletteScheme> = {
   darkSwaps: [
-    [COL_HIGHLIGHT, COL_LOWLIGHT],
+    [COL_FLOOR_HIGHLIGHT, COL_FLOOR_LOWLIGHT],
     [COL_GRABBED_HIGHLIGHT, COL_GRABBED_LOWLIGHT],
     [COL_MAIN_HIGHLIGHT, COL_MAIN_LOWLIGHT],
     [COL_MAIN_GRABBED_HIGHLIGHT, COL_MAIN_GRABBED_LOWLIGHT],
@@ -117,24 +126,15 @@ export const paletteScheme: Partial<PaletteScheme> = {
     [COL_BLOCK_HIGHLIGHT, COL_BLOCK_LOWLIGHT],
   ],
 };
-/** The floor, or a block's face inside its bevel, where the win flash is on
- * it. Flat as the cursor is. */
-export const COL_FLASH = 22;
-/** The same, under the flash's leading edge. */
-export const COL_FLASH_LEAD = 23;
-/** A hint's outline. */
-export const COL_HINT_EVIDENCE = 24;
-const NCOLORS = 25;
-
 export function colors(defaultBackground: Color): Color[] {
-  const out = new Array<Color>(NCOLORS);
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
+  const out = rolePalette(background);
 
   // The floor: the board itself. A surface earns no contrast, and empty floor
   // is what a player is hunting for, so it reads as space.
-  out[COL_BACKGROUND] = background;
-  out[COL_HIGHLIGHT] = highlight;
-  out[COL_LOWLIGHT] = lowlight;
+  out[COL_FLOOR] = background;
+  out[COL_FLOOR_HIGHLIGHT] = highlight;
+  out[COL_FLOOR_LOWLIGHT] = lowlight;
 
   // An ordinary block: an object resting on that floor.
   const block = mkhighlightSpecific(slideBlockBase(background));
@@ -185,11 +185,7 @@ export function colors(defaultBackground: Color): Color[] {
   //
   // Red carries no "mistake" meaning to steal here: Slide declares no
   // `findMistakes` hook, because every reachable position is legal.
-  out[COL_CURSOR] = RED;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
+  out[COL_RED_CURSOR] = RED;
 
   return out;
 }
@@ -262,19 +258,19 @@ const hasAll = (val: number, mask: number): boolean => (val & mask) === mask;
 
 export interface SlideDrawState {
   tileSize: number;
-  /** Last-drawn packed value per cell; `-1` forces a repaint. Every overlay
-   * (drag, cursor, gate, flash) is part of this one word, so they
-   * all sit in the diff key by construction (docs/rendering.md § "The tile cache and the diff key"). */
-  grid: Int32Array;
-  /** The displayed hint's marks, which have no room in `grid`'s word. */
+  /** Each cell's packed value. Every overlay (drag, cursor, gate, flash) is
+   * part of this one word, and the hint's marks are its overlay. */
+  tiles: TileCache;
+  /** The displayed hint's marks, which have no room in the word. */
   hint: OverlaySidecar;
 }
 
 export function newDrawState(state: SlideState, tileSize: number): SlideDrawState {
+  const hint = new OverlaySidecar(state.w * state.h);
   return {
     tileSize,
-    grid: new Int32Array(state.w * state.h).fill(-1),
-    hint: new OverlaySidecar(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { overlays: [hint] }),
+    hint,
   };
 }
 
@@ -608,7 +604,7 @@ function drawTile(
   const box = { x: tx, y: ty, w: ts, h: ts };
 
   // Background: the floor, or the target area's green.
-  let cc = val & BG_TARGET ? COL_TARGET : COL_BACKGROUND;
+  let cc = val & BG_TARGET ? COL_TARGET : COL_FLOOR;
   let ch = cc + 1;
   let cl = cc + 2;
   const lit = litColor(val);
@@ -642,7 +638,7 @@ function drawTile(
   // border it stands in for: squares tile exactly, so a square whose marks
   // change repaints and takes its old band with it.
   const band = { box, outer: 0, inner: highlightWidth(ts) };
-  drawMarkSides(dr, band, marks, COL_HINT_EVIDENCE);
+  drawMarkSides(dr, band, marks, COL_HINT_OUTLINE);
 
   // Topmost: the keyboard cursor, as the collection's four corner brackets.
   // They sit *beside* the content rather than over it, so a block's bevel and
@@ -658,7 +654,7 @@ function drawTile(
       tx + Math.floor(ts / 2),
       ty + Math.floor(ts / 2),
       r,
-      COL_CURSOR,
+      COL_RED_CURSOR,
       1 + Math.floor(ts / 24),
     );
   }
@@ -810,7 +806,7 @@ export function redraw(
         val |= findPiecepart(w, h, dsf, x, y) << FG_MAINPIECESH;
       }
 
-      if (val !== ds.grid[i] || ds.hint.stale(i)) {
+      if (ds.tiles.changed(i, val)) {
         drawTile(
           dr,
           ds,
@@ -820,8 +816,6 @@ export function redraw(
           i,
           outlined.has(i) ? sides(outlined, x, y) : NO_MARKS,
         );
-        ds.grid[i] = val;
-        ds.hint.commit(i);
         if (ringed.has(i)) ringRepainted = true;
       }
     }

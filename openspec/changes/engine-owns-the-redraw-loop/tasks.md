@@ -83,7 +83,8 @@
       samegame, sticks, lightup, singles, range, flood, mines, wordguess,
       solo, mathrax, rome, flip, unruly, filling, mosaic, dominosa, pearl,
       edge-clue-latin (adjacent, unequal), galaxies, wordtrail,
-      border-grid-render (palisade, separate), inertia, path, rect.
+      border-grid-render (palisade, separate), inertia, path, rect, slide,
+      sokoban, pegs, signpost.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -112,8 +113,15 @@
       recorded, is the shared green Palisade's was. A string key that no
       word holds (Rect's ring key) stays a side lane, tested beside
       `changed`. Inertia's ball is `COL_CURSOR` and its splat `COL_ERROR`,
-      under their own names. Next, the remaining cell-tile games: pegs,
-      signpost, slide (its red cursor its own slot), sokoban. Then the multi-family games, then
+      under their own names, as is Sokoban's player. Sokoban's and Pegs'
+      string keys split: the fixed part is words, and what varies in
+      length (push and jump arrows, the aim, sprites) a string lane.
+      Slide's trios are consecutive, so its floor is its own trio
+      (`COL_FLOOR`, the ground's color) rather than slot 0's; its red and
+      Signpost's purple cursor are their own slots. A test that named a
+      slot by its number (`dark-palette.test.ts` for Slide, Signpost's and
+      Sokoban's render tests) imports it instead. Next, the multi-family
+      games. Then the multi-family games, then
       the neighbor-painting ones. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;

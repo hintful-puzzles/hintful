@@ -1461,7 +1461,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "dragX",
       "dragY",
       "dragging",
-      "started",
+      "jumps",
       "tileSize",
       "tiles",
     ],
@@ -1780,18 +1780,15 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
-      "dirp",
       "dragBackground",
       "dragX",
       "dragY",
       "dragging",
       "h",
       "n",
-      "nums",
       "route",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "signpost",
@@ -1939,9 +1936,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "grid",
       "hint",
       "tileSize",
+      "tiles",
     ],
     "id": "slide",
     "members": [
@@ -1975,7 +1972,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "started",
+      "looks",
       "tileSize",
       "tiles",
     ],
