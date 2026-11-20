@@ -2,13 +2,8 @@ import { computed, type Signal, signal } from "@lit-labs/signals";
 import * as Sentry from "@sentry/browser";
 import { proxy, type Remote, releaseProxy, transfer } from "comlink";
 import { assertNever } from "../engine/assert-never.ts";
-import { darkValue } from "../engine/color/color-token.ts";
 import type { Scheme } from "../engine/color/color-word.ts";
-import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { ALREADY_SOLVED, WAY_FORWARD } from "../engine/hint-refusal.ts";
-import type { MarkRole } from "../engine/hint-words.ts";
-import { DEAL_DEADLINE_MS } from "../engine/retry-limit.ts";
-import { MARK_EDGE_PX } from "../engine/ring.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -32,15 +27,17 @@ import type {
   TimerReadout,
 } from "../engine/types.ts";
 import { keptBoards } from "../store/kept-boards.ts";
-import { nextAnimationFrame, sleep } from "../utils/timing.ts";
+import { nextAnimationFrame } from "../utils/timing.ts";
 import { puzzleDataMap } from "./catalog.ts";
-import { DealAhead, SLOW_DEAL_MS } from "./deal-ahead.ts";
+import { Checkpoints } from "./checkpoints.ts";
+import { DealAhead } from "./deal-ahead.ts";
+import { DealWait } from "./deal-wait.ts";
 import type {
   BoardSurface,
   HintReferenceMarks,
   PuzzleEngineSurface,
 } from "./engine-surface.ts";
-import { repainted } from "./mark-flash.ts";
+import { HintPresentation } from "./hint-presentation.ts";
 import {
   type PuzzleWorker,
   spawnPuzzleWorker,
@@ -66,57 +63,12 @@ const AUTO_HINT_STEP_MS = 1000;
  */
 export const HINT_PENDING_MS = 300;
 
-/** How long a pressed reference's marks stay lit, from turning white to
- * fading back (`Puzzle.flashHintReference`). One flash, so nothing strobes. */
-export const HINT_FLASH_MS = 1000;
-
-/** A color's value in `scheme`, as the canvas overlay and CSS take it. */
-function hexIn(c: Color, scheme: Scheme): string {
-  const v = scheme === "dark" ? (darkValue(c) ?? c) : c;
-  return `#${v
-    .map((x) =>
-      Math.round(x * 255)
-        .toString(16)
-        .padStart(2, "0"),
-    )
-    .join("")}`;
-}
-
-/** Whether two references draw the same marks ("here" … "this"). */
-function sameMarks(a: Uint8ClampedArray, b: Uint8ClampedArray): boolean {
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
-  return true;
-}
-
 /** The banner's wording for a pending hint; the Hint control says it too. */
 export const HINT_PENDING_MESSAGE = "Thinking…";
 
 /** What a Hint press does next: show where to look for a step, show it whole,
  * or play it. */
 export type HintBeat = "show" | "explain" | "apply";
-
-/**
- * How long a New game may go unanswered before the app says what it is doing
- * (`Puzzle.dealPending`). Most types deal in well under this, and a kept board
- * (`DealAhead`) is played at once, so the words are seen where a type's boards
- * are rare and none is kept: the first deal of it, or a run of them pressed
- * faster than boards are found. A deal this long is also what makes a type
- * slow, which has more boards kept for it.
- */
-export const DEAL_PENDING_MS = SLOW_DEAL_MS;
-
-/** The chrome's wording for a pending deal (`Puzzle.dealMessage`). */
-const DEAL_PENDING_MESSAGE = "Looking for a board…";
-
-/** A status bar message with no hint's words, as `Puzzle.hintSaid` compares it. */
-const NOTHING_SAID = JSON.stringify([null, null]);
-
-/** `ms` as minutes and seconds, `2:05`. */
-function clock(ms: number): string {
-  const s = Math.round(ms / 1000);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-}
 
 /** What Undo says when it was a run it brought back, not a move: the board a
  * new one replaced, or the moves a Start over put away. */
@@ -272,7 +224,7 @@ export class Puzzle {
       case "game-state-change":
         this._checkMessage.set(null);
         if (!this.followBoard(message.board, message.boardAfter))
-          this.purgeInvalidCheckpoints(message.totalMoves);
+          this._checkpoints.purge(this.totalMoves, message.totalMoves);
         update(this._status, message.status);
         update(this._currentMove, message.currentMove);
         update(this._totalMoves, message.totalMoves);
@@ -298,22 +250,8 @@ export class Puzzle {
         break;
       case "status-bar-change": {
         update(this._statusbarText, message.statusBarText);
-        update(this._activeHintExplanation, message.activeHintExplanation ?? "");
         update(this._checkVerdict, message.activeCheck ?? null);
-        // Compared by value: the engine sends fresh runs each time. Other
-        // words, or the same words marking other squares (a step a move
-        // narrowed), are marks a flash begun on these is not, and that the
-        // measure taken of these does not draw.
-        const said = JSON.stringify([
-          message.activeHintSpans ?? null,
-          message.activeHintMarks ?? null,
-        ]);
-        if (said !== this.hintSaid) {
-          this.hintSaid = said;
-          this._activeHintSpans.set(message.activeHintSpans ?? null);
-          this.stopHintFlash();
-          this.measureHintMarks();
-        }
+        this.hintPresentation.heard(message);
         // Rendered as "Step 2 of 3" beside a multi-leg hint; empty for a
         // single-leg one, which is most of them.
         update(
@@ -411,16 +349,7 @@ export class Puzzle {
   private _generatingGame = signal<boolean>(false);
   private _autoHintActive = signal<boolean>(false);
   private _helpMessage = signal<string>("");
-  private _activeHintExplanation = signal<string>("");
-  private _activeHintSpans = signal<{ light: HintSpan[]; dark: HintSpan[] } | null>(
-    null,
-  );
-  private _hintFlashing = signal<number | null>(null);
-  private hintFlashTimer: ReturnType<typeof setTimeout> | null = null;
-  private _hintMarks = signal<HintReferenceMarks | null>(null);
-  private hintMarksToken = 0;
-  /** The hint's words and marks the status bar last said, as compared. */
-  private hintSaid = NOTHING_SAID;
+  private readonly hintPresentation = new HintPresentation(() => this.board());
   /** "Step 2 of 3" while one deduction plays out over several legs; empty for a
    * single-leg hint and when no hint is displayed. Formatted here rather than
    * in the chrome, so that whatever shows it cannot word it differently. */
@@ -557,100 +486,38 @@ export class Puzzle {
    * runs that each are one reference to a mark or literal words. Empty when
    * no hint is shown; one literal run for a step with no references. */
   public activeHintSpansIn(scheme: Scheme): readonly HintSpan[] {
-    const spans = this._activeHintSpans.get();
-    if (spans) return spans[scheme];
-    const text = this._activeHintExplanation.get();
-    return text ? [{ text, ref: null }] : [];
+    return this.hintPresentation.spansIn(scheme);
   }
 
   /** The displayed hint step's sentence, or "" with none: what tells the
    * reference panel that the step whose items it marks has changed. */
   public get activeHintExplanation(): string {
-    return this._activeHintExplanation.get();
+    return this.hintPresentation.explanation;
   }
 
   /** The reference of the hint's words whose marks are flashing, or `null`
    * between flashes. */
   public get hintFlashing(): number | null {
-    return this._hintFlashing.get();
+    return this.hintPresentation.flashing;
   }
 
   /** Each reference's marks on the canvas, measured once a step is drawn at
    * rest; `null` with no hint, or until they are. */
   public get hintMarks(): HintReferenceMarks | null {
-    return this._hintMarks.get();
+    return this.hintPresentation.marks;
   }
 
-  /** The color of each reference of the hint's words in `scheme`, from its
-   * role's (`HINT_REFERENCE_COLORS`; the owner, 2026-10-19: "I can't imagine
-   * any situation when we'd not want the colors to be distinct"), that its
-   * marks are repainted in and its pill is tinted with. `null` for a
-   * reference that draws nothing. References that draw the same marks share
-   * one. */
+  /** The color of each reference of the hint's words in `scheme`, that its
+   * marks are repainted in and its pill is tinted with; `null` for a
+   * reference that draws nothing. */
   public hintReferenceColorsIn(scheme: Scheme): readonly (string | null)[] {
-    const marks = this._hintMarks.get();
-    if (!marks) return [];
-    const colors: (string | null)[] = [];
-    const taken: Partial<Record<MarkRole, number>> = {};
-    marks.refs.forEach((r, i) => {
-      const same = marks.refs.findIndex((o) => sameMarks(o.alpha, r.alpha));
-      const role = marks.roles[i] ?? "outline";
-      const pool = HINT_REFERENCE_COLORS[role];
-      const next = taken[role] ?? 0;
-      if (r.box === null) colors.push(null);
-      else if (same < i) colors.push(colors[same]);
-      else {
-        colors.push(hexIn(pool[next % pool.length], scheme));
-        taken[role] = next + 1;
-      }
-    });
-    return colors;
+    return this.hintPresentation.referenceColorsIn(scheme);
   }
 
   /** Flash the marks of a reference of the hint's words, the rest of the
-   * step's marks staying as they are, for {@link HINT_FLASH_MS}. A flash
-   * already running is replaced. */
+   * step's marks staying as they are. A flash already running is replaced. */
   public flashHintReference(index: number): void {
-    this.stopHintFlash();
-    this._hintFlashing.set(index);
-    this.hintFlashTimer = setTimeout(() => this.stopHintFlash(), HINT_FLASH_MS);
-    if (!this._hintMarks.get()) this.measureHintMarks();
-  }
-
-  private stopHintFlash(): void {
-    if (this.hintFlashTimer !== null) clearTimeout(this.hintFlashTimer);
-    this.hintFlashTimer = null;
-    this._hintFlashing.set(null);
-  }
-
-  /** Measure each reference's marks once the board is at rest: a step's
-   * move may still be sliding when its words arrive. A later measure, or other
-   * words, supersede one under way. */
-  private measureHintMarks(): void {
-    const spans = this._activeHintSpans.get();
-    const token = ++this.hintMarksToken;
-    this._hintMarks.set(null);
-    if (!spans) return;
-    const count = Math.max(-1, ...spans.light.map((s) => s.ref ?? -1)) + 1;
-    if (count === 0) return;
-    void (async () => {
-      const board = await this.board();
-      const moving = await board.currentAnimationMs();
-      if (moving > 0) await sleep(moving + 50);
-      if (token !== this.hintMarksToken) return;
-      const marks = await board.hintReferenceMarks(count);
-      if (token === this.hintMarksToken) this._hintMarks.set(marks);
-    })();
-  }
-
-  private clearHintExplanation(): void {
-    this._activeHintExplanation.set("");
-    this._activeHintSpans.set(null);
-    this.hintSaid = NOTHING_SAID;
-    this.stopHintFlash();
-    // With the words gone, the engine's wordless message that follows reads as
-    // no change, so the marks are dropped here or they outlive the board.
-    this.measureHintMarks();
+    this.hintPresentation.flash(index);
   }
 
   public get status(): GameStatus {
@@ -757,50 +624,29 @@ export class Puzzle {
     return this._generatingGame.get();
   }
 
-  /**
-   * Whether a New game has gone `DEAL_PENDING_MS` without a board. The chrome
-   * says so in a place of its own and not in `helpMessage`: the board in play
-   * goes on answering input through the wait, so a hint asked for meanwhile
-   * would write over the words and take the way out with them.
-   */
-  private _dealPending = signal(false);
-  /** Counts the New games asked for, so that each knows whether it is still
-   * the one the chrome is speaking of. */
-  private dealsAsked = 0;
-  private dealStoppable = false;
-  /** How long the pending deal has run, in whole seconds. */
-  private _dealWaited = signal(0);
-  /** How long the last board of the type waited for took, this visit. */
-  private dealLastMs: number | null = null;
+  private readonly pendingDeal = new DealWait();
 
+  /** Whether a New game has gone `DEAL_PENDING_MS` without a board. */
   public get dealPending(): boolean {
-    return this._dealPending.get();
+    return this.pendingDeal.pending;
   }
 
   /** What the chrome says of a pending deal, and empty when there is none.
    * Handed over as `helpMessage` is, so that the chrome imports no value from
    * this module and the store behind it. */
   public get dealMessage(): string {
-    return this._dealPending.get() ? DEAL_PENDING_MESSAGE : "";
+    return this.pendingDeal.message;
   }
 
-  /**
-   * The pending deal's wait so far, with what is known of how long it will
-   * be, and empty when there is none. Nothing is known of a type before its
-   * first board here, which is the wait that matters, so the estimate is the
-   * last board's time where there is one and the deadline where not.
-   */
+  /** The pending deal's wait so far, with what is known of how long it will
+   * be, and empty when there is none. */
   public get dealWait(): string {
-    if (!this._dealPending.get()) return "";
-    const waited = clock(this._dealWaited.get() * 1000);
-    return this.dealLastMs === null
-      ? `${waited} so far, ${clock(DEAL_DEADLINE_MS)} at most`
-      : `${waited} so far; the last took ${clock(this.dealLastMs)}`;
+    return this.pendingDeal.wait;
   }
 
   /** Whether the pending deal has a way out (`stopDeal`). */
   public get canStopDeal(): boolean {
-    return this._dealPending.get() && this.dealStoppable;
+    return this.pendingDeal.canStop;
   }
 
   // Methods
@@ -815,25 +661,15 @@ export class Puzzle {
   public async newGame({ canStop = true } = {}): Promise<DealOutcome> {
     this.stopAutoHint("");
     this.setHelpMessage("");
-    this.clearHintExplanation();
-    const turn = ++this.dealsAsked;
-    this.dealStoppable = canStop && this.dealAhead !== null;
-    const pendingTimer = setTimeout(() => this._dealPending.set(true), DEAL_PENDING_MS);
-    this._dealWaited.set(0);
-    const tick = (): ReturnType<typeof setTimeout> =>
-      setTimeout(() => {
-        if (turn === this.dealsAsked) this._dealWaited.set(this._dealWaited.get() + 1);
-        clockTimer = tick();
-      }, 1000);
-    let clockTimer = tick();
+    this.hintPresentation.clear();
+    const turn = this.pendingDeal.begin(canStop && this.dealAhead !== null);
     try {
       const area = this.boardArea ?? undefined;
       for (;;) {
         let found: DealtBoard | null = null;
         if (this.dealAhead) {
           const params = await this.workerPuzzle.dealParams(area);
-          if (turn === this.dealsAsked)
-            this.dealLastMs = this.dealAhead.lastDealMs(params);
+          turn.lastTook(this.dealAhead.lastDealMs(params));
           const waited = await this.dealAhead.next(params);
           if (waited === "stopped") return "stopped";
           if (waited === null)
@@ -851,11 +687,8 @@ export class Puzzle {
         return refusal === null ? "dealt" : { refusal };
       }
     } finally {
-      clearTimeout(pendingTimer);
-      clearTimeout(clockTimer);
+      turn.end();
       this._generatingGame.set(false);
-      // A New game asked for since has its own wait to speak of.
-      if (turn === this.dealsAsked) this._dealPending.set(false);
     }
   }
 
@@ -900,14 +733,14 @@ export class Puzzle {
     this.dealAhead?.stopWaiting();
     this.stopAutoHint("");
     this.setHelpMessage("");
-    this.clearHintExplanation();
+    this.hintPresentation.clear();
     return this.workerPuzzle.newGameFromId(id);
   }
 
   public async restartGame(): Promise<void> {
     this.stopAutoHint("");
     this.setHelpMessage("");
-    this.clearHintExplanation();
+    this.hintPresentation.clear();
     await (await this.board()).restartGame();
   }
 
@@ -1309,41 +1142,31 @@ export class Puzzle {
   // Checkpoints
   //
 
-  // TODO: use reactive set (from signal-utils) rather than replacing value
-  private _checkpoints = signal<ReadonlySet<number>>(new Set());
+  private readonly _checkpoints = new Checkpoints();
 
   /**
    * A set of move numbers that have been set as checkpoints.
    */
   get checkpoints(): ReadonlySet<number> {
-    return this._checkpoints.get();
+    return this._checkpoints.moves;
   }
 
   set checkpoints(value: Iterable<number>) {
-    this._checkpoints.set(new Set(value));
+    this._checkpoints.moves = value;
   }
 
   /**
    * Set a checkpoint at move (default the current move).
    */
   public addCheckpoint(move?: number) {
-    const checkpoint = move ?? this.currentMove;
-    if (!this.checkpoints.has(checkpoint)) {
-      const newCheckpoints = new Set(this.checkpoints);
-      newCheckpoints.add(checkpoint);
-      this._checkpoints.set(newCheckpoints);
-    }
+    this._checkpoints.add(move ?? this.currentMove);
   }
 
   /**
    * Remove checkpoint if it exists
    */
   public removeCheckpoint(checkpoint: number) {
-    if (this.checkpoints.has(checkpoint)) {
-      const newCheckpoints = new Set(this.checkpoints);
-      newCheckpoints.delete(checkpoint);
-      this._checkpoints.set(newCheckpoints);
-    }
+    this._checkpoints.remove(checkpoint);
   }
 
   /**
@@ -1361,49 +1184,19 @@ export class Puzzle {
     }
   }
 
-  /** The engine's number for the board in play (`NotifyGameStateChange.board`). */
-  private boardSerial = 0;
-  /** The checkpoints of the runs left, under their numbers. */
-  private checkpointsLeft = new Map<number, ReadonlySet<number>>();
-
-  /**
-   * Checkpoints are move numbers in one run, so they go with it when it is
-   * left and come back when Undo or Redo brings it back. A run that arrives
-   * with none of its own kept here starts with none. Whether the run in play
-   * changed.
-   */
+  /** Follow the engine to the run `board`, its checkpoints with it. Whether
+   * the run in play changed. */
   private followBoard(board: number, after: OtherRun | null): boolean {
-    if (board === this.boardSerial) return false;
-    if (this.checkpoints.size > 0)
-      this.checkpointsLeft.set(this.boardSerial, this.checkpoints);
-    else this.checkpointsLeft.delete(this.boardSerial);
-    this._checkpoints.set(this.checkpointsLeft.get(board) ?? new Set());
-    // The engine numbers a run as it begins, and a run begun drops every run
-    // ahead of it, so a lower number is a run behind: Undo brought it back.
-    const undone = board < this.boardSerial;
-    this.boardSerial = board;
+    const arrival = this._checkpoints.follow(board);
+    if (arrival === "same") return false;
     // An Undo that changed the whole board, under a control that usually
     // takes back one move, is answered in words as well. Said here and not
     // where Undo is asked for, since this is where the answer arrives.
     const words = Object.values(BROUGHT_BACK);
-    if (undone && after !== null) this.setHelpMessage(BROUGHT_BACK[after], true);
+    if (arrival === "undone" && after !== null)
+      this.setHelpMessage(BROUGHT_BACK[after], true);
     else if (words.includes(this._helpMessage.get())) this.setHelpMessage("");
     return true;
-  }
-
-  private purgeInvalidCheckpoints(totalMoves: number) {
-    // Called before updating this.currentMove and this.totalMoves.
-    // Prune any checkpoints past new totalMoves.
-    if (totalMoves < this.totalMoves && this.checkpoints.size > 0) {
-      // BUG: this can't distinguish these two cases:
-      //   - set checkpoint; undo; redo (shouldn't purge checkpoint == totalMoves)
-      //   - set checkpoint; undo; move (_should_ purge checkpoint >= totalMoves)
-      // To avoid unexpected purging, keep a checkpoint at totalMoves:
-      const kept = [...this.checkpoints].filter((c) => c <= totalMoves);
-      if (kept.length < this.checkpoints.size) {
-        this._checkpoints.set(new Set(kept));
-      }
-    }
   }
 
   //
@@ -1435,30 +1228,25 @@ export class Puzzle {
       this._size = `${w}x${h} @ ${dpr}x`;
       this.captureSentryContext();
     }
-    this.drawingDpr = dpr;
+    this.hintPresentation.dpr = dpr;
     await this.workerPuzzle.resizeDrawing({ w, h }, dpr);
     // A hint's marks moved with the board.
-    this.measureHintMarks();
+    this.hintPresentation.remeasure();
   }
 
-  private drawingDpr = 1;
-
   /** The displayed hint's marks repainted in each reference's color over the
-   * canvas (`repainted`), as RGBA at the canvas's size; `null` until they are
-   * measured. What the board shows over the game's frame, and what Copy image
-   * lays over it. */
+   * canvas, as RGBA at the canvas's size; `null` until they are measured.
+   * What the board shows over the game's frame, and what Copy image lays
+   * over it. */
   public hintRepaintIn(scheme: Scheme): Uint8ClampedArray<ArrayBuffer> | null {
-    const marks = this._hintMarks.get();
-    if (!marks) return null;
-    const reach = Math.max(1, Math.round(MARK_EDGE_PX * this.drawingDpr));
-    return repainted(marks, this.hintReferenceColorsIn(scheme), reach);
+    return this.hintPresentation.repaintIn(scheme);
   }
 
   public async setDrawingPalette(colors: string[]): Promise<void> {
     this._palette.set(colors);
     await this.workerPuzzle.setDrawingPalette(colors);
     // And took the new palette's colors.
-    this.measureHintMarks();
+    this.hintPresentation.remeasure();
   }
 
   /** @see _palette */
@@ -1470,7 +1258,7 @@ export class Puzzle {
    * marks in the colors the screen shows them in under `scheme`. */
   public async getImage(scheme: Scheme, options?: ImageEncodeOptions): Promise<Blob> {
     const repaint = this.hintRepaintIn(scheme);
-    const marks = this._hintMarks.get();
+    const marks = this.hintPresentation.marks;
     const image = await this.workerPuzzle.getImage(options);
     if (!repaint || !marks) return image;
     const canvas = new OffscreenCanvas(marks.width, marks.height);

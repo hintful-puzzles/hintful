@@ -21,8 +21,9 @@ import { computeAvailableCanvasSize } from "../canvas-sizing.ts";
 import { puzzleContext } from "../contexts.ts";
 import { darkModePalette } from "../dark-palette.ts";
 import type { HintReferenceMarks } from "../engine-surface.ts";
+import { HINT_FLASH_MS } from "../hint-presentation.ts";
 import { tinted } from "../mark-flash.ts";
-import { HINT_FLASH_MS, type Puzzle } from "../puzzle.ts";
+import type { Puzzle } from "../puzzle.ts";
 
 /**
  * The `<puzzle-view>` component renders a puzzle using the drawing API.

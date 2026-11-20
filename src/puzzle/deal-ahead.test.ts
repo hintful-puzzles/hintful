@@ -21,7 +21,8 @@ import {
   SLOW_DEAL_MS,
   SLOW_TYPE_BOARDS,
 } from "./deal-ahead.ts";
-import { DEAL_PENDING_MS, Puzzle } from "./puzzle.ts";
+import { DEAL_PENDING_MS } from "./deal-wait.ts";
+import { Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle, TimedDeal } from "./worker.ts";
 import { TsWorkerPuzzle } from "./worker-adapter.ts";
 

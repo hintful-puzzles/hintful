@@ -71,7 +71,7 @@ const tableModules = import.meta.glob<string>(
     "./palette-games.ts",
     "./colors.ts",
     "./roles.ts",
-    "../../puzzle/puzzle.ts",
+    "../../puzzle/hint-presentation.ts",
   ],
   { query: "?raw", import: "default", eager: true },
 );
@@ -91,7 +91,7 @@ const paletteTree = tree(PALETTE);
 const tableTree = tree(TABLE);
 const colorsTree = tree(COLORS);
 const rolesTree = tree(ROLES);
-const appTree = tree("src/puzzle/puzzle.ts");
+const appTree = tree("src/puzzle/hint-presentation.ts");
 
 /** Raw text of every non-test source file under `src/games/`.
  *

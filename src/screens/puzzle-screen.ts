@@ -15,6 +15,7 @@ import type { PuzzleEvent } from "../puzzle/components/context.ts";
 import type { PuzzleKeyUnhandledEvent } from "../puzzle/components/view-interactive.ts";
 import { dealNewGame } from "../puzzle/deal-actions.ts";
 import type { HintReferenceMarks } from "../puzzle/engine-surface.ts";
+import { HINT_FLASH_MS } from "../puzzle/hint-presentation.ts";
 import {
   gridLayout,
   gridTemplateAreas,
@@ -23,7 +24,7 @@ import {
   windowShape,
 } from "../puzzle/layout.ts";
 import { nearestMarked } from "../puzzle/mark-flash.ts";
-import { HINT_FLASH_MS, type Puzzle } from "../puzzle/puzzle.ts";
+import type { Puzzle } from "../puzzle/puzzle.ts";
 import {
   CHECK_OUT_OF_REACH,
   checkAndSave,
