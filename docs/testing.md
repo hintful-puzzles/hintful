@@ -407,8 +407,9 @@ these are the ones that mislead:
   whichever primitive carries it, and `opsOfKind(ops, kind)` narrows a list
   to one op.
 - An op carries `color`, the palette index the game passed, and `rgb`, the
-  resolved label. Assert against the game's own constant
-  (`o.color === COL_HINT_CELL`); a snapshot prints only `rgb`. A polygon or
+  resolved label. Assert against the slot's name, a role's from
+  `engine/color/roles.ts` (`o.color === COL_HINT_OUTLINE`) or the game's
+  own; a snapshot prints only `rgb`. A polygon or
   circle with no fill has `fillRgb` `NO_FILL`.
 - A `drawRing` records a `ring` op in the engine's ink, followed by what its
   `inside` draws between a clip and an unclip; `ringsOf` and `expectRing` in

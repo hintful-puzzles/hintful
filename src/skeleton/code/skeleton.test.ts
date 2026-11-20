@@ -4,6 +4,7 @@
  * frame.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/game.ts";
 import { Midend } from "../../engine/index.ts";
 import { CLEAR_BUTTON } from "../../engine/key-labels.ts";
@@ -18,7 +19,7 @@ import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { skeletonGame } from "./index.ts";
-import { answerRect, COL_IN_PLACE, COL_WRONG, centerOf, tileRect } from "./render.ts";
+import { answerRect, COL_IN_PLACE, centerOf, tileRect } from "./render.ts";
 import {
   ABSENT,
   defaultParams,
@@ -216,7 +217,7 @@ describe("the frame", () => {
       showMistakes: true,
     });
     expect(wrong.mistakeCount).toBe(1);
-    expect(wrong.recording.ops.some((op) => paintsWith(op, COL_WRONG))).toBe(true);
+    expect(wrong.recording.ops.some((op) => paintsWith(op, COL_ERROR))).toBe(true);
 
     const hinted = renderScenario({
       game: skeletonGame,

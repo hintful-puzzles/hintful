@@ -11,19 +11,21 @@
  */
 
 import {
-  CURSOR,
   cellSurface,
   DRAG_ADD,
   DRAG_REMOVE,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   GRID_DARK,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
@@ -49,6 +51,7 @@ import {
   squareEdges,
   UP,
 } from "../../engine/square-edges.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { SkeletonHighlights } from "./hint.ts";
@@ -64,39 +67,28 @@ export const PREFERRED_TILE_SIZE = 40;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
-const COL_CELL = 2;
-const COL_LINE = 3;
-const COL_RULED_OUT = 4;
-export const COL_WALL = 5;
-/** A line that breaks a rule already: it closes a loop short of every
- * square. */
-export const COL_ERROR = 6;
-const COL_DRAG_ADD = 7;
-const COL_DRAG_REMOVE = 8;
-const COL_CURSOR = 9;
-/** The squares a hint step reasons from, and the edges it tries lines on.
- * The edges it decides are ringed by the engine (`drawEdgeHints`). */
-export const COL_HINT_EVIDENCE = 10;
-const COL_FLASH = 11;
-const COL_FLASH_LEAD = 12;
+// The roles (`roles.ts`) are the engine's: `COL_ERROR` is a line that breaks
+// a rule already (it closes a loop short of every square), and
+// `COL_HINT_OUTLINE` the squares a hint step reasons from and the edges it
+// tries lines on (the edges it decides are ringed by the engine,
+// `drawEdgeHints`). The game's own colors start at `FIRST_GAME_SLOT`.
+const COL_GRID = FIRST_GAME_SLOT;
+const COL_CELL = FIRST_GAME_SLOT + 1;
+const COL_LINE = FIRST_GAME_SLOT + 2;
+const COL_RULED_OUT = FIRST_GAME_SLOT + 3;
+export const COL_WALL = FIRST_GAME_SLOT + 4;
+const COL_DRAG_ADD = FIRST_GAME_SLOT + 5;
+const COL_DRAG_REMOVE = FIRST_GAME_SLOT + 6;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_LINE] = INK;
   out[COL_RULED_OUT] = RULED_OUT;
   out[COL_WALL] = GRID_DARK;
-  out[COL_ERROR] = ERROR;
   out[COL_DRAG_ADD] = DRAG_ADD;
   out[COL_DRAG_REMOVE] = DRAG_REMOVE;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   return out;
 }
 
@@ -140,25 +132,19 @@ const S_DRAG_ADD = 1 << 5;
 const S_DRAG_REMOVE = 1 << 6;
 
 // Word 2, the hint on the sides: `edge-hint.ts`'s word.
-const WORDS = 3;
 
 export interface SkeletonDrawState {
-  started: boolean;
   tileSize: number;
-  /** What each square shows on the canvas, three words a square; -1 before
-   * the first frame. */
-  cache: Int32Array;
+  /** What each square shows on the canvas, three words a square. Its first
+   * frame paints the rim. */
+  tiles: TileCache;
 }
 
 export function newDrawState(
   state: SkeletonState,
   tileSize: number,
 ): SkeletonDrawState {
-  return {
-    started: false,
-    tileSize,
-    cache: new Int32Array(state.w * state.h * WORDS).fill(-1),
-  };
+  return { tileSize, tiles: new TileCache(state.w * state.h, { words: 3 }) };
 }
 
 // --- one square -------------------------------------------------------------
@@ -191,7 +177,7 @@ function drawTile(
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     { x: px + 1, y: py + 1, w: ts - 1, h: ts - 1 },
-    tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : COL_CELL,
+    tone ? winSlot(tone) : COL_CELL,
   );
 
   // The walls, as bands along the sides, under the hint's outline so that
@@ -216,7 +202,7 @@ function drawTile(
       inner: Math.max(2, ts >> 4),
     },
     (square >> K_OUTLINE) & 0xf,
-    COL_HINT_EVIDENCE,
+    COL_HINT_OUTLINE,
   );
 
   const sideEnd = (d: number): Point => ({
@@ -266,7 +252,7 @@ function drawTile(
   // An asked side is ringed by a pill across it, round the line from this
   // middle to the next or round the cross on the side; each of its two
   // squares draws its half in its own clip.
-  drawEdgeHints(dr, hints, COL_HINT_EVIDENCE, {
+  drawEdgeHints(dr, hints, COL_HINT_OUTLINE, {
     cross: (sides, ink) => {
       for (let k = 0; k < 4; k++) if (sides & (1 << k)) cross(k, ink, small, hintCross);
     },
@@ -338,7 +324,7 @@ export function redraw(
   const g = squareEdges(w, h);
   const b = border(ts);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The rim is a wall all round, its outer half drawn here in the border
     // where no square repaints it.
     const reach = wallHalf(ts);
@@ -351,7 +337,6 @@ export function redraw(
       },
       COL_WALL,
     );
-    ds.started = true;
   }
 
   // What the board shows: the state, with the drag as it would be released.
@@ -405,17 +390,8 @@ export function redraw(
             : 0);
         sides |= s << (k * SIDE_BITS);
       }
-      const at = i * WORDS;
-      if (
-        ds.cache[at] === square &&
-        ds.cache[at + 1] === sides &&
-        ds.cache[at + 2] === hints
-      )
-        continue;
+      if (!ds.tiles.changed(i, square, sides, hints)) continue;
       drawTile(dr, ds, x, y, square, sides, hints);
-      ds.cache[at] = square;
-      ds.cache[at + 1] = sides;
-      ds.cache[at + 2] = hints;
     }
   }
 }

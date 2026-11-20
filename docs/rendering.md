@@ -134,8 +134,17 @@ never holds a bare cache array or a `started` flag.
   `TileCache` per family. A tile that paints into its neighbors reads
   `overlayMoved` for them before the loop and `forget`s what it painted
   over. Exemplar: [`towers/render.ts`](../src/games/towers/render.ts).
+- **A tile that moves keys as never drawn (-1) and is forced while it
+  moves**, by a term of its own after `changed` (`|| animating`), so the
+  frame after the move, which keys it at rest, repaints it too. Exemplars:
+  [`netslide/render.ts`](../src/games/netslide/render.ts),
+  [`fifteen/render.ts`](../src/games/fifteen/render.ts).
+- **Ask `changed` before any term that short-circuits it**, and ask every
+  tile a whole-panel repaint covers, not up to the first miss: the cache
+  records only what it is asked.
 - **A board that is not tiles keeps its own form**: a full repaint each
-  frame (Cube, Loopy, Untangle) has no cache to own.
+  frame (Cube, Loopy, Untangle) has no cache to own, nor do Numgame's
+  elements or Ball Sort's pour. They take the palette roles all the same.
 
 - **Every word of the key is an `Int32Array` element, never a
   `BigInt64Array` one.** `BigInt` is expensive on the hot path. A key that
@@ -208,15 +217,19 @@ nothing warns when they are gone.**
 1. Look first for a flag that is written and never read: one that appears
    exactly twice, its definition and one `val |=`, is dead. A flag for the
    state the painter takes as its `else` is the usual one.
-2. With no dead flag, give the key a second word, an `OverlaySidecar` or a
-   parallel `Int32Array`, compared with the first in the cache-miss test. Do
-   not narrow an existing field to free a bit, and do not change the array's
-   type to `BigInt64Array`. The key is a repaint cache, not a wire format, so
-   nothing outside the renderer limits its words. Say what each word holds in
-   a comment, because a field that overflows fails silently.
+2. With no dead flag, give the key a second word: build the `TileCache`
+   with `words` (up to four) and hand `changed` each, or register an
+   `OverlaySidecar`. Do not narrow an existing field to free a bit, and do
+   not reach for `BigInt64Array`. The key is a repaint cache, not a wire
+   format, so nothing outside the renderer limits its words. Say what each
+   word holds in a comment, because a field that overflows fails silently.
+3. A part of the key no word holds (a string, a list of varying length)
+   is a lane of its own, tested beside `changed` after it has been asked,
+   so the cache still records the words.
 
 Exemplars: [`slide/render.ts`](../src/games/slide/render.ts) (a full word),
-[`map/render.ts`](../src/games/map/render.ts) (a second word per cell).
+[`map/render.ts`](../src/games/map/render.ts) (a second word per cell, and
+its ring key as a string lane).
 
 ### A warm frame must match a fresh one
 
@@ -666,8 +679,8 @@ Four rules a game can break without a type error:
 
 **Paint a lit element in the tone's color and change nothing else about
 it** (`engine-colors` § "A solved flash drawn as a color takes a shared
-color"). `flash.win` answers `WIN_LEAD` or `WIN_BODY`: give `FLASH_LEAD`
-and `FLASH` a palette slot each and pick with `winSlot(tone, body, lead)`.
+color"). `flash.win` answers `WIN_LEAD` or `WIN_BODY`, and `winSlot(tone)`
+picks the role slot for it, `COL_FLASH_LEAD` or `COL_FLASH`.
 An element with a ground has the ground filled and keeps what it holds on
 top; a line is drawn in the color, and a thin one wider than at rest.
 **Where the route runs along lines across the cells (a track, a path, a
@@ -749,8 +762,10 @@ is the baseline (its default is on `Game.preferredTileSize`).
 **A game contains no color value. Not one** (`engine-colors` § "A game
 contains no color value"). Every color a game shows is a reference into the
 collection's color system, or a call to a shared function from it. The
-skeleton's `colors` is the shape: `out[COL_ERROR] = ERROR`. Which of three
-layers you reach for is the decision:
+skeleton's `colors` is the shape: it starts from `rolePalette`, which fills
+the slots every board shares, and assigns its own from the meanings,
+`out[COL_SHADED] = SHADED`. Which of three layers you reach for is the
+decision:
 
 - [`engine/color/palette.ts`](../src/engine/color/palette.ts) holds **the
   meanings**, and is the default: roles such as `ERROR`, `CURSOR` and
@@ -767,7 +782,16 @@ layers you reach for is the decision:
 A token has no `COL_` prefix, which here means a palette index, so a game's
 index constants and the tokens never collide. Nothing outside a game
 addresses its palette by number, so the order of its `COL_*` constants is
-its own.
+its own, from `FIRST_GAME_SLOT` on. A test names a slot, never its number.
+
+- **A role's slot holds the role's color.** A slot named for a role that
+  holds another color keeps a slot of its own, named for what it is: a
+  cursor that is a wash is `COL_HIGHLIGHT_WASH`, and a purple cursor
+  `COL_PURPLE_CURSOR`. A second slot that held a role's color is the role,
+  or the role under the game's own name (`COL_MISTAKE = COL_ERROR`).
+- **A board whose slot 0 is not its board** (Untangle's dead space round
+  the play area) keeps slot 0 for what the midend lays, gives the board a
+  slot of its own, and names it in `paletteScheme`.
 
 - **The cursor** is `CURSOR` when it is a mark (a ring, outline, line or
   disc) and `highlightWash` when it fills a cell under the cell's content.

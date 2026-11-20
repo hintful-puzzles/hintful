@@ -10,12 +10,8 @@
  */
 
 import {
-  CURSOR,
   cellSurface,
   clueDoneColor,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   GOAL,
   INK,
   PAPER,
@@ -23,6 +19,13 @@ import {
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -35,6 +38,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { DIGIT, ROW, SQUARE } from "./hint-marks.ts";
@@ -53,28 +57,24 @@ export const PREFERRED_TILE_SIZE = 40;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
-const COL_CELL = 2;
-const COL_TEXT = 3;
+// The roles (`roles.ts`) are the engine's: `COL_ERROR` is the frame of a
+// refused row, and of an answer slot ruling out its digit. The game's own
+// colors start at `FIRST_GAME_SLOT`.
+const COL_GRID = FIRST_GAME_SLOT;
+const COL_CELL = FIRST_GAME_SLOT + 1;
+const COL_TEXT = FIRST_GAME_SLOT + 2;
 /** A digit the code does not have: faint, as a retired clue. */
-const COL_ABSENT_TEXT = 4;
+const COL_ABSENT_TEXT = FIRST_GAME_SLOT + 3;
 /** The square under a digit in place. */
-export const COL_IN_PLACE = 5;
+export const COL_IN_PLACE = FIRST_GAME_SLOT + 4;
 /** The disc under a digit elsewhere. */
-const COL_ELSEWHERE = 6;
+const COL_ELSEWHERE = FIRST_GAME_SLOT + 5;
 /** Ink on a digit in place, whose square is dark in both schemes. */
-const COL_ON_IN_PLACE = 7;
-const COL_CURSOR = 8;
-/** The frame of a refused row, and of an answer slot ruling out its digit. */
-export const COL_WRONG = 9;
-const COL_FLASH = 10;
-const COL_FLASH_LEAD = 11;
-const COL_PENCIL = 12;
+const COL_ON_IN_PLACE = FIRST_GAME_SLOT + 6;
+const COL_PENCIL = FIRST_GAME_SLOT + 7;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_TEXT] = INK;
@@ -82,10 +82,6 @@ export function colors(defaultBackground: Color): Color[] {
   out[COL_IN_PLACE] = SHADED;
   out[COL_ELSEWHERE] = GOAL;
   out[COL_ON_IN_PLACE] = PAPER;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_WRONG] = ERROR;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_PENCIL] = PENCIL_BODY;
   return out;
 }
@@ -188,10 +184,11 @@ export function answerSlotAt(
 export interface SkeletonDrawState extends PencilIndicatorCache {
   tileSize: number;
   params: SkeletonParams;
-  /** Each guess tile's key, row-major; -1 before the first frame. */
-  tiles: Int32Array;
-  /** Each answer slot's key; -1 before the first frame. */
-  slots: Int32Array;
+  /** Each guess tile's key, row-major. */
+  tiles: TileCache;
+  /** Each answer slot's key: a second family of tiles, so a cache of its
+   * own. */
+  slots: TileCache;
 }
 
 export function newDrawState(
@@ -202,8 +199,8 @@ export function newDrawState(
   return {
     tileSize,
     params: state.params,
-    tiles: new Int32Array(len * nguesses).fill(-1),
-    slots: new Int32Array(len).fill(-1),
+    tiles: new TileCache(len * nguesses),
+    slots: new TileCache(len),
     pencilModeShown: null,
   };
 }
@@ -265,7 +262,7 @@ function drawTile(dr: GameDrawing, ts: number, r: Rect, t: Tile): void {
   if (t.hatched) dr.drawHatch(room, hatchPeriod(ts));
   dr.drawRect(r, COL_GRID);
   const surface = { x: r.x + 1, y: r.y + 1, w: r.w - 2, h: r.h - 2 };
-  dr.drawRect(surface, t.tone ? winSlot(t.tone, COL_FLASH, COL_FLASH_LEAD) : COL_CELL);
+  dr.drawRect(surface, t.tone ? winSlot(t.tone) : COL_CELL);
 
   let ink = COL_TEXT;
   if (t.mark === IN_PLACE && !t.tone) {
@@ -284,7 +281,7 @@ function drawTile(dr: GameDrawing, ts: number, r: Rect, t: Tile): void {
     dr.drawRing(r, { enclose, avoid: [] }, 1, { room });
   }
   const line = lineOf(ts);
-  if (t.refused) frame(dr, room, line, COL_WRONG);
+  if (t.refused) frame(dr, room, line, COL_ERROR);
   else if (t.submit) frame(dr, room, line, COL_CURSOR);
   else if (t.cursor) frame(dr, r, line, COL_CURSOR);
   dr.drawUpdate(room);
@@ -347,7 +344,7 @@ function drawSlot(
     }
   }
   const line = lineOf(ts);
-  if (a.mistake) frame(dr, room, line, COL_WRONG);
+  if (a.mistake) frame(dr, room, line, COL_ERROR);
   else if (a.cursor) frame(dr, r, line, COL_CURSOR);
   dr.drawUpdate(room);
 }
@@ -392,10 +389,8 @@ export function redraw(
         tone: row === winRow ? flash.win(sweepStep(pos, 0)) : 0,
       };
       const i = row * len + pos;
-      const key = tileKey(tile);
-      if (ds.tiles[i] === key) continue;
+      if (!ds.tiles.changed(i, tileKey(tile))) continue;
       drawTile(dr, ts, tileRect(ts, row, pos), tile);
-      ds.tiles[i] = key;
     }
   }
 
@@ -409,10 +404,8 @@ export function redraw(
       cursor: ui.pencilMode && ui.cursor.visible && ui.cursor.x === pos,
       mistake: (mistakes ?? []).some((m) => m.pos === pos),
     };
-    const key = slotKey(slot);
-    if (ds.slots[pos] === key) continue;
+    if (!ds.slots.changed(pos, slotKey(slot))) continue;
     drawSlot(dr, ts, answerRect(ts, state.params, pos), nsymbols, slot);
-    ds.slots[pos] = key;
   }
 
   const size = computeSize(state.params, ts);

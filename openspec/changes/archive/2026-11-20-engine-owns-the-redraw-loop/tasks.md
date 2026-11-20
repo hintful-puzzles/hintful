@@ -184,10 +184,16 @@
       role `roles.ts` imports to every game that calls `rolePalette`, and
       `palette-departures.test.ts` finds a slot holding its role in
       `roles.ts` as well as in the games.
-- [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;
-      code and edges to go.
+- [x] 2.2 The skeletons' `render.ts` write the engine's form. Grid, code
+      (a cache for the guess tiles and one for the answer slots) and edges
+      (a three-word key; the rim on the first frame). A stamped copy of
+      each passed the color, first-frame, hint-ink, hint-overlay,
+      win-flash and contrast guards; warm-repaint refuses a fresh copy
+      until it pins a wrong board, which the scaffold's checklist says
+      `npm run game` will name.
 
 ## 3. Finish
 
-- [ ] 3.1 `docs/rendering.md` describes the one way. Run
-      `npm run test:hint-sweeps`; commit, push, archive.
+- [x] 3.1 `docs/rendering.md` describes the one way. Run
+      `npm run test:hint-sweeps`; commit, push, archive. The sweeps passed
+      (657 tests).
