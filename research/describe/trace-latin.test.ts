@@ -9,7 +9,7 @@
 import { writeFileSync } from "node:fs";
 import { it } from "vitest";
 import type { PresetMenu } from "../../src/engine/contract/game.ts";
-import { presetMenu } from "../../src/engine/param-label.ts";
+import { presetMenu } from "../../src/engine/game-id/param-label.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { adjacentGame } from "../../src/games/adjacent/index.ts";
 import { clustersGame } from "../../src/games/clusters/index.ts";

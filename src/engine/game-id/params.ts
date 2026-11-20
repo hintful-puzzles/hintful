@@ -6,7 +6,7 @@
  * value and the index to continue from.
  */
 
-import type { ParamBounds, ParamConfigItem, ParamLabel } from "./contract/game.ts";
+import type { ParamBounds, ParamConfigItem, ParamLabel } from "../contract/game.ts";
 import { parseLeadingInt } from "./decimal.ts";
 import { onlyError } from "./only.ts";
 

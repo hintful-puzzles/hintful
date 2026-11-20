@@ -23,9 +23,9 @@ import {
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
+import { presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
-import { presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

@@ -24,7 +24,7 @@ import { difficultyTiers } from "./contract/difficulty.ts";
 import { PUZZLE_NOT_REASONABLE } from "./contract/hint-refusal.ts";
 import { RetryLimitExceeded, underDealTries } from "./contract/retry-limit.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "./contract/solve-failure.ts";
-import { paramsCodec } from "./params-codec.ts";
+import { paramsCodec } from "./game-id/params-codec.ts";
 
 /** Whether each of 1.. is taken, as far as it is decided. */
 type Taken = boolean[];

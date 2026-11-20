@@ -28,17 +28,17 @@ import {
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
-import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
+import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
+import { paramsLetter, unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import * as solo from "../../generated/games/solo/solo.compiled.ts";
 
 // --- difficulty (standard axis) --------------------------------------------

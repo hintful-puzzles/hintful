@@ -13,7 +13,7 @@
 import { fromCoord } from "../../engine/board/geometry.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,

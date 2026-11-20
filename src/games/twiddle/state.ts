@@ -6,11 +6,15 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import {
+  AREA_TOO_LARGE,
+  parseDimensions,
+  unreadParams,
+} from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import * as twiddle from "../../generated/games/twiddle/twiddle.compiled.ts";
 

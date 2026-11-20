@@ -51,7 +51,7 @@ import {
   withTier,
 } from "../../src/engine/contract/difficulty.ts";
 import type { Game, ParamConfigItem } from "../../src/engine/contract/game.ts";
-import { paramsError } from "../../src/engine/params.ts";
+import { paramsError } from "../../src/engine/game-id/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { REGISTERED_GAMES } from "../../src/engine/testing/enrollment.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";

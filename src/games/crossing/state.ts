@@ -32,11 +32,11 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { digitValue, isDigit } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { digitValue, isDigit } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 
 // --- params ----------------------------------------------------------------

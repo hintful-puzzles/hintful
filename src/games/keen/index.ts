@@ -47,7 +47,6 @@ import {
   NO_SOLUTION,
 } from "../../engine/contract/solve-failure.ts";
 import type { KeyLabel, Point } from "../../engine/contract/types.ts";
-import { digitValue } from "../../engine/decimal.ts";
 import {
   clearEntries,
   entryMistakes,
@@ -55,6 +54,7 @@ import {
   revealEntry,
   setMoves,
 } from "../../engine/entry-mistakes.ts";
+import { digitValue } from "../../engine/game-id/decimal.ts";
 import {
   type LatinVocab,
   latinPremise,

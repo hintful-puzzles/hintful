@@ -20,10 +20,10 @@ import {
 import { BORDER_RING_LEGEND, borderStepEdge } from "../../engine/border-grid-hint.ts";
 import type { Game, UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { interpretTargetVerbs } from "../../engine/input/target-verb.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import {

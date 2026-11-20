@@ -23,6 +23,8 @@ import { rejectMove } from "../../engine/contract/assert-never.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point, Size } from "../../engine/contract/types.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
+import { paramsCodec, size } from "../../engine/game-id/params-codec.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   type Game,
@@ -45,8 +47,6 @@ import {
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { numberItem } from "../../engine/params.ts";
-import { paramsCodec, size } from "../../engine/params-codec.ts";
 import { WIN_NONE, type WinTone } from "../../engine/win-wave.ts";
 import { newUntangleDesc } from "./generator.ts";
 import {

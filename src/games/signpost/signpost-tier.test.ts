@@ -15,8 +15,8 @@ import {
   DESC_NOT_UNIQUE,
 } from "../../engine/contract/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

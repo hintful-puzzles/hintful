@@ -28,6 +28,8 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
+import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
@@ -35,8 +37,6 @@ import {
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { slidePieces } from "../../engine/slide-planner.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

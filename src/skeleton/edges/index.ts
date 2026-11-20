@@ -11,13 +11,13 @@ import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
   type EdgeMistake,
   edgeMistakes,
   lineDrawing,
 } from "../../engine/line-drawing.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { newSkeletonDesc } from "./generator.ts";
 import {
   type SkeletonHighlights,

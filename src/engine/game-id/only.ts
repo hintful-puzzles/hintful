@@ -9,8 +9,8 @@
  * entry ({@link onlySentences}).
  */
 
-import type { ParamConfigItem } from "./contract/game.ts";
-import type { ConfigNarrowing } from "./contract/types.ts";
+import type { ParamConfigItem } from "../contract/game.ts";
+import type { ConfigNarrowing } from "../contract/types.ts";
 import { RULESET_KW } from "./ruleset.ts";
 
 /** What is left of one field: choice indices, or a checkbox's one value. */

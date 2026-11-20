@@ -58,6 +58,7 @@ import {
   gridCell,
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
+import { numberItem, squareSize } from "../../engine/game-id/params.ts";
 import {
   type LatinVocab,
   latinPremise,
@@ -96,7 +97,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   candidateReadingPref,
   pencilKeepHighlightPref,

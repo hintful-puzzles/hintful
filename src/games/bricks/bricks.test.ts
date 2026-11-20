@@ -14,6 +14,8 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
@@ -27,8 +29,6 @@ import {
   MOD_NUM_KEYPAD,
   MOD_SHFT,
 } from "../../engine/input/pointer.ts";
-import { presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

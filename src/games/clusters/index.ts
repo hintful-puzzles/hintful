@@ -21,6 +21,7 @@ import {
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import {
   gridCursorMove,
   isCursorMove,
@@ -44,7 +45,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newClustersDesc } from "./generator.ts";
 import { type ClustersHint, clustersHint } from "./hint.ts";

@@ -19,10 +19,10 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 
 // --- cell values (upstream enum BLANK, TREE, TENT, NONTENT) ----------------

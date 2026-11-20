@@ -30,18 +30,23 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { digitValue, isDigit } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
-import type { GridCursor } from "../../engine/input/pointer.ts";
-import { newCursor } from "../../engine/input/pointer.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
-import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
+import { digitValue, isDigit } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import {
+  choice,
+  dims,
+  letters,
+  paramsCodec,
+} from "../../engine/game-id/params-codec.ts";
+import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import {
   encodeRegionWalls,
   gapLetters,
   readRegionWalls,
-} from "../../engine/wall-runs.ts";
+} from "../../engine/game-id/wall-runs.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

@@ -38,11 +38,11 @@ import {
   descValue,
 } from "../../engine/contract/desc-error.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { endParams, parseDimensions } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { endParams, parseDimensions } from "../../engine/params.ts";
 
 // --- the board alphabet -----------------------------------------------
 

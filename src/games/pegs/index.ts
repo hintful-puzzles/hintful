@@ -15,6 +15,10 @@
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { SolveResult } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import {
+  dimensionParamConfig,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   type Game,
@@ -31,7 +35,6 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/input/pointer.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
 import type * as pegs from "../../generated/games/pegs/pegs.compiled.ts";
 import { newDesc } from "./generator.ts";

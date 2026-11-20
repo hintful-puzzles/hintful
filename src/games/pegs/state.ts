@@ -12,10 +12,14 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import {
+  AREA_TOO_LARGE,
+  parseDimensions,
+  unreadParams,
+} from "../../engine/game-id/params.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
-import { AREA_TOO_LARGE, parseDimensions, unreadParams } from "../../engine/params.ts";
 import * as pegs from "../../generated/games/pegs/pegs.compiled.ts";
 
 // --- grid cell values ------------------------------------------------

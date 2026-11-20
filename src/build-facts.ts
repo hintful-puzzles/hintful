@@ -16,22 +16,27 @@ export {
 } from "./engine/contract/hint-words.ts";
 export { draftSections, notApplicableMarkdown } from "./engine/contract/sections.ts";
 export {
+  MODIFIERS_PLACEHOLDER,
+  modifiersMarkdown,
+  modifiersOf,
+} from "./engine/game-id/modifier.ts";
+export {
+  expandChoices,
+  PARAMETERS_PLACEHOLDER,
+  parametersMarkdown,
+} from "./engine/game-id/param-help.ts";
+export {
+  RULESETS_PLACEHOLDER,
+  rulesetField,
+  rulesetsMarkdown,
+} from "./engine/game-id/ruleset.ts";
+export {
   CONTROLS_PLACEHOLDER,
   controlsMarkdown,
   DONE_CLUES_PLACEHOLDER,
   doneCluesMarkdown,
 } from "./engine/input/target-verb.ts";
 export { TOUCH_PLACEHOLDER, touchHelp } from "./engine/input/touch-help.ts";
-export {
-  MODIFIERS_PLACEHOLDER,
-  modifiersMarkdown,
-  modifiersOf,
-} from "./engine/modifier.ts";
-export {
-  expandChoices,
-  PARAMETERS_PLACEHOLDER,
-  parametersMarkdown,
-} from "./engine/param-help.ts";
 export {
   offersStickyPencil,
   STICKY_PENCIL_HELP,
@@ -40,9 +45,4 @@ export {
 export { expandPair } from "./engine/piece.ts";
 export { getTsGame, registeredGameIds } from "./engine/registry.ts";
 export { RULES_OUT_PLACEHOLDER, rulesOutHelp } from "./engine/rules-out.ts";
-export {
-  RULESETS_PLACEHOLDER,
-  rulesetField,
-  rulesetsMarkdown,
-} from "./engine/ruleset.ts";
 export { WING_PLACEHOLDER, wingHelp } from "./engine/wing.ts";

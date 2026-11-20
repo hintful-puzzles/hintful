@@ -24,11 +24,11 @@ import {
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
-import { c2nUpper } from "../../engine/desc-alphabet.ts";
+import { c2nUpper } from "../../engine/game-id/desc-alphabet.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { type EdgeChange, LINE, lineDrawing } from "../../engine/line-drawing.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import {

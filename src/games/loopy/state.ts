@@ -26,9 +26,9 @@ import {
   descValue,
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
-import { c2nUpper, n2cUpper } from "../../engine/desc-alphabet.ts";
-import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
-import { encodeRunLength } from "../../engine/run-length.ts";
+import { c2nUpper, n2cUpper } from "../../engine/game-id/desc-alphabet.ts";
+import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
+import { encodeRunLength } from "../../engine/game-id/run-length.ts";
 import { gridTypeOf, type LoopyParams } from "./params.ts";
 
 /**

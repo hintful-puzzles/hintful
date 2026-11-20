@@ -28,7 +28,7 @@ import type {
   ParamLabel,
   PresetBoards,
   PresetMenu,
-} from "./contract/game.ts";
+} from "../contract/game.ts";
 import { presetGrid } from "./preset-grid.ts";
 import { rulesetField } from "./ruleset.ts";
 

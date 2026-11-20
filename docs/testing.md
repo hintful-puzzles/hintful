@@ -513,7 +513,7 @@ has the divergence policy); while a fixture stands, these hold:
   mis-parses, the undefined range is free to fix. Validate the fix by
   round-tripping through a decoder written strictly to the reading rules,
   never encoder against its own decoder. Exemplar: `encodeRegionWalls` in
-  [`engine/wall-runs.ts`](../src/engine/wall-runs.ts).
+  [`engine/game-id/wall-runs.ts`](../src/engine/game-id/wall-runs.ts).
 - **A sort that feeds only rendering does not threaten a fixture.** Trace
   whether a `.sort()` or a draw reaches the desc before treating it as
   byte-match surface.

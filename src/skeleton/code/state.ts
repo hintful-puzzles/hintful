@@ -21,10 +21,10 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
-import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
-import { numberItem } from "../../engine/params.ts";
-import { num, paramsCodec, size } from "../../engine/params-codec.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/game-id/obfuscate.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
+import { num, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 
 // --- score ------------------------------------------------------------------

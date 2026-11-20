@@ -18,7 +18,9 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
+import { choice, dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -26,8 +28,6 @@ import {
   LINE,
   type LineDrawingUi,
 } from "../../engine/line-drawing.ts";
-import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
-import { choice, dims, num, paramsCodec } from "../../engine/params-codec.ts";
 import { WORD_LENGTHS } from "../../engine/word-list/index.ts";
 import * as wordtrail from "../../generated/games/wordtrail/wordtrail.compiled.ts";
 import { letterChar, type Trail, trailsOf } from "./trails.ts";

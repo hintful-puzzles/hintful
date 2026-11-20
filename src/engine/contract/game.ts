@@ -16,13 +16,13 @@
  * {@link DRAFT_HINT}.
  */
 
+import type { Modifier } from "../game-id/modifier.ts";
+import type { OnlyOf } from "../game-id/only.ts";
+import type { Ruleset } from "../game-id/ruleset.ts";
 import type { PointerAction } from "../input/hint-gesture.ts";
 import type { TargetVerbs } from "../input/target-verb.ts";
-import type { Modifier } from "../modifier.ts";
-import type { OnlyOf } from "../only.ts";
 import type { RandomState } from "../random/index.ts";
 import type { RingClear } from "../ring.ts";
-import type { Ruleset } from "../ruleset.ts";
 import type { Flash } from "../win-wave.ts";
 import type { DifficultyContract } from "./difficulty.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
@@ -245,7 +245,7 @@ export interface RulesOut<State, Move> {
  * The same item is also what the help's Parameters section is generated from
  * (`doc`, `bounds`), what the engine checks before the game's own
  * `validateParams` (`bounds`, and a choice inside its list), and what a params
- * label is composed from (`label`, `engine/param-label.ts`). */
+ * label is composed from (`label`, `engine/game-id/param-label.ts`). */
 export type ParamConfigItem<Params> =
   | (ParamItemCommon<Params> & {
       type: "string";
@@ -266,7 +266,7 @@ export type ParamConfigItem<Params> =
   | (ParamItemCommon<Params> & {
       type: "choices";
       choices: string[];
-      /** Set by `rulesetItem` alone (`engine/ruleset.ts`): the puzzles these
+      /** Set by `rulesetItem` alone (`engine/game-id/ruleset.ts`): the puzzles these
        * choices are, in order. */
       rulesets?: readonly Ruleset[];
       /** How many indices past `choices` an old game ID or save may still
@@ -286,7 +286,7 @@ interface ParamItemCommon<Params> {
   doc: string | { with: string };
   /** Where this field's words go when a params set is labeled, if anywhere. */
   label?: ParamLabel<Params>;
-  /** Set by `modifierItem` alone (`engine/modifier.ts`): the rule this field
+  /** Set by `modifierItem` alone (`engine/game-id/modifier.ts`): the rule this field
    * changes, and the words for a board it applies to. */
   modifier?: Modifier;
   /** What the field leaves of the others, by its value: a choice's index, or

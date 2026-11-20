@@ -33,7 +33,7 @@ import {
   type DescError,
   type DescParse,
   descBadCharacter,
-} from "./contract/desc-error.ts";
+} from "../contract/desc-error.ts";
 import { isDigit, parseLeadingInt } from "./decimal.ts";
 
 /** What {@link DescReader.fail} throws and {@link readDesc} catches. */

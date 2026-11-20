@@ -5,7 +5,7 @@
  * work one answer out the same way.
  */
 
-import type { ConfigDescription, ConfigValues } from "./contract/types.ts";
+import type { ConfigDescription, ConfigValues } from "../contract/types.ts";
 
 /**
  * What is offered of the field `id` at these values: the choice indices left

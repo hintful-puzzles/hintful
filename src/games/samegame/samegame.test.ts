@@ -8,14 +8,14 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { describeParams } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import {
   CURSOR_SELECT,
   CURSOR_SELECT2,
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { describeParams } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { executeMove, samegameGame } from "./index.ts";

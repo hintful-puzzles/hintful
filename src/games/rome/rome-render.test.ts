@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";

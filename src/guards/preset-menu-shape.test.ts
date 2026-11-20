@@ -6,10 +6,10 @@
 import { describe, expect, it } from "vitest";
 import { difficultyChoiceItem, withTier } from "../engine/contract/difficulty.ts";
 import type { Game, ParamConfigItem } from "../engine/contract/game.ts";
-import { presetMenu, type TitledPresetMenu } from "../engine/param-label.ts";
-import { paramsError } from "../engine/params.ts";
-import { MENU_LINES, MENU_SECTION_LINES } from "../engine/preset-grid.ts";
-import { rulesetField } from "../engine/ruleset.ts";
+import { presetMenu, type TitledPresetMenu } from "../engine/game-id/param-label.ts";
+import { paramsError } from "../engine/game-id/params.ts";
+import { MENU_LINES, MENU_SECTION_LINES } from "../engine/game-id/preset-grid.ts";
+import { rulesetField } from "../engine/game-id/ruleset.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,

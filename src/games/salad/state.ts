@@ -30,15 +30,21 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { digitValue } from "../../engine/decimal.ts";
-import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
+import { digitValue } from "../../engine/game-id/decimal.ts";
+import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
+import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+import {
+  choice,
+  letters,
+  num,
+  paramsCodec,
+  size,
+} from "../../engine/game-id/params-codec.ts";
+import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
-import { choice, letters, num, paramsCodec, size } from "../../engine/params-codec.ts";
-import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import * as salad from "../../generated/games/salad/salad.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

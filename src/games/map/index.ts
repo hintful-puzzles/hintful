@@ -30,6 +30,11 @@ import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/contract/types.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
+import {
+  dimensionParamConfig,
+  numberItem,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
 import { markAllPress, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { colorKeys, digitKeyCode } from "../../engine/input/key-labels.ts";
 import {
@@ -57,11 +62,6 @@ import {
   releaseHighlightAfterEntry,
   tapNoteTakingCell,
 } from "../../engine/note-taking-cell.ts";
-import {
-  dimensionParamConfig,
-  numberItem,
-  transposeDimensions,
-} from "../../engine/params.ts";
 import {
   candidateReadingPref,
   pencilKeepHighlightPref,

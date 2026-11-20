@@ -14,6 +14,7 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
@@ -24,7 +25,6 @@ import {
   MOD_CTRL,
   MOD_SHFT,
 } from "../../engine/input/pointer.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

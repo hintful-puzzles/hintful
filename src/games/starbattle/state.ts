@@ -16,13 +16,13 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import { regionNumbers } from "../../engine/divide.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+import { choice, num, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
+import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
+import { encodeRegionWalls, readRegionWalls } from "../../engine/game-id/wall-runs.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
-import { choice, num, paramsCodec, size } from "../../engine/params-codec.ts";
-import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
-import { encodeRegionWalls, readRegionWalls } from "../../engine/wall-runs.ts";
 import * as starbattle from "../../generated/games/starbattle/starbattle.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
@@ -188,7 +188,7 @@ export function validateParams(p: StarbattleParams, _full: boolean): string | nu
 
 // --- desc -------------------------------------------------------------------
 
-/** The regions, as the walls between them (`engine/wall-runs.ts`). */
+/** The regions, as the walls between them (`engine/game-id/wall-runs.ts`). */
 export function encodeDesc(regions: Dsf, size: number): string {
   return encodeRegionWalls(regions, size, size);
 }

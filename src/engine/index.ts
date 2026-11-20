@@ -18,6 +18,6 @@ export type {
 } from "./contract/game.ts";
 export { UI_UPDATE } from "./contract/game.ts";
 export { drawRectOutline } from "./draw.ts";
+export { dimensionParamConfig } from "./game-id/params.ts";
 export { Midend } from "./midend.ts";
-export { dimensionParamConfig } from "./params.ts";
 export { createTsEngine, registerGame } from "./registry.ts";

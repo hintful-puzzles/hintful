@@ -19,10 +19,7 @@ import type {
 } from "../../engine/contract/game.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import type { PointerAction } from "../../engine/input/hint-gesture.ts";
-import { clearKey, numberKeys } from "../../engine/input/key-labels.ts";
-import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/input/pointer.ts";
-import { modifierItem } from "../../engine/modifier.ts";
+import { modifierItem } from "../../engine/game-id/modifier.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
@@ -30,9 +27,12 @@ import {
   paramsLetter,
   parseDimensions,
   transposeDimensions,
-} from "../../engine/params.ts";
+} from "../../engine/game-id/params.ts";
+import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
+import type { PointerAction } from "../../engine/input/hint-gesture.ts";
+import { clearKey, numberKeys } from "../../engine/input/key-labels.ts";
+import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/input/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { newAscentDesc } from "./generator.ts";
 import {
   ASCENT_RUNGS,

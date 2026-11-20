@@ -3,8 +3,8 @@
  * its desc is written in.
  */
 
-import type { DescReader } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import type { DescReader } from "../../engine/game-id/desc-reader.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import * as flip from "../../generated/games/flip/flip.compiled.ts";
 

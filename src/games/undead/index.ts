@@ -33,6 +33,7 @@ import type {
   Size,
 } from "../../engine/contract/types.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { markAllPress, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { clearKey } from "../../engine/input/key-labels.ts";
 import {
@@ -57,7 +58,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,

@@ -27,11 +27,11 @@ import {
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { modifierItem } from "../../engine/game-id/modifier.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
+import { dims, flag, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
-import { modifierItem } from "../../engine/modifier.ts";
-import { dimensionParamConfig, numberItem } from "../../engine/params.ts";
-import { dims, flag, num, paramsCodec } from "../../engine/params-codec.ts";
 import * as abcd from "../../generated/games/abcd/abcd.compiled.ts";
 
 // --- constants -------------------------------------------------------------

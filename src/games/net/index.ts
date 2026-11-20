@@ -31,6 +31,13 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { Game, GamePref, SolveResult } from "../../engine/contract/game.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import {
+  atof,
+  dimensionParamConfig,
+  formatG,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
+import { wrappingRulesetItem } from "../../engine/game-id/ruleset.ts";
 import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
@@ -61,15 +68,8 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import {
-  atof,
-  dimensionParamConfig,
-  formatG,
-  transposeDimensions,
-} from "../../engine/params.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { wrappingRulesetItem } from "../../engine/ruleset.ts";
 import { offset } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import {

@@ -79,7 +79,7 @@
  */
 import { writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
-import { paramsError } from "../../src/engine/params.ts";
+import { paramsError } from "../../src/engine/game-id/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import {
   gatePresets,

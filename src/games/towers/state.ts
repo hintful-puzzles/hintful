@@ -11,13 +11,13 @@ import {
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { isDigit } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
+import { isDigit } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+import { choice, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
-import { choice, paramsCodec, size } from "../../engine/params-codec.ts";
 import * as towers from "../../generated/games/towers/towers.compiled.ts";
 
 /**

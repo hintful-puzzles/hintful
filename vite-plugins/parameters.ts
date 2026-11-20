@@ -3,9 +3,9 @@
  * writes `{{parameters}}` under its `## <Name> parameters` heading, and the
  * help build replaces it before the markdown is rendered.
  *
- * A game with rulesets (`engine/ruleset.ts`) has its list of them generated
+ * A game with rulesets (`engine/game-id/ruleset.ts`) has its list of them generated
  * too, where its page writes `{{rulesets}}`, and a game with rule modifiers
- * (`engine/modifier.ts`) theirs at `{{modifiers}}`; a declaring game's page
+ * (`engine/game-id/modifier.ts`) theirs at `{{modifiers}}`; a declaring game's page
  * without the placeholder, or another game's page with one, fails the build.
  *
  * Where a page's prose names a choice of one of those fields it writes

@@ -12,8 +12,8 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
+import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import * as solo from "../../generated/games/solo/solo.compiled.ts";
 import { soloGame } from "./index.ts";

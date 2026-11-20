@@ -55,7 +55,7 @@
  * identical string for every corpus case.
  */
 
-import type { ParamConfigItem } from "./contract/game.ts";
+import type { ParamConfigItem } from "../contract/game.ts";
 import { parseLeadingInt } from "./decimal.ts";
 import { endParams, paramsLetter, parseDimensions } from "./params.ts";
 

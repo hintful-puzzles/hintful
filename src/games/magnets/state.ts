@@ -23,11 +23,11 @@ import {
   c2n,
   DESC_ALPHABET_SIZE,
   n2c as descChar,
-} from "../../engine/desc-alphabet.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+} from "../../engine/game-id/desc-alphabet.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { choice, dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 
 // --- cell values (upstream: EMPTY == NEUTRAL) -----------------------------

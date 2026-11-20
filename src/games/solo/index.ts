@@ -54,6 +54,9 @@ import {
   revealEntry,
   setMoves,
 } from "../../engine/entry-mistakes.ts";
+import { modifierItem } from "../../engine/game-id/modifier.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
+import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import {
   latinPremise,
   narrateLatinReason,
@@ -69,14 +72,12 @@ import {
   stripModifiers,
 } from "../../engine/input/pointer.ts";
 import type { SingleWhy } from "../../engine/latin-hint.ts";
-import { modifierItem } from "../../engine/modifier.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { numberItem } from "../../engine/params.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -84,7 +85,6 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
 import { NAMES } from "../../generated/games/solo/solo.compiled.ts";
 import { newSoloDesc } from "./generator.ts";
 import { type RegionCells, regionName, SOLO_VOCAB, say } from "./hint.ts";

@@ -18,6 +18,11 @@ import { gridText } from "../../engine/board/grid-text.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/contract/types.ts";
+import {
+  dimensionParamConfig,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
+import { dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   fromCoord as fromCoordE,
@@ -42,8 +47,6 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
-import { dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import { TileCache } from "../../engine/tile-cache.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { newSignpostDesc } from "./generator.ts";

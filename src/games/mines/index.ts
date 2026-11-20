@@ -13,6 +13,7 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
 import { NOT_STARTED } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { dimensionParamConfig, parseConfigInt } from "../../engine/game-id/params.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   type Game,
@@ -33,7 +34,6 @@ import {
   squareGrid,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/params.ts";
 import {
   type RandomState,
   randomStateEncode,

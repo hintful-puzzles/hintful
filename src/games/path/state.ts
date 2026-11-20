@@ -7,7 +7,7 @@
  * edge holds a cross no move clears. A move only writes edges, so a player
  * can lay a piece of a path before it reaches either of its numbers.
  *
- * Two puzzles are played on the board, Path and Pairs (`engine/ruleset.ts`).
+ * Two puzzles are played on the board, Path and Pairs (`engine/game-id/ruleset.ts`).
  * They differ in how many lines a numbered square takes, which
  * {@link PathPuzzle.takes} holds, and in which pieces of line may meet,
  * which is the solver's.
@@ -27,7 +27,16 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import {
+  choice,
+  dims,
+  letters,
+  paramsCodec,
+} from "../../engine/game-id/params-codec.ts";
+import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
+import { encodeWallRuns, readWallRuns } from "../../engine/game-id/wall-runs.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -35,10 +44,6 @@ import {
   LINE,
   type LineDrawingUi,
 } from "../../engine/line-drawing.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, letters, paramsCodec } from "../../engine/params-codec.ts";
-import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
-import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
 import * as path from "../../generated/games/path/path.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
@@ -255,7 +260,7 @@ const isRunLetter = (c: string): boolean => c >= "a" && c <= "z";
 /** The numbers in reading order, each a decimal with {@link SEPARATOR}
  * between two that touch, and each run of squares without one a letter: `a`
  * for one square up to `z` for 26. Then, where there are walls, a comma and
- * the edges as a list of walls and gaps (`engine/wall-runs.ts`), whose order
+ * the edges as a list of walls and gaps (`engine/game-id/wall-runs.ts`), whose order
  * is `engine/board/square-edges.ts`'s. */
 export function encodeDesc(ends: Uint8Array, walls?: Uint8Array): string {
   let out = "";

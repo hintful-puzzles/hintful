@@ -9,8 +9,14 @@
  */
 
 import { descValue } from "../../engine/contract/desc-error.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import {
+  AREA_TOO_LARGE,
+  endParams,
+  formatG,
+  parseLeadingFloat,
+} from "../../engine/game-id/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -19,12 +25,6 @@ import {
   type GridCursor,
   newCursor,
 } from "../../engine/input/pointer.ts";
-import {
-  AREA_TOO_LARGE,
-  endParams,
-  formatG,
-  parseLeadingFloat,
-} from "../../engine/params.ts";
 import {
   addBorderBarriers,
   computeActive as computeActiveWires,

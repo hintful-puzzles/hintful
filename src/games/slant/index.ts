@@ -31,6 +31,7 @@ import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
@@ -56,7 +57,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import {

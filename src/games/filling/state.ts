@@ -28,17 +28,17 @@ import {
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { digitValue } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
 } from "../../engine/describe-runtime.ts";
+import { digitValue } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
+import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
-import { dims, paramsCodec } from "../../engine/params-codec.ts";
-import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
 
 const EMPTY = 0;

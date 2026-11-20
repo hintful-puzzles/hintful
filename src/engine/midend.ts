@@ -71,6 +71,7 @@ import type {
   TimerReadout,
 } from "./contract/types.ts";
 import { freshSeed, generate } from "./deal.ts";
+import { paramsError, UnreadableParams } from "./game-id/params.ts";
 import { pencilModeKey, takesNotes } from "./input/key-labels.ts";
 import {
   cancelDrags,
@@ -98,7 +99,6 @@ import { MoveAnimation } from "./midend-animation.ts";
 import { ChosenParams, largestTile } from "./midend-params.ts";
 import { Preferences } from "./midend-prefs.ts";
 import { Restart, type RunRecord, readSave, writeSave } from "./midend-save.ts";
-import { paramsError, UnreadableParams } from "./params.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
 import { sameShown, sameValue } from "./same-value.ts";

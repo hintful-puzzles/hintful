@@ -12,7 +12,10 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
+import { encodeWallRuns, readWallRuns } from "../../engine/game-id/wall-runs.ts";
 import {
   CROSS,
   type EdgeChange,
@@ -20,9 +23,6 @@ import {
   LINE,
   type LineDrawingUi,
 } from "../../engine/line-drawing.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
-import { encodeWallRuns, readWallRuns } from "../../engine/wall-runs.ts";
 import * as skeleton from "../../generated/skeleton/edges/skeleton.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
@@ -112,7 +112,7 @@ export function validateParams(p: SkeletonParams, _full: boolean): string | null
 
 // --- desc -------------------------------------------------------------------
 
-/** The walls, as `engine/wall-runs.ts` writes a list of them. */
+/** The walls, as `engine/game-id/wall-runs.ts` writes a list of them. */
 export function encodeDesc(walls: Uint8Array): string {
   return encodeWallRuns(walls);
 }

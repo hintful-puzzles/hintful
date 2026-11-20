@@ -12,14 +12,14 @@ import {
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { GAME_OVER } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
+import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
   LEFT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { executeMove, floodGame } from "./index.ts";
 import { completed, solveMoves } from "./solver.ts";

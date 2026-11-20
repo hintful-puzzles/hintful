@@ -20,10 +20,10 @@ import {
   newState,
   newUi,
 } from "../../engine/edge-clue-latin/state.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { CURSOR_LEFT, CURSOR_RIGHT, MOD_SHFT } from "../../engine/input/pointer.ts";
 import { DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { adjacentGame } from "./index.ts";

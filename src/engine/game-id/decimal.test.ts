@@ -9,11 +9,11 @@
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { digitOf } from "../input/pointer.ts";
+import { builtGames, gameSyntax, SCANNED_SOURCE_FILES } from "../testing/enrollment.ts";
+import { nodesOf, parsed, shown, where } from "../testing/syntax.ts";
 import { digitValue, isDigit, parseLeadingInt } from "./decimal.ts";
 import { c2n } from "./desc-alphabet.ts";
-import { digitOf } from "./input/pointer.ts";
-import { builtGames, gameSyntax, SCANNED_SOURCE_FILES } from "./testing/enrollment.ts";
-import { nodesOf, parsed, shown, where } from "./testing/syntax.ts";
 
 describe("isDigit / digitValue", () => {
   it("accepts exactly the ten digit characters", () => {

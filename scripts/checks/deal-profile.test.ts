@@ -32,7 +32,7 @@ import { expect, it } from "vitest";
 import { compiledPath } from "../../src/describe/sources.ts";
 import "../../src/games/index.ts";
 import { type Game, hasHint } from "../../src/engine/contract/game.ts";
-import { paramsError } from "../../src/engine/params.ts";
+import { paramsError } from "../../src/engine/game-id/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { getTsGame } from "../../src/engine/registry.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";

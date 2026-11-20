@@ -23,6 +23,7 @@ import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { drag, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   cursorDelta,
@@ -53,7 +54,6 @@ import {
   verbClicks,
 } from "../../engine/input/target-verb.ts";
 import { matching } from "../../engine/latin.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsHint, tentsJudgeMove, tentsKeepTrack } from "./hint.ts";

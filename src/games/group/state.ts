@@ -30,13 +30,13 @@ import {
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import { latinSpace } from "../../engine/describe-runtime.ts";
 import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
+import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { paramsLetter, unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { paramsLetter, unreadParams } from "../../engine/params.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

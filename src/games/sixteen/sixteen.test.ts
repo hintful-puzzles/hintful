@@ -10,9 +10,9 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { raisedBevelWidth } from "../../engine/draw.ts";
+import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import type { HintStep } from "../../engine/index.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type SlideMove, slidePieces } from "../../engine/slide-planner.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

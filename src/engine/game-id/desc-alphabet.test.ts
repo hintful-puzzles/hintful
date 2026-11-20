@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { magnetsGame } from "../games/magnets/index.ts";
-import { DIFF_EASY, clueChar as magnetsClueChar } from "../games/magnets/state.ts";
-import { singlesGame } from "../games/singles/index.ts";
+import { magnetsGame } from "../../games/magnets/index.ts";
+import { DIFF_EASY, clueChar as magnetsClueChar } from "../../games/magnets/state.ts";
+import { singlesGame } from "../../games/singles/index.ts";
 import {
   c2n,
   c2nUpper,

@@ -16,9 +16,9 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import type { Rect } from "../../engine/contract/types.ts";
+import { presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
-import { presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

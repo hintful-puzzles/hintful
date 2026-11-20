@@ -13,8 +13,8 @@ import {
   variationWord,
 } from "../describe/description.ts";
 import { loadDescriptionFile } from "../describe/load.ts";
+import { rulesetField } from "../engine/game-id/ruleset.ts";
 import { getTsGame } from "../engine/registry.ts";
-import { rulesetField } from "../engine/ruleset.ts";
 import "../games/index.ts";
 
 const texts = import.meta.glob<string>("../**/*.description.yaml", {

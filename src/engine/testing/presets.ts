@@ -8,8 +8,8 @@
  * Dev/test-only; never imported by production code.
  */
 import type { ParamConfigItem, PresetBoards, PresetMenu } from "../contract/game.ts";
-import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
-import { paramsError } from "../params.ts";
+import { presetMenu, type TitledPresetMenu } from "../game-id/param-label.ts";
+import { paramsError } from "../game-id/params.ts";
 import { type Dealing, dealsPromptly } from "./dealt.ts";
 
 /** First leaf preset's params — a small, valid board for each game. */

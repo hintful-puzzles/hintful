@@ -53,7 +53,7 @@ most 400 squares; the refusal names the bound.
 ### Requirement: Description: A description is the walls between regions, and no region is one square
 
 A Norinori description SHALL be the engine's run-length list of the walls
-between regions (`engine/wall-runs.ts`) and nothing else: the board has no
+between regions (`engine/game-id/wall-runs.ts`) and nothing else: the board has no
 clues. Regions SHALL be numbered in the order their first squares are met
 reading the grid. A description with a region of one square SHALL be
 refused, since it cannot hold two shaded squares.

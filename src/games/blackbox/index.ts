@@ -12,6 +12,11 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import { MULTIPLE_SOLUTIONS } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { gridCursorMove, LEFT_RELEASE, newCursor } from "../../engine/input/pointer.ts";
 import {
@@ -20,11 +25,6 @@ import {
   type TargetGeometry,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import {
-  dimensionParamConfig,
-  parseConfigInt,
-  transposeDimensions,
-} from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { answerCount, newDesc } from "./answer.ts";
 import { BLACKBOX_RUNGS, type BlackboxRung, hint, hintKeepTrack } from "./hint.ts";

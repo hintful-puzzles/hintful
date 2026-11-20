@@ -20,6 +20,11 @@ import {
 import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { describedFiringHint } from "../../engine/described-firing-hint.ts";
+import {
+  dimensionParamConfig,
+  numberItem,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
@@ -29,11 +34,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import {
-  dimensionParamConfig,
-  numberItem,
-  transposeDimensions,
-} from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   SYMM_NONE,

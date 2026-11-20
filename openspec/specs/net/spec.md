@@ -143,7 +143,7 @@ grid one square wide and longer SHALL be admitted at Easy.
 ### Requirement: Params: Net's game modes are Bordered and Wrapping
 
 Net SHALL offer wrapping as a ruleset, Bordered or Wrapping
-(`wrappingRulesetItem`, `engine/ruleset.ts`), each a section of the Type
+(`wrappingRulesetItem`, `engine/game-id/ruleset.ts`), each a section of the Type
 menu, with the encoding's `w` unchanged.
 
 #### Scenario: A wrapping board's label

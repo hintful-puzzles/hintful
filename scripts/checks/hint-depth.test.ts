@@ -30,7 +30,7 @@
 import { writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import { difficultyChoiceItem, tierOf } from "../../src/engine/contract/difficulty.ts";
-import { paramsError } from "../../src/engine/params.ts";
+import { paramsError } from "../../src/engine/game-id/params.ts";
 import { dealt } from "../../src/engine/testing/dealt.ts";
 import { HINT_GAMES } from "../../src/engine/testing/hint-games.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";

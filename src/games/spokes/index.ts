@@ -30,6 +30,7 @@ import {
   type UiUpdate,
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -49,7 +50,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { type SpokesHint, spokesHint, spokesJudgeMove } from "./hint.ts";

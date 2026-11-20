@@ -638,7 +638,7 @@ export const MODULES = [
   // claim about them in a minute.
 
   {
-    module: "src/engine/decimal.ts",
+    module: "src/engine/game-id/decimal.ts",
     cases: [
       {
         within: "parseLeadingInt",
@@ -656,7 +656,7 @@ export const MODULES = [
     ],
   },
   {
-    module: "src/engine/params.ts",
+    module: "src/engine/game-id/params.ts",
     cases: [
       {
         within: "parseDimensions",

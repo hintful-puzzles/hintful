@@ -14,6 +14,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
@@ -23,7 +24,6 @@ import {
   newCursor,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

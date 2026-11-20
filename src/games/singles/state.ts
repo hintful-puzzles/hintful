@@ -6,11 +6,11 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/contract/game.ts";
-import { c2n, DESC_ALPHABET_SIZE, n2c } from "../../engine/desc-alphabet.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { c2n, DESC_ALPHABET_SIZE, n2c } from "../../engine/game-id/desc-alphabet.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import * as singles from "../../generated/games/singles/singles.compiled.ts";
 /**
  * Types and pure state helpers for Singles (Hitori), from the state/codec

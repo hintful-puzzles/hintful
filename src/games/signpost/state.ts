@@ -10,8 +10,8 @@
 
 import { Dsf } from "../../engine/board/dsf.ts";
 import { DESC_REPEATED, type DescParse } from "../../engine/contract/desc-error.ts";
-import { isDigit } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { isDigit } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import type { TileCache } from "../../engine/tile-cache.ts";
 

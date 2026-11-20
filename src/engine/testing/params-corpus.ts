@@ -31,7 +31,7 @@
  */
 
 import { difficultyChoiceItem } from "../contract/difficulty.ts";
-import { presetMenu, type TitledPresetMenu } from "../param-label.ts";
+import { presetMenu, type TitledPresetMenu } from "../game-id/param-label.ts";
 import type { AnyGame } from "./enrollment.ts";
 
 export type { AnyGame };

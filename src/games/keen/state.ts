@@ -26,18 +26,18 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/contract/game.ts";
-import { isDigit } from "../../engine/decimal.ts";
-import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
 import {
   type ClueList,
   clueList,
   latinSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
+import { isDigit } from "../../engine/game-id/decimal.ts";
+import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
+import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+import { choice, flag, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
-import { choice, flag, paramsCodec, size } from "../../engine/params-codec.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

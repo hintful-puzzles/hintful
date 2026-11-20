@@ -19,6 +19,7 @@ import {
 } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import {
   click,
   drag,
@@ -49,7 +50,6 @@ import {
   startDrag,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newBridgesDesc } from "./generator.ts";
 import {

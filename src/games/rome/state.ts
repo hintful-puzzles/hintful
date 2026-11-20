@@ -36,16 +36,16 @@ import type {
 import { DESC_TOO_LONG } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import type { DescReader } from "../../engine/desc-reader.ts";
-import type { GridCursor } from "../../engine/input/pointer.ts";
-import type { CellRegion } from "../../engine/latin-hint.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
+import type { DescReader } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import {
   encodeRegionWalls,
   gapLetters,
   readRegionWalls,
-} from "../../engine/wall-runs.ts";
+} from "../../engine/game-id/wall-runs.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import type { CellRegion } from "../../engine/latin-hint.ts";
 import * as rome from "../../generated/games/rome/rome.compiled.ts";
 
 // --- cell bit-field (upstream values, verbatim) -----------------------------

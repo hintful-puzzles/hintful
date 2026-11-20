@@ -6,12 +6,12 @@ import { css, html, LitElement, nothing } from "lit";
 import { query } from "lit/decorators/query.js";
 import { customElement, property, queryAll, state } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
-import { offeredOf, offeredValues } from "../../engine/config-narrowing.ts";
 import type {
   ConfigDescription,
   ConfigItem,
   ConfigValues,
 } from "../../engine/contract/types.ts";
+import { offeredOf, offeredValues } from "../../engine/game-id/config-narrowing.ts";
 import { cssWATweaks } from "../../utils/css.ts";
 import { equalSet } from "../../utils/equal.ts";
 import { puzzleContext } from "../contexts.ts";

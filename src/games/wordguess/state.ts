@@ -15,11 +15,11 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
-import { modifierItem } from "../../engine/modifier.ts";
-import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/obfuscate.ts";
-import { numberItem } from "../../engine/params.ts";
-import { flag, num, paramsCodec, size } from "../../engine/params-codec.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { modifierItem } from "../../engine/game-id/modifier.ts";
+import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/game-id/obfuscate.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
+import { flag, num, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { drawAnswer, isGuess, WORD_LENGTHS } from "../../engine/word-list/index.ts";
 

@@ -20,6 +20,7 @@ import {
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { entryMistakes } from "../../engine/entry-mistakes.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import {
   cursorDelta,
   MOD_SHFT,
@@ -34,7 +35,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { SHADED_NAME } from "../../engine/piece.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { type RangeHint, rangeHint } from "./hint.ts";

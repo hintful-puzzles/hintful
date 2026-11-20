@@ -12,11 +12,11 @@ import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, tierNames } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
+import { choice, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { numberItem } from "../../engine/params.ts";
-import { choice, num, paramsCodec } from "../../engine/params-codec.ts";
 import * as numgame from "../../generated/games/numgame/numgame.compiled.ts";
 import { OPS, type Op, type Step } from "./solver.ts";
 

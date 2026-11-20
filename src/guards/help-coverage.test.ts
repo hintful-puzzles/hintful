@@ -37,16 +37,21 @@ import {
 import { hasHint } from "../engine/contract/game.ts";
 import { HINT_MARKS_PLACEHOLDER } from "../engine/contract/hint-words.ts";
 import {
+  MODIFIERS_PLACEHOLDER,
+  modifiersMarkdown,
+  modifiersOf,
+} from "../engine/game-id/modifier.ts";
+import { expandChoices, PARAMETERS_PLACEHOLDER } from "../engine/game-id/param-help.ts";
+import {
+  RULESETS_PLACEHOLDER,
+  rulesetField,
+  rulesetsMarkdown,
+} from "../engine/game-id/ruleset.ts";
+import {
   CONTROLS_PLACEHOLDER,
   DONE_CLUES_PLACEHOLDER,
 } from "../engine/input/target-verb.ts";
 import { TOUCH_PLACEHOLDER } from "../engine/input/touch-help.ts";
-import {
-  MODIFIERS_PLACEHOLDER,
-  modifiersMarkdown,
-  modifiersOf,
-} from "../engine/modifier.ts";
-import { expandChoices, PARAMETERS_PLACEHOLDER } from "../engine/param-help.ts";
 import {
   offersStickyPencil,
   STICKY_PENCIL_PLACEHOLDER,
@@ -54,11 +59,6 @@ import {
 import { expandPair, PAIR_NAMES } from "../engine/piece.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { RULES_OUT_PLACEHOLDER } from "../engine/rules-out.ts";
-import {
-  RULESETS_PLACEHOLDER,
-  rulesetField,
-  rulesetsMarkdown,
-} from "../engine/ruleset.ts";
 import {
   OPTIONAL_GAME_MEMBERS,
   REGISTERED_GAMES,
@@ -298,7 +298,7 @@ describe("every game's page has the one skeleton", () => {
   });
 
   // A game with rulesets has its list of them generated from the declaration
-  // (`engine/ruleset.ts`), in the unheaded rules at the top of its page, and no
+  // (`engine/game-id/ruleset.ts`), in the unheaded rules at the top of its page, and no
   // other page carries the placeholder. The build refuses both mismatches too.
   let withRulesets = 0;
 
@@ -319,7 +319,7 @@ describe("every game's page has the one skeleton", () => {
     expect(withRulesets).toBeGreaterThanOrEqual(3);
   });
 
-  // The same for a game with rule modifiers (`engine/modifier.ts`): its list
+  // The same for a game with rule modifiers (`engine/game-id/modifier.ts`): its list
   // of them is generated, in the rules, and no other page has the placeholder.
   let withModifiers = 0;
 

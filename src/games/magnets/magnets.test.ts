@@ -7,8 +7,8 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
-import { presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
+import { presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

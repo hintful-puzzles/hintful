@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { Dsf } from "./board/dsf.ts";
+import { Dsf } from "../board/dsf.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   type DescParse,
   descBadCharacter,
-} from "./contract/desc-error.ts";
+} from "../contract/desc-error.ts";
+import { randomNew, randomUpto } from "../random/index.ts";
 import { readDesc } from "./desc-reader.ts";
-import { randomNew, randomUpto } from "./random/index.ts";
 import {
   encodeRegionWalls,
   encodeWallRuns,

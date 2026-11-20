@@ -18,8 +18,8 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
+import { paramsError, UnreadableParams } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
-import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

@@ -15,6 +15,7 @@ import type {
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { gridCursorMove, newCursor } from "../../engine/input/pointer.ts";
 import {
   dragMarkVerbs,
@@ -23,7 +24,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import {

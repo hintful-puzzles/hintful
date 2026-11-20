@@ -6,10 +6,10 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { dims, paramsCodec } from "../../engine/params-codec.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import * as fifteen from "../../generated/games/fifteen/fifteen.compiled.ts";
 

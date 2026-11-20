@@ -43,7 +43,7 @@ import { FOUR_FILLS, FREE, TWO, wordOf } from "../engine/color/colors.ts";
 import type { HintStep } from "../engine/contract/game.ts";
 import { NARRATION_LIMIT, Sentence } from "../engine/contract/hint-words.ts";
 import type { Color } from "../engine/contract/types.ts";
-import { paramsError } from "../engine/params.ts";
+import { paramsError } from "../engine/game-id/params.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { bindingDefects } from "../engine/testing/hint-binding.ts";
 import {

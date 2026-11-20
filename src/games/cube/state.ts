@@ -2,12 +2,12 @@
 
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
   endParams,
   parseDimensions,
   transposeDimensions,
-} from "../../engine/params.ts";
+} from "../../engine/game-id/params.ts";
 import { enumGridSquares, type GridSquare, gridArea } from "./grid.ts";
 import { alignPolyKeys, SOLIDS, SolidType } from "./solids.ts";
 

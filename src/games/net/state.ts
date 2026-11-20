@@ -10,15 +10,15 @@ import { D, L, R, U } from "../../engine/board/square-edges.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
-import type { GridCursor } from "../../engine/input/pointer.ts";
-import { newCursor } from "../../engine/input/pointer.ts";
+import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import {
   AREA_TOO_LARGE,
   formatG,
   parseLeadingFloat,
   unreadParams,
-} from "../../engine/params.ts";
+} from "../../engine/game-id/params.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
 import {
   addBorderBarriers,
   computeActive as computeActiveWires,

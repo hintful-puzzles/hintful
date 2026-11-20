@@ -45,12 +45,12 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import { PuzzleButton } from "../engine/contract/types.ts";
-import * as decimal from "../engine/decimal.ts";
-import * as descAlphabet from "../engine/desc-alphabet.ts";
+import * as decimal from "../engine/game-id/decimal.ts";
+import * as descAlphabet from "../engine/game-id/desc-alphabet.ts";
+import * as runLength from "../engine/game-id/run-length.ts";
 import { puzzleKeyMap } from "../engine/input/key-map.ts";
 import * as pointer from "../engine/input/pointer.ts";
 import { BACKSPACE, DELETE, ESCAPE } from "../engine/input/pointer.ts";
-import * as runLength from "../engine/run-length.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import {
   nodesOf,

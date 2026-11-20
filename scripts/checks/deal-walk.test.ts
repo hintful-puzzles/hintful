@@ -43,7 +43,7 @@ import {
 import type { Game, ParamConfigItem } from "../../src/engine/contract/game.ts";
 import { RetryLimitExceeded } from "../../src/engine/contract/retry-limit.ts";
 import { generate } from "../../src/engine/deal.ts";
-import { paramsError } from "../../src/engine/params.ts";
+import { paramsError } from "../../src/engine/game-id/params.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { getTsGame } from "../../src/engine/registry.ts";
 import { REGISTERED_IDS } from "../../src/engine/testing/enrollment.ts";

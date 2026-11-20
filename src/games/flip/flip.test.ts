@@ -8,9 +8,9 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import { PuzzleButton } from "../../engine/contract/types.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend-prefs.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

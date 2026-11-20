@@ -19,6 +19,9 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
+import { encodeRegionWalls } from "../../engine/game-id/wall-runs.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_SELECT2,
@@ -26,8 +29,6 @@ import {
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -38,7 +39,6 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { encodeRegionWalls } from "../../engine/wall-runs.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/seismic-c-reference.json" with { type: "json" };
 import { maxGeneratedRegionSize, maxRegionSize, newSeismicDesc } from "./generator.ts";

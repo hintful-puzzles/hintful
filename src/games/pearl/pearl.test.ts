@@ -13,8 +13,8 @@ import {
   loadVerdict,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
-import { describeParams } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
+import { describeParams } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";

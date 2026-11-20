@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { difficultyItem } from "./contract/difficulty.ts";
-import type { ParamConfigItem } from "./contract/game.ts";
+import { difficultyItem } from "../contract/difficulty.ts";
+import type { ParamConfigItem } from "../contract/game.ts";
 import { presetGrid } from "./preset-grid.ts";
 
 interface P {

@@ -15,6 +15,11 @@ import {
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point, Size } from "../../engine/contract/types.ts";
 import {
+  dimensionParamConfig,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
+import {
   type Game,
   type HintStep,
   type HintTrackVerdict,
@@ -52,8 +57,6 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/input/target-verb.ts";
-import { dimensionParamConfig, transposeDimensions } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { newGameDesc } from "./generator.ts";

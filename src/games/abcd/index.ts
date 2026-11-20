@@ -28,6 +28,7 @@ import {
   gridCell,
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { clearKey } from "../../engine/input/key-labels.ts";
 import {
@@ -43,7 +44,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import {
   candidateReadingPref,
   pencilKeepHighlightPref,

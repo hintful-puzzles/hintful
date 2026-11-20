@@ -14,11 +14,11 @@ import { gridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
-import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { readDotRuns, writeDotRuns } from "../../engine/game-id/dot-runs.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
 import { PAIR_NAMES, type PairIndex } from "../../engine/piece.ts";
 import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 
@@ -195,7 +195,7 @@ export function validateParams(p: ClustersParams, full: boolean): string | null 
 
 // --- desc codec (upstream new_game_desc/new_game) ---------------------------
 
-/** The given dots of a grid as `engine/dot-runs.ts` writes them: red
+/** The given dots of a grid as `engine/game-id/dot-runs.ts` writes them: red
  * lowercase, blue uppercase. Only `F_COLOR_x|F_SINGLE` cells are dots. */
 export function encodeDesc(grid: Uint8Array, w: number, h: number): string {
   return writeDotRuns(w * h, (i) =>

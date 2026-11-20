@@ -14,7 +14,7 @@ import {
   underDealDeadline,
 } from "./contract/retry-limit.ts";
 import type { DealtBoard, EncodedParams } from "./contract/types.ts";
-import { paramsError } from "./params.ts";
+import { paramsError } from "./game-id/params.ts";
 import { type RandomState, randomNew } from "./random/index.ts";
 
 /** A random 128-bit seed string for a fresh game (upstream seeds from system

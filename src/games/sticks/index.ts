@@ -23,6 +23,7 @@ import {
   type UiUpdate,
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   CURSOR_LEFT,
@@ -49,7 +50,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newSticksDesc } from "./generator.ts";
 import { type SticksHint, sticksHint } from "./hint.ts";

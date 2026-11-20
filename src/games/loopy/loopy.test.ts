@@ -16,10 +16,10 @@ import {
   descValue,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { presetMenu, type TitledPresetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { DELETE, LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
-import { presetMenu, type TitledPresetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

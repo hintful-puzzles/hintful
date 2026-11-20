@@ -14,6 +14,7 @@
 import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click } from "../../engine/input/hint-gesture.ts";
 import {
@@ -23,7 +24,6 @@ import {
   MOD_NUM_KEYPAD,
   numpadDirection,
 } from "../../engine/input/pointer.ts";
-import { numberItem } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import { Direction } from "./grid.ts";

@@ -11,6 +11,7 @@ import { SEARCH_OUT_OF_REACH } from "../../engine/contract/hint-refusal.ts";
 import type { Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
@@ -30,7 +31,6 @@ import {
   RIGHT_BUTTON,
   showCursor,
 } from "../../engine/input/pointer.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   planSlides,

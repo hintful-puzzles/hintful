@@ -9,14 +9,14 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { ALREADY_SOLVED } from "../../engine/contract/hint-refusal.ts";
+import { presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_UP,
   LEFT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

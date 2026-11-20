@@ -14,9 +14,9 @@ import {
   describeParams,
   presetMenu,
   type TitledPresetMenu,
-} from "../engine/param-label.ts";
-import { paramsError } from "../engine/params.ts";
-import { presetGrid } from "../engine/preset-grid.ts";
+} from "../engine/game-id/param-label.ts";
+import { paramsError } from "../engine/game-id/params.ts";
+import { presetGrid } from "../engine/game-id/preset-grid.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,

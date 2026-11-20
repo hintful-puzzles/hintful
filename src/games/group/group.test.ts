@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { cappedSolveFor, lowestSolvingCap } from "../../engine/contract/difficulty.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import {
   CURSOR_RIGHT,
   LEFT_BUTTON,
@@ -17,7 +18,6 @@ import {
   MOD_SHFT,
 } from "../../engine/input/pointer.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

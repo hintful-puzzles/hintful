@@ -287,7 +287,7 @@ not reach a player.
 ### Requirement: The engine provides a shared leading-integer parser
 
 The engine SHALL provide `parseLeadingInt(s: string, start: number): { value:
-number; next: number }` in `src/engine/decimal.ts`. It SHALL return the integer
+number; next: number }` in `src/engine/game-id/decimal.ts`. It SHALL return the integer
 formed by the maximal digit run starting at `start`, which is 0 when the run is
 empty, and the index of the first character that is not a digit. That index
 SHALL be unchanged from `start` when there was no digit, which is how a caller

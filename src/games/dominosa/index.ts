@@ -23,6 +23,7 @@ import type {
   ReferenceItem,
   ReferenceModel,
 } from "../../engine/contract/types.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
 import {
   digitOf,
   gridCursorMove,
@@ -38,7 +39,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import { numberItem } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newDominosaDesc } from "./generator.ts";
 import {

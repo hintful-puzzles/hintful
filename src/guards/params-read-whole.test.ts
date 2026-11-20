@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { UnreadableParams } from "../engine/params.ts";
+import { UnreadableParams } from "../engine/game-id/params.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import { paramsCorpus } from "../engine/testing/params-corpus.ts";
 

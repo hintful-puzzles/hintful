@@ -17,7 +17,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/contract/desc-error.ts";
-import { paramsError } from "../../engine/params.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import cReference from "./__fixtures__/boats-c-reference.json" with { type: "json" };
 import { boatsGame } from "./index.ts";
 import { solveBoats } from "./solver.ts";

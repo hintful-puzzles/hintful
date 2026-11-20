@@ -21,7 +21,9 @@ import {
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { KeyLabel, Point } from "../../engine/contract/types.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
+import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import { modifierItem } from "../../engine/game-id/modifier.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { colorKeysZeroIsTen } from "../../engine/input/key-labels.ts";
@@ -37,8 +39,6 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { modifierItem } from "../../engine/modifier.ts";
-import { numberItem } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   GUESS_RUNGS,

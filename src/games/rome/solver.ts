@@ -18,13 +18,13 @@ import {
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import {
   clueList,
   describedSpace,
   partition,
   rangeMask,
 } from "../../engine/describe-runtime.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
   CellMarks,
   describedLadder,

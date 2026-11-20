@@ -16,7 +16,7 @@ import {
   F_ADJ_DOWN,
   F_ADJ_RIGHT,
 } from "../../engine/edge-clue-latin/state.ts";
-import { unusedLetter } from "../../engine/params-codec.ts";
+import { unusedLetter } from "../../engine/game-id/params-codec.ts";
 import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";
 import { drawBars } from "./render.ts";
 import { barAnswer, barLadder } from "./solver.ts";

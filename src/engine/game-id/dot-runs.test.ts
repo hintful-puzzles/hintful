@@ -3,7 +3,7 @@ import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
-} from "./contract/desc-error.ts";
+} from "../contract/desc-error.ts";
 import { readDesc } from "./desc-reader.ts";
 import { type DotKind, readDotRuns, writeDotRuns } from "./dot-runs.ts";
 

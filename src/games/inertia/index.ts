@@ -19,6 +19,7 @@ import {
   type UiUpdate,
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/input/hint-gesture.ts";
 import {
@@ -29,7 +30,6 @@ import {
   MOD_NUM_KEYPAD,
   numpadDirection,
 } from "../../engine/input/pointer.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newInertiaDesc } from "./generator.ts";
 import {

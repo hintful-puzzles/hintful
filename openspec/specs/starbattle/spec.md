@@ -81,7 +81,7 @@ the time its deal takes or the tier asked of it.
 ### Requirement: Description: A description is the walls between regions, and names a region for every row
 
 A Star Battle description SHALL be the engine's run-length list of the walls
-between regions (`engine/wall-runs.ts`) and nothing else: the board has no
+between regions (`engine/game-id/wall-runs.ts`) and nothing else: the board has no
 clues. Regions SHALL be numbered in the order their first cells are met
 reading the grid. A description whose walls make any number of regions other
 than the grid's size SHALL be refused.

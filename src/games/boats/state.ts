@@ -23,11 +23,11 @@ import {
   descValue,
 } from "../../engine/contract/desc-error.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { endParams, paramsLetter, unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import { newCursor, newDrag } from "../../engine/input/pointer.ts";
-import { endParams, paramsLetter, unreadParams } from "../../engine/params.ts";
 import * as boats from "../../generated/games/boats/boats.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

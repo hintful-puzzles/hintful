@@ -32,6 +32,7 @@ import {
   revealEntry,
   setMoves,
 } from "../../engine/entry-mistakes.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { digitKeys } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT2,
@@ -47,7 +48,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import {
   candidateReadingPref,
   pencilKeepHighlightPref,

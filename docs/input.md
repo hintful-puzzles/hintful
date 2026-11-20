@@ -229,7 +229,7 @@ digit is the same call (`digit === 1`).
 all eight directions at once**, and ask `digitOf` only when it answers `null`.
 A diagonal is then never read as a digit.
 
-[`decimal.test.ts`](../src/engine/decimal.test.ts) scans every operand of
+[`decimal.test.ts`](../src/engine/game-id/decimal.test.ts) scans every operand of
 every game source and fails on a `48`, a `0x39`, a `- 48`, a numeric `case` or
 a `c >= "0"`, whatever the value is called.
 

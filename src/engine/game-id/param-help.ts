@@ -9,7 +9,7 @@
  * cannot disagree with the dialog beside it. What a field *means* is its `doc`, which the game writes.
  */
 
-import type { ParamBounds, ParamConfigItem } from "./contract/game.ts";
+import type { ParamBounds, ParamConfigItem } from "../contract/game.ts";
 import { onlySentences } from "./only.ts";
 import { choiceName } from "./param-label.ts";
 

@@ -175,7 +175,7 @@ them. **An encoding is frozen into shared ids**, so changing one is a
 compatibility decision for the owner.
 
 - **Declare the codec once.** `paramsCodec(defaultParams, segments)`
-  ([`engine/params-codec.ts`](../src/engine/params-codec.ts)) derives both
+  ([`engine/game-id/params-codec.ts`](../src/engine/game-id/params-codec.ts)) derives both
   halves from one ordered list of segments (`engine-params`, "The codec
   grammar is a prefix, tagged segments, flags and letters"). The module's
   doc comments say what each segment and option writes; `full` marks a field
@@ -192,7 +192,7 @@ compatibility decision for the owner.
   it stands is never defaulted and never skipped. A declared codec does
   this itself. A hand-written `decodeParams` throws the engine's refusal
   from
-  [`engine/params.ts`](../src/engine/params.ts): `paramsLetter(s, i,
+  [`engine/game-id/params.ts`](../src/engine/game-id/params.ts): `paramsLetter(s, i,
   letters)` for the letter after a tag, `unreadParams(s, i)` in the last arm
   of a scanning loop, `endParams(s, i)` before a decoder that reads in order
   returns.
@@ -229,7 +229,7 @@ probability moves by one for one ulp.
 - **`Math.fround` at every boundary that admits a value**, to store what C
   stores.
 
-The three functions are in [`engine/params.ts`](../src/engine/params.ts).
+The three functions are in [`engine/game-id/params.ts`](../src/engine/game-id/params.ts).
 Exemplar: [`netslide/state.ts`](../src/games/netslide/state.ts).
 
 ## Portrait boards, and turning them to fit
@@ -272,10 +272,10 @@ something along one side only records it in `UNEVEN_FRAME`.
 
 Put every fact about a params field on its `paramConfig` item. The engine
 builds the rest from it: the Custom dialog, the preset titles and the type
-header ([`engine/param-label.ts`](../src/engine/param-label.ts)), the bounds
-check (`paramsError` in [`engine/params.ts`](../src/engine/params.ts)), the
+header ([`engine/game-id/param-label.ts`](../src/engine/game-id/param-label.ts)), the bounds
+check (`paramsError` in [`engine/game-id/params.ts`](../src/engine/game-id/params.ts)), the
 Parameters section where a help page writes `{{parameters}}`
-([`engine/param-help.ts`](../src/engine/param-help.ts)), the tier accessors
+([`engine/game-id/param-help.ts`](../src/engine/game-id/param-help.ts)), the tier accessors
 and the codec (`engine-params`, "A params field declares what it means, its
 range and its words" and "Params validity is the engine's check"). An item
 carries:
@@ -290,7 +290,7 @@ carries:
   a bound: the bounds are checked first, so the copy is dead code.
 - **`label`**: which slot of the params label the field's words fill
   (`engine-params`, "One describer labels every params set"; the slots are
-  drawn in [`param-label.ts`](../src/engine/param-label.ts)'s header). `words` returning `null` leaves a
+  drawn in [`param-label.ts`](../src/engine/game-id/param-label.ts)'s header). `words` returning `null` leaves a
   default unsaid. A checkbox must give words; a choices field says its choice's
   name by default.
 
@@ -303,7 +303,7 @@ in `presetMenu(game)`.
 ### A game that plays different puzzles on one board declares its rulesets
 
 Declare them with `rulesetItem(rulesets, field)` in `paramConfig`
-([`engine/ruleset.ts`](../src/engine/ruleset.ts)): each a `name` and its
+([`engine/game-id/ruleset.ts`](../src/engine/game-id/ruleset.ts)): each a `name` and its
 `rule`, the sentence that sets it apart, easiest to learn first. The engine
 builds the dialog's "Game mode" field and its help entry, the name in front
 of a params label ("Tectonic: 7x7 Easy"), a section of the Type menu for
@@ -336,7 +336,7 @@ preset menu gives each ruleset a section"). Exemplars:
 ### A setting that adds, removes or bounds one rule is a modifier
 
 Declare it with `modifierItem`
-([`engine/modifier.ts`](../src/engine/modifier.ts)): a checkbox, the value
+([`engine/game-id/modifier.ts`](../src/engine/game-id/modifier.ts)): a checkbox, the value
 `when` its rule applies, the `words` a title says then ("wrapping", "no
 loops"), and the `rule` as a sentence that starts lower-case, in HTML where
 it needs markup. The engine builds the field's help entry ("When on, …",
@@ -366,7 +366,7 @@ name and the tier names are outside that check.
 
 A game declares its boards as `Game.menu` (a `PresetBoards`), and the engine
 builds the menu from them
-([`engine/preset-grid.ts`](../src/engine/preset-grid.ts)): name the boards,
+([`engine/game-id/preset-grid.ts`](../src/engine/game-id/preset-grid.ts)): name the boards,
 at least three and smallest first, and the engine writes each at every tier
 in order, then one board for each thing that is neither a size nor a tier
 (`variants`). A game without tiers lists its boards. `defaultParams()` is
@@ -454,7 +454,7 @@ difficulty), [`solo/index.ts`](../src/games/solo/index.ts) (a fold).
   integer field.
 - **Never hand-write the width and height pair.** Call
   `dimensionParamConfig({ doc, bounds })`
-  ([`engine/params.ts`](../src/engine/params.ts)). A game that spells its
+  ([`engine/game-id/params.ts`](../src/engine/game-id/params.ts)). A game that spells its
   fields differently passes the field map (`fields: { w: "w2", h: "h2" }`)
   and is not renamed to fit. A square game declares one `numberItem` labeled
   with `squareSize(field)`.
@@ -558,7 +558,7 @@ state 0. Exemplars: the skeleton's
   The accepted desc builds a board with its clues shifted, and a typed array
   swallows the out-of-range write.
 - **Read with the cursor**, `readDesc` in
-  [`engine/desc-reader.ts`](../src/engine/desc-reader.ts)
+  [`engine/game-id/desc-reader.ts`](../src/engine/game-id/desc-reader.ts)
   ([`engine-catalog.md`](./engine-catalog.md) § "`desc-reader.ts` — the
   cursor a desc parser drives"), unless the grammar is one character a
   token. It tells *too short* from *bad character*, and its `int` takes
@@ -567,7 +567,7 @@ state 0. Exemplars: the skeleton's
   for.** A parser that skips a character it does not recognize is a second
   spelling of every board, and a player's typo loads.
 - **For the shared run-length grammar** (a value character, or a letter for
-  a run of blanks) use [`engine/run-length.ts`](../src/engine/run-length.ts)
+  a run of blanks) use [`engine/game-id/run-length.ts`](../src/engine/game-id/run-length.ts)
   inside the one parse. `keepTrailingBlanks` decides whether the desc ends
   with the run that reaches the last cell, and your parser depends on the
   answer. A letter-run alone does not make it that grammar; the other token
@@ -584,10 +584,10 @@ that loads also draws, and junk is refused at least once, which catches a
 
 Read and write digits through the engine, whatever the grammar:
 
-- [`engine/decimal.ts`](../src/engine/decimal.ts) for a digit or a run of
+- [`engine/game-id/decimal.ts`](../src/engine/game-id/decimal.ts) for a digit or a run of
   digits (`isDigit`, `digitValue`, `parseLeadingInt`). Write a single digit
   as `String(n)`.
-- [`engine/desc-alphabet.ts`](../src/engine/desc-alphabet.ts) for a value
+- [`engine/game-id/desc-alphabet.ts`](../src/engine/game-id/desc-alphabet.ts) for a value
   above nine: `n2c`/`c2n` where every character is a value, and
   `n2cUpper`/`c2nUpper` where the desc is run-length and has spent the
   lowercase on blanks.
@@ -595,7 +595,7 @@ Read and write digits through the engine, whatever the grammar:
 
 Never write `c >= "0" && c <= "9"`, `c.charCodeAt(0) - 48`,
 `String.fromCharCode(48 + n)` or a private `isDigit`:
-[`decimal.test.ts`](../src/engine/decimal.test.ts) scans every game source
+[`decimal.test.ts`](../src/engine/game-id/decimal.test.ts) scans every game source
 for those shapes, and `emittable-keys.test.ts` fails a declaration of any
 name the fact modules export.
 

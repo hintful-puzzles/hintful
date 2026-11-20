@@ -9,7 +9,7 @@ import {
   type DescParse,
   descValue,
 } from "../../engine/contract/desc-error.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import * as ascent from "../../generated/games/ascent/ascent.compiled.ts";
 
 // --- number sentinels (upstream `NUMBER_*`) ------------------------

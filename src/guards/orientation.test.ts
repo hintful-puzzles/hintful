@@ -22,8 +22,8 @@ import { describe, expect, it } from "vitest";
 import type { PresetMenu } from "../engine/contract/game.ts";
 import { SQUARE_GRID, sectionState } from "../engine/contract/sections.ts";
 import type { Size } from "../engine/contract/types.ts";
-import { presetMenu } from "../engine/param-label.ts";
-import { paramsError } from "../engine/params.ts";
+import { presetMenu } from "../engine/game-id/param-label.ts";
+import { paramsError } from "../engine/game-id/params.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,

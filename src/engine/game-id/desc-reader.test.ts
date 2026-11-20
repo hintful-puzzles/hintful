@@ -8,7 +8,7 @@ import {
   descValue,
   descVerdict,
   puzzleDescError,
-} from "./contract/desc-error.ts";
+} from "../contract/desc-error.ts";
 import { isDigit } from "./decimal.ts";
 import { type DescReader, readDesc } from "./desc-reader.ts";
 

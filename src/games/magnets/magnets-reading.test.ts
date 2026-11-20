@@ -9,7 +9,7 @@
  * actually takes.
  */
 import { describe, expect, it } from "vitest";
-import { presetMenu } from "../../engine/param-label.ts";
+import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { newMagnetsDesc } from "./generator.ts";

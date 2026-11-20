@@ -9,7 +9,7 @@
  * stated once and a title's word for it is the word the help explains.
  */
 
-import type { ParamConfigItem, ParamLabel } from "./contract/game.ts";
+import type { ParamConfigItem, ParamLabel } from "../contract/game.ts";
 import type { OnlyOf } from "./only.ts";
 
 /** What a modifier item carries beside its dialog field. */

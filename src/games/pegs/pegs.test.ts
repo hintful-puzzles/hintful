@@ -6,8 +6,8 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
-import { presetMenu } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
+import { presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";

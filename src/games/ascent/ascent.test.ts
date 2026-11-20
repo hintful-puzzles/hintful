@@ -8,6 +8,8 @@
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { describeParams } from "../../engine/game-id/param-label.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
@@ -17,8 +19,6 @@ import {
   MOD_NUM_KEYPAD,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { describeParams } from "../../engine/param-label.ts";
-import { paramsError } from "../../engine/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

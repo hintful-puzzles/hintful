@@ -34,7 +34,7 @@ import {
 } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
 import { RetryLimitExceeded, underDealTries } from "../contract/retry-limit.ts";
-import { paramsError } from "../params.ts";
+import { paramsError } from "../game-id/params.ts";
 import { type RandomState, randomNew } from "../random/index.ts";
 import { dealRare } from "./dealt.ts";
 import { deepBudget, itSlow } from "./slow.ts";

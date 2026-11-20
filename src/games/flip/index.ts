@@ -9,7 +9,10 @@ import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/game-id/params.ts";
+import { dims, letters, paramsCodec } from "../../engine/game-id/params-codec.ts";
+import { RULESET_KW, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   dimensionParamConfig,
@@ -25,10 +28,7 @@ import {
   squareGrid,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/params.ts";
-import { dims, letters, paramsCodec } from "../../engine/params-codec.ts";
 import { randomUpto } from "../../engine/random/index.ts";
-import { RULESET_KW, rulesetItem } from "../../engine/ruleset.ts";
 import type * as flip from "../../generated/games/flip/flip.compiled.ts";
 import { genCrossesMatrix, genRandomMatrix } from "./generator.ts";
 import { FLIP_RUNGS, type FlipRung, hint, hintKeepTrack } from "./hint.ts";

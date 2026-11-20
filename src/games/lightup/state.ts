@@ -22,11 +22,11 @@ import {
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { digitValue, parseLeadingInt } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
+import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { AREA_TOO_LARGE, endParams } from "../../engine/game-id/params.ts";
+import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { AREA_TOO_LARGE, endParams } from "../../engine/params.ts";
-import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
 import {
   SYMM_NONE,
   SYMM_REF4,

@@ -22,12 +22,17 @@ import {
 } from "../contract/desc-error.ts";
 import { difficultyItem } from "../contract/difficulty.ts";
 import type { GameDrawing, ParamConfigItem } from "../contract/game.ts";
-import { readDesc } from "../desc-reader.ts";
+import { readDesc } from "../game-id/desc-reader.ts";
+import { numberItem, squareSize } from "../game-id/params.ts";
+import {
+  choice,
+  type ParamsSegment,
+  paramsCodec,
+  size,
+} from "../game-id/params-codec.ts";
 import { digitOf, type GridCursor, isEraseKey, newCursor } from "../input/pointer.ts";
 import type { Ladder } from "../ladder-runtime.ts";
 import type { LatinSolver } from "../latin.ts";
-import { numberItem, squareSize } from "../params.ts";
-import { choice, type ParamsSegment, paramsCodec, size } from "../params-codec.ts";
 
 // --- the clue kind -----------------------------------------------------------
 
@@ -184,7 +189,7 @@ export function edgeClueParams(opts: {
 //
 // A display-and-input codec, not a desc alphabet: it takes the puzzle's order,
 // shifts its digits above order 9, maps 0 to a space and reads keypresses. The
-// names `n2c`/`c2n` are `engine/desc-alphabet.ts`'s and are reserved for it.
+// names `n2c`/`c2n` are `engine/game-id/desc-alphabet.ts`'s and are reserved for it.
 
 /** Render number `n` (1..order) as its display character. `0` → space. */
 export function displayChar(n: number, order: number): string {

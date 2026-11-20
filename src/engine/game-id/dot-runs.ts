@@ -13,7 +13,7 @@
  * disagreements that header records about letter alphabets are why this is its
  * own module rather than a knob on that one.
  */
-import { DESC_TOO_LONG, descBadCharacter } from "./contract/desc-error.ts";
+import { DESC_TOO_LONG, descBadCharacter } from "../contract/desc-error.ts";
 import type { DescReader } from "./desc-reader.ts";
 
 /** The kind of a dot: which case its letter is written in. */

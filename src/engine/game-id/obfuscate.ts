@@ -12,7 +12,7 @@
  * `shaCopy` fork of the seed-primed base state per 20-byte block.
  */
 
-import { shaBytes, shaCopy, shaFinal, shaInit } from "./random/sha1.ts";
+import { shaBytes, shaCopy, shaFinal, shaInit } from "../random/sha1.ts";
 
 const ASCII = new TextEncoder();
 

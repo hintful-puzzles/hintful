@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { type Narration, stepMarks } from "../../engine/contract/hint-words.ts";
-import { presetMenu } from "../../engine/param-label.ts";
+import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";

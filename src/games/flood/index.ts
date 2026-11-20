@@ -10,6 +10,11 @@ import { GAME_OVER, NO_MOVE_WORTH_MAKING } from "../../engine/contract/hint-refu
 import { CELL } from "../../engine/contract/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import {
+  dimensionParamConfig,
+  numberItem,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
@@ -18,11 +23,6 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import {
-  dimensionParamConfig,
-  numberItem,
-  transposeDimensions,
-} from "../../engine/params.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { voice } from "../../generated/games/flood/flood.compiled.ts";
 import {

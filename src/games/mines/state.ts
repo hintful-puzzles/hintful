@@ -19,11 +19,11 @@ import {
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
-import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
+import { isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
+import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
+import { obfuscateBitmap } from "../../engine/game-id/obfuscate.ts";
+import { AREA_TOO_LARGE, unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { obfuscateBitmap } from "../../engine/obfuscate.ts";
-import { AREA_TOO_LARGE, unreadParams } from "../../engine/params.ts";
 import {
   type RandomState,
   randomNew,

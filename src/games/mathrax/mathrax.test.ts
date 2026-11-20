@@ -14,6 +14,8 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
+import { paramsError, UnreadableParams } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
@@ -23,8 +25,6 @@ import {
   newCursor,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { describeParams, presetMenu } from "../../engine/param-label.ts";
-import { paramsError, UnreadableParams } from "../../engine/params.ts";
 import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

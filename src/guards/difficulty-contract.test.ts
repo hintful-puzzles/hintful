@@ -31,9 +31,9 @@ import {
   withTier,
 } from "../engine/contract/difficulty.ts";
 import type { Game } from "../engine/contract/game.ts";
+import { presetMenu } from "../engine/game-id/param-label.ts";
+import { paramsError } from "../engine/game-id/params.ts";
 import { Midend } from "../engine/midend.ts";
-import { presetMenu } from "../engine/param-label.ts";
-import { paramsError } from "../engine/params.ts";
 import { randomNew } from "../engine/random/index.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { dealRare, dealsPromptly, dealt } from "../engine/testing/dealt.ts";

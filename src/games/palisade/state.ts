@@ -28,16 +28,16 @@ import {
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { digitValue } from "../../engine/decimal.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
-import type { GridCursor } from "../../engine/input/pointer.ts";
+import { digitValue } from "../../engine/game-id/decimal.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
   AREA_TOO_LARGE,
   dimensionParamConfig,
   numberItem,
-} from "../../engine/params.ts";
-import { dims, num, paramsCodec } from "../../engine/params-codec.ts";
-import { encodeRunLength, scanRunLength } from "../../engine/run-length.ts";
+} from "../../engine/game-id/params.ts";
+import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
+import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 
 // The edge encoding, direction tables and bounds test are shared with Separate
 // in `engine/border-grid.ts`. Import them from there, never through this file:

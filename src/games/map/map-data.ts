@@ -19,10 +19,10 @@ import {
   descValue,
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
-import { digitValue } from "../../engine/decimal.ts";
-import { type DescReader, readDesc } from "../../engine/desc-reader.ts";
+import { digitValue } from "../../engine/game-id/decimal.ts";
+import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
+import { encodeRunLength } from "../../engine/game-id/run-length.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { encodeRunLength } from "../../engine/run-length.ts";
 import { gengraph, graphEdgeIndex } from "./graph.ts";
 import type { MapParams } from "./state.ts";
 

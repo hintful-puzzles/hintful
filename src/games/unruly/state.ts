@@ -12,12 +12,12 @@ import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
-import { readDotRuns, writeDotRuns } from "../../engine/dot-runs.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { readDotRuns, writeDotRuns } from "../../engine/game-id/dot-runs.ts";
+import { modifierItem } from "../../engine/game-id/modifier.ts";
+import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { choice, dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { modifierItem } from "../../engine/modifier.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, flag, paramsCodec } from "../../engine/params-codec.ts";
 import {
   type Cell,
   DIFF_CHARS,
@@ -159,7 +159,7 @@ export function validateParams(p: UnrulyParams, _full: boolean): string | null {
 }
 
 // --- desc codec ----------------------------------------------------------
-// The givens as `engine/dot-runs.ts` writes dots: a ZERO is lowercase, a ONE
+// The givens as `engine/game-id/dot-runs.ts` writes dots: a ZERO is lowercase, a ONE
 // uppercase.
 
 function parseDesc(

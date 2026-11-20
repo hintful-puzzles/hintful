@@ -19,8 +19,8 @@
  * because it is the same letter run.
  */
 
-import type { Dsf } from "./board/dsf.ts";
-import { DESC_TOO_LONG } from "./contract/desc-error.ts";
+import type { Dsf } from "../board/dsf.ts";
+import { DESC_TOO_LONG } from "../contract/desc-error.ts";
 import { isDigit } from "./decimal.ts";
 import type { DescReader } from "./desc-reader.ts";
 

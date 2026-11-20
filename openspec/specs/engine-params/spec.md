@@ -12,10 +12,9 @@ which game IDs and descriptions load, and what a refusal says.
 ### Requirement: The engine provides a shared dimension param parser
 
 The engine SHALL provide `parseDimensions(s, start?)` in
-`src/engine/params.ts`, returning `{ w, h, next }`: it reads a width, then an
-optional `"x"` followed by a height, and falls back to a square (`h = w`) when
-no `"x"` is present; `next` is the index of the first character after the
-dimensions. A game whose `decodeParams` opens with a `WxH`-or-square prefix
+`src/engine/game-id/params.ts`, returning `{ w, h, next }`: a width, then an
+optional `"x"` and a height, or a square (`h = w`) with no `"x"`; `next` is
+the index of the first character after the dimensions. A game whose `decodeParams` opens with a `WxH`-or-square prefix
 SHALL use it and SHALL NOT parse the prefix itself, assigning `w` and `h` into
 its own params fields and parsing any suffix from `next`.
 
@@ -267,7 +266,7 @@ return.
 
 A game whose params encoding fits the collection's grammar SHALL declare it as
 an ordered list of segments and obtain `encodeParams` and `decodeParams` from
-`paramsCodec` in `engine/params-codec.ts`, and SHALL NOT hand-write two
+`paramsCodec` in `engine/game-id/params-codec.ts`, and SHALL NOT hand-write two
 functions that must be exact inverses of each other.
 
 #### Scenario: A declared codec round-trips
@@ -338,7 +337,7 @@ serve several games, as `whenAbsent` does.
 
 ### Requirement: The engine provides the two desc value alphabets
 
-The engine SHALL provide, in `src/engine/desc-alphabet.ts`, two frozen value
+The engine SHALL provide, in `src/engine/game-id/desc-alphabet.ts`, two frozen value
 alphabets: `n2c`/`c2n` over `0`–`9`, `a`–`z`, `A`–`Z` (62 values), for a desc
 in which every character is a value, and `n2cUpper`/`c2nUpper` over `0`–`9`,
 `A`–`Z` (36 values), for a run-length desc, which has spent the lowercase
@@ -788,7 +787,7 @@ A checkbox rule modifier SHALL apply on exactly one line of the menu.
 
 A game whose params choose between different puzzles on the same board SHALL
 declare them with `rulesetItem(rulesets, field)` in its `paramConfig`
-(`engine/ruleset.ts`), each ruleset a `name` and the `rule` that sets it apart.
+(`engine/game-id/ruleset.ts`), each ruleset a `name` and the `rule` that sets it apart.
 The item SHALL be a `"choices"` field with the keyword `ruleset`, labeled
 "Game mode" in every game, offering each ruleset by its name. No label slot
 SHALL put a word in front of a params label: only a declared ruleset does.
@@ -828,7 +827,7 @@ and a menu whose presets all hold one ruleset SHALL stay flat.
 
 A params field that adds, removes or bounds one rule of the game, and that
 holds together with the game's other such fields, SHALL be declared with
-`modifierItem` in `paramConfig` (`engine/modifier.ts`): the words a params
+`modifierItem` in `paramConfig` (`engine/game-id/modifier.ts`): the words a params
 label says for a board the rule applies to, the rule as a sentence, and, for a
 checkbox, the value at which its rule applies. A choices modifier bounds its
 rule at every value, and SHALL declare label words of its own.
@@ -888,7 +887,7 @@ between two deciding fields SHALL throw wherever the declaration is read.
 
 ### Requirement: The engine refuses a deal that asks for what a deciding field does not leave
 
-From an `only` declaration the engine SHALL build (`engine/only.ts`), and no
+From an `only` declaration the engine SHALL build (`engine/game-id/only.ts`), and no
 game SHALL write, the
 refusal in `paramsError` of a params set about to deal a board that holds a
 value the deciding field does not leave, naming the field by its dialog label,
@@ -1060,7 +1059,7 @@ the same load that judged a pasted or saved description.
 ### Requirement: The engine provides a cursor over a description
 
 The engine SHALL provide a cursor over a description
-(`engine/desc-reader.ts`) whose reads fail with the collection's `DescError`
+(`engine/game-id/desc-reader.ts`) whose reads fail with the collection's `DescError`
 kinds: a character or number missing because the description ended is too
 short, one with another character in its place names that character, a number
 outside the bounds its caller states is out of range, and text after the board
@@ -1491,7 +1490,7 @@ means is the game's to declare, and is on where it declares none.
 ### Requirement: The engine makes the one refusal of a params string
 
 The refusal SHALL be the engine's, thrown as `UnreadableParams` by
-`unreadParams` in `engine/params.ts`, and a game SHALL refuse through it,
+`unreadParams` in `engine/game-id/params.ts`, and a game SHALL refuse through it,
 through `paramsLetter` for a tag's letter and through `endParams` for a
 remainder, and SHALL NOT word its own. Its message SHALL be one sentence that
 quotes the params string, and the character where there is one, and the midend

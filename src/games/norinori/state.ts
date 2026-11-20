@@ -16,12 +16,12 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { readDesc } from "../../engine/desc-reader.ts";
 import { regionNumbers } from "../../engine/divide.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
+import { encodeRegionWalls, readRegionWalls } from "../../engine/game-id/wall-runs.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { dimensionParamConfig } from "../../engine/params.ts";
-import { choice, dims, paramsCodec } from "../../engine/params-codec.ts";
-import { encodeRegionWalls, readRegionWalls } from "../../engine/wall-runs.ts";
 import * as norinori from "../../generated/games/norinori/norinori.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------
@@ -129,7 +129,7 @@ export function validateParams(p: NorinoriParams, _full: boolean): string | null
 
 // --- desc -------------------------------------------------------------------
 
-/** The regions, as the walls between them (`engine/wall-runs.ts`). */
+/** The regions, as the walls between them (`engine/game-id/wall-runs.ts`). */
 export function encodeDesc(regions: Dsf, w: number, h: number): string {
   return encodeRegionWalls(regions, w, h);
 }

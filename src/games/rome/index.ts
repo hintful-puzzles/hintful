@@ -41,6 +41,7 @@ import {
   entryMistakes,
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import {
   drag,
   type GestureButton,
@@ -73,7 +74,6 @@ import {
   releaseHighlightAfterEntry,
   tapNoteTakingCell,
 } from "../../engine/note-taking-cell.ts";
-import { transposeDimensions } from "../../engine/params.ts";
 import {
   candidateReadingPref,
   pencilKeepHighlightPref,
