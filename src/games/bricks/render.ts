@@ -25,23 +25,27 @@
 import {
   CLEAR,
   CLEAR_MARK,
-  CURSOR,
   cellSurface,
-  ERROR,
   ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { BricksHint } from "./hint.ts";
@@ -70,44 +74,32 @@ export const PREFERRED_TILE_SIZE = 48;
 
 // --- palette ----------------------------------------------------------------
 
-/** The ground beside the sheared rows, where no cell is. */
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
+// `COL_BACKGROUND` is also the ground beside the sheared rows, where no cell
+// is; the win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is on a cell's ground.
+const COL_GRID = FIRST_GAME_SLOT;
 /** The surface of a cell, which is all an undecided cell is. */
-const COL_EMPTY = 2;
+const COL_EMPTY = FIRST_GAME_SLOT + 1;
 /** The surface under a clue. */
-const COL_GIVEN = 3;
-const COL_SHADE = 4;
-export const COL_ERROR = 5;
-const COL_CURSOR = 6;
-export const COL_HINT_CELL = 7; // the deduction's evidence — an outline inside it
+const COL_GIVEN = FIRST_GAME_SLOT + 2;
+const COL_SHADE = FIRST_GAME_SLOT + 3;
 /** The digit on a clue's lifted cell. */
-const COL_NUMBER = 8;
+const COL_NUMBER = FIRST_GAME_SLOT + 4;
 /** The faint cross in a cell the player has made clear. */
-export const COL_CLEAR_MARK = 9;
+export const COL_CLEAR_MARK = FIRST_GAME_SLOT + 5;
 /** The `!` on a gravity diamond, and the diamond's rim. */
-const COL_ERROR_TEXT = 10;
+const COL_ERROR_TEXT = FIRST_GAME_SLOT + 6;
 /** The surface of a cell the player has made clear. */
-export const COL_CLEAR = 11;
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 12;
-export const COL_FLASH_LEAD = 13;
+export const COL_CLEAR = FIRST_GAME_SLOT + 7;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_EMPTY] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
   out[COL_SHADE] = SHADED;
-  out[COL_ERROR] = ERROR;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_NUMBER] = INK;
   out[COL_CLEAR_MARK] = CLEAR_MARK;
   out[COL_CLEAR] = CLEAR;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
   return out;
 }
@@ -140,14 +132,14 @@ export function tileOrigin(x: number, y: number, h: number, ts: number): Point {
 
 export interface BricksDrawState {
   tileSize: number;
-  /** Last drawn packed cell value per padded index (`-1` = never drawn). */
-  cache: Int32Array;
+  /** The packed cell value last drawn per padded index. */
+  tiles: TileCache;
 }
 
 export function newDrawState(state: BricksState, tileSize: number): BricksDrawState {
   return {
     tileSize: evenTs(tileSize),
-    cache: new Int32Array(state.w * state.h).fill(-1),
+    tiles: new TileCache(state.w * state.h),
   };
 }
 
@@ -205,7 +197,7 @@ function drawErrGravity(dr: GameDrawing, ts: number, x: number, y: number): void
 // Hint-overlay bits packed into the render cache word, above the cell's own
 // bits (num/bound/color + FE_* error/cursor flags all fit under 0x2000).
 const HINT_TARGET = 1 << 13; // the forced cell — ringed
-const HINT_EVID = 1 << 14; // a deduction-evidence cell — inset COL_HINT_CELL outline
+const HINT_EVID = 1 << 14; // a deduction-evidence cell — inset COL_HINT_OUTLINE outline
 /** The win flash's tone on this cell: two bits. */
 const K_LIT = 15;
 
@@ -229,7 +221,7 @@ function drawTile(
   // break no rule, so no bar or diamond is there to point at it.
   const wrong = (n & FE_WRONG) !== 0;
   const tone = ((n >> K_LIT) & 3) as WinTone;
-  const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : -1;
+  const lit = tone ? winSlot(tone) : -1;
   if (color === F_UNSHADE) {
     drawClearSquare(
       dr,
@@ -282,7 +274,7 @@ function drawTile(
   // piece.
   if (n & HINT_EVID) {
     const t = Math.max(2, (ts / 16) | 0);
-    drawThickRectOutline(dr, inner.x, inner.y, inner.w, inner.h, t, COL_HINT_CELL);
+    drawThickRectOutline(dr, inner.x, inner.y, inner.w, inner.h, t, COL_HINT_OUTLINE);
   }
 
   if (n & FE_CURSOR) {
@@ -377,8 +369,7 @@ export function redraw(
     if (hintTargets.has(i)) n |= HINT_TARGET;
     else if (hintEvid.has(i)) n |= HINT_EVID;
 
-    if (ds.cache[i] === n) continue;
-    ds.cache[i] = n;
+    if (!ds.tiles.changed(i, n)) continue;
 
     // Each tile paints inside its own square, as upstream clips it. A rule
     // mark is drawn whole but lands in pieces: the three-in-a-row bar reaches

@@ -10,27 +10,31 @@
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { YELLOW_WASH } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   GOAL_WASH,
   GRID_DARK,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   pencilColor,
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { drawPathArrow, drawPathStart } from "../../engine/path-arrow.ts";
 import { ringContentBox, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect } from "../../engine/types.ts";
 import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
@@ -71,49 +75,42 @@ import {
 
 // --- palette -------------------------------------------------------
 
-const COL_MIDLIGHT = 0; // the board, and the margin an edge number sits in
-export const COL_LOWLIGHT = 1;
-const COL_HIGHLIGHT = 2;
+// The win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is on a square's ground, and
+// `COL_HINT_OUTLINE` is the hint's evidence outline.
+const COL_MIDLIGHT = COL_BACKGROUND; // the board, and the margin an edge number sits in
+export const COL_LOWLIGHT = FIRST_GAME_SLOT;
+const COL_HIGHLIGHT = FIRST_GAME_SLOT + 1;
 /** Ink: a wall, and a number the puzzle fixed. */
-const COL_BORDER = 3;
+const COL_BORDER = FIRST_GAME_SLOT + 2;
 /** The player's own: the number they placed and the line they drew. */
-const COL_LINE = 4;
+const COL_LINE = FIRST_GAME_SLOT + 3;
 /**
  * The path the board draws for itself between consecutive numbers. It runs
  * through plain cells and lifted ones, and has to carry across both: the
  * strong gray, dark on a light board and light on a dark one, where the grid
  * line's tone sank into a plain dark cell.
  */
-export const COL_PATH = 5;
-const COL_ERROR = 6;
-const COL_CURSOR = 7;
-export const COL_ARROW = 8;
-/** The hint's evidence outline. */
-export const COL_HINT_CELL = 9;
+export const COL_PATH = FIRST_GAME_SLOT + 4;
+export const COL_ARROW = FIRST_GAME_SLOT + 5;
 /** The surface of a cell the player fills. */
-export const COL_CELL = 10;
+export const COL_CELL = FIRST_GAME_SLOT + 6;
 /** The lifted surface under a number the puzzle fixed. */
-export const COL_GIVEN = 11;
+export const COL_GIVEN = FIRST_GAME_SLOT + 7;
 /** The line between two cells, and the ring round the disc under the first
  * and the last number. */
-export const COL_GRID = 12;
+export const COL_GRID = FIRST_GAME_SLOT + 8;
 /** The cell the player is holding, typing into or has selected: the
  * collection's "you are here" wash, which sinks below a plain cell and a
  * lifted one in both schemes. */
-const COL_HELD = 13;
+const COL_HELD = FIRST_GAME_SLOT + 9;
 /** Where the held number leads: the nearest placed number on either side of
  * it, and the row or column an edge number is dragged along, which ends on
  * the two arrows it lines up with and wears their color. */
-export const COL_TARGET = 14;
+export const COL_TARGET = FIRST_GAME_SLOT + 10;
 /** A number offered and not placed: what a click here would write. A note in
  * every other entry game's sense, and legible on a dark cell where the bevel's
  * gray was not. */
-const COL_OFFERED = 15;
-/** The ground of a square the win flash is on. */
-export const COL_FLASH = 16;
-/** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = 17;
-const NCOLORS = 18;
+const COL_OFFERED = FIRST_GAME_SLOT + 11;
 
 /** A cell's part in the displayed hint, one bit per mark: its diff key. */
 const HINT_TARGET = 1;
@@ -199,7 +196,6 @@ function pathEndTexts(
 const ERROR_MARGIN = 0.1;
 
 export interface AscentDrawState {
-  started: boolean;
   tileSize: number;
   /** Physical grid dimensions and mode (from the state). */
   w: number;
@@ -214,8 +210,9 @@ export interface AscentDrawState {
   pxW: number;
   pxH: number;
 
-  /** Committed per-cell caches (mirroring upstream `ds`). */
-  colors: Int32Array;
+  /** Each cell's fill as last drawn. The caches below decide when a cell is
+   * dirty, and a dirty cell is forgotten here (mirroring upstream `ds`). */
+  tiles: TileCache;
   oldnum: Int32Array;
   oldpath: Int32Array;
   path: Int32Array;
@@ -255,7 +252,6 @@ export function newAscentDrawState(
   const { userW, userH } = userDims(state.w, state.h, state.mode);
   const px = ascentComputeSize(userW, userH, state.mode, tileSize);
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
@@ -267,7 +263,7 @@ export function newAscentDrawState(
     thickness: Math.max(2, tileSize / 7),
     pxW: px.w,
     pxH: px.h,
-    colors: new Int32Array(s).fill(-1),
+    tiles: new TileCache(s),
     oldnum: new Int32Array(s).fill(-0x7fff),
     oldpath: new Int32Array(s).fill(-1),
     path: new Int32Array(s),
@@ -406,26 +402,20 @@ function computeOffsetX(h: number, mode: number, tileSize: number): number {
 
 export function ascentColors(defaultBackground: Color): Color[] {
   const { background, highlight, lowlight } = mkhighlight(defaultBackground);
-  const ret: Color[] = new Array(NCOLORS);
-  ret[COL_MIDLIGHT] = background;
+  const ret = rolePalette(background);
   ret[COL_HIGHLIGHT] = highlight;
   ret[COL_LOWLIGHT] = lowlight;
   ret[COL_BORDER] = INK;
   ret[COL_LINE] = playerEntryColor(background);
   ret[COL_PATH] = GRID_DARK;
-  ret[COL_ERROR] = ERROR;
-  ret[COL_CURSOR] = CURSOR;
   // Not `HELD`: the held cell is a fill under its number, which is the wash.
   ret[COL_HELD] = highlightWash(background);
   ret[COL_ARROW] = YELLOW_WASH;
   ret[COL_TARGET] = GOAL_WASH;
   ret[COL_OFFERED] = pencilColor(background);
-  ret[COL_HINT_CELL] = HINT_OUTLINE;
   ret[COL_CELL] = cellSurface(background);
   ret[COL_GIVEN] = givenSurface(background);
   ret[COL_GRID] = surfaceGrid(background);
-  ret[COL_FLASH] = FLASH;
-  ret[COL_FLASH_LEAD] = FLASH_LEAD;
   return ret;
 }
 
@@ -629,12 +619,6 @@ export function redrawAscent(
     routeBits[q] |= 1 << findDirection(q, p, w, movement);
   }
 
-  if (!ds.started) {
-    ds.started = true;
-    ds.colors.fill(-1);
-    ds.oldpath.fill(-1);
-  }
-
   /* Build the render path for every cell. */
   for (let i = 0; i < w * h; i++) {
     let pathline = state.path ? state.path[i] : 0;
@@ -701,7 +685,7 @@ export function redrawAscent(
     if (ds.oldpath[i] !== ds.path[i] || ds.oldout[i] !== ds.out[i]) {
       dirty = true;
       for (let i2 = Math.max(0, i - (w + 1)); i2 < w * h && i2 < i + w + 1; i2++) {
-        if (isNear(i, i2, w, state.mode)) ds.colors[i2] = -1;
+        if (isNear(i, i2, w, state.mode)) ds.tiles.forget(i2);
       }
       ds.oldpath[i] = ds.path[i];
       ds.oldout[i] = ds.out[i];
@@ -730,14 +714,14 @@ export function redrawAscent(
     }
     if ((cursorCell === i) !== (ds.oldcursor === i)) dirty = true;
 
-    if (dirty) ds.colors[i] = -1;
+    if (dirty) ds.tiles.forget(i);
   }
   ds.oldcursor = cursorCell;
 
   for (let n = 0; n <= state.last; n++) {
     if (ds.oldpositions[n] !== positions[n]) {
-      if (ds.oldpositions[n] >= 0) ds.colors[ds.oldpositions[n]] = -1;
-      if (positions[n] >= 0) ds.colors[positions[n]] = -1;
+      if (ds.oldpositions[n] >= 0) ds.tiles.forget(ds.oldpositions[n]);
+      if (positions[n] >= 0) ds.tiles.forget(positions[n]);
       ds.oldpositions[n] = positions[n];
     }
   }
@@ -826,7 +810,7 @@ export function redrawAscent(
       sn === NUMBER_WALL
         ? COL_BORDER
         : tone !== WIN_NONE
-          ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
+          ? winSlot(tone)
           : ui.dragColumn === i % w || ui.dragRow === Math.trunc(i / w)
             ? COL_TARGET
             : ui.held === i ||
@@ -841,7 +825,7 @@ export function redrawAscent(
                     ? COL_GIVEN
                     : COL_CELL;
 
-    if (ds.colors[i] === color) continue;
+    if (!ds.tiles.changed(i, color)) continue;
 
     const fn = displayNumber(i, ui, state);
     sn = fn < 0 ? fn : fn & ~NUMBER_FLAG_MOVE;
@@ -868,7 +852,6 @@ export function redrawAscent(
         fillColor,
       );
     }
-    ds.colors[i] = color;
 
     // The line or run's reach a hint names, under the content.
     if (hintMarks[i] & HINT_HATCH)
@@ -1145,7 +1128,7 @@ export function redrawAscent(
           : cutSquare(tx, ty, tileSize, isNumberEdge(sn) ? 0 : cut),
         center,
         HINT_MARK_SCALE,
-        COL_HINT_CELL,
+        COL_HINT_OUTLINE,
         Math.max(2, Math.round(tileSize / 20)),
       );
 

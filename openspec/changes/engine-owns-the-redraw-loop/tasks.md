@@ -87,7 +87,8 @@
       sokoban, pegs, signpost; of the multi-family games, abcd, pattern,
       magnets, blackbox, tents, boats, tracks, salad, group, crossing,
       subsets, bridges, guess, undead; of the neighbor-painting games,
-      fifteen, sixteen, twiddle, net, netslide.
+      fifteen, sixteen, twiddle, net, netslide, bricks, spokes, ascent,
+      map.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -162,8 +163,15 @@
       between repaint. Twiddle's two cursor slots and its pivot all held the
       cursor color, and are the cursor role (the pivot under its own name).
       A test that counted the palette or named a bevel slot by number
-      (Sixteen's, Fifteen's) reads the slot names. Next: ascent, bricks,
-      spokes, map. Not tiles, keeping the explicit form:
+      (Sixteen's, Fifteen's, Spokes') reads the slot names. Spokes keeps
+      a cache for its hubs (both sidecars registered) and one for its
+      corner pass, where a hub's repaint `forget`s a corner whose `shown`
+      diagonal runs into it; its purple cursor is its own slot. Ascent's
+      dirty-marking caches stay its own and `forget` a cell in the tile
+      cache, keyed by its fill. Map's two words are its cache and hint
+      words, the ring key a string lane; its mistake outline held the
+      error color under a second slot and is `COL_ERROR`. Not tiles,
+      keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;
       code and edges to go.

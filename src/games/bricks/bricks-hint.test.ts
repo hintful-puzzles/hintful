@@ -6,6 +6,7 @@
  * board.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -23,7 +24,7 @@ import { STATED } from "../../generated/games/bricks/bricks.compiled.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { type BricksHint, bricksSteps } from "./hint.ts";
 import { bricksGame } from "./index.ts";
-import { COL_HINT_CELL, tileOrigin } from "./render.ts";
+import { tileOrigin } from "./render.ts";
 import {
   answerColors,
   answerOf,
@@ -426,7 +427,7 @@ describe("bricks hint — hintKeepTrack", () => {
 });
 
 describe("bricks hint — rendering (tier 2.5)", () => {
-  it("rings the target and outlines the evidence COL_HINT_CELL", () => {
+  it("rings the target and outlines the evidence COL_HINT_OUTLINE", () => {
     const result = renderScenario({
       game: bricksGame,
       id: FIX_ID,
@@ -438,7 +439,9 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     // still proposing.
     expectRing(ops);
     // Evidence off-board (an edge wall) rings nothing; any other is drawn.
-    const hasEvidence = ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL);
+    const hasEvidence = ops.some(
+      (o) => o.op === "rect" && o.color === COL_HINT_OUTLINE,
+    );
     expect(hasEvidence || stepMarks(result.hint).of("outline", CELL).length === 0).toBe(
       true,
     );

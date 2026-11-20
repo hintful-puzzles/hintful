@@ -4,6 +4,7 @@
  * completion/solve through a real `Midend`, findMistakes, and the render frames.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -47,15 +48,7 @@ import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { newBricksDesc } from "./generator.ts";
 import { bricksGame } from "./index.ts";
-import {
-  COL_CLEAR,
-  COL_CLEAR_MARK,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  offsets,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
+import { COL_CLEAR, COL_CLEAR_MARK, offsets, PREFERRED_TILE_SIZE } from "./render.ts";
 import {
   answerColors,
   answerOf,

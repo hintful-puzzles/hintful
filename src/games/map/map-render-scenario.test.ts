@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -18,15 +19,7 @@ import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { TE } from "./map-data.ts";
-import {
-  COL_0,
-  COL_3,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_GRID,
-  fromCoord,
-} from "./render.ts";
+import { COL_0, COL_3, COL_GRID, fromCoord } from "./render.ts";
 import type { MapMove, MapParams, MapState } from "./state.ts";
 
 const P: MapParams = { w: 12, h: 10, n: 12, diff: 1 };

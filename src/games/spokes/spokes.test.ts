@@ -10,6 +10,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -50,12 +51,10 @@ import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { spokesGame } from "./index.ts";
 import {
-  COL_DONE,
-  COL_DONE_LEAD,
-  COL_ERROR,
   COL_HOLDING,
   COL_HUB,
   COL_LINE,
+  COL_PURPLE_CURSOR,
   COL_SATISFIED,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -655,7 +654,7 @@ describe("spokes rendering", () => {
 
     // Four corner brackets, two segments each.
     expect(
-      dr.ops.filter((o) => o.op === "line" && o.color === 7 /* CURSOR */).length,
+      dr.ops.filter((o) => o.op === "line" && o.color === COL_PURPLE_CURSOR).length,
     ).toBe(8);
   });
 
@@ -722,7 +721,7 @@ describe("spokes: the win flash sweeps the hubs", () => {
   /** The hubs whose face a frame fills with the flash color, as grid `x,y`. */
   const lit = (ops: ReturnType<typeof paint>): string[] => {
     const keys = ops.flatMap((op) =>
-      op.op === "circle" && (op.fill === COL_DONE || op.fill === COL_DONE_LEAD)
+      op.op === "circle" && (op.fill === COL_FLASH || op.fill === COL_FLASH_LEAD)
         ? [`${Math.floor(op.cx / TS)},${Math.floor(op.cy / TS)}`]
         : [],
     );
@@ -745,12 +744,12 @@ describe("spokes: the win flash sweeps the hubs", () => {
     const slots = new Set(
       winFlashRun(paint, (ops) =>
         ops.flatMap((op) =>
-          op.op === "circle" && (op.fill === COL_DONE || op.fill === COL_DONE_LEAD)
+          op.op === "circle" && (op.fill === COL_FLASH || op.fill === COL_FLASH_LEAD)
             ? [op.fill]
             : [],
         ),
       ).frames.flat(),
     );
-    expect(slots).toEqual(new Set([COL_DONE, COL_DONE_LEAD]));
+    expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
   });
 });

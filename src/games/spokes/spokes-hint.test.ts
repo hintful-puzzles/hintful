@@ -12,6 +12,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { NARRATION_LIMIT } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -25,7 +26,6 @@ import { SLOW_TESTS_ENABLED, seedBudget } from "../../engine/testing/slow.ts";
 import { newSpokesDesc } from "./generator.ts";
 import type { SpokesHint } from "./hint.ts";
 import { spokesGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import { type SpokesRung, spokesAnswer, spokesSolved } from "./solver.ts";
 import {
   cloneBoard,
@@ -444,7 +444,7 @@ describe("the hint frame paints the overlay", () => {
     return result;
   }
 
-  it("rings a spoke and draws a COL_HINT_CELL evidence ring, incl. a diagonal", () => {
+  it("rings a spoke and draws a COL_HINT_OUTLINE evidence ring, incl. a diagonal", () => {
     const ops = hintFrame("diagonalLine").recording.ops;
     // The forced diagonal line inside its ring, which is round — completed
     // across the grid corner, so the cells around it and the corner box each
@@ -454,7 +454,9 @@ describe("the hint frame paints the overlay", () => {
     expectRing(ops, { rings: rings.length });
     expect(ops.some((o) => o.op === "line" && o.color === rings[0].color)).toBe(true);
     // The evidence ring behind a hub.
-    expect(ops.some((o) => o.op === "circle" && o.fill === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "circle" && o.fill === COL_HINT_OUTLINE)).toBe(
+      true,
+    );
 
     expect(ops).toMatchSnapshot();
   });

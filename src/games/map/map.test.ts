@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_CURSOR, COL_ERROR } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -42,8 +43,6 @@ import { mapGame } from "./index.ts";
 import { BE, TE } from "./map-data.ts";
 import {
   COL_0,
-  COL_CURSOR,
-  COL_MISTAKE,
   newDrawState,
   origin,
   placeCursorAtCoords,
@@ -495,7 +494,7 @@ describe("map mistake overlay repaints on an already-drawn board", () => {
     redraw(dr2, ds, state, state, 0, ui, 0, NO_FLASH, undefined, mistakes);
     dr2.endDraw();
 
-    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
+    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 });
 

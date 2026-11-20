@@ -15,7 +15,7 @@ exports[`spokes: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
-exports[`the hint frame paints the overlay > rings a spoke and draws a COL_HINT_CELL evidence ring, incl. a diagonal 1`] = `
+exports[`the hint frame paints the overlay > rings a spoke and draws a COL_HINT_OUTLINE evidence ring, incl. a diagonal 1`] = `
 [
   {
     "h": 288,

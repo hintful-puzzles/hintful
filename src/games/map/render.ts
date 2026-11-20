@@ -7,16 +7,17 @@
  */
 
 import { FOUR_FILL_MARKS, FOUR_FILLS } from "../../engine/color/colors.ts";
+import { cellSurface, ERROR_TEXT, INK } from "../../engine/color/palette.ts";
 import {
-  CURSOR,
-  cellSurface,
-  ERROR,
-  ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
-  INK,
-} from "../../engine/color/palette.ts";
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -35,6 +36,7 @@ import {
   CURSOR_UP,
 } from "../../engine/pointer.ts";
 import { type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepRanks, WIN_LEAD } from "../../engine/win-wave.ts";
 import { REGION } from "./hint-marks.ts";
@@ -43,50 +45,36 @@ import type { MapMistake, MapMove, MapParams, MapState, MapUi } from "./state.ts
 
 // --- palette ---------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
-export const COL_0 = 2;
-const COL_1 = 3;
-const COL_2 = 4;
-export const COL_3 = 5;
-export const COL_ERROR = 6;
-const COL_ERRTEXT = 7;
-/** Appended past the upstream enum — a wrong-region outline. */
-export const COL_MISTAKE = 8;
-/** The selected region's band and its notes triangle. */
-export const COL_CURSOR = 9;
-/** The regions a hint step's premise rests on: their band. */
-export const COL_HINT_CELL = 10;
+// `COL_ERROR` is both a clash's diamond and a wrong region's outline;
+// `COL_CURSOR` is the selected region's band and its notes triangle;
+// `COL_HINT_OUTLINE` is the band of the regions a hint step's premise rests
+// on; the win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is on a region's ground.
+export const COL_GRID = FIRST_GAME_SLOT;
+const COL_ERRTEXT = FIRST_GAME_SLOT + 1;
 /** A region with no color yet: the quiet cell surface. */
-const COL_UNCOLORED = 11;
-/** The ground of a region the win flash is on. */
-export const COL_FLASH = 12;
-/** And under the flash's leading edge. */
-export const COL_FLASH_LEAD = 13;
+const COL_UNCOLORED = FIRST_GAME_SLOT + 2;
+/** The four colors, a run a region's color indexes. */
+export const COL_0 = FIRST_GAME_SLOT + 3;
+const COL_1 = COL_0 + 1;
+const COL_2 = COL_0 + 2;
+export const COL_3 = COL_0 + 3;
 /** The first of the four colors as a pencil stipple, a dot on a region with
  * no color yet: stronger than the fill in the dark scheme, where a dot of the
  * fill's own value does not show on that surface. */
-const COL_MARK_0 = 14;
+const COL_MARK_0 = COL_0 + 4;
 
 const FOUR = 4;
 const FIVE = 5;
 
 export function colors(defaultBackground: Color): Color[] {
-  const ret: Color[] = [];
-  ret[COL_BACKGROUND] = defaultBackground;
+  const ret = rolePalette(defaultBackground);
   ret[COL_UNCOLORED] = cellSurface(defaultBackground);
   ret[COL_GRID] = INK;
   ret[COL_0] = FOUR_FILLS[0];
   ret[COL_1] = FOUR_FILLS[1];
   ret[COL_2] = FOUR_FILLS[2];
   ret[COL_3] = FOUR_FILLS[3];
-  ret[COL_ERROR] = ERROR;
   ret[COL_ERRTEXT] = ERROR_TEXT;
-  ret[COL_MISTAKE] = ERROR;
-  ret[COL_CURSOR] = CURSOR;
-  ret[COL_HINT_CELL] = HINT_OUTLINE;
-  ret[COL_FLASH] = FLASH;
-  ret[COL_FLASH_LEAD] = FLASH_LEAD;
   FOUR_FILL_MARKS.forEach((mark, c) => {
     ret[COL_MARK_0 + c] = mark;
   });
@@ -297,16 +285,14 @@ export function pointInRegion(map: MapData, ts: number, r: number): Point {
 // --- draw state ------------------------------------------------------
 
 export interface MapDrawState {
-  started: boolean;
   tileSize: number;
-  /** Per-cell packed cache word; `-1` forces a repaint. */
-  drawn: Int32Array;
+  /** Per cell, its packed cache word and its hint word. Its first frame
+   * paints the grid's ground. */
+  tiles: TileCache;
   todraw: Int32Array;
-  /** Per-cell hint word, compared alongside `drawn`. */
-  drawnHint: Int32Array;
   todrawHint: Int32Array;
-  /** Per-cell key of the hint rings that reach it, compared alongside
-   * `drawn`: a ring reaches cells outside its region. */
+  /** Per-cell key of the hint rings that reach it, tested beside `tiles`: a
+   * ring reaches cells outside its region, and no word holds the key. */
   drawnRings: string[];
   // floating drag/cursor blob
   bl: unknown | null;
@@ -329,11 +315,9 @@ export function computeSize(p: MapParams, tileSize: number): Size {
 export function newDrawState(s: MapState, tileSize: number): MapDrawState {
   const wh = s.params.w * s.params.h;
   return {
-    started: false,
     tileSize,
-    drawn: new Int32Array(wh).fill(-1),
+    tiles: new TileCache(wh, { words: 2 }),
     todraw: new Int32Array(wh),
-    drawnHint: new Int32Array(wh),
     todrawHint: new Int32Array(wh),
     drawnRings: new Array<string>(wh).fill(""),
     bl: null,
@@ -613,7 +597,7 @@ function bandsOf(selected: boolean, hint: number, t: number, ts: number): Band[]
     out.push({
       from,
       to: from + Math.max(1, Math.round((2 * t) / 3)),
-      color: COL_HINT_CELL,
+      color: COL_HINT_OUTLINE,
       dash: Math.max(4, Math.round(ts / 3)),
     });
   }
@@ -915,10 +899,10 @@ function drawSquare(
     const x0 = cx + inset;
     const y0 = cy + inset;
     const bw = ts - 2 * inset;
-    dr.drawRect({ x: x0, y: y0, w: bw, h: t }, COL_MISTAKE);
-    dr.drawRect({ x: x0, y: y0 + bw - t, w: bw, h: t }, COL_MISTAKE);
-    dr.drawRect({ x: x0, y: y0, w: t, h: bw }, COL_MISTAKE);
-    dr.drawRect({ x: x0 + bw - t, y: y0, w: t, h: bw }, COL_MISTAKE);
+    dr.drawRect({ x: x0, y: y0, w: bw, h: t }, COL_ERROR);
+    dr.drawRect({ x: x0, y: y0 + bw - t, w: bw, h: t }, COL_ERROR);
+    dr.drawRect({ x: x0, y: y0, w: t, h: bw }, COL_ERROR);
+    dr.drawRect({ x: x0 + bw - t, y: y0, w: t, h: bw }, COL_ERROR);
   }
 
   for (const ring of rings)
@@ -954,12 +938,11 @@ export function redraw(
     ds.dragVisible = false;
   }
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     dr.drawRect(
       { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
       COL_GRID,
     );
-    ds.started = true;
   }
 
   // The win flash sweeps the regions, each lit whole: a region's position is
@@ -1063,14 +1046,9 @@ export function redraw(
       const tile = { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts };
       const here = rings.filter((r) => overlaps(r.room, tile));
       const ringKey = here.length > 0 ? JSON.stringify(here) : "";
-      if (
-        ds.drawn[y * w + x] !== v ||
-        ds.drawnHint[y * w + x] !== hv ||
-        ds.drawnRings[y * w + x] !== ringKey
-      ) {
+      const changed = ds.tiles.changed(y * w + x, v, hv);
+      if (changed || ds.drawnRings[y * w + x] !== ringKey) {
         drawSquare(dr, ts, map, x, y, v, hv, ui.largeStipples, here);
-        ds.drawn[y * w + x] = v;
-        ds.drawnHint[y * w + x] = hv;
         ds.drawnRings[y * w + x] = ringKey;
       }
     }

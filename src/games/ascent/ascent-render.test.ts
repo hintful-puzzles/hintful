@@ -8,6 +8,11 @@
  * with no per-mode board code, so these three cover the geometry differences.
  */
 import { describe, expect, it } from "vitest";
+import {
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -33,11 +38,8 @@ import { ascentGame } from "./index.ts";
 import {
   COL_ARROW,
   COL_CELL,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_GRID,
-  COL_HINT_CELL,
   COL_LOWLIGHT,
   COL_PATH,
   cellCenter,
@@ -310,7 +312,7 @@ describe("ascent hint frames", () => {
     const ops = recording.ops;
     // One round ring; an outline is one stroke per side of the cell.
     expectRing(ops);
-    expect(strokes(ops, COL_HINT_CELL)).toHaveLength(CUT_SIDES * 2);
+    expect(strokes(ops, COL_HINT_OUTLINE)).toHaveLength(CUT_SIDES * 2);
     // Highlight, never perform: the number the step places is not drawn as a
     // placed number.
     const n = hint.move.kind === "place" ? hint.move.n : -1;
@@ -358,7 +360,7 @@ describe("ascent hint frames", () => {
     expect(marks.hatch).toEqual([]);
     expect(recording.ops.some((o) => o.op === "hatch")).toBe(false);
     expect(marks.area.length).toBeGreaterThan(0);
-    expect(strokes(recording.ops, COL_HINT_CELL)).toHaveLength(
+    expect(strokes(recording.ops, COL_HINT_OUTLINE)).toHaveLength(
       CUT_SIDES * marks.area.length,
     );
     expect(recording.ops).toMatchSnapshot();

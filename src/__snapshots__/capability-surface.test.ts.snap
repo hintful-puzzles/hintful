@@ -95,7 +95,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "colors",
       "h",
       "mode",
       "nexthints",
@@ -114,9 +113,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prevhints",
       "pxH",
       "pxW",
-      "started",
       "thickness",
       "tileSize",
+      "tiles",
       "userH",
       "userW",
       "w",
@@ -281,8 +280,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "tileSize",
+      "tiles",
     ],
     "id": "bricks",
     "members": [
@@ -990,12 +989,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "dragVisible",
       "dragX",
       "dragY",
-      "drawn",
-      "drawnHint",
       "drawnRings",
       "pencilModeShown",
-      "started",
       "tileSize",
+      "tiles",
       "todraw",
       "todrawHint",
     ],
@@ -2025,7 +2022,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "colors",
+      "cells",
       "corners",
       "cursorBlitter",
       "cursorRadius",
@@ -2036,7 +2033,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "h",
       "hint",
       "scratch",
-      "spokes",
       "tileSize",
       "w",
       "wrong",

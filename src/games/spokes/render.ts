@@ -24,21 +24,25 @@
 import { BLUE, PURPLE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   GRID_DARK,
   givenSurface,
   HELD,
-  HINT_OUTLINE,
   INK,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import type { SpokesHint } from "./hint.ts";
@@ -146,21 +150,20 @@ const CORNER = 8;
  * box would be a large fraction of a cell and would eat the spoke dots. */
 const MIN_CORNER_TILE_SIZE = 24;
 
-/** Width of the `COL_HINT_CELL` evidence ring outside the hub rim. */
+/** Width of the `COL_HINT_OUTLINE` evidence ring outside the hub rim. */
 const HINT_RING_WIDTH = 5;
 
 // --- palette (index-for-index with the upstream COL_* enum) ------------------
 
-const COL_BACKGROUND = 0;
-const COL_BORDER = 1;
-export const COL_HOLDING = 2;
-export const COL_LINE = 3;
-const COL_MARK = 4;
-/** The face of a hub the win flash is on. Upstream's white, which also
- * filled a finished hub; see {@link COL_SATISFIED} for that fill here. */
-export const COL_DONE = 5;
-export const COL_ERROR = 6;
-const COL_CURSOR = 7;
+// The win flash (`COL_FLASH`, `COL_FLASH_LEAD`) is on a hub's face, where
+// upstream's white also filled a finished hub; see {@link COL_SATISFIED} for
+// that fill here. The hint's evidence ring is `COL_HINT_OUTLINE`; the spokes
+// a step decides are ringed by the engine.
+const COL_BORDER = FIRST_GAME_SLOT;
+export const COL_HOLDING = FIRST_GAME_SLOT + 1;
+export const COL_LINE = FIRST_GAME_SLOT + 2;
+const COL_MARK = FIRST_GAME_SLOT + 3;
+export const COL_PURPLE_CURSOR = FIRST_GAME_SLOT + 4;
 /**
  * The face of a hub that already has as many spokes as its clue asks for — the
  * "stop thinking about this one" cue, the same fork aid Bridges lifts a
@@ -169,14 +172,9 @@ const COL_CURSOR = 7;
  * step that holds in both schemes, where upstream's pure white sat on the
  * light board's own tone.
  */
-export const COL_SATISFIED = 8;
-/** A ring around each evidence hub the hint reasons over. The spokes a step
- * decides are ringed by the engine. */
-export const COL_HINT_CELL = 9;
+export const COL_SATISFIED = FIRST_GAME_SLOT + 5;
 /** The face of a hub that still has spokes to take: the quiet surface. */
-export const COL_HUB = 10;
-/** The face of a hub the leading edge of the win flash is on. */
-export const COL_DONE_LEAD = 11;
+export const COL_HUB = FIRST_GAME_SLOT + 6;
 
 /**
  * Upstream takes the frontend background as-is (no `game_mkhighlight`) and
@@ -188,21 +186,16 @@ export const COL_DONE_LEAD = 11;
  * (docs/rendering.md § "The palette: three layers, meaning first").
  */
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_BORDER] = GRID_DARK;
   out[COL_HOLDING] = HELD;
   out[COL_LINE] = INK;
   out[COL_MARK] = BLUE;
-  out[COL_DONE] = FLASH;
-  out[COL_DONE_LEAD] = FLASH_LEAD;
-  out[COL_ERROR] = ERROR;
   // Purple, because Spokes has spent the usual two: green is a held hub and
   // blue a ruled-out spoke.
-  out[COL_CURSOR] = PURPLE;
+  out[COL_PURPLE_CURSOR] = PURPLE;
   out[COL_HUB] = cellSurface(defaultBackground);
   out[COL_SATISFIED] = givenSurface(defaultBackground);
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -228,20 +221,19 @@ export interface SpokesDrawState {
   /** Recount scratch, so the renderer can color hubs by line/mark counts and
    * by whether their group is closed off. */
   scratch: SpokesTallies;
-  /** Last-drawn packed hub per cell (−1 = never drawn). */
-  spokes: Int32Array;
-  /** Last-drawn color hash per cell (−1 = never drawn). */
-  colors: Int32Array;
-  /** Last-drawn diagonal through each grid corner (−1 = never drawn, 0 = no
-   * diagonal, else the direction, plus {@link CORNER_WRONG} when flagged). */
-  corners: Int8Array;
+  /** Per cell, its packed hub and color hash (a hole is 0, 0), with the
+   * {@link wrong} and {@link hint} overlays registered. */
+  cells: TileCache;
+  /** The diagonal through each grid corner (0 = none, else the direction,
+   * plus {@link CORNER_WRONG} or {@link CORNER_HINT}). */
+  corners: TileCache;
   /** Check-&-Save mistake overlay: bit `d` set ⇒ spoke `d` of this cell is
    * flagged. Its own sidecar so it repaints a cell nothing else changed
    * (docs/rendering.md § "The tile cache and the diff key"). */
   wrong: OverlaySidecar;
   /** Hint overlay, per cell: bits `0..7` ⇒ spoke `d` is a hint *line* (ringed
    * with the line inside, "draw this"), {@link HUB_OUTLINE} ⇒ ring this hub
-   * as evidence (`COL_HINT_CELL`), bits `9..16` (see {@link hintMarkBit}) ⇒
+   * as evidence (`COL_HINT_OUTLINE`), bits `9..16` (see {@link hintMarkBit}) ⇒
    * spoke `d` is a hint *mark* (a ring round its rim dot, "rule this out"),
    * bits `17..20` (see {@link cornerRingBit}) ⇒ the ring round a hint
    * diagonal through that corner of the cell reaches into it. Its own sidecar
@@ -260,7 +252,7 @@ export interface SpokesDrawState {
 const CORNER_WRONG = 4;
 /** OR'd into a corner's cache value when its diagonal is a hint *line*. */
 const CORNER_HINT = 8;
-/** Hint sidecar bit that rings a hub as evidence (`COL_HINT_CELL`); bits
+/** Hint sidecar bit that rings a hub as evidence (`COL_HINT_OUTLINE`); bits
  * `0..7` are the hint-line spokes, so this sits above them. */
 const HUB_OUTLINE = 1 << 8;
 /** Hint sidecar bit for spoke `d` as a *mark* to rule out (a ring round its
@@ -316,16 +308,17 @@ function numberText(
 export function newDrawState(state: SpokesState, tileSize: number): SpokesDrawState {
   const n = state.w * state.h;
   const cursorRadius = (tileSize * 0.2) | 0;
+  const wrong = new OverlaySidecar(n);
+  const hint = new OverlaySidecar(n);
   return {
     tileSize,
     w: state.w,
     h: state.h,
     scratch: new SpokesTallies(n),
-    spokes: new Int32Array(n).fill(-1),
-    colors: new Int32Array(n).fill(-1),
-    corners: new Int8Array(n).fill(-1),
-    wrong: new OverlaySidecar(n),
-    hint: new OverlaySidecar(n),
+    cells: new TileCache(n, { words: 2, overlays: [wrong, hint] }),
+    corners: new TileCache(n),
+    wrong,
+    hint,
     cursorBlitter: null,
     cursorSaved: false,
     cursorX: -1,
@@ -515,16 +508,12 @@ export function redraw(
 
       if (!state.spokes[i]) {
         // A hole: blank the tile once, then leave it alone.
-        if (ds.spokes[i] !== 0) {
+        if (ds.cells.changed(i, 0, 0)) {
           dr.clip({ x: x * ts, y: y * ts, w: ts, h: ts });
           dr.drawRect({ x: x * ts, y: y * ts, w: ts, h: ts }, COL_BACKGROUND);
           dr.drawUpdate({ x: x * ts, y: y * ts, w: ts, h: ts });
           dr.unclip();
-          ds.spokes[i] = 0;
-          ds.colors[i] = 0;
         }
-        ds.wrong.commit(i);
-        ds.hint.commit(i);
         continue;
       }
 
@@ -534,7 +523,7 @@ export function redraw(
 
       const tone = flash.win(sweepStep(x, y));
       const fill = tone
-        ? winSlot(tone, COL_DONE, COL_DONE_LEAD)
+        ? winSlot(tone)
         : ui.markSatisfied && lines === state.numbers[i]
           ? COL_SATISFIED
           : COL_HUB;
@@ -549,18 +538,11 @@ export function redraw(
         ds.scratch.marked[i] > ds.scratch.nodes[i] - state.numbers[i]
           ? COL_ERROR
           : cshow && cx === x && cy === y
-            ? COL_CURSOR
+            ? COL_PURPLE_CURSOR
             : COL_LINE;
 
       const color = (fill << 10) | (border << 5) | txt;
-      if (
-        ds.spokes[i] === state.spokes[i] &&
-        ds.colors[i] === color &&
-        !ds.wrong.stale(i) &&
-        !ds.hint.stale(i)
-      ) {
-        continue;
-      }
+      if (!ds.cells.changed(i, state.spokes[i], color)) continue;
 
       const wrongBits = ds.wrong.packed[i];
       const hintBits = ds.hint.packed[i];
@@ -603,8 +585,8 @@ export function redraw(
         dr.drawCircle(
           { x: tx, y: ty },
           radius + HINT_RING_WIDTH,
-          COL_HINT_CELL,
-          COL_HINT_CELL,
+          COL_HINT_OUTLINE,
+          COL_HINT_OUTLINE,
         );
       }
 
@@ -636,18 +618,16 @@ export function redraw(
 
       // A repainted cell cleared its share of any diagonal that runs into one
       // of its corners, so that corner has to be redrawn.
-      if (x < w - 1 && y < h - 1 && ds.corners[i] === DIR_BOTRIGHT) ds.corners[i] = -1;
-      if (x > 0 && y < h - 1 && ds.corners[i - 1] === DIR_BOTLEFT)
-        ds.corners[i - 1] = -1;
-      if (x < w - 1 && y > 0 && ds.corners[i - w] === DIR_BOTLEFT)
-        ds.corners[i - w] = -1;
-      if (x > 0 && y > 0 && ds.corners[i - (w + 1)] === DIR_BOTRIGHT)
-        ds.corners[i - (w + 1)] = -1;
+      const { corners } = ds;
+      if (x < w - 1 && y < h - 1 && corners.shown(i) === DIR_BOTRIGHT)
+        corners.forget(i);
+      if (x > 0 && y < h - 1 && corners.shown(i - 1) === DIR_BOTLEFT)
+        corners.forget(i - 1);
+      if (x < w - 1 && y > 0 && corners.shown(i - w) === DIR_BOTLEFT)
+        corners.forget(i - w);
+      if (x > 0 && y > 0 && corners.shown(i - (w + 1)) === DIR_BOTRIGHT)
+        corners.forget(i - (w + 1));
 
-      ds.spokes[i] = state.spokes[i];
-      ds.colors[i] = color;
-      ds.wrong.commit(i);
-      ds.hint.commit(i);
       dr.unclip();
     }
   }
@@ -665,7 +645,7 @@ export function redraw(
     dr.blitterSave(ds.cursorBlitter, origin);
     ds.cursorSaved = true;
 
-    drawRectCorners(dr, ds.cursorX, ds.cursorY, ds.cursorRadius - 1, COL_CURSOR);
+    drawRectCorners(dr, ds.cursorX, ds.cursorY, ds.cursorRadius - 1, COL_PURPLE_CURSOR);
     dr.drawUpdate({ ...origin, w: ds.cursorSize, h: ds.cursorSize });
   }
 }
@@ -718,7 +698,7 @@ function drawCorners(
             ? hintDiag | CORNER_HINT
             : 0;
 
-      if (key === ds.corners[i]) continue;
+      if (!ds.corners.changed(i, key)) continue;
 
       const bx = (x + 1) * ts;
       const by = (y + 1) * ts;
@@ -738,7 +718,6 @@ function drawCorners(
       }
 
       dr.unclip();
-      ds.corners[i] = key;
     }
   }
 }

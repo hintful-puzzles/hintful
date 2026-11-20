@@ -5,6 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -15,7 +16,6 @@ import type { MapHint, MapHintStep } from "./hint.ts";
 import { colorName, colorsOf, hintKeepTrack, refreshHintStep } from "./hint.ts";
 import { REGION } from "./hint-marks.ts";
 import { mapGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import type { MapMove, MapParams, MapState } from "./state.ts";
 
 /** Every arm the hint speaks: the cases of a rung that read differently. A
@@ -615,13 +615,13 @@ describe("map hint rendering", () => {
     const rings = ringsOf(recording.ops);
     expectRing(recording.ops, { rings: rings.length });
     expect(new Set(rings.map((r) => `${r.x},${r.y},${r.w},${r.h}`)).size).toBe(1);
-    expect(polys(COL_HINT_CELL)).toBeGreaterThan(0);
+    expect(polys(COL_HINT_OUTLINE)).toBeGreaterThan(0);
     // The evidence is a dashed line, never a strip along a whole tile side: a
     // solid one beside the target's band read as one thick line (owner
     // playtest, 2026-09-25).
     const ts = mapGame.preferredTileSize ?? 32;
     for (const o of recording.ops)
-      if (o.op === "polygon" && o.fill === COL_HINT_CELL) {
+      if (o.op === "polygon" && o.fill === COL_HINT_OUTLINE) {
         const xs = o.points.map(([x]) => x);
         const ys = o.points.map(([, y]) => y);
         const long = Math.max(

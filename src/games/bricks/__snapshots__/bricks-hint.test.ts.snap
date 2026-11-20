@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines the evidence COL_HINT_CELL 1`] = `
+exports[`bricks hint — rendering (tier 2.5) > rings the target and outlines the evidence COL_HINT_OUTLINE 1`] = `
 [
   {
     "h": 289,
