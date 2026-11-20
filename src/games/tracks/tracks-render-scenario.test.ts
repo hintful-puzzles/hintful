@@ -6,6 +6,7 @@
  * targeted assertions survive a careless `-u`).
  */
 import { describe, expect, it } from "vitest";
+import { COL_CURSOR, COL_ERROR, COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { CURSOR_RIGHT, CURSOR_SELECT2 } from "../../engine/pointer.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
@@ -17,7 +18,6 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { tracksGame } from "./index.ts";
 import { LINE, PIECE } from "./kinds.ts";
-import { COL_CURSOR, COL_ERROR, COL_HINT_CELL } from "./render.ts";
 import type { TracksMove, TracksParams } from "./state.ts";
 
 /** The clues a step's words outline. */
@@ -109,7 +109,7 @@ describe("Tracks render scenarios", () => {
     // hint color").
     expect(ringsOf(recording.ops).length, "the hint ringed nothing").toBeGreaterThan(0);
     expect(
-      recording.ops.some((o) => "color" in o && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => "color" in o && o.color === COL_HINT_OUTLINE),
       "the hint painted no evidence",
     ).toBe(true);
 
@@ -119,7 +119,7 @@ describe("Tracks render scenarios", () => {
     const cell = 33; // PREFERRED_TILE_SIZE
     for (const o of recording.ops) {
       if (o.op !== "rect") continue;
-      if (o.color !== COL_HINT_CELL) continue;
+      if (o.color !== COL_HINT_OUTLINE) continue;
       const short = Math.min(o.w, o.h);
       expect(
         short * 4 < Math.max(o.w, o.h) || short < cell / 2,
@@ -133,7 +133,7 @@ describe("Tracks render scenarios", () => {
     const { recording, step } = hintFrame("countsWithClue");
     const clues = cluesOf(step);
     const hinted = recording.ops.filter(
-      (o) => o.op === "text" && o.color === COL_HINT_CELL,
+      (o) => o.op === "text" && o.color === COL_HINT_OUTLINE,
     );
     expect(hinted.length, "the cited clue's digit is not in the outline's ink").toBe(
       clues.length,

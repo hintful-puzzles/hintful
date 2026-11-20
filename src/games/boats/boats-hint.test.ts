@@ -14,6 +14,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/hint-refusal.ts";
 import { CELL, NARRATION_LIMIT } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -38,7 +39,6 @@ import { NO_FLASH } from "../../engine/win-wave.ts";
 import { STATED } from "../../generated/games/boats/boats.compiled.ts";
 import { newBoatsDesc } from "./generator.ts";
 import { type BoatsHint, boatsGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import { solveToGrid } from "./solver.ts";
 import {
   type BoatsMove,
@@ -701,7 +701,7 @@ describe("boats hint — rendering", () => {
     // `allWaterPlaced` is the one honestly-global technique and declares none,
     // so the frame is a step that carries some.
     const result = renderPinnedHint(boatsGame, pinned("evidence"));
-    expect(usesColor(result.recording.ops, COL_HINT_CELL)).toBe(true);
+    expect(usesColor(result.recording.ops, COL_HINT_OUTLINE)).toBe(true);
   });
 
   it.each([
@@ -743,7 +743,7 @@ describe("boats hint — rendering", () => {
   it("paints no hint color at all when no hint is displayed", () => {
     const result = frame(0, false);
     expect(ringsOf(result.recording.ops)).toEqual([]);
-    expect(usesColor(result.recording.ops, COL_HINT_CELL)).toBe(false);
+    expect(usesColor(result.recording.ops, COL_HINT_OUTLINE)).toBe(false);
   });
 
   it("matches the recorded hint frame", () => {

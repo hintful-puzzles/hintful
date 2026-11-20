@@ -7,6 +7,7 @@
  * `-u`).
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
@@ -22,14 +23,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { LINK, NUMBER } from "./hint-marks.ts";
 import { tentsGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_GRID,
-  COL_HINT_CELL,
-  COL_LINK,
-  COL_MISTAKE,
-  COL_TREELEAF,
-} from "./render.ts";
+import { COL_GRID, COL_LINK, COL_TREELEAF } from "./render.ts";
 import { tentsSolve } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -144,7 +138,7 @@ describe("tents render scenarios", () => {
     expect(hint?.explanation).toMatch(/^This (row|column) /);
     expect(recording.ops.some((o) => o.op === "hatch")).toBe(true);
     expect(
-      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "text" && o.color === COL_HINT_OUTLINE),
     ).toBe(true);
     expectRing(recording.ops, { rings: stepMarks(hint).of("ring", CELL).length });
     expect(recording.ops).toMatchSnapshot();
@@ -219,13 +213,13 @@ describe("tents render scenarios", () => {
         showMistakes: true,
       });
       expect(wrong.mistakeCount).toBeGreaterThanOrEqual(2);
-      expect(thin(wrong.recording.ops, COL_MISTAKE).length).toBeGreaterThanOrEqual(2);
+      expect(thin(wrong.recording.ops, COL_ERROR).length).toBeGreaterThanOrEqual(2);
       return;
     }
     throw new Error("no tree with a non-tent square to its right");
   });
 
-  it("mistake frame: a wrong tent draws the COL_MISTAKE overlay", () => {
+  it("mistake frame: a wrong tent draws the COL_ERROR overlay", () => {
     const p = { w: 8, h: 8, diff: DIFF_EASY };
     const { id, state, soln } = board(p, "trs-mis");
     let idx = -1;
@@ -245,7 +239,7 @@ describe("tents render scenarios", () => {
       showMistakes: true,
     });
     expect(mistakeCount).toBeGreaterThanOrEqual(1);
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
+    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(
       true,
     );
   });

@@ -24,28 +24,31 @@
  *    can sit on a given square or on a line's number, and neither is a square
  *    the player filled.
  *
- * The per-tile cache is an `Int32Array` holding the drawn segment, the live
- * error/cursor flags, the flash phase and the hint role (docs/rendering.md
- * § "The tile cache and the diff key"); the Check & Save overlay rides in an
- * `OverlaySidecar`, so it repaints a cell whose contents are otherwise
+ * The tile cache keys a square on the drawn segment, the live error/cursor
+ * flags, the flash phase and the hint role (docs/rendering.md § "The tile
+ * cache and the diff key"); the Check & Save overlay rides in an
+ * `OverlaySidecar` registered with it, so it repaints a cell whose contents are otherwise
  * unchanged (the frame after the move that drew it).
  */
 
 import { BLUE_WASH } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
   clueDoneColor,
-  ERROR,
   ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -61,6 +64,7 @@ import {
   JOIN_UP,
 } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { BoatsHint } from "./index.ts";
@@ -99,49 +103,33 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1; // the line between two squares, and the frame
-const COL_CURSOR = 2;
-export const COL_WATER = 3;
+const COL_GRID = FIRST_GAME_SLOT; // the line between two squares, and the frame
+export const COL_WATER = FIRST_GAME_SLOT + 1;
 /** A boat segment: the player's, the puzzle's, and a boat still to be found
  * in the fleet tally, which is the same piece. */
-export const COL_SHIP = 4;
-export const COL_SHIP_ERROR = 5;
-const COL_SHIP_FLEET_DONE = 6;
-const COL_SHIP_FLEET_STRIPE = 7;
-export const COL_COUNT = 8;
-const COL_COUNT_ERROR = 9;
-export const COL_COLLISION_ERROR = 10;
-export const COL_COLLISION_TEXT = 11;
-export const COL_HINT_CELL = 12;
-const COL_CELL = 13; // the surface of an undecided square
-export const COL_GIVEN = 14; // the lifted surface under a segment the puzzle gave
+export const COL_SHIP = FIRST_GAME_SLOT + 2;
+const COL_SHIP_FLEET_DONE = FIRST_GAME_SLOT + 3;
+const COL_SHIP_FLEET_STRIPE = FIRST_GAME_SLOT + 4;
+export const COL_COUNT = FIRST_GAME_SLOT + 5;
+export const COL_COLLISION_TEXT = FIRST_GAME_SLOT + 6;
+const COL_CELL = FIRST_GAME_SLOT + 7; // the surface of an undecided square
+export const COL_GIVEN = FIRST_GAME_SLOT + 8; // the lifted surface under a segment the puzzle gave
 /** The waves on a given water square and the edge of a collision diamond. */
-export const COL_INK = 15;
-export const COL_FLASH = 16; // the ground of a square the win flash's body is on
-export const COL_FLASH_LEAD = 17; // and of one its leading edge is on
+export const COL_INK = FIRST_GAME_SLOT + 9;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
   out[COL_INK] = INK;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_CURSOR] = CURSOR;
   out[COL_WATER] = BLUE_WASH;
   // A segment the puzzle gave is the same piece: its lifted cell tells it.
   out[COL_SHIP] = SHADED;
-  out[COL_SHIP_ERROR] = ERROR;
   out[COL_SHIP_FLEET_DONE] = clueDoneColor(defaultBackground);
   out[COL_SHIP_FLEET_STRIPE] = INK;
   out[COL_COUNT] = INK;
-  out[COL_COUNT_ERROR] = ERROR;
-  out[COL_COLLISION_ERROR] = ERROR;
   out[COL_COLLISION_TEXT] = ERROR_TEXT;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -279,20 +267,19 @@ export function computeSize(p: BoatsParams, ts: number): Size {
 // --- draw state ------------------------------------------------------------
 
 export interface BoatsDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
   fleet: number;
-  /** Per-tile last-drawn contents (−1 = never drawn): the segment shape in bits
-   * 0–3, the live error/cursor flags in bits 4–7, the displayed hint step's role
-   * for this square in bits 9–12, the win flash's tone in bits 13–14, and the
-   * sides a segment joins the rest of its boat on in bits 15–18. */
-  tiles: Int32Array;
-  /** Last-drawn `STATUS_*` for each of the `w + h` border numbers. */
-  border: Int32Array;
-  /** Last-drawn count of completed boats per size. */
-  fleetCount: Int32Array;
+  /** Per square: the segment shape in bits 0–3, the live error/cursor flags in
+   * bits 4–7, the displayed hint step's role for this square in bits 9–12, the
+   * win flash's tone in bits 13–14, and the sides a segment joins the rest of
+   * its boat on in bits 15–18. */
+  tiles: TileCache;
+  /** Per border number, its `STATUS_*` and hatch. */
+  border: TileCache;
+  /** Per boat size, the count of completed boats. */
+  fleetCount: TileCache;
   /** The Check & Save mistake overlay; it must be in the diff key or it never
    * repaints (docs/rendering.md § "Overlay sidecars"). */
   wrong: OverlaySidecar;
@@ -300,16 +287,16 @@ export interface BoatsDrawState {
 
 export function newDrawState(state: BoatsState, tileSize: number): BoatsDrawState {
   const { w, h, fleet } = state.params;
+  const wrong = new OverlaySidecar(w * h);
   return {
-    started: false,
     tileSize,
     w,
     h,
     fleet,
-    tiles: new Int32Array(w * h).fill(-1),
-    border: new Int32Array(w + h).fill(-1),
-    fleetCount: new Int32Array(fleet).fill(-1),
-    wrong: new OverlaySidecar(w * h),
+    tiles: new TileCache(w * h, { overlays: [wrong] }),
+    border: new TileCache(w + h),
+    fleetCount: new TileCache(fleet),
+    wrong,
   };
 }
 
@@ -413,7 +400,7 @@ function drawCollision(dr: GameDrawing, ts: number, x: number, y: number): void 
       { x: x + ext, y },
       { x, y: y + ext },
     ],
-    COL_COLLISION_ERROR,
+    COL_ERROR,
     COL_INK,
   );
 
@@ -439,7 +426,6 @@ function drawFleet(
   ds: BoatsDrawState,
   p: BoatsParams,
   fleetCount: Int32Array,
-  full: boolean,
 ): void {
   const ts = ds.tileSize;
   const { h, fleet, fleetData } = p;
@@ -450,8 +436,13 @@ function drawFleet(
   const slope =
     (FLEET_SIZE * ts - STRIPE_SIZE * 2) / (fleet * FLEET_SIZE * ts - STRIPE_SIZE * 2);
 
+  // A size has a slot per boat of it, so whether its count moved is asked
+  // once a size, before its slots are walked.
+  const moved: boolean[] = [];
+  for (let size = 0; size < fleet; size++)
+    moved[size] = ds.fleetCount.changed(size, fleetCount[size]);
   for (const { size, copy, fx: startFx, width, row } of fleetLayout(p)) {
-    if (!full && fleetCount[size] === ds.fleetCount[size]) continue;
+    if (!moved[size]) continue;
 
     const rect = {
       x: fxCoord(startFx),
@@ -485,7 +476,7 @@ function drawFleet(
       // Red rather than ink when more boats of this size are on the board
       // than the fleet holds.
       const stripe =
-        fleetData[size] >= fleetCount[size] ? COL_SHIP_FLEET_STRIPE : COL_COUNT_ERROR;
+        fleetData[size] >= fleetCount[size] ? COL_SHIP_FLEET_STRIPE : COL_ERROR;
       const cy = fyCoord(row) + (FLEET_SIZE * ts) / 2;
       const stripeH = slope * ((size + 1) * FLEET_SIZE * ts - STRIPE_SIZE * 2);
       dr.drawLine(
@@ -496,8 +487,6 @@ function drawFleet(
       );
     }
   }
-
-  for (let i = 0; i < fleet; i++) ds.fleetCount[i] = fleetCount[i];
 }
 
 // --- the frame -------------------------------------------------------------
@@ -585,7 +574,6 @@ export function redraw(
   const ts = ds.tileSize;
   const p = state.params;
   const { w, h } = p;
-  const full = !ds.started;
 
   // The validation family writes its verdicts into caller-supplied arrays and
   // takes a mutable `BoatsBoard`, so give it a scratch copy rather than the
@@ -619,7 +607,7 @@ export function redraw(
     if (state.borderClues[i] === NO_CLUE) continue;
     const hatched = i === hatchedSlot;
     const key = borderStatus[i] + (hatched ? BORDER_HATCHED : 0);
-    if (!full && key === ds.border[i]) continue;
+    if (!ds.border.changed(i, key)) continue;
 
     const column = i < w;
     const tx = BORDER + (column ? i * ts + half : (w + 1) * ts);
@@ -636,23 +624,22 @@ export function redraw(
         fontType: "variable",
         size: half,
       },
-      borderStatus[i] === STATUS_INVALID ? COL_COUNT_ERROR : COL_COUNT,
+      borderStatus[i] === STATUS_INVALID ? COL_ERROR : COL_COUNT,
       String(state.borderClues[i]),
     );
-    ds.border[i] = key;
   }
 
   // A collision diamond straddles the corner of four cells, so a change to one
   // must repaint the other three (the flagged cell repaints on its own flags).
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
-      const drawn = ds.tiles[y * w + x];
+      const drawn = ds.tiles.shown(y * w + x);
       // A never-drawn cell (−1) has nothing to erase, so it is not a change.
       const wasCollision = drawn < 0 ? 0 : (drawn >> 4) & FE_COLLISION;
       if (wasCollision !== (cellFlags[y * w + x] & FE_COLLISION)) {
-        if (y + 1 < h) ds.tiles[(y + 1) * w + x] = -1;
-        if (x + 1 < w) ds.tiles[y * w + (x + 1)] = -1;
-        if (x + 1 < w && y + 1 < h) ds.tiles[(y + 1) * w + (x + 1)] = -1;
+        if (y + 1 < h) ds.tiles.forget((y + 1) * w + x);
+        if (x + 1 < w) ds.tiles.forget(y * w + (x + 1));
+        if (x + 1 < w && y + 1 < h) ds.tiles.forget((y + 1) * w + (x + 1));
       }
     }
   }
@@ -702,14 +689,13 @@ export function redraw(
       const hintBit = hints ? hints[i] : 0;
       const tone = flash.win(boatStep?.get(i) ?? sweepStep(x, y));
       const key = tileKey(ship, cellFlags[i], tone, hintBit, joins);
-      if (ds.tiles[i] === key && !ds.wrong.stale(i)) continue;
-      ds.tiles[i] = key;
+      if (!ds.tiles.changed(i, key)) continue;
 
       dr.drawUpdate({ x: tx, y: ty, w: ts + 1, h: ts + 1 });
       // A segment the puzzle gave is told by the lifted cell under it; given
       // water keeps its blue and is told by its waves. A lit boat is its hull
       // in the flash's color, on its own surface.
-      const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : null;
+      const lit = tone ? winSlot(tone) : null;
       const surface =
         lit !== null && !isShip(ship)
           ? lit
@@ -732,8 +718,7 @@ export function redraw(
 
       if (isShip(ship)) {
         const color =
-          lit ??
-          (cellFlags[i] & FE_MISMATCH || ds.wrong.at(i) ? COL_SHIP_ERROR : COL_SHIP);
+          lit ?? (cellFlags[i] & FE_MISMATCH || ds.wrong.at(i) ? COL_ERROR : COL_SHIP);
         // Clipped to the square, as a polygon's edge spills half a pixel.
         const square = { x: tx, y: ty, w: ts, h: ts };
         dr.clip(square);
@@ -789,11 +774,11 @@ export function redraw(
             inner: Math.max(2, ts >> 4),
           },
           MARK_ALL,
-          COL_HINT_CELL,
+          COL_HINT_OUTLINE,
         );
       }
 
-      if (fleetText) dr.drawText(fleetAt.origin, fleetAt.options, COL_COUNT_ERROR, "?");
+      if (fleetText) dr.drawText(fleetAt.origin, fleetAt.options, COL_ERROR, "?");
 
       // Check & Save: a square the unique solution contradicts. A wrong *ship*
       // is already red above; this outline is what makes a wrong *water* square
@@ -806,7 +791,7 @@ export function redraw(
           ty + inset,
           ts - inset * 2 + 1,
           ts - inset * 2 + 1,
-          COL_SHIP_ERROR,
+          COL_ERROR,
         );
       }
 
@@ -823,8 +808,6 @@ export function redraw(
           COL_CURSOR,
         );
       }
-
-      ds.wrong.commit(i);
     }
   }
 
@@ -833,9 +816,7 @@ export function redraw(
       if (cellFlags[y * w + x] & FE_COLLISION)
         drawCollision(dr, ts, BORDER + (x + 1) * ts, BORDER + (y + 1) * ts);
 
-  drawFleet(dr, ds, p, fleetCount, full);
-
-  ds.started = true;
+  drawFleet(dr, ds, p, fleetCount);
 }
 
 /** The rectangle the current drag covers, or null when no drag is in progress. */

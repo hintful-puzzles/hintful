@@ -26,14 +26,17 @@ import {
 } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  ERROR,
   ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawThickRectOutline } from "../../engine/draw.ts";
 import { Dsf } from "../../engine/dsf.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -48,6 +51,7 @@ import {
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { LEFT_BUTTON } from "../../engine/pointer.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import { type HintLink, LINK, NUMBER } from "./hint-marks.ts";
@@ -79,50 +83,33 @@ import {
 export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
-const COL_BACKGROUND = 0;
-export const COL_GRID = 1; // the line between two squares, and the frame
-const COL_GRASS = 2;
-const COL_TREETRUNK = 3;
-export const COL_TREELEAF = 4;
-export const COL_TENT = 5;
-export const COL_ERROR = 6;
-const COL_ERRTEXT = 7;
-const COL_ERRTRUNK = 8;
-// The findMistakes overlay, appended past upstream's enum.
-export const COL_MISTAKE = 9;
-/** The hint's evidence outline, and the clue it counts with. The ring round
- * what a step decides is the engine's (`GameDrawing.drawRing`). */
-export const COL_HINT_CELL = 10;
-const COL_CELL = 11; // the surface of a square not yet decided
+export const COL_GRID = FIRST_GAME_SLOT; // the line between two squares, and the frame
+const COL_GRASS = FIRST_GAME_SLOT + 1;
+const COL_TREETRUNK = FIRST_GAME_SLOT + 2;
+export const COL_TREELEAF = FIRST_GAME_SLOT + 3;
+export const COL_TENT = FIRST_GAME_SLOT + 4;
+const COL_ERRTEXT = FIRST_GAME_SLOT + 5;
+const COL_ERRTRUNK = FIRST_GAME_SLOT + 6;
+const COL_CELL = FIRST_GAME_SLOT + 7; // the surface of a square not yet decided
 /** The clues, the keyboard cursor and the edge of an error diamond. */
-const COL_INK = 12;
+const COL_INK = FIRST_GAME_SLOT + 8;
 /** A link between a tent and its tree: the ink of the clues, the color of the
  * player's own notation. */
 export const COL_LINK = COL_INK;
-/** The ground of a square the win flash is on. */
-export const COL_FLASH = 13;
-/** The ground of a square the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 14;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_INK] = INK;
   out[COL_GRASS] = GREEN_WASH;
   out[COL_TREETRUNK] = BROWN;
   out[COL_TREELEAF] = GREEN;
   out[COL_TENT] = ORANGE;
-  out[COL_ERROR] = ERROR;
   out[COL_ERRTEXT] = ERROR_TEXT;
   // Red's bold step, not the error role: the trunk of a tree in error has to be
   // told from the red leaves it is drawn under.
   out[COL_ERRTRUNK] = RED_BOLD;
-  out[COL_MISTAKE] = ERROR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -175,26 +162,20 @@ export function computeSize(p: TentsParams, ts: number): Size {
 // --- draw state -----------------------------------------------------------
 
 export interface TentsDrawState {
-  started: boolean;
   tileSize: number;
-  /** Last-drawn packed word per tile; -1 forces a draw. */
-  drawn: Int32Array;
-  /** Last-drawn hint word per tile, the second half of the key. */
-  hintDrawn: Int32Array;
-  /** Last-drawn key per edge number (its error flag, hatch and hint color);
-   * -1 forces a draw. */
-  numbersDrawn: Int32Array;
+  /** Per square, its packed word and its hint word. */
+  tiles: TileCache;
+  /** Per edge number, its error flag, hatch and hint color. */
+  numbers: TileCache;
   /** The hint's rings and outlines, painted after the tile loop. */
   marks: HintMarks;
 }
 
 export function newDrawState(state: TentsState, tileSize: number): TentsDrawState {
   return {
-    started: false,
     tileSize,
-    drawn: new Int32Array(state.w * state.h).fill(-1),
-    hintDrawn: new Int32Array(state.w * state.h).fill(-1),
-    numbersDrawn: new Int32Array(state.w + state.h).fill(-1),
+    tiles: new TileCache(state.w * state.h, { words: 2 }),
+    numbers: new TileCache(state.w + state.h),
     marks: new HintMarks(),
   };
 }
@@ -427,11 +408,7 @@ function drawTile(
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, COL_GRID);
   dr.drawRect(
     { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
-    tone
-      ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-      : v === BLANK
-        ? COL_CELL
-        : COL_GRASS,
+    tone ? winSlot(tone) : v === BLANK ? COL_CELL : COL_GRASS,
   );
   // The line the hint's sentence names, under the content so it stays whole.
   if (hintWord & HINT_LINE_BIT) {
@@ -480,7 +457,7 @@ function drawTile(
       tx,
       ty,
       link,
-      packed & LINK_MISTAKE_BIT ? COL_MISTAKE : COL_LINK,
+      packed & LINK_MISTAKE_BIT ? COL_ERROR : COL_LINK,
     );
   }
   const half = Math.floor(ts / 2);
@@ -499,7 +476,7 @@ function drawTile(
     const thick = Math.max(1, Math.floor(ts / 16));
     const inset = Math.max(2, Math.floor(ts / 8));
     const span = ts - 2 * inset;
-    drawThickRectOutline(dr, tx + inset, ty + inset, span, span, thick, COL_MISTAKE);
+    drawThickRectOutline(dr, tx + inset, ty + inset, span, span, thick, COL_ERROR);
   }
 
   if (cur) {
@@ -587,7 +564,7 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h, grid, numbers } = state;
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The grid lines.
     for (let y = 0; y <= h; y++) {
       dr.drawLine(
@@ -605,7 +582,6 @@ export function redraw(
         1,
       );
     }
-    ds.started = true;
   }
 
   // Errors: transform only the drag's start cell (upstream — instant single-
@@ -660,7 +636,7 @@ export function redraw(
     // A square shows a tree, a tent or grass, never text; the clues lie
     // outside the grid, past any ring's reach.
     text: () => NOTHING_TO_CLEAR,
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   };
   const outlines = new MarkOutlines(hintTargets, area, markStyle);
   // A link's ring is this file's, since only it can draw the link inside; when
@@ -700,11 +676,8 @@ export function redraw(
       if (badLinkSet.has(i)) packed |= LINK_MISTAKE_BIT;
       let hintWord = outlines.packed(x, y) | (hintLinks[i] << HINT_LINK_SHIFT);
       if (onLine(x, y)) hintWord |= HINT_LINE_BIT;
-      if (ds.drawn[i] !== packed || ds.hintDrawn[i] !== hintWord) {
+      if (ds.tiles.changed(i, packed, hintWord))
         drawTile(dr, ts, x, y, packed, hintWord, isCur);
-        ds.drawn[i] = packed;
-        ds.hintDrawn[i] = hintWord;
-      }
     }
   }
 
@@ -717,9 +690,13 @@ export function redraw(
   const numberSize = Math.floor(ts / 2);
   for (let k = 0; k < w + h; k++) {
     const hatched = stripedLine === k;
-    const color = errors.num[k] ? COL_ERROR : counted.has(k) ? COL_HINT_CELL : COL_INK;
+    const color = errors.num[k]
+      ? COL_ERROR
+      : counted.has(k)
+        ? COL_HINT_OUTLINE
+        : COL_INK;
     const key = errors.num[k] | (hatched ? 2 : 0) | (counted.has(k) ? 4 : 0);
-    if (ds.numbersDrawn[k] === key) continue;
+    if (!ds.numbers.changed(k, key)) continue;
     const column = k < w;
     const box = column
       ? { x: coord(k, ts), y: coord(h, ts) + 1, w: ts, h: brBorder(ts) - 1 }
@@ -740,6 +717,5 @@ export function redraw(
       String(numbers[k]),
     );
     dr.drawUpdate(box);
-    ds.numbersDrawn[k] = key;
   }
 }

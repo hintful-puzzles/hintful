@@ -17,21 +17,26 @@
 
 import { ORANGE_BOLD } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
   DRAG_ADD,
   DRAG_REMOVE,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   PAPER,
   RULED_OUT,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
 import { TRACKS_BED } from "../../engine/color/palette-games.ts";
+import {
+  COL_BACKGROUND,
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import {
   drawEdgeHints,
@@ -55,6 +60,7 @@ import {
   squareEdges,
   U,
 } from "../../engine/square-edges.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
 import { pieceOfOp } from "./hint.ts";
@@ -82,34 +88,25 @@ import {
 export const PREFERRED_TILE_SIZE = 33;
 
 // --- palette --------------------------------------------------------------
-const COL_BACKGROUND = 0;
-const COL_GIVEN = 1; // the lifted surface under track the puzzle laid
-const COL_GRID = 2;
-const COL_CLUE = 3;
-export const COL_CURSOR = 4;
-const COL_TRACK = 5;
-const COL_CELL = 6; // the surface of a square the player works
-const COL_SLEEPER = 7;
-const COL_DRAGON = 8;
-const COL_DRAGOFF = 9;
-export const COL_ERROR = 10;
-export const COL_FLASH = 11;
-const COL_ERROR_BACKGROUND = 12;
-/** The outline's ink, past the end of the C enum: what a step reasons from,
- * and the clue it counts with. */
-export const COL_HINT_CELL = 13;
+const COL_GIVEN = FIRST_GAME_SLOT; // the lifted surface under track the puzzle laid
+const COL_GRID = FIRST_GAME_SLOT + 1;
+const COL_CLUE = FIRST_GAME_SLOT + 2;
+const COL_TRACK = FIRST_GAME_SLOT + 3;
+const COL_CELL = FIRST_GAME_SLOT + 4; // the surface of a square the player works
+const COL_SLEEPER = FIRST_GAME_SLOT + 5;
+const COL_DRAGON = FIRST_GAME_SLOT + 6;
+const COL_DRAGOFF = FIRST_GAME_SLOT + 7;
+const COL_ERROR_BACKGROUND = FIRST_GAME_SLOT + 8;
 /** The player's no-track crosses, on squares and edges. Their own slot rather
  * than the rails' `COL_TRACK`, which upstream shared: a rail is the picture
  * and a cross is a note beside it. */
-const COL_NOTRACK = 14;
+const COL_NOTRACK = FIRST_GAME_SLOT + 9;
 /** The bed under a square that carries track, whole piece or not. */
-const COL_TRACK_BACKGROUND = 15;
-export const COL_FLASH_LEAD = 16;
+const COL_TRACK_BACKGROUND = FIRST_GAME_SLOT + 10;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
   out[COL_TRACK_BACKGROUND] = TRACKS_BED;
@@ -118,19 +115,14 @@ export function colors(defaultBackground: Color): Color[] {
   // it, and the rail itself is the same rail.
   out[COL_TRACK] = INK;
   out[COL_CLUE] = INK;
-  out[COL_CURSOR] = CURSOR;
   // White behind a red clue digit, so the red pops; a red wash would sit red
   // under red.
   out[COL_ERROR_BACKGROUND] = PAPER;
   // Brown wood in the light scheme and pale wood in the dark one: orange's
   // bold step, where `BROWN` stays dark and sinks into the bed and a given.
   out[COL_SLEEPER] = ORANGE_BOLD;
-  out[COL_ERROR] = ERROR;
   out[COL_DRAGON] = DRAG_ADD;
   out[COL_DRAGOFF] = DRAG_REMOVE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_NOTRACK] = RULED_OUT;
   return out;
 }
@@ -205,31 +197,28 @@ export function computeSize(p: { w: number; h: number }, tileSize: number): Size
 // --- draw state -----------------------------------------------------------
 
 export interface TracksDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  flags: Int32Array;
-  flagsDrag: Int32Array;
-  /** Per-clue: the error flag, plus a bit for "the hint counts with this clue". */
-  numErrors: Int32Array;
-  /** Per-square hint marks: part of the diff key, see the `H_*` bits. */
-  hint: Int32Array;
+  /** Per square: its flags, its flags under the drag's preview, and its hint
+   * marks (the `H_*` bits); the mistake overlay registered with it. */
+  tiles: TileCache;
+  /** Per clue: the error flag, a bit for "the hint counts with this clue" and
+   * one for its line's hatch. */
+  clues: TileCache;
   wrong: OverlaySidecar;
 }
 
 export function newDrawState(state: TracksState, tileSize: number): TracksDrawState {
   const n = state.w * state.h;
+  const wrong = new OverlaySidecar(n);
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
-    flags: new Int32Array(n).fill(-1),
-    flagsDrag: new Int32Array(n).fill(-1),
-    numErrors: new Int32Array(state.w + state.h).fill(-1),
-    hint: new Int32Array(n),
-    wrong: new OverlaySidecar(n),
+    tiles: new TileCache(n, { words: 3, overlays: [wrong] }),
+    clues: new TileCache(state.w + state.h),
+    wrong,
   };
 }
 
@@ -553,9 +542,9 @@ function drawHintMarks(
   // A ring is the engine's, round: an asked side's is a pill across it, which
   // each of the side's two squares draws its half of in its own clip.
   const area = (hint >> H_AREA_SHIFT) & MARK_ALL;
-  if (area) drawMarkSides(dr, { box, outer: 0, inner: band }, area, COL_HINT_CELL);
+  if (area) drawMarkSides(dr, { box, outer: 0, inner: band }, area, COL_HINT_OUTLINE);
   const ringThick = Math.max(2, lineThick);
-  drawEdgeHints(dr, hint, COL_HINT_CELL, {
+  drawEdgeHints(dr, hint, COL_HINT_OUTLINE, {
     line: (sides, ink, role) =>
       role === "ring" ? drawTrackStubs(dr, m, x, y, sides, ink) : bars(sides, ink),
     cross: (sides, ink, role) =>
@@ -794,14 +783,13 @@ export function redraw(
 ): void {
   const m = metrics(ds.tileSize);
   const { w, h } = state;
-  let force = false;
   const hintMarks = hintFlags(state, hint);
   const marks = stepMarks(hint);
   const hintedClues = new Set(
     marks.of("outline", PIECE).flatMap((p) => ("clue" in p ? [p.clue] : [])),
   );
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     drawLoopEnds(dr, m, state, COL_CLUE);
     dr.drawRect(
       {
@@ -812,8 +800,6 @@ export function redraw(
       },
       COL_GRID,
     );
-    ds.started = true;
-    force = true;
   }
 
   // Clue numbers in the margin. Half of several deductions lives out here
@@ -826,15 +812,14 @@ export function redraw(
   for (let i = 0; i < w + h; i++) {
     const key =
       state.numErrors[i] | (hintedClues.has(i) ? 2 : 0) | (hatchedLines.has(i) ? 4 : 0);
-    if (force || key !== ds.numErrors[i]) {
-      ds.numErrors[i] = key;
+    if (ds.clues.changed(i, key)) {
       drawClue(
         dr,
         m,
         w,
         state.numbers.numbers[i],
         i,
-        key & 1 ? COL_ERROR : key & 2 ? COL_HINT_CELL : COL_CLUE,
+        key & 1 ? COL_ERROR : key & 2 ? COL_HINT_OUTLINE : COL_CLUE,
         key & 1 ? COL_ERROR_BACKGROUND : COL_BACKGROUND,
         (key & 4) !== 0,
       );
@@ -861,19 +846,8 @@ export function redraw(
       const f = s2dFlags(board, x, y, ui) | flashing;
       const fD = dragBoard ? s2dFlags(dragBoard, x, y, ui) : f;
       const hf = hintMarks[i];
-      if (
-        f !== ds.flags[i] ||
-        fD !== ds.flagsDrag[i] ||
-        hf !== ds.hint[i] ||
-        ds.wrong.stale(i) ||
-        force
-      ) {
+      if (ds.tiles.changed(i, f, fD, hf))
         drawSquare(dr, m, x, y, f, fD, ds.wrong.at(i), hf);
-        ds.flags[i] = f;
-        ds.flagsDrag[i] = fD;
-        ds.hint[i] = hf;
-        ds.wrong.commit(i);
-      }
     }
   }
 }

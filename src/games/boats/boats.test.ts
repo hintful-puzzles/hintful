@@ -58,17 +58,14 @@ const presetParams = (i: number): BoatsParams => ({
   fleetData: [...PRESETS[i].fleetData],
 });
 
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
   type BoatsDrawState,
-  COL_COLLISION_ERROR,
   COL_COLLISION_TEXT,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_SHIP,
-  COL_SHIP_ERROR,
   COL_WATER,
   computeSize,
   fleetLayout,
@@ -874,11 +871,9 @@ describe("boats rendering", () => {
       NO_FLASH,
     );
 
-    // The diamond is a polygon filled COL_COLLISION_ERROR outlined COL_INK,
+    // The diamond is a polygon filled COL_ERROR outlined COL_INK,
     // with the exclamation mark in COL_COLLISION_TEXT on top.
-    expect(
-      rec.ops.some((o) => o.op === "polygon" && o.fill === COL_COLLISION_ERROR),
-    ).toBe(true);
+    expect(rec.ops.some((o) => o.op === "polygon" && o.fill === COL_ERROR)).toBe(true);
     expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_COLLISION_TEXT)).toBe(
       true,
     );
@@ -1019,7 +1014,7 @@ describe("boats rendering", () => {
 
     expect(result.mistakeCount).toBeGreaterThan(0);
     expect(
-      result.recording.ops.some((o) => o.op === "line" && o.color === COL_SHIP_ERROR),
+      result.recording.ops.some((o) => o.op === "line" && o.color === COL_ERROR),
     ).toBe(true);
   });
 });

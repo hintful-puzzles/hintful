@@ -37,12 +37,10 @@ import { tentsGame } from "./index.ts";
 // A 4x4 above Easy.
 describeAbsentTiers(tentsGame, ["4x4dt"]);
 
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_MISTAKE,
   COL_TENT,
   COL_TREELEAF,
   computeSize,
@@ -550,7 +548,7 @@ describe("tents render (tier 2)", () => {
     rec.ops.length = 0;
     redraw(rec, ds, null, wrong, 1, ui, 0, NO_FLASH, undefined, mistakes);
 
-    expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
+    expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 
   it("computeSize matches the NARROW_BORDERS geometry", () => {

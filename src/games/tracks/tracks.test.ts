@@ -38,10 +38,10 @@ describeAbsentTiers(tracksGame, ["4x4dt", "4x4dh"]);
 // The size beside it, which deals both.
 describeDealtTiers(tracksGame, ["4x5dt", "4x5dh"], { deals: 8 });
 
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { NO_FLASH } from "../../engine/win-wave.ts";
 import { executeMove, uiCanFlipSquare } from "./moves.ts";
 import {
-  COL_ERROR,
   centeredCoord,
   metrics,
   newDrawState,

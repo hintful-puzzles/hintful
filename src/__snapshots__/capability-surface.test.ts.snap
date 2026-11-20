@@ -246,7 +246,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "fleet",
       "fleetCount",
       "h",
-      "started",
       "tileSize",
       "tiles",
       "w",
@@ -2203,12 +2202,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "drawn",
-      "hintDrawn",
       "marks",
-      "numbersDrawn",
-      "started",
+      "numbers",
       "tileSize",
+      "tiles",
     ],
     "id": "tents",
     "members": [
@@ -2289,13 +2286,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "flags",
-      "flagsDrag",
+      "clues",
       "h",
-      "hint",
-      "numErrors",
-      "started",
       "tileSize",
+      "tiles",
       "w",
       "wrong",
     ],
