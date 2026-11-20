@@ -35,6 +35,13 @@ import {
   squareSide,
 } from "./border-grid.ts";
 import { EDGE } from "./border-grid-hint.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "./color/roles.ts";
 import { glyphFont } from "./draw.ts";
 import type { Dsf } from "./dsf.ts";
 import { drawEdgeHints, type EdgeHint, edgeHintWords } from "./edge-hint.ts";
@@ -45,6 +52,7 @@ import { CELL, type StepMarks } from "./hint-words.ts";
 import type { GridCursor } from "./pointer.ts";
 import { textBox } from "./ring.ts";
 import { squareEdges } from "./square-edges.ts";
+import { TileCache } from "./tile-cache.ts";
 import type { Rect, Size } from "./types.ts";
 import { WIN_BODY, WIN_LEAD, type WinTone } from "./win-wave.ts";
 
@@ -109,17 +117,15 @@ export function flashFlag(tone: WinTone): number {
   return tone === WIN_LEAD ? F_FLASH_LEAD : tone === WIN_BODY ? F_FLASH : 0;
 }
 
-/** Colors the shared parts draw with, by each game's own palette index. */
+/** Colors the shared parts draw with, by each game's own palette index. The
+ * win flash, an error, the hint's marks and the cursor are the palette's
+ * shared roles (`color/roles.ts`). */
 export interface BorderGridColors {
   /** The surface of a cell. */
   background: number;
   /** The lifted surface under a cell flagged {@link F_GIVEN}; omit in a game
    * that flags none. */
   given?: number;
-  /** The ground of a cell under the win flash's body, and under its leading
-   * edge. */
-  flash: number;
-  flashLead: number;
   correct: number;
   /** A wall, and the grid's ink generally. */
   grid: number;
@@ -127,25 +133,16 @@ export interface BorderGridColors {
   lineNo: number;
   /** A border not yet decided. */
   lineMaybe: number;
-  error: number;
-  /** The outline on a square the displayed hint cites; omit in a game with no
-   * hint, which then draws none of a hint's marks. */
-  hintEvidence?: number;
-  /** The keyboard cursor's outline. */
-  cursor: number;
 }
 
 // --- draw state --------------------------------------------------------------
 
 export interface BorderGridDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  /** `w·h` cache of last-drawn packed tile flags; `-1` forces a draw. */
-  cache: Int32Array;
-  /** `w·h` cache of last-drawn `edge-hint.ts` words, beside `cache`. */
-  edges: Int32Array;
+  /** Per cell, its packed tile flags and its `edge-hint.ts` word. */
+  tiles: TileCache;
 }
 
 export function newBorderGridDrawState(
@@ -153,28 +150,7 @@ export function newBorderGridDrawState(
   h: number,
   tileSize: number,
 ): BorderGridDrawState {
-  return {
-    started: false,
-    tileSize,
-    w,
-    h,
-    cache: new Int32Array(w * h).fill(-1),
-    edges: new Int32Array(w * h),
-  };
-}
-
-/** Whether cell `i` shows other than `flags` and `edges`, recording them as
- * drawn when it does: the tile's whole diff key. */
-export function borderTileStale(
-  ds: BorderGridDrawState,
-  i: number,
-  flags: number,
-  edges: number,
-): boolean {
-  if (ds.cache[i] === flags && ds.edges[i] === edges) return false;
-  ds.cache[i] = flags;
-  ds.edges[i] = edges;
-  return true;
+  return { tileSize, w, h, tiles: new TileCache(w * h, { words: 2 }) };
 }
 
 // --- the flags a frame computes ----------------------------------------------
@@ -297,7 +273,7 @@ export function invalidateDanglingRegions(
 
 function edgeColor(flags: number, dir: number, colors: BorderGridColors): number {
   const b = BORDER(dir);
-  if (flags & BORDER_ERROR(b)) return colors.error;
+  if (flags & BORDER_ERROR(b)) return COL_ERROR;
   if (flags & b) return colors.grid; // a wall
   if (flags & DISABLED(b)) return colors.lineNo;
   return colors.lineMaybe;
@@ -358,9 +334,9 @@ export function drawBorderTile(
   dr.drawRect(
     body,
     flags & F_FLASH_LEAD
-      ? colors.flashLead
+      ? COL_FLASH_LEAD
       : flags & F_FLASH
-        ? colors.flash
+        ? COL_FLASH
         : flags & F_CORRECT
           ? colors.correct
           : colors.given !== undefined && flags & F_GIVEN
@@ -373,14 +349,13 @@ export function drawBorderTile(
   // glyph the deduction reads and the `F_CORRECT` shade that shows a region is
   // finished. The outline is inset in the body because the square's border is
   // where the hint's own forced edges are drawn.
-  if (colors.hintEvidence !== undefined && flags & F_HINT_REGION)
-    dr.drawHatch(body, hatchPeriod(ts));
-  if (colors.hintEvidence !== undefined && flags & F_HINT_CELL) {
+  if (flags & F_HINT_REGION) dr.drawHatch(body, hatchPeriod(ts));
+  if (flags & F_HINT_CELL) {
     drawMarkSides(
       dr,
       { box: body, outer: 0, inner: Math.max(2, ts >> 4) },
       MARK_ALL,
-      colors.hintEvidence,
+      COL_HINT_OUTLINE,
     );
   }
 
@@ -402,57 +377,55 @@ export function drawBorderTile(
   // board, so an edge drawn in it would read as a wall whatever was drawn
   // over it. A pill keeps off the glyph in the middle of each square beside
   // the edge, the one a game's `drawContent` draws there.
-  if (colors.hintEvidence !== undefined) {
-    const each = (sides: number, draw: (rect: Rect) => void): void => {
-      edges.forEach((rect, dir) => {
-        if (sides & (1 << SQUARE_DIRS[dir])) draw(rect);
-      });
-    };
-    const arm = Math.max(3, Math.floor(ts / 8));
-    const weight = Math.max(2, ts >> 4);
-    const glyph = (cx: number, cy: number): Rect =>
-      textBox({ x: cx, y: cy }, glyphFont(Math.floor(ts / 2)), "0");
-    drawEdgeHints(dr, edgeHint, colors.hintEvidence, {
-      line: (sides, ink) => each(sides, (rect) => dr.drawRect(rect, ink)),
-      cross: (sides, ink) =>
-        each(sides, (rect) => {
-          const mx = rect.x + Math.floor(rect.w / 2);
-          const my = rect.y + Math.floor(rect.h / 2);
-          dr.drawLine(
-            { x: mx - arm, y: my - arm },
-            { x: mx + arm, y: my + arm },
-            ink,
-            weight,
-          );
-          dr.drawLine(
-            { x: mx - arm, y: my + arm },
-            { x: mx + arm, y: my - arm },
-            ink,
-            weight,
-          );
-        }),
-      ring: (d) => {
-        const rect = edges[SQUARE_DIRS.indexOf(d)];
-        const mx = rect.x + rect.w / 2;
-        const my = rect.y + rect.h / 2;
-        const along = Math.floor(ts * 0.75);
-        const across = Math.floor(ts * 0.3);
-        const flat = rect.w > rect.h;
-        const w2 = (flat ? along : across) / 2;
-        const h2 = (flat ? across : along) / 2;
-        // The two squares the edge parts, by their middles.
-        const cx = x + w + (ts - w) / 2;
-        const cy = y + w + (ts - w) / 2;
-        const other = { x: 2 * mx - cx, y: 2 * my - cy };
-        return {
-          box: { x: mx - w2, y: my - h2, w: 2 * w2, h: 2 * h2 },
-          clear: { enclose: [], avoid: [glyph(cx, cy), glyph(other.x, other.y)] },
-          thickness: weight,
-          room: { x: mx - ts, y: my - ts, w: 2 * ts, h: 2 * ts },
-        };
-      },
+  const each = (sides: number, draw: (rect: Rect) => void): void => {
+    edges.forEach((rect, dir) => {
+      if (sides & (1 << SQUARE_DIRS[dir])) draw(rect);
     });
-  }
+  };
+  const arm = Math.max(3, Math.floor(ts / 8));
+  const weight = Math.max(2, ts >> 4);
+  const glyph = (cx: number, cy: number): Rect =>
+    textBox({ x: cx, y: cy }, glyphFont(Math.floor(ts / 2)), "0");
+  drawEdgeHints(dr, edgeHint, COL_HINT_OUTLINE, {
+    line: (sides, ink) => each(sides, (rect) => dr.drawRect(rect, ink)),
+    cross: (sides, ink) =>
+      each(sides, (rect) => {
+        const mx = rect.x + Math.floor(rect.w / 2);
+        const my = rect.y + Math.floor(rect.h / 2);
+        dr.drawLine(
+          { x: mx - arm, y: my - arm },
+          { x: mx + arm, y: my + arm },
+          ink,
+          weight,
+        );
+        dr.drawLine(
+          { x: mx - arm, y: my + arm },
+          { x: mx + arm, y: my - arm },
+          ink,
+          weight,
+        );
+      }),
+    ring: (d) => {
+      const rect = edges[SQUARE_DIRS.indexOf(d)];
+      const mx = rect.x + rect.w / 2;
+      const my = rect.y + rect.h / 2;
+      const along = Math.floor(ts * 0.75);
+      const across = Math.floor(ts * 0.3);
+      const flat = rect.w > rect.h;
+      const w2 = (flat ? along : across) / 2;
+      const h2 = (flat ? across : along) / 2;
+      // The two squares the edge parts, by their middles.
+      const cx = x + w + (ts - w) / 2;
+      const cy = y + w + (ts - w) / 2;
+      const other = { x: 2 * mx - cx, y: 2 * my - cy };
+      return {
+        box: { x: mx - w2, y: my - h2, w: 2 * w2, h: 2 * h2 },
+        clear: { enclose: [], avoid: [glyph(cx, cy), glyph(other.x, other.y)] },
+        thickness: weight,
+        room: { x: mx - ts, y: my - ts, w: 2 * ts, h: 2 * ts },
+      };
+    },
+  });
 
   dr.unclip();
   dr.drawUpdate({ x, y, w: ts + w, h: ts + w });
@@ -470,8 +443,8 @@ export function drawBorderCursor(
   ts: number,
   curX: number,
   curY: number,
-  color: number,
 ): void {
+  const color = COL_CURSOR;
   const offX = curX % 2;
   const offY = curY % 2;
   const x = margin(ts) + ts * Math.floor(curX / 2);

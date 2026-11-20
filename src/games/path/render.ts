@@ -15,20 +15,24 @@
 
 import { BLACK, FREE, FREE_RAMP, FREE_TEXT } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
   DRAG_ADD,
   DRAG_REMOVE,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
@@ -54,6 +58,7 @@ import {
   squareCenter,
   squareEdges,
 } from "../../engine/square-edges.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { PathHighlights } from "./hint.ts";
@@ -71,31 +76,21 @@ export const PREFERRED_TILE_SIZE = 40;
 
 // --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
-const COL_CELL = 2;
+const COL_GRID = FIRST_GAME_SLOT;
+const COL_CELL = FIRST_GAME_SLOT + 1;
 /** Inside the ring of a number whose path is not yet whole. */
-const COL_GIVEN = 3;
+const COL_GIVEN = FIRST_GAME_SLOT + 2;
 /** A line reaching no number. */
-export const COL_LINE = 4;
-const COL_RULED_OUT = 5;
-export const COL_TEXT = 6;
-/** A line that breaks a rule already: it closes a loop, or joins two
- * different numbers. */
-export const COL_ERROR = 7;
+export const COL_LINE = FIRST_GAME_SLOT + 3;
+const COL_RULED_OUT = FIRST_GAME_SLOT + 4;
+export const COL_TEXT = FIRST_GAME_SLOT + 5;
 /** The edge drawn under a pair's line, ring and disc. */
-const COL_EDGE = 8;
-const COL_DRAG_ADD = 9;
-const COL_DRAG_REMOVE = 10;
-const COL_CURSOR = 11;
-/** The squares a hint step reasons from, and the edges it tries lines on.
- * The edges it decides are ringed by the engine (`drawEdgeHints`). */
-export const COL_HINT_EVIDENCE = 12;
-const COL_FLASH = 13;
-const COL_FLASH_LEAD = 14;
+const COL_EDGE = FIRST_GAME_SLOT + 6;
+const COL_DRAG_ADD = FIRST_GAME_SLOT + 7;
+const COL_DRAG_REMOVE = FIRST_GAME_SLOT + 8;
 /** The first of a pair's colors, one slot each: a pair's discs and every line
  * reaching them. */
-const COL_PAIR = 15;
+const COL_PAIR = FIRST_GAME_SLOT + 9;
 /** How many of the free colors pairs take: all but the gray, whose line in
  * the dark scheme sits near the white of a line reaching no number. */
 export const PAIRS = 9;
@@ -105,24 +100,18 @@ export const COL_PAIR_TEXT = COL_PAIR + PAIRS;
 export const COL_WALL = COL_PAIR_TEXT + PAIRS;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
   out[COL_LINE] = INK;
   out[COL_RULED_OUT] = RULED_OUT;
   out[COL_TEXT] = INK;
-  out[COL_ERROR] = ERROR;
   // `BLACK`, not `INK`: the edge is what a pale pair's line reads against
   // in the light scheme, and on the dark board it vanishes.
   out[COL_EDGE] = BLACK;
   out[COL_DRAG_ADD] = DRAG_ADD;
   out[COL_DRAG_REMOVE] = DRAG_REMOVE;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   for (let k = 0; k < PAIRS; k++) {
     out[COL_PAIR + k] = FREE[k];
     out[COL_PAIR_TEXT + k] = FREE_TEXT[k];
@@ -179,25 +168,20 @@ const S_DRAG_REMOVE = 1 << 5;
 const S_WALL = 1 << 6;
 
 // Word 2, the hint on the sides: `edge-hint.ts`'s word.
-const WORDS = 3;
 
 export interface PathDrawState {
-  started: boolean;
   tileSize: number;
-  /** What each square shows on the canvas, three words a square; -1 before
-   * the first frame. */
-  cache: Int32Array;
+  /** What each square shows on the canvas, in the three words above. */
+  tiles: TileCache;
   /** Each number's slot past `COL_PAIR`, by the number: its pair's in
    * Pairs, and in Path that of the line from it to the next. */
   numberColor: Int32Array;
 }
 
 export function newDrawState(state: PathState, tileSize: number): PathDrawState {
-  const squares = state.w * state.h;
   return {
-    started: false,
     tileSize,
-    cache: new Int32Array(squares * WORDS).fill(-1),
+    tiles: new TileCache(state.w * state.h, { words: 3 }),
     numberColor: state.mode === MODE_PATH ? rampColors(state) : pairColors(state),
   };
 }
@@ -285,7 +269,7 @@ function drawTile(
       inner: Math.max(2, ts >> 4),
     },
     (square >> K_OUTLINE) & 0xf,
-    COL_HINT_EVIDENCE,
+    COL_HINT_OUTLINE,
   );
 
   const sideEnd = (d: number): Point => ({
@@ -345,7 +329,7 @@ function drawTile(
     );
     return [textBox(origin, options, String(n))];
   };
-  drawEdgeHints(dr, hints, COL_HINT_EVIDENCE, {
+  drawEdgeHints(dr, hints, COL_HINT_OUTLINE, {
     cross: (sides, ink) => {
       for (let k = 0; k < 4; k++) if (sides & (1 << k)) cross(k, ink, small, hintCross);
     },
@@ -404,7 +388,7 @@ function drawTile(
   // lights its track (owner, 2026-11-12). A lit line is edged as a pair's is,
   // so the lead's pale tone reads on the square.
   const piece = (square >> K_PIECE) & 0xf;
-  const lit = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : -1;
+  const lit = tone ? winSlot(tone) : -1;
   const lineColor = lit >= 0 ? lit : piece ? COL_PAIR + piece - 1 : COL_LINE;
   const arrives = ((square >> K_ARRIVES) & 7) - 1;
   const arrivingColor =
@@ -538,10 +522,8 @@ export function redraw(
   const g = squareEdges(w, h);
   const b = border(ts);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame())
     dr.drawRect({ x: b, y: b, w: w * ts + 1, h: h * ts + 1 }, COL_GRID);
-    ds.started = true;
-  }
 
   // What the board shows: the state, with the drag as it would be released.
   const drag = dragPreview(pathLines, state, ui.drag);
@@ -608,17 +590,8 @@ export function redraw(
             : 0);
         sides |= side << (k * SIDE_BITS);
       }
-      const at = i * WORDS;
-      if (
-        ds.cache[at] === square &&
-        ds.cache[at + 1] === sides &&
-        ds.cache[at + 2] === hints
-      )
-        continue;
-      drawTile(dr, ds, x, y, square, sides, hints, numberAt);
-      ds.cache[at] = square;
-      ds.cache[at + 1] = sides;
-      ds.cache[at + 2] = hints;
+      if (ds.tiles.changed(i, square, sides, hints))
+        drawTile(dr, ds, x, y, square, sides, hints, numberAt);
     }
   }
 }

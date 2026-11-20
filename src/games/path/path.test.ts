@@ -14,6 +14,7 @@
  *                  +-+-+-+
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
 import { paramsError } from "../../engine/params.ts";
@@ -39,14 +40,7 @@ import type { Point } from "../../engine/types.ts";
 import { type Flash, WIN_NONE } from "../../engine/win-wave.ts";
 import { countAnswers } from "./count-answers.ts";
 import { pathGame } from "./index.ts";
-import {
-  COL_ERROR,
-  COL_WALL,
-  centerOf,
-  layout,
-  newDrawState,
-  rampColors,
-} from "./render.ts";
+import { COL_WALL, centerOf, layout, newDrawState, rampColors } from "./render.ts";
 import { answerOf, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,

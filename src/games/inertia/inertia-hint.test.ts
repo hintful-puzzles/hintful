@@ -4,6 +4,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { type Narration, stepMarks } from "../../engine/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -16,7 +17,6 @@ import { newInertiaDesc } from "./generator.ts";
 import { hasNoSolution, hint } from "./hint.ts";
 import { inertiaGame } from "./index.ts";
 import { GEM as GEM_MARK } from "./kinds.ts";
-import { COL_HINT_GOAL } from "./render.ts";
 import {
   GEM,
   type InertiaMove,
@@ -546,7 +546,7 @@ describe("inertia hint rendering", () => {
     // cache — a ring that never repaints is the classic overlay-cache trap.
     expect(
       result.recording.ops.some(
-        (o) => o.op === "circle" && o.outline === COL_HINT_GOAL,
+        (o) => o.op === "circle" && o.outline === COL_HINT_OUTLINE,
       ),
     ).toBe(true);
 
@@ -569,7 +569,7 @@ describe("inertia hint rendering", () => {
     });
     expect(
       result.recording.ops.some(
-        (o) => o.op === "circle" && o.outline === COL_HINT_GOAL,
+        (o) => o.op === "circle" && o.outline === COL_HINT_OUTLINE,
       ),
     ).toBe(false);
   });

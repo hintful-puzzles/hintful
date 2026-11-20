@@ -5,6 +5,13 @@
 import { describe, expect, it } from "vitest";
 import { BORDER } from "../../engine/border-grid.ts";
 import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -18,12 +25,7 @@ import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";
 import {
   COL_CORRECT,
-  COL_CURSOR,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GRID,
-  COL_HINT_CELL,
   COL_LINE_MAYBE,
   newDrawState,
   type PalisadeDrawState,
@@ -189,7 +191,7 @@ describe("Palisade redraw", () => {
       stepRinging([own, { x: 1, y: 1, dir: 2, kind: "wall" }]),
     );
     // The action edge AND its sibling are both ringed (they share a fate, so
-    // they share a mark); referenced cells get a COL_HINT_CELL outline. Each
+    // they share a mark); referenced cells get a COL_HINT_OUTLINE outline. Each
     // edge's pill is drawn by both of its cells, so a bare count cannot tell
     // one edge from two: compare against the action edge alone.
     const hintRings = (o: RecordingDrawing["ops"]) => ringsOf(o).length;
@@ -208,13 +210,13 @@ describe("Palisade redraw", () => {
     );
     expect(hintRings(alone.ops)).toBeGreaterThan(0);
     expect(hintRings(ops)).toBeGreaterThan(hintRings(alone.ops));
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(true);
 
     // With no hint, none of the hint colors appear.
     const { dr: dr2, ops: ops2 } = recordingDrawing();
     redraw(dr2, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH);
     expect(ringsOf(ops2)).toEqual([]);
-    expect(ops2.some((o) => "color" in o && o.color === COL_HINT_CELL)).toBe(false);
+    expect(ops2.some((o) => "color" in o && o.color === COL_HINT_OUTLINE)).toBe(false);
   });
 
   it("draws the cursor outline when shown", () => {

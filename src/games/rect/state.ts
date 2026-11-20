@@ -29,6 +29,7 @@ import {
 } from "../../engine/params.ts";
 import type { GridCursor, GridDrag } from "../../engine/pointer.ts";
 import { type Ruleset, rulesetItem } from "../../engine/ruleset.ts";
+import type { TileCache } from "../../engine/tile-cache.ts";
 import type { Rect } from "../../engine/types.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 
@@ -185,21 +186,16 @@ export interface RectUi {
 }
 
 export interface RectDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  /** Per-cell packed cache word (see render.ts). `-1` = force repaint. */
-  visible: Int32Array;
-  /** Per-cell tone of the win flash last drawn, beside the word, which is
-   * full. */
-  tone: Uint8Array;
+  /** Per cell: its packed word (see render.ts), the win flash's tone, and
+   * the key of the line colors round it, which the full word has no room
+   * for. */
+  tiles: TileCache;
   /** Per-cell key of the hint rings last drawn through it: a ring reaches
    * past its element, so no side bits in the word can say which it was. */
   rings: string[];
-  /** Per-cell key of the line colors last drawn round it (`render.ts`),
-   * beside the word, which has no room for them. */
-  tints: Int32Array;
 }
 
 /** A flagged edge that the unique solution does not contain. */

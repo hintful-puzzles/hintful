@@ -804,13 +804,12 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "grid",
       "pbgX",
       "pbgY",
       "playerBackground",
       "playerBgSaved",
-      "started",
       "tileSize",
+      "tiles",
     ],
     "id": "inertia",
     "members": [
@@ -1325,11 +1324,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
-      "edges",
       "h",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "palisade",
@@ -1360,10 +1357,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "numberColor",
-      "started",
       "tileSize",
+      "tiles",
     ],
     "id": "path",
     "members": [
@@ -1537,11 +1533,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "h",
       "rings",
-      "started",
       "tileSize",
-      "tints",
-      "tone",
-      "visible",
+      "tiles",
       "w",
     ],
     "id": "rect",
@@ -1754,11 +1747,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
-      "edges",
       "h",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "separate",

@@ -17,7 +17,6 @@ import {
   type BorderGridDrawState,
   borderErrorBits,
   borderGridSize,
-  borderTileStale,
   center,
   cursorBits,
   drawBorderCursor,
@@ -33,15 +32,12 @@ import {
 } from "../../engine/border-grid-render.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   lineMaybeColor,
   lineNoColor,
   REGION_DONE,
 } from "../../engine/color/palette.ts";
+import { COL_ERROR, FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -59,50 +55,32 @@ export const PREFERRED_TILE_SIZE = 48;
 
 const A = "A".charCodeAt(0);
 
-// --- palette (mirrors Palisade's COL_* enum) ------------------------------
+// --- palette (mirrors Palisade's) -----------------------------------------
 
-const COL_BACKGROUND = 0;
-export const COL_FLASH = 1;
-const COL_GRID = 2; // == letter color == wall color
-const COL_LINE_MAYBE = 3;
-const COL_LINE_NO = 4;
-export const COL_ERROR = 5;
-export const COL_CORRECT = 6; // a completed, correct region
-export const COL_HINT_CELL = 7; // the outline on a square a hint step cites
-const COL_CELL = 8; // the surface of every cell
-/** The body of a cell under the win flash's leading edge, where `COL_FLASH` is
- * under its body. */
-export const COL_FLASH_LEAD = 9;
+const COL_GRID = FIRST_GAME_SLOT; // == letter color == wall color
+const COL_LINE_MAYBE = FIRST_GAME_SLOT + 1;
+const COL_LINE_NO = FIRST_GAME_SLOT + 2;
+export const COL_CORRECT = FIRST_GAME_SLOT + 3; // a completed, correct region
+const COL_CELL = FIRST_GAME_SLOT + 4; // the surface of every cell
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_CELL] = cellSurface(background);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = INK;
-  out[COL_ERROR] = ERROR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);
   return out;
 }
 
-/** Separate's palette indices, in the shared renderer's terms. Its cursor is
- * drawn in the grid's own ink. */
+/** Separate's palette indices, in the shared renderer's terms. */
 const PALETTE: BorderGridColors = {
   background: COL_CELL,
-  flash: COL_FLASH,
-  flashLead: COL_FLASH_LEAD,
   correct: COL_CORRECT,
   grid: COL_GRID,
   lineNo: COL_LINE_NO,
   lineMaybe: COL_LINE_MAYBE,
-  error: COL_ERROR,
-  hintEvidence: COL_HINT_CELL,
-  cursor: COL_GRID,
 };
 
 // --- geometry -------------------------------------------------------------
@@ -140,10 +118,7 @@ export function redraw(
   const { w, h, k, letters, borders } = state;
   const wh = w * h;
 
-  if (!ds.started) {
-    drawBorderGridBackground(dr, ts, w, h, PALETTE);
-    ds.started = true;
-  }
+  if (ds.tiles.firstFrame()) drawBorderGridBackground(dr, ts, w, h, PALETTE);
 
   const blackDsf = buildDsf(w, h, borders, true);
   const yellowDsf = buildDsf(w, h, borders, false);
@@ -196,7 +171,7 @@ export function redraw(
       flags |= cursorBits(ui.cursor, c, r);
       flags |= borderErrorBits(c, r, w, h, k, borders, blackDsf, yellowDsf);
 
-      if (borderTileStale(ds, i, flags, hinted.edges[i])) {
+      if (ds.tiles.changed(i, flags, hinted.edges[i])) {
         drawBorderTile(
           dr,
           ts,
@@ -218,5 +193,5 @@ export function redraw(
     }
   }
 
-  if (ui.cursor.visible) drawBorderCursor(dr, ts, ui.cursor.x, ui.cursor.y, COL_GRID);
+  if (ui.cursor.visible) drawBorderCursor(dr, ts, ui.cursor.x, ui.cursor.y);
 }

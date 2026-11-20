@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { loadVerdict } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -17,13 +18,7 @@ import { ladder } from "../../generated/games/rect/rect.compiled.ts";
 import { rectHint } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState, outlinedBoxAt } from "./moves.ts";
-import {
-  COL_EDGE_TINT,
-  COL_FILL,
-  COL_MISTAKE,
-  newDrawState,
-  redraw,
-} from "./render.ts";
+import { COL_EDGE_TINT, COL_FILL, newDrawState, redraw } from "./render.ts";
 import { answerOf } from "./solver.ts";
 import {
   DIFF_NORMAL,
@@ -198,7 +193,7 @@ describe("Patches' look", () => {
     const s = executeMove(newState(patches(3, 2), SMALL), rect(0, 0, 1, 1));
     const colors = colorsOf(s);
     expect(tinted(colors)).toBe(true);
-    expect(colors.has(COL_MISTAKE)).toBe(false);
+    expect(colors.has(COL_ERROR)).toBe(false);
   });
 
   it("draws one with its clue's number in ink", () => {
@@ -235,7 +230,7 @@ describe("Patches' look", () => {
     // A tall clue's rectangle two squares wide on a board two high.
     const s = executeMove(newState(patches(3, 2), SMALL), rect(1, 0, 2, 2));
     const colors = colorsOf(s);
-    expect(colors.has(COL_MISTAKE)).toBe(true);
+    expect(colors.has(COL_ERROR)).toBe(true);
     expect(tinted(colors)).toBe(false);
   });
 });

@@ -16,7 +16,6 @@ import {
   type BorderGridDrawState,
   borderErrorBits,
   borderGridSize,
-  borderTileStale,
   center,
   cursorBits,
   drawBorderCursor,
@@ -32,18 +31,14 @@ import {
   newBorderGridDrawState,
 } from "../../engine/border-grid-render.ts";
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   lineMaybeColor,
   lineNoColor,
   REGION_DONE,
 } from "../../engine/color/palette.ts";
+import { COL_ERROR, FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
 import { glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
@@ -64,34 +59,20 @@ export const PREFERRED_TILE_SIZE = 48;
 
 // --- palette --------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
 /** The lifted surface under a clue. */
-const COL_GIVEN = 1;
-export const COL_GRID = 2; // == COL_CLUE == COL_LINE_YES
-export const COL_LINE_MAYBE = 3;
-const COL_LINE_NO = 4;
-export const COL_ERROR = 5;
-export const COL_HINT_CELL = 6; // referenced-cell outline, inset inside the cell
-export const COL_CORRECT = 7; // a completed, correct region
-/** The keyboard cursor's box, which upstream drew in the grid's own ink. */
-export const COL_CURSOR = 8;
-const COL_CELL = 9; // the surface of a cell with no clue
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 10;
-export const COL_FLASH_LEAD = 11;
+const COL_GIVEN = FIRST_GAME_SLOT;
+export const COL_GRID = FIRST_GAME_SLOT + 1; // == COL_CLUE == COL_LINE_YES
+export const COL_LINE_MAYBE = FIRST_GAME_SLOT + 2;
+const COL_LINE_NO = FIRST_GAME_SLOT + 3;
+export const COL_CORRECT = FIRST_GAME_SLOT + 4; // a completed, correct region
+const COL_CELL = FIRST_GAME_SLOT + 5; // the surface of a cell with no clue
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_GRID] = INK;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_ERROR] = ERROR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CORRECT] = REGION_DONE;
   out[COL_LINE_MAYBE] = lineMaybeColor(background);
   out[COL_LINE_NO] = lineNoColor(background);
@@ -102,15 +83,10 @@ export function colors(defaultBackground: Color): Color[] {
 const PALETTE: BorderGridColors = {
   background: COL_CELL,
   given: COL_GIVEN,
-  flash: COL_FLASH,
-  flashLead: COL_FLASH_LEAD,
   correct: COL_CORRECT,
   grid: COL_GRID,
   lineNo: COL_LINE_NO,
   lineMaybe: COL_LINE_MAYBE,
-  error: COL_ERROR,
-  hintEvidence: COL_HINT_CELL,
-  cursor: COL_CURSOR,
 };
 
 // --- geometry -------------------------------------------------------------
@@ -150,10 +126,7 @@ export function redraw(
 
   const hinted = hintTileBits(w, h, stepMarks(hint));
 
-  if (!ds.started) {
-    drawBorderGridBackground(dr, ts, w, h, PALETTE);
-    ds.started = true;
-  }
+  if (ds.tiles.firstFrame()) drawBorderGridBackground(dr, ts, w, h, PALETTE);
 
   const blackDsf = buildDsf(w, h, borders, true);
   const yellowDsf = buildDsf(w, h, borders, false);
@@ -193,7 +166,7 @@ export function redraw(
       flags |= cursorBits(ui.cursor, c, r);
       flags |= borderErrorBits(c, r, w, h, k, borders, blackDsf, yellowDsf);
 
-      if (borderTileStale(ds, i, flags, hinted.edges[i])) {
+      if (ds.tiles.changed(i, flags, hinted.edges[i])) {
         drawBorderTile(
           dr,
           ts,
@@ -217,5 +190,5 @@ export function redraw(
     }
   }
 
-  if (ui.cursor.visible) drawBorderCursor(dr, ts, ui.cursor.x, ui.cursor.y, COL_CURSOR);
+  if (ui.cursor.visible) drawBorderCursor(dr, ts, ui.cursor.x, ui.cursor.y);
 }

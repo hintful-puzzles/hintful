@@ -2,13 +2,14 @@
 // through the real Midend and asserted with no browser and no human eyeball.
 //
 //  1. the `equivalentEdges` hint frame — both forced edges ringed, the
-//     referenced region outlined in COL_HINT_CELL, clue digits still drawn
+//     referenced region outlined in COL_HINT_OUTLINE, clue digits still drawn
 //     (the spec's "hint frame asserted without a browser" scenario);
 //  2. a fixed opener frame snapshot — a render regression is a
 //     reviewable text diff (the spec's "render regression is a snapshot
 //     diff" scenario).
 import { describe, expect, it } from "vitest";
 import { EDGE } from "../../engine/border-grid-hint.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
@@ -19,7 +20,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { palisadeGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 
 // What an equivalentEdges frame marks: a sibling edge AND a hatched *region*
 // (more than one cell). numberExhausted journeys carry siblings too, but
@@ -69,7 +69,9 @@ describe("Palisade render scenarios", () => {
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(
       stepMarks(result.hint).of("stripes", CELL).length,
     );
-    expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toEqual([]);
+    expect(ops.filter((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toEqual(
+      [],
+    );
 
     // Hatching the region does not erase the clues: digits are still drawn.
     expect(ops.some((o) => o.op === "text")).toBe(true);

@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { DESC_NOT_UNIQUE, loadVerdict, validateDesc } from "../../engine/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { describeParams, presetMenu } from "../../engine/param-label.ts";
@@ -32,7 +33,7 @@ import {
   outlinedBoxAt,
   status,
 } from "./moves.ts";
-import { BORDER, COL_MISTAKE, newDrawState, redraw } from "./render.ts";
+import { BORDER, newDrawState, redraw } from "./render.ts";
 import { ladderFinishes } from "./solver.ts";
 import {
   DIFF_NORMAL,
@@ -672,12 +673,12 @@ describe("rect render", () => {
     expect(mistakes.length).toBeGreaterThan(0);
     const dr = new RecordingDrawing(palette);
     redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH, undefined, mistakes);
-    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(true);
+    expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
 
     // A third frame without the overlay clears the red.
     const dr2 = new RecordingDrawing(palette);
     redraw(dr2, ds, null, st, 1, ui, 0, NO_FLASH);
-    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(false);
+    expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);
   });
 
   it("clone is independent of the source state", () => {

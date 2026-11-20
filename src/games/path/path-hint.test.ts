@@ -6,6 +6,7 @@
  * (docs/testing.md § "Pinning a hint's positions").
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
@@ -18,7 +19,6 @@ import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { PathHighlights } from "./hint.ts";
 import { pathGame } from "./index.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import { answerOf, type PathRung } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -291,7 +291,7 @@ describe("path hint frame", () => {
     expect(ringed).toBeGreaterThan(0);
     // Both squares of an edge draw its pill.
     expectRing(recording.ops, { rings: 2 * ringed });
-    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_EVIDENCE))).toBe(true);
+    expect(recording.ops.some((op) => paintsWith(op, COL_HINT_OUTLINE))).toBe(true);
   });
 
   it("draws the edges a step tries lines on thin, as lines", () => {

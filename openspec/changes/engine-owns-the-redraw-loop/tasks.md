@@ -82,7 +82,8 @@
       Moved: towers, clusters, norinori, starbattle, seismic, keen,
       samegame, sticks, lightup, singles, range, flood, mines, wordguess,
       solo, mathrax, rome, flip, unruly, filling, mosaic, dominosa, pearl,
-      edge-clue-latin (adjacent, unequal), galaxies, wordtrail.
+      edge-clue-latin (adjacent, unequal), galaxies, wordtrail,
+      border-grid-render (palisade, separate), inertia, path, rect.
       A game whose board
       values are palette indices (SameGame's and Flood's tile colors) numbers
       them from a run after its own slots (`COL_PIECE + c - 1`,
@@ -105,9 +106,14 @@
       cell's flag word): its key is number and highlight, flags, pencil, and
       the cursor's "did it move" bookkeeping went into the highlight; a cell
       under an erased hint mark is `forget`. Galaxies' `colors()` moved from
-      `index.ts`. Next, the remaining cell-tile games: inertia, palisade and
-      separate (`border-grid-render.ts`), path, pegs, rect, signpost, slide,
-      sokoban. Then the multi-family games, then
+      `index.ts`. `BorderGridColors` lost its role entries: the shared
+      renderer draws the flash, error, hint marks and cursor in the roles,
+      so Separate's cursor, which was the grid's ink with no reason
+      recorded, is the shared green Palisade's was. A string key that no
+      word holds (Rect's ring key) stays a side lane, tested beside
+      `changed`. Inertia's ball is `COL_CURSOR` and its splat `COL_ERROR`,
+      under their own names. Next, the remaining cell-tile games: pegs,
+      signpost, slide (its red cursor its own slot), sokoban. Then the multi-family games, then
       the neighbor-painting ones. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).
 - [ ] 2.2 The skeletons' `render.ts` write the engine's form. Grid done;

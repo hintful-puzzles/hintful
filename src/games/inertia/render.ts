@@ -13,23 +13,26 @@
 
 import { BLACK, WHITE } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
   DRAG_ADD,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   GOAL,
-  HINT_OUTLINE,
   INK,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { coord as coordE } from "../../engine/geometry.ts";
 import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -56,43 +59,29 @@ import {
 
 // --- palette ----------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_OUTLINE = 1;
+export const COL_OUTLINE = FIRST_GAME_SLOT;
 /** The glint on a mine. */
-export const COL_GLINT = 2;
+export const COL_GLINT = FIRST_GAME_SLOT + 1;
 /** The line between two squares. */
-export const COL_GRID = 3;
-export const COL_PLAYER = 4;
-export const COL_DEAD_PLAYER = 5;
-export const COL_MINE = 6;
-export const COL_GEM = 7;
-export const COL_WALL = 8;
-/** Appended past the C enum: the swipe's aim arrow, "let go and you go this
- * way". While a swipe is held it replaces the hint's ringed arrow ("the hint
- * says go this way"). */
-export const COL_AIM = 9;
-/** Appended: the outline round the gem a hint is going for. The hint's two
- * roles get two cues (docs/hints-marks.md § "The engine colors the marks"):
- * the direction is the hint's *arrow*, ringed on the ball, the subgoal gem an
- * *outline* in its evidence color. */
-export const COL_HINT_GOAL = 10;
-/** Appended: the solved flash's tile fill, under the highlight's body. */
-export const COL_FLASH = 11;
+export const COL_GRID = FIRST_GAME_SLOT + 2;
+/** The ball is the figure the player steers, "where you are": the cursor. */
+export const COL_PLAYER = COL_CURSOR;
+export const COL_DEAD_PLAYER = COL_ERROR;
+export const COL_MINE = FIRST_GAME_SLOT + 3;
+export const COL_GEM = FIRST_GAME_SLOT + 4;
+export const COL_WALL = FIRST_GAME_SLOT + 5;
+/** The swipe's aim arrow, "let go and you go this way". While a swipe is held
+ * it replaces the hint's ringed arrow ("the hint says go this way"). */
+export const COL_AIM = FIRST_GAME_SLOT + 6;
 /** A floor square. */
-export const COL_FLOOR = 12;
-/** The solved flash's tile fill under the highlight's leading edge. */
-export const COL_FLASH_LEAD = 13;
+export const COL_FLOOR = FIRST_GAME_SLOT + 7;
 
 export function colors(defaultBackground: Color): Color[] {
-  const ret: Color[] = new Array(13);
+  const ret = rolePalette(defaultBackground);
 
-  ret[COL_BACKGROUND] = defaultBackground;
   ret[COL_FLOOR] = cellSurface(defaultBackground);
   ret[COL_GRID] = surfaceGrid(defaultBackground);
   ret[COL_OUTLINE] = INK;
-  // The ball is the figure the player steers: "where you are".
-  ret[COL_PLAYER] = CURSOR;
-  ret[COL_DEAD_PLAYER] = ERROR;
   // `BLACK` and `WHITE`, not `INK` and `PAPER`: a mine is a black ball with a
   // glint on it in both schemes.
   ret[COL_MINE] = BLACK;
@@ -100,11 +89,6 @@ export function colors(defaultBackground: Color): Color[] {
   ret[COL_GEM] = GOAL;
   ret[COL_WALL] = wallFill(defaultBackground);
   ret[COL_AIM] = DRAG_ADD;
-  // The subgoal is an outline in role, so it takes the color an outline has in
-  // every game.
-  ret[COL_HINT_GOAL] = HINT_OUTLINE;
-  ret[COL_FLASH] = FLASH;
-  ret[COL_FLASH_LEAD] = FLASH_LEAD;
 
   return ret;
 }
@@ -136,13 +120,10 @@ const WIN_MASK = 3 << WIN_SHIFT;
  * (docs/rendering.md § "The tile cache and the diff key"). */
 const HINT_GOAL = 0x400;
 
-const UNDRAWN = -1;
-
 export interface InertiaDrawState {
-  started: boolean;
   tileSize: number;
   /** Cell value | flash bits, per square. */
-  grid: Int32Array;
+  tiles: TileCache;
   playerBackground: unknown;
   playerBgSaved: boolean;
   pbgX: number;
@@ -151,9 +132,8 @@ export interface InertiaDrawState {
 
 export function newDrawState(s: InertiaState, tileSize: number): InertiaDrawState {
   return {
-    started: false,
     tileSize,
-    grid: new Int32Array(s.params.w * s.params.h).fill(UNDRAWN),
+    tiles: new TileCache(s.params.w * s.params.h),
     // The blitter needs a GameDrawing, so `redraw` allocates it lazily.
     playerBackground: null,
     playerBgSaved: false,
@@ -185,11 +165,7 @@ function drawTile(
   const ty = coord(y, ts);
   const tone = ((v & WIN_MASK) >> WIN_SHIFT) as WinTone;
   const bg =
-    v & FLASH_DEAD
-      ? COL_DEAD_PLAYER
-      : tone !== WIN_NONE
-        ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-        : COL_FLOOR;
+    v & FLASH_DEAD ? COL_DEAD_PLAYER : tone !== WIN_NONE ? winSlot(tone) : COL_FLOOR;
   const cell = v & ~(FLASH_DEAD | WIN_MASK | HINT_GOAL);
 
   dr.clip({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
@@ -258,8 +234,8 @@ function drawTile(
     const center = { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) };
     const r = Math.floor(ts / 2) - 2;
     // Two circles: one pixel of ring is too thin to read at any tile size.
-    dr.drawCircle(center, r, -1, COL_HINT_GOAL);
-    dr.drawCircle(center, r - 1, -1, COL_HINT_GOAL);
+    dr.drawCircle(center, r, -1, COL_HINT_OUTLINE);
+    dr.drawCircle(center, r - 1, -1, COL_HINT_OUTLINE);
   }
 
   dr.unclip();
@@ -402,7 +378,7 @@ export function redraw(
     ds.playerBgSaved = false;
   }
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // Rule the grid.
     for (let y = 0; y <= h; y++) {
       dr.drawLine(
@@ -420,8 +396,6 @@ export function redraw(
         1,
       );
     }
-
-    ds.started = true;
   }
 
   // How far along its slide the ball has got, in squares.
@@ -454,13 +428,12 @@ export function redraw(
       // its tile.
       else if (s.board.at(x, y) !== WALL) v |= flash.win(sweepStep(x, y)) << WIN_SHIFT;
 
-      if (ds.grid[y * w + x] !== v) {
+      if (ds.tiles.changed(y * w + x, v)) {
         const wall = s.board.at(x, y) === WALL;
         const left = wall && x > 0 && s.board.at(x - 1, y) === WALL;
         const up = wall && y > 0 && s.board.at(x, y - 1) === WALL;
         const corner = left && up && s.board.at(x - 1, y - 1) === WALL;
         drawTile(dr, ts, x, y, v, { left, up, corner });
-        ds.grid[y * w + x] = v;
       }
     }
   }

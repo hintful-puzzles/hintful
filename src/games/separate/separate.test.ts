@@ -14,6 +14,7 @@ import {
   BORDER_R,
   buildDsf,
 } from "../../engine/border-grid.ts";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -33,7 +34,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { separateGame } from "./index.ts";
-import { COL_CORRECT, COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "./render.ts";
+import { COL_CORRECT } from "./render.ts";
 import { isSolved, solveToBorders } from "./solver.ts";
 import {
   decodeParams,

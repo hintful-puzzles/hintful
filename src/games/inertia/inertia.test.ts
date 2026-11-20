@@ -5,6 +5,7 @@
  * tally) plus tier 2.5 render scenarios (docs/testing.md § "The test tiers").
  */
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -28,15 +29,7 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { inertiaGame } from "./index.ts";
-import {
-  COL_AIM,
-  COL_DEAD_PLAYER,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_GEM,
-  COL_MINE,
-  COL_PLAYER,
-} from "./render.ts";
+import { COL_AIM, COL_DEAD_PLAYER, COL_GEM, COL_MINE, COL_PLAYER } from "./render.ts";
 import { findGemCandidates, solveRoute, unreachableGems } from "./solver.ts";
 import {
   BLANK,

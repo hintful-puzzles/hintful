@@ -7,6 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import {
@@ -22,14 +23,7 @@ import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { rectGame } from "./index.ts";
 import { newState } from "./moves.ts";
-import {
-  BORDER,
-  COL_FILL,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_MISTAKE,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
+import { BORDER, COL_FILL, PREFERRED_TILE_SIZE } from "./render.ts";
 import { MODE_RECT, type RectMove, type RectParams } from "./state.ts";
 
 const P: RectParams = { w: 7, h: 7, expandfactor: 0, diff: DIFF_EASY, mode: MODE_RECT };
@@ -118,7 +112,7 @@ describe("rect render scenarios", () => {
       showMistakes: true,
     });
     expect(mistakeCount).toBeGreaterThan(0);
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_MISTAKE)).toBe(
+    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(
       true,
     );
   });

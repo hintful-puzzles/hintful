@@ -20,17 +20,19 @@
 
 import { REGION_FILLS, REGION_LINES } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
   DRAG_ADD,
   DRAG_REMOVE,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -38,6 +40,7 @@ import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { regionFills } from "../../engine/region-fill.ts";
 import { type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { RectHint } from "./hint.ts";
@@ -66,24 +69,16 @@ export const PREFERRED_TILE_SIZE = 24;
 export const BORDER = 1;
 
 // --- palette ---------------------------------------------------------------
-const COL_BACKGROUND = 0;
-const COL_LINE = 1;
-const COL_TEXT = 2;
-const COL_GRID = 3;
-const COL_DRAG = 4;
-const COL_DRAGERASE = 5;
-const COL_CURSOR = 6;
-export const COL_MISTAKE = 7;
-export const COL_HINT_CELL = 8;
-const COL_CELL = 9; // the surface of a square with no clue
-/** The ground of a square the win flash is on: its body, and its leading
- * edge. */
-export const COL_FLASH = 10;
-export const COL_FLASH_LEAD = 11;
+const COL_LINE = FIRST_GAME_SLOT;
+const COL_TEXT = FIRST_GAME_SLOT + 1;
+const COL_GRID = FIRST_GAME_SLOT + 2;
+const COL_DRAG = FIRST_GAME_SLOT + 3;
+const COL_DRAGERASE = FIRST_GAME_SLOT + 4;
+const COL_CELL = FIRST_GAME_SLOT + 5; // the surface of a square with no clue
 /** The first of the clues' fills, one for each of {@link FILLS}. */
-export const COL_FILL = 12;
+export const COL_FILL = FIRST_GAME_SLOT + 6;
 /** The first of the clues' line colors, indexed as {@link COL_FILL}. */
-export const COL_EDGE_TINT = 16;
+export const COL_EDGE_TINT = COL_FILL + 4;
 
 /** The first four region fills, as Star Battle takes them: the next four are
  * a step darker in the dark scheme, too near the plain cell they border
@@ -92,12 +87,9 @@ const FILLS = REGION_FILLS.slice(0, 4);
 
 export function colors(defaultBackground: Color): Color[] {
   const bg = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = bg;
+  const out = rolePalette(bg);
   out[COL_GRID] = surfaceGrid(bg);
   out[COL_CELL] = cellSurface(bg);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_DRAG] = DRAG_ADD;
   out[COL_DRAGERASE] = DRAG_REMOVE;
   FILLS.forEach((fill, k) => {
@@ -106,9 +98,6 @@ export function colors(defaultBackground: Color): Color[] {
   });
   out[COL_LINE] = INK;
   out[COL_TEXT] = INK;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_MISTAKE] = ERROR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -292,14 +281,11 @@ export function computeSize(p: RectParams, tileSize: number): Size {
 
 export function newDrawState(state: RectState, tileSize: number): RectDrawState {
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
-    visible: new Int32Array(state.w * state.h).fill(-1),
-    tone: new Uint8Array(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { words: 3 }),
     rings: new Array<string>(state.w * state.h).fill(""),
-    tints: new Int32Array(state.w * state.h).fill(-1),
   };
 }
 
@@ -346,11 +332,7 @@ function drawTile(
     cy + 1,
     tile - 1,
     tile - 1,
-    tone
-      ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-      : fill
-        ? COL_FILL + fill - 1
-        : COL_CELL,
+    tone ? winSlot(tone) : fill ? COL_FILL + fill - 1 : COL_CELL,
   );
   // The line or area the hint's sentence names, under the clue.
   if (bgflags & F_STRIPES)
@@ -379,7 +361,7 @@ function drawTile(
       tile + 1,
       2,
       mistake & M_TOP
-        ? COL_MISTAKE
+        ? COL_ERROR
         : hrange(w, h, x, y)
           ? edgeColor(hedge[y * w + x], tints.h[y * w + x])
           : COL_LINE,
@@ -391,7 +373,7 @@ function drawTile(
       tile + 1,
       2,
       mistake & M_BOTTOM
-        ? COL_MISTAKE
+        ? COL_ERROR
         : hrange(w, h, x, y + 1)
           ? edgeColor(hedge[(y + 1) * w + x], tints.h[(y + 1) * w + x])
           : COL_LINE,
@@ -403,7 +385,7 @@ function drawTile(
       2,
       tile + 1,
       mistake & M_LEFT
-        ? COL_MISTAKE
+        ? COL_ERROR
         : vrange(w, h, x, y)
           ? edgeColor(vedge[y * w + x], tints.v[y * w + x])
           : COL_LINE,
@@ -415,7 +397,7 @@ function drawTile(
       2,
       tile + 1,
       mistake & M_RIGHT
-        ? COL_MISTAKE
+        ? COL_ERROR
         : vrange(w, h, x + 1, y)
           ? edgeColor(vedge[y * w + (x + 1)], tints.v[y * w + (x + 1)])
           : COL_LINE,
@@ -443,7 +425,7 @@ function drawTile(
       inner: t,
     },
     (bgflags >> OUTLINE_SHIFT) & 15,
-    COL_HINT_CELL,
+    COL_HINT_OUTLINE,
   );
   for (const ring of rings) {
     dr.clip({ x: cx, y: cy, w: tile + 1, h: tile + 1 });
@@ -730,7 +712,7 @@ export function redraw(
     }
   }
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     dr.drawRect(
       {
         x: coord(0, tile) - 1,
@@ -740,14 +722,12 @@ export function redraw(
       },
       COL_LINE,
     );
-    ds.started = true;
     dr.drawUpdate({
       x: 0,
       y: 0,
       w: w * tile + 2 * BORDER + 1,
       h: h * tile + 2 * BORDER + 1,
     });
-    ds.visible.fill(-1);
   }
 
   for (let x = 0; x < w; x++)
@@ -778,12 +758,8 @@ export function redraw(
         .map(({ box: b }) => `${b.x},${b.y},${b.w},${b.h}`)
         .join(" ");
       const tintsKey = tintKey(tints, w, h, x, y);
-      if (
-        ds.visible[y * w + x] !== c ||
-        ds.tone[y * w + x] !== tone ||
-        ds.rings[y * w + x] !== ringKey ||
-        ds.tints[y * w + x] !== tintsKey
-      ) {
+      const ringsMoved = ds.rings[y * w + x] !== ringKey;
+      if (ds.tiles.changed(y * w + x, c, tone, tintsKey) || ringsMoved) {
         drawTile(
           dr,
           tile,
@@ -799,10 +775,7 @@ export function redraw(
           tileRings,
           tints,
         );
-        ds.visible[y * w + x] = c;
-        ds.tone[y * w + x] = tone;
         ds.rings[y * w + x] = ringKey;
-        ds.tints[y * w + x] = tintsKey;
       }
     }
 }

@@ -14,6 +14,7 @@ import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/border-grid.ts";
 import { type BorderHint, EDGE } from "../../engine/border-grid-hint.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
@@ -25,7 +26,6 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
 import type { SeparateRung } from "./hint.ts";
 import { separateGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import { deduction, solveToBorders } from "./solver.ts";
 import {
   executeMove,
@@ -294,7 +294,7 @@ describe("separate hint frame", () => {
     expectRing(ops, { rings: 2 * stepMarks(result.hint).of("ring", EDGE).length });
     const hatched = new Set(opsOfKind(ops, "hatch").map((h) => `${h.x},${h.y}`));
     expect(hatched.size).toBe(stepMarks(result.hint).of("stripes", CELL).length);
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(true);
     // The letters the deduction reads are still drawn over the marks.
     expect(ops.some((o) => o.op === "text")).toBe(true);
     expect(result.hint?.explanation).toMatch(/striped/);

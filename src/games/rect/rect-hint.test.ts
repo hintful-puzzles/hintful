@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
@@ -13,7 +14,6 @@ import { newDesc } from "./generator.ts";
 import { rectHint, rectKeepTrack } from "./hint.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import { ladderFinishes, RECT_RUNGS } from "./solver.ts";
 import {
   MODE_RECT,
@@ -308,7 +308,7 @@ describe("rect hint frame", () => {
     const [first, ...rest] = rings;
     for (const r of rest) expect(r).toEqual(first);
     expect(first.w > first.h).toBe(w > h);
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(true);
     expect(ops).toMatchSnapshot();
   });
 
