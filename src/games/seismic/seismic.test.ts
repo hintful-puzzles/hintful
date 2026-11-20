@@ -9,6 +9,7 @@
  * every test runs against a real upstream puzzle without generating one.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -45,12 +46,9 @@ import { seismicGame } from "./index.ts";
 import {
   COL_BORDER,
   COL_CELL,
-  COL_CURSOR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_GRID,
-  COL_NUM_ERROR,
+  COL_HIGHLIGHT_WASH,
   COL_NUM_FIXED,
   COL_NUM_GUESS,
   COL_NUM_PENCIL,
@@ -1003,7 +1001,7 @@ describe("seismic rendering", () => {
     expect(rects(COL_GIVEN)).toBe(givens);
     expect(rects(COL_CELL)).toBe(state.w * state.h - givens);
     expect(ops.some((o) => o.op === "text" && o.color === COL_NUM_FIXED)).toBe(true);
-    expect(rects(COL_CURSOR)).toBe(0);
+    expect(rects(COL_HIGHLIGHT_WASH)).toBe(0);
     expect(ops).toMatchSnapshot();
   });
 
@@ -1055,9 +1053,9 @@ describe("seismic rendering", () => {
       pencil: false,
     }));
     const r = renderScenario({ game: seismicGame, id: idOf(SMALL), moves });
-    expect(
-      r.recording.ops.some((o) => o.op === "text" && o.color === COL_NUM_ERROR),
-    ).toBe(true);
+    expect(r.recording.ops.some((o) => o.op === "text" && o.color === COL_ERROR)).toBe(
+      true,
+    );
   });
 
   it("draws every pencil mark, including a 9", () => {
@@ -1150,9 +1148,9 @@ describe("seismic rendering", () => {
     expect(r.mistakeCount).toBe(1);
     // The overlay is a stroked outline, so it records as lines, not a rect
     // (docs/testing.md § "Render-op vocabulary").
-    expect(
-      r.recording.ops.some((o) => o.op === "line" && o.color === COL_NUM_ERROR),
-    ).toBe(true);
+    expect(r.recording.ops.some((o) => o.op === "line" && o.color === COL_ERROR)).toBe(
+      true,
+    );
     expect(r.recording.ops).toMatchSnapshot();
   });
 

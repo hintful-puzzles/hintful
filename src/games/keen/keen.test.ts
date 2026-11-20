@@ -9,6 +9,7 @@
  * mistake overlay, each with targeted op assertions plus a snapshot.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -73,9 +74,6 @@ import {
 } from "../../generated/games/keen/keen.compiled.ts";
 import {
   border,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_PENCIL_BODY,
   type KeenDrawState,
   type KeenHint,

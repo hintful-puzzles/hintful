@@ -31,11 +31,7 @@
 import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -43,6 +39,13 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
@@ -73,6 +76,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import type { SeismicHint } from "./hint.ts";
@@ -96,49 +100,36 @@ const BORDER = GRIDEXTRA * 2;
 
 // --- palette ---------------------------------------------------------------
 
-const COL_BACKGROUND = 0; // the board around the grid
+// A number in error, and a Check & Save outline, are `COL_ERROR`.
 /** The surface of a cell the player fills. */
-export const COL_CELL = 1;
+export const COL_CELL = FIRST_GAME_SLOT;
 /** The lifted surface under a number the puzzle fixed. */
-export const COL_GIVEN = 2;
+export const COL_GIVEN = FIRST_GAME_SLOT + 1;
 /** A region's wall, and the frame, which is the outer regions' wall. */
-export const COL_BORDER = 3;
-export const COL_NUM_FIXED = 4;
-export const COL_NUM_GUESS = 5;
-export const COL_NUM_ERROR = 6;
-export const COL_NUM_PENCIL = 7;
+export const COL_BORDER = FIRST_GAME_SLOT + 2;
+export const COL_NUM_FIXED = FIRST_GAME_SLOT + 3;
+export const COL_NUM_GUESS = FIRST_GAME_SLOT + 4;
+export const COL_NUM_PENCIL = FIRST_GAME_SLOT + 5;
 /** The thin line between two cells of one region. */
-export const COL_GRID = 8;
+export const COL_GRID = FIRST_GAME_SLOT + 6;
 /** The pencil indicator's body. */
-export const COL_PENCIL_BODY = 9;
-/** Fork addition: the outline of what an explained hint reasons from
- * (docs/hints-marks.md § "Shade vs ring"), drawn on a cell's edge rather than
- * behind its notes. The ring on the cell it acts on is the engine's. */
-export const COL_HINT_CELL = 10;
-/** The highlight's wash, in both its full-cell and its corner form. */
-export const COL_CURSOR = 11;
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 12;
-export const COL_FLASH_LEAD = 13;
+export const COL_PENCIL_BODY = FIRST_GAME_SLOT + 7;
+/** The highlight's wash, in both its full-cell and its corner form: the
+ * note-taking cell's "you are here" fill under the digit and its notes, which
+ * every game in that mechanic shares, and not the cursor role's green mark. */
+export const COL_HIGHLIGHT_WASH = FIRST_GAME_SLOT + 8;
 
 export function colors(background: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = background;
+  const out = rolePalette(background);
   out[COL_CELL] = cellSurface(background);
   out[COL_GIVEN] = givenSurface(background);
   out[COL_GRID] = surfaceGrid(background);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_BORDER] = INK;
   out[COL_NUM_FIXED] = INK;
   out[COL_NUM_GUESS] = playerEntryColor(background);
-  out[COL_NUM_ERROR] = ERROR;
   out[COL_NUM_PENCIL] = pencilColor(background);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
-  // A fill under the digit and its notes: the note-taking cell's "you are
-  // here" wash, which every game in that mechanic shares, not the green mark.
-  out[COL_CURSOR] = highlightWash(background);
+  out[COL_HIGHLIGHT_WASH] = highlightWash(background);
   return out;
 }
 
@@ -178,12 +169,11 @@ export function fromCoord(v: number, ts: number): number {
 // --- draw state ------------------------------------------------------------
 
 export interface SeismicDrawState {
-  started: boolean;
   tileSize: number;
-  /** Per-tile last-drawn contents (−1 = never drawn): the digit in bits 0–3, the
-   * pencil bitmask in bits 4–12, the cell flags in 13–15, the completion wave's
-   * beat in 16–17 and the cell's highlight from bit 18. */
-  tiles: Int32Array;
+  /** Per tile, what it shows: the digit in bits 0–3, the pencil bitmask in
+   * bits 4–12, the cell flags in 13–15 and the cell's highlight from bit 18;
+   * and the mistake and hint overlays on it. */
+  tiles: TileCache;
   /** The Check-&-Save mistake overlay. */
   wrong: OverlaySidecar;
   /** The displayed hint: target and evidence bits, and each struck note at
@@ -197,12 +187,13 @@ export interface SeismicDrawState {
 
 export function newDrawState(state: SeismicState, tileSize: number): SeismicDrawState {
   const cells = state.w * state.h;
+  const wrong = new OverlaySidecar(cells);
+  const hint = new OverlaySidecar(cells);
   return {
-    started: false,
     tileSize,
-    tiles: new Int32Array(cells).fill(-1),
-    wrong: new OverlaySidecar(cells),
-    hint: new OverlaySidecar(cells),
+    tiles: new TileCache(cells, { overlays: [wrong, hint] }),
+    wrong,
+    hint,
     marks: new HintMarks(),
     pencilModeShown: null,
   };
@@ -348,10 +339,8 @@ function drawTile(
     dr,
     { x: cx, y: cy, w: cw, h: ch },
     highlight,
-    COL_CURSOR,
+    COL_HIGHLIGHT_WASH,
     color,
-    COL_FLASH,
-    COL_FLASH_LEAD,
   );
   ds.hint.drawHatch(dr, i, { x: cx, y: cy, w: cw, h: ch }, ts);
 
@@ -385,7 +374,7 @@ function drawTile(
       flags[i] & FM_FIXED
         ? COL_NUM_FIXED
         : flags[i] & FM_ERRORMASK
-          ? COL_NUM_ERROR
+          ? COL_ERROR
           : COL_NUM_GUESS;
     const { origin: at, options } = digitText(ts, x, y);
     dr.drawText(at, options, ink, String(grid[i]));
@@ -399,10 +388,10 @@ function drawTile(
       const t = ty + inset;
       const r = tx + ts - 2 - inset;
       const b = ty + ts - 2 - inset;
-      dr.drawLine({ x: l, y: t }, { x: r, y: t }, COL_NUM_ERROR, 1);
-      dr.drawLine({ x: r, y: t }, { x: r, y: b }, COL_NUM_ERROR, 1);
-      dr.drawLine({ x: r, y: b }, { x: l, y: b }, COL_NUM_ERROR, 1);
-      dr.drawLine({ x: l, y: b }, { x: l, y: t }, COL_NUM_ERROR, 1);
+      dr.drawLine({ x: l, y: t }, { x: r, y: t }, COL_ERROR, 1);
+      dr.drawLine({ x: r, y: t }, { x: r, y: b }, COL_ERROR, 1);
+      dr.drawLine({ x: r, y: b }, { x: l, y: b }, COL_ERROR, 1);
+      dr.drawLine({ x: l, y: b }, { x: l, y: t }, COL_ERROR, 1);
     }
   }
 
@@ -437,9 +426,7 @@ export function redraw(
 ): void {
   const ts = ds.tileSize;
   const { w, h } = state;
-  const firstFrame = !ds.started;
-
-  if (firstFrame) {
+  if (ds.tiles.firstFrame()) {
     // The rectangle the region walls show through.
     dr.drawRect(
       {
@@ -450,7 +437,6 @@ export function redraw(
       },
       COL_BORDER,
     );
-    ds.started = true;
   }
 
   const index = (x: number, y: number): number => y * w + x;
@@ -472,12 +458,9 @@ export function redraw(
         (state.flags[i] << 13) |
         (highlight << 18);
 
-      if (ds.tiles[i] !== tile || ds.wrong.stale(i) || ds.hint.stale(i)) {
+      if (ds.tiles.changed(i, tile)) {
         const struck = ds.hint.struck[i];
         drawTile(dr, ds, state, x, y, color, highlight, ds.wrong.at(i), struck);
-        ds.tiles[i] = tile;
-        ds.wrong.commit(i);
-        ds.hint.commit(i);
       }
     }
   }
@@ -493,7 +476,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(state, x, y, ts),
     text: (x, y) => cellText(state, ts, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   });
 
   const box = PENCIL_BOX(state.params, ts);

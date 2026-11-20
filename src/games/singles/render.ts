@@ -10,18 +10,22 @@
 
 import { WHITE } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
   ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { hatchPeriod } from "../../engine/hatch.ts";
@@ -29,6 +33,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
 import type { SinglesHint } from "./index.ts";
@@ -45,46 +50,30 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-export const COL_GRID = 1;
+// `COL_HINT_OUTLINE` also marks the corner a corner-deduction protects.
+export const COL_GRID = FIRST_GAME_SLOT;
 /** The surface of a cell, which is all an undecided cell is. */
-const COL_EMPTY = 2;
-/** The ground of a cell the win flash is on, under its piece or its ring. */
-export const COL_FLASH = 3;
+const COL_EMPTY = FIRST_GAME_SLOT + 1;
 /** The number of a cell that holds no piece. */
-const COL_TEXT = 4;
-const COL_SHADED = 5;
+const COL_TEXT = FIRST_GAME_SLOT + 2;
+const COL_SHADED = FIRST_GAME_SLOT + 3;
 /** The number on the shaded piece: pinned, because the piece is one color in
  * both schemes and ink is not. */
-const COL_SHADED_NUM = 6;
+const COL_SHADED_NUM = FIRST_GAME_SLOT + 4;
 /** The ring round a number the player has marked as kept. */
-const COL_KEPT = 7;
-const COL_CURSOR = 8;
-export const COL_ERROR = 9;
-/** The number on a piece drawn in {@link COL_ERROR}. */
-const COL_ERROR_TEXT = 10;
-/** A cell the deduction reasons from, decided or not, and the corner a
- * corner-deduction protects. */
-export const COL_HINT_CELL = 11;
-/** The ground of a cell under the win flash's leading edge, where `COL_FLASH`
- * is under its body. */
-export const COL_FLASH_LEAD = 12;
+const COL_KEPT = FIRST_GAME_SLOT + 5;
+/** The number on a piece drawn in `COL_ERROR`. */
+const COL_ERROR_TEXT = FIRST_GAME_SLOT + 6;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_EMPTY] = cellSurface(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_TEXT] = INK;
   out[COL_SHADED] = SHADED;
   out[COL_SHADED_NUM] = WHITE;
   out[COL_KEPT] = RULED_OUT;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -128,20 +117,19 @@ const DS_HINT_STRAND = 0x400;
 const DS_HINT_LINE = 0x800; // on the line the sentence names: hatched
 
 export interface SinglesDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
   h: number;
-  cache: Int32Array;
+  /** What each cell shows, as its `DS_*` flags. */
+  tiles: TileCache;
 }
 
 export function newDrawState(state: SinglesState, tileSize: number): SinglesDrawState {
   return {
-    started: false,
     tileSize,
     w: state.w,
     h: state.h,
-    cache: new Int32Array(state.n).fill(-1),
+    tiles: new TileCache(state.n),
   };
 }
 
@@ -213,7 +201,7 @@ function tileRedraw(
       : NOTHING_TO_CLEAR;
     dr.drawRing(inner, clear, band.inner);
   } else if (f & (DS_HINT_STRAND | DS_HINT_EVID))
-    drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
+    drawMarkSides(dr, band, MARK_ALL, COL_HINT_OUTLINE);
 
   if (text) dr.drawText(c, text.options, tcol, text.text);
 
@@ -286,7 +274,7 @@ export function redraw(
 
   // The frame closes the grid on its top and left, where no tile draws a
   // line, and is no heavier than a grid line, whose color it takes.
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     const o = coord(0, ts) - 1;
     dr.drawRect({ x: o, y: o, w: ts * w + 1, h: 1 }, COL_GRID);
     dr.drawRect({ x: o, y: o, w: 1, h: ts * h + 1 }, COL_GRID);
@@ -313,11 +301,8 @@ export function redraw(
       if (hintStrand.has(i)) f |= DS_HINT_STRAND;
       if (hintLine.has(i)) f |= DS_HINT_LINE;
 
-      if (!ds.started || ds.cache[i] !== f) {
+      if (ds.tiles.changed(i, f))
         tileRedraw(dr, ts, coord(x, ts), coord(y, ts), state.nums[i], f);
-        ds.cache[i] = f;
-      }
     }
   }
-  ds.started = true;
 }

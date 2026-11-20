@@ -10,23 +10,26 @@
 
 import { BLACK, WHITE, YELLOW_WASH } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
   ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   RULED_OUT,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawRuledOutCross } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -52,37 +55,25 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette -------------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-export const COL_GRID = 1; // the line between two cells, and the frame
-export const COL_WALL = 2;
-export const COL_LIGHT = 3; // white: bulbs and clue digits
-export const COL_LIT = 4; // yellow lit-square fill
-export const COL_ERROR = 5;
-const COL_CURSOR = 6;
-// Fork hint inks.
-/** The evidence and the squares a deduction is about, outlined, and the
- * outline round a hint's driving clue, on its wall. */
-export const COL_HINT_CELL = 7;
+// The full red `COL_ERROR` is the badge under a wrong clue and the disc of a
+// bulb another bulb lights; `COL_HINT_OUTLINE` also rings a hint's driving
+// clue, on its wall.
+export const COL_GRID = FIRST_GAME_SLOT; // the line between two cells, and the frame
+export const COL_WALL = FIRST_GAME_SLOT + 1;
+export const COL_LIGHT = FIRST_GAME_SLOT + 2; // white: bulbs and clue digits
+export const COL_LIT = FIRST_GAME_SLOT + 3; // yellow lit-square fill
 /** The player's "no light here" cross. */
-export const COL_RULED_OUT = 8;
-const COL_CELL = 9; // the surface of an open square no bulb lights
-/** The ground of an open square under the completion flash's body. The slot
- * for its leading edge is {@link COL_FLASH_LEAD}. */
-export const COL_FLASH = 10;
+export const COL_RULED_OUT = FIRST_GAME_SLOT + 4;
+const COL_CELL = FIRST_GAME_SLOT + 5; // the surface of an open square no bulb lights
 /** The line round a bulb. */
-export const COL_BULB_RIM = 11;
+export const COL_BULB_RIM = FIRST_GAME_SLOT + 6;
 /** A wrong clue's digit, on its badge. */
-export const COL_ERROR_TEXT = 12;
-/** The ground of an open square under the completion flash's leading edge. */
-export const COL_FLASH_LEAD = 13;
+export const COL_ERROR_TEXT = FIRST_GAME_SLOT + 7;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_WALL] = wallFill(defaultBackground);
   // Pinned: a bulb *is* white with a black rim, in either scheme, and a clue
   // is that white on its wall.
@@ -93,12 +84,7 @@ export function colors(defaultBackground: Color): Color[] {
   // Plain yellow is a near-board tint under a light scheme and a bright patch
   // under a dark one.
   out[COL_LIT] = YELLOW_WASH;
-  // The full red, not its wash: it is the badge under a wrong clue and the
-  // disc of a bulb another bulb lights.
-  out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_RULED_OUT] = RULED_OUT;
   return out;
 }
@@ -135,18 +121,17 @@ const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — rin
 const DF_HINT_CLUE = 16384; // driving clue: its wall ringed
 
 export interface LightupDrawState {
-  started: boolean;
   tileSize: number;
   crad: number;
-  cache: Int32Array;
+  /** What each square shows, as its display flags. */
+  tiles: TileCache;
 }
 
 export function newDrawState(state: LightupState, tileSize: number): LightupDrawState {
   return {
-    started: false,
     tileSize,
     crad: Math.floor((3 * (tileSize - 1)) / 8),
-    cache: new Int32Array(state.w * state.h).fill(-1),
+    tiles: new TileCache(state.w * state.h),
   };
 }
 
@@ -194,7 +179,7 @@ function tileRedraw(
   y: number,
 ): void {
   const ts = ds.tileSize;
-  const dsFlags = ds.cache[idx(x, y, state.w)];
+  const dsFlags = ds.tiles.shown(idx(x, y, state.w));
   const dx = coord(x, ts);
   const dy = coord(y, ts);
   // An open square's surface, inside the grid line on its top and left. The
@@ -235,7 +220,7 @@ function tileRedraw(
         dr,
         { box: { x: dx + m, y: dy + m, w: side, h: side }, outer: 0, inner: t },
         MARK_ALL,
-        COL_HINT_CELL,
+        COL_HINT_OUTLINE,
       );
       drawRectOutline(
         dr,
@@ -248,18 +233,14 @@ function tileRedraw(
     }
   } else {
     // Hint roles (fork): the target is **ringed**, so a light or blob
-    // already on it stays visible. An evidence square is outlined COL_HINT_CELL
-    // and keeps its fill, which is its premise: lit or not.
+    // already on it stays visible. An evidence square is outlined
+    // COL_HINT_OUTLINE and keeps its fill, which is its premise: lit or not.
     const tone = ((dsFlags >> DF_WIN_SHIFT) & 3) as WinTone;
     const fill =
-      tone !== WIN_NONE
-        ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-        : dsFlags & DF_LIT
-          ? COL_LIT
-          : COL_CELL;
+      tone !== WIN_NONE ? winSlot(tone) : dsFlags & DF_LIT ? COL_LIT : COL_CELL;
     dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_GRID);
     dr.drawRect(box, fill);
-    if (dsFlags & (DF_HINT_AREA | DF_HINT_DARKREF)) ring(COL_HINT_CELL);
+    if (dsFlags & (DF_HINT_AREA | DF_HINT_DARKREF)) ring(COL_HINT_OUTLINE);
     if (dsFlags & DF_LIGHT) {
       const lcol = dsFlags & DF_OVERLAP ? COL_ERROR : COL_LIGHT;
       dr.drawCircle(
@@ -340,11 +321,10 @@ export function redraw(
     add([c], bit);
   }
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // One line wide, like the grid: its top and left lie under the first
     // row's and column's own lines, its right and bottom close the last.
     drawRectOutline(dr, coord(0, ts), coord(0, ts), ts * w + 1, ts * h + 1, COL_GRID);
-    ds.started = true;
   }
 
   const wrong = mistakes?.length
@@ -358,10 +338,7 @@ export function redraw(
       if (wrong?.has(i)) df |= DF_WRONG;
       if (ui.drawBlobsWhenLit) df |= DF_BLOBS_PREF;
       df |= hintBits.get(i) ?? 0;
-      if (ds.cache[i] !== df) {
-        ds.cache[i] = df;
-        tileRedraw(dr, ds, state, ui, x, y);
-      }
+      if (ds.tiles.changed(i, df)) tileRedraw(dr, ds, state, ui, x, y);
     }
   }
 }

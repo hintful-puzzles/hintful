@@ -614,9 +614,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "grid",
-      "started",
       "tileSize",
+      "tiles",
     ],
     "id": "flood",
     "members": [
@@ -864,7 +863,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint",
       "marks",
       "pencilModeShown",
-      "started",
       "tileSize",
       "tiles",
       "w",
@@ -906,10 +904,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "crad",
-      "started",
       "tileSize",
+      "tiles",
     ],
     "id": "lightup",
     "members": [
@@ -1524,9 +1521,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "h",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "range",
@@ -1698,13 +1695,13 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "grid",
       "hint",
       "margin",
       "marks",
       "tileSize",
       "tilegap",
       "tileinner",
+      "tiles",
     ],
     "id": "samegame",
     "members": [
@@ -1739,7 +1736,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint",
       "marks",
       "pencilModeShown",
-      "started",
       "tileSize",
       "tiles",
       "wrong",
@@ -1860,10 +1856,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "h",
-      "started",
       "tileSize",
+      "tiles",
       "w",
     ],
     "id": "singles",
@@ -2168,10 +2163,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "cache",
       "mistakes",
-      "started",
       "tileSize",
+      "tiles",
     ],
     "id": "sticks",
     "members": [

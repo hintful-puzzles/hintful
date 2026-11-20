@@ -4,6 +4,7 @@
 // selection outer rect (COL_SEL), and the stuck board's inner recolor
 // (COL_INK).
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -11,9 +12,12 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave.ts";
 import { samegameGame } from "./index.ts";
 import {
-  COL_FLASH,
-  COL_FLASH_LEAD,
+  COL_CELL,
+  COL_GRID,
+  COL_INK,
   COL_LIFTED,
+  COL_PIECE,
+  COL_SEL,
   FLASH_FRAME,
   newDrawState,
   redraw,
@@ -58,11 +62,11 @@ describe("Same Game redraw", () => {
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
     expect(ops.some((o) => o.op === "polygon")).toBe(false);
-    // The frame (COL_GRID = 14), then the field one pixel inside it
-    // (COL_CELL = 12): 2 tiles and a gap wide, plus the frame's two pixels.
+    // The frame, then the field one pixel inside it: 2 tiles and a gap wide,
+    // plus the frame's two pixels.
     const [frame, field] = ops;
-    expect(frame).toMatchObject({ op: "rect", color: 14, w: 2 * TS + 2 + 2 });
-    expect(field).toMatchObject({ op: "rect", color: 12, w: 2 * TS + 2 });
+    expect(frame).toMatchObject({ op: "rect", color: COL_GRID, w: 2 * TS + 2 + 2 });
+    expect(field).toMatchObject({ op: "rect", color: COL_CELL, w: 2 * TS + 2 });
   });
 
   it("draws an emptied cell as the field's own surface", () => {
@@ -71,23 +75,23 @@ describe("Same Game redraw", () => {
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
     const at = ops.filter((o) => o.op === "rect" && o.x === 16 && o.y === 16);
-    expect(at.map((o) => o.op === "rect" && o.color)).toEqual([12]);
+    expect(at.map((o) => o.op === "rect" && o.color)).toEqual([COL_CELL]);
   });
 
   it("fills the gap between same-color neighbors (a seamless join)", () => {
     // Two color-1 tiles side by side: the left tile joins right, so it
-    // paints a full-TILE_SIZE-wide rect in its color (COL_1 = 1).
+    // paints a full-TILE_SIZE-wide rect in its color.
     const state = mkState("1,1");
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
-    expect(ops.some((o) => o.op === "rect" && o.color === 1 && o.w === TS)).toBe(true);
+    const fullWidth = (o: RecordingDrawing["ops"][number]) =>
+      o.op === "rect" && o.color === COL_PIECE && o.w === TS;
+    expect(ops.some(fullWidth)).toBe(true);
     // A differing pair leaves the inner-only width (no full-width join fill).
     const state2 = mkState("1,2");
     const r2 = recordingDrawing();
     redraw(r2.dr, freshDs(state2), null, state2, 1, emptyUi(state2), 0, NO_FLASH);
-    expect(r2.ops.some((o) => o.op === "rect" && o.color === 1 && o.w === TS)).toBe(
-      false,
-    );
+    expect(r2.ops.some(fullWidth)).toBe(false);
   });
 
   it("draws a COL_SEL outer rect for a selected tile", () => {
@@ -97,16 +101,15 @@ describe("Same Game redraw", () => {
     ui.nselected = 1;
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, ui, 0, NO_FLASH);
-    // COL_SEL = palette index 11.
-    expect(ops.some((o) => o.op === "rect" && o.color === 11)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_SEL)).toBe(true);
   });
 
   it("recolors tile innards to COL_INK on a stuck board", () => {
     const state: SamegameState = mkState("1,2");
     const { dr, ops } = recordingDrawing();
     redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
-    // COL_INK = palette index 10 (drawn as the inner square).
-    expect(ops.some((o) => o.op === "rect" && o.color === 10)).toBe(true);
+    // Drawn as the inner square.
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_INK)).toBe(true);
   });
 });
 

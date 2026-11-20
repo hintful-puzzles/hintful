@@ -9,6 +9,7 @@
  * lives in `singles-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -33,7 +34,7 @@ describeAbsentTiers(singlesGame, ["2x2dk", "2x3dk", "3x2dk", "3x3dk"]);
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
-import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD, COL_GRID } from "./render.ts";
+import { COL_GRID } from "./render.ts";
 import { solveSpecific } from "./solver.ts";
 import {
   cloneState,

@@ -11,18 +11,20 @@
  */
 
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   RULED_OUT,
   SHADED,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import {
   drawRectCorners,
   drawRectOutline,
@@ -35,6 +37,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
 import type { RangeHint } from "./hint.ts";
@@ -55,37 +58,24 @@ export const PREFERRED_TILE_SIZE = 32;
 
 // --- palette ---------------------------------------------------------------
 
-const COL_BACKGROUND = 0; // the board around the grid
-export const COL_GRID = 1; // the line between two cells, and the frame
-export const COL_CELL = 2; // the surface of a cell the puzzle left open
+export const COL_GRID = FIRST_GAME_SLOT; // the line between two cells, and the frame
+export const COL_CELL = FIRST_GAME_SLOT + 1; // the surface of a cell the puzzle left open
 /** The surface under a clue. */
-export const COL_GIVEN = 3;
-export const COL_SHADED = 4; // the piece in a shaded cell
-export const COL_RULED_OUT = 5; // the cross in a cell marked clear
-const COL_TEXT = 6; // a clue's number
-export const COL_ERROR = 7;
-const COL_CURSOR = 8;
-export const COL_HINT_CELL = 9; // the deduction's premise/area cells — outlined
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 10;
-export const COL_FLASH_LEAD = 11;
+export const COL_GIVEN = FIRST_GAME_SLOT + 2;
+export const COL_SHADED = FIRST_GAME_SLOT + 3; // the piece in a shaded cell
+export const COL_RULED_OUT = FIRST_GAME_SLOT + 4; // the cross in a cell marked clear
+const COL_TEXT = FIRST_GAME_SLOT + 5; // a clue's number
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
   out[COL_GIVEN] = givenSurface(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_SHADED] = SHADED;
   out[COL_RULED_OUT] = RULED_OUT;
   // Ink, which inverts: the number is read against a surface, never
   // against a piece, since a clue cell is never shaded.
   out[COL_TEXT] = INK;
-  out[COL_ERROR] = ERROR;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -107,7 +97,7 @@ export function computeSize(p: RangeParams, ts: number): Size {
 const F_ERROR = 1 << 16;
 const F_CURSOR = 1 << 17;
 const F_MISTAKE = 1 << 19;
-const F_HINT_CLUE = 1 << 21; // the clue driving the deduction — digit in COL_HINT_CELL
+const F_HINT_CLUE = 1 << 21; // the clue driving the deduction — digit in COL_HINT_OUTLINE
 /** The win flash's tone on the cell, in two bits above the hint's. */
 const WIN_SHIFT = 25;
 const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
@@ -115,8 +105,8 @@ const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
 /** A cell's role in the displayed hint, with its cache flag. The `target` is
  * the forced cell, shaded or clear alike (the narration says which mark),
  * ringed; the `area` is the deduction's evidence, outlined in
- * COL_HINT_CELL; a `shadedRef` is a shaded premise cell, which keeps its piece
- * and takes a doubled outline in COL_HINT_CELL. */
+ * COL_HINT_OUTLINE; a `shadedRef` is a shaded premise cell, which keeps its piece
+ * and takes a doubled outline in COL_HINT_OUTLINE. */
 const HINT_FLAG = { none: 0, target: 1 << 20, area: 1 << 22, shadedRef: 1 << 23 };
 type HintKind = keyof typeof HINT_FLAG;
 
@@ -124,7 +114,8 @@ export interface RangeDrawState {
   tileSize: number;
   w: number;
   h: number;
-  cache: Int32Array;
+  /** What each cell shows, as its packed key. */
+  tiles: TileCache;
 }
 
 export function newDrawState(state: RangeState, tileSize: number): RangeDrawState {
@@ -132,7 +123,7 @@ export function newDrawState(state: RangeState, tileSize: number): RangeDrawStat
     tileSize,
     w: state.w,
     h: state.h,
-    cache: new Int32Array(state.w * state.h).fill(-1),
+    tiles: new TileCache(state.w * state.h),
   };
 }
 
@@ -148,7 +139,7 @@ function drawCell(
   cursor: boolean,
   tone: WinTone,
   hintKind: HintKind,
-  /** This clue drives the displayed deduction, so its digit draws `COL_HINT_CELL`
+  /** This clue drives the displayed deduction, so its digit draws `COL_HINT_OUTLINE`
    * (see `RangeHint.clue`). The clue is *inside* the outlined area or striped
    * run it drives, so it keeps that mark and changes only its digit. */
   clueRef = false,
@@ -166,11 +157,7 @@ function drawCell(
   // is in: lifted under a clue, plain everywhere else. The cursor is corner brackets and no hint role is a
   // fill: a Range premise area runs along a clue's arms and takes in the clue
   // cell itself, whose digit the deduction counts.
-  const surface = tone
-    ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD)
-    : value > 0
-      ? COL_GIVEN
-      : COL_CELL;
+  const surface = tone ? winSlot(tone) : value > 0 ? COL_GIVEN : COL_CELL;
 
   drawRectOutline(dr, x, y, ts + 1, ts + 1, COL_GRID);
   dr.drawRect(box, surface);
@@ -187,7 +174,7 @@ function drawCell(
     dr.drawText(
       origin,
       options,
-      error ? COL_ERROR : clueRef ? COL_HINT_CELL : COL_TEXT,
+      error ? COL_ERROR : clueRef ? COL_HINT_OUTLINE : COL_TEXT,
       String(value),
     );
   }
@@ -203,7 +190,7 @@ function drawCell(
   // mark: a placed piece or cross would read as already done, so the narration
   // says which mark and auto-hint applies it for real.
   const band = { box, outer: 0, inner: thick };
-  if (hintKind === "area") drawMarkSides(dr, band, MARK_ALL, COL_HINT_CELL);
+  if (hintKind === "area") drawMarkSides(dr, band, MARK_ALL, COL_HINT_OUTLINE);
   if (hintKind === "target") {
     const clue = clueText(ts, tx, ty);
     const clear: RingClear =
@@ -213,8 +200,8 @@ function drawCell(
     dr.drawRing(box, clear, thick);
   }
   if (hintKind === "shadedRef") {
-    drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_HINT_CELL);
-    drawRectOutline(dr, x + 2, y + 2, ts - 3, ts - 3, COL_HINT_CELL);
+    drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_HINT_OUTLINE);
+    drawRectOutline(dr, x + 2, y + 2, ts - 3, ts - 3, COL_HINT_OUTLINE);
   }
 
   dr.drawUpdate({ x, y, w: ts + 1, h: ts + 1 });
@@ -289,7 +276,7 @@ export function redraw(
       if (clueRef) packed |= F_HINT_CLUE;
       if (hatched) packed |= F_HINT_HATCH;
 
-      if (ds.cache[i] !== packed) {
+      if (ds.tiles.changed(i, packed)) {
         drawCell(
           dr,
           ts,
@@ -303,7 +290,6 @@ export function redraw(
           clueRef,
           hatched,
         );
-        ds.cache[i] = packed;
       }
     }
   }

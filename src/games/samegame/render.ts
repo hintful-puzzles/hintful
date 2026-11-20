@@ -1,13 +1,15 @@
 import { BLACK, FREE, WHITE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  FLASH,
-  FLASH_LEAD,
   givenSurface,
-  HINT_OUTLINE,
   INK,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import {
@@ -20,6 +22,7 @@ import type { MarkedDeadEnd } from "../../engine/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
 import {
@@ -56,45 +59,35 @@ const TILE_TONE_SHIFT = 14;
 
 // --- color palette indices -------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_1 = 1; // COL_1..COL_9 are 1..9
 /** The middle of every tile on a stuck board, and the cursor on an emptied
  * cell. */
-const COL_INK = 10;
+export const COL_INK = FIRST_GAME_SLOT;
 /** The body of a selected tile, whose color shrinks to its middle. */
-const COL_SEL = 11;
+export const COL_SEL = FIRST_GAME_SLOT + 1;
 /** The field: an emptied cell, and the gap between two tiles. */
-const COL_CELL = 12;
+export const COL_CELL = FIRST_GAME_SLOT + 2;
 /** The field on the lit beats of a stuck board's flash. */
-export const COL_LIFTED = 13;
+export const COL_LIFTED = FIRST_GAME_SLOT + 3;
 /** The frame round the field. */
-const COL_GRID = 14;
+export const COL_GRID = FIRST_GAME_SLOT + 4;
 /** The cursor on a tile. */
-const COL_ON_TILE = 15;
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 16;
-export const COL_FLASH_LEAD = 17;
-/** The outline round the squares and groups a hint step reasons from. The
- * ring round the group it removes is the engine's (`GameDrawing.drawRing`). */
-export const COL_HINT_EVIDENCE = 18;
-const NCOLORS = 19;
+const COL_ON_TILE = FIRST_GAME_SLOT + 5;
+/** The nine piece colors: a square holding color `c` (1 to 9) paints
+ * `COL_PIECE + c - 1`. */
+export const COL_PIECE = FIRST_GAME_SLOT + 6;
 
-export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = new Array<Color>(NCOLORS);
-  out[COL_BACKGROUND] = defaultBackground;
-  for (let i = 0; i < 9; i++) out[COL_1 + i] = FREE[i];
+export function colors(bg: Color): Color[] {
+  const out = rolePalette(bg);
   out[COL_INK] = INK;
   // `WHITE` and `BLACK`, not `PAPER` and `INK`: both are read against a
   // tile, which is one color in both schemes, and a selected tile that
   // inverted would sink into the dark scheme's field.
   out[COL_SEL] = WHITE;
   out[COL_ON_TILE] = BLACK;
-  out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_LIFTED] = givenSurface(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_GRID] = surfaceGrid(defaultBackground);
-  out[COL_HINT_EVIDENCE] = HINT_OUTLINE;
+  out[COL_CELL] = cellSurface(bg);
+  out[COL_LIFTED] = givenSurface(bg);
+  out[COL_GRID] = surfaceGrid(bg);
+  for (let i = 0; i < 9; i++) out[COL_PIECE + i] = FREE[i];
   return out;
 }
 
@@ -115,10 +108,10 @@ export interface SamegameDrawState {
   /** The color the margin was last drawn in, which the stuck board's flash
    * changes. */
   margin: number;
-  /** Per-cell cache of the last-drawn packed tile value; `-1` forces a
-   * redraw (the no-BigInt Int32Array cache pattern). */
-  grid: Int32Array;
-  /** The hint step's marks by square, part of the diff key. */
+  /** What each square shows, as its packed tile value, and the hint's marks
+   * on it. */
+  tiles: TileCache;
+  /** The hint step's marks by square. */
   hint: OverlaySidecar;
   /** The ring and the outline, drawn after the tiles. */
   marks: HintMarks;
@@ -128,13 +121,14 @@ export function newDrawState(
   state: SamegameState,
   tileSize: number,
 ): SamegameDrawState {
+  const hint = new OverlaySidecar(state.w * state.h);
   return {
     tileSize,
     tileinner: tileSize - gap(tileSize),
     tilegap: gap(tileSize),
     margin: -1,
-    grid: new Int32Array(state.w * state.h).fill(-1),
-    hint: new OverlaySidecar(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { overlays: [hint] }),
+    hint,
     marks: new HintMarks(),
   };
 }
@@ -173,19 +167,20 @@ function tileRedraw(
   const inner = ds.tileinner;
   const tgap = ds.tilegap;
   const col = tile & TILE_COLMASK;
+  const piece = COL_PIECE + col - 1;
 
   let outerCol = bgcolor;
   let innerCol = bgcolor;
   if (col) {
     if (tile & TILE_IMPOSSIBLE) {
-      outerCol = col;
+      outerCol = piece;
       innerCol = COL_INK;
     } else if (tile & TILE_SELECTED) {
       outerCol = COL_SEL;
-      innerCol = col;
+      innerCol = piece;
     } else {
-      outerCol = col;
-      innerCol = col;
+      outerCol = piece;
+      innerCol = piece;
     }
   }
 
@@ -284,8 +279,10 @@ export function redraw(
   const margin = stuckLit ? COL_LIFTED : COL_CELL;
   const marginChanged = ds.margin !== margin;
   if (marginChanged) {
+    // The margin's repaint covers the field, so every tile follows it.
     drawFrame(dr, w, h, ts, margin);
     ds.marks.reset();
+    ds.tiles.forgetAll();
   }
 
   // The displayed step's marks, read from its words and from nowhere else.
@@ -297,7 +294,7 @@ export function redraw(
     band: (x, y) => markBand(ds, x, y),
     // A tile is a color, never text.
     text: () => NOTHING_TO_CLEAR,
-    evidenceColor: COL_HINT_EVIDENCE,
+    evidenceColor: COL_HINT_OUTLINE,
     // A step rings one group: one pill where it is straight, and a ring per
     // square where it bends.
     joinTargets: () => true,
@@ -305,7 +302,7 @@ export function redraw(
     joinEvidence: (a, b) => state.tiles[a.y * w + a.x] === state.tiles[b.y * w + b.x],
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, style, margin, (x, y) => {
-    if (x >= 0 && x < w && y >= 0 && y < h) ds.grid[y * w + x] = -1;
+    if (x >= 0 && x < w && y >= 0 && y < h) ds.tiles.forget(y * w + x);
   });
 
   for (let x = 0; x < w; x++) {
@@ -332,12 +329,9 @@ export function redraw(
       const tone = flash.win(sweepStep(x, y));
       tile |= tone << TILE_TONE_SHIFT;
 
-      // The margin's repaint covers the field, so every tile follows it.
-      if (ds.grid[i] !== tile || marginChanged || ds.hint.stale(i)) {
-        const bgcolor = tone ? winSlot(tone, COL_FLASH, COL_FLASH_LEAD) : margin;
+      if (ds.tiles.changed(i, tile)) {
+        const bgcolor = tone ? winSlot(tone) : margin;
         tileRedraw(dr, ds, i, x, y, dright, dbelow, tile, bgcolor);
-        ds.grid[i] = tile;
-        ds.hint.commit(i);
       }
     }
   }

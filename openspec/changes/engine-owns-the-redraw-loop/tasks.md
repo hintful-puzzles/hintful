@@ -79,9 +79,14 @@
       state's fields, so it moves with every game: update it with
       `--update` and check the diff is only `cache`/`started` → `tiles`. In the app: a move, a hint, auto-solve to the win flash.
 
-      Moved: towers, clusters, norinori, starbattle.
-      Next, skeleton-shaped: seismic, keen, samegame, sticks, lightup,
-      singles, range, flood, mines, wordguess, solo, mathrax, rome,
+      Moved: towers, clusters, norinori, starbattle, seismic, keen,
+      samegame, sticks, lightup, singles, range, flood. A game whose board
+      values are palette indices (SameGame's and Flood's tile colors) numbers
+      them from a run after its own slots (`COL_PIECE + c - 1`,
+      `COL_TILE + c`); a whole-board repaint (SameGame's margin) is
+      `forgetAll`. Seismic's `COL_CURSOR` was the note-taking wash and is
+      `COL_HIGHLIGHT_WASH`; Flood's mark on a tile stays black, its own slot.
+      Next, skeleton-shaped: mines, wordguess, solo, mathrax, rome,
       edge-clue-latin (adjacent, unequal). Then the multi-family games, then
       the neighbor-painting ones. Not tiles, keeping the explicit form:
       cube, loopy, untangle (palette roles only).

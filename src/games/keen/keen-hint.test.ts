@@ -5,10 +5,11 @@
  * eliminations + basic-Latin culls) and places with quality-bar narration; refusal
  * on solved / on mistakes; `hintKeepTrack` verdicts. Tier 2.5 — a render-scenario
  * snapshot of a cage-elimination journey frame (struck candidate `COL_PENCIL`
- * strikethrough, evidence `COL_HINT_CELL`, cage clue glyphs still drawn).
+ * strikethrough, evidence `COL_HINT_OUTLINE`, cage clue glyphs still drawn).
  */
 import { describe, expect, it } from "vitest";
 import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
@@ -28,7 +29,7 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
-import { COL_HINT_CELL, COL_PENCIL, computeSize, coord, gridExtra } from "./render.ts";
+import { COL_PENCIL, computeSize, coord, gridExtra } from "./render.ts";
 import {
   type KeenMove,
   type KeenParams,
@@ -457,7 +458,7 @@ describe("keen hint render", () => {
     expect(new Set(hatches.map((h) => `${h.x},${h.y}`)).size).toBe(cage.length);
     const at = (cs: Cells) => cs.map((c) => `${c.x},${c.y}`);
     expect(at(hl.area)).toEqual(at(hl.targets));
-    expectContour(recording.ops, COL_HINT_CELL, 1);
+    expectContour(recording.ops, COL_HINT_OUTLINE, 1);
     // The struck candidate keeps its COL_PENCIL digit, crossed through in COL_PENCIL.
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,
@@ -524,7 +525,7 @@ describe("keen hint render", () => {
     expect(hatches).toHaveLength(SMALL.w);
     const isRow = /in this row/.test(hint?.explanation ?? "");
     expect(new Set(hatches.map((h) => (isRow ? h.y : h.x))).size).toBe(1);
-    expect(markSides(recording.ops, COL_HINT_CELL)).toEqual([]);
+    expect(markSides(recording.ops, COL_HINT_OUTLINE)).toEqual([]);
     expectRing(recording.ops);
     expect(recording.ops).toMatchSnapshot();
   });

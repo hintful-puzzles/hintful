@@ -8,6 +8,7 @@
  * are stable ground truth here.
  */
 import { describe, expect, it } from "vitest";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -44,10 +45,7 @@ import { newLightupDesc } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";
 import {
   COL_BULB_RIM,
-  COL_ERROR,
   COL_ERROR_TEXT,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_LIGHT,
   COL_LIT,
   COL_RULED_OUT,

@@ -4,6 +4,12 @@
 // (grid outline, clue text, background) so a render regression is a
 // reviewable text diff.
 import { describe, expect, it } from "vitest";
+import {
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, mark, phrase, so, stepMarks } from "../../engine/hint-words.ts";
 import { newCursor } from "../../engine/pointer.ts";
@@ -17,12 +23,8 @@ import { rangeGame } from "./index.ts";
 import { CLUE } from "./kinds.ts";
 import {
   COL_CELL,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
   COL_GIVEN,
   COL_GRID,
-  COL_HINT_CELL,
   COL_RULED_OUT,
   COL_SHADED,
   colors,
@@ -63,7 +65,7 @@ function makeState(w: number, h: number, grid: number[]): RangeState {
 }
 
 describe("hint color legend", () => {
-  it("outlines a cited black premise in COL_HINT_CELL, apart from the ringed target", () => {
+  it("outlines a cited black premise in COL_HINT_OUTLINE, apart from the ringed target", () => {
     // The adjacency deduction shape: a black square (the premise) at the center
     // forces a neighbor white (the target), each in its own role's ink.
     const grid = [EMPTY, EMPTY, EMPTY, EMPTY, BLACK, EMPTY, EMPTY, EMPTY, EMPTY];
@@ -84,7 +86,7 @@ describe("hint color legend", () => {
     redraw(rec, ds, null, state, 1, noCursor, 0, NO_FLASH, step);
     // The cited black square takes a doubled outline (`line` ops, not a body
     // fill).
-    expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_CELL)).toBe(
+    expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_OUTLINE)).toBe(
       true,
     );
     // The forced cell is ringed, and nothing else (the premise's outline
@@ -209,12 +211,12 @@ describe("render scenario snapshot", () => {
     expect(result.hint).toBeDefined();
     const ops = result.recording.ops;
     // The hint target cell is **ringed**; premise cells are outlined
-    // COL_HINT_CELL, and a run the sentence names is hatched translucently.
+    // COL_HINT_OUTLINE, and a run the sentence names is hatched translucently.
     // None is an opaque fill: a Range premise runs along a clue's arms and takes
     // in the clue cell, so it carries the very digit the deduction counts with.
     expectRing(ops);
     const marks = stepMarks(result.hint);
-    const premise = markSides(ops, COL_HINT_CELL);
+    const premise = markSides(ops, COL_HINT_OUTLINE);
     for (const s of premise) expect(isThin(s)).toBe(true);
     const run = marks.of("stripes", CELL);
     const hatched = opsOfKind(ops, "hatch");
@@ -222,12 +224,12 @@ describe("render scenario snapshot", () => {
     expect(premise.length + run.length).toBeGreaterThan(0);
     // Clues are still drawn.
     expect(ops.some((o) => o.op === "text")).toBe(true);
-    // …and the clue *driving* the deduction draws its digit in COL_HINT_CELL, which
+    // …and the clue *driving* the deduction draws its digit in COL_HINT_OUTLINE, which
     // is what lets the narration say "the highlighted 5". A clue sits inside
     // its own shaded line of sight and that run can hold a second clue of the
     // same value (seen live on 9x6 `range-a`), so the value alone is not a name.
     expect(marks.of("outline", CLUE)).toHaveLength(1);
-    expect(ops.some((o) => o.op === "text" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "text" && o.color === COL_HINT_OUTLINE)).toBe(true);
     expect(result.recording.ops).toMatchSnapshot();
   });
 });

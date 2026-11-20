@@ -6,6 +6,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -42,15 +43,7 @@ import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";
-import {
-  COL_CELL,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_LINE,
-  newDrawState,
-  redraw,
-} from "./render.ts";
+import { COL_CELL, COL_LINE, newDrawState, redraw } from "./render.ts";
 import {
   deductionFinishes,
   findLiveErrors,

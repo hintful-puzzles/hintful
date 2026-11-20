@@ -18,10 +18,6 @@
 import { valueBit } from "../../engine/candidate-bits.ts";
 import {
   cellSurface,
-  ERROR,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -29,6 +25,13 @@ import {
   playerEntryColor,
   surfaceGrid,
 } from "../../engine/color/palette.ts";
+import {
+  COL_BACKGROUND,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawStrike, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { fromCoord as fromCoordE } from "../../engine/geometry.ts";
@@ -58,6 +61,7 @@ import {
   repaintPencilIndicator,
 } from "../../engine/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../../engine/types.ts";
 import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import {
@@ -77,39 +81,25 @@ import {
 
 export const PREFERRED_TILE_SIZE = 48;
 
-// --- palette (index-for-index with the upstream COL_* enum) ----------------
+// --- palette ----------------------------------------------------------------
 
-const COL_BACKGROUND = 0;
-const COL_GRID = 1;
-const COL_USER = 2;
-const COL_HIGHLIGHT = 3;
-export const COL_ERROR = 4;
-export const COL_PENCIL = 5;
-// Fork additions, appended past the upstream enum.
-export const COL_PENCIL_BODY = 6; // the yellow body of the pencil-mode indicator
-/** The driving cage's outline (drawn in redraw's last block). */
-export const COL_HINT_CELL = 7;
-const COL_CELL = 8; // the surface of a cell the player fills
+const COL_GRID = FIRST_GAME_SLOT;
+const COL_USER = FIRST_GAME_SLOT + 1;
+const COL_HIGHLIGHT = FIRST_GAME_SLOT + 2;
+export const COL_PENCIL = FIRST_GAME_SLOT + 3;
+export const COL_PENCIL_BODY = FIRST_GAME_SLOT + 4; // the yellow body of the pencil-mode indicator
+const COL_CELL = FIRST_GAME_SLOT + 5; // the surface of a cell the player fills
 /** The thin line between two cells of one cage. A cage's own edge is content
  * and stays `COL_GRID`. */
-const COL_LINE = 9;
-/** The ground of a cell the win flash is on: its body, and its leading edge. */
-export const COL_FLASH = 10;
-export const COL_FLASH_LEAD = 11;
+const COL_LINE = FIRST_GAME_SLOT + 6;
 
-export function colors(defaultBackground: Color): Color[] {
-  const bg = defaultBackground;
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = bg;
+export function colors(bg: Color): Color[] {
+  const out = rolePalette(bg);
   out[COL_GRID] = INK;
   out[COL_USER] = playerEntryColor(bg);
   out[COL_HIGHLIGHT] = highlightWash(bg);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
-  out[COL_ERROR] = ERROR;
   out[COL_PENCIL] = pencilColor(bg);
   out[COL_PENCIL_BODY] = PENCIL_BODY;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   out[COL_CELL] = cellSurface(bg);
   out[COL_LINE] = surfaceGrid(bg);
   return out;
@@ -117,10 +107,10 @@ export function colors(defaultBackground: Color): Color[] {
 
 /** Highlight payload a Keen hint step carries (built in `index.ts`). The marks
  * (docs/hints-marks.md § "The engine colors the marks"): the driving cage's
- * cells outlined `COL_HINT_CELL`, the acted-on cell(s) ringed by the engine,
+ * cells outlined `COL_HINT_OUTLINE`, the acted-on cell(s) ringed by the engine,
  * the ruled-out candidate(s) shown struck. */
 export interface KeenHint {
-  /** The driving cage's cells (evidence), shaded `COL_HINT_CELL`. */
+  /** The driving cage's cells (evidence), outlined `COL_HINT_OUTLINE`. */
   area: Point[];
   /** The cell(s) the deduction acts on, ringed. */
   targets: Point[];
@@ -167,11 +157,11 @@ export function computeSize(p: { w: number }, ts: number): Size {
 // --- draw state ------------------------------------------------------------
 
 export interface KeenDrawState {
-  started: boolean;
   tileSize: number;
   w: number;
-  /** `w²` last-drawn tile values (-1 = never drawn). */
-  tiles: Int32Array;
+  /** What each of the `w²` cells shows, and the hint and mistake overlays on
+   * it. */
+  tiles: TileCache;
   /** `w²` scratch error flags, refilled each redraw by `markErrors`. */
   errors: Int32Array;
   /** `w²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
@@ -193,14 +183,15 @@ export interface KeenDrawState {
 
 export function newDrawState(state: KeenState, tileSize: number): KeenDrawState {
   const a = state.params.w * state.params.w;
+  const hint = new OverlaySidecar(a);
+  const wrong = new OverlaySidecar(a);
   return {
-    started: false,
     tileSize,
     w: state.params.w,
-    tiles: new Int32Array(a).fill(-1),
+    tiles: new TileCache(a, { overlays: [hint, wrong] }),
     errors: new Int32Array(a),
-    hint: new OverlaySidecar(a),
-    wrong: new OverlaySidecar(a),
+    hint,
+    wrong,
     pencilModeShown: null,
     marks: new HintMarks(),
   };
@@ -268,8 +259,6 @@ function drawTile(
     ((tile >> DF_HIGHLIGHT_SHIFT) & 7) as CellHighlight,
     COL_HIGHLIGHT,
     COL_CELL,
-    COL_FLASH,
-    COL_FLASH_LEAD,
   );
   ds.hint.drawHatch(dr, cell, { x: cx, y: cy, w: cw, h: ch }, ts);
 
@@ -499,7 +488,7 @@ export function redraw(
   const w = state.params.w;
   const ge = gridExtra(ts);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The grid backing rectangle the thin lines show through.
     dr.drawRect(
       {
@@ -511,7 +500,6 @@ export function redraw(
       COL_GRID,
     );
     ds.marks.reset(); // the backing rect just erased every gutter
-    ds.started = true;
   }
 
   markErrors(state, ds.errors);
@@ -534,10 +522,10 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ts, x, y),
     text: (x: number, y: number) => cellText(state, ts, x, y),
-    evidenceColor: COL_HINT_CELL,
+    evidenceColor: COL_HINT_OUTLINE,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
-    if (x >= 0 && x < w && y >= 0 && y < w) ds.tiles[y * w + x] = -1;
+    if (x >= 0 && x < w && y >= 0 && y < w) ds.tiles.forget(y * w + x);
   });
 
   for (let y = 0; y < w; y++) {
@@ -550,12 +538,7 @@ export function redraw(
       if (ds.errors[i] & ERR_LATIN) tile |= DF_ERR_LATIN;
       if (ds.errors[i] & ERR_CLUE) tile |= DF_ERR_CLUE;
 
-      if (ds.tiles[i] !== tile || ds.hint.stale(i) || ds.wrong.stale(i)) {
-        drawTile(dr, ds, state, x, y, tile);
-        ds.tiles[i] = tile;
-        ds.hint.commit(i);
-        ds.wrong.commit(i);
-      }
+      if (ds.tiles.changed(i, tile)) drawTile(dr, ds, state, x, y, tile);
     }
   }
 

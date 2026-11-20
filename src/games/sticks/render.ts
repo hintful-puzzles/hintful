@@ -17,24 +17,27 @@
 
 import { WHITE } from "../../engine/color/colors.ts";
 import {
-  CURSOR,
   cellSurface,
-  ERROR,
   ERROR_TEXT,
-  FLASH,
-  FLASH_LEAD,
-  HINT_OUTLINE,
   INK,
   SHADED,
   surfaceGrid,
   wallFill,
 } from "../../engine/color/palette.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_HINT_OUTLINE,
+  FIRST_GAME_SLOT,
+  rolePalette,
+} from "../../engine/color/roles.ts";
 import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, DrawTextOptions, Point, Size } from "../../engine/types.ts";
 import {
   type Flash,
@@ -60,32 +63,20 @@ export const PREFERRED_TILE_SIZE = 48;
 
 // --- palette ----------------------------------------------------------------
 
-export const COL_BACKGROUND = 0;
-export const COL_GRID = 1; // the line between two cells, and the frame
-export const COL_LINE = 2;
-export const COL_NUMBER = 3;
-export const COL_ERROR = 4;
-export const COL_CURSOR = 5;
-// Fork additions beyond upstream's COL_* enum: the explained hint.
-export const COL_HINT_CELL = 6; // the deduction's evidence — an inset ring
+export const COL_GRID = FIRST_GAME_SLOT; // the line between two cells, and the frame
+export const COL_LINE = FIRST_GAME_SLOT + 1;
+export const COL_NUMBER = FIRST_GAME_SLOT + 2;
 /** A block: the collection's wall. */
-export const COL_BLOCK = 7;
-export const COL_CELL = 8; // the surface of a white cell
-export const COL_TEXT = 9; // a clue's number on an open cell
+export const COL_BLOCK = FIRST_GAME_SLOT + 3;
+export const COL_CELL = FIRST_GAME_SLOT + 4; // the surface of a white cell
+export const COL_TEXT = FIRST_GAME_SLOT + 5; // a clue's number on an open cell
 /** A violated clue's digit on a block, on its badge. */
-export const COL_ERROR_TEXT = 10;
-/** The ground of an open cell the win flash is on. */
-export const COL_FLASH = 11;
-/** The ground of an open cell the win flash's leading edge is on. */
-export const COL_FLASH_LEAD = 12;
+export const COL_ERROR_TEXT = FIRST_GAME_SLOT + 6;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   out[COL_GRID] = surfaceGrid(defaultBackground);
   out[COL_CELL] = cellSurface(defaultBackground);
-  out[COL_FLASH] = FLASH;
-  out[COL_FLASH_LEAD] = FLASH_LEAD;
   out[COL_TEXT] = INK;
   // A placed stick is a bar filling a fifth of its cell — a piece, not a glyph,
   // so the piece's color rather than the entry green a digit takes.
@@ -94,10 +85,7 @@ export function colors(defaultBackground: Color): Color[] {
   // schemes to carry white.
   out[COL_NUMBER] = WHITE;
   out[COL_BLOCK] = wallFill(defaultBackground);
-  out[COL_ERROR] = ERROR;
   out[COL_ERROR_TEXT] = ERROR_TEXT;
-  out[COL_CURSOR] = CURSOR;
-  out[COL_HINT_CELL] = HINT_OUTLINE;
   return out;
 }
 
@@ -124,18 +112,18 @@ const F_HINT_EVID = 1 << 13;
 const F_FLASH_SHIFT = 14;
 
 export interface SticksDrawState {
-  started: boolean;
   tileSize: number;
-  cache: Int32Array;
+  /** What each cell shows, and the mistakes on it. */
+  tiles: TileCache;
   mistakes: OverlaySidecar;
 }
 
 export function newDrawState(state: SticksState, tileSize: number): SticksDrawState {
+  const mistakes = new OverlaySidecar(state.w * state.h);
   return {
-    started: false,
     tileSize,
-    cache: new Int32Array(state.w * state.h).fill(-1),
-    mistakes: new OverlaySidecar(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { overlays: [mistakes] }),
+    mistakes,
   };
 }
 
@@ -192,10 +180,7 @@ function drawTile(
   // mark (`hint-mark.ts`). A white evidence square is not empty either: it
   // carries the clue the deduction counts with, and often a line.
   if (!black) {
-    dr.drawRect(
-      { x: px, y: py, w: ts - 1, h: ts - 1 },
-      lit ? winSlot(lit, COL_FLASH, COL_FLASH_LEAD) : COL_CELL,
-    );
+    dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, lit ? winSlot(lit) : COL_CELL);
   }
 
   const bar = (bits: number, color: number): void => {
@@ -216,7 +201,7 @@ function drawTile(
         inner: Math.max(2, Math.floor(ts / 10)),
       },
       MARK_ALL,
-      COL_HINT_CELL,
+      COL_HINT_OUTLINE,
     );
     // On a block the ring is close to the block's own gray in the light scheme,
     // so a line in the digit's white parts the two.
@@ -296,11 +281,10 @@ export function redraw(
   const { w, h, grid, numbers } = state;
   const b = border(ts);
 
-  if (!ds.started) {
+  if (ds.tiles.firstFrame()) {
     // The frame, one line wide like the grid: each tile draws the line on its
     // right and bottom, so this is the top and left ones that are missing.
     drawRectOutline(dr, b - 1, b - 1, w * ts + 1, h * ts + 1, COL_GRID);
-    ds.started = true;
   }
 
   // Live clue violations, recomputed pure from the committed grid (upstream
@@ -350,7 +334,7 @@ export function redraw(
         (hintLine & F_HOR ? F_HINT_HOR : 0) |
         (hintLine & F_VER ? F_HINT_VER : 0) |
         (evidence ? F_HINT_EVID : 0);
-      if (ds.cache[i] !== packed || ds.mistakes.stale(i)) {
+      if (ds.tiles.changed(i, packed)) {
         drawTile(dr, ts, x, y, {
           tile,
           clue: numbers[i],
@@ -361,8 +345,6 @@ export function redraw(
           hintLine,
           evidence,
         });
-        ds.cache[i] = packed;
-        ds.mistakes.commit(i);
       }
     }
   }

@@ -3,6 +3,7 @@
 // tiles, separator borders between differing-color cells, the cursor
 // outline, the hint's ring on each next-fill square, and victory/defeat flash overlays.
 import { describe, expect, it } from "vitest";
+import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
@@ -11,7 +12,7 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { NO_FLASH, ownFlash } from "../../engine/win-wave.ts";
 import { floodGame, speak } from "./index.ts";
-import { COL_LIT, COL_LIT_LEAD, type FloodDrawState, redraw } from "./render.ts";
+import { COL_GRID, COL_MARK, COL_TILE, type FloodDrawState, redraw } from "./render.ts";
 import { type FloodMove, type FloodState, newState } from "./state.ts";
 
 const PALETTE = floodGame.colors(DEFAULT_BACKGROUND);
@@ -39,12 +40,12 @@ describe("Flood redraw", () => {
     redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
 
     expect(ops.some((o) => o.op === "polygon")).toBe(false);
-    // The frame (COL_GRID = palette index 12): the field and a separator
-    // (1 pixel at this size) on each side.
-    expect(ops[0]).toMatchObject({ op: "rect", color: 12, w: 2 * TS + 2 });
-    // A full-tile rect in a play color (COL_1 = palette index 2) for the
-    // corner cell (color 0).
-    expect(ops.some((o) => o.op === "rect" && o.color === 2 && o.w === TS)).toBe(true);
+    // The frame: the field and a separator (1 pixel at this size) on each side.
+    expect(ops[0]).toMatchObject({ op: "rect", color: COL_GRID, w: 2 * TS + 2 });
+    // A full-tile rect in a play color for the corner cell (color 0).
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_TILE && o.w === TS)).toBe(
+      true,
+    );
   });
 
   it("draws separator borders (COL_GRID) between differing cells", () => {
@@ -53,7 +54,9 @@ describe("Flood redraw", () => {
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
     // A thin (w = sepWidth = 1) rect in the grid's color appears.
-    expect(ops.some((o) => o.op === "rect" && o.color === 12 && o.w === 1)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_GRID && o.w === 1)).toBe(
+      true,
+    );
   });
 
   it("keeps the line and the frame on a tile smaller than the preferred one", () => {
@@ -63,9 +66,11 @@ describe("Flood redraw", () => {
     const ds = floodGame.newDrawState(state, small) as FloodDrawState;
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
-    expect(ops[0]).toMatchObject({ op: "rect", color: 12, w: 2 * small + 2 });
+    expect(ops[0]).toMatchObject({ op: "rect", color: COL_GRID, w: 2 * small + 2 });
     expect(
-      ops.some((o) => o.op === "rect" && o.color === 12 && o.w === 1 && o.h === small),
+      ops.some(
+        (o) => o.op === "rect" && o.color === COL_GRID && o.w === 1 && o.h === small,
+      ),
     ).toBe(true);
   });
 
@@ -74,8 +79,8 @@ describe("Flood redraw", () => {
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
     redraw(dr, ds, null, state, 1, { cursor: newCursor(0, 0, true) }, 0, NO_FLASH);
-    // The cursor outline is four lines in the mark color (COL_MARK = 1).
-    expect(ops.filter((o) => o.op === "line" && o.color === 1).length).toBe(4);
+    // The cursor outline is four lines in the mark color.
+    expect(ops.filter((o) => o.op === "line" && o.color === COL_MARK).length).toBe(4);
   });
 
   it("rings the hint's next-fill square", () => {
@@ -122,7 +127,7 @@ describe("Flood redraw", () => {
     );
     // A tile's distance from the corner the fill starts in.
     expectWinFlashTravels(run, W * 4, (i) => (i % W) + Math.floor(i / W));
-    expect(slotsSeen).toEqual(new Set([COL_LIT, COL_LIT_LEAD]));
+    expect(slotsSeen).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
     expect(run.frames[0]).toEqual([0]);
   });
 
@@ -137,7 +142,7 @@ describe("Flood redraw", () => {
     redraw(dr, ds, null, state, 1, UI, 0, ownFlash(0.05));
     const tiles = opsOfKind(ops, "rect").filter((o) => o.w === TS && o.h === TS);
     expect(tiles).toHaveLength(9);
-    expect(tiles.every((o) => o.color === 1)).toBe(true);
+    expect(tiles.every((o) => o.color === COL_MARK)).toBe(true);
   });
 });
 
@@ -145,7 +150,7 @@ describe("Flood redraw", () => {
  * is one painted in either, the highlight's body or its leading edge. */
 const slotsSeen = new Set<number>();
 function litSlot(color: number): boolean {
-  if (color !== COL_LIT && color !== COL_LIT_LEAD) return false;
+  if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
   slotsSeen.add(color);
   return true;
 }

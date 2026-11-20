@@ -10,6 +10,7 @@
  * frame (the blue target + evidence, numbers still drawn).
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { techniqueFirings } from "../../engine/ladder-runtime.ts";
@@ -23,7 +24,6 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/singles/singles.compiled.ts";
 import { type SinglesHint, type SinglesRung, singlesGame } from "./index.ts";
-import { COL_HINT_CELL } from "./render.ts";
 import { hintWalk, solveSpecific } from "./solver.ts";
 import {
   DIFF_ANY,
@@ -483,7 +483,7 @@ describe("singles hint render", () => {
     // filled.
     const forced = (step.highlights as SinglesHint).targets;
     expectRing(ops, { rings: forced.length });
-    expect(markSides(ops, COL_HINT_CELL).length).toBeGreaterThan(0);
+    expect(markSides(ops, COL_HINT_OUTLINE).length).toBeGreaterThan(0);
     // Numbers are still rendered (clue digits not hidden by the overlay).
     expect(ops.some((o) => o.op === "text")).toBe(true);
     expect(ops).toMatchSnapshot();
@@ -493,13 +493,13 @@ describe("singles hint render", () => {
     // A besideCovered frame: a decided black square forces a neighbor white.
     const { recording } = hintFrame("besideCovered");
     const ops = recording.ops;
-    expect(markSides(ops, COL_HINT_CELL).length).toBeGreaterThan(0);
+    expect(markSides(ops, COL_HINT_OUTLINE).length).toBeGreaterThan(0);
     expect(ringsOf(ops).length).toBeGreaterThan(0);
   });
 
   it("outlines a cited circled square", () => {
     // A sameLine frame: a circled white square forces line-mates shaded.
     const { recording } = hintFrame("sameLine");
-    expect(markSides(recording.ops, COL_HINT_CELL).length).toBeGreaterThan(0);
+    expect(markSides(recording.ops, COL_HINT_OUTLINE).length).toBeGreaterThan(0);
   });
 });

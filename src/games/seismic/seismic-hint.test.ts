@@ -9,6 +9,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { type CandidateReading, nakedSingles } from "../../engine/candidate-hint.ts";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/game.ts";
 import type { CellMarks, Firing } from "../../engine/ladder-runtime.ts";
 import { randomNew } from "../../engine/random/index.ts";
@@ -26,7 +27,7 @@ import {
   workingBoard,
 } from "./hint.ts";
 import { seismicGame } from "./index.ts";
-import { COL_HINT_CELL, COL_NUM_PENCIL } from "./render.ts";
+import { COL_NUM_PENCIL } from "./render.ts";
 import { dealtOf, marksOf, seismicLadder } from "./solver.ts";
 import {
   areaBits,
@@ -662,7 +663,7 @@ describe("the frames a hint draws", () => {
     expect(new Set(hatched.map((h) => `${h.x},${h.y}`)).size).toBe(area.length);
     expect(hl.area).toEqual(expect.arrayContaining(hl.targets));
     expect(hl.area).toHaveLength(hl.targets.length);
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL)).toBe(true);
+    expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(true);
     // Each struck note is crossed out with an X: two strokes (`drawStrike`).
     expect(
       ops.filter((o) => o.op === "line" && o.color === COL_NUM_PENCIL),

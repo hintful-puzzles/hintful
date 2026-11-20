@@ -7,6 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { DESC_NO_SOLUTION } from "../../engine/desc-error.ts";
 import type { HintStep } from "../../engine/game.ts";
 import { isDeadEnd } from "../../engine/hint-refusal.ts";
@@ -32,7 +33,6 @@ import {
   type SamegameRung,
 } from "./hint.ts";
 import { executeMove, samegameGame } from "./index.ts";
-import { COL_HINT_EVIDENCE } from "./render.ts";
 import { findClearing, type Group, groupsOf, loneSquares, removed } from "./solver.ts";
 import {
   isCleared,
@@ -366,7 +366,7 @@ describe("samegame hint", () => {
     const rects = (color: number) =>
       recording.ops.filter((o) => o.op === "rect" && o.color === color).length;
     expect(ringsOf(recording.ops).length).toBeGreaterThan(0);
-    expect(rects(COL_HINT_EVIDENCE)).toBeGreaterThan(0);
+    expect(rects(COL_HINT_OUTLINE)).toBeGreaterThan(0);
     const rival = stepMarks(pin.step).of("stripes", CELL);
     const hatches = recording.ops.filter((o) => o.op === "hatch");
     expect(hatches.length).toBe(rival.length);

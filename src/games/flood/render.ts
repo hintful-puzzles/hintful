@@ -1,11 +1,13 @@
 import { BLACK, FREE, FREE_NAMES } from "../../engine/color/colors.ts";
-import { FLASH, FLASH_LEAD, surfaceGrid } from "../../engine/color/palette.ts";
+import { surfaceGrid } from "../../engine/color/palette.ts";
+import { FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
 import { drawRectOutline } from "../../engine/draw.ts";
 import type { GameDrawing, HintStep } from "../../engine/game.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { TileCache } from "../../engine/tile-cache.ts";
 import type { Color, Size } from "../../engine/types.ts";
-import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
+import { type Flash, WIN_BODY, WIN_LEAD, winSlot } from "../../engine/win-wave.ts";
 import { completed, fill } from "./solver.ts";
 import {
   FILLX,
@@ -31,16 +33,14 @@ export const DEFEAT_FLASH_FRAME = 0.1;
 
 // --- color palette indices -------------------------------------------
 
-const COL_BACKGROUND = 0;
-/** A mark drawn on a tile: the cursor, the lost board's blink. */
-const COL_MARK = 1;
-const COL_1 = 2; // COL_1..COL_10 are 2..11
+/** A mark drawn on a tile: the cursor, the lost board's blink. Its own slot
+ * and not the cursor role's, because it is read against a tile of any color. */
+export const COL_MARK = FIRST_GAME_SLOT;
 /** The line between two regions, and the frame round the field. */
-const COL_GRID = 12;
-/** A tile the win flash is on. */
-export const COL_LIT = 13;
-/** A tile the flash's leading edge is on. */
-export const COL_LIT_LEAD = 14;
+export const COL_GRID = FIRST_GAME_SLOT + 1;
+/** The ten tile colors: a square of color `c` (0 to 9) paints
+ * `COL_TILE + c`. */
+export const COL_TILE = FIRST_GAME_SLOT + 2;
 
 /**
  * The ten tiles, as the hint says them: *"Fill with orange"*. Re-exported from
@@ -50,15 +50,12 @@ export const COL_LIT_LEAD = 14;
 export const COLOR_NAMES = FREE_NAMES;
 
 export function colors(defaultBackground: Color): Color[] {
-  const out: Color[] = [];
-  out[COL_BACKGROUND] = defaultBackground;
+  const out = rolePalette(defaultBackground);
   // `BLACK`, not `INK`: a mark on a tile is drawn against the tile, not the
   // board, and stays black under both schemes.
   out[COL_MARK] = BLACK;
-  for (let i = 0; i < 10; i++) out[COL_1 + i] = FREE[i];
   out[COL_GRID] = surfaceGrid(defaultBackground);
-  out[COL_LIT] = FLASH;
-  out[COL_LIT_LEAD] = FLASH_LEAD;
+  for (let i = 0; i < 10; i++) out[COL_TILE + i] = FREE[i];
   return out;
 }
 
@@ -86,17 +83,15 @@ const LIT_LEAD = 0x1000;
 const COLOR_SHIFT = 13;
 
 export interface FloodDrawState {
-  started: boolean;
   tileSize: number;
-  /** Per-cell cache of the last-drawn packed tile; `-1` forces a redraw. */
-  grid: Int32Array;
+  /** What each square shows, as its packed tile. */
+  tiles: TileCache;
 }
 
 export function newDrawState(state: FloodState, tileSize: number): FloodDrawState {
   return {
-    started: false,
     tileSize,
-    grid: new Int32Array(state.w * state.h).fill(-1),
+    tiles: new TileCache(state.w * state.h),
   };
 }
 
@@ -115,10 +110,8 @@ function drawTile(
     tile & BADFLASH
       ? COL_MARK
       : tile & LIT
-        ? tile & LIT_LEAD
-          ? COL_LIT_LEAD
-          : COL_LIT
-        : (tile >> COLOR_SHIFT) + COL_1;
+        ? winSlot(tile & LIT_LEAD ? WIN_LEAD : WIN_BODY)
+        : (tile >> COLOR_SHIFT) + COL_TILE;
   dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, color);
 
   if (sep > 0) {
@@ -213,10 +206,7 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h, colors: ncolors } = state;
 
-  if (!ds.started) {
-    drawFrame(dr, w, h, ts);
-    ds.started = true;
-  }
+  if (ds.tiles.firstFrame()) drawFrame(dr, w, h, ts);
 
   // The defeat blink: the board in the mark color, but for its second frame.
   const blink = flash.time > 0 && Math.floor(flash.time / DEFEAT_FLASH_FRAME) !== 1;
@@ -258,10 +248,7 @@ export function redraw(
       const tone = flash.win(Math.abs(x - FILLX) + Math.abs(y - FILLY));
       if (tone) tile |= tone === WIN_LEAD ? LIT | LIT_LEAD : LIT;
 
-      if (ds.grid[pos] !== tile) {
-        drawTile(dr, ts, x, y, tile);
-        ds.grid[pos] = tile;
-      }
+      if (ds.tiles.changed(pos, tile)) drawTile(dr, ts, x, y, tile);
     }
   }
 }

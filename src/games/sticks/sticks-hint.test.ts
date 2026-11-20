@@ -9,6 +9,7 @@
  * `engine/testing/hint-games.ts` and are deliberately not duplicated here.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { statedSentence } from "../../engine/stated.ts";
@@ -27,7 +28,7 @@ import type { Point } from "../../engine/types.ts";
 import { STATED } from "../../generated/games/sticks/sticks.compiled.ts";
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";
-import { COL_HINT_CELL, COL_LINE } from "./render.ts";
+import { COL_LINE } from "./render.ts";
 import { STICKS_RUNGS } from "./solver.ts";
 import {
   defaultParams,
@@ -366,7 +367,7 @@ describe("sticks hint — render frames (tier 2.5)", () => {
       // …and the evidence as an area, not a single premise square, drawn
       // as a **ring per square** — never a wash, on a white square or a black
       // one: a white evidence square carries the clue the deduction counts with.
-      const evidence = markSides(ops, COL_HINT_CELL);
+      const evidence = markSides(ops, COL_HINT_OUTLINE);
       expect(evidence.length).toBeGreaterThanOrEqual(4);
       expect(evidence.length % 4).toBe(0);
       for (const s of evidence) expect(isThin(s)).toBe(true);

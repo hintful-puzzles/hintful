@@ -1,7 +1,7 @@
 /**
  * Tier-2.5 render scenarios for the Light Up hint: drive a real Midend to
  * a displayed hint step and capture `redraw`. Targeted op assertions (the
- * target rings, the `COL_HINT_CELL` outlines on the evidence and the clue)
+ * target rings, the `COL_HINT_OUTLINE` outlines on the evidence and the clue)
  * plus one snapshot so a render regression is a
  * reviewable text diff (`vitest -u` re-baselines an intended change; the
  * targeted assertions survive a careless `-u`).
@@ -9,13 +9,14 @@
  * Each frame is a pinned position whose hint opens with the firing.
  */
 import { describe, expect, it } from "vitest";
+import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/hint-words.ts";
 import { SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectContour, expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { lightupGame } from "./index.ts";
-import { COL_GRID, COL_HINT_CELL, COL_LIGHT } from "./render.ts";
+import { COL_GRID, COL_LIGHT } from "./render.ts";
 import type { LightupParams } from "./state.ts";
 
 const EASY: LightupParams = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
@@ -84,7 +85,7 @@ describe("Light Up hint render scenarios", () => {
     // and nothing else, a digit included, takes the ring's ink.
     expectRing(recording.ops, { rings: h.targets.length });
     // The driving clue's wall is outlined, and its digit keeps its own ink.
-    expectContour(recording.ops, COL_HINT_CELL, 1);
+    expectContour(recording.ops, COL_HINT_OUTLINE, 1);
     expect(recording.ops.some((o) => o.op === "text" && o.color === COL_LIGHT)).toBe(
       true,
     );
@@ -100,10 +101,10 @@ describe("Light Up hint render scenarios", () => {
     expectRing(recording.ops);
     // The evidence is outlined, never washed.
     expect(
-      recording.ops.some((o) => o.op === "line" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "line" && o.color === COL_HINT_OUTLINE),
     ).toBe(true);
     expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE),
     ).toBe(false);
   });
 
@@ -118,7 +119,7 @@ describe("Light Up hint render scenarios", () => {
     expect(h.kind).toBe("impossible");
     expect(h.targets.length).toBe(1);
     expect(
-      recording.ops.some((o) => o.op === "line" && o.color === COL_HINT_CELL),
+      recording.ops.some((o) => o.op === "line" && o.color === COL_HINT_OUTLINE),
     ).toBe(true);
   });
 });
