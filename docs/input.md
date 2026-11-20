@@ -444,7 +444,9 @@ Exemplars: `borderGridGeometry` in
 [`engine/border-grid.ts`](../src/engine/border-grid.ts) (an edge between two
 cells); [`magnets/index.ts`](../src/games/magnets/index.ts) (tiles and the
 clues round them); `net/index.ts` (a scrolled origin);
-[`numgame/index.ts`](../src/games/numgame/index.ts) (a board that is no grid).
+[`numgame/index.ts`](../src/games/numgame/index.ts) (a board that is no grid);
+[`netslide/index.ts`](../src/games/netslide/index.ts) (arrows in the gutter
+round the grid, the cursor walking their ring).
 
 ### A move picked in parts
 
@@ -452,8 +454,9 @@ clues round them); `net/index.ts` (a scrolled origin);
 holds what is picked on the `Ui` until the last part makes the move. Every
 board change clears what was picked (`changedState`). The guards arm such a
 move of up to three parts (two presses, then the one that makes it), so
-nothing is declared for them; a longer one is armed by nothing. Two
-things are the game's own:
+nothing is declared for them; a longer one is armed by nothing. A verb that
+only picks changes the `Ui` and no board, and the guards count that as
+doing something. Two things are the game's own:
 
 - **Its `hintGesture` taps each part**, from the selection as it stands.
   `verbClicks` needs every click to make a move the step keeps, which a click
@@ -461,7 +464,9 @@ things are the game's own:
 - **A key for a part picks the part under the cursor too** where nothing is
   picked yet, so the keyboard needs no more presses than the pointer.
 
-Exemplar: `numgame/index.ts`.
+Exemplars: `numgame/index.ts` (three parts);
+[`samegame/index.ts`](../src/games/samegame/index.ts) (two: a group
+highlighted, then removed or let go).
 
 ### A drag game declares its click half
 

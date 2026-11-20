@@ -8,20 +8,16 @@ help:
     as much as possible, by removing large groups at a time instead of
     small ones.
   controls: |-
-    Click on a colored square to highlight the rest of its connected
-    group. The status line will print the number of squares selected,
-    and the score you would gain by removing them. Click again to remove
-    the group; other squares will fall down to fill the space, and if
-    you empty a whole column then the other columns will move left to
-    close the gap. You cannot remove a single isolated square: try to
-    avoid dead-end positions where all remaining squares are isolated.
+    {{controls}}
 
-    Right-click a highlighted group to let go of it without removing it.
-
-    With the keyboard, the arrow keys move a cursor around the grid,
-    wrapping round at the edges. Enter highlights the group under the
-    cursor and removes it on a second press; Space highlights it, and lets
-    go of it on a second press.
+    A square's group is the squares of its color connected to it. While a
+    group is highlighted, the status line prints the number of squares in
+    it and the score you would gain by removing them. When a group goes,
+    the squares above fall down to fill the space, and if you empty a whole
+    column then the other columns move left to close the gap. You cannot
+    remove a single isolated square: try to avoid dead-end positions where
+    all remaining squares are isolated. The cursor wraps round at the
+    edges of the grid.
   hints: |-
     **Hint** shows a group to remove next, one that still leaves a board that can
     be cleared. It searches for a way to clear the board from wherever you are,

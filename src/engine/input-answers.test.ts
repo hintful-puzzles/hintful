@@ -47,8 +47,6 @@ const ANSWERS_NOTHING_AND_CHANGES_THE_FRAME: Record<string, string> = {
   clusters: "a drag that hides the cursor",
   crossing: "a key that puts the held number down",
   group: "a drag along the legend",
-  netslide: "a press that hides the cursor",
-  samegame: "a press that hides the cursor, a key that shows it",
   signpost: "a press that hides the cursor",
   tracks: "a press that hides the cursor",
 };

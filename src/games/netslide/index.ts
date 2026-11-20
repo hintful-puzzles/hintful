@@ -12,11 +12,9 @@
  */
 
 import { assertNever, rejectMove } from "../../engine/assert-never.ts";
-import type { Game, SolveResult } from "../../engine/game.ts";
-import { UI_UPDATE, type UiUpdate } from "../../engine/game.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/game.ts";
 import { fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { click } from "../../engine/hint-gesture.ts";
 import {
   atof,
   dimensionParamConfig,
@@ -24,17 +22,14 @@ import {
   numberItem,
   transposeDimensions,
 } from "../../engine/params.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  isCursorMove,
-  LEFT_BUTTON,
-  RIGHT_BUTTON,
-  stripModifiers,
-} from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { wrappingRulesetItem } from "../../engine/ruleset.ts";
 import { SOLUTION_UNKNOWN } from "../../engine/solve-failure.ts";
+import {
+  interpretTargetVerbs,
+  type TargetVerbs,
+  verbGesture,
+} from "../../engine/target-verb.ts";
 import type { GameStatus, Point } from "../../engine/types.ts";
 import { newDesc } from "./generator.ts";
 import {
@@ -163,63 +158,82 @@ function cellCenter(c: number, ts: number): number {
   return border(ts) + 1 + c * ts + Math.floor(ts / 2);
 }
 
+/** The slide the arrow at `t` makes, `sign` 1 the way it points and -1 the
+ * other; `null` where `t` is no arrow, the source's row and column having
+ * none. */
+function slideAt(s: NetslideState, t: Point, sign: 1 | -1): NetslideMove | null {
+  // Beside a row: the left gutter slides it left, the right gutter right.
+  if (t.y >= 0 && t.y < s.h && t.y !== s.cy && (t.x === -1 || t.x === s.w)) {
+    const dir = (t.x === -1 ? sign : -sign) as 1 | -1;
+    return { type: "slide", axis: "row", index: t.y, dir };
+  }
+  // Beside a column: the top gutter slides it up, the bottom gutter down.
+  if (t.x >= 0 && t.x < s.w && t.x !== s.cx && (t.y === -1 || t.y === s.h)) {
+    const dir = (t.y === -1 ? sign : -sign) as 1 | -1;
+    return { type: "slide", axis: "col", index: t.x, dir };
+  }
+  return null;
+}
+
+/** The target is an arrow in the gutter round the grid, and the cursor walks
+ * the ring of them. */
+const targetVerbs: TargetVerbs<
+  NetslideState,
+  NetslideUi,
+  NetslideDrawState,
+  Point,
+  NetslideMove
+> = {
+  geometry: {
+    noun: "arrow",
+    pointerTarget: (s, ds, p) => {
+      const t = { x: cellAt(p.x, ds.tileSize), y: cellAt(p.y, ds.tileSize) };
+      return slideAt(s, t, 1) === null ? null : t;
+    },
+    pointAt: (_s, ds, t) => ({
+      x: cellCenter(t.x, ds.tileSize),
+      y: cellCenter(t.y, ds.tileSize),
+    }),
+    cursorTarget: (_s, ui) => ({ x: ui.cursor.x, y: ui.cursor.y }),
+    parkCursor: (ui, t) => {
+      ui.cursor.x = t.x;
+      ui.cursor.y = t.y;
+    },
+    moveCursor: (s, ui, button) => {
+      const { cursor } = ui;
+      const shown = !cursor.visible;
+      cursor.visible = true;
+      const diff = c2diff(s.w, s.h, cursor.x, cursor.y, button);
+      if (diff === 0) return shown;
+      let pos = c2pos(s.w, s.h, cursor.x, cursor.y);
+      // Step along the ring until we land on a line that can actually be slid.
+      do {
+        pos += diff;
+        const c = pos2c(s.w, s.h, pos);
+        cursor.x = c.cx;
+        cursor.y = c.cy;
+      } while (cursor.x === s.cx || cursor.y === s.cy);
+      return true;
+    },
+  },
+  primary: {
+    does: "slide its row or column the way it points",
+    apply: (s, t) => slideAt(s, t, 1),
+  },
+  secondary: {
+    does: "slide the line the opposite way",
+    apply: (s, t) => slideAt(s, t, -1),
+  },
+};
+
 function interpretMove(
   s: NetslideState,
   ui: NetslideUi,
   ds: NetslideDrawState,
   p: Point,
-  rawButton: number,
+  button: number,
 ): NetslideMove | null | UiUpdate {
-  const button = stripModifiers(rawButton);
-  const ts = ds.tileSize;
-
-  if (isCursorMove(button)) {
-    const diff = c2diff(s.w, s.h, ui.cursor.x, ui.cursor.y, button);
-    if (diff !== 0) {
-      let pos = c2pos(s.w, s.h, ui.cursor.x, ui.cursor.y);
-      // Step along the ring until we land on a line that can actually be slid.
-      do {
-        pos += diff;
-        const c = pos2c(s.w, s.h, pos);
-        ui.cursor.x = c.cx;
-        ui.cursor.y = c.cy;
-      } while (ui.cursor.x === s.cx || ui.cursor.y === s.cy);
-    }
-    ui.cursor.visible = true;
-    return UI_UPDATE;
-  }
-
-  let cx: number;
-  let cy: number;
-
-  if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-    cx = cellAt(p.x, ts);
-    cy = cellAt(p.y, ts);
-    ui.cursor.visible = false;
-  } else if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    if (!ui.cursor.visible) {
-      // A select with no cursor showing just reveals it.
-      ui.cursor.visible = true;
-      return UI_UPDATE;
-    }
-    cx = ui.cursor.x;
-    cy = ui.cursor.y;
-  } else {
-    return null;
-  }
-
-  const sign = button === RIGHT_BUTTON ? -1 : 1;
-  // Beside a row: the left gutter slides it left, the right gutter right.
-  if (cy >= 0 && cy < s.h && cy !== s.cy && (cx === -1 || cx === s.w)) {
-    const dir = (cx === -1 ? sign : -sign) as 1 | -1;
-    return { type: "slide", axis: "row", index: cy, dir };
-  }
-  // Beside a column: the top gutter slides it up, the bottom gutter down.
-  if (cx >= 0 && cx < s.w && cx !== s.cx && (cy === -1 || cy === s.h)) {
-    const dir = (cy === -1 ? sign : -sign) as 1 | -1;
-    return { type: "slide", axis: "col", index: cx, dir };
-  }
-  return null;
+  return interpretTargetVerbs(targetVerbs, s, ui, ds, p, button);
 }
 
 /* ----------------------------------------------------------------------
@@ -290,6 +304,7 @@ export const netslideGame: Game<
   newState,
   newUi,
 
+  targetVerbs,
   interpretMove,
   executeMove,
 
@@ -320,11 +335,10 @@ export const netslideGame: Game<
     },
   },
   hintKeepTrack,
-  hintGesture(s, _ui, ds, m) {
+  hintGesture(s, ui, ds, m) {
     if (m.type !== "slide") return [];
     const { arrowX, arrowY } = arrowFor(s, m);
-    const ts = ds.tileSize;
-    return [click({ x: cellCenter(arrowX, ts), y: cellCenter(arrowY, ts) })];
+    return verbGesture(targetVerbs, s, ds, ui, [{ x: arrowX, y: arrowY }]);
   },
 
   statusbarText: (s) => {

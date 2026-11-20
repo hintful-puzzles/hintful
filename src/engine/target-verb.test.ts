@@ -427,11 +427,13 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
   };
 
   /**
-   * The two clicks that arm a move, for a game where no one click commits
-   * one: Target's move is a number, an operator and a second number, so a
-   * click there only selects, and a key compared with it at a fresh board
-   * would agree with a dead one. The first pair of targets after whose clicks
-   * a third commits; none where one click commits, or no three do.
+   * The clicks that arm a move, for a game where no one click commits one:
+   * Same Game's removal is a group highlighted and then clicked again, and
+   * Target's move is a number, an operator and a second number, so a click
+   * there only selects, and a key compared with it at a fresh board would
+   * agree with a dead one. The first target after whose click a second
+   * commits, else the first pair after which a third does; none where one
+   * click commits, or no three do.
    */
   const armingClicks = (game: AnyGame, id: string): Point[] => {
     const b = probeBoard(game, id);
@@ -444,6 +446,7 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
       return b.board() !== before;
     };
     if (points.some((p) => commits([p]))) return [];
+    for (const p of points) if (points.some((r) => commits([p, r]))) return [p];
     for (const p of points)
       for (const q of points) if (points.some((r) => commits([p, q, r]))) return [p, q];
     return [];
@@ -480,9 +483,10 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
         : null;
 
     /** Each position where the key's board is not among the press's, named by
-     * the point the press was made at. A key that changed no board anywhere
-     * agrees with a dead button, so it is refused first, on the boards it was
-     * pressed on together. */
+     * the point the press was made at. A key that changed nothing anywhere,
+     * neither a board nor a selection the `Ui` holds, agrees with a dead
+     * button, so it is refused first, on the boards it was pressed on
+     * together. */
     const disagree = (
       runs: readonly {
         r: BoardsReached;
@@ -492,7 +496,7 @@ describe("a game's declared verbs are what its buttons and keys do", () => {
     ) => {
       expect(
         runs.some(({ r, byKey }) =>
-          r.positions.some(({ board }, i) => !r.same(byKey[i], board)),
+          r.positions.some(({ board }, i) => r.changed(board, byKey[i])),
         ),
         "the key changes no board anywhere",
       ).toBe(true);

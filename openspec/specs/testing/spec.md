@@ -109,12 +109,12 @@ real-canvas smoke checks.
 ### Requirement: A shared helper carries the byte-for-byte differential shape
 
 The engine testing utilities SHALL provide `describeDescDifferential` in
-`src/engine/testing/differential.ts`: given a fixture list, a `params` mapper
-and a game's `newDesc`, it asserts for each fixture that
-`newDesc(params(fixture), randomNew(fixture.seed)).desc` equals the recorded C
-desc, with an optional `extra` callback for a follow-on assertion. A game whose
-gated differential has that shape SHALL use the helper. The solver-agreement
-shape is game-specific and is not modeled by it.
+`src/engine/testing/differential.ts`: given fixtures, a `params` mapper and a
+game's `newDesc`, it asserts that each fixture's seed generates the recorded C
+desc, and `aux` where one was recorded, with an optional `extra` callback for
+a follow-on assertion. A game whose gated differential has that shape SHALL
+use the helper. The solver-agreement shape is game-specific and is not
+modeled by it.
 
 #### Scenario: A game's byte-match differential uses the helper
 
@@ -128,6 +128,11 @@ shape is game-specific and is not modeled by it.
 - **WHEN** a game's differential decodes a recorded board, runs the solver and
   asserts the recorded difficulty
 - **THEN** it is written in the game's own test, not through this helper
+
+#### Scenario: A fixture that recorded the aux
+
+- **WHEN** a fixture carries the `aux` the C generator wrote beside its desc
+- **THEN** the helper asserts the TS generator's `aux` equals it too
 
 ### Requirement: The frozen fixtures' provenance is stated once, and no recipe is carried
 

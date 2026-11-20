@@ -14,15 +14,12 @@ help:
 
     {{rulesets}}
   controls: |-
-    Click on the arrows at the edges of the grid to move a row or column
-    left, right, up or down. The square that falls off the end of the
-    row comes back on the other end.
+    {{controls}}
 
-    Right-click an arrow to slide the line the opposite way.
-
-    On the keyboard, the arrow keys move a cursor round the arrows at the
-    edges, skipping the source's row and column, and Enter or Space presses
-    the arrow under it.
+    The arrows sit at the edges of the grid, and slide a row or column left,
+    right, up or down. The square that falls off the end of the line comes
+    back on the other end. The source's row and column have no arrows, and
+    the cursor walks round the arrows skipping them.
   sections:
     - heading: The source and the barriers
       body: |-

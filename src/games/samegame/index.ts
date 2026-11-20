@@ -5,21 +5,16 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/game.ts";
-import { coord, fromCoord } from "../../engine/geometry.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
-import { click } from "../../engine/hint-gesture.ts";
-import {
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  isCursorMove,
-  LEFT_BUTTON,
-  moveCursor,
-  newCursor,
-  RIGHT_BUTTON,
-  stripModifiers,
-} from "../../engine/pointer.ts";
+import { newCursor } from "../../engine/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
+import {
+  interpretTargetVerbs,
+  squareGrid,
+  type TargetVerbs,
+  verbGesture,
+} from "../../engine/target-verb.ts";
 import type { Point } from "../../engine/types.ts";
 import {
   hasNoSolution,
@@ -109,48 +104,56 @@ function selMovedesc(ui: SamegameUi): SamegameMove {
 
 // --- input ------------------------------------------------------------
 
+/** Highlight the group at `t` in place of whatever was highlighted. */
+function highlight(ui: SamegameUi, state: SamegameState, t: Point): UiUpdate {
+  selClear(ui);
+  selExpand(ui, state, t.x, t.y);
+  return UI_UPDATE;
+}
+
+/** A removal is picked in two parts: the first press on a group highlights
+ * it, and the second either removes it or lets it go. */
+const targetVerbs: TargetVerbs<
+  SamegameState,
+  SamegameUi,
+  SamegameDrawState,
+  Point,
+  SamegameMove
+> = {
+  // The cursor wraps toroidally on this board.
+  geometry: squareGrid({
+    size: (s) => s,
+    border: (ts) => Math.floor(ts / 2),
+    wrap: true,
+  }),
+  primary: {
+    does: "highlight its group, or remove the group once it is highlighted",
+    apply: (s, t, ui) => {
+      const i = t.y * s.w + t.x;
+      if (s.tiles[i] === 0) return null;
+      return ui.selected[i] ? selMovedesc(ui) : highlight(ui, s, t);
+    },
+  },
+  secondary: {
+    does: "highlight its group, or let go of the group once it is highlighted",
+    apply: (s, t, ui) => {
+      const i = t.y * s.w + t.x;
+      if (s.tiles[i] === 0) return null;
+      if (!ui.selected[i]) return highlight(ui, s, t);
+      selClear(ui);
+      return UI_UPDATE;
+    },
+  },
+};
+
 function interpretMove(
   state: SamegameState,
   ui: SamegameUi,
   ds: SamegameDrawState,
   p: Point,
-  rawButton: number,
+  button: number,
 ): SamegameMove | null | UiUpdate {
-  const { w, h } = state;
-  const button = stripModifiers(rawButton);
-  let tx: number;
-  let ty: number;
-
-  if (button === RIGHT_BUTTON || button === LEFT_BUTTON) {
-    ui.cursor.visible = false;
-    const ts = ds.tileSize;
-    const bd = Math.floor(ts / 2);
-    tx = fromCoord(p.x, ts, bd);
-    ty = fromCoord(p.y, ts, bd);
-  } else if (isCursorMove(button)) {
-    // The cursor wraps toroidally on this board.
-    return moveCursor(ui.cursor, button, w, h, true) ? UI_UPDATE : null;
-  } else if (button === CURSOR_SELECT || button === CURSOR_SELECT2) {
-    ui.cursor.visible = true;
-    tx = ui.cursor.x;
-    ty = ui.cursor.y;
-  } else {
-    return null;
-  }
-
-  if (tx < 0 || tx >= w || ty < 0 || ty >= h) return null;
-  if (state.tiles[ty * w + tx] === 0) return null; // empty tile: no effect
-
-  if (ui.selected[ty * w + tx]) {
-    if (button === RIGHT_BUTTON || button === CURSOR_SELECT2) {
-      selClear(ui);
-      return UI_UPDATE;
-    }
-    return selMovedesc(ui);
-  }
-  selClear(ui); // might be a no-op
-  selExpand(ui, state, tx, ty);
-  return UI_UPDATE;
+  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, button);
 }
 
 // --- move execution ---------------------------------------------------
@@ -239,6 +242,7 @@ export const samegameGame: Game<
   newUi,
   changedState,
 
+  targetVerbs,
   interpretMove,
   executeMove,
   finishesByDeduction: nothingToDeduce,
@@ -261,10 +265,8 @@ export const samegameGame: Game<
   hintGesture(s, ui, ds, m) {
     if (m.type !== "remove") return [];
     const i = m.tiles[0];
-    const ts = ds.tileSize;
-    const center = (n: number) => coord(n, ts, Math.floor(ts / 2)) + Math.floor(ts / 2);
-    const tap = click({ x: center(i % s.w), y: center(Math.floor(i / s.w)) });
-    return ui.selected[i] ? [tap] : [tap, tap];
+    const t = { x: i % s.w, y: Math.floor(i / s.w) };
+    return verbGesture(targetVerbs, s, ds, ui, ui.selected[i] ? [t] : [t, t]);
   },
 
   textFormat,

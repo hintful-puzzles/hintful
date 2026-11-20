@@ -295,13 +295,20 @@ function digest(value: unknown): string {
   });
 }
 
+/** What the player holds at a moment: the state, and the `Ui` but for its
+ * cursor, digested. */
+interface Reached {
+  readonly state: unknown;
+  readonly ui: string;
+}
+
 /** A cursor position a key is pressed at, and the point a press pairs with. */
 export interface KeyPosition {
   /** The arrow presses that walk the cursor here from the opening position. */
   readonly path: readonly number[];
   /** Where a press addresses what the cursor rests on. */
   readonly at: Point;
-  /** The state here, before anything is pressed. */
+  /** What the player holds here, before anything is pressed. */
   readonly board: unknown;
 }
 
@@ -309,8 +316,8 @@ export interface KeyPosition {
 export interface BoardsReached {
   /** Every position a key is pressed at, in the order the walk met them. */
   readonly positions: readonly KeyPosition[];
-  /** At each of {@link positions}, the state `code` left, which is the
-   * position's own where it changed nothing. */
+  /** At each of {@link positions}, what `code` left, which is the position's
+   * own where it changed nothing. */
   readonly key: (code: number) => readonly unknown[];
   /** At each of {@link positions}, the states left by pressing and releasing
    * `buttons` in turn at its point, after pressing the keys `before` — the
@@ -324,6 +331,9 @@ export interface BoardsReached {
   /** Whether two of those states are one board: the same values, or with
    * `bySight` the same frame. */
   readonly same: (a: unknown, b: unknown) => boolean;
+  /** Whether anything a player holds differs from `from` to `to`: the board,
+   * or the `Ui` but for its cursor, which a selection made by no move is. */
+  readonly changed: (from: unknown, to: unknown) => boolean;
   /** How many cursor positions the arrows reached — the walk's power. */
   readonly cursorPositions: number;
 }
@@ -368,7 +378,16 @@ export function boardsReached(
     prime(b);
     startMoves = b.moves();
   };
-  const stateNow = () => b.live().state;
+  // A selection is the `Ui`'s and no move (Same Game's highlighted group), so
+  // a verb that only selects is told from a dead one by the `Ui`. The cursor
+  // is left out: a key shows it and a press hides it. A drag's bookkeeping is
+  // the `Ui`'s too, and a key and a press leave it differently, so two boards
+  // are compared by their states alone.
+  const reachedNow = (): Reached => {
+    const { state, ui } = b.live();
+    const { cursor: _, ...held } = ui as { cursor?: unknown };
+    return { state, ui: digest(held) };
+  };
 
   const frames = new WeakMap<object, string>();
   const frameOf = (state: unknown) => {
@@ -381,8 +400,13 @@ export function boardsReached(
     }
     return frame;
   };
-  const same = (x: unknown, y: unknown) =>
-    sameState(x, y) || (options.bySight === true && frameOf(x) === frameOf(y));
+  const same = (x: unknown, y: unknown) => {
+    const a = (x as Reached).state;
+    const c = (y as Reached).state;
+    return sameState(a, c) || (options.bySight === true && frameOf(a) === frameOf(c));
+  };
+  const changed = (from: unknown, to: unknown) =>
+    !same(from, to) || (from as Reached).ui !== (to as Reached).ui;
 
   // Every cursor position the arrows reach, as the key presses that reach it.
   // A position is the `Ui` together with the board, since an arrow that moves
@@ -403,7 +427,7 @@ export function boardsReached(
   const keep = (path: number[]) => {
     const { state, ui } = b.live();
     const at = pairAt(state, ui, game.newDrawState(state, tileSize));
-    if (at !== null) positions.push({ path, at, board: state });
+    if (at !== null) positions.push({ path, at, board: reachedNow() });
   };
   replay([]);
   const met = new Set([where()]);
@@ -424,7 +448,7 @@ export function boardsReached(
     positions.map(({ path }) => {
       replay(path);
       m.processInput(0, 0, code);
-      return stateNow();
+      return reachedNow();
     });
 
   const press = ({ x, y }: Point, button: number) => {
@@ -436,16 +460,16 @@ export function boardsReached(
       replay(path);
       for (const k of options.before ?? []) m.processInput(0, 0, k);
       const out: unknown[] = [];
-      if (options.every) out.push(stateNow());
+      if (options.every) out.push(reachedNow());
       for (const button of buttons) {
         press(at, button);
-        if (options.every) out.push(stateNow());
+        if (options.every) out.push(reachedNow());
       }
-      if (!options.every) out.push(stateNow());
+      if (!options.every) out.push(reachedNow());
       return out;
     });
 
-  return { positions, key, pressed, same, cursorPositions: paths.length };
+  return { positions, key, pressed, same, changed, cursorPositions: paths.length };
 }
 
 /**

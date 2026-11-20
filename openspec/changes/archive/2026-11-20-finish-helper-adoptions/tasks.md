@@ -74,11 +74,33 @@
       and Tents recorded one never asserted, and match), with a delta in
       `specs/testing`. A planted `aux` defect fails all six. The other
       differentials are solver agreement only, which the spec keeps inline.
-- [ ] 3.2 Sort the 34 `interpretTargetVerbs` holdouts by input shape;
+- [x] 3.2 Sort the 34 `interpretTargetVerbs` holdouts by input shape;
       migrate those of the target-and-verb shape, and run each in the app
       with mouse, touch and keyboard.
+      2026-11-20, sorted by what `interpretMove` hands its input to:
+      select a cell, then type, on `note-taking-cell.ts` (Abcd, Adjacent,
+      Crossing, Group, Keen, Map, Mathrax, Rome, Salad, Seismic, Solo,
+      Towers, Undead, Unequal); a line drag on `lineDrawing` (Path, Pearl,
+      Wordtrail); a drag of their own whose click has no keyboard twin at
+      the cursor (Ascent, Bridges, Pegs, Rect, Signpost, Untangle); a
+      multi-cell selection filled by a digit (Filling); a row composed and
+      sent (Guess, Word Guess); a piece moved, the arrows being moves and
+      not a cursor (Cube, Fifteen, Inertia, Slide, Sokoban); and Sixteen,
+      whose cursor walks the tiles in its lock modes, where the arrows
+      slide. Two fit and moved: Same Game (a removal picked in two parts)
+      and Netslide (a geometry of gutter arrows on the cursor's ring). The
+      owner chose the model's keys for both (2026-11-20): Netslide's Space
+      now reverses as a right-click does, and a select key on a hidden
+      cursor only shows it in Same Game. The key guard armed only
+      three-part moves and read a verb that only selects as dead; it now
+      arms a two-part move first and counts a `Ui` change but for the
+      cursor as doing something (seen to fail on a planted dead Space).
+      Both run in Chrome with mouse, keyboard and phone touch.
 
 ## 4. Finish
 
-- [ ] 4.1 Guides describe only the helper. Run `npm run test:hint-sweeps`;
+- [x] 4.1 Guides describe only the helper. Run `npm run test:hint-sweeps`;
       commit, push, archive.
+      2026-11-20: `input.md` names Same Game and Netslide as exemplars and
+      says a verb that only picks counts as doing something; hint sweeps
+      green (657 tests).
