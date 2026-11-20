@@ -46,30 +46,10 @@ export {
   type GridSize,
   type GridType,
   gridNewSquare,
-  gridSizeFor,
   gridValidateParams,
   PERIODIC_GRID_TYPES,
 } from "./grid-tilings.ts";
-export {
-  gridNewCairo,
-  gridNewHoneycomb,
-  gridNewSnubsquare,
-  gridNewTriangular,
-} from "./grid-tilings-basic.ts";
-export {
-  gridNewCompassdodecagonal,
-  gridNewDodecagonal,
-  gridNewGreatdodecagonal,
-  gridNewGreatgreatdodecagonal,
-} from "./grid-tilings-dodec.ts";
-export {
-  gridNewFloret,
-  gridNewGreathexagonal,
-  gridNewKagome,
-  gridNewKites,
-  gridNewOctagonal,
-} from "./grid-tilings-hex.ts";
-export { GridTrimmedAwayError, gridTrimVigorously } from "./grid-trim.ts";
+export { GridTrimmedAwayError } from "./grid-trim.ts";
 
 import type { Grid } from "./grid-core.ts";
 import { assertGridDescValid } from "./grid-desc.ts";

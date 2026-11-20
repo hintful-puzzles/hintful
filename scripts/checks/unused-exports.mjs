@@ -39,7 +39,10 @@
  *
  * **What counts as a use**, each one a real way this tree reaches a symbol:
  *
- * - a named or namespace import, or a re-export, from another file;
+ * - a named or namespace import from another file, or `typeof import(…)` of
+ *   it, which types the whole module; a re-export is not a use but a
+ *   forwarding address, and a use of the name it forwards reaches the module
+ *   behind it;
  * - being exported from an entry file — the page scripts, the worker, the
  *   service worker, the preflight gate, and every `*.test.ts`;
  * - matching an `import.meta.glob` pattern whose modules are actually imported.
@@ -70,12 +73,15 @@
  * actually have caught knip — the fraction of import specifiers that RESOLVED to
  * a file in the project.
  *
- * **Two blind spots cost more to find than the check cost to write**, and both
+ * **Three blind spots cost more to find than the check cost to write**, and all
  * had the same shape — a relay counted as a consumer. The `?raw` globs above,
  * and `export * from`, which is a forwarding address rather than a use: treating
  * it as one marked every module behind `src/engine/index.ts` wholly used. With
  * both fixed the report went from 9 to 373, and a deliberately planted dead
- * export in `engine/draw.ts` — silent under both — was caught.
+ * export in `engine/draw.ts` — silent under both — was caught. The third was
+ * `export { a } from`, counted as a use of `a` while the barrel's own name went
+ * unjudged: fixed, it found 46 names the two engine barrels forwarded to no one,
+ * and a planted dead re-export in `describe-runtime.ts` that the old rule passed.
  *
  * Usage: `npm run dead-exports`. `DEBUG=<file>` explains one file's verdict.
  */
@@ -236,6 +242,14 @@ const wholeModuleUsed = new Set();
  * audit had to make.
  */
 const starReexports = new Map();
+/**
+ * "barrel::name" -> "file::name" for each `export { name } from "./file.ts"`.
+ * A named re-export is a forwarding address for the same reason as a star
+ * one: the barrel's name is the export judged, and a use of it reaches the
+ * module behind it. Counted as a use, every name `describe-runtime.ts`
+ * forwards read as used whether or not compiled code calls it.
+ */
+const namedForwards = new Map();
 const globPatterns = [];
 /**
  * file -> (exported name -> the names its own *signature* mentions).
@@ -360,8 +374,13 @@ for (const [file, sf] of sources) {
             if (!starReexports.has(file)) starReexports.set(file, new Set());
             starReexports.get(file).add(target);
           } else if (ts.isNamedExports(node.exportClause))
-            for (const e of node.exportClause.elements)
-              used.add(`${target}::${(e.propertyName ?? e.name).text}`);
+            for (const e of node.exportClause.elements) {
+              names.add(e.name.text);
+              namedForwards.set(
+                `${file}::${e.name.text}`,
+                `${target}::${(e.propertyName ?? e.name).text}`,
+              );
+            }
           else wholeModuleUsed.add(target); // `export * as ns from`
         }
       }
@@ -386,6 +405,16 @@ for (const [file, sf] of sources) {
               used.add(`${target}::${(e.propertyName ?? e.name).text}`);
         }
       }
+    }
+    // `typeof import("./x.ts")` types a whole module, as a plugin does the one
+    // the build loads by path (`vite-plugins/game-code.ts`).
+    if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument) &&
+      ts.isStringLiteral(node.argument.literal)
+    ) {
+      const target = resolveSpec(file, node.argument.literal.text);
+      if (target) wholeModuleUsed.add(target);
     }
     // dynamic import() and import.meta.glob()
     if (ts.isCallExpression(node)) {
@@ -440,26 +469,39 @@ if (totalExports < FLOORS.exports)
 
 // --- Pass 2a: follow every use through the barrels that forward it. ---
 
+/** A use of a forwarded name, or the ledger keeping one, reaches the module
+ * behind it: the ledger keeps the barrel's name, which is the one judged. */
+const forwardedFrom = (key) => {
+  const sep = key.lastIndexOf("::");
+  const [file, name] = [key.slice(0, sep), key.slice(sep + 2)];
+  const out = [...(starReexports.get(file) ?? [])].map((t) => `${t}::${name}`);
+  const named = namedForwards.get(key);
+  if (named !== undefined) out.push(named);
+  return out;
+};
+for (const key of Object.keys(KEPT_UNUSED))
+  for (const forwarded of forwardedFrom(key)) used.add(forwarded);
 for (let pass = 0; pass < 8; pass++) {
   let grew = false;
-  for (const key of [...used]) {
-    const sep = key.lastIndexOf("::");
-    const [file, name] = [key.slice(0, sep), key.slice(sep + 2)];
-    for (const target of starReexports.get(file) ?? []) {
-      const forwarded = `${target}::${name}`;
+  for (const key of [...used])
+    for (const forwarded of forwardedFrom(key))
       if (!used.has(forwarded)) {
         used.add(forwarded);
         grew = true;
       }
-    }
-  }
   // A barrel that is itself wholly used forwards that too.
-  for (const file of [...wholeModuleUsed])
+  for (const file of [...wholeModuleUsed]) {
     for (const target of starReexports.get(file) ?? [])
       if (!wholeModuleUsed.has(target)) {
         wholeModuleUsed.add(target);
         grew = true;
       }
+    for (const [from, to] of namedForwards)
+      if (from.startsWith(`${file}::`) && !used.has(to)) {
+        used.add(to);
+        grew = true;
+      }
+  }
   if (!grew) break;
 }
 

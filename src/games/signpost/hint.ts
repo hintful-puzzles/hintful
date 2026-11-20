@@ -39,7 +39,7 @@ import {
   updateNumbers,
 } from "./state.ts";
 
-export type { Rival, SignpostFiring, SignpostRung } from "./solver.ts";
+export type { SignpostRung } from "./solver.ts";
 
 /** The rungs a step can be: the description's techniques, in its order. */
 export const SIGNPOST_RUNGS: readonly SignpostRung[] = signpost.ladder.map((e) => e.id);

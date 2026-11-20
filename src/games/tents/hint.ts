@@ -58,8 +58,6 @@ import {
   U,
 } from "./state.ts";
 
-export type { TentsRung } from "./solver.ts";
-
 // --- the words ---------------------------------------------------------------
 
 /** Which kind of line a count is read along. */
