@@ -28,7 +28,9 @@
  * feedback loop rather than a broken `main`. That is the same argument that
  * lets the hook run `biome check --staged` while CI runs `biome ci .`.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { importsOf, nodesOf, parsed } from "./engine/testing/syntax.ts";
 
 /** Every test file's source, keyed by path. Read as text through the same
  * mechanism the selector parses — which is the point: if this glob stops
@@ -45,25 +47,44 @@ const testSources = import.meta.glob<string>("./**/*.test.ts", {
  * it — `scripts/checks/diff.vitest.config.mts` runs them on demand. */
 const FS_READERS_OUTSIDE_THE_GATE = "scripts/checks/";
 
-/**
- * Drop comment lines, **line by line and never with a block-comment regex**.
- *
- * `/\/\*[\s\S]*?\*\//` looks like the obvious way to do this and is a trap
- * here: a doc comment that mentions a glob pattern contains `**` followed by
- * `/`, so the comment terminates at the pattern and the stripper goes on to eat
- * live code. That is not hypothetical — it silently removed three help guards
- * from a real selection while this file was being written. The selector's own
- * walk reads globs from the syntax tree instead, where a comment is not code.
- *
- * A line whose first non-space character is `*`, `//` or `/*` is prose. Every
- * `import.meta.glob` call in this tree begins a statement, so nothing real is
- * lost, and a self-terminating delimiter cannot reach past its own line.
- */
-function stripProse(source: string): string {
-  return source
-    .split("\n")
-    .filter((line) => !/^\s*(\*|\/\/|\/\*)/.test(line))
-    .join("\n");
+/** Every `import.meta.glob(…)` call in a file, read off its syntax tree as the
+ * selector's own walk reads them: a comment or a string that discusses one is
+ * no call. */
+function globCalls(path: string, source: string): ts.CallExpression[] {
+  return [...nodesOf(parsed(path, source))].filter(
+    (n): n is ts.CallExpression =>
+      ts.isCallExpression(n) &&
+      ts.isPropertyAccessExpression(n.expression) &&
+      n.expression.name.text === "glob" &&
+      ts.isMetaProperty(n.expression.expression) &&
+      n.expression.expression.keywordToken === ts.SyntaxKind.ImportKeyword,
+  );
+}
+
+/** A pattern the selector can read: a string, or an array of strings. */
+function isLiteralPattern(arg?: ts.Expression): boolean {
+  if (arg === undefined) return false;
+  if (ts.isStringLiteralLike(arg)) return true;
+  return ts.isArrayLiteralExpression(arg) && arg.elements.every(ts.isStringLiteralLike);
+}
+
+/** The filesystem modules, under either spelling. */
+const FS = new Set(["fs", "node:fs", "fs/promises", "node:fs/promises"]);
+
+/** Whether a file reaches `fs`: an import of it, static or dynamic, or a
+ * `require` of it. */
+function readsFs(path: string, source: string): boolean {
+  const sf = parsed(path, source);
+  if (importsOf(sf).some((e) => FS.has(e.spec))) return true;
+  return [...nodesOf(sf)].some(
+    (n) =>
+      ts.isCallExpression(n) &&
+      ts.isIdentifier(n.expression) &&
+      n.expression.text === "require" &&
+      n.arguments[0] !== undefined &&
+      ts.isStringLiteralLike(n.arguments[0]) &&
+      FS.has(n.arguments[0].text),
+  );
 }
 
 describe("the pre-commit test selector can see every coupling", () => {
@@ -84,26 +105,15 @@ describe("the pre-commit test selector can see every coupling", () => {
     //   import.meta.glob("../games/**\/*.ts", …)
     //   import.meta.glob(["../templates/*.hbs", "../help/*.hbs"], …)
     //
-    // The array form spans several lines, which is exactly what a first,
-    // line-oriented pass at this question could not see: it reported the tree
-    // as uniformly single-pattern and missed both call sites. Scan for the
-    // *call*, then classify what follows it — never grep for the shape you
-    // expect (`docs/method.md` § "A scan that keys on a name").
-    const anyCall = /import\.meta\.glob\s*(?:<[^>]*>)?\s*\(/g;
+    // Find every *call*, then classify its pattern — never search for the
+    // shape you expect (`docs/method.md` § "A scan that keys on a name").
     const offenders: string[] = [];
     let calls = 0;
 
     for (const [file, source] of Object.entries(testSources)) {
-      // This file, and several guards, *discuss* `import.meta.glob` in prose;
-      // a sweep that counts those reports offenders that do not exist.
-      const code = stripProse(source);
-      for (const match of code.matchAll(anyCall)) {
+      for (const call of globCalls(file, source)) {
         calls++;
-        const rest = code.slice(match.index + match[0].length).trimStart();
-        const literal = rest.startsWith('"');
-        const arrayOfLiterals =
-          rest.startsWith("[") && /^\[\s*"/.test(rest.replace(/\s+/g, " "));
-        if (!literal && !arrayOfLiterals) offenders.push(file);
+        if (!isLiteralPattern(call.arguments[0])) offenders.push(file);
       }
     }
 
@@ -119,6 +129,27 @@ describe("the pre-commit test selector can see every coupling", () => {
     ).toEqual([]);
   });
 
+  it("sees each shape it judges, and not a mention of one", () => {
+    const patterns = (src: string) =>
+      globCalls("src/plant.test.ts", src).map((c) => isLiteralPattern(c.arguments[0]));
+    expect(patterns('import.meta.glob("./*.ts");')).toEqual([true]);
+    expect(
+      patterns('import.meta.glob<string>([\n  "./a/*.ts",\n  "./b/*.ts",\n]);'),
+    ).toEqual([true]);
+    expect(patterns("import.meta.glob(`./${dir}/*.ts`);")).toEqual([false]);
+    expect(
+      patterns("// import.meta.glob(dir)\nconst s = 'import.meta.glob(x)';"),
+    ).toEqual([]);
+    for (const reads of [
+      'import { readFileSync } from "node:fs";',
+      'import fs from "fs";',
+      'const fs = await import("node:fs/promises");',
+      'const fs = require("fs");',
+    ])
+      expect(readsFs("src/plant.test.ts", reads), reads).toBe(true);
+    expect(readsFs("src/plant.test.ts", '// import "node:fs";')).toBe(false);
+  });
+
   it("no test in the gate reads the filesystem directly", () => {
     // `node:fs` reaches a file through neither the import graph nor a glob, so
     // the selector cannot model it. The four files that legitimately do this
@@ -126,11 +157,7 @@ describe("the pre-commit test selector can see every coupling", () => {
     // via `npm run diff`.
     const offenders = Object.entries(testSources)
       .filter(([file]) => !file.includes(FS_READERS_OUTSIDE_THE_GATE))
-      .filter(([, source]) =>
-        /from\s+"node:fs("\/promises")?"|require\(\s*"(node:)?fs"\s*\)/.test(
-          stripProse(source),
-        ),
-      )
+      .filter(([file, source]) => readsFs(file, source))
       .map(([file]) => file);
 
     expect(

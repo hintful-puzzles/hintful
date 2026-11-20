@@ -23,9 +23,9 @@
  * third: **the push runs the rest.** `.husky/pre-push` hands the gate the
  * commit the remote has, and a test below holds it to that.
  *
- * ON THE INSTRUMENT. This scans for the **shape of a read** — an
- * `import.meta.glob`, `readFileSync`, `readdirSync`, `fs.read*` or `new URL`
- * whose path argument, or an import whose specifier, names one of the skipped
+ * ON THE INSTRUMENT. This reads each file's syntax tree for the **shape of a
+ * read** — an `import.meta.glob`, a `read*` call or `new URL` whose literal
+ * path argument, or an import whose specifier, names one of the skipped
  * roots — not for the roots' names anywhere in the file. A path assembled at
  * run time from parts is outside what it sees. A plain mention is what most of these files do: dozens cite
  * `docs/*.md` and `AGENTS.md` in prose, and a name-keyed scan would
@@ -40,6 +40,7 @@
  * the on-demand config runs. The `.mjs` checks there are the fast prefix,
  * which the shortcut does not skip, and several read `docs/` on purpose.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 // Read as text, the way the About dialog reads the licenses — `import.meta.glob`
 // cannot take an extension-less dotfile path (`../.husky/pre-commit` reaches
@@ -48,6 +49,7 @@ import gateWorkflow from "../.github/workflows/gate.yml?raw";
 import preCommitHook from "../.husky/pre-commit?raw";
 import prePushHook from "../.husky/pre-push?raw";
 import gateScript from "../scripts/gate.sh?raw";
+import { importsOf, nodesOf, parsed } from "./engine/testing/syntax.ts";
 
 /** Every source and test module, plus the build side, as raw text. */
 const sources = {
@@ -85,26 +87,44 @@ const SKIPPED_ROOTS = (shortcutPatterns[0] ?? "")
   .split("|")
   .map((alternative) => alternative.replace(/\\/g, "").replace(/\$$/, ""));
 
-/** A read call's path argument: one literal, or an array of them. */
-const READ_CALL =
-  /(?:import\.meta\.glob|readFileSync|readdirSync|readFile|fs\.read\w*|new URL)\s*(?:<[^(]*>)?\s*\(\s*(\[[^\]]*\]|(["'`])[^"'`]+\2)/g;
-/**
- * An import's specifier, static or dynamic: with `?raw` it reads any file. Only
- * a dynamic import takes a template literal, and prose says "from `docs/…`".
- */
-const IMPORT =
-  /\bfrom\s*(["'])(?<static>[^"'\n]+)\1|\bimport\s*\(?\s*(["'`])(?<dynamic>[^"'`\n]+)\3/g;
-const LITERAL = /(["'`])([^"'`\n]+)\1/g;
+/** Whether a call reads a path: `import.meta.glob`, `new URL`, or any
+ * function whose name starts `read` (`readFileSync`, `fs.readdir`…), taken
+ * as a superset and judged by its literal path. */
+function isReadCall(n: ts.Node): n is ts.CallExpression | ts.NewExpression {
+  if (ts.isNewExpression(n))
+    return ts.isIdentifier(n.expression) && n.expression.text === "URL";
+  if (!ts.isCallExpression(n)) return false;
+  const e = n.expression;
+  if (ts.isPropertyAccessExpression(e) && ts.isMetaProperty(e.expression))
+    return e.name.text === "glob";
+  const name = ts.isIdentifier(e)
+    ? e.text
+    : ts.isPropertyAccessExpression(e)
+      ? e.name.text
+      : "";
+  return /^read[A-Z]/.test(name);
+}
 
-/** Every path `text` reads, by either shape. */
-function pathsRead(text: string): string[] {
-  const fromCalls = [...text.matchAll(READ_CALL)].flatMap((call) =>
-    [...call[1].matchAll(LITERAL)].map((literal) => literal[2]),
-  );
-  const fromImports = [...text.matchAll(IMPORT)].map(
-    (m) => m.groups?.["static"] ?? m.groups?.["dynamic"] ?? "",
-  );
-  return [...fromCalls, ...fromImports];
+/** A read call's literal path argument: one string, or an array of them. */
+function literalPaths(arg?: ts.Expression): string[] {
+  if (arg === undefined) return [];
+  if (ts.isStringLiteralLike(arg)) return [arg.text];
+  if (ts.isArrayLiteralExpression(arg))
+    return arg.elements.filter(ts.isStringLiteralLike).map((e) => e.text);
+  return [];
+}
+
+/** The read calls in `text`, by the syntax tree: a comment is no call. */
+const readCalls = (text: string, path: string) =>
+  [...nodesOf(parsed(path, text))].filter(isReadCall);
+
+/** Every path `text` reads: a read call's literal path, or an import's
+ * specifier, static or dynamic (with `?raw` it reads any file). */
+function pathsRead(text: string, path: string): string[] {
+  return [
+    ...readCalls(text, path).flatMap((c) => literalPaths(c.arguments?.[0])),
+    ...importsOf(parsed(path, text)).map((e) => e.spec),
+  ];
 }
 
 interface Offender {
@@ -116,7 +136,7 @@ const offenders: Offender[] = [];
 let filesScanned = 0;
 for (const [file, text] of Object.entries(sources)) {
   filesScanned++;
-  for (const path of pathsRead(text)) {
+  for (const path of pathsRead(text, file)) {
     if (SKIPPED_ROOTS.some((root) => path.includes(root))) {
       offenders.push({ file, path });
     }
@@ -129,16 +149,21 @@ describe("the gate's per-commit scopings stay safe", () => {
     // over nothing. The second check proves the *pattern* still matches: this
     // repo has several tests that read source through `import.meta.glob`.
     expect(filesScanned).toBeGreaterThan(200);
-    const anyRead = Object.values(sources).filter(
-      (t) => [...t.matchAll(READ_CALL)].length > 0,
+    const anyRead = Object.entries(sources).filter(
+      ([file, t]) => readCalls(t, file).length > 0,
     );
     expect(anyRead.length).toBeGreaterThan(5);
     // Each shape sees a read known to be there: an array of globs, and a
-    // `?raw` import.
-    expect(pathsRead(sources["./project-identity.test.ts"])).toContain("../README.md");
-    expect(pathsRead(sources["./dialogs/about-dialog.ts"])).toContain(
-      "../../LICENSE.md?raw",
-    );
+    // `?raw` import; and a read written in a comment is none.
+    const read = (file: string) => pathsRead(sources[file] ?? "", file);
+    expect(read("./project-identity.test.ts")).toContain("../README.md");
+    expect(read("./dialogs/about-dialog.ts")).toContain("../../LICENSE.md?raw");
+    expect(
+      pathsRead(
+        '// readFileSync("docs/a.md")\nnew URL("../docs/b.md", u);',
+        "plant.ts",
+      ),
+    ).toEqual(["../docs/b.md"]);
     // Each file outside `src/` that a skipped step loads was read, by its key.
     for (const loaded of [
       "../vite.config.ts",
@@ -246,8 +271,8 @@ describe("the gate's per-commit scopings stay safe", () => {
     // globbed by `help-coverage.test.ts` and rendered by `extra-pages.ts`, and
     // this change's own `::icon::` check fails the *build* on a bad help page.
     expect(SKIPPED_ROOTS).not.toContain("help/");
-    const helpReaders = Object.values(sources).filter((text) =>
-      pathsRead(text).some((path) => path.includes("help/")),
+    const helpReaders = Object.entries(sources).filter(([file, text]) =>
+      pathsRead(text, file).some((path) => path.includes("help/")),
     );
     // Proves the previous assertion is meaningful: help/ *is* read, so if it
     // were on the skip list the first test would have caught it.

@@ -25,7 +25,9 @@
  * (`import * as toast from "./dialogs/toast.ts"`) or on the shared object
  * (`savedGames`), in a `beforeEach`.
  */
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { nodesOf, parsed } from "./engine/testing/syntax.ts";
 
 /** Every test module, eagerly, as raw text; Vite resolves these at build. */
 const sources = Object.entries(
@@ -36,8 +38,22 @@ const sources = Object.entries(
   }) as Record<string, string>,
 );
 
-/** Every vitest call that registers a module factory or stand-in. */
-const MODULE_MOCK = /\bvi\s*\.\s*(?:mock|doMock|hoisted)\s*\(/;
+/** The `vi` members that register a module factory or stand-in. */
+const MOCKING = ["mock", "doMock", "hoisted"];
+
+/** The calls in `text` that mock a module: `vi.mock(…)` and its kin, read off
+ * the syntax tree, so a comment or a string naming one is not a call. */
+const mocks = (text: string, path = "src/plant.test.ts"): string[] =>
+  [...nodesOf(parsed(path, text))]
+    .filter(
+      (n): n is ts.CallExpression =>
+        ts.isCallExpression(n) &&
+        ts.isPropertyAccessExpression(n.expression) &&
+        ts.isIdentifier(n.expression.expression) &&
+        n.expression.expression.text === "vi" &&
+        MOCKING.includes(n.expression.name.text),
+    )
+    .map((c) => c.expression.getText());
 
 describe("no test file mocks a module", () => {
   it("scanned the test tree with a pattern that matches a mock", () => {
@@ -54,17 +70,15 @@ describe("no test file mocks a module", () => {
       "vi\n  .mock(`./x.ts`)",
       "const spies = vi.hoisted(() => ({}))",
     ]) {
-      expect(MODULE_MOCK.test(call), call).toBe(true);
+      expect(mocks(call), call).toHaveLength(1);
     }
-    expect(MODULE_MOCK.test("vi.spyOn(toast, 'showToast')")).toBe(false);
+    expect(mocks("vi.spyOn(toast, 'showToast')")).toEqual([]);
+    expect(mocks('// vi.mock("./x.ts")\nconst s = "vi.mock(";')).toEqual([]);
   });
 
   it("finds no vi.mock, vi.doMock or vi.hoisted", () => {
     const mocking = sources
-      .filter(
-        ([path, text]) =>
-          MODULE_MOCK.test(text) && !path.endsWith("/no-module-mocks.test.ts"),
-      )
+      .filter(([path, text]) => mocks(text, path).length > 0)
       .map(([path]) => path);
     expect(
       mocking,

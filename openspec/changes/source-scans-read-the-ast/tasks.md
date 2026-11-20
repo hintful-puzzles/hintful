@@ -29,8 +29,26 @@
       against the regex reads it replaces. `testing/syntax.ts`. Parsing the
       580 game and engine files took 377 ms against 1657 ms for the comment
       stripping the text scans ran (2026-11-20).
-- 2.2 progress: group (a) and `module-layering` done and committed; next
-      (b) `test-selection`, `no-module-mocks`, `gate-scope`.
+- 2.2 progress: groups (a) and (b) done. Next, (c) then (d). Notes for them:
+      - `syntax.ts` holds `parsed`, `nodesOf`, `usesOf`, `importsOf`,
+        `importedModules`, `callsTo`, `where`, `shown`; `enrollment.ts`
+        holds `gamesUsing`/`gamesNotUsing`/`gamesImporting`/
+        `gamesCallingMethod`/`gameSyntax`. `gameSourceFiles` paths are now
+        repo-relative (`src/games/…`): `palette-departures`' failure
+        messages still strip `../../games/`.
+      - `palette-source` already builds a `ts.Program` for its literal
+        rule; its background-channel rule can key on the `Color` type the
+        same way rather than on the names `bg`/`background`.
+      - `palette-departures`' positional form labels a slot by its trailing
+        comment: read it through `ts.getTrailingCommentRanges` on the
+        array element, since the comment is the label.
+      - `cursor-vocabulary`'s check that `pointer.ts` exports the vocabulary
+        is answered by importing the names (the typecheck holds it).
+      - `emittable-keys`: `puzzleKeyMap` is a public static on
+        `PuzzleViewInteractive`, readable at run time; the fact modules'
+        exports are their namespaces' keys.
+      - The tree scans keyed on a callee's spelling (`desc-error`,
+        `hint-refusal`, `params-refusal`) bind it through `usesOf`.
 - [ ] 2.2 Replace each scan a declaration can answer; convert the rest to
       the syntax tree. Plant the defect each scan exists for and see it fail.
 
