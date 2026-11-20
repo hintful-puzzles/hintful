@@ -11,8 +11,8 @@
  * have used (the `spent` flags, mutable).
  */
 
+import { MAX_CANDIDATE_VALUE } from "../candidate-bits.ts";
 import type { CandidateReading } from "../candidate-hint.ts";
-import { parseLeadingInt } from "../decimal.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
@@ -20,10 +20,12 @@ import {
   descValue,
 } from "../desc-error.ts";
 import { readDesc } from "../desc-reader.ts";
-import type { GameDrawing } from "../game.ts";
+import { difficultyItem } from "../difficulty.ts";
+import type { GameDrawing, ParamConfigItem } from "../game.ts";
 import type { Ladder } from "../ladder-runtime.ts";
 import type { LatinSolver } from "../latin.ts";
-import { endParams, paramsLetter } from "../params.ts";
+import { numberItem, squareSize } from "../params.ts";
+import { choice, type ParamsSegment, paramsCodec, size } from "../params-codec.ts";
 import { digitOf, type GridCursor, isEraseKey, newCursor } from "../pointer.ts";
 
 // --- the clue kind -----------------------------------------------------------
@@ -91,9 +93,6 @@ export function diffToLevel(d: Difficulty): number {
 export function diffFromLevel(level: number): Difficulty {
   return DIFFS[level] ?? "easy";
 }
-function diffChar(d: Difficulty): string {
-  return DIFF_CHARS[diffToLevel(d)];
-}
 
 // --- flag bits (upstream F_*) ----------------------------------------------
 
@@ -141,24 +140,43 @@ export interface EdgeClueParams {
   diff: Difficulty;
 }
 
-export function encodeParams(p: EdgeClueParams, full: boolean): string {
-  let s = String(p.order);
-  if (full) s += `d${diffChar(p.diff)}`;
-  return s;
-}
-
-/** `{order}d{c}`, each part optional; what is missing is `defaults`'. */
-export function decodeParams(s: string, defaults: EdgeClueParams): EdgeClueParams {
-  const p = { ...defaults };
-  const order = parseLeadingInt(s, 0);
-  if (order.next > 0) p.order = order.value;
-  let i = order.next;
-  if (s[i] === "d") {
-    p.diff = diffFromLevel(paramsLetter(s, i + 1, DIFF_CHARS));
-    i += 2;
-  }
-  endParams(s, i);
-  return p;
+/**
+ * A game's size and difficulty fields, and its codec: `{order}d{c}`, the
+ * order and then the generator-only difficulty letter. `afterOrder` is what
+ * the game's upstream form writes between the two (Adjacent's `a`).
+ */
+export function edgeClueParams(opts: {
+  tiers: readonly string[];
+  /** The size field's help sentence, which names the game's own small-board
+   * limits. */
+  sizeDoc: string;
+  defaults: () => EdgeClueParams;
+  afterOrder?: readonly ParamsSegment<EdgeClueParams>[];
+}): {
+  paramConfig: ParamConfigItem<EdgeClueParams>[];
+  encodeParams(p: EdgeClueParams, full: boolean): string;
+  decodeParams(s: string): EdgeClueParams;
+} {
+  const paramConfig = [
+    numberItem<EdgeClueParams>("size", "Size", "order", {
+      doc: opts.sizeDoc,
+      // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
+      bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
+      label: { slot: "size", words: squareSize("order") },
+    }),
+    difficultyItem(opts.tiers, {
+      get: (p: EdgeClueParams) => diffToLevel(p.diff),
+      set: (p: EdgeClueParams, tier: number) => {
+        p.diff = diffFromLevel(tier);
+      },
+    }),
+  ];
+  const codec = paramsCodec(opts.defaults, [
+    size(paramConfig, "size"),
+    ...(opts.afterOrder ?? []),
+    choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
+  ]);
+  return { paramConfig, ...codec };
 }
 
 // --- number <-> character (upstream's n2c / c2n) ---------------------------

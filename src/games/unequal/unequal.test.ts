@@ -29,7 +29,6 @@ import {
   diffToLevel,
   type EdgeClueParams,
   type EdgeClueState,
-  encodeParams,
   newState,
   newUi,
 } from "../../engine/edge-clue-latin/state.ts";
@@ -49,7 +48,7 @@ import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { unequalGame } from "./index.ts";
-import { decodeParams, SIGNS } from "./state.ts";
+import { decodeParams, encodeParams, SIGNS } from "./state.ts";
 
 function gen(
   order: number,

@@ -5,18 +5,19 @@
  * (`engine/edge-clue-latin/state.ts`).
  */
 
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import {
   type ClueKind,
   DIFF_SET,
   type Difficulty,
-  decodeParams as decodeEdgeClueParams,
   diffToLevel,
   type EdgeClueParams,
+  edgeClueParams,
   F_ADJ_DOWN,
   F_ADJ_RIGHT,
 } from "../../engine/edge-clue-latin/state.ts";
 import type { PresetBoards } from "../../engine/game.ts";
+import { unusedLetter } from "../../engine/params-codec.ts";
+import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";
 import { drawBars } from "./render.ts";
 import { barAnswer, barLadder } from "./solver.ts";
 
@@ -60,14 +61,15 @@ export function defaultParams(): EdgeClueParams {
   return { order: 5, diff: "easy" };
 }
 
-/** `{order}d{c}`, and upstream's form too: upstream deals Adjacent as a mode of
- * Unequal, writing an `a` after the order, which is read here by name. */
-export function decodeParams(s: string): EdgeClueParams {
-  const order = parseLeadingInt(s, 0);
-  const upstream = s[order.next] === "a";
-  const ours = upstream ? s.slice(0, order.next) + s.slice(order.next + 1) : s;
-  return decodeEdgeClueParams(ours, defaultParams());
-}
+export const { paramConfig, encodeParams, decodeParams } = edgeClueParams({
+  tiers: adjacent.tiers,
+  sizeDoc:
+    "Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. Tricky or above needs a size of at least 5.",
+  defaults: defaultParams,
+  // Upstream deals Adjacent as a mode of Unequal, writing an `a` after the
+  // order, so its game IDs still open.
+  afterOrder: [unusedLetter("a")],
+});
 
 export function validateParams(p: EdgeClueParams, _full: boolean): string | null {
   if (p.order < 5 && diffToLevel(p.diff) >= DIFF_SET)

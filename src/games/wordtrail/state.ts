@@ -142,9 +142,6 @@ export function letterRange(p: WordtrailParams): { least: number; most: number }
 }
 
 export function validateParams(p: WordtrailParams, _full: boolean): string | null {
-  if (p.w < 2 || p.h < 2) return "Width and height must both be at least two.";
-  if (p.w > 8 || p.h > 8) return "Width and height must both be at most eight.";
-  if (p.words < 1) return "There must be at least one word.";
   const { least, most } = letterRange(p);
   if (least > most)
     return p.words * SHORTEST > Math.floor(p.w * p.h * 0.8)

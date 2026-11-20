@@ -92,7 +92,7 @@ describe("Same Game params", () => {
     expect(valid({ w: 5, h: 5, ncols: 3, scoresub: 2 })).toBeNull();
     // A grid built to be cleared needs ≥ 3 colors and more than one square.
     expect(valid({ w: 5, h: 5, ncols: 2, scoresub: 2 })).toBe(
-      "Number of colors must be at least three.",
+      "No. of colors must be at least 3.",
     );
     expect(valid({ w: 1, h: 1, ncols: 3, scoresub: 2 })).toBe(
       "Grid area must be greater than one.",

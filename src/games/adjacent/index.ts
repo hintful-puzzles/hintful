@@ -7,7 +7,6 @@
  * Adjacent's is its bar.
  */
 
-import { MAX_CANDIDATE_VALUE } from "../../engine/candidate-bits.ts";
 import {
   type CandidatePlanPrefs,
   candidateGesture,
@@ -26,7 +25,6 @@ import {
   techniqueRung,
   valuesOf,
 } from "../../engine/candidate-plan.ts";
-import { difficultyItem } from "../../engine/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
 import {
@@ -55,14 +53,12 @@ import {
 } from "../../engine/edge-clue-latin/render.ts";
 import {
   DIFF_EXTREME,
-  diffFromLevel,
   diffToLevel,
   displayChar,
   type EdgeClueMove,
   type EdgeClueParams,
   type EdgeClueState,
   type EdgeClueUi,
-  encodeParams,
   newState,
   newUi,
   status,
@@ -87,7 +83,6 @@ import {
   latinNotesLadder,
   latinStrikeRungs,
 } from "../../engine/latin-notes.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -100,7 +95,15 @@ import { statedParts } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
 import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";
 import type { HintReason } from "./solver.ts";
-import { BARS, decodeParams, defaultParams, menu, validateParams } from "./state.ts";
+import {
+  BARS,
+  decodeParams,
+  defaultParams,
+  encodeParams,
+  menu,
+  paramConfig,
+  validateParams,
+} from "./state.ts";
 
 // --- hint ------------------------------------------------------------------
 
@@ -249,20 +252,7 @@ export const adjacentGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  paramConfig: [
-    numberItem<EdgeClueParams>("size", "Size", "order", {
-      doc: "Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. Tricky or above needs a size of at least 5.",
-      // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
-      bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
-      label: { slot: "size", words: squareSize("order") },
-    }),
-    difficultyItem(adjacent.tiers, {
-      get: (p: EdgeClueParams) => diffToLevel(p.diff),
-      set: (p: EdgeClueParams, tier: number) => {
-        p.diff = diffFromLevel(tier);
-      },
-    }),
-  ],
+  paramConfig,
 
   newDesc: (p, rng) => newEdgeClueDesc(BARS, p, rng),
   newState: (p, desc) => newState(BARS, p, desc),

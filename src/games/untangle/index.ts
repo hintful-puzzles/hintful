@@ -31,7 +31,6 @@ import {
   HINT_OUTLINE,
   INK,
 } from "../../engine/color/palette.ts";
-import { parseLeadingInt } from "../../engine/decimal.ts";
 import { descValue } from "../../engine/desc-error.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { drag } from "../../engine/hint-gesture.ts";
@@ -41,7 +40,8 @@ import {
   UI_UPDATE,
   type UiUpdate,
 } from "../../engine/index.ts";
-import { endParams, numberItem } from "../../engine/params.ts";
+import { numberItem } from "../../engine/params.ts";
+import { paramsCodec, size } from "../../engine/params-codec.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -98,6 +98,20 @@ const TAB = 9;
  * scratch grid). Upstream's bound is INT_MAX/3; a few thousand is plenty
  * and keeps the O(E²) crossing scan responsive. */
 const MAX_POINTS = 2000;
+
+const defaultParams = (): UntangleParams => ({ n: 10 });
+
+const paramConfig = [
+  numberItem<UntangleParams>("number-of-points", "Number of points", "n", {
+    doc: "How many points the puzzle has. More points means more lines to untangle.",
+    bounds: { min: 4, max: MAX_POINTS },
+    label: { slot: "size", words: (p) => `${p.n} points` },
+  }),
+];
+
+const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  size(paramConfig, "number-of-points"),
+]);
 
 /** The pixel vertex `i` is grabbed at. */
 function vertexPixel(s: UntangleState, i: number, tileSize: number): Point {
@@ -170,23 +184,11 @@ export const untangleGame: Game<
   preferredTileSize: PREFERRED_TILE_SIZE,
 
   // --- params --------------------------------------------------------
-  defaultParams: () => ({ n: 10 }),
-  paramConfig: [
-    numberItem<UntangleParams>("number-of-points", "Number of points", "n", {
-      doc: "How many points the puzzle has. More points means more lines to untangle.",
-      bounds: { min: 4, max: MAX_POINTS },
-      label: { slot: "size", words: (p) => `${p.n} points` },
-    }),
-  ],
+  defaultParams,
+  paramConfig,
   menu: { boards: [6, 10, 15, 20, 25].map((n) => ({ n })) },
-  encodeParams: (p) => `${p.n}`,
-  // A string with no number reads as 0, and the bounds refuse it in the
-  // dialog's words.
-  decodeParams: (s) => {
-    const points = parseLeadingInt(s, 0);
-    endParams(s, points.next);
-    return { n: points.value };
-  },
+  encodeParams,
+  decodeParams,
 
   // --- generation ----------------------------------------------------
   newDesc: newUntangleDesc,

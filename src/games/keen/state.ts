@@ -17,7 +17,7 @@ import {
   type CandidateReading,
   DEFAULT_CANDIDATE_READING,
 } from "../../engine/candidate-hint.ts";
-import { isDigit, parseLeadingInt } from "../../engine/decimal.ts";
+import { isDigit } from "../../engine/decimal.ts";
 import {
   DESC_TOO_LONG,
   type DescParse,
@@ -31,9 +31,11 @@ import {
   latinSpace,
   partition,
 } from "../../engine/describe-runtime.ts";
-import { noSuchTier } from "../../engine/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../../engine/difficulty.ts";
 import { Dsf } from "../../engine/dsf.ts";
-import { endParams, paramsLetter } from "../../engine/params.ts";
+import type { ParamConfigItem } from "../../engine/game.ts";
+import { numberItem, squareSize } from "../../engine/params.ts";
+import { choice, flag, paramsCodec, size } from "../../engine/params-codec.ts";
 import type { GridCursor } from "../../engine/pointer.ts";
 import { newCursor } from "../../engine/pointer.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
@@ -50,7 +52,7 @@ export const DIFF_UNREASONABLE = 4;
 
 // Upstream's keen_diffchars, indexed by level.
 const DIFF_CHARS = "enhxu";
-export const DIFF_NAMES = keen.tiers;
+const DIFF_NAMES = keen.tiers;
 const DIFFS: Difficulty[] = ["easy", "normal", "hard", "extreme", "unreasonable"];
 
 export function diffToLevel(d: Difficulty): number {
@@ -59,9 +61,6 @@ export function diffToLevel(d: Difficulty): number {
 }
 export function diffFromLevel(level: number): Difficulty {
   return DIFFS[level] ?? "normal";
-}
-function diffChar(d: Difficulty): string {
-  return DIFF_CHARS[diffToLevel(d)];
 }
 
 // --- clue packing (upstream C_* / CMASK) -----------------------------------
@@ -104,10 +103,41 @@ export function defaultParams(): KeenParams {
   return { w: 6, diff: "normal", multiplicationOnly: false };
 }
 
-export function encodeParams(p: KeenParams, full: boolean): string {
-  if (!full) return `${p.w}`;
-  return `${p.w}d${diffChar(p.diff)}${p.multiplicationOnly ? "m" : ""}`;
-}
+export const paramConfig: ParamConfigItem<KeenParams>[] = [
+  numberItem<KeenParams>("grid-size", "Grid size", "w", {
+    doc: "Width and height of the grid, which is also the largest number in it. A 3x3 has no puzzles above Normal.",
+    // One digit per cell.
+    bounds: { min: 3, max: 9 },
+    label: { slot: "size", words: squareSize("w") },
+  }),
+  difficultyItem(DIFF_NAMES, {
+    get: (p: KeenParams) => diffToLevel(p.diff),
+    set: (p: KeenParams, tier: number) => {
+      p.diff = diffFromLevel(tier);
+    },
+  }),
+  {
+    kw: "multiplication-only",
+    name: "Multiplication only",
+    type: "boolean",
+    doc: "When enabled, every cage's clue is a product: no sums, differences or ratios. Such puzzles are rare above Tricky, and at 9x9 above Normal: except at 4x4 and 6x6 the first can take a quarter of a minute to appear, and a 9x9 above Tricky a minute or two.",
+    label: {
+      slot: "tail",
+      words: (p) => (p.multiplicationOnly ? "multiplication only" : null),
+    },
+    get: (p) => p.multiplicationOnly,
+    set: (p, v) => {
+      p.multiplicationOnly = v;
+    },
+  },
+];
+
+/** The order, then the generator-only difficulty and multiplication letters. */
+export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
+  size(paramConfig, "grid-size"),
+  choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
+  flag(paramConfig, "m", "multiplication-only", { full: true }),
+]);
 
 export function validateParams(p: KeenParams, full: boolean): string | null {
   const level = diffToLevel(p.diff);
@@ -120,23 +150,6 @@ export function validateParams(p: KeenParams, full: boolean): string | null {
   // tier, Hard took 17 s on average and none gave up, Unreasonable 36 s and
   // two of twelve gave up.
   return null;
-}
-
-export function decodeParams(s: string): KeenParams {
-  const p = defaultParams();
-  const size = parseLeadingInt(s, 0);
-  let i = size.next;
-  if (i > 0) p.w = size.value;
-  if (s[i] === "d") {
-    p.diff = diffFromLevel(paramsLetter(s, i + 1, DIFF_CHARS));
-    i += 2;
-  }
-  if (s[i] === "m") {
-    p.multiplicationOnly = true;
-    i++;
-  }
-  endParams(s, i);
-  return p;
 }
 
 // --- block-structure codec -------------------------------------------------

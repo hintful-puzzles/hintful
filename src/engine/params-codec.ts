@@ -41,12 +41,13 @@
  * ## What it does not do
  *
  * Float-valued params (Rectangles' expansion factor, Net's barrier
- * probability), a leading letter before the dimensions (Cube), and a field
- * whose encoding is a `switch` over multi-character strings (Solo's symmetry)
- * are **not** expressible here, and those games keep hand-written codecs as
- * first-class citizens. A grammar that swallowed them would have to grow an
- * escape hatch per game, which is two ways plus a seam rather than one obvious
- * way.
+ * probability), a leading letter before the dimensions (Cube), a field
+ * whose encoding is a `switch` over multi-character strings (Solo's symmetry),
+ * a tail read in any order (Guess, Mines), and a shape only one game has
+ * (Boats' fleet list, Slide's `u` for no limit) are **not** expressible here,
+ * and those games keep hand-written codecs as first-class citizens. A grammar
+ * that swallowed them would have to grow an escape hatch per game, which is
+ * two ways plus a seam rather than one obvious way.
  *
  * Byte-stability is not assumed, it is asserted: `params-stability.test.ts`
  * holds every game's encodings against a recorded table, so replacing a

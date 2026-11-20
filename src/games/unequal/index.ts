@@ -6,7 +6,6 @@
  * plays too; what is Unequal's is its sign.
  */
 
-import { MAX_CANDIDATE_VALUE } from "../../engine/candidate-bits.ts";
 import {
   type CandidatePlanPrefs,
   candidateGesture,
@@ -25,7 +24,6 @@ import {
   strikesOf,
   techniqueRung,
 } from "../../engine/candidate-plan.ts";
-import { difficultyItem } from "../../engine/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { edgeClueVocab } from "../../engine/edge-clue-latin/hint-text.ts";
 import {
@@ -54,14 +52,12 @@ import {
 } from "../../engine/edge-clue-latin/render.ts";
 import {
   DIFF_EXTREME,
-  diffFromLevel,
   diffToLevel,
   displayChar,
   type EdgeClueMove,
   type EdgeClueParams,
   type EdgeClueState,
   type EdgeClueUi,
-  encodeParams,
   newState,
   newUi,
   status,
@@ -85,7 +81,6 @@ import {
   latinNotesLadder,
   latinStrikeRungs,
 } from "../../engine/latin-notes.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -98,7 +93,15 @@ import { statedParts } from "../../engine/stated.ts";
 import type { Point } from "../../engine/types.ts";
 import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
 import type { HintReason } from "./solver.ts";
-import { decodeParams, defaultParams, menu, SIGNS, validateParams } from "./state.ts";
+import {
+  decodeParams,
+  defaultParams,
+  encodeParams,
+  menu,
+  paramConfig,
+  SIGNS,
+  validateParams,
+} from "./state.ts";
 
 // --- hint ------------------------------------------------------------------
 
@@ -257,20 +260,7 @@ export const unequalGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  paramConfig: [
-    numberItem<EdgeClueParams>("size", "Size", "order", {
-      doc: "Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. A 3x3 has no Tricky or Unreasonable puzzles.",
-      // One more would not fit a candidate mask (`engine/candidate-bits.ts`).
-      bounds: { min: 3, max: MAX_CANDIDATE_VALUE },
-      label: { slot: "size", words: squareSize("order") },
-    }),
-    difficultyItem(unequal.tiers, {
-      get: (p: EdgeClueParams) => diffToLevel(p.diff),
-      set: (p: EdgeClueParams, tier: number) => {
-        p.diff = diffFromLevel(tier);
-      },
-    }),
-  ],
+  paramConfig,
 
   newDesc: (p, rng) => newEdgeClueDesc(SIGNS, p, rng),
   newState: (p, desc) => newState(SIGNS, p, desc),

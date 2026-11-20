@@ -19,6 +19,7 @@
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, type EdgeChange, LINE, OPEN } from "../../engine/line-drawing.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -56,7 +57,6 @@ import {
   executeMove,
   LINE_BACK,
   newState,
-  validateParams,
   type WordtrailMove,
   type WordtrailState,
 } from "./state.ts";
@@ -106,15 +106,12 @@ describe("wordtrail params", () => {
   });
 
   it("refuse a board too small or too large, and words too many or too few", () => {
-    expect(validateParams({ ...P, w: 1 }, true)).toMatch(/\.$/);
-    expect(validateParams({ ...P, w: 9 }, true)).toMatch(/\.$/);
-    expect(validateParams({ w: 4, h: 4, words: 5, diff: DIFF_EASY }, true)).toMatch(
-      /many/,
-    );
-    expect(validateParams({ w: 8, h: 8, words: 4, diff: DIFF_EASY }, true)).toMatch(
-      /few/,
-    );
-    expect(validateParams(P, true)).toBeNull();
+    const refusal = (p: typeof P) => paramsError(wordtrailGame, p, true);
+    expect(refusal({ ...P, w: 1 })).toBe("Width must be at least 2.");
+    expect(refusal({ ...P, w: 9 })).toBe("Width must be at most 8.");
+    expect(refusal({ w: 4, h: 4, words: 5, diff: DIFF_EASY })).toMatch(/many/);
+    expect(refusal({ w: 8, h: 8, words: 4, diff: DIFF_EASY })).toMatch(/few/);
+    expect(refusal(P)).toBeNull();
   });
 });
 

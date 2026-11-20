@@ -76,7 +76,7 @@ export const paramConfig: ParamConfigItem<SamegameParams>[] = [
   }),
   numberItem<SamegameParams>("no-of-colors", "No. of colors", "ncols", {
     doc: "How many different colors the squares come in; at least 3. Fewer colors make bigger groups.",
-    bounds: { max: 9, maxShown: true },
+    bounds: { min: 3, max: 9, maxShown: true },
     label: { slot: "tail", words: (p) => `${p.ncols} colors` },
   }),
   {
@@ -112,7 +112,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: SamegameParams, _full: boolean): string | null {
   if (p.w > Number.MAX_SAFE_INTEGER / p.h) return AREA_TOO_LARGE;
-  if (p.ncols < 3) return "Number of colors must be at least three.";
   if (p.w * p.h <= 1) return "Grid area must be greater than one.";
   return null;
 }

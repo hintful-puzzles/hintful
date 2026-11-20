@@ -286,7 +286,8 @@ carries:
 - **`bounds`** on a numeric text field: `{ min?, max? }`, an unconditional
   range only. A limit that depends on another field, or that holds only
   when generating (`full`), stays in `validateParams` (`engine-params`, "A
-  generation-only bound is gated on full").
+  generation-only bound is gated on full"). `validateParams` never restates
+  a bound: the bounds are checked first, so the copy is dead code.
 - **`label`**: which slot of the params label the field's words fill
   (`engine-params`, "One describer labels every params set"; the slots are
   drawn in [`param-label.ts`](../src/engine/param-label.ts)'s header). `words` returning `null` leaves a

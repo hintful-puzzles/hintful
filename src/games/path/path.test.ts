@@ -16,6 +16,7 @@
 import { describe, expect, it } from "vitest";
 import { Midend } from "../../engine/index.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
+import { paramsError } from "../../engine/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -61,7 +62,6 @@ import {
   newState,
   type PathMove,
   type PathState,
-  validateParams,
 } from "./state.ts";
 
 const P = { w: 4, h: 3, diff: DIFF_EASY, mode: MODE_PAIRS };
@@ -156,9 +156,9 @@ describe("path params", () => {
   });
 
   it("refuse a board too small or too large", () => {
-    expect(validateParams({ ...P, w: 2, h: 5 }, true)).toMatch(/\.$/);
-    expect(validateParams({ ...P, w: 30, h: 30 }, true)).toMatch(/\.$/);
-    expect(validateParams(P, true)).toBeNull();
+    expect(paramsError(pathGame, { ...P, w: 2, h: 5 }, true)).toMatch(/\.$/);
+    expect(paramsError(pathGame, { ...P, w: 30, h: 30 }, true)).toMatch(/\.$/);
+    expect(paramsError(pathGame, P, true)).toBeNull();
   });
 });
 

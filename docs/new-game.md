@@ -360,7 +360,7 @@ cell-state game on the declared codec and `targetVerbs`;
 [`palisade`](../openspec/specs/palisade/spec.md) for a game that takes its
 input from a shared layer and has a search tier, with its `Controls` and
 `Hint` pointers; [`keen`](../openspec/specs/keen/spec.md) for a Latin game
-with notes and a hand-written codec;
+with notes;
 [`inertia`](../openspec/specs/inertia/spec.md) for a game of movement and
 search, which declares little and so states most of itself.
 

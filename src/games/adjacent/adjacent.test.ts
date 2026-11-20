@@ -18,7 +18,6 @@ import {
   diffToLevel,
   type EdgeClueParams,
   type EdgeClueState,
-  encodeParams,
   F_ERROR_RIGHT,
   markErrors,
   newState,
@@ -31,7 +30,7 @@ import { CURSOR_LEFT, CURSOR_RIGHT, MOD_SHFT } from "../../engine/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { adjacentGame } from "./index.ts";
-import { BARS, decodeParams } from "./state.ts";
+import { BARS, decodeParams, encodeParams } from "./state.ts";
 
 function gen(
   order: number,
@@ -53,12 +52,12 @@ function lowestCap(p: EdgeClueParams, desc: string): number | null {
 // --- params + codec --------------------------------------------------------
 
 describe("adjacent params", () => {
-  it("round-trips, and defaults to 5x5 Normal", () => {
+  it("round-trips, and defaults to Normal", () => {
     const a: EdgeClueParams = { order: 5, diff: "tricky" };
     expect(encodeParams(a, true)).toBe("5dk");
     expect(encodeParams(a, false)).toBe("5");
     expect(decodeParams("5dk")).toEqual(a);
-    expect(decodeParams("")).toEqual({ order: 5, diff: "easy" });
+    expect(decodeParams("6")).toEqual({ order: 6, diff: "easy" });
     // Upstream deals Adjacent as Unequal's mode `a`.
     expect(decodeParams("5adk")).toEqual(a);
   });

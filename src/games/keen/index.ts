@@ -32,7 +32,7 @@ import {
   valuesOf,
 } from "../../engine/candidate-plan.ts";
 import { digitValue } from "../../engine/decimal.ts";
-import { type DifficultyContract, difficultyItem } from "../../engine/difficulty.ts";
+import type { DifficultyContract } from "../../engine/difficulty.ts";
 import {
   clearEntries,
   entryMistakes,
@@ -70,7 +70,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/note-taking-cell.ts";
-import { numberItem, squareSize } from "../../engine/params.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
@@ -116,11 +115,9 @@ import {
   cagesOf,
   cloneState,
   DIFF_EXTREME,
-  DIFF_NAMES,
   DIFF_UNREASONABLE,
   decodeParams,
   defaultParams,
-  diffFromLevel,
   diffToLevel,
   encodeParams,
   type KeenMove,
@@ -129,6 +126,7 @@ import {
   type KeenUi,
   newState,
   newUi,
+  paramConfig,
   status,
   validateParams,
 } from "./state.ts";
@@ -483,34 +481,7 @@ export const keenGame: Game<
   encodeParams,
   decodeParams,
   validateParams,
-  paramConfig: [
-    numberItem<KeenParams>("grid-size", "Grid size", "w", {
-      doc: "Width and height of the grid, which is also the largest number in it. A 3x3 has no puzzles above Normal.",
-      // One digit per cell.
-      bounds: { min: 3, max: 9 },
-      label: { slot: "size", words: squareSize("w") },
-    }),
-    difficultyItem(DIFF_NAMES, {
-      get: (p: KeenParams) => diffToLevel(p.diff),
-      set: (p: KeenParams, tier: number) => {
-        p.diff = diffFromLevel(tier);
-      },
-    }),
-    {
-      kw: "multiplication-only",
-      name: "Multiplication only",
-      type: "boolean",
-      doc: "When enabled, every cage's clue is a product: no sums, differences or ratios. Such puzzles are rare above Tricky, and at 9x9 above Normal: except at 4x4 and 6x6 the first can take a quarter of a minute to appear, and a 9x9 above Tricky a minute or two.",
-      label: {
-        slot: "tail",
-        words: (p) => (p.multiplicationOnly ? "multiplication only" : null),
-      },
-      get: (p) => p.multiplicationOnly,
-      set: (p, v) => {
-        p.multiplicationOnly = v;
-      },
-    },
-  ],
+  paramConfig,
 
   newDesc: newKeenDesc,
   newState,

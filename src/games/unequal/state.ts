@@ -10,9 +10,9 @@ import {
   DIFF_RECURSIVE,
   DIFF_SET,
   type Difficulty,
-  decodeParams as decodeEdgeClueParams,
   diffToLevel,
   type EdgeClueParams,
+  edgeClueParams,
   F_ADJ_DOWN,
   F_ADJ_LEFT,
   F_ADJ_RIGHT,
@@ -67,9 +67,12 @@ export function defaultParams(): EdgeClueParams {
   return { order: 4, diff: "easy" };
 }
 
-export function decodeParams(s: string): EdgeClueParams {
-  return decodeEdgeClueParams(s, defaultParams());
-}
+export const { paramConfig, encodeParams, decodeParams } = edgeClueParams({
+  tiers: unequal.tiers,
+  sizeDoc:
+    "Width and height of the grid, which is also the largest number in it. Above 9, the numbers are written 0 to 9 and then A, B, C and so on, so each still takes one character. A 3x3 has no Tricky or Unreasonable puzzles.",
+  defaults: defaultParams,
+});
 
 export function validateParams(p: EdgeClueParams, full: boolean): string | null {
   const level = diffToLevel(p.diff);
