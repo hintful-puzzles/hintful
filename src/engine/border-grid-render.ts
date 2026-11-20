@@ -47,14 +47,14 @@ import {
 import type { GameDrawing } from "./contract/game.ts";
 import { CELL, type StepMarks } from "./contract/hint-words.ts";
 import type { Rect, Size } from "./contract/types.ts";
-import { glyphFont } from "./draw.ts";
 import { drawEdgeHints, type EdgeHint, edgeHintWords } from "./edge-hint.ts";
-import { hatchPeriod } from "./hatch.ts";
-import { drawMarkSides, MARK_ALL } from "./hint-mark.ts";
 import type { GridCursor } from "./input/pointer.ts";
-import { textBox } from "./ring.ts";
-import { TileCache } from "./tile-cache.ts";
-import { WIN_BODY, WIN_LEAD, type WinTone } from "./win-wave.ts";
+import { glyphFont } from "./render/draw.ts";
+import { hatchPeriod } from "./render/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "./render/hint-mark.ts";
+import { textBox } from "./render/ring.ts";
+import { TileCache } from "./render/tile-cache.ts";
+import { WIN_BODY, WIN_LEAD, type WinTone } from "./render/win-wave.ts";
 
 // --- geometry ---------------------------------------------------------------
 

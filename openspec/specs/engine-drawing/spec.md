@@ -13,7 +13,7 @@ matches a fresh paint.
 ### Requirement: The engine provides a shared recessed-border drawing helper
 
 The engine SHALL provide `drawRecessedBorder(dr, bounds, inset, highlight,
-lowlight)` in `src/engine/draw.ts`, where `bounds` is the playfield's outer
+lowlight)` in `src/engine/render/draw.ts`, where `bounds` is the playfield's outer
 pixel box (`{ left, top, right, bottom }`, edges inclusive), `inset` is the
 bevel depth (the tile size), and `highlight` and `lowlight` are the two palette
 colors. It SHALL draw the two-pentagon recessed bevel, a highlight wedge along
@@ -44,7 +44,7 @@ the helpers' shape that no call to a shared helper drew.
 ### Requirement: The engine provides a shared rectangle-outline drawing helper
 
 The engine SHALL provide `drawRectOutline(dr, x, y, w, h, color)` in
-`src/engine/draw.ts`, drawing a rectangle border as four lines in the
+`src/engine/render/draw.ts`, drawing a rectangle border as four lines in the
 **inclusive** convention (corners `(x, y)` to `(x+w−1, y+h−1)`). The border
 SHALL be one pixel thick unless the caller passes a thickness as a seventh
 argument. Games drawing a rectangle outline (cursor markers, cell borders)
@@ -93,7 +93,7 @@ stale.
 ### Requirement: The engine provides a shared raised-bevel drawing helper
 
 The engine SHALL provide `drawRaisedTile(dr, body, tileSize, face, highlight,
-lowlight)` in `src/engine/draw.ts`, where `body` is the rectangle of pixels the
+lowlight)` in `src/engine/render/draw.ts`, where `body` is the rectangle of pixels the
 tile covers. It SHALL draw the raised block over `body`, a bottom-right
 lowlight triangle and a top-left highlight triangle, lowlight first, and then
 `face` over the middle, inset by `raisedBevelWidth(tileSize)` on all four
@@ -461,7 +461,7 @@ reaches SHALL be named, with the reason, in a ledger the test holds exact.
 
 A per-cell overlay a game hands its cell painter beside the tile value, the
 hint overlay and the mistake overlay alike, SHALL reach the render cache
-through the shared overlay sidecar (`engine/overlay-sidecar.ts`) and not
+through the shared overlay sidecar (`engine/render/overlay-sidecar.ts`) and not
 through a per-game re-derivation of the repack, stale and commit steps. An
 overlay folded into the tile value is in the cache key already and needs no
 sidecar.

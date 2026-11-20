@@ -17,7 +17,7 @@
  */
 
 import type { Size } from "../contract/types.ts";
-import { HATCH_OPACITY, hatchBands } from "../hatch.ts";
+import { HATCH_OPACITY, hatchBands } from "../render/hatch.ts";
 import type { DrawOp } from "./recording-drawing.ts";
 
 const escapeText = (s: string): string =>

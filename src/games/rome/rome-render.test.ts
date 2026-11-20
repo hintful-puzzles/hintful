@@ -10,8 +10,9 @@ import { descValue } from "../../engine/contract/desc-error.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend.ts";
-import { pencilIndicatorReach } from "../../engine/pencil-indicator.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { pencilIndicatorReach } from "../../engine/render/pencil-indicator.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import {
@@ -19,7 +20,6 @@ import {
   winFlashAt,
   winFlashRun,
 } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newRomeDesc } from "./generator.ts";
 import { romeGame } from "./index.ts";
 import {

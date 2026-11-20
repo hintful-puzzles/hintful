@@ -24,6 +24,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -31,7 +32,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newClustersDesc } from "./generator.ts";
 import { clustersGame } from "./index.ts";
 import { COL_WRONG, PREFERRED_TILE_SIZE } from "./render.ts";

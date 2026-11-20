@@ -35,6 +35,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -47,7 +48,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { spokesGame } from "./index.ts";
 import {

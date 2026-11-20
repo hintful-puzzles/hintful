@@ -25,9 +25,9 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
-import { strokeScaledPolygon } from "../../engine/draw.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
+import { strokeScaledPolygon } from "../../engine/render/draw.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { type Bbox, enumGridSquares, findBbox } from "./grid.ts";
 import { SQUARE } from "./kinds.ts";
 import { SOLIDS, transformPoly } from "./solids.ts";

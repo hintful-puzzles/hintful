@@ -15,7 +15,7 @@ import {
   edgeHintWords,
   hintedSides,
 } from "./edge-hint.ts";
-import { NOTHING_TO_CLEAR } from "./ring.ts";
+import { NOTHING_TO_CLEAR } from "./render/ring.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 const g = squareEdges(3, 2);

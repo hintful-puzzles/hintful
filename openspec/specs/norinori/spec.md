@@ -188,7 +188,7 @@ A shaded square SHALL be drawn as the collection's shaded piece, in the
 error color while it touches two shaded squares or its region holds more
 than two; a cross SHALL be the collection's ruled-out cross. A region's
 border SHALL be a heavy line of which each square paints the half inside its
-own box (`engine/region-walls.ts`), and a square's surface SHALL be its
+own box (`engine/render/region-walls.ts`), and a square's surface SHALL be its
 region's fill, as Star Battle's are. A hint's ring and outline SHALL sit
 inside the square's surface, never on the border.
 

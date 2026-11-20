@@ -20,6 +20,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -32,7 +33,6 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newGameDesc } from "./generator.ts";
 import {
   GalaxiesDiff,

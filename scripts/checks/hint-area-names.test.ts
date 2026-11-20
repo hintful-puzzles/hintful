@@ -29,6 +29,7 @@ import { writeFileSync } from "node:fs";
 import { expect, it } from "vitest";
 import type { HintStep } from "../../src/engine/contract/game.ts";
 import type { MarkRef, Sentence } from "../../src/engine/contract/hint-words.ts";
+import { NO_FLASH } from "../../src/engine/render/win-wave.ts";
 import { dealt } from "../../src/engine/testing/dealt.ts";
 import { gatePresets, HINT_GAMES } from "../../src/engine/testing/hint-games.ts";
 import {
@@ -36,7 +37,6 @@ import {
   RecordingDrawing,
 } from "../../src/engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../src/engine/testing/render-scenario.ts";
-import { NO_FLASH } from "../../src/engine/win-wave.ts";
 
 const OUT = "metrics/hint-area-names.md";
 

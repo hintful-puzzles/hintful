@@ -6,12 +6,12 @@
 import { describe, expect, it } from "vitest";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { executeMove, fifteenGame } from "./index.ts";
 import { TILE } from "./kinds.ts";
 import { COL_HIGHLIGHT, COL_LOWLIGHT } from "./render.ts";

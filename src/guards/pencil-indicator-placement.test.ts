@@ -25,14 +25,14 @@ import { takesNotes } from "../engine/input/key-labels.ts";
 import {
   type PencilIndicatorBox,
   pencilIndicatorBox,
-} from "../engine/pencil-indicator.ts";
+} from "../engine/render/pencil-indicator.ts";
+import { NO_FLASH } from "../engine/render/win-wave.ts";
 import { type AnyGame, builtGames, enrolledIn } from "../engine/testing/enrollment.ts";
 import { paramsCorpus } from "../engine/testing/params-corpus.ts";
 import type { DrawOp } from "../engine/testing/recording-drawing.ts";
 import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import { inSweep } from "../engine/testing/slow.ts";
-import { NO_FLASH } from "../engine/win-wave.ts";
 
 const noteTaking = enrolledIn((g) => takesNotes(g.state, g.ui));
 

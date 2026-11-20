@@ -18,6 +18,7 @@ import {
   newCursor,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -25,7 +26,6 @@ import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
 } from "../../engine/testing/render-scenario.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { TALLY_SET } from "./hint-marks.ts";
 import { subsetsGame } from "./index.ts";

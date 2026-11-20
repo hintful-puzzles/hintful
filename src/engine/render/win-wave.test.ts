@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { winFlashAt } from "./testing/win-flash.ts";
+import { winFlashAt } from "../testing/win-flash.ts";
 import {
   type Flash,
   loopSteps,

@@ -12,12 +12,12 @@ import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend-prefs.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { type FlipParams, type FlipState, flipGame } from "./index.ts";
 import { border, COL_GRID } from "./render.ts";
 

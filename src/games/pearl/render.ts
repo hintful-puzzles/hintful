@@ -46,7 +46,6 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
-import { drawRectCorners } from "../../engine/draw.ts";
 import {
   drawEdgeHints,
   EDGE,
@@ -55,11 +54,17 @@ import {
   edgeHintWords,
   hintedSides,
 } from "../../engine/edge-hint.ts";
-import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { dragPreview } from "../../engine/line-drawing.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, loopSteps, WIN_LEAD, walkLoop } from "../../engine/win-wave.ts";
+import { drawRectCorners } from "../../engine/render/draw.ts";
+import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  loopSteps,
+  WIN_LEAD,
+  walkLoop,
+} from "../../engine/render/win-wave.ts";
 import { edgeOf, type PearlHint } from "./hint.ts";
 import { SQUARE } from "./kinds.ts";
 import { pearlLines } from "./moves.ts";
@@ -488,7 +493,7 @@ function hintFlags(
   }
   out.set(edgeHintWords(squareEdges(w, h), asked));
   // One contour round a contiguous region, one ring per scattered square
-  // (`engine/hint-mark.ts`).
+  // (`engine/render/hint-mark.ts`).
   const area = marks.of("outline", SQUARE);
   const inArea = new Set(area);
   for (const c of area) {

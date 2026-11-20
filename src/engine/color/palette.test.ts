@@ -19,7 +19,7 @@ import { getTsGame } from "../registry.ts";
 import { colorToOKLCH, isGrayChroma, type OKLCH } from "../testing/oklch.ts";
 import "../../games/index.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
-import { HATCH_OPACITY } from "../hatch.ts";
+import { HATCH_OPACITY } from "../render/hatch.ts";
 import { mkhighlight } from "./color-mkhighlight.ts";
 import { darkValue } from "./color-token.ts";
 import * as colors from "./colors.ts";

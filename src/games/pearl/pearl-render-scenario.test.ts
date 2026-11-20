@@ -17,6 +17,7 @@ import {
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { EDGE } from "../../engine/edge-hint.ts";
 import { Midend } from "../../engine/midend.ts";
+import type { Flash } from "../../engine/render/win-wave.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -26,7 +27,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import type { Flash } from "../../engine/win-wave.ts";
 import type { PearlHint } from "./hint.ts";
 import { pearlGame } from "./index.ts";
 import { SQUARE } from "./kinds.ts";

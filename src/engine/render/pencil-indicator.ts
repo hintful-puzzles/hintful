@@ -9,8 +9,8 @@
  * palette index, `gridColor` the outline/graphite index.
  */
 
-import type { GameDrawing } from "./contract/game.ts";
-import type { Size } from "./contract/types.ts";
+import type { GameDrawing } from "../contract/game.ts";
+import type { Size } from "../contract/types.ts";
 
 /**
  * A game's three palette indices for the indicator. An object rather than three

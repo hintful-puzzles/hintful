@@ -21,7 +21,7 @@ import {
   RETIRED_PHRASE,
   unboundDefect,
 } from "../engine/contract/wording-rules.ts";
-import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../engine/piece.ts";
+import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../engine/render/piece.ts";
 import {
   DEFAULT_FORMS,
   DRAWN,

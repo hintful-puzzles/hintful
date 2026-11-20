@@ -38,6 +38,7 @@ import {
 } from "./border-grid-render.ts";
 import { mark, phrase, stepMarks } from "./contract/hint-words.ts";
 import { newCursor } from "./input/pointer.ts";
+import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./render/win-wave.ts";
 import {
   enrolledIn,
   gamesNotUsing,
@@ -45,7 +46,6 @@ import {
   SCANNED_SOURCE_FILES,
 } from "./testing/enrollment.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
-import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./win-wave.ts";
 
 describe("geometry", () => {
   it("leaves room for the outer walls and a margin either side", () => {

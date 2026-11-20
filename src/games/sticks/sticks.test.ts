@@ -28,6 +28,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/render/win-wave.ts";
 import { SYMM_NONE, SYMM_ROT2 } from "../../engine/symmetric-blacks.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -39,7 +40,6 @@ import {
   winFlashAt,
   winFlashRun,
 } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";

@@ -22,8 +22,8 @@ import type { Ruleset } from "../game-id/ruleset.ts";
 import type { PointerAction } from "../input/hint-gesture.ts";
 import type { TargetVerbs } from "../input/target-verb.ts";
 import type { RandomState } from "../random/index.ts";
-import type { RingClear } from "../ring.ts";
-import type { Flash } from "../win-wave.ts";
+import type { RingClear } from "../render/ring.ts";
+import type { Flash } from "../render/win-wave.ts";
 import type { DifficultyContract } from "./difficulty.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
 import type { MarkRole, Sentence } from "./hint-words.ts";
@@ -411,9 +411,9 @@ export interface GameDrawing<Blitter = unknown> {
   /** A hint's stripes: translucent diagonal bands of the stripes ink
    * (`HINT_STRIPES`, the last entry of every palette, `resolvePalette`) over
    * `rect`, `period` apart and aligned to the canvas so neighboring rects
-   * join (`engine/hatch.ts`). */
+   * join (`engine/render/hatch.ts`). */
   drawHatch(rect: Rect, period: number): void;
-  /** A hint's ring round the element at `box`: the shape `engine/ring.ts`'s
+  /** A hint's ring round the element at `box`: the shape `engine/render/ring.ts`'s
    * `ringShape` fits clear of every rect in `clear`, stroked `thickness` wide
    * in the ring ink (`HINT_RING`, the second-last entry of every palette,
    * `resolvePalette`). It is the only way to draw in that ink: `inside`, if

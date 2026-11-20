@@ -16,11 +16,11 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/contract/hint-words.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";
 import {

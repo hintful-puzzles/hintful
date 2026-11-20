@@ -30,7 +30,7 @@ import {
   TIERS,
 } from "./ladder-runtime.ts";
 import { type Judging, judgeWalked } from "./move-judge.ts";
-import type { PairIndex } from "./piece.ts";
+import type { PairIndex } from "./render/piece.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 import { stepBudget } from "./step-budget.ts";
 

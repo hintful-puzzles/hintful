@@ -21,6 +21,7 @@ import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import type { Flash } from "../../engine/render/win-wave.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import {
   type DrawOp,
@@ -31,7 +32,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import type { Flash } from "../../engine/win-wave.ts";
 import { newUntangleDesc } from "./generator.ts";
 import { deduceUntangleHintPlan } from "./hint.ts";
 import { CROSSING, SPOT, VERTEX } from "./hint-marks.ts";

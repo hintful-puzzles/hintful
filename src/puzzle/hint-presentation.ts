@@ -9,7 +9,7 @@ import type {
   HintSpan,
   NotifyStatusBarChange,
 } from "../engine/contract/types.ts";
-import { MARK_EDGE_PX } from "../engine/ring.ts";
+import { MARK_EDGE_PX } from "../engine/render/ring.ts";
 import { sleep } from "../utils/timing.ts";
 import type { BoardSurface, HintReferenceMarks } from "./engine-surface.ts";
 import { repainted } from "./mark-flash.ts";

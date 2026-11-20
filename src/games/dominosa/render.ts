@@ -24,24 +24,24 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
-import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
+import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
 import {
   type HintMarkStyle,
   HintMarks,
   type MarkBand,
   type MarkCell,
   MarkOutlines,
-} from "../../engine/hint-mark.ts";
+} from "../../engine/render/hint-mark.ts";
 import {
   drawPiecePart,
   JOIN_DOWN,
   JOIN_LEFT,
   JOIN_RIGHT,
   JOIN_UP,
-} from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
+} from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepStep, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { DominosaHint } from "./hint.ts";
 import { SPOT } from "./kinds.ts";
 import {

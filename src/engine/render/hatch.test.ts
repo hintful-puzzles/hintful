@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Rect } from "./contract/types.ts";
+import type { Rect } from "../contract/types.ts";
 import { hatchBands } from "./hatch.ts";
 
 /** Whether `(x, y)` lies in one of the bands laid over `rect`, read off each

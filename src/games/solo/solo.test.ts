@@ -38,7 +38,7 @@ describeAbsentTiers(soloGame, [
 // The tier under those, and the grid beside them.
 describeDealtTiers(soloGame, ["4jdi", "5jda", "5jdu", "3jka", "2x2ka"]);
 
-import { NO_FLASH } from "../../engine/win-wave.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   COL_KILLER,
   COL_XDIAGONALS,

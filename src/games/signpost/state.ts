@@ -13,7 +13,7 @@ import { DESC_REPEATED, type DescParse } from "../../engine/contract/desc-error.
 import { isDigit } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import type { TileCache } from "../../engine/tile-cache.ts";
+import type { TileCache } from "../../engine/render/tile-cache.ts";
 
 // --- directions ------------------------------------------------------
 

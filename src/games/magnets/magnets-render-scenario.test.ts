@@ -17,6 +17,7 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { CURSOR_SELECT, CURSOR_UP } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {
   expectPieceRing,
@@ -31,7 +32,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import type { MagnetsHighlights } from "./hint.ts";
 import { magnetsGame } from "./index.ts";
 import { CLUE, LINE, SQUARE } from "./kinds.ts";

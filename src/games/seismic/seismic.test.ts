@@ -30,6 +30,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
@@ -39,7 +40,6 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/seismic-c-reference.json" with { type: "json" };
 import { maxGeneratedRegionSize, maxRegionSize, newSeismicDesc } from "./generator.ts";
 import { seismicGame } from "./index.ts";

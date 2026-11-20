@@ -36,12 +36,12 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { colorToOKLCH } from "../../engine/testing/oklch.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";
 import { crossingGame } from "./index.ts";

@@ -27,6 +27,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { SYMM_ROT2, SYMM_ROT4 } from "../../engine/symmetric-blacks.ts";
 import {
   describeAbsentTiers,
@@ -39,7 +40,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
 import { newLightupDesc } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";

@@ -20,10 +20,10 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE } from "./hint-marks.ts";

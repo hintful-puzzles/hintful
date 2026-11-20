@@ -28,23 +28,23 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
   CURSOR_RIGHT,
   CURSOR_UP,
 } from "../../engine/input/pointer.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
   pencilIndicatorCanvas,
   pencilIndicatorReach,
   repaintPencilIndicator,
-} from "../../engine/pencil-indicator.ts";
-import { type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepRanks, WIN_LEAD } from "../../engine/win-wave.ts";
+} from "../../engine/render/pencil-indicator.ts";
+import { type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepRanks, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import { REGION } from "./hint-marks.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
 import type { MapMistake, MapMove, MapParams, MapState, MapUi } from "./state.ts";

@@ -4,7 +4,7 @@
  * bars) recomputed each frame from the validators; the win flash, which
  * fills each cell it passes with the flash color, under its piece.
  *
- * The board is pieces on a quiet surface (`engine/piece.ts`): the two states
+ * The board is pieces on a quiet surface (`engine/render/piece.ts`): the two states
  * are the collection's two-state pair, a given sits on a lifted cell, and
  * every mark drawn at a cell's edge lands beside the piece.
  */
@@ -31,12 +31,17 @@ import type {
   Point,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+import { drawThickRectOutline, glyphFont } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawPiece, TWO_SHAPES } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import {

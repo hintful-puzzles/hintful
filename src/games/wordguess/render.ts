@@ -27,10 +27,15 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
-import { textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
+import { textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import { SQUARE } from "./hint-marks.ts";
 import {
   ELSEWHERE,

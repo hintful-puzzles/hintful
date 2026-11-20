@@ -22,8 +22,8 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import { PAIR_NAMES } from "../../engine/piece.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { PAIR_NAMES } from "../../engine/render/piece.ts";
 import {
   type SaysById,
   STATED,

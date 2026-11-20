@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/input/pointer.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   type DrawOp,
   RecordingDrawing,
@@ -12,7 +13,6 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { ballsortGame as G } from "./index.ts";
 import {
   COL_BALL,

@@ -3,7 +3,7 @@
  * which squares a click there flips, the cursor ring, the win flash and the
  * hint's marks.
  *
- * The board is pieces on a quiet surface (`engine/piece.ts`). A square's two
+ * The board is pieces on a quiet surface (`engine/render/piece.ts`). A square's two
  * states are the collection's two-state pair: an unlit square holds the first
  * member and a lit one the second, so the aim reads as one kind of piece.
  */
@@ -19,13 +19,22 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Rect, Size } from "../../engine/contract/types.ts";
-import { drawThickRectOutline } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, type MarkBand, MarkOutlines } from "../../engine/hint-mark.ts";
-import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+import { drawThickRectOutline } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import {
+  drawMarkSides,
+  type MarkBand,
+  MarkOutlines,
+} from "../../engine/render/hint-mark.ts";
+import { drawPiece, TWO_SHAPES } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { FlipMove, FlipParams, FlipState, FlipUi } from "./state.ts";
 
 export interface FlipDrawState {

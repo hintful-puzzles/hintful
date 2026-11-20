@@ -32,15 +32,15 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { textBox } from "../../engine/ring.ts";
+import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { textBox } from "../../engine/render/ring.ts";
 import {
   type Flash,
   sweepRanks,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import { SIGN, TILE } from "./kinds.ts";
 import { OPS, type Op } from "./solver.ts";
 import {

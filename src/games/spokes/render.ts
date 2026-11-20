@@ -46,11 +46,11 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
+import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
+import { type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import type { SpokesHint } from "./hint.ts";
 import { HUB, SPOKE } from "./kinds.ts";
 import {

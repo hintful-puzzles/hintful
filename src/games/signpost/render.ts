@@ -41,11 +41,11 @@ import type {
   Point,
   Rect,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners, drawRectOutline } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { textBox } from "../../engine/ring.ts";
-import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
+import { drawRectCorners, drawRectOutline } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { textBox } from "../../engine/render/ring.ts";
+import { type Flash, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { SignpostHint } from "./hint.ts";
 import { ARROW } from "./hint-marks.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";

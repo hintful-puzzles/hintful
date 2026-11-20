@@ -78,7 +78,7 @@
  * and `export * from`, which is a forwarding address rather than a use: treating
  * it as one marked every module behind `src/engine/index.ts` wholly used. With
  * both fixed the report went from 9 to 373, and a deliberately planted dead
- * export in `engine/draw.ts` — silent under both — was caught. The third was
+ * export in `engine/render/draw.ts` — silent under both — was caught. The third was
  * `export { a } from`, counted as a use of `a` while the barrel's own name went
  * unjudged: fixed, it found 46 names the two engine barrels forwarded to no one,
  * and a planted dead re-export in `describe-runtime.ts` that the old rule passed.
@@ -434,7 +434,7 @@ for (const [file, sf] of sources) {
         // module imports marked every file under `src/engine/` and
         // `src/games/` as wholly used, which turned the check off across most
         // of the tree while it printed a clean ✓. Caught by planting a dead
-        // export in `engine/draw.ts` and watching this stay silent.
+        // export in `engine/render/draw.ts` and watching this stay silent.
         const opts = node.arguments[1];
         const asText =
           opts != null &&

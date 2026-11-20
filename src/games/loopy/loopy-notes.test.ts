@@ -32,10 +32,10 @@ import {
 } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { dlineEnds, dlineIndexFromDot, dlineIndexFromFace } from "./dlines.ts";
 import { newDesc } from "./generator.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
@@ -427,7 +427,7 @@ describe("notes on the board", () => {
     const glyph = on.filter((o) => o.op === "polygon" && o.fill === COL_PENCIL_BODY);
     expect(glyph).toHaveLength(1);
     // The collection's place for it: above and right of every dot, inside the
-    // canvas (`engine/pencil-indicator.ts` `pencilIndicatorBox`).
+    // canvas (`engine/render/pencil-indicator.ts` `pencilIndicatorBox`).
     const dots = on.flatMap((o) =>
       o.op === "circle" && o.fill !== COL_CURSOR ? [o] : [],
     );

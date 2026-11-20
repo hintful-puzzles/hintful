@@ -31,15 +31,15 @@ import type {
   Point,
   Rect,
 } from "../../engine/contract/types.ts";
-import { drawRectOutline, glyphFont } from "../../engine/draw.ts";
-import { textBox } from "../../engine/ring.ts";
+import { drawRectOutline, glyphFont } from "../../engine/render/draw.ts";
+import { textBox } from "../../engine/render/ring.ts";
 import {
   type Flash,
   sweepRanks,
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import { CROSSING, SPOT, VERTEX } from "./hint-marks.ts";
 import {
   CIRCLE_RADIUS,

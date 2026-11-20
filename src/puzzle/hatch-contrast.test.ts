@@ -1,5 +1,5 @@
 /**
- * The hint's line hatch (`engine/hatch.ts`) has to be visible on the board it
+ * The hint's line hatch (`engine/render/hatch.ts`) has to be visible on the board it
  * is drawn over, in both schemes. A flat fill could not be made to work in both
  * (docs/hints-marks.md § "Why a fill cannot work, whatever color it is"), so the
  * bands have a bar of their own, and it is measured on the colors the app
@@ -12,8 +12,8 @@ import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { COL_BACKGROUND } from "../engine/color/roles.ts";
 import type { Narration } from "../engine/contract/hint-words.ts";
 import type { Color } from "../engine/contract/types.ts";
-import { HATCH_OPACITY } from "../engine/hatch.ts";
 import { Midend } from "../engine/index.ts";
+import { HATCH_OPACITY } from "../engine/render/hatch.ts";
 import { beginDealt } from "../engine/testing/dealt.ts";
 import { gamesCallingMethod, REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import { gatePresets, HINT_GAMES } from "../engine/testing/hint-games.ts";

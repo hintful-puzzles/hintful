@@ -28,7 +28,7 @@ import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { SHADED_NAME } from "../../engine/piece.ts";
+import { SHADED_NAME } from "../../engine/render/piece.ts";
 import * as range from "../../generated/games/range/range.compiled.ts";
 
 // --- cells -----------------------------------------------------------------

@@ -17,6 +17,12 @@ import { ALREADY_SOLVED } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import {
+  type Flash,
+  NO_FLASH,
+  ownFlash,
+  sweepStep,
+} from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -26,7 +32,6 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave.ts";
 import { newInertiaDesc } from "./generator.ts";
 import { inertiaGame } from "./index.ts";
 import { COL_AIM, COL_DEAD_PLAYER, COL_GEM, COL_MINE, COL_PLAYER } from "./render.ts";

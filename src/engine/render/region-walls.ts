@@ -8,8 +8,8 @@
  * tile cache repaints one square without touching its neighbors.
  */
 
-import type { GameDrawing } from "./contract/game.ts";
-import type { Rect } from "./contract/types.ts";
+import type { GameDrawing } from "../contract/game.ts";
+import type { Rect } from "../contract/types.ts";
 
 /** Half the width of a region's border, less the grid line it is laid over:
  * what a square paints of it beyond that line. */

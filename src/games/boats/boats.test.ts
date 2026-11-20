@@ -59,8 +59,8 @@ const presetParams = (i: number): BoatsParams => ({
 });
 
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
   type BoatsDrawState,
   COL_COLLISION_TEXT,

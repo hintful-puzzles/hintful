@@ -22,6 +22,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { type RandomState, randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -30,7 +31,6 @@ import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
 import { border, COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";

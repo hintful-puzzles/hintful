@@ -38,9 +38,9 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, WIN_LEAD } from "../../engine/win-wave.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import { wireDistance } from "../../engine/wires.ts";
 import type { NetslideHint } from "./hint.ts";
 import { TILE } from "./kinds.ts";

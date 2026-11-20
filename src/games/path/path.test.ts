@@ -31,13 +31,13 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
+import { type Flash, WIN_NONE } from "../../engine/render/win-wave.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import {
   paintsWith,
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { type Flash, WIN_NONE } from "../../engine/win-wave.ts";
 import { countAnswers } from "./count-answers.ts";
 import { pathGame } from "./index.ts";
 import { COL_WALL, centerOf, layout, newDrawState, rampColors } from "./render.ts";

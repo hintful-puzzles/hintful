@@ -32,18 +32,22 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
-import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import {
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+} from "../../engine/render/hint-mark.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import type { FillingHint } from "./index.ts";
 import {
   DX,

@@ -37,12 +37,17 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawMoveArrow, glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawPiece } from "../../engine/piece.ts";
-import { textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
+import { drawMoveArrow, glyphFont } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawPiece } from "../../engine/render/piece.ts";
+import { textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_NONE,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import { BARREL, GOAL, PUSH } from "./hint-marks.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";

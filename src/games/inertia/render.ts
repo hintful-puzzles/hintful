@@ -32,15 +32,15 @@ import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import type { MarkedDeadEnd } from "../../engine/contract/hint-refusal.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import { ARROW, GEM as GEM_MARK } from "./kinds.ts";
 import {
   BLANK,

@@ -11,13 +11,13 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { RecordingDrawing } from "../testing/recording-drawing.ts";
 import {
   type PencilIndicatorBox,
   type PencilIndicatorCache,
   type PencilIndicatorStyle,
   repaintPencilIndicator,
 } from "./pencil-indicator.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 /** Three distinguishable palette slots; the values only have to differ. */
 const STYLE: PencilIndicatorStyle = { background: 0, body: 1, ink: 2 };

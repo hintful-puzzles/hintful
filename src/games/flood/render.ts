@@ -4,10 +4,15 @@ import { FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
-import { drawRectOutline } from "../../engine/draw.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, WIN_BODY, WIN_LEAD, winSlot } from "../../engine/win-wave.ts";
+import { drawRectOutline } from "../../engine/render/draw.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  WIN_BODY,
+  WIN_LEAD,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import { completed, fill } from "./solver.ts";
 import {
   FILLX,

@@ -19,7 +19,7 @@ import { readDotRuns, writeDotRuns } from "../../engine/game-id/dot-runs.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { PAIR_NAMES, type PairIndex } from "../../engine/piece.ts";
+import { PAIR_NAMES, type PairIndex } from "../../engine/render/piece.ts";
 import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------

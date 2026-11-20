@@ -44,18 +44,23 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
 import {
   type PencilIndicatorCache,
   type PencilIndicatorStyle,
   pencilIndicatorBox,
   pencilIndicatorReach,
   repaintPencilIndicator,
-} from "../../engine/pencil-indicator.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
+} from "../../engine/render/pencil-indicator.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_LEAD,
+  WIN_NONE,
+} from "../../engine/render/win-wave.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
 import {

@@ -27,6 +27,7 @@ import {
   resolvePalette,
 } from "../engine/color/color-mkhighlight.ts";
 import { highlightWash } from "../engine/color/palette.ts";
+import { NO_FLASH } from "../engine/render/win-wave.ts";
 import {
   type BuiltGame,
   builtGames,
@@ -41,7 +42,6 @@ import {
   rgbLabel,
 } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
-import { NO_FLASH } from "../engine/win-wave.ts";
 
 const DRAW_CELL_BACKGROUND = {
   module: "src/engine/note-taking-cell.ts",

@@ -32,16 +32,16 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
   pencilIndicatorReach,
   repaintPencilIndicator,
-} from "../../engine/pencil-indicator.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+} from "../../engine/render/pencil-indicator.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   type Flash,
   NO_FLASH,
@@ -49,7 +49,7 @@ import {
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import { COLOR, ROW, SLOT } from "./hint-marks.ts";
 import {
   FEEDBACK_CORRECTCOLOR,

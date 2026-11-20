@@ -36,10 +36,15 @@ import type {
   Point,
   Rect,
 } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
-import { type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
+import { type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  WIN_LEAD,
+  WIN_NONE,
+} from "../../engine/render/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { PIECE, SPAN } from "./hint-marks.ts";
 import { dragReleaseOps, executeMove } from "./moves.ts";
@@ -160,7 +165,7 @@ const D_L_LIMIT_SHIFT_V = 30;
 // overlay in the diff key, which is the whole of the bug class `hint-overlay.test.ts` guards
 // (docs/rendering.md § "The tile cache and the diff key"). There is no
 // room in the packed word — an island square already reaches bit 29 — and a
-// lane of its own is what `engine/overlay-sidecar.ts` reaches for too.
+// lane of its own is what `engine/render/overlay-sidecar.ts` reaches for too.
 //
 // It mirrors the packed model's island/line duality because it has to: a hint
 // that recolors an island's rim has to intrude into the four neighbor tiles
@@ -951,7 +956,7 @@ function buildMistakeMask(
  * layout the packed descriptor uses, and by the same two-pass shape: every
  * cell's own roles first, then the intrusions into its neighbors.
  *
- * **Nothing here comes from `engine/hint-mark.ts`, and that is this game's
+ * **Nothing here comes from `engine/render/hint-mark.ts`, and that is this game's
  * answer to it.** A `MarkBand` is a band on a cell's border box, and neither
  * thing a Bridges deduction points at is one: an island is a circle wider than
  * its own tile, and a bridge is a *span* between two of them, which is nobody's

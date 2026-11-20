@@ -27,6 +27,7 @@ import {
   LEFT_DRAG,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -34,7 +35,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newFillingDesc } from "./generator.ts";
 import { fillingGame } from "./index.ts";
 import { COL_CELL, COL_CORRECT, COL_ERROR_WASH, COL_GIVEN, COL_INK } from "./render.ts";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Rect } from "./contract/types.ts";
+import type { Rect } from "../contract/types.ts";
 import { glyphFont } from "./draw.ts";
 import { RING_MIN_ROUNDNESS, type RingClear, ringShape, textBox } from "./ring.ts";
 

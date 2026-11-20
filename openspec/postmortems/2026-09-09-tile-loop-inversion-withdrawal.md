@@ -183,7 +183,7 @@ Walked item by item, which is the lesson row 4 paid for.
 | the tile loop | — | 0 |
 | the cache | — (each game's own typed array) | 53 of 57 hold one |
 | the miss test | — | ~41 |
-| **overlay sidecars** | **`engine/overlay-sidecar.ts`** — repack/stale/commit, three pack entry points | **19 games** |
+| **overlay sidecars** | **`engine/render/overlay-sidecar.ts`** — repack/stale/commit, three pack entry points | **19 games** |
 | the commit | partly, via `OverlaySidecar.commit` | 19 |
 | first-frame background fill | — **deliberately**: "the engine paints no pixels of its own" is doctrine, and `unify-board-background` (2026-09-02) settled the *color* rather than the ceremony | 56 of 57 carry a `started` flag |
 | palette derivation | partly — the three-layer palette with named meanings (`color/palette.ts`, `palette-games.ts`, `color-token.ts`); not a type-level derivation | all 57 |

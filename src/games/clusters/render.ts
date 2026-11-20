@@ -1,7 +1,7 @@
 /**
  * Clusters rendering. A per-tile diffed loop: each cell is a `COL_GRID` rect
  * under a slightly smaller surface, lifted under a given, with the cell's
- * color as a piece of the collection's two-state pair (`engine/piece.ts`), a
+ * color as a piece of the collection's two-state pair (`engine/render/piece.ts`), a
  * dot on a given's piece, a red four-sided outline
  * for a rule violation, and a green frame under the keyboard cursor. Rule
  * violations are recomputed every frame from the current grid and shown live
@@ -30,13 +30,22 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
-import { drawThickRectOutline } from "../../engine/draw.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { drawPiece, TWO_SHAPES } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+import { drawThickRectOutline } from "../../engine/render/draw.ts";
+import {
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+} from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
+import { drawPiece, TWO_SHAPES } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { ClustersMistake } from "./index.ts";
 import { findErrors } from "./solver.ts";
 import {

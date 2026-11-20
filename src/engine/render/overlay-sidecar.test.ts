@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { valueBit } from "./board/candidate-bits.ts";
+import { valueBit } from "../board/candidate-bits.ts";
 import {
   CELL,
   mark,
@@ -8,8 +8,8 @@ import {
   phrase,
   type StepMarks,
   stepMarks,
-} from "./contract/hint-words.ts";
-import type { Point } from "./contract/types.ts";
+} from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
 import {
   HINT_AREA,
   HINT_TARGET,

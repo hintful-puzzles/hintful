@@ -9,10 +9,10 @@ import {
 import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { type PegsMove, type PegsParams, pegsGame } from "./index.ts";
 import { type Jump, PegsBoard } from "./solver.ts";

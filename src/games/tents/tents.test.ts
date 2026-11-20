@@ -38,8 +38,8 @@ import { tentsGame } from "./index.ts";
 describeAbsentTiers(tentsGame, ["4x4dt"]);
 
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import {
   COL_TENT,
   COL_TREELEAF,

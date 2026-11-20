@@ -39,7 +39,7 @@ describeAbsentTiers(tracksGame, ["4x4dt", "4x4dh"]);
 describeDealtTiers(tracksGame, ["4x5dt", "4x5dh"], { deals: 8 });
 
 import { COL_ERROR } from "../../engine/color/roles.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { executeMove, uiCanFlipSquare } from "./moves.ts";
 import {
   centeredCoord,

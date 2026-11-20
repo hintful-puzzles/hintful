@@ -307,7 +307,7 @@ positions").
 - **The recorder refuses what the canvas refuses**: a color the palette lacks
   throws, as it would in the app, and a call the canvas paints nothing for
   (a zero-size rect, a zero-thickness line) is not recorded. Both read
-  [`drawing-rules.ts`](../src/engine/drawing-rules.ts). A fixture with no
+  [`drawing-rules.ts`](../src/engine/render/drawing-rules.ts). A fixture with no
   game gives the recorder a palette as long as its indices reach.
 - **The gate writes no snapshot and keeps no orphan.** It runs vitest with
   `--update=none`, as CI does: run a new snapshot's file yourself before

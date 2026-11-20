@@ -21,23 +21,23 @@ import {
 } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color } from "../../engine/contract/types.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
 import {
   drawRectOutline,
   type GameDrawing,
   type HintStep,
 } from "../../engine/index.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import type { GalaxiesHint } from "./hint.ts";
 import { DOT, WALL } from "./hint-marks.ts";
 import type { GalaxiesMistake, GalaxiesMove, GalaxiesUi } from "./index.ts";

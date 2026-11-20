@@ -13,6 +13,7 @@ import {
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/contract/hint-words.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
+import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/render/win-wave.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import {
   type DrawOp,
@@ -25,7 +26,6 @@ import {
   winFlashAt,
   winFlashRun,
 } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { type Cell, ONE, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import { unrulyGame } from "./index.ts";

@@ -19,7 +19,6 @@ import { CELL, mark, phrase, stepMarks, unshaped } from "./contract/hint-words.t
 import { RetryLimitExceeded } from "./contract/retry-limit.ts";
 import { SOLUTION_UNKNOWN } from "./contract/solve-failure.ts";
 import type { ChangeNotification, Color, Point } from "./contract/types.ts";
-import { easeOut } from "./easing.ts";
 import {
   type FakeDrawState,
   type FakeMove,
@@ -53,11 +52,12 @@ import {
 } from "./input/target-verb.ts";
 import { Midend } from "./midend.ts";
 import { SHOW_TIMER_PREF } from "./midend-prefs.ts";
+import { easeOut } from "./render/easing.ts";
+import { WIN_FLASH_S, WIN_NONE } from "./render/win-wave.ts";
 import { decodeSave, encodeSave } from "./save.ts";
 import { driveMidend } from "./testing/drive-midend.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
-import { WIN_FLASH_S, WIN_NONE } from "./win-wave.ts";
 
 function recordingDrawing() {
   const dr = new RecordingDrawing(fakeGame.colors(DEFAULT_BACKGROUND));

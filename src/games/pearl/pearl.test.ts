@@ -16,7 +16,7 @@ import {
 import { describeParams } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
 import { executeMove } from "./moves.ts";

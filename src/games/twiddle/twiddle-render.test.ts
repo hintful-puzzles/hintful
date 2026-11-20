@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { COL_CURSOR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
+import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/render/win-wave.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import {
@@ -13,7 +14,6 @@ import {
   winFlashAt,
   winFlashRun,
 } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/win-wave.ts";
 import { executeMove, twiddleGame } from "./index.ts";
 import {
   animLength,

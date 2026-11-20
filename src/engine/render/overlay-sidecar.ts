@@ -20,9 +20,9 @@
  *   - `ds.<overlay>.packed[i]` handed to the cell painter.
  */
 
-import type { GameDrawing } from "./contract/game.ts";
-import { CELL, NOTE, type Note, type StepMarks } from "./contract/hint-words.ts";
-import type { Rect } from "./contract/types.ts";
+import type { GameDrawing } from "../contract/game.ts";
+import { CELL, NOTE, type Note, type StepMarks } from "../contract/hint-words.ts";
+import type { Rect } from "../contract/types.ts";
 import { hatchPeriod } from "./hatch.ts";
 import { outlineSides } from "./hint-mark.ts";
 

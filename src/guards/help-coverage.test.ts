@@ -56,8 +56,8 @@ import {
   offersStickyPencil,
   STICKY_PENCIL_PLACEHOLDER,
 } from "../engine/pencil-prefs.ts";
-import { expandPair, PAIR_NAMES } from "../engine/piece.ts";
 import { getTsGame } from "../engine/registry.ts";
+import { expandPair, PAIR_NAMES } from "../engine/render/piece.ts";
 import { RULES_OUT_PLACEHOLDER } from "../engine/rules-out.ts";
 import {
   OPTIONAL_GAME_MEMBERS,

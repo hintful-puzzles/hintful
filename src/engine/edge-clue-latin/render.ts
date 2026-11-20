@@ -35,9 +35,6 @@ import {
 import type { GameDrawing, HintStep } from "../contract/game.ts";
 import { stepMarks } from "../contract/hint-words.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../contract/types.ts";
-import { drawStrike, glyphFont } from "../draw.ts";
-import { hatchPeriod } from "../hatch.ts";
-import { HintMarks, type MarkBand, type MarkCell, ringTextBox } from "../hint-mark.ts";
 import {
   type CellHighlight,
   cellHighlight,
@@ -45,16 +42,24 @@ import {
   noteGrid,
   winHighlight,
 } from "../note-taking-cell.ts";
-import { HINT_AREA, HINT_TARGET, OverlaySidecar } from "../overlay-sidecar.ts";
+import { drawStrike, glyphFont } from "../render/draw.ts";
+import { hatchPeriod } from "../render/hatch.ts";
+import {
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+  ringTextBox,
+} from "../render/hint-mark.ts";
+import { HINT_AREA, HINT_TARGET, OverlaySidecar } from "../render/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
   pencilIndicatorReach,
   repaintPencilIndicator,
-} from "../pencil-indicator.ts";
-import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../ring.ts";
-import { TileCache } from "../tile-cache.ts";
-import { type Flash, sweepStep } from "../win-wave.ts";
+} from "../render/pencil-indicator.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../render/ring.ts";
+import { TileCache } from "../render/tile-cache.ts";
+import { type Flash, sweepStep } from "../render/win-wave.ts";
 import {
   displayChar,
   type EdgeClueMove,

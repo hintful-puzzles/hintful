@@ -17,6 +17,7 @@ import {
   COL_HINT_OUTLINE,
 } from "../../engine/color/roles.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import {
   expectRing,
@@ -31,7 +32,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import type { SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";
 import {

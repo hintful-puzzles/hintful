@@ -1,6 +1,6 @@
 /**
  * Pattern rendering, after `game_redraw` / `grid_square` / `draw_numbers` in
- * pattern.c. The board is pieces on a quiet surface (`engine/piece.ts`): a
+ * pattern.c. The board is pieces on a quiet surface (`engine/render/piece.ts`): a
  * full cell holds the shaded piece, a cell known to be empty is the clear
  * square, and an undecided cell is plain surface. A per-cell cache
  * keyed on the displayed value (drag-adjusted) plus overlay bits,
@@ -28,12 +28,17 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
-import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+import { drawThickRectOutline, glyphFont } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
 import type { PatternHint } from "./index.ts";
 import { lineHasError } from "./solver.ts";

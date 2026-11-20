@@ -21,12 +21,17 @@ import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import {
+  type Flash,
+  NO_FLASH,
+  ownFlash,
+  sweepStep,
+} from "../../engine/render/win-wave.ts";
 import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, ownFlash, sweepStep } from "../../engine/win-wave.ts";
 import { firstOpen, minegen } from "./generator.ts";
 import { minesGame } from "./index.ts";
 import { borderFor, COL_COVERED, COL_OPEN, FLASH_FRAME } from "./render.ts";

@@ -20,17 +20,17 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
-import { drawRecessedBorder, glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
+import { drawRecessedBorder, glyphFont } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
 import {
   MARK_EDGE_PX,
   type RingClear,
   type RingShape,
   ringShape,
   textBox,
-} from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
+} from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { BLOCK, LIFTED, TILE } from "./kinds.ts";
 import type { TwiddleMove, TwiddleState, TwiddleUi } from "./state.ts";
 

@@ -66,8 +66,8 @@ describe("multiplication alone, where a tier is found seldom", () => {
   describeDealtTiers(keenGame, SELDOM, { seldom: true });
 });
 
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import {
   ladder,
   tiers as ladderTiers,

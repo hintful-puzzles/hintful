@@ -19,6 +19,7 @@ import {
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   type DrawOp,
   RecordingDrawing,
@@ -28,7 +29,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newUndeadDesc } from "./generator.ts";
 import { undeadGame } from "./index.ts";
 import { border, countBlockAt, newDrawState, redraw } from "./render.ts";

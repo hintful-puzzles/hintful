@@ -16,6 +16,7 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
@@ -26,7 +27,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { itDeep } from "../../engine/testing/slow.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { STATED } from "../../generated/games/loopy/loopy.compiled.ts";
 import { dlineEnds } from "./dlines.ts";
 import {

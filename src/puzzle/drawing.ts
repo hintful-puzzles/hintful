@@ -11,9 +11,9 @@ import {
   hasFill,
   paintsNothing,
   paletteInk,
-} from "../engine/drawing-rules.ts";
-import { HATCH_OPACITY, hatchBands } from "../engine/hatch.ts";
-import { type RingClear, ringShape } from "../engine/ring.ts";
+} from "../engine/render/drawing-rules.ts";
+import { HATCH_OPACITY, hatchBands } from "../engine/render/hatch.ts";
+import { type RingClear, ringShape } from "../engine/render/ring.ts";
 
 const defaultFontInfo: FontInfo = {
   fontFamily: "sans-serif",

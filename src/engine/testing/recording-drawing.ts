@@ -35,8 +35,8 @@ import {
   type InkRole,
   paintsNothing,
   paletteInk,
-} from "../drawing-rules.ts";
-import { type RingClear, ringShape } from "../ring.ts";
+} from "../render/drawing-rules.ts";
+import { type RingClear, ringShape } from "../render/ring.ts";
 
 /** The `fillRgb` of a polygon or circle drawn with no fill. */
 export const NO_FILL = "none";

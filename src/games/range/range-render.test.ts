@@ -13,11 +13,11 @@ import {
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, mark, phrase, so, stepMarks } from "../../engine/contract/hint-words.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import type { RangeHint } from "./hint.ts";
 import { rangeGame } from "./index.ts";
 import { CLUE } from "./kinds.ts";

@@ -35,6 +35,7 @@ import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
 import { DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -44,7 +45,6 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { unequalGame } from "./index.ts";
 import { decodeParams, encodeParams, SIGNS } from "./state.ts";
 

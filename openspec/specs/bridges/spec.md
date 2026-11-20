@@ -497,7 +497,7 @@ named island left short of its clue.
 A step's marks SHALL be drawn as the game's own shapes recolored, because
 neither element a Bridges deduction points at is a cell: an island is a circle
 wider than its own tile, and a bridge is a span between two islands, which is
-no cell's border. No mark SHALL come from `engine/hint-mark.ts`, whose every
+no cell's border. No mark SHALL come from `engine/render/hint-mark.ts`, whose every
 mark is a band on a cell's border box.
 
 #### Scenario: Raising a span leaves the bridges already there in board ink

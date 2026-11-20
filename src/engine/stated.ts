@@ -35,7 +35,12 @@ import {
   whole,
 } from "./contract/hint-words.ts";
 import type { Point } from "./contract/types.ts";
-import { PAIR_NAMES, type PairIndex, SHADED_NAME, UNSHADED_NAME } from "./piece.ts";
+import {
+  PAIR_NAMES,
+  type PairIndex,
+  SHADED_NAME,
+  UNSHADED_NAME,
+} from "./render/piece.ts";
 import {
   DEFAULT_FORMS,
   DRAWN,

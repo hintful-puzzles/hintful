@@ -40,7 +40,7 @@ The skeleton's [`render.ts`](../src/skeleton/grid/render.ts) does steps 1 to
    the tile when `ds.tiles.changed(i, key)` says so: it compares the key and
    every registered overlay, and records both. See § "The win flash".
 7. In `drawTile`, paint inside the tile's own box, with the shapes of
-   `engine/draw.ts` and `engine/piece.ts`, and end with `drawUpdate`. See
+   `engine/render/draw.ts` and `engine/render/piece.ts`, and end with `drawUpdate`. See
    § "A warm frame must match a fresh one" and § "What a board looks like:
    pieces on a quiet surface".
 8. Paint the hint marks after the tile loop, outside any clip.
@@ -125,7 +125,7 @@ full coverage.
 The draw state holds one packed word per tile of what the canvas shows. Each
 frame works out what the tile should show, repaints only on a mismatch, and
 records what it painted. The skeleton's `redraw` is the shape, and
-[`engine/tile-cache.ts`](../src/engine/tile-cache.ts) is the cache: a game
+[`engine/render/tile-cache.ts`](../src/engine/render/tile-cache.ts) is the cache: a game
 never holds a bare cache array or a `started` flag.
 
 - **The engine owns the per-tile test, and the walk is the game's.** A ring
@@ -167,7 +167,7 @@ a cell, and Check & Save or a hint runs a frame after the move that drew the
 cell, so an overlay compared nowhere never shows.
 
 **Never hand-write the two-array comparison.** `OverlaySidecar`
-([`engine/overlay-sidecar.ts`](../src/engine/overlay-sidecar.ts)) owns
+([`engine/render/overlay-sidecar.ts`](../src/engine/render/overlay-sidecar.ts)) owns
 repack, stale and commit, one instance per overlay on the draw state, and
 each is registered on the `TileCache` when the draw state is built, which
 then tests and commits it with the key. Pack a hint step's marks with
@@ -195,7 +195,7 @@ silent.
 - **The pencil-mode indicator is the shared case.** The engine picks its
   position, and a game with the mode keeps `ds.pencilModeShown` beside its
   tile cache and repaints through `repaintPencilIndicator`
-  ([`engine/pencil-indicator.ts`](../src/engine/pencil-indicator.ts)).
+  ([`engine/render/pencil-indicator.ts`](../src/engine/render/pencil-indicator.ts)).
 - **When a cue stops being drawn as something the key already reads, give it
   its own term in the key.** Turning a cue from a color class into a box,
   passed to the painter as a separate predicate, drops it from a key that was
@@ -303,7 +303,7 @@ either.
 
 - **By piece**, the tile's key says which piece of the mark it draws: a
   side, a direction, half a bar, in the game's own geometry. Region outlines
-  are the shared case (`MarkOutlines.packed`, `engine/hint-mark.ts`).
+  are the shared case (`MarkOutlines.packed`, `engine/render/hint-mark.ts`).
   Exemplars: Bridges' spans, Pearl's edges, Net's sides, Bricks' rule flags.
 - **By identity**, the tile's key names the marks crossing it, and the tile
   draws each one whole while clipped to its box. It suits a mark whose shape
@@ -527,7 +527,7 @@ corner triangle in the region's first cell. Exemplar: `drawBands` in
 ### A shape another game also draws
 
 **A single shape any other game also draws belongs in
-[`engine/draw.ts`](../src/engine/draw.ts)**: a recessed frame, a raised tile
+[`engine/render/draw.ts`](../src/engine/render/draw.ts)**: a recessed frame, a raised tile
 and its bevel width, a rect outline, corner brackets, a move arrow. A
 primitive takes a rect and colors and draws; it needs no callback and no
 shared cache key.
@@ -630,7 +630,7 @@ rebuilds the draw state for a new tile size, and lays the ground under a
 fresh one").
 
 **`animTime` arrives eased, so interpolate linearly in it.** The midend
-passes it through `easeOut` (`engine/easing.ts`): a move starts fast and
+passes it through `easeOut` (`engine/render/easing.ts`): a move starts fast and
 settles, in every game alike. Do not ease again in `redraw`, and do not
 read a constant speed from `animTime`; a move of several stages (Cube's
 rolls, Ball Sort's stream of balls) plays them in order, front-loaded.
@@ -647,7 +647,7 @@ it is.
 **The win flash is the engine's, and a game only says where its elements
 are** (`ts-engine` § "The win flash is one traveling highlight in every
 game"). Its timing, its length and what reduced motion shows are
-[`engine/win-wave.ts`](../src/engine/win-wave.ts)'s and the midend's, and a
+[`engine/render/win-wave.ts`](../src/engine/render/win-wave.ts)'s and the midend's, and a
 game has no hook for any of them.
 
 In the loop where `redraw` builds an element's flags, ask
@@ -753,7 +753,7 @@ is the baseline (its default is on `Game.preferredTileSize`).
 - **A game with notes mode keeps its border no narrower than
   `pencilIndicatorReach`**, or grows its canvas with `pencilIndicatorCanvas`
   where its own corner is taken
-  ([`engine/pencil-indicator.ts`](../src/engine/pencil-indicator.ts)).
+  ([`engine/render/pencil-indicator.ts`](../src/engine/render/pencil-indicator.ts)).
 - **A border constant that looks surprisingly small is upstream's
   `NARROW_BORDERS` variant.** Leave it.
 
@@ -814,7 +814,7 @@ its own, from `FIRST_GAME_SLOT` on. A test names a slot, never its number.
   such set, its first members first: Flood's tiles and Guess's pegs, whose
   color is all that tells them apart, and Path's pairs, whose numbers say
   which is which. Only a game with that second carrier may repeat it past
-  its ten, spread by `spreadColors` (`engine/spread-colors.ts`). No member
+  its ten, spread by `spreadColors` (`engine/render/spread-colors.ts`). No member
   is near the error, the cursor, the drag or the hint's first ring and
   outline, so a piece never hides a mark. A game drawing pale members as
   lines on the light cell edges them in `BLACK`, and one that writes a
@@ -880,7 +880,7 @@ names the one it applies.
     the app: a pencil note and a player's entry read weaker on a dark fill
     than on a plain cell, and `REGION_DONE` is close to the light violet.
 - **A state is a piece, drawn with `drawPiece`**
-  ([`engine/piece.ts`](../src/engine/piece.ts); "A piece is drawn inset on
+  ([`engine/render/piece.ts`](../src/engine/render/piece.ts); "A piece is drawn inset on
   its cell"). State is never a step of gray alone.
 - **A piece over two cells or more is one tile, drawn with `drawPiecePart`**:
   a domino (Dominosa, Norinori's shaded pairs) or a boat. Each cell draws its
@@ -1085,7 +1085,7 @@ Each guard reads every game without being told about it.
 - [`bevels.test.ts`](../src/puzzle/bevels.test.ts) fails when a bevel's
   lighter color is not the lighter one in both schemes, which is a forgotten
   `darkSwaps` pair, and when a game draws the shared bevel shape itself. It
-  finds bevels by the shape `engine/draw.ts`'s bevel primitives emit, so
+  finds bevels by the shape `engine/render/draw.ts`'s bevel primitives emit, so
   draw through them where the shape allows.
 - `colors.test.ts` and `palette.test.ts` hold the palette's own sets and
   meanings; a game meets them only by changing `colors.ts` or `palette.ts`.

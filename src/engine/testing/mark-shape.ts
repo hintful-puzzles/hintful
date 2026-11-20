@@ -13,7 +13,7 @@
  */
 import { expect } from "vitest";
 import type { DrawTextOptions } from "../contract/types.ts";
-import { RING_MIN_ROUNDNESS, ringSide, textBox } from "../ring.ts";
+import { RING_MIN_ROUNDNESS, ringSide, textBox } from "../render/ring.ts";
 import { type DrawOp, opsOfKind, paintsWith } from "./recording-drawing.ts";
 
 interface RectOp {

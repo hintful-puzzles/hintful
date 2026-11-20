@@ -20,6 +20,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -29,7 +30,6 @@ import {
   type DrawOp,
   RecordingDrawing,
 } from "../../engine/testing/recording-drawing.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newAscentDesc } from "./generator.ts";
 import { ascentGame } from "./index.ts";
 import { COL_PATH, COL_TARGET } from "./render.ts";

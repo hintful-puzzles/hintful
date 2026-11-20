@@ -55,20 +55,6 @@ import type {
   Size,
 } from "../../engine/contract/types.ts";
 import {
-  drawRectCorners,
-  drawRectOutline,
-  drawStrike,
-  drawThickRectOutline,
-} from "../../engine/draw.ts";
-import {
-  drawMarkSides,
-  HintMarks,
-  MARK_ALL,
-  type MarkBand,
-  type MarkCell,
-  ringTextBox,
-} from "../../engine/hint-mark.ts";
-import {
   type CellHighlight,
   cellHighlight,
   drawCellBackground,
@@ -79,19 +65,33 @@ import {
   winHighlight,
 } from "../../engine/note-taking-cell.ts";
 import {
+  drawRectCorners,
+  drawRectOutline,
+  drawStrike,
+  drawThickRectOutline,
+} from "../../engine/render/draw.ts";
+import {
+  drawMarkSides,
+  HintMarks,
+  MARK_ALL,
+  type MarkBand,
+  type MarkCell,
+  ringTextBox,
+} from "../../engine/render/hint-mark.ts";
+import {
   HINT_AREA,
   HINT_TARGET,
   OverlaySidecar,
-} from "../../engine/overlay-sidecar.ts";
+} from "../../engine/render/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
   pencilIndicatorReach,
   repaintPencilIndicator,
-} from "../../engine/pencil-indicator.ts";
-import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+} from "../../engine/render/pencil-indicator.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { LISTED } from "./hint-marks.ts";
 import type { CrossingMistake } from "./solver.ts";
 import {

@@ -19,7 +19,7 @@ import { changedCells, trackTargets } from "./contract/hint-track.ts";
 import type { MarkKind, MarkRole, StepMarks } from "./contract/hint-words.ts";
 import type { Rect } from "./contract/types.ts";
 import { CROSS, type EdgeChange, type EdgeMark } from "./line-drawing.ts";
-import type { RingClear } from "./ring.ts";
+import type { RingClear } from "./render/ring.ts";
 
 /** An edge of the board, by its `square-edges.ts` number, so one edge named
  * from the square on either side of it is one mark. */

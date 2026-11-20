@@ -1,7 +1,7 @@
 /**
  * Ball Sort's renderer: tubes standing in rows on the board's quiet surface,
  * each ball a disc of its color with a symbol of its own on it, so no two
- * colors are told apart by hue alone (`engine/piece.ts`).
+ * colors are told apart by hue alone (`engine/render/piece.ts`).
  *
  * The tubes reflow into as many rows as keep the board no wider than tall.
  * Each tube repaints alone when its key changes; a frame with something in
@@ -23,16 +23,16 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawPiece } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawPiece } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import {
   type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import { landingSlots, movingBalls } from "./hint.ts";
 import { POUR, RUN, TUBE } from "./kinds.ts";
 import {

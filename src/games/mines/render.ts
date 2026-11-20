@@ -41,12 +41,16 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, DrawTextOptions, Point } from "../../engine/contract/types.ts";
-import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
+import {
+  drawRectCorners,
+  drawRectOutline,
+  glyphFont,
+} from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import type { MinesHint } from "./hint.ts";
 import {
   around,

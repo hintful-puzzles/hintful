@@ -1,6 +1,6 @@
 /**
  * Range rendering: a per-cell diffed loop over pieces on a quiet surface
- * (`engine/piece.ts`). A cell is a grid-outlined surface, lifted under a clue
+ * (`engine/render/piece.ts`). A cell is a grid-outlined surface, lifted under a clue
  * and filled in the flash color where the win flash is on it; a shaded
  * cell holds the shaded piece, a cell marked clear holds the ruled-out cross,
  * and a clue holds its number. The keyboard cursor is corner brackets, out at
@@ -38,13 +38,22 @@ import {
   drawRectOutline,
   drawThickRectOutline,
   glyphFont,
-} from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { drawPiece, drawRuledOutCross, SHADED_SHAPE } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+} from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import {
+  drawPiece,
+  drawRuledOutCross,
+  SHADED_SHAPE,
+} from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { RangeHint } from "./hint.ts";
 import { CLUE } from "./kinds.ts";
 import { findErrors } from "./solver.ts";

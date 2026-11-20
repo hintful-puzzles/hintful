@@ -50,17 +50,21 @@ import type {
   Point,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
+import {
+  drawRectCorners,
+  drawThickRectOutline,
+  glyphFont,
+} from "../../engine/render/draw.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
   OverlaySidecar,
-} from "../../engine/overlay-sidecar.ts";
-import { drawRuledOutCross } from "../../engine/piece.ts";
-import { textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
+} from "../../engine/render/overlay-sidecar.ts";
+import { drawRuledOutCross } from "../../engine/render/piece.ts";
+import { textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
 import {

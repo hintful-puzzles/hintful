@@ -66,7 +66,7 @@ game has a `hint()`.
 - **A piece or a state is named by the rules or its shape, never its color**,
   which is the theme's. A page about pieces of the two-state pair writes
   `{{pair:0}}` and `{{pair:1}}`, and the build says each piece's shape word
-  (`PAIR_NAMES` in `src/engine/piece.ts`): "a {{pair:0}} or a {{pair:1}}". A
+  (`PAIR_NAMES` in `src/engine/render/piece.ts`): "a {{pair:0}} or a {{pair:1}}". A
   shading game's page says "shaded" and "clear".
 - **A sentence several pages would each write is the engine's.** The Mark-all
   press is `{{mark-all}}`, sticky pencil mode is `{{sticky-pencil}}` and a

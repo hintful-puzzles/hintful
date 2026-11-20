@@ -350,7 +350,7 @@ export const WHITE: Color = token([1, 1, 1], [1, 1, 1]);
  * Unruly's two kinds of square. A game takes the pair from here and names no
  * hue of its own, so a different pair is this line and {@link TWO_WASH}. No
  * sentence says these colors: a piece is named by its shape (`PAIR_NAMES`,
- * `engine/piece.ts`), so the pair can change and no word with it.
+ * `engine/render/piece.ts`), so the pair can change and no word with it.
  *
  * Purple and yellow because a board of pieces still has marks drawn on it:
  * red is an error, blue the hint's ring, teal its evidence, green and pink
@@ -358,7 +358,7 @@ export const WHITE: Color = token([1, 1, 1], [1, 1, 1]);
  * game with the pair gives a premise no shared role names (Unruly's reference
  * ring). A piece in any of those swallows that mark. Of what is left, this
  * pair stands furthest apart in lightness, which is what a color-blind player
- * has when hue fails. The pieces also differ in shape (`engine/piece.ts`), so
+ * has when hue fails. The pieces also differ in shape (`engine/render/piece.ts`), so
  * the pair is not the only carrier.
  */
 export const TWO: readonly [Color, Color] = [PURPLE, YELLOW];

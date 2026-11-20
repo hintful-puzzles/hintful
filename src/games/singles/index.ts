@@ -35,8 +35,8 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/render/piece.ts";
 import {
   SAYS_KINDS,
   type SaysById,

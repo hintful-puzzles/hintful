@@ -14,9 +14,9 @@ import {
 import { MULTIPLE_SOLUTIONS } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { answerCount } from "./answer.ts";
 import { blackboxGame as game } from "./index.ts";
 import {

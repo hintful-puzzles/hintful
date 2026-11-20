@@ -24,7 +24,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { describedSpace } from "../../engine/describe-runtime.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import type { WinTone } from "../../engine/win-wave.ts";
+import type { WinTone } from "../../engine/render/win-wave.ts";
 import * as untangle from "../../generated/games/untangle/untangle.compiled.ts";
 
 /**

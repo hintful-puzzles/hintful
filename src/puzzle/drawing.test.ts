@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameDrawing } from "../engine/contract/game.ts";
 import type { Color } from "../engine/contract/types.ts";
-import { NOTHING_TO_CLEAR } from "../engine/ring.ts";
+import { NOTHING_TO_CLEAR } from "../engine/render/ring.ts";
 import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { Drawing } from "./drawing.ts";
 

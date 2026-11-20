@@ -308,7 +308,7 @@ export function lineNoColor(background: Color): Color {
 
 /**
  * **A cell that holds a piece, or will**: the quiet surface of a board whose
- * content is pieces (`engine/piece.ts`). A small step off the board, so the
+ * content is pieces (`engine/render/piece.ts`). A small step off the board, so the
  * grid reads as a field of cells and the color on the board is all content.
  *
  * Darker than the board in both schemes. The dark value is authored because

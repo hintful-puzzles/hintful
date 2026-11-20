@@ -12,7 +12,7 @@
  */
 import { describe, expect, it, vi } from "vitest";
 import "../games/index.ts";
-import * as draw from "../engine/draw.ts";
+import * as draw from "../engine/render/draw.ts";
 import type { DrawOp } from "../engine/testing/recording-drawing.ts";
 import { colorToOKLCH } from "../utils/color.ts";
 import { puzzleIds } from "./catalog.ts";

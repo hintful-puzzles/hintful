@@ -31,9 +31,9 @@ import { type SinglesMistake, singlesGame } from "./index.ts";
 // Under 4 squares both ways, at Normal.
 describeAbsentTiers(singlesGame, ["2x2dk", "2x3dk", "3x2dk", "3x3dk"]);
 
+import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { COL_GRID } from "./render.ts";
 import { solveSpecific } from "./solver.ts";
 import {

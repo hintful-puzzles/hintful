@@ -43,24 +43,29 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
-import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import {
   CROSS,
   dragPreview,
   type EdgeMistake,
   LINE,
 } from "../../engine/line-drawing.ts";
+import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
 import {
   drawPathArrow,
   drawPathStart,
   pathStrokeThickness,
-} from "../../engine/path-arrow.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+} from "../../engine/render/path-arrow.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { WordtrailHighlights } from "./hint.ts";
 import { withChanges, wordtrailLines } from "./moves.ts";
 import { fittingTrails } from "./solver.ts";

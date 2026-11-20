@@ -17,19 +17,19 @@
  * in `docs/hints-marks.md` § "Shade vs ring".
  */
 import { describe, expect, it } from "vitest";
-import { HINT_OUTLINE } from "./color/palette.ts";
-import type { Color, Rect } from "./contract/types.ts";
-import { type HintMarkStyle, HintMarks, type MarkCell } from "./hint-mark.ts";
-import { NOTHING_TO_CLEAR, RING_MIN_ROUNDNESS } from "./ring.ts";
-import { HINT_GAMES } from "./testing/hint-games.ts";
-import { walkHints } from "./testing/hint-walk.ts";
-import { outsideRings, ringCrossings, ringsOf } from "./testing/mark-shape.ts";
+import { HINT_OUTLINE } from "../color/palette.ts";
+import type { Color, Rect } from "../contract/types.ts";
+import { HINT_GAMES } from "../testing/hint-games.ts";
+import { walkHints } from "../testing/hint-walk.ts";
+import { outsideRings, ringCrossings, ringsOf } from "../testing/mark-shape.ts";
 import {
   type DrawOp,
   paintsWith,
   RecordingDrawing,
-} from "./testing/recording-drawing.ts";
-import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
+} from "../testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
+import { type HintMarkStyle, HintMarks, type MarkCell } from "./hint-mark.ts";
+import { NOTHING_TO_CLEAR, RING_MIN_ROUNDNESS } from "./ring.ts";
 
 /** The slots of a game's palette that hold the outline's ink. Found by value,
  * never by an export's name, which a game is free to choose and a guard keyed

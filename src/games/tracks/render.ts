@@ -49,20 +49,24 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
 import {
   drawEdgeHints,
   EDGE_HINT_BITS,
   type EdgeHint,
   edgeHintWords,
 } from "../../engine/edge-hint.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL, outlineSides } from "../../engine/hint-mark.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { drawRuledOutCross } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, WIN_LEAD, WIN_NONE } from "../../engine/win-wave.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import {
+  drawMarkSides,
+  MARK_ALL,
+  outlineSides,
+} from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
+import { drawRuledOutCross } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, WIN_LEAD, WIN_NONE } from "../../engine/render/win-wave.ts";
 import { pieceOfOp } from "./hint.ts";
 import { LINE, PIECE, type Piece } from "./kinds.ts";
 import { copyAndApplyDrag } from "./moves.ts";
@@ -273,7 +277,7 @@ function hintFlags(state: TracksState, step?: HintStep<TracksMove>): Int32Array 
 
   // One contour round a contiguous region, one ring per scattered cell: the
   // shared rule, so the picture never draws a boundary the deduction did not
-  // reason across (`engine/hint-mark.ts`).
+  // reason across (`engine/render/hint-mark.ts`).
   const area = outlined.filter(isCell);
   const inArea = new Set(area.map((c) => c.y * w + c.x));
   for (const c of area) {

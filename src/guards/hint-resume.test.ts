@@ -28,6 +28,7 @@ import {
   DEDUCTION_EXHAUSTED,
   SEARCH_OUT_OF_REACH,
 } from "../engine/contract/hint-refusal.ts";
+import { NO_FLASH } from "../engine/render/win-wave.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   type AnyGame,
@@ -43,7 +44,6 @@ import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import { sameState } from "../engine/testing/same-state.ts";
 import { itOverWholeSweep } from "../engine/testing/slow.ts";
 import { FIRST_SHARE, ofThisShare, shareFloor } from "../engine/testing/sweep-share.ts";
-import { NO_FLASH } from "../engine/win-wave.ts";
 
 /** Walk a fresh board to solved, recomputing the hint after every move.
  * Returns the move count, or throws with a diagnostic if a hint gives up or

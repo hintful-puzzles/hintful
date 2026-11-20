@@ -1,6 +1,6 @@
 /**
  * Singles (Hitori) rendering. A per-tile diffed loop draws each cell as pieces
- * on a quiet surface (`engine/piece.ts`): a blacked-out cell holds the shaded
+ * on a quiet surface (`engine/render/piece.ts`): a blacked-out cell holds the shaded
  * piece, a cell the player has marked as kept holds a ring round its number,
  * and an undecided cell is plain surface. Every cell shows its number, except
  * a blacked-out one while the show-black-numbers preference is off. The cursor
@@ -34,13 +34,17 @@ import type {
   Point,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, WIN_LEAD } from "../../engine/win-wave.ts";
+import {
+  drawRectCorners,
+  drawThickRectOutline,
+  glyphFont,
+} from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepStep, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { SinglesHint } from "./index.ts";
 import {
   F_BLACK,

@@ -23,7 +23,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
 import type { Color } from "../../src/engine/contract/types.ts";
-import { hasFill } from "../../src/engine/drawing-rules.ts";
+import { hasFill } from "../../src/engine/render/drawing-rules.ts";
 import {
   type DrawOp,
   NO_FILL,

@@ -19,6 +19,7 @@ import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { CELL, NARRATION_LIMIT } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import {
   describeHintKindPins,
@@ -35,7 +36,6 @@ import {
   renderPinnedHint,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { STATED } from "../../generated/games/boats/boats.compiled.ts";
 import { newBoatsDesc } from "./generator.ts";
 import { type BoatsHint, boatsGame } from "./index.ts";

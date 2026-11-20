@@ -23,7 +23,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
 } from "../../engine/input/pointer.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import { mosaicGame } from "./index.ts";
 import { status } from "./solver.ts";
 import {

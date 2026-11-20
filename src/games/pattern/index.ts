@@ -52,8 +52,8 @@ import {
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
-import { SHADED_NAME, UNSHADED_NAME } from "../../engine/piece.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { SHADED_NAME, UNSHADED_NAME } from "../../engine/render/piece.ts";
 import { voice } from "../../generated/games/pattern/pattern.compiled.ts";
 import { newPatternDesc } from "./generator.ts";
 import { CLUE, cellAt, LINE } from "./hint-marks.ts";

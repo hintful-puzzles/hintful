@@ -36,12 +36,16 @@ import type {
   Point,
   Rect,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners, glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawPathArrow, drawPathStart } from "../../engine/path-arrow.ts";
-import { ringContentBox, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, WIN_NONE, winSlot } from "../../engine/win-wave.ts";
+import {
+  drawRectCorners,
+  glyphFont,
+  strokeScaledPolygon,
+} from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawPathArrow, drawPathStart } from "../../engine/render/path-arrow.ts";
+import { ringContentBox, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, WIN_NONE, winSlot } from "../../engine/render/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-marks.ts";
 import {

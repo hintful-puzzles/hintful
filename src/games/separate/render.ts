@@ -41,8 +41,8 @@ import { COL_ERROR, FIRST_GAME_SLOT, rolePalette } from "../../engine/color/role
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
+import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import type {
   SeparateMistake,
   SeparateMove,

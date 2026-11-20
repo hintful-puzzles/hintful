@@ -27,16 +27,16 @@ import {
   drawRecessedBorder,
   glyphFont,
   raisedBevelWidth,
-} from "../../engine/draw.ts";
-import { textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+} from "../../engine/render/draw.ts";
+import { textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import { TILE } from "./kinds.ts";
 import type { FifteenMove, FifteenParams, FifteenState, FifteenUi } from "./state.ts";
 

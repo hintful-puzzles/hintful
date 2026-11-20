@@ -26,18 +26,22 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
-import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { drawRuledOutCross } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import {
+  drawRectCorners,
+  drawRectOutline,
+  glyphFont,
+} from "../../engine/render/draw.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { drawRuledOutCross } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import type { LightupHint, LightupMistake } from "./index.ts";
 import {
   F_BLACK,

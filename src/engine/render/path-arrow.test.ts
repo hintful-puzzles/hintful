@@ -6,14 +6,14 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { Color } from "./contract/types.ts";
+import type { Color } from "../contract/types.ts";
+import { opsOfKind, RecordingDrawing } from "../testing/recording-drawing.ts";
 import {
   drawPathArrow,
   drawPathStart,
   pathHeadLength,
   pathHeadWidth,
 } from "./path-arrow.ts";
-import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
 
 const BLACK: Color = [0, 0, 0];
 const WHITE: Color = [1, 1, 1];

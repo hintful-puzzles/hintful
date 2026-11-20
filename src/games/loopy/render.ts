@@ -57,13 +57,18 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { glyphFont, strokeScaledPolygon } from "../../engine/draw.ts";
+import { glyphFont, strokeScaledPolygon } from "../../engine/render/draw.ts";
 import {
   drawPencilGlyph,
   pencilIndicatorBox,
   pencilIndicatorReach,
-} from "../../engine/pencil-indicator.ts";
-import { MARK_EDGE_PX, type RingClear, ringShape, textBox } from "../../engine/ring.ts";
+} from "../../engine/render/pencil-indicator.ts";
+import {
+  MARK_EDGE_PX,
+  type RingClear,
+  ringShape,
+  textBox,
+} from "../../engine/render/ring.ts";
 import {
   type Flash,
   loopSteps,
@@ -71,7 +76,7 @@ import {
   type WinTone,
   walkLoop,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import type { LoopyCursor } from "./cursor.ts";
 import type { LoopyMove, LoopyNoteDrag } from "./index.ts";
 import { CORNER, DOT, EDGE, FACE, PAIR } from "./kinds.ts";

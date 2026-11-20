@@ -25,6 +25,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -37,7 +38,6 @@ import {
 } from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { BE, TE } from "./map-data.ts";

@@ -11,6 +11,7 @@
 
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -20,7 +21,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { groupGame } from "./index.ts";
 import { COL_DIAGONAL, COL_GRID } from "./render.ts";
 import type { GroupMove } from "./state.ts";

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FOUR_NAMES, FREE_NAMES, TWO, wordOf } from "./color/colors.ts";
+import { FOUR_NAMES, FREE_NAMES, TWO, wordOf } from "../color/colors.ts";
+import { opsOfKind, RecordingDrawing } from "../testing/recording-drawing.ts";
 import {
   drawPiece,
   expandPair,
@@ -8,7 +9,6 @@ import {
   TWO_SHAPES,
   UNSHADED_NAME,
 } from "./piece.ts";
-import { opsOfKind, RecordingDrawing } from "./testing/recording-drawing.ts";
 
 // Even sides, so every coordinate the recorder rounds is already whole.
 const CELL = { x: 10, y: 20, w: 32, h: 32 };

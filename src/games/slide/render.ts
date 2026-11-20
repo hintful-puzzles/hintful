@@ -70,17 +70,17 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners } from "../../engine/draw.ts";
-import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import { drawRectCorners } from "../../engine/render/draw.ts";
+import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   type Flash,
   sweepStep,
   WIN_LEAD,
   type WinTone,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import { slid } from "./moves.ts";
 import {
   cursorPos,

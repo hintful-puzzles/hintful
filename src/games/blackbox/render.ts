@@ -4,7 +4,7 @@
  * flash flags included). A reveal is the win, and the win flash sweeps the
  * squares of the box.
  *
- * Pieces on a quiet surface (`engine/piece.ts`): a square of the box is the
+ * Pieces on a quiet surface (`engine/render/piece.ts`): a square of the box is the
  * cell surface and a guessed ball is a disc on it. What is settled is lifted:
  * a square marked as known, which holds a cross where it has no ball, a laser
  * square once fired, and the whole box once revealed.
@@ -39,11 +39,16 @@ import {
   drawRectOutline,
   drawThickRectOutline,
   glyphFont,
-} from "../../engine/draw.ts";
-import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+} from "../../engine/render/draw.ts";
+import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import { BUTTON, LASER } from "./hint-marks.ts";
 import {
   BALL_GUESS,

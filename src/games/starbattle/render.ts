@@ -3,7 +3,7 @@
  * ones whose packed key changed (docs/rendering.md § "The tile cache and the
  * diff key").
  *
- * A square is drawn inside its region's walls (`engine/region-walls.ts`), on
+ * A square is drawn inside its region's walls (`engine/render/region-walls.ts`), on
  * its region's fill.
  */
 
@@ -25,20 +25,29 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
-import { drawRectCorners } from "../../engine/draw.ts";
-import { HintMarks, type MarkBand, type MarkCell } from "../../engine/hint-mark.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { drawRuledOutCross } from "../../engine/piece.ts";
 import { regionFills } from "../../engine/region-fill.ts";
+import { drawRectCorners } from "../../engine/render/draw.ts";
+import {
+  HintMarks,
+  type MarkBand,
+  type MarkCell,
+} from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
+import { drawRuledOutCross } from "../../engine/render/piece.ts";
 import {
   drawWalledSquare,
   regionWalls,
   walledBoxes,
   wallHalf,
-} from "../../engine/region-walls.ts";
-import { NOTHING_TO_CLEAR } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+} from "../../engine/render/region-walls.ts";
+import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { StarbattleMistake } from "./index.ts";
 import { StarbattleBoard, touchingStars } from "./solver.ts";
 import {

@@ -54,19 +54,24 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners, glyphFont } from "../../engine/draw.ts";
 import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
-import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import {
   CROSS,
   dragPreview,
   type EdgeMistake,
   LINE,
 } from "../../engine/line-drawing.ts";
-import { textBox } from "../../engine/ring.ts";
-import { type PieceBox, spreadColors } from "../../engine/spread-colors.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
+import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import { textBox } from "../../engine/render/ring.ts";
+import { type PieceBox, spreadColors } from "../../engine/render/spread-colors.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { PathHighlights } from "./hint.ts";
 import { pathLines, withChanges } from "./moves.ts";
 import {

@@ -9,7 +9,7 @@
  * uses upstream's `NARROW_BORDERS` layout: no border, and `computeSize` adds
  * one pixel for the right/bottom edges.
  *
- * The board is pieces on a quiet surface (`engine/piece.ts`): a shaded brick
+ * The board is pieces on a quiet surface (`engine/render/piece.ts`): a shaded brick
  * is the collection's shaded piece inset on its cell, a ruled-out one is the
  * clear square, a clue sits on a lifted cell, and every mark drawn at a cell's edge
  * lands beside the piece. A cell is a square whatever the row's offset, so the
@@ -48,11 +48,16 @@ import type {
   Point,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
-import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
-import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+import { drawThickRectOutline, glyphFont } from "../../engine/render/draw.ts";
+import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { BricksHint } from "./hint.ts";
 import { bricksValidate } from "./solver.ts";
 import {

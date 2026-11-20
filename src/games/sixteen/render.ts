@@ -34,10 +34,10 @@ import {
   drawRaisedTile,
   glyphFont,
   raisedBevelWidth,
-} from "../../engine/draw.ts";
-import { textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/win-wave.ts";
+} from "../../engine/render/draw.ts";
+import { textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { SQUARE, TILE } from "./kinds.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";
 

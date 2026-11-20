@@ -12,14 +12,6 @@ import { FLASH, FLASH_LEAD } from "../engine/color/palette.ts";
 import type { Color } from "../engine/contract/types.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "../engine/input/pointer.ts";
 import {
-  REGISTERED_GAME_COUNT,
-  REGISTERED_GAMES,
-} from "../engine/testing/enrollment.ts";
-import { type AnyGame, probeBoard } from "../engine/testing/input-probe.ts";
-import { RecordingDrawing, rgbLabel } from "../engine/testing/recording-drawing.ts";
-import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
-import { winFlashAt } from "../engine/testing/win-flash.ts";
-import {
   type Flash,
   NO_FLASH,
   WIN_BODY,
@@ -27,7 +19,15 @@ import {
   WIN_LEAD,
   WIN_NONE,
   WIN_STILL_S,
-} from "../engine/win-wave.ts";
+} from "../engine/render/win-wave.ts";
+import {
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+} from "../engine/testing/enrollment.ts";
+import { type AnyGame, probeBoard } from "../engine/testing/input-probe.ts";
+import { RecordingDrawing, rgbLabel } from "../engine/testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
+import { winFlashAt } from "../engine/testing/win-flash.ts";
 
 /** The games a solved board can be reached in without playing one: those with
  * a solver. The others pin their flash in their own tests. */

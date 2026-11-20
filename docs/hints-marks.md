@@ -155,7 +155,7 @@ cell a color", a fill says with the board what the narration is still
 proposing.
 
 **A ring is round, crosses no number, and only the engine draws one**
-(`GameDrawing.drawRing`, [`engine/ring.ts`](../src/engine/ring.ts);
+(`GameDrawing.drawRing`, [`engine/render/ring.ts`](../src/engine/render/ring.ts);
 requirement "A ring is round, crosses no number, and only the engine draws
 one"; the owner, 2026-10-25: "a ring should actually be round", and
 2026-10-28: "it doesn't write over numbers"). Its ink is the engine's,
@@ -182,7 +182,7 @@ text that moves with a mark is drawn into the mark when the app measures a
 reference. A clue drawn on a disc painted over the marks (Mathrax) is not
 text a ring keeps clear of: the ring passes under it.
 
-The parts are in [`engine/hint-mark.ts`](../src/engine/hint-mark.ts), whose
+The parts are in [`engine/render/hint-mark.ts`](../src/engine/render/hint-mark.ts), whose
 exports' comments say what each owns: `MarkBand`, `HintMarks` (the band and
 the ring, around the tile loop), `MarkOutlines`, and `HintMarkStyle.text`
 (what a ring on the cell encloses, and the corner clue it goes round).
@@ -199,7 +199,7 @@ the middle.
 rules out is struck"). A grid of notes leaves no room for a ring round one
 note, and a ring round the cell says the step decides the cell, so a strike
 step crosses each note out, in the note's own ink, and rings nothing. Draw it
-with `drawStrike` ([`engine/draw.ts`](../src/engine/draw.ts)), every game's
+with `drawStrike` ([`engine/render/draw.ts`](../src/engine/render/draw.ts)), every game's
 one strike. A premise's "this cell" on a cell whose notes are struck is not
 ringed but outlined, by the engine (`struckCellsOutlined` in
 [`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts); § "Outline the
@@ -283,7 +283,7 @@ fill pale enough for content to read through it is invisible on the dark
 board, and the only hues that clear the bar sit beside `ERROR_WASH`, which
 would make the cell a hint points at look like the cell that is wrong. The
 measurements are in the header of
-[`engine/hint-mark.ts`](../src/engine/hint-mark.ts). The palette carries no
+[`engine/render/hint-mark.ts`](../src/engine/render/hint-mark.ts). The palette carries no
 fill role for the action color (requirement "The palette carries no fill for
 the acted-on color"), so retuning does not reopen the question. A mark on the
 border is read against a surface and not through it, so it can take a strong
@@ -295,7 +295,7 @@ color, as the engine's do.
 cell's border means in your game.** It reads as a highlight by color, not by
 weight. A `MarkBand` reaches outside the content box (`outer`) and inside it
 (`inner`), and that choice decides who undoes the mark, as the header of
-[`engine/hint-mark.ts`](../src/engine/hint-mark.ts) explains. A cell's ring is
+[`engine/render/hint-mark.ts`](../src/engine/render/hint-mark.ts) explains. A cell's ring is
 as thick as the band and within its reach (`drawRing`'s `room`), so the same
 erase and repaint undo it.
 
@@ -364,7 +364,7 @@ ink" is what a fill also satisfies.
 - **No game names `HINT_RING`**
   ([`palette-source.test.ts`](../src/engine/color/palette-source.test.ts)),
   so a ring is the engine's and round by construction.
-- **[`hint-mark.test.ts`](../src/engine/hint-mark.test.ts) walks every
+- **[`hint-mark.test.ts`](../src/engine/render/hint-mark.test.ts) walks every
   hinting game**: nothing in the ring's ink but rings and the shapes inside
   them, every ring round, and no rect in the outline's ink cell-sized and
   thick in both directions. It finds the outline's slots by their value,
@@ -550,7 +550,7 @@ Exemplar: `componentSquares` and `incidentSquares` in
 
 **A step whose sentence names a row or column stripes that line**:
 translucent diagonal bands over its squares and on through its clue slots, in
-the engine's stripes ink ([`engine/hatch.ts`](../src/engine/hatch.ts)). **A
+the engine's stripes ink ([`engine/render/hatch.ts`](../src/engine/render/hatch.ts)). **A
 region the sentence is about is striped the same way**: a cage, a block, a
 run, an area. Requirements "A hint hatches the one line its sentence names"
 and "A hint hatches the region its sentence is about". Stripes work where a

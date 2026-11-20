@@ -52,6 +52,7 @@ import {
   releaseHighlightAfterEntry,
   winHighlight,
 } from "./note-taking-cell.ts";
+import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./render/win-wave.ts";
 import {
   builtGames,
   enrolledIn,
@@ -59,7 +60,6 @@ import {
   SCANNED_SOURCE_FILES,
 } from "./testing/enrollment.ts";
 import { RecordingDrawing } from "./testing/recording-drawing.ts";
-import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./win-wave.ts";
 
 const OPEN: CellEntry = { canEnter: true, canMark: true };
 const GIVEN: CellEntry = { canEnter: false, canMark: false };

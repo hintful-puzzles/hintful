@@ -42,13 +42,22 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawRectCorners, drawRectOutline, glyphFont } from "../../engine/draw.ts";
-import { hatchPeriod } from "../../engine/hatch.ts";
-import { drawMarkSides, outlineSides } from "../../engine/hint-mark.ts";
 import { regionFills } from "../../engine/region-fill.ts";
-import { type RingClear, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+import {
+  drawRectCorners,
+  drawRectOutline,
+  glyphFont,
+} from "../../engine/render/draw.ts";
+import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import { type RingClear, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { RectHint } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
 import {

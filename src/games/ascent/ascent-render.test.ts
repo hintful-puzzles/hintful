@@ -16,6 +16,7 @@ import {
 import type { HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -30,7 +31,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import { newAscentDesc } from "./generator.ts";
 import type { AscentRung } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-marks.ts";

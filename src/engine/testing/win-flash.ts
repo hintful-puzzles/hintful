@@ -4,7 +4,7 @@
  */
 
 import { expect } from "vitest";
-import { type Flash, WIN_FLASH_S, WinWave } from "../win-wave.ts";
+import { type Flash, WIN_FLASH_S, WinWave } from "../render/win-wave.ts";
 
 /**
  * The win flash `seconds` after it set off.

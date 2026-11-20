@@ -12,7 +12,7 @@
  * canvas, the recorder and the SVG view cannot disagree about them.
  */
 
-import type { Point, Rect } from "./contract/types.ts";
+import type { Point, Rect } from "../contract/types.ts";
 
 /** How opaque a band is over what it covers. Held against the board by
  * `puzzle/hatch-contrast.test.ts`, in both schemes. */

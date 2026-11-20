@@ -39,18 +39,22 @@ import type {
   Point,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawRectOutline, drawThickRectOutline, glyphFont } from "../../engine/draw.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/hint-mark.ts";
-import { OverlaySidecar } from "../../engine/overlay-sidecar.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import {
+  drawRectOutline,
+  drawThickRectOutline,
+  glyphFont,
+} from "../../engine/render/draw.ts";
+import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
   winSlot,
-} from "../../engine/win-wave.ts";
+} from "../../engine/render/win-wave.ts";
 import type { SticksHint } from "./hint.ts";
 import { findLiveErrors } from "./solver.ts";
 import {

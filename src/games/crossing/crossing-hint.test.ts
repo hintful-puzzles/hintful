@@ -21,6 +21,7 @@ import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, newCursor } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -28,7 +29,6 @@ import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newCrossingDesc } from "./generator.ts";
 import { narrateCrossing } from "./hint.ts";
 import { crossingGame } from "./index.ts";

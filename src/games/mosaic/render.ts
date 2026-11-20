@@ -4,7 +4,7 @@
  * column draw the closing grid lines and cursor edges. The win flash
  * fills the ground of each cell it is on.
  *
- * The board is pieces on a quiet surface (`engine/piece.ts`): a marked cell
+ * The board is pieces on a quiet surface (`engine/render/piece.ts`): a marked cell
  * holds the shaded piece, a blank one is the clear square, and a cell's number
  * is drawn over whichever it is.
  */
@@ -36,17 +36,22 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { glyphFont } from "../../engine/draw.ts";
+import { glyphFont } from "../../engine/render/draw.ts";
 import {
   drawMarkSides,
   MARK_ALL,
   type MarkBand,
   MarkOutlines,
-} from "../../engine/hint-mark.ts";
-import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/piece.ts";
-import { ringFits, textBox } from "../../engine/ring.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
-import { type Flash, sweepStep, type WinTone, winSlot } from "../../engine/win-wave.ts";
+} from "../../engine/render/hint-mark.ts";
+import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
+import { ringFits, textBox } from "../../engine/render/ring.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  type Flash,
+  sweepStep,
+  type WinTone,
+  winSlot,
+} from "../../engine/render/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./kinds.ts";
 import {

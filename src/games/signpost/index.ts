@@ -47,7 +47,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
-import { TileCache } from "../../engine/tile-cache.ts";
+import { TileCache } from "../../engine/render/tile-cache.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { newSignpostDesc } from "./generator.ts";
 import {

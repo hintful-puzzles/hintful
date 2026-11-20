@@ -30,6 +30,7 @@ import {
   MOD_SHFT,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -44,7 +45,6 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { repaintDifferential } from "../../engine/testing/repaint-differential.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH } from "../../engine/win-wave.ts";
 import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { newBricksDesc } from "./generator.ts";
 import { bricksGame } from "./index.ts";

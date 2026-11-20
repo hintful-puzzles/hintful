@@ -47,7 +47,7 @@ import {
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { WIN_NONE, type WinTone } from "../../engine/win-wave.ts";
+import { WIN_NONE, type WinTone } from "../../engine/render/win-wave.ts";
 import { newUntangleDesc } from "./generator.ts";
 import {
   deduceUntangleHintPlan,

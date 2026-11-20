@@ -25,13 +25,13 @@ import { describeParams } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, sweepStep } from "../../engine/win-wave.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { separateGame } from "./index.ts";
 import { COL_CORRECT } from "./render.ts";

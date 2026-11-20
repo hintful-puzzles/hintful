@@ -9,11 +9,12 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
-import { raisedBevelWidth } from "../../engine/draw.ts";
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import type { HintStep } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { raisedBevelWidth } from "../../engine/render/draw.ts";
+import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { type SlideMove, slidePieces } from "../../engine/slide-planner.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
@@ -22,7 +23,6 @@ import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { type Flash, NO_FLASH, sweepStep } from "../../engine/win-wave.ts";
 import { netslideGame } from "../netslide/index.ts";
 import { COL_LOWLIGHT } from "../netslide/render.ts";
 import { executeMove, sixteenGame, slideWords } from "./index.ts";

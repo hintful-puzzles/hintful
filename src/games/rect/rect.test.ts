@@ -23,11 +23,11 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { itSlow } from "../../engine/testing/slow.ts";
-import { NO_FLASH } from "../../engine/win-wave.ts";
 import { newDesc } from "./generator.ts";
 import { rectGame } from "./index.ts";
 import {

@@ -30,7 +30,7 @@ import {
 } from "../../engine/game-id/params.ts";
 import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
-import type { TileCache } from "../../engine/tile-cache.ts";
+import type { TileCache } from "../../engine/render/tile-cache.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 
 /** The two puzzles, indexed by `mode`. */

@@ -6,7 +6,7 @@
  * vocabulary. `solver.ts`'s remaining import from `state.ts` is types only,
  * which `verbatimModuleSyntax` erases.
  */
-import type { PairIndex } from "../../engine/piece.ts";
+import type { PairIndex } from "../../engine/render/piece.ts";
 import * as unruly from "../../generated/games/unruly/unruly.compiled.ts";
 
 // --- cell values (upstream `enum { EMPTY, N_ONE, N_ZERO, BOGUS }`) -------
