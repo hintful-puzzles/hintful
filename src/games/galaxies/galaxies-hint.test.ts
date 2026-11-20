@@ -293,7 +293,7 @@ describe("the hint never guesses, and says so when that is the end of the road",
     // a premise. This is a shape check on the vocabulary, cheap and blunt.
     //
     // Kept **stricter than** the cross-game version now in
-    // `engine/hint-quality.test.ts` (`audit-guessing-tier-names` promoted it
+    // `guards/hint-quality.test.ts` (`audit-guessing-tier-names` promoted it
     // there, since a rule enforced in one game is not enforced). This one also
     // rejects `suppose` / `if it were` outright, which the shared check cannot:
     // several games narrate a *single-step* refutation that way and are right

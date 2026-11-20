@@ -220,4 +220,4 @@ describe("magnets moves + findMistakes", () => {
 });
 
 // Cap monotonicity is asserted for every tiered game, Magnets included, by
-// `engine/difficulty-contract.test.ts`; a second copy here would drift from it.
+// `guards/difficulty-contract.test.ts`; a second copy here would drift from it.

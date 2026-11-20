@@ -1,0 +1,131 @@
+/*
+ * What every game can do, snapshotted — the sweep's net for silent capability
+ * loss.
+ *
+ * `re-express-the-collection` converts all 57 games, in batches, and its
+ * characteristic failure is not breakage. A converted game that quietly stops
+ * offering its keypad, its reference aid, its mistake checking or its hint
+ * still compiles, still plays, and still passes most of its own tests — because
+ * the tests that would have caught it are the ones that were deleted along with
+ * the capability. At a scale of 57 that is the failure that will actually
+ * happen, which is why this exists **before** the first game moves rather than
+ * alongside it.
+ *
+ * WHY A SNAPSHOT AND NOT A LIST. The set is derived on every run — from
+ * `Object.hasOwn` against the `Game` interface's own optional members, and from
+ * the objects `newUi` and `newDrawState` actually returned — so nothing here can
+ * be forgotten by a game that changes. Both halves of what a game remembers are
+ * in it: a `Ui` field and a draw-state field are equally part of a game's
+ * vocabulary, and the pencil indicator's nine-way divergence lived entirely in
+ * the half that went unread until `widen-the-capability-snapshot`.
+ * The snapshot is the *before* half of a diff, and its whole
+ * job is to make a capability's disappearance a reviewable line in a text diff
+ * rather than a silence. `vitest -u` re-baselines it, which is correct for an
+ * intended change and is why the assertions below are not snapshots: a careless
+ * `-u` must not be able to erase the guarantee (`docs/testing.md`).
+ *
+ * WHY NOT A MANIFEST. Because the change that drops a capability would drop its
+ * manifest entry in the same edit, and nothing would notice — the shape this
+ * repo has now reversed four times (`audit-declared-versus-derived-capabilities`,
+ * and `engine/testing/enrollment.ts`'s opening comment for the argument).
+ */
+
+import { describe, expect, it } from "vitest";
+import {
+  builtGames,
+  capabilitySets,
+  OPTIONAL_GAME_MEMBERS,
+} from "../engine/testing/enrollment.ts";
+import { expectLedger } from "../engine/testing/ledger.ts";
+import "../games/index.ts";
+
+describe("capability surface", () => {
+  it("reads a non-trivial contract and a full collection", () => {
+    // The vacuity guard, on both derivations. An `import.meta.glob` that
+    // matched nothing yields `{}`, an unregistered collection yields no games,
+    // and every assertion below would then pass over nothing and report health
+    // — the shape this repo has hit five times.
+    expect(OPTIONAL_GAME_MEMBERS.length).toBeGreaterThanOrEqual(10);
+    expect(builtGames().length).toBeGreaterThanOrEqual(57);
+    expect(capabilitySets()).toHaveLength(builtGames().length);
+  });
+
+  it("knows exactly which games hold no Ui state, and why", () => {
+    // A game whose `Ui` came back empty is far more likely to be a broken probe
+    // — or a re-expression that dropped the `Ui` — than a game with genuinely
+    // nothing to remember. One game is genuinely that, so the exemption is a
+    // **ledger keyed to the derived set**, not a skip: the derivation says who,
+    // and the ledger says why, one entry per member, asserted to be exactly the
+    // set (`docs/testing.md` § "How a cross-game guard finds its
+    // population"). If a converted game empties its `Ui`, this fails; if Cube
+    // ever gains state, the stale entry fails too.
+    // An entry is a game whose every gesture is a bare direction relative to a
+    // position already in `State`, so there is nothing to carry between moves,
+    // and it says so in its own type, as `Record<string, never>`. The ledger
+    // was written with one entry and the derivation returned two, which is the
+    // argument for deriving in miniature; Sokoban left when its push became a
+    // drag held from the player (`walk-by-tap-push-by-drag`).
+    const NO_UI_STATE: Record<string, string> = {
+      cube: "Rolls a solid across a fixed grid; a move is a direction from where the solid already is. `CubeUi` is `Record<string, never>`.",
+    };
+    const empty = capabilitySets()
+      .filter((c) => c.ui.length === 0)
+      .map((c) => c.id);
+    expectLedger(empty, NO_UI_STATE, {
+      table: "NO_UI_STATE",
+      file: "src/guards/capability-surface.test.ts",
+      found: "games whose `newUi` returns no fields",
+      add: "add it with why nothing is carried between moves",
+    });
+  });
+
+  it("derives membership from the object, not from a name", () => {
+    // Anchors the derivation against three capabilities whose populations are
+    // independently known, so a probe that silently stopped reading the game
+    // object cannot pass by returning the same empty set for everyone.
+    const sets = capabilitySets();
+    const has = (m: string) =>
+      sets.filter((c) => c.members.includes(m)).map((c) => c.id);
+
+    // A hint's Check & save verdict, read off the hint the game hands over.
+    expect(has("hint.judgeMove").length).toBeGreaterThan(20);
+    // Mistake checking: a deliberate-divergence feature, widely but not
+    // universally offered.
+    expect(has("findMistakes").length).toBeGreaterThan(20);
+    // And the negative direction: no game should carry a member the interface
+    // does not declare.
+    for (const c of sets) {
+      for (const m of c.members) expect(OPTIONAL_GAME_MEMBERS).toContain(m);
+    }
+  });
+
+  it("reads a draw state off every game, not only a Ui", () => {
+    // The vacuity guard for the second half. Unlike the `Ui` — where two games
+    // genuinely have nothing to remember, hence the ledger above — *every* game
+    // draws, so an empty draw state here means the probe stopped reading rather
+    // than a game with nothing to draw. No ledger is needed because no
+    // exemption is possible.
+    const sets = capabilitySets();
+    expect(sets.filter((c) => c.drawState.length === 0).map((c) => c.id)).toEqual([]);
+
+    // And the anchor, on a population known independently of this file: the
+    // nine games whose renderer draws the pencil indicator all hold
+    // `pencilModeShown`, which is the divergence no instrument in the tree
+    // could see until the snapshot covered this half. A floor rather than a
+    // census — a tenth game acquiring a pencil is not a regression.
+    const has = (f: string) =>
+      sets.filter((c) => c.drawState.includes(f)).map((c) => c.id);
+    expect(has("pencilModeShown").length).toBeGreaterThan(5);
+    // Every draw state carries `tileSize`, because `newDrawState` is handed
+    // one to keep; a probe returning empty sets could not clear this.
+    expect(has("tileSize").length).toBeGreaterThan(50);
+  });
+
+  it("matches the recorded capability surface", () => {
+    // The diff itself. A batch of `re-express-the-collection` is clean when
+    // this does not move; a moved line is either an intended capability change
+    // (re-baseline it, and say so in the change) or the sweep silently
+    // shrinking a game (fix it).
+    expect(capabilitySets()).toMatchSnapshot();
+  });
+});

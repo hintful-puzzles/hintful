@@ -199,7 +199,7 @@ research tools all read through it; the app never does.
   take the question mark that says nothing of the rectangle. A change to the deal
   alone is a setting and has no variation. A variation is named as the game
   offers it, a ruleset's name or a modifier's words, and
-  `src/variations.test.ts` refuses a game whose field declares the other
+  `src/guards/variations.test.ts` refuses a game whose field declares the other
   word.
 
 ## The formula syntax
@@ -568,7 +568,7 @@ no count or narrowing (`freshReads`), behind `staleChecking` and
 `import.meta.env.DEV`, so a build drops it. The module reads
 `import.meta.env.DEV` once, into a constant: Vitest makes each read of it
 a lookup, and read in every binding it doubled the suite's solves.
-[`stale-reads.test.ts`](../src/engine/stale-reads.test.ts) turns it on and
+[`stale-reads.test.ts`](../src/guards/stale-reads.test.ts) turns it on and
 solves every described game's shared boards. A defect in the reads made
 again fails there in every game whose boards make that read fail. A game
 whose boards never do cannot fail, since the defect changes nothing it does.

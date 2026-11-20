@@ -186,7 +186,7 @@ Two rules make a sweep across the collection affordable:
 - **A capability diff per game.** A sweep's risk is silent capability loss:
   a game stops having something it had. The set is derived from what the
   game is, and never declared:
-  [`capability-surface.test.ts`](../src/capability-surface.test.ts) is the
+  [`capability-surface.test.ts`](../src/guards/capability-surface.test.ts) is the
   diff, and its header says what it reads.
 
 ## Before archiving

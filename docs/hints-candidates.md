@@ -570,7 +570,7 @@ player's deductions as soon as one cell is blank.
   documented at its arm as unreachable from input.
 - **A test of this rule must narrow a cell by hand**: a resetting fill writes
   back exactly what was there otherwise. The guard is
-  [`engine/mark-all.test.ts`](../src/engine/mark-all.test.ts), which a game
+  [`guards/mark-all.test.ts`](../src/guards/mark-all.test.ts), which a game
   joins by declaring `markAll`.
 
 ## Two readings of an unmarked cell

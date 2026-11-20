@@ -108,7 +108,7 @@ interface only, never on the `Midend`. The file layout is
   "this game does not have that capability" and is no stub: a game with no
   solver omits `solve`.
 - **Do not add an optional member speculatively, or leave one whose consumer
-  has gone.** [`contract-surface.test.ts`](../src/contract-surface.test.ts)
+  has gone.** [`contract-surface.test.ts`](../src/guards/contract-surface.test.ts)
   requires every optional member of `Game` and of `PuzzleStaticAttributes`
   to have an implementer and a consumer. A capability kept unread needs an
   entry in that test naming the change that owns the decision.
@@ -208,7 +208,7 @@ compatibility decision for the owner.
   `params-refusal.test.ts` reads every string one can return, through
   constants (`AREA_TOO_LARGE`) and helper calls.
 - **Do not re-baseline
-  [`params-stability.test.ts`](../src/engine/params-stability.test.ts) with
+  [`params-stability.test.ts`](../src/guards/params-stability.test.ts) with
   `vitest -u`.** Every line of its table that moves is a shared game ID
   that stops naming its board, so it needs the owner's say-so. A new game
   adds its own lines and moves none: run with `--update` and read the diff.
@@ -241,7 +241,7 @@ panel or a tiling's cell shape decides the aspect. A tiling that cannot turn
 takes sizes of its own that draw tall, not a landscape size transposed. A
 board whose shape is the puzzle's own (a solid's net, a hexagon) goes in the
 `WIDE_BY_NATURE` ledger of
-[`orientation.test.ts`](../src/engine/orientation.test.ts) with its reason.
+[`orientation.test.ts`](../src/guards/orientation.test.ts) with its reason.
 
 **Declare `transposeParams` so the midend can deal a new board turned** when
 that gives a larger tile (`engine-params`, "A deal turns the chosen params
@@ -380,7 +380,7 @@ A test that wants the menu's lines reads `leafPresets(game)` or
 `presetMenu(game)`, never a list of its own: a copy of the menu in a test
 stays green when the menu moves.
 
-[`preset-menu-shape.test.ts`](../src/engine/preset-menu-shape.test.ts) holds
+[`preset-menu-shape.test.ts`](../src/guards/preset-menu-shape.test.ts) holds
 every game's menu to the shape
 (`engine-params`, "The preset menu is a grid", "A preset menu is short
 enough to choose from", "A board's tiers are one run of lines, and every
@@ -441,7 +441,7 @@ Also:
 submission onto a copy of the params and validates with `paramsError`, so
 the dialog rejects exactly what a game ID would. Every registered game
 declares a non-empty one
-([`custom-params.test.ts`](../src/engine/custom-params.test.ts)).
+([`custom-params.test.ts`](../src/guards/custom-params.test.ts)).
 Exemplars: [`pattern/state.ts`](../src/games/pattern/state.ts) (width and
 height), [`towers/state.ts`](../src/games/towers/state.ts) (size and
 difficulty), [`solo/index.ts`](../src/games/solo/index.ts) (a fold).
@@ -574,7 +574,7 @@ state 0. Exemplars: the skeleton's
   decides. A multi-digit clue with separators, or a desc with no value
   character, is a grammar of its own.
 
-[`desc-error-games.test.ts`](../src/engine/desc-error-games.test.ts) checks
+[`desc-error-games.test.ts`](../src/guards/desc-error-games.test.ts) checks
 from outside: every desc the generator writes loads, every one-edit near
 miss ([`testing/desc-mutants.ts`](../src/engine/testing/desc-mutants.ts))
 that loads also draws, and junk is refused at least once, which catches a
@@ -655,7 +655,7 @@ a key that puts down what was held, may return `null`.
   cursor on what it pressed changes nothing. So keep the flag's name, and
   never paint from a part while its `visible` is off.
 
-[`input-answers.test.ts`](../src/engine/input-answers.test.ts) sweeps every
+[`input-answers.test.ts`](../src/guards/input-answers.test.ts) sweeps every
 registered game for an unclaimed input that changed the frame.
 
 **Read `ds.tileSize` directly.** `ds` is non-null and built at the tile size
@@ -716,7 +716,7 @@ skeleton's `executeMove`, an `if / else if / else` chain.
   `x < 0` and `x >= w` both false, so range tests pass a foreign move
   through.
 
-`engine/save-round-trip.test.ts` pushes a foreign move into every game's
+`guards/save-round-trip.test.ts` pushes a foreign move into every game's
 saved move log and requires the refusal to name the game.
 
 ## Status
@@ -1003,7 +1003,7 @@ does".
   the unit are the game's: one candidate bitmask a cell, or a region where
   regions are what the player fills. The shared guards read the field by
   that name
-  ([`note-vocabulary.test.ts`](../src/engine/note-vocabulary.test.ts)). Two
+  ([`note-vocabulary.test.ts`](../src/guards/note-vocabulary.test.ts)). Two
   things keep their own words: a field that is not a candidate set (no-line
   marks on a cell's edges), and a solver's working candidates.
 - **Mark-all is the `markAll(state)` hook.** It returns the press's move,

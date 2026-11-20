@@ -404,27 +404,27 @@ function verify(): void {
     "a Pearl-only push selects the registry's readers and not the catalog's",
   );
   expect(
-    game.narrow.includes("src/engine/hint-resume.test.ts"),
+    game.narrow.includes("src/guards/hint-resume.test.ts"),
     "a Pearl-only push selects hint-resume through the registry",
   );
 
   const midend = push(["src/engine/midend.ts"]);
   expect(
-    midend.whole.includes("src/engine/hint-resume.test.ts"),
+    midend.whole.includes("src/guards/hint-resume.test.ts"),
     "the midend is read by every guard itself, so hint-resume runs whole",
   );
 
   // `src/games/index.ts` sits in the games directory but belongs to no game.
   const registry = push(["src/games/index.ts"]);
   expect(
-    registry.whole.includes("src/engine/hint-resume.test.ts"),
+    registry.whole.includes("src/guards/hint-resume.test.ts"),
     "the registry is read by every guard itself, so hint-resume runs whole",
   );
 
   // A glob in a helper, not in the test file: the walk must read it.
   const engine = push(["src/engine/latin-hint.ts"]);
   expect(
-    engine.whole.includes("src/engine/hint-em-dash.test.ts"),
+    engine.whole.includes("src/guards/hint-em-dash.test.ts"),
     "engine-source.ts's glob puts hint-em-dash in whole for an engine module",
   );
   expect(
@@ -437,28 +437,28 @@ function verify(): void {
   // `engine-source.ts` and `test-source.ts` exist so that it does not.
   for (const guard of ["hint-resume", "hint-quality", "mark-all"]) {
     expect(
-      engine.narrow.includes(`src/engine/${guard}.test.ts`),
+      engine.narrow.includes(`src/guards/${guard}.test.ts`),
       `${guard} narrows on an engine module only some games reach`,
     );
   }
 
-  const test = push(["src/engine/hint-quality.test.ts"]);
+  const test = push(["src/guards/hint-quality.test.ts"]);
   expect(
-    test.whole.includes("src/engine/hint-quality.test.ts") &&
-      test.whole.includes("src/engine/hint-enrollment.test.ts"),
+    test.whole.includes("src/guards/hint-quality.test.ts") &&
+      test.whole.includes("src/guards/hint-enrollment.test.ts"),
     "a changed test runs whole, and so does test-source.ts's reader",
   );
 
-  const snap = push(["src/__snapshots__/capability-surface.test.ts.snap"]);
+  const snap = push(["src/guards/__snapshots__/capability-surface.test.ts.snap"]);
   expect(
-    snap.lines.includes("whole src/capability-surface.test.ts"),
+    snap.lines.includes("whole src/guards/capability-surface.test.ts"),
     "a changed snapshot selects its own test",
   );
 
   const help = push(["src/games/pearl/pearl.description.yaml"]);
   expect(
     help.scope.join() === "pearl" &&
-      help.lines.includes("narrow src/help-coverage.test.ts"),
+      help.lines.includes("narrow src/guards/help-coverage.test.ts"),
     "a description selects help-coverage through its glob, narrowed to its game",
   );
 
@@ -467,24 +467,24 @@ function verify(): void {
   // it: a reader of the text that also walks boards keeps them for the push.
   const contract = commit(["src/engine/game.ts"]);
   expect(
-    contract.narrow.includes("src/engine/hint-quality.test.ts") &&
-      contract.narrow.includes("src/engine/hint-em-dash.test.ts") &&
+    contract.narrow.includes("src/guards/hint-quality.test.ts") &&
+      contract.narrow.includes("src/guards/hint-em-dash.test.ts") &&
       contract.whole.length === 0,
     "a commit to game.ts runs hint-quality and the em-dash scan with no game's cases",
   );
   expect(
-    owed(["src/engine/game.ts"]).includes("whole src/engine/hint-quality.test.ts"),
+    owed(["src/engine/game.ts"]).includes("whole src/guards/hint-quality.test.ts"),
     "the push that carries a game.ts commit runs hint-quality whole",
   );
   const ownMidend = commit(["src/engine/midend.ts"]);
   expect(
     ownMidend.scope.length === 0 &&
-      ownMidend.narrow.includes("src/engine/hint-resume.test.ts") &&
+      ownMidend.narrow.includes("src/guards/hint-resume.test.ts") &&
       !ownMidend.lines.some((l) => l.includes(" src/games/pearl/")),
     "a commit to the midend runs hint-resume with no game's cases, and no game's own tests",
   );
   expect(
-    owed(["src/engine/midend.ts"]).includes("whole src/engine/hint-resume.test.ts"),
+    owed(["src/engine/midend.ts"]).includes("whole src/guards/hint-resume.test.ts"),
     "the push that carries a midend commit runs hint-resume whole",
   );
   const both = commit(["src/engine/midend.ts", "src/games/pearl/hint.ts"]);
@@ -495,8 +495,8 @@ function verify(): void {
     "a commit to the midend and to Pearl runs Pearl's cases and Pearl's tests only",
   );
   expect(
-    commit(["src/engine/hint-quality.test.ts"]).whole.includes(
-      "src/engine/hint-quality.test.ts",
+    commit(["src/guards/hint-quality.test.ts"]).whole.includes(
+      "src/guards/hint-quality.test.ts",
     ),
     "a commit runs a staged test file whole",
   );
@@ -527,8 +527,8 @@ function verify(): void {
   expect(
     [
       "src/games/pearl/pearl.test.ts",
-      "src/engine/hint-resume.test.ts",
-      "src/help-coverage.test.ts",
+      "src/guards/hint-resume.test.ts",
+      "src/guards/help-coverage.test.ts",
       "src/asset-integrity.test.ts",
     ].every((f) => verdict.includes(f)) &&
       !verdict.some((f) => (gameOf(f) ?? "pearl") !== "pearl"),
@@ -545,13 +545,13 @@ function verify(): void {
   const prose = push(["src/games/index.ts"], ["src/games/index.ts"]);
   expect(
     prose.lines.join() !== "ALL" &&
-      !prose.lines.some((l) => l.endsWith(" src/engine/hint-resume.test.ts")),
+      !prose.lines.some((l) => l.endsWith(" src/guards/hint-resume.test.ts")),
     "a comment changed in the registry does not select hint-resume",
   );
   const proseEngine = push(["src/engine/latin-hint.ts"], ["src/engine/latin-hint.ts"]);
   expect(
-    proseEngine.whole.includes("src/engine/hint-em-dash.test.ts") &&
-      !proseEngine.lines.some((l) => l.endsWith(" src/engine/hint-resume.test.ts")),
+    proseEngine.whole.includes("src/guards/hint-em-dash.test.ts") &&
+      !proseEngine.lines.some((l) => l.endsWith(" src/guards/hint-resume.test.ts")),
     "a comment changed in an engine module selects the guard that reads its text, and no walk",
   );
 

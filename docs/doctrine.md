@@ -137,7 +137,7 @@ run, so a new question about upstream behavior is answered behaviorally.
 - **Display code is not held to upstream**: rendering, layout, animation and
   colors aim at neat visuals and clean code.
 - **Game IDs from upstream keep loading where that is easy.** A desc
-  upstream's generator writes is accepted (`src/engine/upstream-descs.test.ts`
+  upstream's generator writes is accepted (`src/guards/upstream-descs.test.ts`
   holds it); a spelling upstream merely tolerated is not kept. A change that
   would refuse what upstream's generator writes is a compatibility break.
 - **The app hands out boards, never seeds.** Anything a player keeps or

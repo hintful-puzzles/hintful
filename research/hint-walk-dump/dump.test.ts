@@ -2,7 +2,7 @@
  * Every plan of every hint walk of one game, written one step a line, so a
  * change meant to keep a hint's steps can be compared with `cmp` against the
  * same dump run in a worktree of `HEAD`. Wider than the hint-walk fingerprint
- * (`src/engine/hint-walk-fingerprint.test.ts`): it starts each board from a
+ * (`src/guards/hint-walk-fingerprint.test.ts`): it starts each board from a
  * share of the solve move's ops already played, and lists every recomputed
  * plan whole, so a rung the fingerprint's boards never reach, or a change in
  * which firing a plan continues with, shows. `DUMP_OUT.rungs` counts the

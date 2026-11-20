@@ -57,7 +57,7 @@ const OWED_BY_MEMBER = [
 ];
 
 const GAMES_DIR = "src/games";
-const SURFACE = "src/__snapshots__/capability-surface.test.ts.snap";
+const SURFACE = "src/guards/__snapshots__/capability-surface.test.ts.snap";
 
 /** The subject a title leads with, or null. */
 function subjectOf(title) {
@@ -163,7 +163,7 @@ for (const game of games) {
   const members = recorded.get(game);
   if (!members) {
     failures.push(
-      `${path}: ${SURFACE} has no record of ${game}; write it with \`npx vitest run src/capability-surface.test.ts -u\``,
+      `${path}: ${SURFACE} has no record of ${game}; write it with \`npx vitest run src/guards/capability-surface.test.ts -u\``,
     );
     continue;
   }

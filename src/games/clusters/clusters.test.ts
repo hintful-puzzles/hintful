@@ -516,7 +516,7 @@ describe("midend integration", () => {
 
   it("Check & Save path: the mistake overlay is actually painted", () => {
     // The test above proves `findMistakes` *finds* the violation; this one
-    // proves the frame *draws* it (`src/mistake-overlay-coverage.test.ts`). The
+    // proves the frame *draws* it (`src/guards/mistake-overlay-coverage.test.ts`). The
     // inset error frame is shared engine code, so this is also one of the few
     // tests that fail when `drawThickRectOutline` loses a side.
     const { desc, moves } = violation();

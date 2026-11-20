@@ -38,8 +38,8 @@
  *
  * ```sh
  * npm run test:slow -- src/games/seismic        # the deferred 7x7 fixtures
- * npm run test:slow -- src/engine/hint-resume.test.ts   # every preset, not the gate slice
- * npm run test:slow -- src/games/sixteen src/engine/hint-quality.test.ts
+ * npm run test:slow -- src/guards/hint-resume.test.ts   # every preset, not the gate slice
+ * npm run test:slow -- src/games/sixteen src/guards/hint-quality.test.ts
  * ```
  *
  * That is the form to use when a refactor touches a solver, a generator or a

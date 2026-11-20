@@ -1,7 +1,7 @@
 /**
  * Tier-1 tests for Pattern's explained hint. The cross-game guarantees (a hint
  * solves from any mid-game position, a plan step is never a no-op, `hint()` is
- * pure) live in `engine/hint-resume.test.ts`. This file covers Pattern's own
+ * pure) live in `guards/hint-resume.test.ts`. This file covers Pattern's own
  * bar: the plan completes the board, every forced cell agrees with the unique
  * solution, the narration teaches (indication-led, necessity voice), the
  * color-legend roles are disjoint, and refusal and keep-track behave.

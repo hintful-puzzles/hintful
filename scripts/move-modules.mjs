@@ -200,6 +200,13 @@ function specifierEdits(file, text) {
       } else if (moves && /toMatchFileSnapshot$/.test(callee) && arg)
         unseen.push(`${file}: ${callee}(${arg.getText(sf)})`);
     } else if (
+      ts.isElementAccessExpression(node) &&
+      ts.isCallExpression(node.expression) &&
+      node.expression.expression.getText(sf) === "import.meta.glob"
+    ) {
+      // A glob's result is keyed by each match's specifier from this file.
+      literal(node.argumentExpression, (s) => repoint(file, newFile, s));
+    } else if (
       ts.isNewExpression(node) &&
       node.expression.getText(sf) === "URL" &&
       node.arguments?.[1]?.getText(sf) === "import.meta.url"
@@ -234,7 +241,12 @@ const alternatives = keys.map((k) => {
   // A stem or a directory without its slash must end there; a full file name
   // or a directory with its slash may run on.
   const end = /\.[a-z]+$|\/$/.test(k) ? "" : "(?![\\w.\\-/])";
-  return `(?:src/${esc(bare)}|(?<![\\w/.\\-])${esc(bare)})${end}`;
+  // Without `src/`, a path needs a directory to be one: a bare file name is
+  // prose about the file, true wherever it lives.
+  const short = bare.replace(/\/$/, "").includes("/")
+    ? `|(?<![\\w/.\\-])${esc(bare)}`
+    : "";
+  return `(?:src/${esc(bare)}${short})${end}`;
 });
 const pathPattern = keys.length ? new RegExp(alternatives.join("|"), "g") : null;
 const lookup = new Map(keys.map((k) => [k.slice(4), textMoves.get(k).slice(4)]));

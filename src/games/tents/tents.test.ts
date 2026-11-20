@@ -380,7 +380,7 @@ describe("tents input (drag model)", () => {
     //
     // Deterministic here because the board and the coordinates are known. The
     // collection-wide version of this was attempted and withdrawn; see
-    // `engine/drag-cancel.test.ts` for why.
+    // `guards/drag-cancel.test.ts` for why.
     const p = { w: 8, h: 8, diff: DIFF_EASY };
     const { state } = genBoard(p, "preview-cancel");
     const ui = tentsGame.newUi(state);

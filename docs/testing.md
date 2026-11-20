@@ -375,7 +375,7 @@ the board: a `rect` op at `(0,0)` the size of `computeSize`.
 
 The midend lays a color-0 ground over `computeSize` on a fresh draw state's
 first frame ([`rendering.md`](./rendering.md) § "The first frame and a fresh
-draw state"), and `src/engine/first-frame-coverage.test.ts` fails on a bare
+draw state"), and `src/guards/first-frame-coverage.test.ts` fails on a bare
 pixel in any game's first frame at its default params. Neither sees a margin
 only a later frame opens, nor whether color 0 is the color the margin should
 be.
@@ -392,7 +392,7 @@ the clock, how often it asked for a repaint) through `driveMidend(game)`, or
 argument, or `null` when none was sent; never restate a notification's shape
 in a cast. Clear `notes` to look only at what follows. A test that only needs
 the midend to run passes no callbacks: they are optional. Exemplar:
-`src/engine/midend-ui-state.test.ts`.
+`src/guards/midend-ui-state.test.ts`.
 
 ## Render-op vocabulary
 
@@ -703,7 +703,7 @@ and their reasons.
   guard titles `<id>: …`, and it is nearly all of the suite's time.
 - **A commit to the engine tests no game's boards.** It runs the engine's own
   tests and the whole-collection tests that are not split by game. Run the
-  guarding sweep yourself first: `npx vitest run src/engine/hint-resume.test.ts`
+  guarding sweep yourself first: `npx vitest run src/guards/hint-resume.test.ts`
   for a hint planner, the file named for the mechanic otherwise. A bare
   `vitest` is the wide run, since only the hooks narrow.
 - **A staged test file runs with every game's cases**, being what the author
@@ -741,7 +741,7 @@ push.
 Run the slow tier with a path, for the games a refactor could have moved,
 when you move a solver, a generator or a hint planner:
 `npm run test:slow -- src/games/seismic`,
-`npm run test:slow -- src/engine/hint-resume.test.ts`. The bare command
+`npm run test:slow -- src/guards/hint-resume.test.ts`. The bare command
 re-runs every gate test as well, with the widened seed budgets on top. The
 deferred cases are
 `git grep -n -e 'itSlow(' -e describeSlow -e 'slow: true' -- src`.
@@ -814,7 +814,7 @@ reads; no list is edited. What each asks of the game's author:
   rest. Recipe: [`hints.md`](./hints.md).
 - **Difficulty tiers**: declaring `Game.difficulty`
   ([`difficulty.ts`](../src/engine/difficulty.ts)) enrolls the game in
-  [`difficulty-contract.test.ts`](../src/engine/difficulty-contract.test.ts):
+  [`difficulty-contract.test.ts`](../src/guards/difficulty-contract.test.ts):
   caps are monotonic, every tier generates or refuses with a reason, the tier
   list matches the difficulty `paramConfig` choices, and tiers survive the
   params codec. A tiered game that does not declare fails. Adapter rules:
@@ -832,7 +832,7 @@ reads; no list is edited. What each asks of the game's author:
   whose seeded run checks no wrong board feeds a `WRONG` pin
   ([`rendering.md`](./rendering.md) § "Prove the overlay repaints").
 - **A new `Ui` or draw-state field**, or a new optional `Game` method, moves
-  [`capability-surface.test.ts`](../src/capability-surface.test.ts)'s
+  [`capability-surface.test.ts`](../src/guards/capability-surface.test.ts)'s
   snapshot. Re-baseline with `vitest run <path> -u` and say so in the change.
 - **A ledger entry**, where the game is an exception a guard cannot read off
   it: a board no input breaks once solved, a frame drawn wider along one
@@ -933,12 +933,12 @@ so the slice replaces a `tiers.map(withTier(base))` loop.
   ([`testing/presets.ts`](../src/engine/testing/presets.ts), which reads no
   registry) is the call for a sweep over games without a hint, or one that
   wants its modes and no large board (`scalarEnds: false`), as
-  [`desc-error-games.test.ts`](../src/engine/desc-error-games.test.ts) and
-  [`mistake-invariant.test.ts`](../src/engine/mistake-invariant.test.ts) do.
+  [`desc-error-games.test.ts`](../src/guards/desc-error-games.test.ts) and
+  [`mistake-invariant.test.ts`](../src/guards/mistake-invariant.test.ts) do.
   `axisSlice` and `leafPresets` are for a sweep about the slicing rule
   itself, and deal nothing the menu leaves out.
 - **A sweep that calls `firstLeaf(` or `withTier(` is held to a ledger** in
-  [`hint-enrollment.test.ts`](../src/engine/hint-enrollment.test.ts), one
+  [`hint-enrollment.test.ts`](../src/guards/hint-enrollment.test.ts), one
   entry per file with the behavior that needs a record the menu does not
   offer.
 - **A value the Custom dialog offers and no preset holds is dealt beside the
@@ -954,7 +954,7 @@ so the slice replaces a `tiers.map(withTier(base))` loop.
   holds such values to the ledger `NO_BOARD`, which is empty. Add a preset
   that carries the value.
 - **Say what still covers the presets between.** The slow tier walks them all
-  (`npm run test:slow -- src/engine/hint-resume.test.ts`).
+  (`npm run test:slow -- src/guards/hint-resume.test.ts`).
 - **Pay for the slice in seeds, not in presets.** For a property that is a
   code path, the second seed of one configuration repeats the first; take one
   seed across the slice.
@@ -1116,7 +1116,7 @@ helper itself.
 
 To find one concept spelled several ways across games (a `dragType` beside a
 `dragtype`, a private pencil indicator per game), read
-[`capability-surface.test.ts`](../src/capability-surface.test.ts)'s snapshot
+[`capability-surface.test.ts`](../src/guards/capability-surface.test.ts)'s snapshot
 through: it lists every game's `Ui` and draw-state field names, sorted, in
 one file. A clone detector does not see this, since differing spellings are
 not duplication. The snapshot asserts nothing about which names a game may

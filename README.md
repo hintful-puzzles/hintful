@@ -118,7 +118,7 @@ tokens; reactive state via `@lit-labs/signals`; offline via a Workbox
 service worker; telemetry via Sentry. The in-app help is this project's own
 markdown: the site-level pages under [help/](help), and each game's page in its
 description, `src/games/<id>/<id>.description.yaml`, which the help build
-renders. `src/help-coverage.test.ts` holds the descriptions and the catalog to
+renders. `src/guards/help-coverage.test.ts` holds the descriptions and the catalog to
 each other in both directions.
 
 [Web Awesome]: https://webawesome.com/docs/

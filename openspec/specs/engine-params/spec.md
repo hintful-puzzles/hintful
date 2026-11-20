@@ -1577,7 +1577,7 @@ A field whose value only adds a rule, a clue or a unit SHALL be a modifier, and 
 
 - **WHEN** a description's variation replaces a block, and the game declares
   the field it names with `modifierItem`
-- **THEN** `src/variations.test.ts` fails, naming the description and the
+- **THEN** `src/guards/variations.test.ts` fails, naming the description and the
   variation
 
 #### Scenario: A field changes only the deal

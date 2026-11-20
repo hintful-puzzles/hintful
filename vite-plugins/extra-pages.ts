@@ -803,7 +803,7 @@ let helpIconRules: Set<string> | null = null;
  * **empty space**, with no error from markdown-it, from Vite, or from the
  * browser, so nothing downstream would ever report it. `vite build` is in the
  * pre-commit gate, so failing here fails the commit. (The paired test in
- * `src/help-coverage.test.ts` cannot do it: Vitest stubs every CSS import to the
+ * `src/guards/help-coverage.test.ts` cannot do it: Vitest stubs every CSS import to the
  * empty string, `?raw` included.)
  */
 function definedHelpIcons(): Set<string> {

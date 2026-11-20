@@ -1,0 +1,233 @@
+/**
+ * **A game's status is a function of the position** — the guard behind the
+ * `ts-engine` requirement "A game's status is judged from the board alone".
+ *
+ * The midend derives everything historical (the solver was used, when to
+ * flash, when the clock runs) and reports the board's status *now*, so a game
+ * that keeps a record of having been solved shows a broken solved board that
+ * still says COMPLETED!, refuses a hint as "already solved" and stops the clock.
+ *
+ * ON THE INSTRUMENT, precisely — the two halves are not equally strong:
+ *
+ *  - **The behavioral half** asks the one thing a latch can never do: from a
+ *    solved board, reach a position whose status is not solved. It plays the
+ *    game's own input through the midend (a click, each on-screen key, a right
+ *    click, at points across the board) and stops at the first such position,
+ *    so it is cheap. A game whose input cannot take a solved board off its
+ *    solution is a ledger entry with its reason, asserted exact, because a game
+ *    the walk cannot break is a game this half cannot see.
+ *  - **The structural half** walks real states (fresh, and solved) and refuses
+ *    the names the record went by. It keys on names, which is the weaker
+ *    instrument (docs/method.md, "A scan that keys on a name"), and it is here for
+ *    the games the behavioral half cannot see.
+ *
+ * WHY NOT "a board with a mistake is not solved": it is false. Loopy's and
+ * Net's `findMistakes` flag a wrong *note* (a corner, a pair, a side), and a
+ * wrong note does not unsolve a board whose lines are right.
+ *
+ * Proved to fail by planting a latch in Keen: Keen lands in the unbroken list.
+ */
+
+import { describe, expect, it } from "vitest";
+import {
+  LEFT_BUTTON,
+  LEFT_DRAG,
+  LEFT_RELEASE,
+  PENCIL_MODE_BUTTON,
+  RIGHT_BUTTON,
+  RIGHT_RELEASE,
+} from "../engine/pointer.ts";
+import { REGISTERED_GAMES, workingRowExemption } from "../engine/testing/enrollment.ts";
+import {
+  probeBoard,
+  probePoints,
+  targetPoints,
+} from "../engine/testing/input-probe.ts";
+import { expectLedger } from "../engine/testing/ledger.ts";
+
+/** The names a game's own completion record goes by. */
+const RECORD_KEYS = [
+  "completed",
+  "complete",
+  "cheated",
+  "solved",
+  "wasSolved",
+  "won",
+  "usedSolve",
+  "hasCheated",
+];
+
+/**
+ * Games with Solve whose own input, from the solved board, never reaches a
+ * position that is not solved, each with the reason. The walk cannot see a
+ * latch in these, nor in a code-breaking game, which its working row excuses.
+ */
+const UNBREAKABLE: Record<string, string> = {
+  // A board Solve refuses, so there is no solved position to start from.
+  mines: "the probe board has no first click yet, so there is nothing to solve",
+  // A solved board whose rules take no move that could break it.
+  ballsort:
+    "a sorted board pours only a whole tube into an empty one, which leaves it sorted",
+  blackbox: "a revealed arena takes no move",
+  cube: "a solid with every face painted rolls freely, and moves no paint",
+  flood: "a flooded board accepts no fill",
+  inertia: "a collected gem stays collected, and the gems are all that solved counts",
+  mosaic: "a solved board accepts only the cursor keys",
+  net: "Solve locks every tile, a locked tile does not turn, and unlocking is a notes-mode tap",
+  pegs: "a solved board has one peg left, and one peg has nothing to jump over",
+  samegame: "a solved board is empty, and an empty board has no group to remove",
+};
+
+describe("a game's status is judged from the board alone", () => {
+  it("lets the player's input take a solved board off its solution", () => {
+    const population = REGISTERED_GAMES.filter(([, g]) => g.solve);
+    // Vacuity: the population is derived; an empty one asserts nothing.
+    expect(population.length).toBeGreaterThanOrEqual(40);
+
+    const unbroken: string[] = [];
+    let walked = 0;
+    for (const [id, game] of population) {
+      const pb = probeBoard(game, id);
+      // A board that refuses Solve (Mines before its first click) has no
+      // solved position to start from.
+      if (pb.m.solve() !== null || game.status(pb.live().state) !== "solved") {
+        unbroken.push(id);
+        continue;
+      }
+      walked++;
+      // Not the Marks key: it switches the keys that follow to notes, and a note
+      // never takes a board off its solution.
+      const keys = pb.m
+        .requestKeys()
+        .map((k) => k.button)
+        .filter((b) => b !== PENCIL_MODE_BUTTON);
+      const step = Math.max(4, Math.floor(Math.min(pb.size.w, pb.size.h) / 12));
+      const drag = (p: { x: number; y: number }, dx: number, dy: number) => () => {
+        pb.m.processInput(p.x, p.y, LEFT_BUTTON);
+        pb.m.processInput(p.x + dx, p.y + dy, LEFT_DRAG);
+        pb.m.processInput(p.x + dx, p.y + dy, LEFT_RELEASE);
+      };
+      const inputs = (p: { x: number; y: number }): (() => void)[] => [
+        () => {
+          pb.m.processInput(p.x, p.y, LEFT_BUTTON);
+          pb.m.processInput(p.x, p.y, LEFT_RELEASE);
+        },
+        ...keys.map((k) => () => pb.m.processInput(p.x, p.y, k)),
+        () => {
+          pb.m.processInput(p.x, p.y, RIGHT_BUTTON);
+          pb.m.processInput(p.x, p.y, RIGHT_RELEASE);
+        },
+        // The games played by dragging: a line, a link, a color, a point.
+        drag(p, step, 0),
+        drag(p, 0, step),
+      ];
+      // A solved board can leave room in one direction only (Slide's key block,
+      // home in a corner of the exit), so a board the first pass cannot break
+      // is solved again and dragged the other two ways. A pass of its own,
+      // because mixing the drags into the first walk changes the positions it
+      // reaches, and Bridges then went unbroken; and from the solved board,
+      // because the first pass can box Slide's key block in.
+      const backward = (p: { x: number; y: number }) => [
+        drag(p, -step, 0),
+        drag(p, 0, -step),
+      ];
+      const breaks = (pass: typeof inputs): boolean => {
+        for (const p of probePoints(pb.size)) {
+          for (const input of pass(p)) {
+            const before = pb.moves();
+            input();
+            if (pb.moves() === before) continue;
+            if (game.status(pb.live().state) !== "solved") return true;
+          }
+        }
+        return false;
+      };
+      if (breaks(inputs)) continue;
+      pb.reset();
+      if (pb.m.solve() !== null) throw new Error(`${id}: Solve refused a second time`);
+      if (breaks(backward)) continue;
+      // A move picked in parts (Target's number, operator and number) takes
+      // three clicks at targets, which no walk of one input a point assembles.
+      // Only for a game no one click of which moves the board, which the walks
+      // above have already tried. Each try starts from the solved board: a move
+      // it made is undone, then Solve is undone and redone, so the game drops
+      // whatever the clicks selected. A click the game does not answer leaves
+      // the board and the Ui as they were, so a try goes on only from a click
+      // it answered: what would follow any other is tried without it.
+      const at = targetPoints(game, pb);
+      const clicks = (points: readonly { x: number; y: number }[]) => {
+        const before = pb.moves();
+        let answered = false;
+        for (const { x, y } of points) {
+          const answers = pb.answers();
+          pb.m.processInput(x, y, LEFT_BUTTON);
+          pb.m.processInput(x, y, LEFT_RELEASE);
+          answered = pb.answers() !== answers;
+        }
+        const moved = pb.moves() !== before;
+        const broke = moved && game.status(pb.live().state) !== "solved";
+        if (moved) pb.m.undo();
+        pb.m.undo();
+        pb.m.redo();
+        return { moved, broke, answered };
+      };
+      const oneMoves = at.some((p) => clicks([p]).moved);
+      const breaksWithin = (
+        prefix: readonly { x: number; y: number }[],
+        more: number,
+      ): boolean =>
+        at.some((p) => {
+          const tried = clicks([...prefix, p]);
+          if (tried.broke) return true;
+          return tried.answered && more > 1 && breaksWithin([...prefix, p], more - 1);
+        });
+      if (oneMoves || !breaksWithin([], 3)) unbroken.push(id);
+    }
+    expectLedger(
+      unbroken,
+      UNBREAKABLE,
+      {
+        table: "UNBREAKABLE",
+        file: "src/guards/position-status.test.ts",
+        found: "games whose solved board no input took off its solution",
+        add: "find the latch that keeps the board solved, or add it with the rule that lets no move break a solved board",
+      },
+      [
+        workingRowExemption(
+          population.map(([id]) => id),
+          "a won game takes no more guesses, and a mark on the answer row is a note",
+        ),
+      ],
+    );
+    expect(walked).toBeGreaterThanOrEqual(40);
+  });
+
+  it("keeps no record of being solved or helped on the state", () => {
+    const all = REGISTERED_GAMES;
+    expect(all.length).toBeGreaterThanOrEqual(50);
+    const offenders: string[] = [];
+    let solvedStates = 0;
+    for (const [id, game] of all) {
+      const pb = probeBoard(game, id);
+      const states: [string, unknown][] = [["fresh", pb.live().state]];
+      if (pb.m.solve() === null) {
+        states.push(["solved", pb.live().state]);
+        solvedStates++;
+      }
+      for (const [when, state] of states) {
+        for (const key of RECORD_KEYS) {
+          if (
+            typeof state === "object" &&
+            state !== null &&
+            Object.hasOwn(state, key)
+          ) {
+            offenders.push(`${id} (${when}): \`${key}\``);
+          }
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+    // Vacuity from the other side: the solved half looked at something.
+    expect(solvedStates).toBeGreaterThanOrEqual(40);
+  });
+});

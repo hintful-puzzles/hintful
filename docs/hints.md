@@ -211,7 +211,7 @@ whether a trial was involved:
   Normal, with a control showing Normal adds firings the tier below lacks, so
   the equality cannot pass vacuously.
 - **Stating the classified contradiction and anchoring it to the board is not
-  a walk.** [`engine/hint-quality.test.ts`](../src/engine/hint-quality.test.ts)
+  a walk.** [`guards/hint-quality.test.ts`](../src/guards/hint-quality.test.ts)
   ("no hint leaves a chain for the player to carry, at any tier") holds every
   game to the walk.
 
@@ -367,7 +367,7 @@ non-forced move uses the imperative. A necessity premise may carry an
 imperative tail where the premise already states the forcing (Palisade's "…
 reaches its count only if every ringed edge is a wall, so draw them all").
 
-`src/engine/hint-quality.test.ts` holds every deductive game's forced steps to
+`src/guards/hint-quality.test.ts` holds every deductive game's forced steps to
 the shared necessity vocabulary. The step's relation says whether it is a
 deduction: a step that offers a move, or is declared `setup` or `bare`, is
 read by its form and not held to the modal. An owner-endorsed phrasing that
@@ -659,7 +659,7 @@ delete the clause to lose the dash. The en-dash is notation and stays
 (Dominosa's `3–5`).
 
 Held by the narration sweep in `hint-quality.test.ts` and, in
-[`hint-em-dash.test.ts`](../src/engine/hint-em-dash.test.ts), a scan of every
+[`hint-em-dash.test.ts`](../src/guards/hint-em-dash.test.ts), a scan of every
 hinting game's source and of the engine's shipped code, where a family's
 sentence is often written once.
 
@@ -787,7 +787,7 @@ for them. A sentence can then use a mark without defining it.
 
 Write it from the game's description's words and one rendered hint, never from
 memory. A change to what a hint draws or calls its marks updates the section
-in the same change. `src/help-coverage.test.ts` checks only that the section
+in the same change. `src/guards/help-coverage.test.ts` checks only that the section
 is there. Exemplar: `src/skeleton/grid/skeleton.description.yaml`.
 
 ### Hint the move that advances the goal
@@ -1166,7 +1166,7 @@ see, and starts reasoning on its first line.
 **A hint makes no wrong-board check of its own.** A hint that opens by
 comparing the board with the answer is a second copy of `findMistakes` that
 keeps the cell to itself: move what it found into `findMistakes`.
-[`wrong-entry-check.test.ts`](../src/engine/wrong-entry-check.test.ts) holds
+[`wrong-entry-check.test.ts`](../src/guards/wrong-entry-check.test.ts) holds
 every game to it.
 
 What a game answers for itself:
@@ -1296,7 +1296,7 @@ firing that makes every fact left before one that makes some; a count would
 take the strikes a placement brings along first. A firing the hint shows no
 step for is bookkeeping too, and its facts go with the next step's. Which
 hinting games judge nothing, and why, is a ledger in
-`src/engine/move-judge-games.test.ts`, which also holds every judging game to
+`src/guards/move-judge-games.test.ts`, which also holds every judging game to
 calling its own hint's first move followed.
 
 **A chain's start is the earliest firing it cannot do without**
@@ -1389,13 +1389,13 @@ A game enrolls in every cross-game hint guard by writing its `hint`, with no
 line of its own: the guards iterate the list
 [`testing/hint-games.ts`](../src/engine/testing/hint-games.ts) derives from
 the registry. They are
-[`hint-resume.test.ts`](../src/engine/hint-resume.test.ts) (resume, purity,
+[`hint-resume.test.ts`](../src/guards/hint-resume.test.ts) (resume, purity,
 plans whose every step changes the state and the frame, Latin naked-single
-honesty), [`hint-overlay.test.ts`](../src/engine/hint-overlay.test.ts) (the
+honesty), [`hint-overlay.test.ts`](../src/guards/hint-overlay.test.ts) (the
 overlay reaches the render cache) and
-[`hint-quality.test.ts`](../src/engine/hint-quality.test.ts) (voice, length,
+[`hint-quality.test.ts`](../src/guards/hint-quality.test.ts) (voice, length,
 binding, show-something), and
-[`hint-finishes-any-board.test.ts`](../src/engine/hint-finishes-any-board.test.ts)
+[`hint-finishes-any-board.test.ts`](../src/guards/hint-finishes-any-board.test.ts)
 (repeated presses finish a board random input has played, and an
 Unreasonable board, through every refusal's way forward). A game's own "the
 plan solves from empty" test is not a substitute for any of them.
@@ -1414,7 +1414,7 @@ hint is computed from the current state.
 - **A heuristic plan must not undo itself across recomputes**
   (`hints-search.md` § "Recompute-stable plans").
 
-[`hint-resume.test.ts`](../src/engine/hint-resume.test.ts) walks a fresh
+[`hint-resume.test.ts`](../src/guards/hint-resume.test.ts) walks a fresh
 board to solved by the hint's own plans, asking afresh as `RECOMPUTES`' doc says, over
 the boards `gatePresets` gives ([`testing.md`](./testing.md) § "Slicing a
 preset sweep for the gate"). Besides a searching game's
@@ -1436,7 +1436,7 @@ reads the whole line. Ask the real question of the line: where an arm can
 end, not how long the first gap is. A rule that leans on another to stay
 monotone is fine; say so in a comment.
 
-[`wrong-entry-check.test.ts`](../src/engine/wrong-entry-check.test.ts) asks
+[`wrong-entry-check.test.ts`](../src/guards/wrong-entry-check.test.ts) asks
 it of every game with `findMistakes`, `solve` and a hint: from a position
 with nothing wrong on it, the hint finishes. The sharp probe is one right
 entry on an otherwise untouched board, and a game where a move sets a cell

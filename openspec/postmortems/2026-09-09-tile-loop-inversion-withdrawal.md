@@ -239,7 +239,7 @@ already guarded in the rest.
 
 ## Finding 5 — what the exploration actually found: a coverage ledger that under-reports
 
-`src/mistake-overlay-coverage.test.ts` carries a ratcheted ledger of 17 games
+`src/guards/mistake-overlay-coverage.test.ts` carries a ratcheted ledger of 17 games
 that "offer `findMistakes` but never render its overlay in a test", and says the
 list may only shrink. **At least six of the seventeen already have the test.**
 

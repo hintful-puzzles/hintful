@@ -44,7 +44,7 @@ made.
    change."* So the criterion had to be applied here rather than assumed
    discharged.
 2. **The derived capability surface exists and ships.**
-   `src/contract-surface.test.ts` reads every optional member of the `Game`
+   `src/guards/contract-surface.test.ts` reads every optional member of the `Game`
    interface off the TypeScript AST, derives implementers from the live registry
    by `Object.hasOwn` on the real game object, and derives consumers from
    property-access nodes in every non-game module. Both halves carry a vacuity

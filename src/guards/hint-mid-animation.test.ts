@@ -1,0 +1,47 @@
+/**
+ * A Hint pressed while the stepper's applied move still animates shows the next
+ * step, and that step is still on display once the move lands.
+ *
+ * The press is answered before the animation's settle advances the plan, so in
+ * every game whose hinted move animates the two can disagree: the press shows
+ * the step in flight, and the settle then hides it, leaving the control armed
+ * to apply a step the player never saw. `midend.test.ts` pins the mechanism on
+ * a fake game; this walks the real ones, whose `hint.refreshStep` and win flash
+ * take part in the settle.
+ */
+import { describe, expect, it } from "vitest";
+import { HINT_GAMES } from "../engine/testing/hint-games.ts";
+import { LAND_S, walkBoards } from "../engine/testing/hint-walk.ts";
+
+describe("a hint asked mid-animation shows the next step", () => {
+  const animated: string[] = [];
+  let walked = 0;
+
+  for (const [name, game] of HINT_GAMES) {
+    it(`${name}: the step shown mid-animation outlives the landing`, () => {
+      walked++;
+      const [{ midend }] = walkBoards(game, true);
+      if (midend.hint() !== null) return;
+      const applied = midend.activeHintStep();
+      expect(midend.executeHint(true)).toBeNull();
+      if (midend.currentAnimationMs() === 0) return;
+      // The applied step may have finished the board: then nothing is armed.
+      if (midend.hint() !== null) return;
+      animated.push(name);
+      const shown = midend.activeHintStep();
+      expect(shown, `${name}: the press showed no step`).not.toBeNull();
+      expect(shown, `${name}: the press showed the step in flight`).not.toBe(applied);
+      midend.timer(LAND_S);
+      expect(midend.activeHintStep()?.explanation, `${name}: the landing hid it`).toBe(
+        shown?.explanation,
+      );
+    });
+  }
+
+  // A sweep in which no game animated would pass having tested nothing. A run
+  // filtered to some games walks only those, which may animate nothing.
+  it("met games whose hinted move animates", (ctx) => {
+    ctx.skip(walked < HINT_GAMES.length, "the run was filtered to some games");
+    expect(animated.length).toBeGreaterThan(0);
+  });
+});

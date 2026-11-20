@@ -51,11 +51,11 @@ function passFiles(): { include: string[]; exclude: string[] } {
  * every mode of every game (110 s here, 2026-11-20).
  */
 const SPREAD = [
-  "src/engine/hint-resume.test.ts",
-  "src/engine/hint-quality.test.ts",
-  "src/engine/warm-repaint.test.ts",
-  "src/engine/desc-error-games.test.ts",
-  "src/engine/ladder-skip.test.ts",
+  "src/guards/hint-resume.test.ts",
+  "src/guards/hint-quality.test.ts",
+  "src/guards/warm-repaint.test.ts",
+  "src/guards/desc-error-games.test.ts",
+  "src/guards/ladder-skip.test.ts",
   "src/puzzle/mark-collisions.test.ts",
 ];
 

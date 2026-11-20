@@ -2,7 +2,7 @@
  * **A game ID upstream's encoder writes opens here** (`engine-params`, "A
  * params string is read whole or refused"): the letters upstream writes for
  * a setting this app has no field for are read by name, never by a skip.
- * `engine/params-read-whole.test.ts` holds the other half, the strings no
+ * `guards/params-read-whole.test.ts` holds the other half, the strings no
  * game reads.
  *
  * The table lives here, above the engine, because what says a game has an

@@ -283,7 +283,7 @@ describe("subsets generator (tier 1)", () => {
 
 // --- difficulty tiers -------------------------------------------------------
 //
-// The cross-game contract guards (`engine/difficulty-contract.test.ts`) already
+// The cross-game contract guards (`guards/difficulty-contract.test.ts`) already
 // hold cap-monotonicity and tier-reachability for this game; what is left here
 // is what only Subsets can assert — that the restored head half of
 // `applyArrowsAdvanced` is *sound*, and that the tier gate actually binds.

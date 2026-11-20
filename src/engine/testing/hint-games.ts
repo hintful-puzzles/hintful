@@ -181,7 +181,7 @@ export function markRoles(highlights: unknown): number {
  * **What the slice does not walk, and what does.** Every other preset — a
  * game's largest board, a mode at a size other than its smallest, a tier at a
  * size other than the menu's first — is the slow tier's, through this same
- * function: `npm run test:slow -- src/engine/hint-resume.test.ts`.
+ * function: `npm run test:slow -- src/guards/hint-resume.test.ts`.
  */
 export function gatePresets(game: AnyGame): { title: string; params: unknown }[] {
   return dealtBoards(game, { every: SLOW_TESTS_ENABLED, scalarEnds: false });

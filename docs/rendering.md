@@ -101,7 +101,7 @@ first redraw of a fresh draw state the midend fills the whole canvas in color
 0 before `game.redraw` runs, and on every other redraw it paints nothing
 (`engine-drawing` § "The midend repaints on every transition, rebuilds the
 draw state for a new tile size, and lays the ground under a fresh one").
-`src/engine/first-frame-coverage.test.ts` holds every game's first frame to
+`src/guards/first-frame-coverage.test.ts` holds every game's first frame to
 full coverage.
 
 - **A first-frame branch draws only what is the game's own** (grid frame,
@@ -234,10 +234,10 @@ its ring key as a string lane).
 ### A warm frame must match a fresh one
 
 **A frame drawn on a warm draw state must look like a fresh paint of the
-same state.** `src/engine/warm-repaint.test.ts` holds every registered game
+same state.** `src/guards/warm-repaint.test.ts` holds every registered game
 to it by driving a real `Midend` through seeded input; its header and
 `engine/testing/repaint-differential.ts`'s say what is compared and why. Run
-it with `npx vitest run src/engine/warm-repaint.test.ts -t <game>`. When it
+it with `npx vitest run src/guards/warm-repaint.test.ts -t <game>`. When it
 names a game, the cause is one of these, and each is a rule:
 
 - **Every input the painter reads is a term of the key.** A `Ui` field or a
@@ -329,7 +329,7 @@ what the square holds, with its sides in the key (`drawMarkSides`,
 misses the cache, so an overlay missing from the diff test still paints.
 
 - **The hint overlay is guarded for every game with a hint** by
-  [`hint-overlay.test.ts`](../src/engine/hint-overlay.test.ts). A game owes
+  [`hint-overlay.test.ts`](../src/guards/hint-overlay.test.ts). A game owes
   it nothing.
 - **The mistake overlay is guarded for every game that finds mistakes** by
   `warm-repaint.test.ts`, which compares a warm mistaken frame, and the frame
@@ -337,7 +337,7 @@ misses the cache, so an overlay missing from the diff test still paints.
   a fresh one"). A game owes it at most a `WRONG` pin, whether the flag rides
   a sidecar or the tile key.
 - **What the game's own test owes is the look.**
-  `src/mistake-overlay-coverage.test.ts` requires a test that paints the
+  `src/guards/mistake-overlay-coverage.test.ts` requires a test that paints the
   overlay and asserts what it drew; a `renderScenario` `showMistakes` frame
   does. A test that also paints twice, as `towers.test.ts` ("highlights a
   mistake even when the cell was already drawn") does, proves the repaint
@@ -708,7 +708,7 @@ when the winning move's own animation ends, so a game that slides or spins a
 tile writes no guard, and it is the midend that withholds it after the Solve
 command.
 
-`src/engine/win-flash.test.ts` paints every solvable game's solved board
+`src/guards/win-flash.test.ts` paints every solvable game's solved board
 through a flash. Pin the route in the game's own test: `winFlashRun` paints
 the flash and `expectWinFlashTravels` asserts it lit every element once, in
 the order of the positions handed over (`engine/testing/win-flash.ts`;
@@ -748,7 +748,7 @@ is the baseline (its default is on `Game.preferredTileSize`).
   § "interpretMove and UI_UPDATE").
 - **The draw state's field is `tileSize`**, also for a board that is not
   tiled, whose scale is the number `newDrawState` is handed.
-  `src/capability-surface.test.ts` records the field names, and another
+  `src/guards/capability-surface.test.ts` records the field names, and another
   spelling shows there as a line.
 - **A game with notes mode keeps its border no narrower than
   `pencilIndicatorReach`**, or grows its canvas with `pencilIndicatorCanvas`
@@ -963,7 +963,7 @@ scheme, and a piece's color is its identity and is pinned.
   in a pinned color. Where the thing really is ink, fix the word.
 - **A digit on a pinned cell is pinned with it**, and a grid between
   pinned-white cells is `GRID_DARK`.
-- [`help-lightness-words.test.ts`](../src/help-lightness-words.test.ts)
+- [`help-lightness-words.test.ts`](../src/guards/help-lightness-words.test.ts)
   holds the help page to this. It checks that the palette holds such a
   color, not where it is painted, so look at the dark frame too.
 

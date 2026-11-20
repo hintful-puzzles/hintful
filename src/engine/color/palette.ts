@@ -412,7 +412,7 @@ export function surfaceGrid(background: Color): Color {
  *
  * The theme's yellow, which reads on ink and on nearly every surface in both
  * schemes. Where it does not (a field of that yellow), {@link FLASH_LEAD}
- * does. A game has no lit look of its own: `engine/win-flash.test.ts` holds
+ * does. A game has no lit look of its own: `guards/win-flash.test.ts` holds
  * every element a game lights to these two.
  */
 export const FLASH: Color = GOAL;

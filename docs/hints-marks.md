@@ -636,7 +636,7 @@ engine colors every hint mark".
 
 - **Draw an outline in `HINT_OUTLINE`**, in a palette slot of its own, and a
   mark in nothing else. A recolored clue digit is an outline.
-  [`hint-ink.test.ts`](../src/engine/hint-ink.test.ts) hides each reference
+  [`hint-ink.test.ts`](../src/guards/hint-ink.test.ts) hides each reference
   of the steps every hinting game opens with, and fails on a mark drawn in
   another role's ink or in a slot only a hint uses.
 - **Rings and stripes are the engine's**: `drawRing` and `drawHatch` take no

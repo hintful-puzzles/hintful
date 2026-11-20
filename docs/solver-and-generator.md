@@ -1015,7 +1015,7 @@ Exemplar: `newSkeletonDesc` in
   never ends. Do not end a counting `for` with its own `throw new Error(…)`.
 
 **The gate holds the rule in its fast pass**, in
-[`retry-bound.test.ts`](../src/engine/retry-bound.test.ts), whose header
+[`retry-bound.test.ts`](../src/guards/retry-bound.test.ts), whose header
 says which loops it reads. Each open loop that draws from the RNG must call a
 `retryLimit` guard in its own body, or have a line in the test's
 `BOUNDED_OTHERWISE` ledger saying what ends it, and a `throw` straight after
@@ -1418,7 +1418,7 @@ game decides is only whether it can:
 - **Where a mistake stands in the way, the answer replaces it**, as it
   replaces a wrong digit.
 
-[`solve-finishes.test.ts`](../src/engine/solve-finishes.test.ts) solves
+[`solve-finishes.test.ts`](../src/guards/solve-finishes.test.ts) solves
 every game from positions played into.
 
 ## findMistakes
@@ -1481,7 +1481,7 @@ are no fault there, but a board with none is refused with
   played into ([hints.md](./hints.md) § "Refusal wording comes from one
   module").
 - **A new game with no mistake check pins a board with no solution** in
-  [`no-solution-load.test.ts`](../src/engine/no-solution-load.test.ts).
+  [`no-solution-load.test.ts`](../src/guards/no-solution-load.test.ts).
 
 **A hidden answer is no reason to skip the check.** A game whose answer is
 hidden checks marks against it as any game checks a digit.
@@ -1554,7 +1554,7 @@ no rule yet passes it, and Check & Save then has nothing to point at.
 - **The shape to look for** is a hint that opens by re-solving and answers
   `CONTRADICTION_UNLOCALIZED`: what it found there belongs in `findMistakes`.
 
-[`wrong-entry-check.test.ts`](../src/engine/wrong-entry-check.test.ts) looks
+[`wrong-entry-check.test.ts`](../src/guards/wrong-entry-check.test.ts) looks
 for the gap in every game by entering things blind and asking whether Check
 & Save can name what the answer contradicts. Exemplars: `findMistakes` in
 [`bricks/solver.ts`](../src/games/bricks/solver.ts), which keeps the rule

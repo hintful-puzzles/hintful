@@ -1261,7 +1261,7 @@ describe("crossing findMistakes", () => {
 
   it("Check & Save path: the mistake overlay is actually painted", () => {
     // The test above proves `findMistakes` *finds* the wrong digit; this proves
-    // the frame *draws* it (`src/mistake-overlay-coverage.test.ts`).
+    // the frame *draws* it (`src/guards/mistake-overlay-coverage.test.ts`).
     //
     // Crossing's mistake mark is **not** the run-error frame the test below
     // covers: it is two nested `drawRectOutline` boxes inset well inside the

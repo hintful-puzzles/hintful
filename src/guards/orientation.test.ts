@@ -1,0 +1,219 @@
+/**
+ * **Boards are dealt for a phone held upright.** Two guarantees, both read off
+ * what each registered game already is:
+ *
+ * 1. Every default and every preset draws no wider than tall, judged by the
+ *    game's own `computeSize`: the pixels a player gets, never the params'
+ *    field names. A clue margin, a fleet panel or a tiling's cell shape all
+ *    decide the drawn aspect, and a census keyed on `w > h` counted those
+ *    wrong. The exceptions are a ledger of boards whose shape is the puzzle's
+ *    own.
+ * 2. A game that can turn its params (`Game.transposeParams`) turns them into
+ *    valid params, turns them back exactly, and draws the turned board as the
+ *    same board on its side. That last property is what lets the midend's
+ *    deal-time choice between the two be a plain comparison of tile sizes.
+ *
+ * Who may turn is the game's own `transposeParams` section: it turns, or it
+ * says in `notApplicable` why a turned board would be a different game (or the
+ * same one), or it is a draft (`sections.ts`).
+ */
+
+import { describe, expect, it } from "vitest";
+import type { PresetMenu } from "../engine/game.ts";
+import { presetMenu } from "../engine/param-label.ts";
+import { paramsError } from "../engine/params.ts";
+import { SQUARE_GRID, sectionState } from "../engine/sections.ts";
+import {
+  REGISTERED_GAME_COUNT,
+  REGISTERED_GAMES,
+} from "../engine/testing/enrollment.ts";
+import { expectLedger } from "../engine/testing/ledger.ts";
+import type { AnyGame, AnyParams } from "../engine/testing/params-corpus.ts";
+import type { Size } from "../engine/types.ts";
+
+/** Within this of square a board gains nothing from being turned. */
+const SQUARE_TOLERANCE = 1.02;
+
+/** Boards that draw wider than tall because of what they are, by game and
+ * encoded params. Held exactly right below: an entry nothing needs fails. */
+const WIDE_BY_NATURE: Record<string, { reason: string; params: string[] }> = {
+  cube: {
+    reason:
+      "Each solid rolls on a triangle grid sized to that solid, which draws " +
+      "about 1.12 wide at every size; there is no taller grid of the same solid.",
+    params: ["t1x2", "o2x2", "i3x3"],
+  },
+  ascent: {
+    reason:
+      "Hexagon mode's board is a regular hexagon, wider across its corners " +
+      "than across its flats at every size.",
+    params: ["7x7mH"],
+  },
+};
+
+/** Games whose turned board does not exchange its drawn width and height
+ * exactly, because something is drawn along one side only. Turning them is
+ * still sound: the midend compares the real tile size of each orientation. */
+const UNEVEN_FRAME: Record<string, string> = {
+  abcd: "One pixel of tile-background allowance is added to the width only.",
+  boats: "The fleet is drawn in a panel below the grid.",
+  crossing: "The list of numbers to place is drawn below the grid.",
+  undead: "The monster counts are drawn in a band above the grid.",
+  wordtrail: "The list of word lengths is drawn below the grid.",
+};
+
+const TILE_SIZES = [17, 32];
+
+function leaves(menu: PresetMenu<AnyParams>): AnyParams[] {
+  if (menu.params !== undefined) return [menu.params];
+  return (menu.submenu ?? []).flatMap(leaves);
+}
+
+/** The default and every preset leaf, deduplicated by encoding. */
+function menuParams(game: AnyGame): AnyParams[] {
+  const all = [game.defaultParams(), ...leaves(presetMenu(game))];
+  const seen = new Set<string>();
+  return all.filter((p) => {
+    const key = game.encodeParams(p, true);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/** The menu's boards, plus each one made a size larger along one side, through
+ * the first Custom dialog item that turning the board moves, where that is
+ * still valid (two larger, for a game that wants even sizes). Most menu boards
+ * are square, and a square board turns into itself, so without these the
+ * exchange below could hardly fail. The item is found by turning, not by its
+ * keyword, which a game names for what its numbers mean. */
+function boardsToTurn(game: AnyGame): AnyParams[] {
+  const out = menuParams(game);
+  const turn = game.transposeParams;
+  if (turn === undefined) return out;
+  for (const p of menuParams(game)) {
+    widen: for (const item of game.paramConfig) {
+      if (item.type !== "string") continue;
+      for (const extra of [1, 2]) {
+        const q = structuredClone(p);
+        item.set(q, String(Number(item.get(q)) + extra));
+        if (paramsError(game, q, true) !== null) continue;
+        const t = turn(q);
+        if (t === null || item.get(t) === item.get(q)) continue;
+        out.push(q);
+        break widen;
+      }
+    }
+  }
+  return out;
+}
+
+function drawn(game: AnyGame, p: AnyParams): Size {
+  return game.computeSize(p, game.preferredTileSize);
+}
+
+function hasWidthAndHeight(game: AnyGame): boolean {
+  const kws = new Set(game.paramConfig.map((item) => item.kw));
+  return kws.has("width") && kws.has("height");
+}
+
+describe("portrait by default", () => {
+  it("looks at every game and a menu's worth of boards", () => {
+    expect(REGISTERED_GAME_COUNT).toBeGreaterThanOrEqual(57);
+    const boards = REGISTERED_GAMES.reduce((n, [, g]) => n + menuParams(g).length, 0);
+    expect(boards).toBeGreaterThanOrEqual(400);
+  });
+
+  it("draws no default or preset wider than tall, outside the ledger", () => {
+    const wide: string[] = [];
+    for (const [id, game] of REGISTERED_GAMES) {
+      for (const p of menuParams(game)) {
+        const { w, h } = drawn(game, p);
+        if (w > h * SQUARE_TOLERANCE) wide.push(`${id}:${game.encodeParams(p, false)}`);
+      }
+    }
+    const ledger = Object.entries(WIDE_BY_NATURE).flatMap(([id, e]) =>
+      e.params.map((p) => `${id}:${p}`),
+    );
+    const missing = [...new Set(wide)].filter((b) => !ledger.includes(b)).sort();
+    const stale = ledger.filter((b) => !wide.includes(b)).sort();
+    expect(
+      { missing, stale },
+      "WIDE_BY_NATURE (src/guards/orientation.test.ts): a board in `missing` " +
+        "draws wider than tall; make it taller, or add its encoded params to its " +
+        "game's `params` with why no taller board is the same puzzle. Remove each " +
+        "board in `stale` from its game's `params`.",
+    ).toEqual({ missing: [], stale: [] });
+  });
+});
+
+describe("turning a board on its side", () => {
+  const TURNING = REGISTERED_GAMES.filter(([, g]) => g.transposeParams !== undefined);
+
+  it("has a population, and a known positive in it", () => {
+    expect(TURNING.map(([id]) => id)).toContain("magnets");
+    expect(TURNING.length).toBeGreaterThanOrEqual(30);
+  });
+
+  it("is offered by every game with a width and a height, or excused", () => {
+    // A game that forgets to turn is a draft, and the catalog says so; what
+    // fails here is a reason that is not the puzzle's.
+    const excused = REGISTERED_GAMES.filter(
+      ([, g]) => sectionState(g, "transposeParams").kind === "notApplicable",
+    );
+    // Known positive: gravity is the reason a width and a height do not turn.
+    expect(excused.map(([id]) => id)).toContain("bricks");
+    for (const [id, game] of excused) {
+      if (game.notApplicable?.transposeParams !== SQUARE_GRID) continue;
+      // "The grid is square" is a claim, so every board on the menu is held to it.
+      for (const p of menuParams(game)) {
+        const { w, h } = drawn(game, p);
+        expect(`${id}:${game.encodeParams(p, false)}:${w === h}`).toMatch(/:true$/);
+      }
+    }
+    expect(excused.filter(([, g]) => hasWidthAndHeight(g)).length).toBeGreaterThan(0);
+  });
+
+  it("turns valid params into valid params and back again", () => {
+    let turned = 0;
+    for (const [id, game] of TURNING) {
+      for (const p of boardsToTurn(game)) {
+        const t = game.transposeParams?.(p) ?? null;
+        if (t === null) continue;
+        turned++;
+        expect(`${id}:${paramsError(game, t, true)}`).toBe(`${id}:null`);
+        const back = game.transposeParams?.(t) ?? null;
+        expect(back === null ? null : game.encodeParams(back, true)).toBe(
+          game.encodeParams(p, true),
+        );
+      }
+    }
+    expect(turned).toBeGreaterThanOrEqual(200);
+  });
+
+  it("draws the turned board as the same board on its side", () => {
+    const uneven = new Set<string>();
+    const nonSquare = new Set<string>();
+    for (const [id, game] of TURNING) {
+      for (const p of boardsToTurn(game)) {
+        const t = game.transposeParams?.(p) ?? null;
+        if (t === null) continue;
+        for (const ts of TILE_SIZES) {
+          const a = game.computeSize(p, ts);
+          const b = game.computeSize(t, ts);
+          if (a.w !== b.h || a.h !== b.w) uneven.add(id);
+          if (a.w !== a.h) nonSquare.add(id);
+        }
+      }
+    }
+    expectLedger([...uneven], UNEVEN_FRAME, {
+      table: "UNEVEN_FRAME",
+      file: "src/guards/orientation.test.ts",
+      found:
+        "turning games whose turned board does not exchange its drawn width and height",
+      add: "make `computeSize` exchange them exactly, or add it naming what is drawn along one side only",
+    });
+    // Every turning game was checked on a board the exchange could get wrong.
+    expect(TURNING.map(([id]) => id).filter((id) => !nonSquare.has(id))).toEqual([]);
+  });
+});

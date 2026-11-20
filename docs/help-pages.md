@@ -3,7 +3,7 @@
 The rules for the help the app serves. What must hold is the
 [`help-pages`](../openspec/specs/help-pages/spec.md) capability. The renderer
 (`src/describe/help-page.ts`) writes a game page's skeleton, and
-`src/help-coverage.test.ts` checks most of the rest; read it for what is
+`src/guards/help-coverage.test.ts` checks most of the rest; read it for what is
 checked. This guide is the part a test cannot say.
 
 ## Owned by this project
@@ -92,7 +92,7 @@ game has a `hint()`.
 A game's first open shows its rules in a card over the board, so they are
 written for someone who has never played it and is reading on a phone. Apply
 this list to a page you write or change; items marked *checked* are in
-`src/help-coverage.test.ts`.
+`src/guards/help-coverage.test.ts`.
 
 1. **The rules are a summary** (*checked*: a word count of the rules as the
    card shows them, set to what fits a phone unscrolled). The generated lists

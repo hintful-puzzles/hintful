@@ -300,7 +300,7 @@ describe("solver", () => {
   });
 
   // Cap-monotonicity is asserted for every tiered game, Rome included, by
-  // `engine/difficulty-contract.test.ts` through `Game.difficulty`.
+  // `guards/difficulty-contract.test.ts` through `Game.difficulty`.
 
   // A board with no goal leaves no technique a firing, so the ladder stops
   // short of an answer: no technique reads a missing way in as a

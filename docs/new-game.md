@@ -459,7 +459,7 @@ A game, or a change to one, is done when all of these hold:
 - [ ] An explained hint that meets the quality bar ([`hints.md`](./hints.md)).
       A new game ships with its hint; one registered with `hint: DRAFT_HINT`
       is a draft.
-- [ ] A help page in the standard shape, which `src/help-coverage.test.ts`
+- [ ] A help page in the standard shape, which `src/guards/help-coverage.test.ts`
       holds to the game ([`hints.md`](./hints.md) § "The help teaches the
       marks"). A mode the page names is written as a choice token
       ([`mechanics.md`](./mechanics.md) § "Params are declared once, on `paramConfig`").

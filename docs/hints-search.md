@@ -26,7 +26,7 @@ and `index.ts`, beside these steps.
    does goes through `searchFinish`. Use two searches where one cannot both
    find and prove (§ "Find with one search, prove with another").
 3. Name the non-negative integer every hinted move lowers, before writing any
-   narration, and run `src/engine/hint-resume.test.ts` on the game
+   narration, and run `src/guards/hint-resume.test.ts` on the game
    (§ "Recompute-stable plans").
 4. In `hint`, refuse through `searchRefusal` where the search found no line.
    Otherwise offer the plan's first move, or a short plan.
@@ -245,7 +245,7 @@ a non-negative integer every hinted move provably lowers.
 - **Never narrate a tour heuristic as the plan.** Recomputed from adjacent
   positions, one can disagree with itself about what to fetch first.
 
-The guard is `src/engine/hint-resume.test.ts`: ask, apply the first step,
+The guard is `src/guards/hint-resume.test.ts`: ask, apply the first step,
 throw the plan away, ask again, to solved. It runs for every game with a
 `hint`. Run it on yours before polishing any narration, with
 `npm run game -- <id>` ([`testing.md`](./testing.md) § "A game's verdict in
@@ -255,7 +255,7 @@ cycle: following the plan is the one path that never recomputes.
 
 The gate walks each game's smallest boards, one per mode
 (`gatePresets` in `src/engine/testing/hint-games.ts` says which). The largest
-are the slow tier's (`npm run test:slow -- src/engine/hint-resume.test.ts`),
+are the slow tier's (`npm run test:slow -- src/guards/hint-resume.test.ts`),
 which nothing automatic runs. So where the hint's hard case grows with the
 board, run the slow tier on the game whenever its search changes, and keep a
 test in the game that walks a full-size board on every commit. A game that

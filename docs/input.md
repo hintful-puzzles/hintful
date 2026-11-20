@@ -97,7 +97,7 @@ values, keys of its own, pixel coordinates in its state.
 **Take every button code, class predicate and modifier mask from
 [`engine/pointer.ts`](../src/engine/pointer.ts), and never restate one**: no
 local `const MOD_MASK`, no renamed copy, no magic number where a named button
-exists. [`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts)
+exists. [`emittable-keys.test.ts`](../src/guards/emittable-keys.test.ts)
 derives the export list from the module and fails on a game-local
 declaration that shadows one.
 
@@ -131,13 +131,13 @@ each by being registered. The section named says what the game owes.
 | Guard | What it holds |
 | --- | --- |
 | [`view-interactive.test.ts`](../src/puzzle/components/view-interactive.test.ts) | a finger and a mouse send the same codes; a held key or the middle button changes nothing (§ "One pointer, two buttons") |
-| [`input-parity.test.ts`](../src/engine/input-parity.test.ts) | the `ignoresSecondaryButton` biconditional (§ "A touch hold arrives as the right button"); that a keyboard-only sequence commits a move, not merely moves a cursor; that every on-screen key reaches the game (§ "The on-screen keypad"); that a game declines a button it did not act on |
+| [`input-parity.test.ts`](../src/guards/input-parity.test.ts) | the `ignoresSecondaryButton` biconditional (§ "A touch hold arrives as the right button"); that a keyboard-only sequence commits a move, not merely moves a cursor; that every on-screen key reaches the game (§ "The on-screen keypad"); that a game declines a button it did not act on |
 | [`shortcuts.test.ts`](../src/puzzle/shortcuts.test.ts) | every bare letter the app binds still reaches the app (§ "The app's shortcut keys") |
-| [`emittable-keys.test.ts`](../src/engine/emittable-keys.test.ts) | no game tests a code the frontend cannot send (§ "The numeric keypad never arrives") |
-| [`canceled-press.test.ts`](../src/engine/canceled-press.test.ts) | a canceled press leaves the board and the `Ui` as they were (§ "A canceled press is the engine's") |
-| [`drag-cancel.test.ts`](../src/engine/drag-cancel.test.ts) | a gesture ends when the board changes under it (§ "A board change under a gesture is the engine's") |
-| [`input-answers.test.ts`](../src/engine/input-answers.test.ts) | what each answer of `interpretMove` leaves behind ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE") |
-| [`modifier-arrow.test.ts`](../src/engine/modifier-arrow.test.ts) | Shift or Ctrl with an arrow and with its opposite never change the board alike |
+| [`emittable-keys.test.ts`](../src/guards/emittable-keys.test.ts) | no game tests a code the frontend cannot send (§ "The numeric keypad never arrives") |
+| [`canceled-press.test.ts`](../src/guards/canceled-press.test.ts) | a canceled press leaves the board and the `Ui` as they were (§ "A canceled press is the engine's") |
+| [`drag-cancel.test.ts`](../src/guards/drag-cancel.test.ts) | a gesture ends when the board changes under it (§ "A board change under a gesture is the engine's") |
+| [`input-answers.test.ts`](../src/guards/input-answers.test.ts) | what each answer of `interpretMove` leaves behind ([`mechanics.md`](./mechanics.md) § "interpretMove and UI_UPDATE") |
+| [`modifier-arrow.test.ts`](../src/guards/modifier-arrow.test.ts) | Shift or Ctrl with an arrow and with its opposite never change the board alike |
 | [`hint-gesture.test.ts`](../src/engine/hint-gesture.test.ts) | every hint step is played through `interpretMove` by the gesture `hintGesture` gives ([`hints.md`](./hints.md) § "Every step is a gesture") |
 
 **Take a modified arrow's direction from the key (`cursorDelta`), never from
@@ -167,7 +167,7 @@ questions the guards ask, so two guards cannot drift apart.
 - **Button codes are not Unicode.** A private-use code such as `0xE000`
   carries bits of `MOD_MASK`, so it decodes as modifiers on another key. Take
   a code no game acts on from `UNACTIONABLE` in
-  [`input-parity.test.ts`](../src/engine/input-parity.test.ts), which derives
+  [`input-parity.test.ts`](../src/guards/input-parity.test.ts), which derives
   why each is safe from the vocabulary.
 
 ## The numeric keypad never arrives
@@ -514,7 +514,7 @@ pixels. Exemplar: [`tracks/index.ts`](../src/games/tracks/index.ts).
 **Do not write a second paint drag beside the model's.** Where the drag is the
 game's own gesture on that target, the click stays one mark a press.
 
-[`target-verb-sweep.test.ts`](../src/engine/target-verb-sweep.test.ts) plays
+[`target-verb-sweep.test.ts`](../src/guards/target-verb-sweep.test.ts) plays
 every declaring game: a drag between two like targets marks both, and one Undo
 takes it back.
 
@@ -529,7 +529,7 @@ lands on it and what it holds, and drives the drag with `beginSweep`,
 - **A clue marked done is the game's `doneClues`**, even where its targets
   are also verbs' (Magnets, whose verbs delegate to it). The help writes the
   page's sentence from it and
-  [`drag-marks.test.ts`](../src/engine/drag-marks.test.ts) plays it, both
+  [`drag-marks.test.ts`](../src/guards/drag-marks.test.ts) plays it, both
   finding it on the `Game`.
 - **Any other such mark is exported and named in that test**, since no `Game`
   member carries it and no guard finds it otherwise. A `holds` that reads the
@@ -542,7 +542,7 @@ Exemplars: `clueDrag` in [`towers/index.ts`](../src/games/towers/index.ts);
 
 **Hold the keyboard cursor as `ui.cursor`, a `GridCursor` from
 `engine/pointer.ts` built by `newCursor`, and give nothing about it a second
-name.** [`cursor-vocabulary.test.ts`](../src/engine/cursor-vocabulary.test.ts)
+name.** [`cursor-vocabulary.test.ts`](../src/guards/cursor-vocabulary.test.ts)
 finds a cursor by its shape, read off `newCursor()`, and fails on one held
 anywhere else. The cursor helpers' docs say what each returns. For a
 traversal that is not a bounded grid step (a half-grid cursor, corner
@@ -812,7 +812,7 @@ leaves the game as it was before the press". What it asks of a game:
 - **Do not read a drag off the top left of the board as a cancel.** It is only
   somewhere a player dragged to.
 
-Guard: [`canceled-press.test.ts`](../src/engine/canceled-press.test.ts).
+Guard: [`canceled-press.test.ts`](../src/guards/canceled-press.test.ts).
 
 ## A board change under a gesture is the engine's
 
@@ -837,7 +837,7 @@ Exemplar: `sokoban/index.ts`. Do not write one for Undo. What else
 `changedState` is for is in [`mechanics.md`](./mechanics.md) §
 "changedState".
 
-Guard: [`drag-cancel.test.ts`](../src/engine/drag-cancel.test.ts).
+Guard: [`drag-cancel.test.ts`](../src/guards/drag-cancel.test.ts).
 
 ## A button you did not act on must not be claimed
 

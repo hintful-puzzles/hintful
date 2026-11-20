@@ -5,7 +5,7 @@
 The help the app serves: where its pages live, the one skeleton a game's page
 follows and what is generated into it from the game, how a page names a
 control, a choice or a hint mark, and what the site-level pages owe a player
-about the features this fork adds. `src/help-coverage.test.ts` holds most of
+about the features this fork adds. `src/guards/help-coverage.test.ts` holds most of
 these, and how to write a page is `docs/help-pages.md`.
 
 ## Requirements
