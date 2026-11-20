@@ -19,7 +19,6 @@ import type { SixteenMove } from "./state.ts";
  * assert the stored plan's shape and current step. */
 interface PrivateHintView {
   activeHint: { steps: { move: SixteenMove }[]; index: number } | null;
-  animLength: number;
 }
 
 function harness(game: typeof sixteenGame = sixteenGame) {
@@ -363,7 +362,7 @@ describe("Sixteen midend integration — executeHint auto-play", () => {
 
     // Hint-executed moves animate in slow motion, stretched to the uniform
     // HINT_ANIM_S (1.0s) regardless of the game's own ANIM_TIME (0.4s here).
-    expect(mPrivate.animLength).toBeCloseTo(1.0);
+    expect(h.m.currentAnimationMs()).toBeCloseTo(1000);
 
     // Still animating well past the normal 0.4s settle point — the
     // executed step stays on display, describing the move in flight.
@@ -383,7 +382,7 @@ describe("Sixteen midend integration — executeHint auto-play", () => {
     // A manual move is NOT stretched: it settles at the game's own 0.4s.
     h.m.processInput(0, 0, CURSOR_SELECT);
     h.m.processInput(0, 0, 0x2000 | CURSOR_RIGHT); // shift + cursor_right
-    expect(mPrivate.animLength).toBeCloseTo(0.4);
+    expect(h.m.currentAnimationMs()).toBeCloseTo(400);
   });
 
   // Deliberately not clock-gated: the guarantee is the mechanism — hintCalls
