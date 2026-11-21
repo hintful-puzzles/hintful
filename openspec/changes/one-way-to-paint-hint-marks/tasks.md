@@ -69,8 +69,10 @@
         still read as two squares (its comment's reason). Wordtrail's
         spotlight keeps `outlineSides`: it is not a hint mark. No snapshot
         moved; all seven games walked in the app.
-  - [ ] Rings drawn by hand on a cell's band, onto `drawCellRing`: Flip,
-        Mines, Range, Slant, Sticks, Boats, Tracks, Signpost, Lightup.
+  - [x] Rings drawn by hand on a cell's band, onto `drawCellRing`: Flip and
+        Tracks here, the rest with their batches above. Signpost's square
+        ring keeps `drawRing` off center, for the reason its item gives.
+        Neither ring changed thickness: each band's width was its ring's.
 - [ ] 2.2 A render snapshot that moves is a look that changed: check each
       against the variant's look, and record it. (None moved through 1.3.)
 - [ ] 2.3 The skeletons write the engine's form (grid: done in 1.3; edges:

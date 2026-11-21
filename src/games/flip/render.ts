@@ -22,6 +22,7 @@ import type { Color, Rect, Size } from "../../engine/contract/types.ts";
 import { drawThickRectOutline } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
 import {
+  drawCellRing,
   drawMarkSides,
   type MarkBand,
   MarkOutlines,
@@ -252,7 +253,7 @@ function drawTile(
     inner: Math.max(2, ts >> 4),
   };
   drawMarkSides(dr, band, marks.evidenceSides(x, y), COL_HINT_OUTLINE);
-  if (marks.targetSides(x, y)) dr.drawRing(inner, NOTHING_TO_CLEAR, band.inner);
+  if (marks.targetSides(x, y)) drawCellRing(dr, band, NOTHING_TO_CLEAR);
 
   dr.unclip();
   dr.drawUpdate(inner);

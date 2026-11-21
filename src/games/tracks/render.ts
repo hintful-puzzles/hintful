@@ -58,6 +58,7 @@ import {
 import { glyphFont } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
 import {
+  drawCellRing,
   drawMarkSides,
   evidenceSidesOf,
   MARK_ALL,
@@ -544,8 +545,8 @@ function drawHintMarks(
   // Evidence first, so a target's ring lies over any border the two share.
   // A ring is the engine's, round: an asked side's is a pill across it, which
   // each of the side's two squares draws its half of in its own clip.
-  const area = (hint >> H_AREA_SHIFT) & MARK_ALL;
-  if (area) drawMarkSides(dr, { box, outer: 0, inner: band }, area, COL_HINT_OUTLINE);
+  const markBand = { box, outer: 0, inner: band };
+  drawMarkSides(dr, markBand, (hint >> H_AREA_SHIFT) & MARK_ALL, COL_HINT_OUTLINE);
   const ringThick = Math.max(2, lineThick);
   drawEdgeHints(dr, hint, COL_HINT_OUTLINE, {
     line: (sides, ink, role) =>
@@ -570,9 +571,12 @@ function drawHintMarks(
     },
   });
   if (hint & H_RING)
-    dr.drawRing(box, NOTHING_TO_CLEAR, ringThick, {
-      inside: hint & H_EMPTY ? (ink) => drawRuledOutCross(dr, box, ink) : undefined,
-    });
+    drawCellRing(
+      dr,
+      markBand,
+      NOTHING_TO_CLEAR,
+      hint & H_EMPTY ? (ink) => drawRuledOutCross(dr, box, ink) : undefined,
+    );
 }
 
 function drawSquare(
