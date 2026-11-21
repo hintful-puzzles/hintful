@@ -680,6 +680,7 @@ export function redraw(
     ds.marks.paint(dr, targets, evidence, {
       band: (x, y) => markBand(ds.tileSize, x, y),
       text: (x, y) => cellText(s, ds, x, y),
+      words: stepMarks(hint),
       evidenceColor: COL_HINT_OUTLINE,
       // The entry the hint asks for, inside the ring on its square.
       inside: ([c]) => {

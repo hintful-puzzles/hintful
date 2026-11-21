@@ -27,7 +27,7 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -39,8 +39,8 @@ import {
   drawThickRectOutline,
   glyphFont,
 } from "../../engine/render/draw.ts";
-import { hatchPeriod } from "../../engine/render/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { drawCellRing, drawMarkSides } from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
@@ -117,28 +117,24 @@ const DS_ERROR = 0x10;
 const DS_FLASH = 0x20;
 const DS_FLASH_LEAD = 0x40;
 const DS_MISTAKE = 0x80;
-// Hint overlay: a forced cell, an evidence cell (outlined, in a color of its
-// kind when it is a decided premise, whose state is then the reason), and a
-// corner-deduction's protected corner.
-const DS_HINT_TARGET = 0x100;
-const DS_HINT_EVID = 0x200;
-const DS_HINT_STRAND = 0x400;
-const DS_HINT_LINE = 0x800; // on the line the sentence names: hatched
 
 export interface SinglesDrawState {
   tileSize: number;
   w: number;
   h: number;
-  /** What each cell shows, as its `DS_*` flags. */
+  /** What each cell shows, as its `DS_*` flags, and the hint's marks. */
   tiles: TileCache;
+  hint: OverlaySidecar;
 }
 
 export function newDrawState(state: SinglesState, tileSize: number): SinglesDrawState {
+  const hint = new OverlaySidecar(state.n);
   return {
     tileSize,
     w: state.w,
     h: state.h,
-    tiles: new TileCache(state.n),
+    tiles: new TileCache(state.n, { overlays: [hint] }),
+    hint,
   };
 }
 
@@ -151,6 +147,8 @@ function tileRedraw(
   y: number,
   num: number,
   f: number,
+  hint: OverlaySidecar,
+  i: number,
 ): void {
   const shaded = f & DS_BLACK;
   const error = f & DS_ERROR;
@@ -177,7 +175,7 @@ function tileRedraw(
   );
   // The hatch goes under the piece: it marks the line, and the piece is what
   // the line holds.
-  if (f & DS_HINT_LINE) dr.drawHatch(inner, hatchPeriod(ts));
+  hint.drawHatch(dr, i, inner, ts);
 
   if (shaded) {
     drawPiece(dr, inner, SHADED_SHAPE, error ? COL_ERROR : COL_SHADED);
@@ -204,13 +202,15 @@ function tileRedraw(
   // for — is what erases a mark that moves.
   const band = { box: inner, outer: 0, inner: markT(ts) };
   const text = dnum ? numberText(ts, num, shaded !== 0) : null;
-  if (f & DS_HINT_TARGET) {
-    const clear = text
-      ? { enclose: [textBox(c, text.options, text.text)], avoid: [] }
-      : NOTHING_TO_CLEAR;
-    dr.drawRing(inner, clear, band.inner);
-  } else if (f & (DS_HINT_STRAND | DS_HINT_EVID))
-    drawMarkSides(dr, band, MARK_ALL, COL_HINT_OUTLINE);
+  drawMarkSides(dr, band, hint.outlineSides(i), COL_HINT_OUTLINE);
+  if (hint.ringed(i))
+    drawCellRing(
+      dr,
+      band,
+      text
+        ? { enclose: [textBox(c, text.options, text.text)], avoid: [] }
+        : NOTHING_TO_CLEAR,
+    );
 
   if (text) dr.drawText(c, text.options, tcol, text.text);
 
@@ -262,17 +262,7 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h } = state;
 
-  // Index the displayed hint step's marks. The protected corner is one of the
-  // outlined cells, told apart by the step's `strand`.
-  const marks = stepMarks(hint);
-  const index = (c: Point): number => c.y * w + c.x;
-  const strand = new Set(hint?.highlights?.strand.map(index));
-  const hintTarget = new Set(marks.of("ring", CELL).map(index));
-  const hintEvid = new Set<number>();
-  const hintStrand = new Set<number>();
-  for (const i of marks.of("outline", CELL).map(index))
-    (strand.has(i) ? hintStrand : hintEvid).add(i);
-  const hintLine = new Set(marks.of("stripes", CELL).map(index));
+  ds.hint.pack(stepMarks(hint), (x, y) => y * w + x);
   const mistakeSet = new Set(mistakes?.map((m) => m.y * w + m.x));
 
   // The frame closes the grid on its top and left, where no tile draws a
@@ -299,13 +289,9 @@ export function redraw(
       if (state.flags[i] & F_CIRCLE) f |= DS_CIRCLE;
       if (state.flags[i] & F_ERROR) f |= DS_ERROR;
       if (mistakeSet.has(i)) f |= DS_MISTAKE;
-      if (hintTarget.has(i)) f |= DS_HINT_TARGET;
-      if (hintEvid.has(i)) f |= DS_HINT_EVID;
-      if (hintStrand.has(i)) f |= DS_HINT_STRAND;
-      if (hintLine.has(i)) f |= DS_HINT_LINE;
 
       if (ds.tiles.changed(i, f))
-        tileRedraw(dr, ts, coord(x, ts), coord(y, ts), state.nums[i], f);
+        tileRedraw(dr, ts, coord(x, ts), coord(y, ts), state.nums[i], f, ds.hint, i);
     }
   }
 }

@@ -597,6 +597,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (bx, by) => markBand(ds, bx, by),
     text: (bx, by) => squareText(ts, armedAt, bx, by),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   });
 

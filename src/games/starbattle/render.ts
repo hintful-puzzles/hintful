@@ -304,6 +304,7 @@ export function redraw(
     band: (x, y) => markBand(ds, size, x, y),
     // A square shows no text: a star and a cross are shapes.
     text: () => NOTHING_TO_CLEAR,
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   });
 }

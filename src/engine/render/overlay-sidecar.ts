@@ -24,7 +24,7 @@ import type { GameDrawing } from "../contract/game.ts";
 import { CELL, NOTE, type Note, type StepMarks } from "../contract/hint-words.ts";
 import type { Rect } from "../contract/types.ts";
 import { hatchPeriod } from "./hatch.ts";
-import { outlineSides } from "./hint-mark.ts";
+import { evidenceSides } from "./hint-mark.ts";
 
 /** Bit 0: the cell the deduction acts on (`COL_HINT`). */
 export const HINT_TARGET = 1;
@@ -121,13 +121,11 @@ export class OverlaySidecar {
     markBits: ((note: Note) => number) | null = null,
   ): void {
     this.clear();
-    const area = marks.of("outline", CELL);
-    const inArea = new Set(area.map((a) => CELL.key(a)));
-    const isEvidence = (x: number, y: number): boolean => inArea.has(`${x},${y}`);
-    for (const a of area) {
+    const sides = evidenceSides(marks);
+    for (const a of marks.of("outline", CELL)) {
       const i = index(a.x, a.y);
       this.add(i, HINT_AREA);
-      this.outline[i] = outlineSides(a.x, a.y, isEvidence);
+      this.outline[i] = sides(a.x, a.y);
     }
     for (const t of marks.of("ring", CELL)) this.add(index(t.x, t.y), HINT_TARGET);
     // A struck note is its own mark, never its cell's: a cell the words name
@@ -153,6 +151,17 @@ export class OverlaySidecar {
    * cell's background and before its content, so the content stays whole. */
   drawHatch(dr: GameDrawing, i: number, rect: Rect, tileSize: number): void {
     if (this.hatched[i]) dr.drawHatch(rect, hatchPeriod(tileSize));
+  }
+
+  /** Whether the step rings cell `i` this frame. */
+  ringed(i: number): boolean {
+    return (this.packed[i] & HINT_TARGET) !== 0;
+  }
+
+  /** The sides of cell `i` the evidence's outline runs along this frame, for
+   * `drawMarkSides`: one contour round a contiguous area. */
+  outlineSides(i: number): number {
+    return this.outline[i];
   }
 
   /** True when cell `i` carries any overlay this frame. */

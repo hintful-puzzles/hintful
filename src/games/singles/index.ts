@@ -242,8 +242,8 @@ export interface SinglesTarget extends Point {
 /** Highlight data for a Singles hint step. `targets` are the squares the
  * firing decides, each with the mark it asks for; a firing that decides
  * several at once carries them all. `strand` is the distinct corner a
- * corner deduction keeps from being sealed off, which `redraw` draws in its
- * own color so the player can tell it from the matching numbers. */
+ * corner deduction keeps from being sealed off, which the sentence names
+ * apart from the matching numbers. */
 export type SinglesHint = FiringHint<SinglesTarget>;
 
 export type SinglesRung = (typeof SAYS_KINDS)[number];

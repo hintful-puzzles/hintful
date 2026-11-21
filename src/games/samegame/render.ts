@@ -286,6 +286,7 @@ export function redraw(
     band: (x, y) => markBand(ds, x, y),
     // A tile is a color, never text.
     text: () => NOTHING_TO_CLEAR,
+    words: named,
     evidenceColor: COL_HINT_OUTLINE,
     // A step rings one group: one pill where it is straight, and a ring per
     // square where it bends.

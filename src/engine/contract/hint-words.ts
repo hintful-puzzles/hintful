@@ -787,6 +787,34 @@ export class StepMarks {
     }
     return out as readonly E[];
   }
+
+  /** Whether the references in `role` that name `a` are exactly those that
+   * name `b`, and there is one. The app colors each reference apart, so a
+   * mark that joins elements into one shape joins them only within a
+   * reference; and an element a second reference also names is painted in
+   * that one's color too, which would cover a side its first shape left open. */
+  together<E>(role: MarkRole, kind: MarkKind<E>): (a: E, b: E) => boolean {
+    const refsOf = new Map<string, number[]>();
+    this.refs.forEach((r, i) => {
+      if (r.role !== role || r.kind.name !== kind.name) return;
+      for (const e of r.elements as readonly E[]) {
+        const k = kind.key(e);
+        const named = refsOf.get(k);
+        if (!named) refsOf.set(k, [i]);
+        else if (named[named.length - 1] !== i) named.push(i);
+      }
+    });
+    return (a, b) => {
+      const ra = refsOf.get(kind.key(a));
+      const rb = refsOf.get(kind.key(b));
+      return (
+        ra !== undefined &&
+        rb !== undefined &&
+        ra.length === rb.length &&
+        ra.every((i, n) => rb[n] === i)
+      );
+    };
+  }
 }
 
 const cache = new WeakMap<Narration, StepMarks>();

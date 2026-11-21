@@ -522,6 +522,7 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ts, x, y),
     text: (x: number, y: number) => cellText(state, ts, x, y),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {

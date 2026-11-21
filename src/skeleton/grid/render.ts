@@ -265,9 +265,8 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ts, x, y),
     text: (x: number, y: number) => squareText(state, ts, x, y),
+    words: named,
     evidenceColor: COL_HINT_OUTLINE,
-    // Two numbers side by side are two premises, each outlined by itself.
-    joinEvidence: () => false,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_GRID, (x, y) => {
     if (x >= 0 && x < w && y >= 0 && y < h) ds.tiles.forget(y * w + x);

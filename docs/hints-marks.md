@@ -330,10 +330,17 @@ geometry and not by eye, and record the bound at the game's `markBand`
 
 **Outline the evidence, never wash it**: its cells carry what the player has
 to read, and even an empty cell's surface is part of its premise (Light Up's
-unlit square is told by not being yellow). `outlineSides` paints a side
-wherever the neighbor across it is not also evidence, so a contiguous region
-comes out as one contour and a scattered set as one ring a cell.
+unlit square is told by not being yellow). `evidenceSides` paints a side
+wherever the neighbor across it is not evidence of the same reference, so a
+contiguous region comes out as one contour and a scattered set as one ring
+a cell.
 
+- **A contour is one reference's.** The app colors each reference apart, so
+  two cells share an outline only when the same references name them
+  (`StepMarks.together`); two references that touch are two closed shapes.
+  Take the sides from `evidenceSides(words)` or `OverlaySidecar.pack`, and
+  give `HintMarkStyle` the step's `words`; never `outlineSides` over the
+  whole outline set.
 - **One shape for one role.** Do not outline one kind of evidence cell and
   mark another some other way.
 - **Never drop the evidence mark.** Where a sentence says "this cage" and the

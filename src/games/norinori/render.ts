@@ -321,6 +321,7 @@ export function redraw(
     band: (x, y) => markBand(ds, w, x, y),
     // A square shows no text: a shaded piece and a cross are shapes.
     text: () => NOTHING_TO_CLEAR,
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   });
 }

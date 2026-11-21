@@ -414,6 +414,7 @@ export function redraw(
   const markStyle: HintMarkStyle = {
     band: (x, y) => markBand(ds, x, y),
     text: (x, y) => squareText(state, ts, x, y),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   };
   // The spot's ring is this file's (`drawSpotRing`); its sides here are only

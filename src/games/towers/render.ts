@@ -610,6 +610,7 @@ export function redraw(
       return { ...band, box: { ...band.box, x: face.x, y: face.y } };
     },
     text: (x, y) => cellText(ds, threeD, x, y),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   });
 

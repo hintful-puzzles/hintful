@@ -501,6 +501,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(ts, x, y),
     text: (x, y) => cellText(state, ts, x, y),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   });
   // A mark passes behind the clues on its cell's corners, never over their

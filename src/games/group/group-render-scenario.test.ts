@@ -106,15 +106,15 @@ describe("group render scenarios", () => {
     // The forced cell is **ringed**, round, and the three known products are
     // outlined COL_HINT_OUTLINE as evidence.
     //
-    // The side count is the assertion, because it is what distinguishes one
-    // contour from a ring per cell. The kind's premises are an adjacent pair,
-    // which the neighbor rule joins into a 6-sided contour, plus a separate
-    // cell — **10**, where a per-cell renderer would give 12 and one that
-    // dropped a premise 6.
+    // The side count is the assertion. The three products are three
+    // references ("c·d = e", "d·d = f", "(c·d)·d = d"), which the app colors
+    // apart, so each is a closed box even where two are adjacent: **12**,
+    // where a renderer joining across references would give 10 and one that
+    // dropped a premise 8.
     expectRing(frame.recording.ops);
     expect(areaOf(step)).toHaveLength(3);
     const evidence = markSides(frame.recording.ops, COL_HINT_OUTLINE);
-    expect(evidence.length).toBe(10);
+    expect(evidence.length).toBe(12);
     for (const s of evidence) expect(isThin(s)).toBe(true);
 
     expect(frame.recording.ops).toMatchSnapshot();

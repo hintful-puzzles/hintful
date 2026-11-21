@@ -594,6 +594,7 @@ export function redraw(
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(x, y, ts, n),
     text: (x, y) => cellText(state, ts, x, y),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   });
 

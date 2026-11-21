@@ -2696,12 +2696,28 @@ exports[`group render scenarios > an associativity hint frame rings the target a
     "y": 218,
   },
   {
+    "h": 3,
+    "op": "rect",
+    "rgb": "rgb(40, 132, 32)",
+    "w": 49,
+    "x": 266,
+    "y": 264,
+  },
+  {
     "h": 49,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
     "w": 3,
     "x": 312,
     "y": 218,
+  },
+  {
+    "h": 3,
+    "op": "rect",
+    "rgb": "rgb(40, 132, 32)",
+    "w": 49,
+    "x": 266,
+    "y": 266,
   },
   {
     "h": 49,

@@ -40,6 +40,7 @@
  */
 
 import type { GameDrawing } from "../contract/game.ts";
+import { CELL, type StepMarks } from "../contract/hint-words.ts";
 import type { Rect } from "../contract/types.ts";
 import { type RingClear, ringContentBox } from "./ring.ts";
 
@@ -114,7 +115,27 @@ export function outlineSides(
   );
 }
 
+/**
+ * The outline sides of each cell the step's words outline: a side wherever
+ * the neighbor across it is not outlined by the same references
+ * (`StepMarks.together`). A contiguous reference comes out as one contour;
+ * two references that touch stay two closed shapes, because the app colors
+ * each apart and a side they shared would belong to neither. Zero for a cell
+ * the words do not outline.
+ */
+export function evidenceSides(words: StepMarks): (x: number, y: number) => number {
+  const outlined = new Set(words.of("outline", CELL).map((c) => CELL.key(c)));
+  const together = words.together("outline", CELL);
+  return (x, y) => {
+    if (!outlined.has(CELL.key({ x, y }))) return 0;
+    return outlineSides(x, y, (nx, ny) => together({ x, y }, { x: nx, y: ny }));
+  };
+}
+
 export interface HintMarkStyle {
+  /** The step's marks, whose references decide which evidence cells share
+   * one outline ({@link evidenceSides}). */
+  words: StepMarks;
   /** Where cell `(x, y)`'s band sits. */
   band(x: number, y: number): MarkBand;
   /**
@@ -134,8 +155,9 @@ export interface HintMarkStyle {
    */
   joinTargets?: (a: MarkCell, b: MarkCell) => boolean;
   /**
-   * Whether two edge-adjacent evidence cells share one outline. Omitted, any two
-   * do — one contour around a region. A game whose evidence is whole pieces
+   * Whether two edge-adjacent evidence cells share one outline, beside their
+   * being named by one reference. Omitted, any two that are do — one contour
+   * around a reference's region. A game whose evidence is whole pieces
    * joins only within a piece, so two dominoes side by side stay two shapes
    * rather than one that is not on the board.
    */
@@ -181,6 +203,22 @@ function roleSides(
 
 const never = (): boolean => false;
 
+/** Which evidence cells share an outline: those one reference names, and
+ * that the game's own relation joins. Without words, any two the game's
+ * relation joins (a game outlining what is not the step's evidence). */
+function evidenceJoin({
+  words,
+  joinEvidence,
+}: Pick<HintMarkStyle, "joinEvidence"> & Partial<Pick<HintMarkStyle, "words">>):
+  | ((a: MarkCell, b: MarkCell) => boolean)
+  | null {
+  if (!words) return joinEvidence ?? null;
+  const together = words.together("outline", CELL);
+  return joinEvidence
+    ? (a, b) => together(a, b) && joinEvidence(a, b)
+    : (a, b) => together(a, b);
+}
+
 /**
  * Which sides of each cell a frame's marks paint, per role.
  *
@@ -196,10 +234,11 @@ export class MarkOutlines {
   constructor(
     targets: readonly MarkCell[],
     evidence: readonly MarkCell[],
-    joins: Pick<HintMarkStyle, "joinTargets" | "joinEvidence">,
+    joins: Pick<HintMarkStyle, "joinTargets" | "joinEvidence"> &
+      Partial<Pick<HintMarkStyle, "words">>,
   ) {
     this.target = roleSides(targets, joins.joinTargets ?? never);
-    this.evidence = roleSides(evidence, joins.joinEvidence ?? null);
+    this.evidence = roleSides(evidence, evidenceJoin(joins));
   }
 
   targetSides(x: number, y: number): number {
@@ -303,6 +342,27 @@ function drawPieceRing(
       centered: true,
     },
   );
+}
+
+/**
+ * The ring round one cell, drawn from inside the cell's own tile: the ring
+ * {@link HintMarks} draws after the tile loop, on the band's box, as thick as
+ * the band, in the band's room. For a game whose marks are part of the tile,
+ * as they must be where content goes over the outline (a cross on a side) or
+ * the tile is what repaints; the outline beside it is {@link drawMarkSides}
+ * with the evidence's contour sides.
+ */
+export function drawCellRing(
+  dr: GameDrawing,
+  band: MarkBand,
+  clear: RingClear,
+  inside?: (ink: number) => void,
+): void {
+  dr.drawRing(band.box, clear, ringThickness(band), {
+    room: bandRoom(band),
+    inside,
+    centered: true,
+  });
 }
 
 /** The pixels a cell's repaint and erase answer for: its box and the band's

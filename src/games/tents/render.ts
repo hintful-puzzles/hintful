@@ -630,6 +630,7 @@ export function redraw(
     // A square shows a tree, a tent or grass, never text; the clues lie
     // outside the grid, past any ring's reach.
     text: () => NOTHING_TO_CLEAR,
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   };
   const outlines = new MarkOutlines(hintTargets, area, markStyle);

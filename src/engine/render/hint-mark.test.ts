@@ -18,6 +18,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { HINT_OUTLINE } from "../color/palette.ts";
+import { CELL, mark, phrase, StepMarks, stepMarks } from "../contract/hint-words.ts";
 import type { Color, Rect } from "../contract/types.ts";
 import { HINT_GAMES } from "../testing/hint-games.ts";
 import { walkHints } from "../testing/hint-walk.ts";
@@ -28,7 +29,14 @@ import {
   RecordingDrawing,
 } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
-import { type HintMarkStyle, HintMarks, type MarkCell } from "./hint-mark.ts";
+import {
+  evidenceSides,
+  type HintMarkStyle,
+  HintMarks,
+  MARK_ALL,
+  type MarkCell,
+  MarkOutlines,
+} from "./hint-mark.ts";
 import { NOTHING_TO_CLEAR, RING_MIN_ROUNDNESS } from "./ring.ts";
 
 /** The slots of a game's palette that hold the outline's ink. Found by value,
@@ -197,6 +205,7 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
     const style: HintMarkStyle = {
       band: () => band,
       text: () => NOTHING_TO_CLEAR,
+      words: StepMarks.NONE,
       evidenceColor: EVIDENCE,
     };
     const [targets, evidence] = role === "ring" ? [marked, []] : [[], marked];
@@ -275,6 +284,7 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
     const style: HintMarkStyle = {
       band: () => ({ box: { x: 5, y: 5, w: 20, h: 20 }, outer: 1, inner: 3 }),
       text: () => NOTHING_TO_CLEAR,
+      words: StepMarks.NONE,
       evidenceColor: EVIDENCE,
     };
     const marks = new HintMarks();
@@ -286,3 +296,47 @@ describe("HintMarks undoes a mark the way a fresh canvas never had it", () => {
     expect(named).toBe(0);
   });
 });
+
+describe("an outline joins cells only within one reference", () => {
+  // The app colors each reference apart, so a side two references shared
+  // would be drawn by neither: each has to come out a closed shape.
+  const a = { x: 0, y: 0 };
+  const b = { x: 1, y: 0 };
+
+  it("keeps two touching references two closed shapes", () => {
+    const words = stepMarks({
+      words: phrase`${mark.as("outline", CELL, [a], "a")} ${mark.as("outline", CELL, [b], "b")}`,
+    });
+    const sides = evidenceSides(words);
+    expect([sides(0, 0), sides(1, 0)]).toEqual([MARK_ALL, MARK_ALL]);
+    const outlines = new MarkOutlines([], [a, b], { words });
+    expect([outlines.evidenceSides(0, 0), outlines.evidenceSides(1, 0)]).toEqual([
+      MARK_ALL,
+      MARK_ALL,
+    ]);
+  });
+
+  it("closes a reference round a cell another reference also names", () => {
+    // Singles' corner step: "the corner's 5s" and "the side 5" share a cell,
+    // which the second reference's color covers.
+    const words = stepMarks({
+      words: phrase`${mark.as("outline", CELL, [a, b], "ab")} ${mark.as("outline", CELL, [b], "b")}`,
+    });
+    const sides = evidenceSides(words);
+    expect([sides(0, 0), sides(1, 0)]).toEqual([MARK_ALL, MARK_ALL]);
+  });
+
+  it("draws one reference's cells as one contour", () => {
+    const words = stepMarks({
+      words: phrase`${mark.as("outline", CELL, [a, b], "ab")}`,
+    });
+    const sides = evidenceSides(words);
+    expect(sides(0, 0) & sides(1, 0)).not.toBe(MARK_ALL);
+    expect(popcount(sides(0, 0)) + popcount(sides(1, 0))).toBe(6);
+    const outlines = new MarkOutlines([], [a, b], { words });
+    expect(outlines.evidenceSides(0, 0)).toBe(sides(0, 0));
+    expect(outlines.evidenceSides(1, 0)).toBe(sides(1, 0));
+  });
+});
+
+const popcount = (n: number): number => (n === 0 ? 0 : (n & 1) + popcount(n >> 1));

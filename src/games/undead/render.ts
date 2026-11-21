@@ -816,6 +816,7 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ds, x, y),
     text: (x: number, y: number) => cellText(ds, state, ui.ascii, x, y),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   };
   const underErased = new Uint8Array(ds.hint.packed.length);

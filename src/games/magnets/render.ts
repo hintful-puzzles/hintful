@@ -507,6 +507,7 @@ export function redraw(
   const markStyle: HintMarkStyle = {
     band: (x, y) => markBand(ts, x, y),
     text: (x, y) => squareText(state, ts, x, y),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
     joinTargets: partners,
     joinEvidence: partners,

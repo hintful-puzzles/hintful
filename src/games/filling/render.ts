@@ -30,15 +30,11 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import { CELL, type StepMarks, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
-import {
-  HintMarks,
-  type MarkBand,
-  type MarkCell,
-} from "../../engine/render/hint-mark.ts";
+import { HintMarks, type MarkBand } from "../../engine/render/hint-mark.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
@@ -431,7 +427,7 @@ export function redrawFilling(
     }
   }
 
-  paintHintMarks(dr, ds, state, hintTargets, hintArea);
+  paintHintMarks(dr, ds, state, marks);
 }
 
 /**
@@ -442,13 +438,12 @@ function paintHintMarks(
   dr: GameDrawing,
   ds: FillingDrawState,
   state: FillingState,
-  targets: ReadonlySet<number>,
-  area: ReadonlySet<number>,
+  marks: StepMarks,
 ): void {
-  const cellAt = (i: number): MarkCell => ({ x: i % ds.w, y: (i / ds.w) | 0 });
-  ds.marks.paint(dr, [...targets].map(cellAt), [...area].map(cellAt), {
+  ds.marks.paint(dr, marks.of("ring", CELL), marks.of("outline", CELL), {
     band: (x, y) => markBand(ds, x, y),
     text: (x, y) => cellText(state, ds.tileSize, x, y),
+    words: marks,
     evidenceColor: COL_HINT_OUTLINE,
   });
 }

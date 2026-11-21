@@ -530,6 +530,7 @@ export function redraw(
   const markStyle = {
     band: (x: number, y: number) => markBand(ds.tileSize, x, y),
     text: (x: number, y: number) => cellText(ds, state, x, y),
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   };
   ds.marks.eraseBeforeTiles(dr, targets, evidence, markStyle, COL_LINE, (x, y) => {

@@ -277,6 +277,7 @@ export function redraw(
     band: (x: number, y: number) => markBand(ds, x, y),
     // A forced cell shows a piece or a dot, never text.
     text: () => NOTHING_TO_CLEAR,
+    words: stepMarks(hint),
     evidenceColor: COL_HINT_OUTLINE,
   };
   ds.marks.eraseBeforeTiles(dr, targets, [], markStyle, COL_GRID, (x, y) => {

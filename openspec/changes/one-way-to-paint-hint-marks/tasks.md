@@ -1,20 +1,48 @@
 ## 1. Census and design
 
-- [ ] 1.1 For each game, how its marks are painted: which helper, or what
-      it does by hand. Sort into variants; record each with its query.
-- [ ] 1.2 Design one painter a variant; pilot on a game that pressures it
-      (marks across tiles, text in the cell, animation).
+- [x] 1.1 For each game, how its marks are painted: which helper, or what
+      it does by hand. Sort into variants; record each with its query
+      (`design.md` § "Census").
+- [x] 1.2 Design one painter a variant; pilot on a game that pressures it
+      (marks across tiles, text in the cell, animation). Singles: in-tile
+      outline from `OverlaySidecar.outlineSides`, ring by `drawCellRing`
+      round its number (D1, D2). The pilot found D4.
+- [x] 1.3 D4: an outline joins cells only within one reference
+      (`StepMarks.together`, `evidenceSides`, `HintMarkStyle.words`); the
+      grid skeleton's `joinEvidence: () => false` workaround removed.
 
 ## 2. Migrate
 
 - [ ] 2.1 Move the games in batches by variant; each runs in the app (a
       hint's ring, outline and stripes, through an auto-solve) before it
       counts. Record which moved, which keep a form of their own, and why.
+  - [x] Singles (pilot).
+  - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2):
+        Mines, Lightup, Range, Slant, Signpost, Sticks, Boats, and the
+        border grid (Palisade, Separate). Fold Range's and Slant's doubled
+        "premise" outline and Lightup's dark-square ring into the one
+        outline (`hints-marks.md` § "Outline the evidence": one shape for
+        one role), unless the words lean on the difference.
+  - [ ] Contour packed by hand, onto `evidenceSides(words)` (D4): Path,
+        Pearl, Wordtrail, Rect, Tracks, Slide, the edges skeleton; Flip and
+        Mosaic's `MarkOutlines` given `words`.
+  - [ ] Rings drawn by hand on a cell's band, onto `drawCellRing`: Flip,
+        Mines, Range, Slant, Sticks, Boats, Tracks, Signpost, Lightup.
 - [ ] 2.2 A render snapshot that moves is a look that changed: check each
-      against the variant's look, and record it.
-- [ ] 2.3 The skeletons write the engine's form.
+      against the variant's look, and record it. (None moved through 1.3.)
+- [ ] 2.3 The skeletons write the engine's form (grid: done in 1.3; edges:
+      with the contour batch).
+- [ ] 2.4 Singles' corner step ("The corner's 4s need one shaded; … the
+      side 4, boxing the corner in"): both cells "the corner's 4s" names
+      are also named by "the side 4" and "the corner", whose colors cover
+      it, so that reference shows no mark of its own. As before this
+      change. Raise it with the owner, recommending the words name the
+      pair by the two other references (`hints.md` § the deictic rules)
+      rather than a third.
 
 ## 3. Finish
 
-- [ ] 3.1 The guides describe one way a variant. Run
+- [ ] 3.1 The guides describe one way a variant (`hints-marks.md`
+      § "Outline the evidence" and § "Where the band goes, and who rubs it
+      out", `rendering.md` § "A mark that crosses tiles"). Run
       `npm run test:hint-sweeps`; commit, push, archive.
