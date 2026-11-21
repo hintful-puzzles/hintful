@@ -1,5 +1,0 @@
-# Layout and a guard; a requirement that names an engine path takes a delta
-# in the change if any does.
-schema: spec-driven
-created: 2026-11-20
-skip_specs: true

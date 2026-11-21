@@ -92,5 +92,9 @@ globs in tests (repointed by their static prefix), and every guide and spec.
 
 ## 3. Finish
 
-- [ ] 3.1 Rewrite `docs/engine-catalog.md`'s placement rule and trim what the
-      layout now says. Commit, push, archive.
+- [x] 3.1 Rewrite `docs/engine-catalog.md`'s placement rule and trim what the
+      layout now says. Commit, push, archive. The catalog's sections are the
+      directories, its entries moved unchanged; the summary of the engine's
+      own modules went into the `contract/`, `input/`, `midend/` and harness
+      sections. `repo-layout`'s flat-layout requirements are replaced by a
+      delta here (the change had declared none).
