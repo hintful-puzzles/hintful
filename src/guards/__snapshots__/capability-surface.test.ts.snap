@@ -42,7 +42,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "errFlags",
       "hint",
       "marks",
       "order",
@@ -67,6 +66,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "requestKeys",
       "revealOne",
+      "rules",
       "textFormat",
       "validateParams",
     ],
@@ -2006,7 +2006,6 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "errFlags",
       "hint",
       "marks",
       "order",
@@ -2031,6 +2030,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "requestKeys",
       "revealOne",
+      "rules",
       "textFormat",
       "validateParams",
     ],

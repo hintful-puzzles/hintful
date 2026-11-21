@@ -21,6 +21,7 @@ import {
 } from "../contract/desc-error.ts";
 import { difficultyItem } from "../contract/difficulty.ts";
 import type { GameDrawing, ParamConfigItem } from "../contract/game.ts";
+import type { RulesOf } from "../contract/rules.ts";
 import { readDesc } from "../game-id/desc-reader.ts";
 import { numberItem, squareSize } from "../game-id/params.ts";
 import {
@@ -31,6 +32,7 @@ import {
 } from "../game-id/params-codec.ts";
 import type { CandidateReading } from "../hint/candidate-hint.ts";
 import { digitOf, type GridCursor, isEraseKey, newCursor } from "../input/pointer.ts";
+import type { Violation } from "../solve/describe-runtime/violations.ts";
 import type { Ladder } from "../solve/ladder-runtime.ts";
 import type { LatinSolver } from "../solve/latin.ts";
 
@@ -61,9 +63,8 @@ export interface ClueKind {
   /** The techniques the game's description places at each tier, over this
    * board's clues. */
   ladder(o: number, flags: Int32Array): Ladder<LatinSolver>;
-  /** Whether a whole grid is an answer to this board, by the rules its
-   * description compiles to. */
-  isAnswer(grid: ArrayLike<number>, o: number, flags: Int32Array): boolean;
+  /** This board's rules as its description compiles them. */
+  rules(o: number, flags: Int32Array): ClueRules;
   /** Draw the clues in the gaps the cell at `(ox, oy)` owns, from its composed
    * flag word `f` (clue, error and spent bits). */
   drawClues(dr: GameDrawing, ts: number, ox: number, oy: number, f: number): void;
@@ -71,12 +72,24 @@ export interface ClueKind {
   glyph(flags: Int32Array, o: number, x: number, y: number, side: GapSide): string;
 }
 
-/** Whether filled neighbors `a` and `b` break the clue between them, `flagged`
- * saying whether the clue is dealt toward `b` at `a`'s cell. */
-function breaksClue(kind: ClueKind, flagged: boolean, a: number, b: number): boolean {
-  if (flagged) return !kind.holds(a, b);
-  return kind.complete && kind.holds(a, b);
+/** A board's rules over a grid of its values (0 undecided). */
+export interface ClueRules {
+  /** Whether the grid is an answer. */
+  isAnswer(g: ArrayLike<number>): boolean;
+  /** Where the grid already breaks a rule. */
+  violations(g: ArrayLike<number>): Violation[];
+  /** The edge each dealt clue sits on, by the clue's index: a game deals one
+   * kind of clue. */
+  edges: ArrayLike<number>;
 }
+
+/** The board as its rules read it: a number is its value, a blank square
+ * undecided. */
+export const rules: RulesOf<EdgeClueState> = {
+  grid: (s) => Uint8Array.from(s.grid),
+  violations: (s, g) => s.kind.rules(s.order, s.clueFlags).violations(g),
+  isAnswer: (s, g) => s.kind.rules(s.order, s.clueFlags).isAnswer(g),
+};
 
 // --- difficulty ------------------------------------------------------------
 
@@ -379,53 +392,10 @@ export function newState(
   };
 }
 
-// --- error checking (check_complete / check_num_error / check_num_adj) ------
-
-/**
- * Mark the grid's errors into `errFlags` (an `order²` array of
- * `F_ERROR | F_ERROR_*` bits per cell), the error overlay: whether a board is
- * solved is the compiled answer check's. From `check_num_error` and
- * `check_num_adj`.
- */
-export function markErrors(state: EdgeClueState, errFlags: Int32Array): void {
-  const o = state.order;
-  const grid = state.grid;
-
-  errFlags.fill(0);
-
-  for (let x = 0; x < o; x++) {
-    for (let y = 0; y < o; y++) {
-      const i = y * o + x;
-      const val = grid[i];
-      if (val === 0) continue;
-
-      // check_num_error: duplicates in the same row / column.
-      let dup = false;
-      for (let yy = 0; yy < o; yy++)
-        if (yy !== y && grid[yy * o + x] === val) dup = true;
-      for (let xx = 0; xx < o; xx++)
-        if (xx !== x && grid[y * o + xx] === val) dup = true;
-      if (dup) errFlags[i] |= F_ERROR;
-
-      // check_num_adj: clue violations toward filled neighbors.
-      const f = state.clueFlags[i];
-      for (let d = 0; d < 4; d++) {
-        const nx = x + ADJTHAN[d].dx;
-        const ny = y + ADJTHAN[d].dy;
-        if (nx < 0 || nx >= o || ny < 0 || ny >= o) continue;
-        const dn = grid[ny * o + nx];
-        if (dn === 0) continue;
-        if (breaksClue(state.kind, (f & ADJTHAN[d].f) !== 0, val, dn))
-          errFlags[i] |= ADJTHAN[d].fe;
-      }
-    }
-  }
-}
-
 // --- status / text ---------------------------------------------------------
 
 export function status(s: EdgeClueState): "solved" | "ongoing" {
-  return s.kind.isAnswer(s.grid, s.order, s.clueFlags) ? "solved" : "ongoing";
+  return rules.isAnswer(s, s.grid) ? "solved" : "ongoing";
 }
 
 /** ASCII grid with inter-cell clue glyphs, matching `game_text_format`. */

@@ -27,7 +27,7 @@ export function solveEdgeClues(
   return latinSolver(soln, o, {
     maxdiff,
     diffRecursive: DIFF_UNREASONABLE,
-    isAnswer: (grid) => kind.isAnswer(grid, o, flags),
+    isAnswer: kind.rules(o, flags).isAnswer,
     cubeOut,
     ladder: kind.ladder(o, flags),
   });

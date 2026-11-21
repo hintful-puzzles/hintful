@@ -19,7 +19,7 @@ import {
 import { unusedLetter } from "../../engine/game-id/params-codec.ts";
 import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";
 import { drawBars } from "./render.ts";
-import { barAnswer, barLadder } from "./solver.ts";
+import { barLadder, barRules } from "./solver.ts";
 
 /** A bar: its two numbers differ by one. Every bar is dealt, so two
  * neighbors without one never do, and a bar is flagged from both its cells. */
@@ -30,7 +30,7 @@ export const BARS: ClueKind = {
   complete: true,
   bothEnds: true,
   ladder: barLadder,
-  isAnswer: barAnswer,
+  rules: barRules,
   drawClues: drawBars,
   glyph: (flags, o, x, y, side) => {
     const i = y * o + x;

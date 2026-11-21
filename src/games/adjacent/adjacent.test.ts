@@ -9,14 +9,18 @@ import { COL_ERROR } from "../../engine/color/roles.ts";
 import { DESC_CONTRADICTORY, validateDesc } from "../../engine/contract/desc-error.ts";
 import { cappedSolveFor, lowestSolvingCap } from "../../engine/contract/difficulty.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
-import { coord, PREFERRED_TILE_SIZE } from "../../engine/edge-clue-latin/render.ts";
+import {
+  coord,
+  errorFlags,
+  PREFERRED_TILE_SIZE,
+} from "../../engine/edge-clue-latin/render.ts";
 import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
 import {
   diffToLevel,
   type EdgeClueParams,
   type EdgeClueState,
+  F_ERROR_LEFT,
   F_ERROR_RIGHT,
-  markErrors,
   newState,
   newUi,
 } from "../../engine/edge-clue-latin/state.ts";
@@ -86,10 +90,8 @@ describe("adjacent generator", () => {
     expect(solveEdgeClues(5, BARS, st.clueFlags, soln, 4)).not.toBe(DIFF_IMPOSSIBLE);
     // With the answer filled in, no gap, barred or not, is in error.
     const solved = { ...st, grid: Int8Array.from(soln) };
-    const err = new Int32Array(25);
     expect(adjacentGame.status(solved)).toBe("solved");
-    markErrors(solved, err);
-    expect(err.every((f) => f === 0)).toBe(true);
+    expect(errorFlags(solved).every((f) => f === 0)).toBe(true);
   });
 
   it("generates an exactly-graded board", () => {
@@ -150,9 +152,10 @@ describe("adjacent errors", () => {
     const st = newState(BARS, { order: 4, diff: "easy" }, "0,".repeat(16));
     st.grid[0] = 1;
     st.grid[1] = 2;
-    const err = new Int32Array(16);
-    markErrors(st, err);
+    const err = errorFlags(st);
+    // A bar flagged at neither end is missing at both.
     expect(err[0] & F_ERROR_RIGHT).toBeTruthy();
+    expect(err[1] & F_ERROR_LEFT).toBeTruthy();
   });
 });
 

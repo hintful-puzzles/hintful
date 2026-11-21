@@ -38,7 +38,10 @@
       sum or product is bounded by its domain, so a cage a digit
       overshoots is red with squares still open), group (each failed
       product's triple is read back from the four squares its violation
-      names, checked against the grid). Run `src/guards` before a
+      names, checked against the grid), adjacent and unequal (a
+      `ClueKind` gives its board's `rules`; a broken clue is marked at each
+      end that shows it, both for Adjacent's missing bar; their specs'
+      marks are unchanged). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

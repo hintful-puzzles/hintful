@@ -41,8 +41,15 @@ function dealtOf(o: number, flags: Int32Array): unequal.Dealt {
   return { greater: clueList(at, v, edges) };
 }
 
-export const signAnswer: ClueKind["isAnswer"] = (grid, o, flags) =>
-  unequal.isAnswer(grid, latinSpace(o), dealtOf(o, flags));
+export const signRules: ClueKind["rules"] = (o, flags) => {
+  const sp = latinSpace(o);
+  const dl = dealtOf(o, flags);
+  return {
+    isAnswer: (g) => unequal.isAnswer(g, sp, dl),
+    violations: (g) => unequal.violations(g, sp, dl),
+    edges: dl.greater.at,
+  };
+};
 
 export const signLadder: ClueKind["ladder"] = (o, flags) =>
   latinLadder(unequal, dealtOf(o, flags));

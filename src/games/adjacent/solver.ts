@@ -38,8 +38,15 @@ function dealtOf(o: number, flags: Int32Array): adjacent.Dealt {
   return { bar: clueList(at, v, edges) };
 }
 
-export const barAnswer: ClueKind["isAnswer"] = (grid, o, flags) =>
-  adjacent.isAnswer(grid, latinSpace(o), dealtOf(o, flags));
+export const barRules: ClueKind["rules"] = (o, flags) => {
+  const sp = latinSpace(o);
+  const dl = dealtOf(o, flags);
+  return {
+    isAnswer: (g) => adjacent.isAnswer(g, sp, dl),
+    violations: (g) => adjacent.violations(g, sp, dl),
+    edges: dl.bar.at,
+  };
+};
 
 export const barLadder: ClueKind["ladder"] = (o, flags) => {
   const cl = dealtOf(o, flags);

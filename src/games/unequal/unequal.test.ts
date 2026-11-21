@@ -19,14 +19,20 @@ import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import {
   computeSize,
   coord,
+  errorFlags,
   PREFERRED_TILE_SIZE,
 } from "../../engine/edge-clue-latin/render.ts";
 import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
 import {
+  ADJTHAN,
   cloneState,
   diffToLevel,
   type EdgeClueParams,
   type EdgeClueState,
+  F_ERROR_DOWN,
+  F_ERROR_LEFT,
+  F_ERROR_RIGHT,
+  F_ERROR_UP,
   newState,
   newUi,
 } from "../../engine/edge-clue-latin/state.ts";
@@ -276,6 +282,34 @@ describe("unequal moves", () => {
 });
 
 // --- findMistakes ----------------------------------------------------------
+
+describe("unequal live errors", () => {
+  it("a sign broken by its two numbers is marked at the end that shows it", () => {
+    const { st } = gen(5, "easy", "unequal-live");
+    const o = st.order;
+    // A sign between two open squares, shown at `big` toward `small`.
+    const found = [...st.clueFlags].flatMap((f, big) => {
+      if (st.grid[big]) return [];
+      return ADJTHAN.flatMap((d) => {
+        const x = (big % o) + d.dx;
+        const y = ((big / o) | 0) + d.dy;
+        const small = y * o + x;
+        return f & d.f && x >= 0 && x < o && y >= 0 && y < o && !st.grid[small]
+          ? [{ big, small, d }]
+          : [];
+      });
+    })[0];
+    if (found === undefined) throw new Error("no sign between two open squares");
+    const s = cloneState(st);
+    s.grid[found.big] = 1;
+    s.grid[found.small] = 2;
+    const err = errorFlags(s);
+    expect(err[found.big] & found.d.fe).toBeTruthy();
+    expect(
+      err[found.small] & (F_ERROR_UP | F_ERROR_RIGHT | F_ERROR_DOWN | F_ERROR_LEFT),
+    ).toBe(0);
+  });
+});
 
 describe("unequal findMistakes", () => {
   it("flags a wrong number, a note-mistake, and ignores ordinary notes", () => {

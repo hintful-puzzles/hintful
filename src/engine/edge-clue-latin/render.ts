@@ -50,6 +50,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../render/hint-mark.ts";
+import { liveErrors } from "../render/live-errors.ts";
 import { HINT_AREA, HINT_TARGET, OverlaySidecar } from "../render/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
@@ -60,13 +61,15 @@ import {
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { sweepStep } from "../render/win-wave.ts";
+import { latinSpace } from "../solve/describe-runtime.ts";
 import {
+  ADJTHAN,
   displayChar,
   type EdgeClueMove,
   type EdgeClueState,
   type EdgeClueUi,
   F_ERROR,
-  markErrors,
+  rules,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -165,14 +168,46 @@ export interface EdgeClueDrawState {
   /** `order²` mistake-overlay sidecar (fork addition), so that a Check & Save
    * repaints the red highlight on an already-drawn cell. */
   wrong: OverlaySidecar;
-  /** `order²` scratch error flags, refilled each redraw by `markErrors`. */
-  errFlags: Int32Array;
   /** Whether the pencil-mode indicator was on last frame (fork addition). */
   pencilModeShown: boolean | null;
   /** The hint target's ring and the evidence region's outline (fork additions),
    * both drawn in the **gap** between cells, which no cell repaints. See
    * {@link markBand}. */
   marks: HintMarks;
+}
+
+/**
+ * Where the board breaks a rule (`Game.rules`), as each cell's
+ * `F_ERROR | F_ERROR_*` bits: `F_ERROR` on each of two numbers alike in a
+ * line, and toward the other end of a broken clue at each end that flags it.
+ * A clue flagged at neither end, Adjacent's missing bar, is broken at both.
+ */
+export function errorFlags(state: EdgeClueState): Int32Array {
+  const o = state.order;
+  const flags = state.clueFlags;
+  const out = new Int32Array(o * o);
+  const live = liveErrors(rules, state);
+  for (const [a, b] of live.pairs) {
+    out[a] |= F_ERROR;
+    out[b] |= F_ERROR;
+  }
+  const { edges } = state.kind.rules(o, flags);
+  const { edgeEnds } = latinSpace(o);
+  // The direction from cell `a` to its neighbor `b`.
+  const toward = (a: number, b: number) =>
+    ADJTHAN[b === a + 1 ? 1 : b === a - 1 ? 3 : b === a + o ? 2 : 0];
+  for (const ks of live.clues.values())
+    for (const k of ks) {
+      const a = edgeEnds[2 * edges[k]];
+      const b = edgeEnds[2 * edges[k] + 1];
+      const ab = toward(a, b);
+      const ba = toward(b, a);
+      const atA = (flags[a] & ab.f) !== 0;
+      const atB = (flags[b] & ba.f) !== 0;
+      if (atA || !atB) out[a] |= ab.fe;
+      if (atB || !atA) out[b] |= ba.fe;
+    }
+  return out;
 }
 
 export function newDrawState(
@@ -188,7 +223,6 @@ export function newDrawState(
     tiles: new TileCache(o * o, { words: 3, overlays: [hint, wrong] }),
     hint,
     wrong,
-    errFlags: new Int32Array(o * o),
     pencilModeShown: null,
     marks: new HintMarks(),
   };
@@ -418,7 +452,7 @@ export function redraw(
     ds.marks.reset(); // the midend's ground just erased every gap
   }
 
-  markErrors(state, ds.errFlags);
+  const errFlags = errorFlags(state);
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * o + x;
@@ -456,7 +490,7 @@ export function redraw(
       const flags =
         state.clueFlags[i] |
         state.spent[i] |
-        ds.errFlags[i] |
+        errFlags[i] |
         (state.immutable[i] ? DF_IMMUTABLE : 0);
       const pencil = num === 0 ? state.pencil[i] : 0;
 

@@ -1123,7 +1123,7 @@ A Latin square whose clues sit in the gaps between neighboring cells is
 spent-clue drag, the cell drawing, the solver's driver and the generator
 (its order deals the boards). The game declares its clue as a `ClueKind` (what it
 says, whether every true one is dealt, whether both ends flag it, its
-compiled ladder, its drawing and its text glyph) and writes its own `Game`,
+compiled ladder and rules, its drawing and its text glyph) and writes its own `Game`,
 its reasons and its hint's sentences. Exemplars: `unequal/`, `adjacent/`.
 
 ### `edge-hint.ts` — a hint on an edge between squares

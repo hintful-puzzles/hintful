@@ -52,6 +52,7 @@ import {
   type EdgeClueUi,
   newState,
   newUi,
+  rules,
   status,
   textFormat,
 } from "../../engine/edge-clue-latin/state.ts";
@@ -266,6 +267,7 @@ export const adjacentGame: Game<
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
+  rules,
   difficulty: edgeClueDifficulty(BARS),
   hint: {
     plan: hint,
