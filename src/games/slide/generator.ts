@@ -12,9 +12,8 @@
  *     the puzzle stays soluble.
  *
  * Because stage 4's solubility test is the solver's verdict on every candidate
- * board, the description is decided end-to-end by the solver — which is what
- * makes a single byte-for-byte desc match validate generator, solver and codec
- * together (docs/solver-and-generator.md § "Solver-gated generation").
+ * board, the description is decided end-to-end by the solver
+ * (docs/solver-and-generator.md § "Solver-gated generation").
  *
  * Upstream's FIXMEs ask for variety in stage 2 and it never delivers any: the
  * main block is always a 2×2 at the top left and the exit is always a

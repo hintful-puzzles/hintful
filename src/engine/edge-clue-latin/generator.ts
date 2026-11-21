@@ -6,10 +6,9 @@
  * greedily *assemble* clues (number givens and the kind's clues) onto a blank
  * board until the graded solver solves it, then *strip* redundant clues. A
  * complete kind's clues are all dealt from the start, so only number givens
- * are added and removed. RNG-faithful to upstream over the bit-identical
- * `random.ts`, so the emitted desc matches C byte-for-byte for the same seed,
- * except where upstream gave up on the tier: after fifty boards the tier below
- * could solve it dealt at that tier, and this keeps looking.
+ * are added and removed. Unlike upstream, this never gives up on the tier:
+ * after fifty boards upstream deals one the tier below could solve, and this
+ * keeps looking.
  */
 
 import { shuffle } from "../board/shuffle.ts";
@@ -124,9 +123,8 @@ function ggRemoveClue(g: GenState, ccode: number, checkonly: boolean): boolean {
 /**
  * Pick the next clue to add: the placeable clue whose cell has the most
  * remaining candidate possibilities, tie-broken by fewest existing flag-clues.
- * Faithful to `gg_best_clue`, including upstream's flat `hints[loc*o + j]` read
- * (a transposition quirk vs the cube's `(x*o+y)*o+n` layout — reproduced exactly
- * so the greedy choice, and hence the desc, matches C byte-for-byte).
+ * Port of `gg_best_clue`, including upstream's flat `hints[loc*o + j]` read
+ * (a transposition quirk vs the cube's `(x*o+y)*o+n` layout).
  */
 function ggBestClue(g: GenState, scratch: Int32Array, latin: Int32Array): number {
   const o = g.o;
@@ -253,8 +251,8 @@ export function newEdgeClueDesc(
   }
 }
 
-/** Shuffle `arr[start .. start+len)` in place, RNG-faithful (the draw sequence
- * matches C's `shuffle(arr + start, len, …)`). */
+/** Shuffle `arr[start .. start+len)` in place (C's
+ * `shuffle(arr + start, len, …)`). */
 function shuffleRange(
   arr: Int32Array,
   start: number,

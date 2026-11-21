@@ -22,9 +22,7 @@
  * `diff - 1`, so the difficulty is exactly right.
  *
  * Every draw is a `shuffle`, and the solver in between is deterministic, so
- * the description is a pure function of the seed over the bit-identical
- * `random.ts`. That is what the byte-for-byte differential checks, so the
- * draw order and the iteration order here are both fixed.
+ * the description is a pure function of the seed.
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";

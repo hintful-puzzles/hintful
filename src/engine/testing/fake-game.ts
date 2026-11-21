@@ -63,8 +63,8 @@ export const fakeGame: Game<FakeParams, FakeState, FakeMove, null, FakeDrawState
   paramConfig: [],
 
   newDesc: (p, rng) => {
-    // Exercise the retained bit-identical RNG; desc is deterministic
-    // per (params, seed) so game IDs reproduce.
+    // Exercise the seeded RNG; desc is deterministic per (params, seed) so
+    // game IDs reproduce.
     const salt = randomUpto(rng, 1000);
     return { desc: `g${p.target}-${salt}` };
   },

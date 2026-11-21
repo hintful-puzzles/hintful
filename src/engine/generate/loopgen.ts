@@ -3,9 +3,8 @@
  *
  * `generateLoop(grid, board, rng, bias?)` colors every face of `grid`
  * inside (WHITE) or outside (BLACK) so the white/black boundary is a single
- * closed loop, writing the coloring into `board`. It is **RNG-faithful**:
- * it reproduces the exact `generate_loop` draw order, which the consumers'
- * differentials depend on —
+ * closed loop, writing the coloring into `board`. It follows
+ * `generate_loop`'s draws —
  *   1. a per-face 31-bit random score (`randomBits(rng, 31)`),
  *   2. a random seed face (`randomUpto(rng, numFaces)`),
  *   3. per main-loop iteration a random candidate color (`randomUpto(rng, 2)`),

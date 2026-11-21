@@ -424,7 +424,8 @@ class SpectreContext {
    * arrival entry that is *itself* external, requiring another hop — and
    * `specin_S` is the only table in which that happens (4 of its 18 entries).
    * Collapse this to a single `if` and every tiling without an S hex on the
-   * relevant path still comes out perfect; only the differential notices.
+   * relevant path still comes out perfect; only a comparison against a
+   * recorded patch notices.
    */
   step(sc: SpectreCoords, edge: number): number {
     let h = HEX_DATA[sc.c[0].type];

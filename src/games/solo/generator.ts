@@ -20,11 +20,8 @@
  *  4. Encode the givens grid, plus (jigsaw) the block structure, plus (killer)
  *     the cage structure + cage-sum grid.
  *
- * RNG-faithful over the bit-identical `random.ts`, so the emitted desc matches
- * the C reference byte-for-byte for the same seed (no variant's path has a
- * `qsort` or other order-dependent step). The solver is the grading oracle, so
- * its verdict must match C's on every intermediate board; that faithfulness
- * lives in `solver.ts`.
+ * The solver is the grading oracle, so its verdict on every intermediate board
+ * decides which boards exist.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
@@ -197,8 +194,8 @@ function gridgen(
 // --- killer cage generation ------------------------------------------------
 
 /** `merge_blocks`: merge cage `n2` into `n1` (toward the lower index), then move
- *  the last cage into the freed slot. The reindexing is byte-match-relevant: the
- *  cage indexing decides `merge_some_cages`'s pair-enumeration order, hence the
+ *  the last cage into the freed slot. The reindexing is upstream's: the cage
+ *  indexing decides `merge_some_cages`'s pair-enumeration order, hence the
  *  RNG draw. Mutates `b` in place. */
 function mergeBlocks(b: BlockStructure, n1: number, n2: number): void {
   if (n2 < n1) {

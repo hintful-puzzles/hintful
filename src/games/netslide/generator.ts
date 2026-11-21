@@ -1,9 +1,7 @@
 /**
  * Netslide board generation.
  *
- * Three RNG-consuming phases, in this order — and the *order* is load-bearing,
- * because the differential asserts the desc byte-for-byte against C for the
- * same seed:
+ * Three RNG-consuming phases, in upstream's order:
  *
  *   1. Grow the solved grid outward from the center as a spanning tree.
  *   2. Shuffle it with random slides.

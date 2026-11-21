@@ -8,11 +8,10 @@
  * kind. An Unreasonable one is a fill with one answer that the solver does
  * not reach, which the search in `solver.ts` proves.
  *
- * The Easy pass reproduces the C desc byte-for-byte: the RNG surface is exactly one
- * `randomUpto` per fill cell plus, for hard mode, one `shuffle` of the clue
- * indices, and `solveAbcd` is deterministic. Because every accept/reject and
- * every clue removal is solver-gated, the differential's one byte-match
- * validates the fill order, the solver's every verdict and the codec together.
+ * The RNG surface is one `randomUpto` per fill cell plus, for hard mode, one
+ * `shuffle` of the clue indices, and `solveAbcd` is deterministic, so the desc
+ * is a pure function of the seed. Every accept/reject and every clue removal is
+ * solver-gated, so a change to the solver's verdicts changes which boards exist.
  *
  * Large boards can take many attempts; `validateParams`' size bound keeps a
  * player off the ones that never generate.

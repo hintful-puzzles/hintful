@@ -64,8 +64,7 @@ import { LOCKED, type NetParams, newState } from "./state.ts";
  * Plateaus are real but short: measured over 720 boards (3x3…13x11, wrapping
  * and not, 60 seeds each) the longest run of non-reducing rounds was **3**, and
  * this escape fired **zero** times. 100 leaves ~33x that headroom, so every
- * seed the C reference converges on takes the identical path and the
- * differential's byte-match is unaffected.
+ * seed upstream's loop converges on takes the same path here.
  */
 const MAX_STALLED_ROUNDS = 100;
 
@@ -210,8 +209,7 @@ function shuffled(
  * Scramble the solved grid: rotate every tile a random amount, then repeatedly
  * reshuffle just the tiles that form a loop until there are none, and finally
  * require at least one mismatched non-wrapping edge so the start is not
- * accidentally already solved. Every draw and every retry must match C (the
- * differential checks it).
+ * accidentally already solved. The draws and retries are upstream's.
  */
 function shuffle(tiles: Uint8Array, w: number, h: number, rs: RandomState): void {
   const wh = w * h;

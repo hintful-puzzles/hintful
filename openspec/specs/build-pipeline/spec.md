@@ -498,23 +498,6 @@ word of an analysis that cannot see them.
 - **THEN** it tests the read explicitly before using it, and that test stays
   whatever a type-aware analysis says of it
 
-### Requirement: A test is not deferred when it is the only cover of a configuration
-
-Deferral to the opt-in tier, `npm run test:slow`, SHALL be reserved for cases
-where the cost is board size and not configuration. A test SHALL NOT be deferred when it is the only
-one covering some configuration: deferring the only fixture for a grid type
-silently removes that grid type from every commit. The remaining coverage
-SHALL be stated where the deferral is made.
-
-#### Scenario: A differential fixture is deferred
-
-- **WHEN** the largest board of a game's frozen differential is moved to the
-  opt-in tier
-- **THEN** every mode, difficulty and grid type it carried is still asserted on
-  every commit by the smaller fixtures, and that is stated at the call site
-- **BECAUSE** the differentials are the refactoring net: a refactor that changes a
-  solver's verdict must still change a desc the gate checks
-
 ### Requirement: The app builds from a clean checkout with no toolchain but Node
 
 A clean checkout SHALL build the complete app (every game, every help page, the
@@ -712,9 +695,9 @@ so one rule per puzzle page would turn it into a limit on the number of games.
 
 A test SHALL be judged by what it would catch in a refactor that no cheaper
 test would, and never by the era or the category it belongs to. "It was written
-for the port" is not by itself a reason: the frozen `c-reference` differentials
-are porting artifacts and also the strongest net under solver refactoring,
-because a change to a solver's verdict changes which boards exist.
+for the port" is not by itself a reason. A test that held the code only to
+upstream's output SHALL be retired once each thing it was the only net under is
+held by another test, named in the change.
 
 #### Scenario: A configuration would lose its last cover
 
@@ -1599,3 +1582,19 @@ CI's gate SHALL run the test suite as shards, each a job on a runner of its own,
 - **WHEN** the suite runs in shards
 - **THEN** each shard walks shares of its own of each spread file, and the shards together walk every share once
 - **BECAUSE** a placement by file alone would put every share of a spread file in one shard, which would walk the sweep whole
+
+### Requirement: A test is not deferred while it is the only cover of a configuration
+
+Deferral to the opt-in tier, `npm run test:slow`, SHALL be reserved for cases
+where the cost is board size and not configuration. A test SHALL NOT be deferred when it is the only
+one covering some configuration: deferring the only board for a grid type
+silently removes that grid type from every commit. The remaining coverage
+SHALL be stated where the deferral is made.
+
+#### Scenario: A sweep's largest board is deferred
+
+- **WHEN** the largest board a game's sweep walks is moved to the opt-in tier
+- **THEN** every mode, difficulty and grid type it carried is still asserted on
+  every commit by the smaller boards, and that is stated at the call site
+- **BECAUSE** a refactor that changes a solver's verdict must still move a board
+  the gate checks

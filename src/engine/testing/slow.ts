@@ -3,9 +3,8 @@
  * commit**.
  *
  * The pre-commit gate exists to say "this tree is not broken", and it is paid
- * for on every commit. A handful of tests cost more than half of it (three
- * Seismic 7×7 differential fixtures at 272 s, one Bricks 12×8 at 100 s) while
- * their configuration coverage — every mode × difficulty — is carried by the
+ * for on every commit. A handful of tests on a family's largest boards can
+ * cost more than half of it while their configuration coverage — every mode × difficulty — is carried by the
  * smaller boards of the same family, so what the big ones add is board *size*
  * against the same code paths.
  *
@@ -52,7 +51,7 @@
  * deferring the only fixture for a grid type silently removes that grid type
  * from every commit. State the remaining coverage when you mark something.
  */
-import { describe, expect, it } from "vitest";
+import { expect, it } from "vitest";
 import { scopeFromEnv } from "./game-scope.ts";
 
 /** True when the run was asked for the expensive tier (`npm run test:slow`).
@@ -145,9 +144,6 @@ export const itDeep: typeof it = new Proxy((() => {}) as unknown as typeof it, {
   apply: (_target, self, args) => Reflect.apply(it.skipIf(!inDeepTier()), self, args),
   get: (_target, key) => Reflect.get(it.skipIf(!inDeepTier()), key),
 });
-
-/** `describe`, skipped unless the slow tier was asked for. */
-export const describeSlow = describe.skipIf(!SLOW_TESTS_ENABLED);
 
 /** `it`, skipped unless the slow tier was asked for. */
 export const itSlow = it.skipIf(!SLOW_TESTS_ENABLED);

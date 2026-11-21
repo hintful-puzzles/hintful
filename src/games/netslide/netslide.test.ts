@@ -5,10 +5,6 @@
  * generator's structural invariants, input mapping and the win condition; tier
  * 2.5 (`renderScenario` against a real `Midend`) for the frames — the opener and
  * a mid-slide animation frame.
- *
- * The generator's *fidelity to C* is pinned separately, and far more strongly,
- * by `netslide-differential.test.ts` (byte-for-byte desc match). These tests
- * cover what a byte-match cannot: that the thing plays.
  */
 
 import { describe, expect, it } from "vitest";

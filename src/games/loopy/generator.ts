@@ -4,8 +4,7 @@
  *
  * The whole thing is **solver-gated** — `gameHasUniqueSoln` decides every clue
  * removal, every board retry and the too-easy rejection — which is why a single
- * divergence anywhere in the solver changes which descriptions come out, and
- * why the description byte-match is such a strong differential.
+ * divergence anywhere in the solver changes which descriptions come out.
  */
 
 import { APERIODIC_GRID_TYPES, type GridType } from "../../engine/board/grid/index.ts";

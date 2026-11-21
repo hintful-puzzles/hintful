@@ -121,8 +121,7 @@ export function validateParams(p: PearlParams, _full: boolean): string | null {
  *
  * Upstream grows a run by incrementing the letter it already wrote, starting a
  * fresh `a` after `z`. That produces exactly the 26-cell chunks
- * {@link encodeRunLength} writes, which the frozen differential checks byte for
- * byte.
+ * {@link encodeRunLength} writes.
  */
 export function encodeClues(clues: Uint8Array, sz: number): string {
   return encodeRunLength(

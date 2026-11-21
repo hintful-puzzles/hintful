@@ -108,8 +108,8 @@ export interface RectParams {
   w: number;
   h: number;
   /** C `float`: base grid is generated at `size / (1 + expandfactor)` then
-   * stretched. Default 0 (all presets). A byte-match float hazard, so encoded
-   * `%g` and decoded `atof`. */
+   * stretched. Default 0 (all presets). Encoded `%g` and decoded `atof`, as
+   * upstream's params strings write it. */
   expandfactor: number;
   /** `DIFF_EASY` or {@link DIFF_NORMAL}, a board the ladder's techniques
    * of that tier finish, or {@link DIFF_UNREASONABLE}, one with a single answer that

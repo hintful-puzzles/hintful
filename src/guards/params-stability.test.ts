@@ -5,9 +5,10 @@
  * A game's params appear inside every shared game ID, so changing how a game
  * encodes them silently invalidates every link anyone has ever shared of it.
  * The `engine-params` spec asks for an assertion and not policy alone ("Encoded
- * params are byte-stable, and the guard is derived"), and this file is it. The
- * frozen differentials cover **descs**, not params, so without it a codec
- * could be rewritten with the whole suite green.
+ * params are byte-stable, and the guard is derived"), and this file is it.
+ * `upstream-descs.test.ts` holds that upstream's game IDs load, not that this
+ * app's own encodings stay put, so without this a codec could be rewritten
+ * with the whole suite green.
  *
  * Two guarantees, and they do different jobs:
  *

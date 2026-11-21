@@ -1,10 +1,7 @@
 /**
- * Bridges generator — RNG-faithful port of `new_game_desc` in
- * `puzzles/bridges.c`. Because `random.ts` is bit-identical to `random.c` and
- * nothing here sorts/shuffles the island list before encoding, the emitted desc
- * is byte-identical to C for the same seed — that is the differential test's
- * bar. The exact `random_upto` draw order (island, direction, two possible
- * expansion rolls, position offsets, bridge count) is preserved rule-for-rule.
+ * Bridges generator — port of `new_game_desc` in `puzzles/bridges.c`. Each
+ * growth step draws, in upstream's order, an island, a direction, up to two
+ * expansion rolls, position offsets and a bridge count.
  */
 
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
@@ -88,9 +85,9 @@ export function newBridgesDesc(
         }
 
         // Either join an existing island (loops allowed) or make a new one.
-        // NOTE: the `&&` short-circuit reproduces C's draw order exactly — the
-        // first expansion roll happens iff a join is available, and a failed
-        // roll falls through to the second (new-island) roll below.
+        // The `&&` short-circuit means the first expansion roll happens iff a
+        // join is available, and a failed roll falls through to the second
+        // (new-island) roll below, as upstream draws them.
         if (
           p.allowloops &&
           joinx !== -1 &&

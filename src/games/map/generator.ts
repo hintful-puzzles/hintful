@@ -1,6 +1,5 @@
 /**
- * Map's board generator (upstream `new_game_desc` and its helpers). Byte-faithful
- * to the C RNG draw order so a seed reproduces the exact desc + aux:
+ * Map's board generator (upstream `new_game_desc` and its helpers):
  *   1. the regions, grown from seeds scattered at random (upstream `genmap`,
  *      which is the engine's `growFromSeeds`);
  *   2. `gengraph` — the adjacency graph (see graph.ts);
@@ -29,7 +28,7 @@ const FOUR = 4;
 // --- four-coloring --------------------------------------------------
 
 /**
- * The draws of upstream's four-coloring, which the frozen fixture pins: a region at
+ * The draws of upstream's four-coloring: a region at
  * random among those tied, and its colors shuffled and tried from the last.
  */
 const drawn = (rs: RandomState): FillChoice => ({

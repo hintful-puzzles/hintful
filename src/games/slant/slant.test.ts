@@ -1,7 +1,6 @@
 /**
  * Behavioral tests for the Slant port (tier 1 logic + tier 2 render ops +
- * tier 2.5 render scenario; the C-vs-TS byte-match lives in
- * slant-differential.test.ts).
+ * tier 2.5 render scenario).
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
@@ -33,7 +32,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import cReference from "./__fixtures__/slant-c-reference.json" with { type: "json" };
 import { newDesc, slantGenerate } from "./generator.ts";
 import { slantGame } from "./index.ts";
 import { border, COL_GROUNDED } from "./render.ts";
@@ -54,18 +52,14 @@ import {
   textFormat,
 } from "./state.ts";
 
-const FIXTURE = (
-  cReference as {
-    fixtures: {
-      w: number;
-      h: number;
-      diff: number;
-      seed: string;
-      desc: string;
-      aux: string;
-    }[];
-  }
-).fixtures[0]; // 5x5 Easy
+/** A 5x5 Easy board upstream's generator dealt, with its solution as `aux`. */
+const BOARD = {
+  w: 5,
+  h: 5,
+  diff: DIFF_EASY,
+  desc: "c1c3a2a01a3c02a1b1c3d1b",
+  aux: "\\////\\\\//\\\\\\\\\\\\//\\//////\\",
+};
 
 const P22 = { w: 2, h: 2, diff: DIFF_EASY };
 
@@ -130,9 +124,9 @@ describe("slant params", () => {
 
 describe("slant desc codec", () => {
   it("round-trips a generated desc", () => {
-    const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
-    expect(validateDesc(slantGame, p, FIXTURE.desc)).toBeNull();
-    expect(encodeClues(decodeClues(p, FIXTURE.desc))).toBe(FIXTURE.desc);
+    const p = { w: BOARD.w, h: BOARD.h, diff: BOARD.diff };
+    expect(validateDesc(slantGame, p, BOARD.desc)).toBeNull();
+    expect(encodeClues(decodeClues(p, BOARD.desc))).toBe(BOARD.desc);
   });
 
   it("rejects malformed descs", () => {
@@ -180,11 +174,11 @@ describe("slant errors and completion", () => {
   });
 
   it("is solved exactly while the board holds the unique solution", () => {
-    const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
-    let s = newState(p, FIXTURE.desc);
+    const p = { w: BOARD.w, h: BOARD.h, diff: BOARD.diff };
+    let s = newState(p, BOARD.desc);
     const moves: SlantMove[] = [];
     for (let i = 0; i < p.w * p.h; i++) {
-      moves.push(set(i % p.w, Math.floor(i / p.w), FIXTURE.aux[i] === "\\" ? -1 : 1));
+      moves.push(set(i % p.w, Math.floor(i / p.w), BOARD.aux[i] === "\\" ? -1 : 1));
     }
     s = applyAll(s, moves);
     expect(slantGame.status(s)).toBe("solved");
@@ -194,10 +188,10 @@ describe("slant errors and completion", () => {
   });
 
   it("computeErrors reports complete only when full and clean", () => {
-    const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
-    const clues = decodeClues(p, FIXTURE.desc);
+    const p = { w: BOARD.w, h: BOARD.h, diff: BOARD.diff };
+    const clues = decodeClues(p, BOARD.desc);
     const soln = new Int8Array(p.w * p.h);
-    for (let i = 0; i < soln.length; i++) soln[i] = FIXTURE.aux[i] === "\\" ? -1 : 1;
+    for (let i = 0; i < soln.length; i++) soln[i] = BOARD.aux[i] === "\\" ? -1 : 1;
     expect(computeErrors(p.w, p.h, clues, soln).complete).toBe(true);
     soln[3] = 0;
     expect(computeErrors(p.w, p.h, clues, soln).complete).toBe(false);
@@ -272,20 +266,20 @@ describe("slant input", () => {
 });
 
 describe("slant solve + findMistakes", () => {
-  const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
+  const p = { w: BOARD.w, h: BOARD.h, diff: BOARD.diff };
 
   it("solve uses the aux solution when present", () => {
-    const s = newState(p, FIXTURE.desc);
-    const r = slantGame.solve(s, s, FIXTURE.aux);
-    expect(r).toEqual({ ok: true, move: { type: "solve", grid: FIXTURE.aux } });
+    const s = newState(p, BOARD.desc);
+    const r = slantGame.solve(s, s, BOARD.aux);
+    expect(r).toEqual({ ok: true, move: { type: "solve", grid: BOARD.aux } });
   });
 
   it("solve re-derives the solution without aux, from a dirty state", () => {
-    let s = newState(p, FIXTURE.desc);
+    let s = newState(p, BOARD.desc);
     // Place two wrong diagonals first.
-    const wrong0 = FIXTURE.aux[0] === "\\" ? 1 : -1;
+    const wrong0 = BOARD.aux[0] === "\\" ? 1 : -1;
     s = executeMove(s, set(0, 0, wrong0 as -1 | 1));
-    const r = slantGame.solve(newState(p, FIXTURE.desc), s);
+    const r = slantGame.solve(newState(p, BOARD.desc), s);
     expect(r?.ok).toBe(true);
     if (r?.ok) {
       const done = executeMove(s, r.move);
@@ -294,24 +288,24 @@ describe("slant solve + findMistakes", () => {
   });
 
   it("flags exactly the diagonals contradicting the unique solution", () => {
-    let s = newState(p, FIXTURE.desc);
-    const right0 = FIXTURE.aux[0] === "\\" ? -1 : 1;
+    let s = newState(p, BOARD.desc);
+    const right0 = BOARD.aux[0] === "\\" ? -1 : 1;
     s = executeMove(s, set(0, 0, right0 as -1 | 1)); // correct
-    const wrong1 = FIXTURE.aux[1] === "\\" ? 1 : -1;
+    const wrong1 = BOARD.aux[1] === "\\" ? 1 : -1;
     s = executeMove(s, set(1, 0, wrong1 as -1 | 1)); // wrong
     expect(slantGame.findMistakes?.(s)).toEqual([{ x: 1, y: 0 }]);
   });
 
   it("reports no mistakes on a blank or correct board", () => {
-    const s = newState(p, FIXTURE.desc);
+    const s = newState(p, BOARD.desc);
     expect(slantGame.findMistakes?.(s)).toEqual([]);
   });
 
   it("is solved on a genuine player win", () => {
-    const s = newState(p, FIXTURE.desc);
+    const s = newState(p, BOARD.desc);
     const moves: SlantMove[] = [];
     for (let i = 0; i < p.w * p.h; i++) {
-      moves.push(set(i % p.w, Math.floor(i / p.w), FIXTURE.aux[i] === "\\" ? -1 : 1));
+      moves.push(set(i % p.w, Math.floor(i / p.w), BOARD.aux[i] === "\\" ? -1 : 1));
     }
     const prev = applyAll(s, moves.slice(0, -1));
     const done = executeMove(prev, moves[moves.length - 1]);
@@ -355,7 +349,7 @@ describe("slant rendering", () => {
   it("draws clue circles and slashes on the initial frame (snapshot)", () => {
     const { recording } = renderScenario({
       game: slantGame,
-      id: `5x5:${FIXTURE.desc}`,
+      id: `5x5:${BOARD.desc}`,
       moves: [set(0, 0, -1)],
     });
     // Clue circles exist…
@@ -366,10 +360,10 @@ describe("slant rendering", () => {
   });
 
   it("renders the mistake overlay in error color", () => {
-    const wrong0 = FIXTURE.aux[0] === "\\" ? 1 : -1;
+    const wrong0 = BOARD.aux[0] === "\\" ? 1 : -1;
     const { recording, mistakeCount } = renderScenario({
       game: slantGame,
-      id: `5x5:${FIXTURE.desc}`,
+      id: `5x5:${BOARD.desc}`,
       moves: [set(0, 0, wrong0 as -1 | 1)],
       showMistakes: true,
     });
@@ -382,9 +376,9 @@ describe("slant rendering", () => {
   it("repaints a mistake overlay onto an unchanged tile (second paint)", () => {
     // The docs/rendering.md § "The tile cache and the diff key" regression: paint, then flag a mistake, then redraw
     // with no tile change — the red styling must appear on the second paint.
-    const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
-    let s = newState(p, FIXTURE.desc);
-    const wrong0 = FIXTURE.aux[0] === "\\" ? 1 : -1;
+    const p = { w: BOARD.w, h: BOARD.h, diff: BOARD.diff };
+    let s = newState(p, BOARD.desc);
+    const wrong0 = BOARD.aux[0] === "\\" ? 1 : -1;
     s = executeMove(s, set(0, 0, wrong0 as -1 | 1));
 
     const dr = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
@@ -412,8 +406,8 @@ describe("slant rendering", () => {
   });
 
   it("fades grounded diagonals only when the pref is on", () => {
-    const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
-    let s = newState(p, FIXTURE.desc);
+    const p = { w: BOARD.w, h: BOARD.h, diff: BOARD.diff };
+    let s = newState(p, BOARD.desc);
     s = executeMove(s, set(0, 0, -1)); // touches the border: grounded
 
     const palette = slantGame.colors(DEFAULT_BACKGROUND);
@@ -437,8 +431,8 @@ describe("slant rendering", () => {
 });
 
 describe("slant: the win flash", () => {
-  const p = { w: FIXTURE.w, h: FIXTURE.h, diff: FIXTURE.diff };
-  const state = newState(p, FIXTURE.desc);
+  const p = { w: BOARD.w, h: BOARD.h, diff: BOARD.diff };
+  const state = newState(p, BOARD.desc);
   const palette = slantGame.colors(DEFAULT_BACKGROUND);
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(palette);

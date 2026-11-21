@@ -2,8 +2,8 @@
  * Boats — the solver-gated generator (upstream's "Generator" block), plus the
  * fleet-fit half of `validateParams`.
  *
- * `newBoatsDesc` is byte-match surface end to end. Every stage is gated by the
- * solver's verdict on an intermediate board:
+ * Every stage of `newBoatsDesc` is gated by the solver's verdict on an
+ * intermediate board:
  *
  *  1. place a random fleet, and derive the border numbers from it;
  *  2. keep adding a random given clue until the **Easy** solver is no longer
@@ -19,12 +19,11 @@
  * along the way (docs/solver-and-generator.md § "Solver-gated
  * generation").
  *
- * **RNG draws must be reproduced in order, including the wasted ones.** The
+ * The RNG draws are upstream's, kept as ported, wasted ones included: the
  * fleet placement shuffles the run list and draws a position *per boat*, and
- * the clue-removal passes shuffle a full-grid permutation twice — the second
- * `shuffle` permutes the array the first one already permuted, rather than a
- * fresh identity, so it cannot be replaced with one shuffle of a fresh array
- * (docs/testing.md § "Byte-match: fidelity where there is a right answer").
+ * the clue-removal passes shuffle a full-grid permutation twice, the second
+ * `shuffle` permuting the array the first one already permuted rather than a
+ * fresh identity.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";

@@ -1,13 +1,13 @@
 /**
  * Behavioral tests for the Solo port (tiers 1 + 2.5).
  *
- * Tier 1 drives the move/solve/findMistakes logic on fixture-derived boards.
+ * Tier 1 drives the move/solve/findMistakes logic on upstream-dealt boards.
  * Tier 2.5 drives a real `Midend` to an initial frame for each of the four
  * variants (standard / X / jigsaw / killer) via the shared recording drawing,
  * asserting the distinctive ops plus a frozen snapshot.
  *
- * Board descs are taken from the differential fixture so the tests are
- * deterministic without running the (slow) generator.
+ * Board descs are written inline so the tests are deterministic without
+ * running the (slow) generator.
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/contract/game.ts";
@@ -23,7 +23,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
-import cReference from "./__fixtures__/solo-c-reference.json" with { type: "json" };
 import { soloGame } from "./index.ts";
 
 // The three smallest grids above Easy.
@@ -54,41 +53,51 @@ import {
   type SoloState,
 } from "./state.ts";
 
-interface Fixture {
-  c: number;
-  r: number;
-  symm: number;
-  diff: number;
-  kdiff: number;
-  xtype: boolean;
-  killer: boolean;
-  seed: string;
+interface Board extends SoloParams {
   desc: string;
 }
 
-const fixtures = (cReference as { fixtures: Fixture[] }).fixtures;
-
-function paramsOf(f: Fixture): SoloParams {
+function paramsOf(f: Board): SoloParams {
   const { c, r, symm, diff, kdiff, xtype, killer } = f;
   return { c, r, symm, diff, kdiff, xtype, killer };
 }
 
-function fixtureBy(pred: (f: Fixture) => boolean): Fixture {
-  const f = fixtures.find(pred);
-  if (!f) throw new Error("no matching fixture");
-  return f;
-}
+// One 9x9 board of each variant, dealt by upstream's generator.
+const PLAIN = { c: 3, r: 3, symm: 1, diff: 1, kdiff: 1, xtype: false, killer: false };
+const STD: Board = {
+  ...PLAIN,
+  desc: "d1b4c6_3_7_2a1g2_6a7b6b5_3a6g7a8_2b4b6a6_4g2a5_6_7_4c9b4d",
+};
+const XTYPE: Board = {
+  ...PLAIN,
+  xtype: true,
+  desc: "9h5c1b6d2a4c7_9a5e6_2e5_4e2a9_7c6a7d5b8c9h8",
+};
+const JIGSAW: Board = {
+  ...PLAIN,
+  c: 9,
+  r: 1,
+  desc:
+    "e5i4_3b2_6_7a3b5c5_3e1b2b7e9_8c9b8a7_2_4b6_7i4e," +
+    "_afb__b__aa___ba___b_a___aa__b___c_b_ciaade____ba____bdbbea_a__bf_",
+};
+const KILLER: Board = {
+  ...PLAIN,
+  symm: 0,
+  diff: 0,
+  kdiff: 3,
+  killer: true,
+  desc:
+    "zzzc," +
+    "__aa____aa____a_b__a_a_aaa__a_____aa___a_a____ca__ba__aaa_________a_____aa__a_aa____ab__a_b_a___ba_a_," +
+    "5_5_12a13a9_9_16b9a13d9_13_8a7_20e12b11a5_13_17a13a7a5b4a8a14_12a13a15b14b15a12a12b18_4_8b15f10a",
+};
 
-const STD = fixtureBy((f) => !f.xtype && !f.killer && f.r === 3 && f.c === 3);
-const XTYPE = fixtureBy((f) => f.xtype && !f.killer && f.r === 3);
-const JIGSAW = fixtureBy((f) => f.r === 1 && !f.xtype && !f.killer);
-const KILLER = fixtureBy((f) => f.killer);
-
-function idOf(f: Fixture): string {
+function idOf(f: Board): string {
   return `${encodeParams(paramsOf(f), false)}:${f.desc}`;
 }
 
-function stateOf(f: Fixture): SoloState {
+function stateOf(f: Board): SoloState {
   return newState(paramsOf(f), f.desc);
 }
 
@@ -101,7 +110,7 @@ function firstEditable(s: SoloState): number {
   throw new Error("no editable cell");
 }
 
-function solvedGrid(f: Fixture): Int8Array {
+function solvedGrid(f: Board): Int8Array {
   const me = new Midend(soloGame);
   me.newGameFromId(idOf(f));
   me.solve();
@@ -214,7 +223,7 @@ describe("solo moves", () => {
         checked++;
       }
     }
-    // A fixture whose row and column were already filled would assert nothing.
+    // A board whose row and column were already filled would assert nothing.
     expect(checked).toBeGreaterThan(0);
   });
 });

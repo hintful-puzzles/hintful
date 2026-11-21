@@ -2,8 +2,8 @@
  * The firing census every compiled ladder is certified with: the soundness
  * check says a technique is right, and only this says it is ever reached.
  *
- * **Why a ladder needs more than its differential.** A fixture corpus certifies
- * only the rungs it fires, and nothing in a fixture file says which those are:
+ * **Why a ladder needs more than its game's tests.** A test corpus certifies
+ * only the rungs it fires, and nothing in a test file says which those are:
  * deleting one of Tracks' eight rungs entirely left all its tests green, because
  * that rung fires on no board its generator produces. So each game walks its
  * ladder over a corpus at every cap (the cap is what selects rungs) and asserts
@@ -12,7 +12,7 @@
  *
  * **What it cannot see is a rung that fires and is not needed.** Other rungs can
  * reach the same conclusion, and then silencing one leaves the board unchanged;
- * docs/solver-and-generator.md § "Proving an adoption: the fixtures are not enough" says how to find
+ * docs/solver-and-generator.md § "Proving an adoption: a census and a plant" says how to find
  * out. Each adoption was once proved against the hand-written loop it replaced,
  * which git keeps; the census is what stays live.
  *

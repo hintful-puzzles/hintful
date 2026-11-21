@@ -336,7 +336,8 @@ claiming otherwise is.
 - **THEN** the module names the known non-fits and why, so the evaluation
   starts from evidence rather than from an implied obligation
 - **AND** a solver whose loop merely *resembles* the shared one is not treated
-  as fitting until its differential says so
+  as fitting until, run through it, the game's tests pass and no hint-walk
+  snapshot moves
 
 #### Scenario: An audit finds the majority do not fit
 
@@ -354,7 +355,7 @@ and a game that does not SHALL have its reason recorded. The helpers in
 question emit tables a game would otherwise hand-write:
 `dimensionParamConfig()` for width/height params, and the shared pencil-mark
 preference declarations. Adopting such a helper SHALL be a no-op: no
-differential and no render snapshot moves.
+hint-walk snapshot and no render snapshot moves.
 
 #### Scenario: A new port declares its params config
 
@@ -643,8 +644,10 @@ a fixed order.
 
 #### Scenario: Map's generator draws through the walk
 
-- **WHEN** Map's generator colors a map with upstream's draws as the choice
-- **THEN** its descriptions match the frozen reference byte for byte
+- **WHEN** Map's generator colors a map
+- **THEN** it answers the walk's questions with its random draws, so the walk
+  asks for one among the regions tied for fewest fills left, then for the
+  order of that region's fills, once each at every step
 
 #### Scenario: No coloring exists
 

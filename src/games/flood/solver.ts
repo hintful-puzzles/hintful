@@ -2,8 +2,7 @@
  * Flood's heuristic solver, ported branch-for-branch from upstream
  * `flood.c` (`search` + `choosemove` + `choosemove_recurse`). It is
  * *not* optimal — it is a depth-3 greedy look-ahead — but it is exactly
- * what upstream uses to set each board's par at generation time, so it
- * must reproduce C's choices (the differential test checks it). Keep the
+ * what upstream uses to set each board's par at generation time. Keep the
  * inner loops typed-array-tight.
  */
 

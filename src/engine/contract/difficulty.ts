@@ -30,8 +30,8 @@
  * convention into every cross-game consumer.
  *
  * **The contract describes; it never decides.** Adopting it changes no board a
- * game generates — a differential fixture that moves means an adapter
- * misreports its game's solver.
+ * game generates — a dealt board that moves when a game adopts it means an
+ * adapter misreports its game's solver.
  */
 // Type-only, so the `game.ts` ⇄ `difficulty.ts` pair is erased at compile time
 // and no runtime cycle exists.

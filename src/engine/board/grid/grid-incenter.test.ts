@@ -185,7 +185,7 @@ describe("gridFindIncenter", () => {
 
         // How many things did I look at? A sweep that iterates zero faces
         // passes every assertion inside it, so the count is asserted before
-        // any of them. `grid-differential.test.ts` pins the exact face list far
+        // any of them. `grid-numbering.test.ts` pins the exact face list far
         // more strongly; this only has to make the loop's emptiness visible.
         expect(g.faces.length).toBeGreaterThan(0);
 

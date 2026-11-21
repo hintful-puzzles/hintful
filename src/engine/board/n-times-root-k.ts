@@ -17,8 +17,8 @@
  * **exact** coordinate equality, a single one-unit disagreement does not
  * degrade a coordinate — it silently splits one shared corner into two dots and
  * produces a structurally broken grid. Keeping the exact algorithm also keeps
- * the C reference fixtures trustworthy as a check rather than as a check that
- * happens to agree.
+ * the recorded numbering fixtures (`grid-aperiodic-numbering.test.ts`)
+ * trustworthy as a check rather than as a check that happens to agree.
  *
  * ## Method
  *

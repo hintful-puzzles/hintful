@@ -1,8 +1,7 @@
 /**
  * Behavioral tests for the Light Up explained hint.
  *
- * The recorder-off byte-match guard is `lightup-differential.test.ts`; these
- * tests cover the recorder-on plan: completeness on Easy/Normal boards, the
+ * These tests cover the recorder-on plan: completeness on Easy/Normal boards, the
  * bleed rule (a step's marks stay inside its narrated evidence), the narration
  * voice guards, refusals, keep-track shrinking, and the honest
  * Unreasonable-tier refusal at the guess point.

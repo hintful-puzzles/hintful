@@ -355,7 +355,8 @@ SHALL fire on them.
 #### Scenario: A mis-tiered or reordered rung fails
 
 - **WHEN** a rung is declared at another tier, or moved past the rung after it
-- **THEN** the frozen differential or the firing census fails
+- **THEN** the firing census fails, or the tier gate fails, or the hint-walk
+  snapshots move
 
 ### Requirement: Solver: A killer region left nothing is a contradiction
 

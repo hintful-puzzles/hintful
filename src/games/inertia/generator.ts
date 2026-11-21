@@ -7,10 +7,8 @@
  * are so unevenly spread that a large region of the board would be dead space.
  * Only then are the gems placed, on a random subset of the legal squares.
  *
- * Byte-match-critical: the RNG draws here (one `shuffle` per attempt, plus a
- * second on the attempt that succeeds) must match the C exactly, or the same
- * seed yields a different board. That constrains the order the two shuffled
- * lists are *built* in, and nothing else.
+ * The RNG draws are upstream's: one `shuffle` per attempt, plus a second on the
+ * attempt that succeeds.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";

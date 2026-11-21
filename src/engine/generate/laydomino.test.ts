@@ -41,7 +41,7 @@ describe("dominoLayout", () => {
     expect(assertValidLayout(grid, 5, 5)).toBe(1);
   });
 
-  it("is deterministic for a fixed seed (byte-match RNG)", () => {
+  it("is deterministic for a fixed seed", () => {
     const a = dominoLayout(8, 7, randomNew("lay-det"));
     const b = dominoLayout(8, 7, randomNew("lay-det"));
     expect(Array.from(a)).toEqual(Array.from(b));

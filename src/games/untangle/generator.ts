@@ -17,8 +17,7 @@
  * and via the move log, never the desc. The solved layout is returned as
  * `aux` (used by Solve and the hint; not persisted).
  *
- * The only randomness is the two `shuffle` calls, so over the bit-identical
- * `random.ts` this reproduces the C desc for a given seed.
+ * The only randomness is the two `shuffle` calls.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";

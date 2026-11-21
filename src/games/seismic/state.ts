@@ -12,9 +12,9 @@
  * Seismic reads `canonify` only as a region *identifier*: walls come from a
  * membership comparison, the solver re-reads its root-indexed scratch arrays
  * through `canonify`, and every clue is per-cell. So union-by-size's root choice
- * is unobservable and the shared `Dsf` is byte-match faithful as-is
- * (docs/solver-and-generator.md § "The Latin family"). Don't add a
- * min-dsf variant to "restore fidelity".
+ * is unobservable and the shared `Dsf` serves as-is
+ * (docs/solver-and-generator.md § "The Latin family"); a min-dsf variant
+ * would change nothing.
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";

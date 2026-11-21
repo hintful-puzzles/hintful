@@ -1,6 +1,6 @@
 /**
  * Generic Latin-square solver and generator: upstream `latin.c`'s solver, and
- * its RNG-faithful generator with `matching.c`.
+ * its generator with `matching.c`.
  *
  * Shared by the games that call `latinSolver`. A game supplies its ladder,
  * compiled from its description, which places the library's techniques
@@ -571,7 +571,7 @@ export function latinSolver(
   return ret;
 }
 
-// --- generator (matching.c / latin.c, RNG-faithful) ------------------------
+// --- generator (matching.c / latin.c) --------------------------------------
 
 /**
  * Maximum bipartite matching (Hopcroft–Karp) between `nl` left and `nr`
@@ -580,9 +580,8 @@ export function latinSolver(
  * (`-1` = unmatched), upstream's `outl`; invert it for an R→L assignment.
  *
  * With `rs`, the matching is chosen at random among the maximum ones
- * (generation): upstream's two draws — `shuffle(Lorder)` per BFS pass and the
- * in-place `random_upto` adjacency swap during the DFS — are reproduced
- * exactly, so generation is byte-faithful. Without it the run is
+ * (generation), by upstream's two draws: `shuffle(Lorder)` per BFS pass and
+ * the in-place `random_upto` adjacency swap during the DFS. Without it the run is
  * deterministic; a matching's *cardinality* does not depend on the choice, so
  * that mode is upstream's `rs = NULL` existence check (Tents' completion check).
  */

@@ -113,7 +113,7 @@ function solutionGrid(st: KeenState): number[] {
   return r.move.grid;
 }
 
-// A deterministic descriptive id from the frozen C fixture (4×4 Easy).
+// A fixed 4×4 Easy board, as upstream's C generator wrote it.
 const D4 = "aa_a_aa_ba_5a,d2s1a9m4d2m6s2";
 const P4: KeenParams = { w: 4, diff: "easy", multiplicationOnly: false };
 

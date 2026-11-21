@@ -1,11 +1,9 @@
 /**
- * Tents generator — faithful port of `new_game_desc` in tents.c. Byte-match
- * critical, and the differential checks it: every RNG draw must reproduce C
- * exactly — the `random_upto` tent-placement permutation and the bipartite
- * `matching`'s own internal draws (RNG-faithful in `engine/solve/latin.ts`) — and
- * the solver's verdict must match C on every candidate board (the difficulty
- * gate rejects any board solvable one level down). See docs/testing.md
- * § "Byte-match: fidelity where there is a right answer".
+ * Tents generator — faithful port of `new_game_desc` in tents.c. The RNG draws
+ * are upstream's: the `random_upto` tent-placement permutation and the
+ * bipartite `matching`'s own internal draws (in `engine/solve/latin.ts`). The
+ * solver's verdict on every candidate board decides which boards exist (the
+ * difficulty gate rejects any board solvable one level down).
  *
  * Generation strategy: place `w*h/5` tents at random non-adjacent squares,
  * place trees by matching each tent to a distinct orthogonally-adjacent

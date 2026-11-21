@@ -1,13 +1,13 @@
 # Testing a game
 
 How a game change is verified: which tier a test belongs in, what a new game
-ships, how a hint's positions and a frame are pinned, what the frozen
-differentials still hold, the rules that keep the suite deterministic, what
+ships, how a hint's positions and a frame are pinned, what to do when the
+boards a seed deals move, the rules that keep the suite deterministic, what
 runs at a commit and at a push, and what a game and a new guard owe the
 cross-game guards. Writing tests is here; assessing them (the mutation probe,
 `npm run probe`) is [`test-strength.md`](./test-strength.md). The specs are
 [`testing`](../openspec/specs/testing/spec.md) (the tiers, the render
-harness, determinism under load, the differential helper, a hint test's pins,
+harness, determinism under load, a hint test's pins,
 the boards a cross-game sweep walks) and
 [`build-pipeline`](../openspec/specs/build-pipeline/spec.md) (what the gate
 runs, and what a commit may leave to the push and to CI).
@@ -65,11 +65,8 @@ runs, and what a commit may leave to the push and to CI).
 | Observing a midend | a test asks what the midend told the app: status bar, timer, repaint requests |
 | Render-op vocabulary | an op assertion never matches, or you are matching a ring, a circle or a color |
 | What a new game ships | you are writing a new game's tests |
-| The frozen differentials | a game has a `<game>-differential.test.ts`, or you wonder whether to write or delete one |
-| Byte-match: fidelity where there is a right answer | you refactor or optimize a generator, a codec or an RNG-drawing library a fixture pins |
-| Order-independent verdicts | a fixture's generator was never reproducible byte for byte |
-| Quirks are load-bearing — capped, not cleaned | you are tempted to tidy an upstream quirk in a fixture-pinned generator |
-| When a fixture goes red | a differential fails after your change |
+| When the boards a seed deals move | you change a generator, a solver it gates on, a codec or an RNG-drawing library, or a hint-walk snapshot moves |
+| – Finding why a deal moved | a change meant to move no board moved one |
 | Seed-deterministic, never clock-gated | a test needs a particular board, is slow, flaky under load or hangs, or you want to give it a timeout |
 | – A test that fails only in a full run | a test passes alone and fails in the suite |
 | Right-sizing the gate | a test is expensive and you are deciding whether to shrink, defer or retire it |
@@ -423,7 +420,7 @@ these are the ones that mislead:
 ## What a new game ships
 
 Ship the skeleton's three test files, filled in (§ "What every game does"
-says what each holds); write no differential. A new game has no oracle, so
+says what each holds). A game has no oracle to compare with, so
 its floor is a generation-invariant property test: every generated board is
 uniquely solvable at exactly its stated difficulty, across a fixed-seed
 sweep. That is `<game>-generation.test.ts`, through `describeDealtTiers`
@@ -442,74 +439,44 @@ longer walks go to the game's deep tier, which the game's own commits run
 **Play a move through `executeMove` to a completed board in a tier-1 test.**
 A generation check runs the solver's verdict-only completion. The
 interactive completion path (error marking, loop and path marking, flash
-labeling) is other code, and no generation check or differential runs it.
+labeling) is other code, and no generation check runs it.
 Play the solve move, or the moves, to a solved board. Exemplars:
 [`skeleton.test.ts`](../src/skeleton/grid/skeleton.test.ts),
 [`tracks.test.ts`](../src/games/tracks/tracks.test.ts).
 
-## The frozen differentials
+## When the boards a seed deals move
 
-Treat a `<game>-differential.test.ts` and its `__fixtures__/*.json` as the
-net under refactoring, and never regenerate, re-record or hand-edit a
-fixture: the C build that recorded them is gone. A change that alters a
-solver's verdict alters which boards exist, and nothing else in the suite
-notices a solver that got quietly stronger.
+Which board a seed deals is no one's promise: the app hands out boards, never
+seeds ([`doctrine.md`](./doctrine.md) § "Upstream"). A generator may change
+its draws, its order or its solver gate, and the boards it deals move with
+them. Nothing here holds a generator to upstream's C. What a change must keep
+is held by tests that re-record:
 
-- **A deliberate divergence retires or re-founds its fixture**
-  ([`solver-and-generator.md`](./solver-and-generator.md) has the policy and
-  the assurance that must replace it).
-- **None is kept for parity's sake.** A fixture may be deleted with its test
-  when a change deals other boards and another assurance (the tier contract)
-  grades what it deals.
-- **Cost is not a reason to retire one.** Together they were about a tenth of
-  suite time (measured 2026-09-09).
-- **A differential test file carries no regeneration recipe**, because none
-  can be run. The full statement is the header of
-  [`differential.ts`](../src/engine/testing/differential.ts), per the
-  `testing` spec.
-- **The gated, committed, frozen-fixture test is the only form a differential
-  has.** `npm run diff` runs the advisory checks under `scripts/checks/`
-  (`diff.vitest.config.mts` lists them), which report and never gate; no
-  differential is among them. Delete on sight a check that still sits in the
-  tree and can no longer run its real comparison.
-- **A fixture's `"genMs"` field is evidence, not an assertion**: the C's
-  wall-clock per board at capture.
+- **Every board is dealt at exactly its tier**: `describeDealtTiers` and the
+  tier gate (`guards/difficulty-contract.test.ts`), with the ladder census
+  showing every rung still fires.
+- **Every game ID keeps loading**: the game's own codec round-trips, and
+  upstream's game IDs through `guards/upstream-descs.test.ts`, a corpus of
+  descs upstream's generator wrote that nothing can add to. A grid's
+  numbering is in every Loopy game ID, so `grid-numbering.test.ts` holds it.
+- **Which boards exist is noticed when it moves**: the hint-walk snapshots
+  (`guards/hint-walk-fingerprint.test.ts`) walk the boards each preset deals,
+  so a change that moves a deal moves a walk. A change meant to move none is
+  shown by none moving; one that moves some is re-recorded with `-u`, after
+  § "Finding why a deal moved" says why.
 
-Two shapes:
+Three habits follow:
 
-- **Byte-for-byte desc match**: a faithful generator over the bit-identical
-  RNG reproduces the recorded desc for the same seed, through
-  `describeDescDifferential`. Exemplar:
-  [`unruly-differential.test.ts`](../src/games/unruly/unruly-differential.test.ts).
-- **Solver agreement**: decode a recorded board, run the solver, assert the
-  recorded difficulty verdict. Game-specific, so it stays inline. Exemplar:
-  [`galaxies-differential.test.ts`](../src/games/galaxies/galaxies-differential.test.ts).
-
-A game without one is a recorded decision. Permutation and short-RNG games
-get their RNG faithfulness from the RNG's own corpus
-([`random.test.ts`](../src/engine/random/random.test.ts)).
-
-## Byte-match: fidelity where there is a right answer
-
-Before refactoring or optimizing a fixture-pinned generator, find what the
-fixture pins and keep it. Matching the C is not a reason to hold back an
-improvement to a game ([`solver-and-generator.md`](./solver-and-generator.md)
-has the divergence policy); while a fixture stands, these hold:
-
-- **A byte-match proves a substitution changed no behavior**, so it is the
-  safest ground for an optimization. When one looks risky, check whether a
-  fixture already pins its observable output.
 - **RNG draws are observable side effects.** A loop that rejects a candidate
   has already spent its draws, so "pick only legal candidates in the first
-  place" diverges the stream. The tell is a loop whose counter increments
-  conditionally, or a draw skipped "because n === 1". This holds through the
-  RNG-drawing leaf libraries too (`latin.ts`'s `matching`, `loopgen.ts`,
-  `laydomino.ts`).
-- **A recorded artifact with no right answer is a yardstick, not an answer
-  key.** Where an approximate optimizer has many equally good outputs, assert
-  the result is legal, complete and no worse than the recorded one, not equal
-  to it. Exemplar:
-  [`inertia-differential.test.ts`](../src/games/inertia/inertia-differential.test.ts).
+  place" moves every later board. That is allowed, but it is not a pure
+  refactor: expect the walks to move. The tell is a loop whose counter
+  increments conditionally, or a draw skipped "because n === 1".
+- **An output with no right answer gets a ratchet, not an answer key.** Where
+  an approximate optimizer has many equally good outputs, assert the result
+  is legal, complete and no worse than today's, and lower the ceiling when it
+  improves. Exemplar: "finds routes no longer than it did" in
+  [`inertia.test.ts`](../src/games/inertia/inertia.test.ts).
 - **Read what the reader accepts before deciding what a writer owes it.** An
   encoder that never flushes its trailing run is a format, and "completing"
   it diverges every desc. Where a writer can emit what its own reader
@@ -517,45 +484,16 @@ has the divergence policy); while a fixture stands, these hold:
   round-tripping through a decoder written strictly to the reading rules,
   never encoder against its own decoder. Exemplar: `encodeRegionWalls` in
   [`engine/game-id/wall-runs.ts`](../src/engine/game-id/wall-runs.ts).
-- **A sort that feeds only rendering does not threaten a fixture.** Trace
-  whether a `.sort()` or a draw reaches the desc before treating it as
-  byte-match surface.
 
-## Order-independent verdicts
+### Finding why a deal moved
 
-Where a generator's output was never reproducible byte for byte (upstream
-sorted with `qsort`, whose tie order is implementation-defined), assert only
-verdicts that are provably independent of that order, and keep the
-order-independence argument in the test. The fixture records such verdicts
-(uniquely solvable, solved by the iterative solver, the ambiguity count after
-the fixpoint, the brute-force outcome) and no order-dependent quantity such
-as passes to fixpoint. The test decodes the same descs and asserts the solver
-reaches the same verdicts, which validates solver and codec where the
-generator cannot be pinned. Exemplar:
-[`undead-differential.test.ts`](../src/games/undead/undead-differential.test.ts).
-
-## Quirks are load-bearing — capped, not cleaned
-
-An upstream quirk in a fixture-pinned generator is part of which boards
-exist, so a hygiene fix diverges the fixture; a fix for the player is
-priced as [`solver-and-generator.md`](./solver-and-generator.md) §
-"Divergence and what it costs" says. Where the quirk's safety rests on an
-unproven invariant, port it faithfully inside the loop's `retryLimit`
-(`solver-and-generator.md` § "Every retry loop is bounded"), so an
-accidental divergence fails loudly and does not hang.
-
-## When a fixture goes red
-
-Treat the fixture as the instrument and your change as the suspect: a red
-differential after a refactor means the set of boards that exist changed.
-Never hand-edit a fixture to pass; a deliberate divergence retires or
-re-founds it (§ "The frozen differentials").
-
-Find the first fixture that mismatches. If the game records intermediate
-verdicts, binary-search for the first board whose solver verdict moved.
-Toggle techniques off one at a time to find which got stronger or weaker,
-then diff that technique against its earlier self. Two things to check
-first:
+Treat the walks as the instrument and your change as the suspect: a change
+meant to move no board that moves one changed which boards exist, most often
+because a solver the generator gates on got stronger or weaker. Find the
+first board whose walk moved, run its generation at the commit before and
+after, and binary-search for the first intermediate board whose solver
+verdict differs. Toggle techniques off one at a time to find which one
+moved, then diff it against its earlier self. Two things to check first:
 
 - **A sentinel imported from the wrong module reads as `undefined`** and
   weakens a `diff >= X` gate with no type error. Check a difficulty
@@ -611,7 +549,7 @@ would; one that cannot answer is a candidate for retirement whatever it cost
 to write.
 
 - **Retire by measurement, never by category.** "It was a porting test" is
-  not a reason. Answer per fixture.
+  not a reason. Answer per test.
 - **Say what still covers the configuration**, at the site, when you defer or
   delete the only case covering a mode, a grid type or a difficulty.
 - **A guard that catches what the author just wrote stays on the per-commit
@@ -664,10 +602,9 @@ Three treatments for an expensive test, in order of how little they lose:
    ([`slow.ts`](../src/engine/testing/slow.ts)), only for a property whose
    violation would be systematic, and say at the call site how many
    assertions the reduced count still executes.
-3. **Defer to `npm run test:slow`** (`slow: true` on
-   `describeDescDifferential`, or `describeSlow` and `itSlow`), only where
-   the cost is board size and not configuration. Never defer the only fixture
-   covering a configuration, and state what still covers it.
+3. **Defer to `npm run test:slow`** (`itSlow`), only
+   where the cost is board size and not configuration. Never defer the only
+   board covering a configuration, and state what still covers it.
 
 **In a game's own files, the first lever is the game's deep tier**
 (`itDeep` and `deepBudget(ci, deep)` in `slow.ts`): CI's time
@@ -752,7 +689,7 @@ when you move a solver, a generator or a hint planner:
 `npm run test:slow -- src/guards/hint-resume.test.ts`. The bare command
 re-runs every gate test as well, with the widened seed budgets on top. The
 deferred cases are
-`git grep -n -e 'itSlow(' -e describeSlow -e 'slow: true' -- src`.
+`git grep -n -e 'itSlow(' -- src`.
 
 A snapshot a slow case keeps (`hint-walk-<game>-more.txt`) is run by no
 hook and no CI job, so it is written again in the change that writes its
@@ -807,9 +744,9 @@ probe that is the systematic form, are [`test-strength.md`](./test-strength.md).
 
 When you extract logic from a game into `src/engine/`, write the extracted
 module's tests in the same change, stating the rules its doc comment claims
-and not pinning values. The game's differential still catches a defect in the
-module, but as a differing desc after a full generate-and-compare and not as
-a named rule in 100 ms. Exemplar:
+and not pinning values. The games' tests may still catch a defect in the
+module, but as a moved hint walk or a failed tier and not as a named rule in
+100 ms. Exemplar:
 [`wires.test.ts`](../src/engine/mechanics/wires.test.ts).
 
 ## What a game owes the cross-game guards

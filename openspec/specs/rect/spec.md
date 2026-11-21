@@ -252,26 +252,6 @@ reaches a unique placement for.
   dealt for an Easy board
 - **THEN** the generator lays out another grid
 
-### Requirement: Generation: Rectangles deals only boards its hint can finish
-
-At Easy and Normal the generator SHALL deal only boards the ladder of that
-tier finishes from an empty board, and at Normal only boards Easy's
-techniques do not, dealing again where a board it laid out falls outside
-them. The desc of a seed for which upstream deals such a board SHALL differ
-from upstream's.
-
-#### Scenario: A board past the hint is dealt again
-
-- **WHEN** the generator, dealing an Easy board, lays out a uniquely solvable
-  board Easy's techniques cannot finish
-- **THEN** it draws another board instead of returning that one
-
-#### Scenario: A board of the tier upstream's seed dealt
-
-- **WHEN** each seed upstream's generator was recorded on is dealt at the tier
-  its recorded board needs
-- **THEN** the desc and the `aux` are upstream's, byte for byte
-
 ### Requirement: Generation: An Unreasonable Rectangles board has one answer that the hint does not reach
 
 At Unreasonable the generator SHALL put each number on a square of its
@@ -348,6 +328,19 @@ A board the ladder finishes has one answer, each technique being sound.
 - **WHEN** a 5×5 ID whose board has one answer the hint does not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `5x5du`
+
+### Requirement: Generation: Rectangles deals only boards its ladder finishes
+
+At Easy and Normal the generator SHALL deal only boards the ladder of that
+tier finishes from an empty board, and at Normal only boards Easy's
+techniques do not, dealing again where a board it laid out falls outside
+them.
+
+#### Scenario: A board past the hint is dealt again
+
+- **WHEN** the generator, dealing an Easy board, lays out a uniquely solvable
+  board Easy's techniques cannot finish
+- **THEN** it draws another board instead of returning that one
 
 ### Requirement: Solver: Rectangles' Solve returns the generator's answer, or the search's, as edges
 
@@ -491,8 +484,7 @@ own (`Hint: A rectangle the player drew round one clue is a lower bound`).
 #### Scenario: Upstream's 10x10 board is hinted to the end
 
 - **WHEN** the hint is followed on `10x10e0.5:a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c`
-- **THEN** it finishes the board, one of its steps a line, and the generator
-  returns that board for upstream's seed
+- **THEN** it finishes the board, one of its steps a line
 
 #### Scenario: The hint goes on from a rectangle drawn rightly
 

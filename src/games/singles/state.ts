@@ -26,7 +26,7 @@ export type Difficulty = "easy" | "tricky";
 
 /** Numeric difficulty levels, as upstream's `enum` (its Easy and Tricky). */
 export const DIFF_EASY = singles.TIER.easy;
-export const DIFF_NORMAL = singles.TIER.normal;
+const DIFF_NORMAL = singles.TIER.normal;
 /** The "whatever the solver reaches" level Solve and findMistakes use. Not a
  * tier: upstream's enum puts `DIFF_MAX` between the tiers and it. */
 export const DIFF_ANY = singles.tiers.length + 1;
@@ -37,7 +37,7 @@ const DIFF_NAMES = singles.tiers;
 export function diffToLevel(d: Difficulty): number {
   return d === "tricky" ? DIFF_NORMAL : DIFF_EASY;
 }
-export function diffFromLevel(level: number): Difficulty {
+function diffFromLevel(level: number): Difficulty {
   return level === DIFF_NORMAL ? "tricky" : "easy";
 }
 

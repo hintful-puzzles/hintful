@@ -1,9 +1,7 @@
 /**
  * Behavioral tests for the Loopy port.
  *
- * The byte-match differential (`loopy-differential.test.ts`) is the strongest
- * assurance this port has, but it can only cover what the C is willing to
- * generate. These tests cover the rest: the codecs, the input table, the
+ * These tests cover the codecs, the input table, the
  * completion classification, the two upstream quirks that are preserved on
  * purpose, and the retry paths the C reaches by aborting or hanging.
  */
@@ -561,8 +559,8 @@ describe("generation", () => {
 
   it("recovers from a degenerate aperiodic patch instead of throwing", () => {
     // At its minimum size a Penrose rhombs patch trims away to nothing for most
-    // seeds — upstream aborts in dsf_new(0) on exactly these. No differential
-    // fixture can reach this path, because the C cannot produce one.
+    // seeds — upstream aborts in dsf_new(0) on exactly these, so no upstream
+    // desc can reach this path.
     const build = () =>
       buildLoopyGrid("penrose_p3_thick", 3, 3, randomNew("degenerate"));
     const first = build();

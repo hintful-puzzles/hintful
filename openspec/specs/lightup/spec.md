@@ -253,7 +253,7 @@ An Unreasonable board SHALL have exactly one answer, which the engine's search b
 
 #### Scenario: A board upstream's recursion solved
 
-- **WHEN** one of upstream's frozen Unreasonable boards is graded
+- **WHEN** one of the Unreasonable boards upstream's generator dealt is graded
 - **THEN** it is solved at Unreasonable and not at Normal
 
 ### Requirement: Solver: Light Up knows a board's answer from the search beneath its ladder

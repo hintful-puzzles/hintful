@@ -59,7 +59,7 @@ export function diffToLevel(d: Difficulty): number {
   const i = DIFFS.indexOf(d);
   return i < 0 ? DIFF_NORMAL : i;
 }
-export function diffFromLevel(level: number): Difficulty {
+function diffFromLevel(level: number): Difficulty {
   return DIFFS[level] ?? "normal";
 }
 

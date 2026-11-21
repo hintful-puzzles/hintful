@@ -1,7 +1,7 @@
 /**
  * Bricks explained-hint tests. Each technique's step is pinned on crafted
  * minimal grids (one rule each), the plan's stop where only the search
- * progresses on a Tricky fixture, and the whole `hint()` — refusals, plan
+ * progresses on a Tricky board, and the whole `hint()` — refusals, plan
  * stability, narration, `hint.keepTrack`, and the render overlay — on a real
  * board.
  */
@@ -22,7 +22,6 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
 import { STATED } from "../../generated/games/bricks/bricks.compiled.ts";
-import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { type BricksHint, bricksSteps } from "./hint.ts";
 import { bricksGame } from "./index.ts";
 import { tileOrigin } from "./render.ts";
@@ -49,15 +48,29 @@ import {
   newState,
 } from "./state.ts";
 
-interface Fixture {
-  seed: string;
-  desc: string;
+interface Board {
   w: number;
   h: number;
   diff: number;
+  desc: string;
 }
-const fixtures = (cReference as { fixtures: Fixture[] }).fixtures;
-const FIX = fixtures[0]; // 7x6 easy
+/** Boards upstream's generator dealt, as [w, h, diff, desc]. */
+const boards: Board[] = (
+  [
+    [7, 6, 0, "2c1_3ab0c2_3fb2_2a5a3fb2a2a2"],
+    [7, 6, 1, "c3c4fd4bb4b2a3fb2_2b1"],
+    [7, 6, 2, "ga6c3ac3a2af3_0_3b2_4ag"],
+    [10, 8, 0, "a4c1dc2_1b3_0a3d3de3b2ab2c2ca2c2c0_2a2c3b3_2a2b3d"],
+    [10, 8, 1, "f1b1b5b3_3cj0c3b3bh2aa4b2c1a1b5e2c3a3d"],
+    [10, 8, 2, "c3b2c2b4b2a2_1ja3a2f1c3a5ce4c0_3a4b3b3aa3f2a"],
+    [4, 4, 0, "2b1c0c2_2b1"],
+    [5, 5, 1, "2b3ab4a3_3da4ca3b2"],
+    [8, 5, 2, "2c3cb5d3a6fd2_3b2a3d2"],
+    [6, 7, 1, "1b1bd3a3a3a1afa6db3_2a2_2e"],
+    [9, 6, 0, "2c2c1b3_2b3b3b2c2ae4_1b2b2c4ac2e"],
+  ] as [number, number, number, string][]
+).map(([w, h, diff, desc]) => ({ w, h, diff, desc }));
+const FIX = boards[0]; // 7x6 Easy
 const FIX_PARAMS: BricksParams = { w: FIX.w, h: FIX.h, diff: FIX.diff };
 const FIX_ID = `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`;
 
@@ -222,14 +235,14 @@ describe("bricks hint — where the search takes over", () => {
   it("stops where the ladder does instead of narrating a search", () => {
     // The hint never searches, but Solve does: where the ladder stalls, the
     // plan ends and the search still finds the board its one answer.
-    const tricky = fixtures.find((f) => f.diff === 2) as Fixture;
+    const tricky = boards.find((f) => f.diff === 2) as Board;
     const start = newState(
       { w: tricky.w, h: tricky.h, diff: tricky.diff },
       tricky.desc,
     );
     // Each plan is played as one paint of every square it decides.
     const { state: st } = walkPlan(start, {
-      // Far more plans than the fixture takes; reaching it is a plan that stalls.
+      // Far more plans than the board takes; reaching it is a plan that stalls.
       asks: 200,
       limit: "throw",
       done: () => false,
@@ -305,7 +318,7 @@ describe("bricks hint — a second mark on the board is named", () => {
     /next to the outlined shaded bricks?|outlined cells? below this cell|outlined \d+ beside (it|this cell)|above rests only on this cell|break the board at the outlined cells?/;
 
   it("every step that rings a cell says how that cell relates to the target", () => {
-    // Sweep partial positions, not just the openers: each fixture is replayed
+    // Sweep partial positions, not just the openers: each board is replayed
     // from many random subsets of its own solution, which is what reaches all
     // five reachable reasons (the openers alone reach three of them).
     let seed = 12345;
@@ -318,8 +331,7 @@ describe("bricks hint — a second mark on the board is named", () => {
     const kinds = new Set<string>();
     let checked = 0;
     let withMark = 0;
-    for (const f of fixtures) {
-      if (f.w * f.h >= 96) continue; // the 12x8 Tricky fixture is test:slow
+    for (const f of boards) {
       const st = newState({ w: f.w, h: f.h, diff: f.diff }, f.desc);
       const sol = solvedBits(st);
       const empties: number[] = [];
@@ -481,7 +493,7 @@ describe("bricks hint — rendering (tier 2.5)", () => {
     if (target === undefined)
       throw new Error("no cell with a right and lower neighbor");
     const planned = bricksGame.hint.plan(state);
-    if (!planned?.ok) throw new Error("the fixture has no hint");
+    if (!planned?.ok) throw new Error("the board has no hint");
     const step = {
       ...planned.steps[0],
       words: statedSentence(STATED.unsupported.step[0], {

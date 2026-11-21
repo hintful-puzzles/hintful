@@ -215,9 +215,7 @@ export function textFormat(state: FloodState): string {
 
 /** Upstream's `new_game_desc`: invent a random grid (re-rolling an
  * already-complete one), run the heuristic solver to count the moves it
- * needs, and set the move limit to that count plus the leniency. The
- * differential checks both halves: the grid reproduces from `random.ts`,
- * the limit only if the solver makes C's choices. */
+ * needs, and set the move limit to that count plus the leniency. */
 export function newDesc(p: FloodParams, rng: RandomState): { desc: string } {
   const { w, h, colors, leniency } = p;
   const wh = w * h;

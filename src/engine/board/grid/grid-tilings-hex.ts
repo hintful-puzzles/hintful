@@ -291,8 +291,7 @@ export function gridNewFloret(width: number, height: number): Grid {
       /* `|| 0` normalizes negative zero: `yStep` is negative, so `yStep * 0`
        * is IEEE `-0` in JS where C's integer multiply gives plain 0. It
        * compares equal under `===` but not under a structural comparison
-       * (`Object.is(-0, 0)` is false), which is exactly what the differential
-       * against the C dump does. */
+       * such as `toEqual` (`Object.is(-0, 0)` is false). */
       let cy = yStep * y || 0;
       if (x % 2) {
         cy -= yStagger;

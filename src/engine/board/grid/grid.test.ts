@@ -1,10 +1,9 @@
 /**
  * Tier-1 structural tests for the shared planar-grid leaf, deliberately
- * **independent of the C fixture**: the differential
- * (`grid-differential.test.ts`) proves the tilings match upstream, while these
- * prove they are structurally sane — which still holds if the oracle is ever
- * regenerated, and which catches incidence bugs by invariant rather than by
- * comparison.
+ * **independent of the C fixture**: `grid-numbering.test.ts` proves the
+ * tilings keep upstream's numbering, while these prove they are structurally
+ * sane — which catches incidence bugs by invariant rather than by comparison,
+ * including on sizes and descs the fixture does not record.
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../../random/index.ts";
@@ -137,8 +136,8 @@ describe.each(PERIODIC_GRID_TYPES)("%s tiling", (type) => {
     expect(g.edges.length).toBeGreaterThan(0);
     expect(g.dots.length).toBeGreaterThan(0);
 
-    // Indices are positional — everything downstream (Loopy's dline indexing,
-    // the differential) assumes it.
+    // Indices are positional — everything downstream (Loopy's dline indexing
+    // and game IDs, the numbering test) assumes it.
     g.faces.forEach((f, i) => {
       expect(f.index).toBe(i);
     });
@@ -273,8 +272,8 @@ describe("triangular version desc", () => {
 });
 
 describe("aperiodic tilings", () => {
-  // Index-exact agreement with the C lives in
-  // `grid-aperiodic-differential.test.ts`; what is asserted here is only that
+  // Index-exact numbering lives in
+  // `grid-aperiodic-numbering.test.ts`; what is asserted here is only that
   // they are wired into the barrel at all.
   it.each([
     ...APERIODIC_GRID_TYPES,

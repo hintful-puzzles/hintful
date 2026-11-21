@@ -4,9 +4,8 @@
  * What is asserted is what a caller relies on from each walk: every cell in
  * one region, every region connected, the game's rule never broken, and a
  * rule that cannot be met reported and not looped on. The rules here are made
- * by hand. The draws of each walk are not restated: Rome's and Map's frozen
- * differentials pin `mergeNeighbors` and `growFromSeeds` byte for byte, and
- * Seismic's property tests run on `growToSize`.
+ * by hand. The draws of each walk are not asserted: which board a seed deals
+ * is free to change, and Seismic's property tests run on `growToSize`.
  */
 import { describe, expect, it } from "vitest";
 import { Dsf } from "../board/dsf.ts";

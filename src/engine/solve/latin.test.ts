@@ -3,9 +3,8 @@
  *
  * `latin.ts` is the largest module in the engine and the Latin family sits on
  * it. Tested only end to end through `latinSolver`, a defect planted in one of
- * its deductions surfaces in the Towers and Singles differentials, but only
- * after a generate-and-compare run, and as a differing description string
- * rather than as the deduction that broke.
+ * its deductions surfaces, if at all, in a game's suite as a board that
+ * misbehaves rather than as the deduction that broke.
  *
  * So the blocks below assert each deduction **directly**, in the vocabulary of
  * the technique it implements: the hidden single places on a last remaining
@@ -14,20 +13,17 @@
  * That is the same reasoning a hint narrates, which is why the tests read as
  * sentences about Latin squares rather than as pokes at an array.
  *
- * ## What deliberately stays with the differentials, checked rather than assumed
+ * ## What deliberately goes unasserted
  *
  * The **RNG draw order** through `matching` — the `shuffle(Lorder)` per BFS
  * pass and the in-place adjacency swap during the DFS — decides *which boards
- * exist*, not whether the matching is correct. A matching's cardinality is
- * order-independent, so every assertion below is blind to it by construction,
- * and that is the right division of labor rather than a gap in it.
- *
- * `testing` requires that split to be verified, not stated, so it was:
- * disabling the DFS adjacency swap (`if (rs && adjsizes[L] - j > 1)` → `false`)
- * leaves **all 21 tests in this file green** and fails **34 assertions** across
- * `towers-differential.test.ts` and `singles-differential.test.ts`. Do not add a
- * test here that pins a particular matching; it would break on any deliberate
- * generator change while proving nothing the differentials do not already.
+ * exist*, not whether the matching is correct, and which board a seed deals is
+ * free to change. A matching's cardinality is order-independent, so every
+ * assertion below is blind to it by construction: disabling the DFS adjacency
+ * swap (`if (rs && adjsizes[L] - j > 1)` → `false`) leaves every test in this
+ * file green. Do not add a test here that pins a particular matching; it would
+ * break on any deliberate generator change while proving nothing a player
+ * relies on.
  */
 import { describe, expect, it } from "vitest";
 import { randomNew, randomUpto } from "../random/index.ts";
@@ -403,7 +399,7 @@ describe("latin generator", () => {
  * `matching` is the bipartite matcher `latinGenerate` builds each row with, and
  * it is exported and used directly (Tents' completion check runs it with no
  * `rs`). Its *cardinality* is the guarantee; the particular matching chosen is
- * the RNG's business and stays with the differentials.
+ * the RNG's business and is not asserted.
  */
 describe("matching", () => {
   /** Maximum matching by brute force over all L→R injections. */

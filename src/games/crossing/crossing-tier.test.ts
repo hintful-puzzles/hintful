@@ -21,7 +21,6 @@ import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { walkHint } from "../../engine/testing/plan-walk.ts";
-import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { crossingGame } from "./index.ts";
 import { answerOf, searchAnswers, solveCrossing } from "./solver.ts";
 import {
@@ -101,8 +100,8 @@ const puzzleOf = (w: number, h: number, desc: string): CrossingPuzzle =>
 
 /** A 5x5 board with one answer, on which the solver stops short. */
 const NEEDS_SEARCH = "a2a3a3a2a1a1a6,16,34,36,44,49,74,76,79,145,7853,35544";
-/** A 5x5 board the solver finishes: upstream's, from the differential. */
-const SOLVER_FINISHES = (cReference.fixtures[0] as { desc: string }).desc;
+/** A 5x5 board the solver finishes, one upstream's generator dealt. */
+const SOLVER_FINISHES = "a2a3a2a2a2a6a1,12,59,71,83,95,242,487,911,992,53971";
 /** Two four-square runs a wall apart, and two numbers either could hold. */
 const MANY_ANSWERS = "4d4,1234,5678";
 /** An across run of four and a down run of two from its first square, which

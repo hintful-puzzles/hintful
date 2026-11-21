@@ -1,38 +1,63 @@
 # random Specification
 
 ## Purpose
-The seeded random-number generator that game generation draws on, whose stream
-stays the same in every build of this app so that a seed keeps feeding a
-generator the same numbers, and the frozen corpus that holds it to that.
+The seeded random-number generator that game generation draws on: what a
+generator asks of it, a seed's stream, a draw's range and a state that
+continues. Which numbers a seed gives is not held to upstream's or to an
+earlier build.
 
 ## Requirements
 
-### Requirement: The characterization corpus is frozen
+### Requirement: A seed deals one stream
 
-The corpus under `src/engine/random/__fixtures__/` SHALL NOT be re-baselined. It pins the stream a seed produces, and what it holds the module to is stability across this app's builds: a change that moved the stream would silently change the numbers every seed feeds a generator.
+`randomNew` SHALL deal, from the same seed, the same stream of draws every
+time within a build, and a different stream from a different seed. Which
+numbers the stream holds SHALL NOT be pinned, to `random.c` or to an earlier
+build: no board a player keeps names a seed.
 
-#### Scenario: A replay that fails is not fixed in the corpus
+#### Scenario: The same seed twice
 
-- **WHEN** a change to the module makes a recorded output stop matching
-- **THEN** the module is corrected
-- **AND** the recorded output is left as it was
+- **WHEN** two states are made from the same seed and 200 draws of 32 bits are
+  taken from each
+- **THEN** the two runs are equal, and a run from another seed is not
 
-### Requirement: The random module's output is stable across builds
+#### Scenario: A change moves the stream
 
-The TypeScript implementation in `src/engine/random/index.ts` SHALL produce, for every call in the characterization corpus, exactly the output the corpus records, so its output is stable across builds and a seed keeps feeding a generator the same numbers.
+- **WHEN** a change to the module makes a seed deal other numbers
+- **THEN** no test fails for that alone, and the boards it moves are noticed by
+  the hint-walk snapshots
 
-#### Scenario: Corpus replay passes byte-for-byte
+### Requirement: A draw stays within its range
 
-- **WHEN** each fixture in `src/engine/random/__fixtures__/` is loaded and its recorded call sequence is replayed against `src/engine/random/index.ts`
-- **THEN** every returned value matches the recorded value byte-for-byte
-- **AND** every `randomStateEncode` output matches the recorded hex string character-for-character
+`randomBits(state, n)` SHALL return an integer in `[0, 2^n)`, a 32-bit draw
+unsigned with no sign extension or precision loss. `randomUpto(state, limit)`
+SHALL return an integer in `[0, limit)`, and reach every such value.
 
-#### Scenario: randomBits returns 32-bit values without precision loss
+#### Scenario: A 32-bit draw lands in the top half
 
-- **WHEN** `randomBits(state, 32)` is called
-- **THEN** it returns the unsigned 32-bit value the corpus records, with no sign extension and no precision loss
+- **WHEN** `randomBits(state, 32)` is drawn repeatedly
+- **THEN** every value is a non-negative integer below 2^32, and some are at or
+  above 2^31
 
-#### Scenario: encode/decode round-trip preserves state
+#### Scenario: Every value below a limit is reached
 
-- **WHEN** a state is encoded with `randomStateEncode` and decoded with `randomStateDecode`
-- **THEN** subsequent `randomBits` and `randomUpto` calls on the decoded state produce the same outputs as on the original
+- **WHEN** `randomUpto` is drawn forty times per value for a limit
+- **THEN** every value is below the limit, and every value below it occurs
+
+### Requirement: A copy or an encoded state continues the stream
+
+`randomCopy` SHALL return a state whose draws continue the original's stream
+and run on independently of it. `randomStateDecode(randomStateEncode(state))`
+SHALL do the same, and encode back to the same string.
+
+#### Scenario: A copy continues the stream
+
+- **WHEN** a state is copied part way through its stream, and 50 draws are
+  taken from each
+- **THEN** the two runs are equal
+
+#### Scenario: An encoded state continues the stream
+
+- **WHEN** a state is encoded and decoded part way through its stream
+- **THEN** the decoded state encodes to the same string, and its next draws are
+  the original's

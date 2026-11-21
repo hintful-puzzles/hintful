@@ -3,9 +3,7 @@
  * board mechanics and input (tier 1), solver difficulty coupling (tier 1),
  * findMistakes (tier 1), and render scenarios (tier 2/2.5).
  *
- * Deterministic boards come from the frozen C-reference fixtures — the
- * differential test proves the generator reproduces them, so their descs
- * are stable ground truth here.
+ * Deterministic boards are descs upstream's generator dealt, written inline.
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
@@ -41,7 +39,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import cReference from "./__fixtures__/lightup-c-reference.json" with { type: "json" };
 import { newLightupDesc } from "./generator.ts";
 import { type LightupMistake, lightupGame } from "./index.ts";
 import {
@@ -68,22 +65,61 @@ import {
   setLight,
 } from "./state.ts";
 
-const FIXTURES = (
-  cReference as {
-    fixtures: {
-      w: number;
-      h: number;
-      blackpc: number;
-      symm: number;
-      difficulty: number;
-      seed: string;
-      desc: string;
-    }[];
-  }
-).fixtures;
+/** Boards upstream's generator dealt, as [w, h, blackpc, symm, difficulty, desc]. */
+const BOARDS = (
+  [
+    [7, 7, 20, 4, 0, "h00b3f1i0f1b01h"],
+    [7, 7, 20, 4, 1, "aBBf0c1e01c1c1Be0cBfBBa"],
+    [7, 7, 20, 4, 2, "e2a2h2aBk1a1h1aBe"],
+    [10, 10, 20, 2, 0, "aBdBe3eBbBaB2cBbBb0c3h3d2h2cBb1bBc1BaBb0e2e0dBa"],
+    [10, 10, 20, 2, 1, "c2eBaBd1hBa0bBlBbBa3b0aBbBlBbBa3h1d2a2eBc"],
+    [10, 10, 20, 2, 2, "cBa1dBh1a0aBc3d2b0c1c3cBdBcBc1c1bBd3cBaBa1h2d0aBc"],
+    [
+      14,
+      14,
+      20,
+      2,
+      0,
+      "BBe3hBeBb10gBd1bBc2cBdBb1aBb1eBa1B2BBaBa2zj0a1aBBBB2a1eBb1a3b1d3c1cBbBdBgB0bBe1h0eBB",
+    ],
+    [
+      14,
+      14,
+      20,
+      2,
+      1,
+      "d00c0fBfBc32bBBaBc1Bb0bBiBa1bBBbBi0e2f1b2a2j2aBbBfBeBiBb2Bb2a1i0bBbBBc1a20b0BcBf1f1c11d",
+    ],
+    [
+      14,
+      14,
+      20,
+      2,
+      2,
+      "2a2aBkBb2B2e0f2a1rBg0b2a3aBBbBf2aBaBb0B2aBjBaBB1b1a2aBf1b01a3a0b0gBr2aBf1eBBBbBkBa1aB",
+    ],
+    [10, 8, 25, 1, 1, "b0c0i1a0B1BlBaBBf1aB1b1Bn1a11b1cBc"],
+    [9, 9, 30, 0, 2, "B0d1iBg1i0b1a1a3aBBB0BcB2fBbBa2cBb1BBBf"],
+    [
+      11,
+      11,
+      20,
+      3,
+      0,
+      "bBaBaBaBcB1eBBa3cBa0c3aBg3e0a1eBgBeBa0eBgBa1cBaBcBaB1eBBcBaBa0a1b",
+    ],
+  ] as [number, number, number, number, number, string][]
+).map(([w, h, blackpc, symm, difficulty, desc]) => ({
+  w,
+  h,
+  blackpc,
+  symm,
+  difficulty,
+  desc,
+}));
 
-/** The 7x7 easy C-reference board (differential-verified). */
-const EASY = FIXTURES[0];
+/** A 7x7 Easy board. */
+const EASY = BOARDS[0];
 
 /** Whether each square of the board's one answer holds a bulb, or `null`
  * where it has not exactly one. */
@@ -202,8 +238,8 @@ describe("lightup params", () => {
 });
 
 describe("lightup desc codec", () => {
-  it("fixture descs validate and round-trip through newState", () => {
-    for (const f of FIXTURES) {
+  it("sample descs validate and round-trip through newState", () => {
+    for (const f of BOARDS) {
       const p = {
         w: f.w,
         h: f.h,

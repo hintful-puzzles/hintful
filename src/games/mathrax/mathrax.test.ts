@@ -40,7 +40,6 @@ import {
   ladder,
   tiers as ladderTiers,
 } from "../../generated/games/mathrax/mathrax.compiled.ts";
-import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "json" };
 import { mathraxCandidateClue, newMathraxDesc } from "./generator.ts";
 import { mathraxGame } from "./index.ts";
 import { computeSize, origin, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -87,22 +86,53 @@ import {
   validateParams,
 } from "./state.ts";
 
-interface Fixture {
+interface Board {
   o: number;
   diff: number;
   options: number;
-  seed: string;
   desc: string;
 }
-const fixtures = (cReference as { fixtures: Fixture[] }).fixtures;
-const paramsOf = (f: Fixture): MathraxParams => ({
+/** Boards upstream's generator dealt, as [o, diff level, options, desc]. */
+const boards: Board[] = (
+  [
+    [5, 0, 63, "u2c,cS1aS0bS0S3bS3aS2a"],
+    [5, 1, 63, "j1c4j,S1dS2bS2eM4a"],
+    [5, 2, 63, "f3f1k,kS1S0S3b"],
+    [6, 0, 63, "i3z,aD2bS1bA7A6bA9aA5aS4bA8A7e"],
+    [6, 1, 63, "j6y,A5A9hA8cS3aObA8cS1a"],
+    [6, 2, 63, "zj,bS1A6bS2S3A8S2dA8bS2A7A10S2d"],
+    [7, 1, 63, "g1r5k5j,bD2cA7eS1eObS0S3aS3cS1aM12aObA8"],
+    [8, 1, 63, "f3zg6a35a2i6h,eD2aS4aEkA10S1eD2bA10aA8fS3dS0S1b"],
+    [9, 1, 63, "h5t4a7c2a8c7e9q5d8c6c3b,eA10D3S2aS3iOcM18eS2gS1aOS4aObS2nOc"],
+    [3, 0, 63, "a3g,A4c"],
+    [3, 2, 63, "a1e2a,cA4"],
+    [4, 1, 63, "a1g4f,aS2fS2"],
+    [4, 3, 63, "p,i"],
+    [5, 3, 63, "y,p"],
+    [6, 3, 63, "zj,y"],
+    [7, 2, 63, "t6i1r,dS2aA8D2S1OkA10bD3bA9bS0aA9S0b"],
+    [8, 0, 63, "f1v5j64b1p4b,S1OeD4bA9eS4dA11A9jS4aS3fS4A9aS2bA9"],
+    [9, 2, 63, "v8q5zf9d7b,fOaS5eA11fM12fOaM6M12A12A13dS0aA10aS2dObA9S0dS0g"],
+    [6, 1, 1, "d3k6b5c6b62c1a4b,bA7uA7"],
+    [6, 1, 2, "n6j2d3e,aS1S1cS2cS1bS2eS1e"],
+    [6, 1, 4, "a3c5b1e2h6c2b56c3,iM12o"],
+    [6, 1, 8, "b16a2a6a3e43a4b2f1a34b6a,y"],
+    [6, 1, 16, "3a65d4b62b6c1c25g5a1a,y"],
+    [6, 1, 32, "5d12a5e6c612a4e3b2d,wOa"],
+    [6, 2, 3, "j4y,A5gA8fS4S3cA10aS1b"],
+    [6, 1, 28, "d1b4j1a25e2g2,D2hM12lD2b"],
+    [7, 0, 62, "b15k34b7n3c3b1e2a,S0S1mD3aS2dS2aOaD2i"],
+    [5, 2, 33, "g1q,iEA5aA8c"],
+  ] as [number, number, number, string][]
+).map(([o, diff, options, desc]) => ({ o, diff, options, desc }));
+const paramsOf = (f: Board): MathraxParams => ({
   o: f.o,
   diff: diffFromLevel(f.diff),
   options: f.options,
 });
 
-/** A 5×5 Easy board (the first fixture) used as the standard scenario. */
-const FIX = fixtures[0];
+/** A 5×5 Easy board used as the standard scenario. */
+const FIX = boards[0];
 const FIX_PARAMS = paramsOf(FIX);
 const FIX_ID = `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`;
 
@@ -201,8 +231,8 @@ describe("mathrax params", () => {
 // --- desc codec ------------------------------------------------------------
 
 describe("mathrax desc codec", () => {
-  it("round-trips every fixture description", () => {
-    for (const f of fixtures) {
+  it("round-trips every sample description", () => {
+    for (const f of boards) {
       const p = paramsOf(f);
       expect(validateDesc(mathraxGame, p, f.desc)).toBeNull();
       const st = newState(p, f.desc);
@@ -342,11 +372,11 @@ describe("mathrax clue semantics", () => {
 // --- solver and generator --------------------------------------------------
 
 describe("mathrax solver", () => {
-  it("solves every recorded upstream board uniquely, at no more than its tier", () => {
-    // The Recursive fixtures are excluded: upstream strips those boards past
-    // uniqueness (they are literally blank), which is the defect the generator's
-    // divergence fixes — `mathrax-differential.test.ts` pins them by verdict.
-    for (const f of fixtures.filter((x) => x.diff < DIFF_UNREASONABLE)) {
+  it("solves every sample upstream board uniquely, at no more than its tier", () => {
+    // The Recursive boards are excluded: upstream strips those past uniqueness
+    // (they are literally blank), which is the defect the generator's
+    // divergence fixes.
+    for (const f of boards.filter((x) => x.diff < DIFF_UNREASONABLE)) {
       const p = paramsOf(f);
       const st = newState(p, f.desc);
       const grid = Uint8Array.from(st.grid);
@@ -372,9 +402,9 @@ describe("mathrax solver", () => {
   });
 
   it("grades an Easy board as Easy and a Tricky board as beyond Easy", () => {
-    const easy = fixtures.find((f) => f.o === 6 && f.diff === DIFF_EASY);
-    const tricky = fixtures.find((f) => f.o === 6 && f.diff === DIFF_TRICKY);
-    if (!easy || !tricky) throw new Error("fixture set changed");
+    const easy = boards.find((f) => f.o === 6 && f.diff === DIFF_EASY);
+    const tricky = boards.find((f) => f.o === 6 && f.diff === DIFF_TRICKY);
+    if (!easy || !tricky) throw new Error("sample boards changed");
     const e = newState(paramsOf(easy), easy.desc);
     expect(mathraxSolve(6, Uint8Array.from(e.grid), e.clues, DIFF_EASY)).toBe(
       SOLVE_UNIQUE,
@@ -419,8 +449,8 @@ describe("mathrax generator", () => {
     }
   });
 
-  // The tier gate. Upstream had none, so a tier need not bind: 3 of the 23
-  // frozen C fixtures above Easy fall lower.
+  // The tier gate. Upstream had none, so a tier need not bind: of 23 boards
+  // upstream dealt above Easy, 3 fall lower.
   describe("difficulty tiers bind", () => {
     const CASES: [number, MathraxDiff, number, number][] = [
       [3, "tricky", DIFF_TRICKY, DIFF_NORMAL],

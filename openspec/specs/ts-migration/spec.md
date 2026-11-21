@@ -92,6 +92,14 @@ it.
 - **THEN** the divergence is expected and acceptable
 - **AND** it is NOT treated as a fidelity regression
 
+#### Scenario: A generator deals other boards than upstream's
+
+- **WHEN** a change makes a game's generator, or a solver it gates on, deal
+  another board for a seed than upstream's did, or grade a board at another
+  tier than upstream's
+- **THEN** no test fails for that alone: what is held of upstream is that its
+  game IDs and params strings keep loading
+
 ### Requirement: Touch acceptance happens on a device, and a synthesized pointer is not one
 
 Work whose correctness is *how it feels under a finger* SHALL be accepted on a

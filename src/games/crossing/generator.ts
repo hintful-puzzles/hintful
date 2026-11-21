@@ -96,7 +96,7 @@ function checkPool(w: number, h: number, cells: Uint8Array): boolean {
  * every open cell" is exactly the connectivity test.
  *
  * Only class membership and size are read, both independent of which element
- * the union-find picks as root, so the shared `Dsf` is byte-match safe here.
+ * the union-find picks as root, so the shared `Dsf` serves here as it is.
  */
 function checkDsf(w: number, h: number, cells: Uint8Array): boolean {
   const dsf = new Dsf(w * h);

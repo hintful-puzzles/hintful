@@ -107,22 +107,6 @@ one for one.
 - **WHEN** a description ends before its wall section has covered the board
 - **THEN** it is rejected as too short
 
-### Requirement: Generation: Crossing's generator keeps every board uniquely solvable
-
-At Easy the generator SHALL accept a board only when the solver reports it
-valid, so that the board has one solution and deduction alone reaches it, and
-SHALL retry otherwise. On a generated board no 2×2 block SHALL be fully closed
-and the open cells SHALL be connected. An Easy deal SHALL keep a board that
-needs the solver's third deduction, which upstream's generator throws away, so
-a seed need not deal the board upstream deals from it.
-
-#### Scenario: A recorded seed deals upstream's board unless an earlier draw is kept
-
-- **WHEN** each seed recorded from upstream whose board has no cell out of a
-  clue's reach is dealt
-- **THEN** it deals the recorded board, or, for a seed named as dealing an
-  earlier draw, another board that the solver finishes
-
 ### Requirement: Generation: Crossing never generates a cell no clue can reach
 
 Generation SHALL reject a candidate board containing an open cell that belongs
@@ -166,6 +150,20 @@ Unreasonable where it has exactly one answer that they do not reach.
 - **WHEN** a 5×5 ID whose board has one answer the solver does not reach is
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `5x5du`
+
+### Requirement: Generation: Crossing's generator deals only uniquely solvable boards
+
+At Easy the generator SHALL accept a board only when the solver reports it
+valid, so that the board has one solution and deduction alone reaches it, and
+SHALL retry otherwise. On a generated board no 2×2 block SHALL be fully closed
+and the open cells SHALL be connected. An Easy deal SHALL keep a board that
+needs the solver's third deduction, which upstream's generator throws away.
+
+#### Scenario: A generated board is valid and connected
+
+- **WHEN** an Easy board is generated
+- **THEN** the solver reports it valid, no 2×2 block of it is fully closed, and
+  its open cells are connected
 
 ### Requirement: Solver: Crossing's solver propagates what the fitting numbers allow
 

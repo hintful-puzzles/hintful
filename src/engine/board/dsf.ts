@@ -53,7 +53,7 @@ export class Dsf {
    * The root is upstream `dsf_merge`'s: the larger class's, and on a tie the
    * *second* argument's. Some algorithms branch on the root's *identity*
    * (Filling's `learn_critical_square` walks a region from its canonical
-   * cell), so the differentials depend on this choice, not only on the
+   * cell), so what those games do depends on this choice, not only on the
    * partition. */
   merge(a: number, b: number): void {
     const ra = this.canonify(a);

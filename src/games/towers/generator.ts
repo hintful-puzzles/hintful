@@ -5,8 +5,7 @@
  * then remove grid givens (and, above Easy, clues) one at a time for as long as
  * the graded solver still solves the board at the target difficulty —
  * regenerating until the board is solvable at *exactly* that difficulty and no
- * lower. RNG-faithful to upstream over the bit-identical `random.ts`, so the
- * emitted desc matches C byte-for-byte for the same seed.
+ * lower.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";

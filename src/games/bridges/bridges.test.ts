@@ -1,6 +1,5 @@
 /**
- * Behavioral tests for Bridges (tier 1 logic + tier 2.5 render). The byte-match
- * generator/solver differential is `bridges-differential.test.ts`.
+ * Behavioral tests for Bridges (tier 1 logic + tier 2.5 render).
  */
 import { describe, expect, it } from "vitest";
 import { shuffle } from "../../engine/board/shuffle.ts";

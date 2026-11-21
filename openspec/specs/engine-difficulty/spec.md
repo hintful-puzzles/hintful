@@ -325,8 +325,7 @@ that its rejection rate does not make a size or difficulty tier unfillable or
 materially slow "New Game". A game that redefines "solvable" as "narratably
 solvable" SHALL have its tiers re-graded afterward, since that can shift a
 tier's character. A gate SHALL NOT be refused for changing which boards the
-game generates, and a game's byte-match differential against the C reference
-SHALL NOT be required to outlive it.
+game generates.
 
 #### Scenario: A costly rejection gate is measured before adoption
 
@@ -568,11 +567,10 @@ Unreasonable, and every board dealt SHALL have one solution.
 
 #### Scenario: A game ID upstream wrote with its checks on
 
-- **WHEN** a desc from a frozen upstream fixture is loaded under the params its
-  fixture states
-- **THEN** it loads, unless the fixture records that upstream's own solver
-  found several answers on it, and a fixture naming an option that switches a
-  generator's checks off names it at the value that leaves them on
+- **WHEN** a desc in `src/guards/__fixtures__/upstream-descs.json` is loaded
+  under the params string it is listed under
+- **THEN** the params pass as a written board's do and the desc loads; the
+  corpus holds no board upstream's own solver found several answers on
 
 ### Requirement: A generator that runs out of tries is answered, not thrown
 

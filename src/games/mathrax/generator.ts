@@ -27,9 +27,8 @@
  * solution, so Check & Save could flag nothing and Solve could show a grid other
  * than the one the player legitimately finished.
  *
- * That tier's frozen C descriptions stay in the fixture and are checked the
- * order-independent way instead: the TS solver must reach C's recorded verdict
- * on them (docs/testing.md § "Order-independent verdicts").
+ * So a desc upstream dealt at that tier, having several answers, does not load
+ * here.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
@@ -172,7 +171,8 @@ export function newMathraxDesc(p: MathraxParams, rs: RandomState): { desc: strin
   const diff = diffToLevel(p.diff);
 
   // Upstream generates exactly once; the tier gate below can reject, so the
-  // loop needs the house runaway guard (docs/testing.md § "Quirks are load-bearing — capped, not cleaned").
+  // loop needs the house runaway guard (docs/solver-and-generator.md § "Every
+  // retry loop is bounded").
   const attempt = retryLimit(`mathrax: generation (o${o} d${diff})`);
   for (;;) {
     attempt();

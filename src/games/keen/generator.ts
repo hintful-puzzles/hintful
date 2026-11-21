@@ -5,9 +5,7 @@
  * (random dominoes, then fold the remaining singletons into neighbors), choose
  * a balanced mix of cage operations + values avoiding low-quality clues, then
  * accept the board only when the graded solver solves it at *exactly* the target
- * difficulty (regenerate otherwise). RNG-faithful to upstream over the
- * bit-identical `random.ts`, so the emitted desc matches C byte-for-byte for the
- * same seed.
+ * difficulty (regenerate otherwise).
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";

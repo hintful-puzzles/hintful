@@ -7,14 +7,6 @@
 // instead of beside the tests they resemble. Usage:
 //   npm run diff                                                          # all
 //   npx vitest run -c scripts/checks/diff.vitest.config.mts -t collide    # one
-//
-// This used to also collect `scripts/diff-*.test.ts`, the per-game *live*
-// differentials that generated boards from the C build and the TS port for the
-// same seed. Those went game by game as each port landed, and the C build itself
-// went with `retire-c-engine`; the frozen-fixture differentials in
-// src/games/<game>/ are what survive, and they run in the gate. The glob went
-// with them: a config entry that matches nothing is not where history goes, and
-// it costs the next reader a trip to the filesystem to discover it is inert.
 import { defineConfig } from "vitest/config";
 import { describeFirst } from "../../vite-plugins/describe.ts";
 

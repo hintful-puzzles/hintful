@@ -345,9 +345,10 @@ needs is a dishonest difficulty.
 
 #### Scenario: Teaching the solver the pattern regrades no board
 
-- **WHEN** every board of the frozen differential is generated and graded
-- **THEN** each description is unchanged byte for byte and each board still needs
-  the difficulty it was recorded at, rather than becoming solvable one tier lower
+- **WHEN** the boards each preset deals are generated and graded with the
+  deduction taught
+- **THEN** no hint-walk snapshot moves, and each board is still dealt at its
+  tier rather than becoming solvable one tier lower
 
 ### Requirement: Generation: Loopy draws an aperiodic patch again when it is far under its size
 

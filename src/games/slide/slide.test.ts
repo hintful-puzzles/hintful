@@ -1,10 +1,7 @@
 /**
  * Behavioral tests for the Slide port (tier 1 — pure logic).
  *
- * The desc/generator/solver correctness bar is carried by
- * `slide-differential.test.ts`, which byte-matches the C on every preset. What
- * lives here is everything that differential cannot see: the param and desc
- * codecs' *rejection* paths, the drag reachability rules, the move-counting
+ * The param and desc codecs' *rejection* paths, the drag reachability rules, the move-counting
  * quirks, the interactive completion path, the Solve route and its step key,
  * and the deliberate divergences from the C.
  */

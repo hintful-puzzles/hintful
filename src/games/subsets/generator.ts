@@ -2,14 +2,12 @@
  * Subsets generator — port of `new_game_desc` in
  * `puzzles/unreleased/subsets.c`.
  *
- * This is the byte-match surface (see subsets-differential.test.ts). The
- * RNG draw order is upstream's exactly: one `shuffle` of the `2^n`
- * set-values over the cells (the entire board assignment), then one
- * `shuffle` of the cell indices for the blanking order. Every arrow clue is
- * derived deterministically from the ⊆ relation, and each cell is blanked
- * only while the deterministic solver still reaches a complete solution —
- * so the desc is a pure function of the seed, and one byte-match validates
- * the generator, the solver's exact strength, and the codec together.
+ * The RNG draws are upstream's: one `shuffle` of the `2^n` set-values over
+ * the cells (the entire board assignment), then one `shuffle` of the cell
+ * indices for the blanking order. Every arrow clue is derived
+ * deterministically from the ⊆ relation, and each cell is blanked only while
+ * the deterministic solver still reaches a complete solution — so the desc is
+ * a pure function of the seed.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";
@@ -34,9 +32,8 @@ import {
  * One candidate board at `p.diff`: upstream's generation exactly, with the
  * solver capped at the requested tier.
  *
- * **The Easy tier is upstream byte-for-byte.** `DIFF_EASY` is upstream's
- * shipped solver strength, the RNG draw order is untouched, and tier 0 needs
- * no "and not easier" gate — so the differential fixtures still bind. Only
+ * **The Easy tier is upstream's generation.** `DIFF_EASY` is upstream's
+ * shipped solver strength, and tier 0 needs no "and not easier" gate. Only
  * Normal is new.
  */
 export function generateCandidate(p: SubsetsParams, rng: RandomState): SubsetsState {

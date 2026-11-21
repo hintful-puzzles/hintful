@@ -118,7 +118,7 @@ export function diffToLevel(d: SpokesDiff): number {
 /** An out-of-range level stays invalid, for `paramsError` to refuse, rather
  * than quietly becoming Easy: upstream never checks the letter, so `6x6dz`
  * would index its `spokes_diffchars` out of bounds. */
-export function diffFromLevel(level: number): SpokesDiff {
+function diffFromLevel(level: number): SpokesDiff {
   return DIFFS[level] ?? ("invalid" as SpokesDiff);
 }
 
@@ -375,8 +375,7 @@ export function clearBoard(b: SpokesBoard): void {
 /**
  * A description is exactly `w*h` characters in row-major order: a clue digit
  * `'0'`–`'8'`, or `'X'` for a hand-authored hole. Deliberately *not*
- * run-length — the generator only ever emits digits, and a flat grid keeps the
- * byte-match differential a plain string compare. The clues come back with an
+ * run-length — the generator only ever emits digits. The clues come back with an
  * `'X'` as `-1`.
  */
 function parseDesc(p: SpokesParams, desc: string): DescParse<Int8Array> {

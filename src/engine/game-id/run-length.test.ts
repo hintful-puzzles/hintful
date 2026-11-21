@@ -2,12 +2,11 @@
  * The run-length grammar's own tests.
  *
  * A desc is a player promise: a `params:desc` game ID must decode to the same
- * board for ever. Most games in this family carry a frozen differential that
- * would catch a byte moving, but Palisade does not, so the bytes are pinned here
- * at the boundaries where an encoder can round a run differently (26, 27, 52,
- * 53 blanks), and a fuzz holds encoding and scanning to each other. When the
- * grammar was extracted, the encoder was fuzzed against Palisade's own, 4,000
- * trials byte for byte (`7308155b`).
+ * board for ever, so the bytes are pinned here at the boundaries where an
+ * encoder can round a run differently (26, 27, 52, 53 blanks), and a fuzz
+ * holds encoding and scanning to each other. When the grammar was extracted,
+ * the encoder was fuzzed against Palisade's own, 4,000 trials byte for byte
+ * (`7308155b`).
  */
 
 import { describe, expect, it } from "vitest";

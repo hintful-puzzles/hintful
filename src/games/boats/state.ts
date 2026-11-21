@@ -420,9 +420,9 @@ export function newState(p: BoatsParams, desc: string): BoatsState {
 
 /**
  * The inverse of {@link newState} — upstream's serialization tail in
- * `new_game_desc`. **Byte-match surface**, including the quirk that a trailing
- * run of clue-less cells is dropped rather than flushed (the loop only emits a
- * run when it meets a clue or hits the 26-cell cap).
+ * `new_game_desc`, writing upstream's desc format. It keeps upstream's quirk
+ * that a trailing run of clue-less cells is dropped rather than flushed (the
+ * loop only emits a run when it meets a clue or hits the 26-cell cap).
  */
 export function encodeDesc(
   w: number,

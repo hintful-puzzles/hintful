@@ -174,8 +174,8 @@ export interface CrossingRun {
  * isolated 1×1 open cell belongs to no run at all — upstream's own generator
  * TODO admits those boards exist.
  *
- * The emission order is part of the byte-match surface: the generator reads one
- * number out of each run in this order before sorting.
+ * The emission order is upstream's: the generator reads one number out of each
+ * run in this order before sorting.
  */
 export function collectRuns(w: number, h: number, walls: Uint8Array): CrossingRun[] {
   const runs: CrossingRun[] = [];
@@ -221,8 +221,7 @@ export interface CrossingPuzzle {
   /** `w·h` flags, 1 = wall (an unplayable black cell). */
   readonly walls: Uint8Array;
   /** The clue numbers, sorted by (length, then digit by digit) — upstream
-   * `cmp_numbers`. The order is byte-match surface: it is the order the desc
-   * emits and the solver walks. */
+   * `cmp_numbers`. It is the order the desc emits and the solver walks. */
   readonly numbers: readonly CrossingNumber[];
   /** Runs derived from `walls` once (upstream recomputes them per solver, per
    * ui and per validate call). */

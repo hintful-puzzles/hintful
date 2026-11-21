@@ -217,7 +217,7 @@ function unreasonableRefusal(p: SticksParams): string | null {
   return null;
 }
 
-// --- desc codec (byte-match surface, upstream new_game_desc/new_game) -------
+// --- desc codec (upstream's format, new_game_desc/new_game) -----------------
 
 const CODE_a = "a".charCodeAt(0);
 
@@ -273,7 +273,8 @@ export function newState(p: SticksParams, desc: string): SticksState {
 
 /**
  * Encode a generated board's blacks + clues as a desc — the exact inverse of
- * {@link newState} and byte-for-byte upstream `new_game_desc`'s encode loop:
+ * {@link newState}, writing upstream's desc format as `new_game_desc`'s encode
+ * loop does:
  * runs of plain blank cells become lowercase letters (chaining `z` for runs
  * over 26), `_` separates a clue-bearing white cell from a directly preceding
  * emitted cell, `B` marks a black cell, digits are the current cell's clue.

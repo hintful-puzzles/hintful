@@ -6,7 +6,7 @@
  * grid* (Net rotates a tile in place, Netslide slides a whole line). The
  * hex wire description codec, the spanning-tree grower,
  * barrier placement and the "power flows from the source" flood are shared,
- * and live here. Both games' differentials depend on the draw order in it.
+ * and live here.
  *
  * ## The `0x10` trap
  *
@@ -68,8 +68,7 @@ export interface Xyd {
 }
 
 /** Upstream `xyd_cmp` — lexicographic on x, then y, then direction. This is
- * the order the RNG indexes into (`randomUpto(size)` → `removeAt(i)`), so it
- * is part of the byte-match surface, not merely a tidy convention. */
+ * the order the RNG indexes into (`randomUpto(size)` → `removeAt(i)`). */
 export function xydCmp(a: Xyd, b: Xyd): number {
   return a.x - b.x || a.y - b.y || a.direction - b.direction;
 }

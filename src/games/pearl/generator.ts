@@ -1,7 +1,6 @@
 /**
  * Pearl generator — port of `pearl_loopgen` + `new_clues` + `new_game_desc`
- * (pearl.c). The RNG draw order is pearl.c's, since the frozen differential
- * compares `newDesc(p, randomNew(seed))` with its desc byte for byte.
+ * (pearl.c).
  *
  * The generator: build a random loop over the shared `generateLoop` (biased
  * toward black-pearl corners), derive the maximal clue set, gate on the
@@ -287,8 +286,8 @@ function newClues(
     // that leaves the puzzle soluble. Upstream meant to remove whichever clue
     // type is more numerous, but fills its `corners` array from STRAIGHT
     // positions too: corner clues are never removed and every straight is
-    // tried twice. Reproduced, the second shuffle's RNG draws included,
-    // because the frozen differential checks the desc byte for byte.
+    // tried twice. That is upstream's behavior, kept as ported, the second
+    // shuffle's RNG draws included.
     const straights: number[] = [];
     for (let i = 0; i < w * h; i++) if (clues[i] === STRAIGHT) straights.push(i);
     shuffle(straights, rng);

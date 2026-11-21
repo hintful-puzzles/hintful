@@ -365,7 +365,7 @@ function solveBruteforce(board: Board, guess: Uint8Array): boolean {
   return solutions === 1;
 }
 
-export interface GradeResult {
+interface GradeResult {
   iterativeSolved: boolean;
   bruteforceSolved: boolean;
   inconsistent: boolean;
@@ -378,11 +378,11 @@ export interface GradeResult {
 /**
  * Upstream's solver pipeline (`new_game_desc`'s grading block): its
  * iterative solver, the ladder's Easy rungs, to a fixpoint, then brute force
- * when `diffAllowsBruteforce` (upstream skips it at Easy). The differential
- * checks its verdicts against C; the generator grades by
+ * when `diffAllowsBruteforce` (upstream skips it at Easy). Solve and
+ * {@link isUniquelySolvable} use it; the generator grades by
  * {@link solveDeductive} instead.
  */
-export function gradeUndead(
+function gradeUndead(
   common: UndeadCommon,
   start: Uint8Array,
   diffAllowsBruteforce: boolean,
@@ -427,7 +427,7 @@ export function findUndeadSolution(state: UndeadState): SolutionResult {
 }
 
 /** True iff the board has exactly one solution (iterative-or-brute-force,
- * order-independent). Used by the generator and the differential. */
+ * order-independent). Used by the generator. */
 export function isUniquelySolvable(common: UndeadCommon): boolean {
   const start = new Uint8Array(common.numTotal).fill(MON_NONE);
   const grade = gradeUndead(common, start, true);

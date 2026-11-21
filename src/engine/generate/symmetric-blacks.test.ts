@@ -1,23 +1,16 @@
 /**
  * Tier-1 tests for the shared symmetric black-square placer.
  *
- * Without these, `placeSymmetricBlacks`'s guarantees live only in Light Up's
- * and Sticks' frozen differentials, which do catch its defects but report them
- * as a differing description string rather than as the rule that broke.
+ * These state the *symmetry* `placeSymmetricBlacks` produces (which is what a
+ * reader would call the point of the code) and the guards around it — not the
+ * draw order, since which board a seed deals is free to change.
  *
- * The module's own doc comment calls its RNG draw order byte-match critical, so
- * these state the *symmetry* it produces (which is what a reader would call the
- * point of the code) and the guards around it — not the draw order, which the
- * differentials already pin exactly and which no restatement here could pin
- * better.
- *
- * **That division of labor was checked, not assumed.** Mutating
- * `if (!rotate) rw += wodd` to drop its guard changes the 4-fold *region size*
- * on an odd-width board — so it changes which boards exist without breaking any
- * symmetry, and it survives everything here. Light Up's and Sticks' frozen
- * differentials fail on it, which is the right place for it to be
- * caught. What survives these tests should be the byte-match layer and nothing
- * else; if you add a case here, check which side of that line it falls on.
+ * Mutating `if (!rotate) rw += wodd` to drop its guard changes the 4-fold
+ * *region size* on an odd-width board — so it changes which boards exist
+ * without breaking any symmetry, and it survives everything here, correctly.
+ * What survives these tests should be a change to which boards a seed deals
+ * and nothing else; if you add a case here, check which side of that line it
+ * falls on.
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../random/index.ts";

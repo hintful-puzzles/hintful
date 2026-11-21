@@ -5,12 +5,11 @@
  * Cayley table by BFS, randomly permute its (non-identity) elements, then remove
  * clues one at a time while the puzzle stays solvable at the target difficulty.
  * The generator is solver-gated, so the desc depends on the solver's verdict at
- * every step, which is why one byte-match differential checks solver and codec
- * too.
+ * every step.
  *
  * The only RNG draws are `randomUpto` (group choice, the extra blanked
  * row/column in identity-hidden mode) and `shuffle` (element permutation,
- * clue-removal order), in C's order so generation matches it byte for byte.
+ * clue-removal order), in upstream's order.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";

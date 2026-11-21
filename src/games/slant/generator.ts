@@ -1,9 +1,7 @@
 /**
  * Slant generator — faithful port of `slant_generate` / `new_game_desc` in
- * slant.c. Byte-match critical: every RNG draw (one shuffle of the square
- * order, one `random_upto(rs, 2)` per unforced square, one shuffle of the
- * clue order) and every solver verdict in the clue-removal loop must match C
- * exactly for the desc to reproduce byte-for-byte.
+ * slant.c. The RNG draws are upstream's: one shuffle of the square order, one
+ * `random_upto(rs, 2)` per unforced square, one shuffle of the clue order.
  */
 import { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";

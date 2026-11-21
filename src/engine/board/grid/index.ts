@@ -27,8 +27,8 @@
  * **The one contract worth knowing before reading further:** `gridNewDesc` is
  * the only function here that consumes randomness, and `gridNew` is a pure
  * deterministic function of `(type, width, height, desc)`. Everything else
- * follows from that split — including the ability to differential-check
- * geometry and RNG fidelity independently.
+ * follows from that split — including that a game ID, which carries the desc,
+ * rebuilds the same grid however the generator draws.
  */
 
 export {

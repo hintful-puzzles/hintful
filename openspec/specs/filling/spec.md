@@ -131,24 +131,6 @@ Unreasonable where it has exactly one answer that they do not reach.
   entered with no difficulty letter, with `de`, and with `du`
 - **THEN** each opens, and the board's params read `5x5du`
 
-### Requirement: Solver: Filling solver deduces the unique solution
-
-The solver SHALL run the ladder Filling's description states, compiled, to a
-fixpoint, where regions grow into the squares they cannot do without and
-numbers are ruled out of squares they cannot hold. Each technique SHALL be
-checked sound, and SHALL read only the numbers on the board.
-
-#### Scenario: Solver completes a generated board
-
-- **WHEN** the solver runs on a freshly generated puzzle's clues
-- **THEN** it reports solved
-- **AND** the produced board has every region sized to its number
-
-#### Scenario: Upstream's boards are solved
-
-- **WHEN** the solver runs on each board upstream's generator dealt
-- **THEN** it reports solved
-
 ### Requirement: Solver: Filling's search assumes each number an empty square can still take
 
 Filling's search for a clue set's answers SHALL run over the ladder, assuming
@@ -184,6 +166,19 @@ only where every square is filled and they do.
   and `4x1:13a1`
 - **THEN** it reports no answer for each
 - **AND** on an empty 3×1 it reports that it stopped
+
+### Requirement: Solver: Filling's solver deduces the unique solution
+
+The solver SHALL run the ladder Filling's description states, compiled, to a
+fixpoint, where regions grow into the squares they cannot do without and
+numbers are ruled out of squares they cannot hold. Each technique SHALL be
+checked sound, and SHALL read only the numbers on the board.
+
+#### Scenario: Solver completes a generated board
+
+- **WHEN** the solver runs on a freshly generated puzzle's clues
+- **THEN** it reports solved
+- **AND** the produced board has every region sized to its number
 
 ### Requirement: Controls: Filling builds a selection of cells
 

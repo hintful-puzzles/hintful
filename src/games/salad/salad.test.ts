@@ -6,8 +6,6 @@
  * transitions, completion, `findMistakes`, the keypad, and Solve through a real
  * `Midend`. Tier 2 — the paint-twice mistake-overlay regression; the tier-2.5
  * render scenarios live in `salad-render.test.ts`.
- *
- * The frozen C boards are decoded and graded in `salad-differential.test.ts`.
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR } from "../../engine/color/roles.ts";
@@ -67,8 +65,8 @@ import {
 /** Every line of the menu, in order. */
 const PRESETS = leafPresets(saladGame).map((l) => l.params);
 
-/** A 4×4 ABC End View board and a 5×5 Number Ball board, both taken from the
- * frozen C reference so the fixtures and these tests describe one game. */
+/** A 4×4 ABC End View board and a 5×5 Number Ball board, both as upstream's
+ * C generator wrote them. */
 const LETTERS: { p: SaladParams; desc: string } = {
   p: { order: 4, nums: 3, mode: GAMEMODE_LETTERS, diff: DIFF_EASY },
   desc: "CaCbAfBaAa,p",

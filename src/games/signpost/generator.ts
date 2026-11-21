@@ -6,9 +6,8 @@
  * (1) `new_game_fill`: grow a full 1..n path by a random head+tail walk;
  * (2) mark 1 and n immutable; (3) `new_game_strip`: add immutable
  * numbers until the solver can solve it, then remove redundant ones;
- * (4) encode. Byte-match-critical: the `random_upto`/`shuffle` call
- * order must match C exactly, so the walk's head-then-tail alternation
- * and the `cell_adj` enumeration order are ported verbatim.
+ * (4) encode. The walk's head-then-tail alternation and the `cell_adj`
+ * enumeration order are upstream's, ported verbatim.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";

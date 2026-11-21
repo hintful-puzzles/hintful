@@ -1,11 +1,9 @@
 /**
  * Tier-1 tests for the shared Net/Netslide wire model.
  *
- * `wires.ts` is shared by both games, whose frozen differentials do catch its
- * defects, but only after a full generate-and-compare run, and only with a
- * diff that names a description string rather than the rule that broke.
- * Coverage several layers away is adequate protection and poor feedback; these
- * assertions are the feedback.
+ * `wires.ts` is shared by both games, whose own suites reach it only several
+ * layers away, with a failure that names a board rather than the rule that
+ * broke; these assertions name the rule.
  *
  * They deliberately state the *rules* the module's doc comments claim — the
  * torus wrap, the desc codec's
@@ -174,12 +172,11 @@ describe("the description codec", () => {
 
 /**
  * `growSpanningTree` builds the *solved* grid every Net/Netslide board is
- * scrambled from, and the games' frozen descs move for any reason at all, so
- * they pin none of its rules by name. What follows
+ * scrambled from. What follows
  * asserts the three properties its doc comment claims — spanning, acyclic, no
  * full crosses — plus the boundary rule, as structure rather than as values, so
- * a deliberate change to the RNG draw order (which is the differential's
- * business) leaves them alone while a broken rule fails here by name.
+ * a change to the RNG draw order (which board a seed deals is free to change)
+ * leaves them alone while a broken rule fails here by name.
  */
 describe("growSpanningTree", () => {
   const grow = (w: number, h: number, wrapping: boolean, seed: string) => {
@@ -265,7 +262,7 @@ describe("growSpanningTree", () => {
     // The complement of the test above: with `wrapping`, the rim guard is
     // skipped, and over enough seeds the seam is used. Asserted as "some seed
     // wraps" rather than "this seed does", so it states the rule without
-    // pinning a draw order the differential owns.
+    // pinning a draw order, which is free to change.
     const [w, h] = [4, 4];
     const wrapped = ["a", "b", "c", "d", "e", "f"].some((seed) => {
       const tiles = grow(w, h, true, `wrap-${seed}`);

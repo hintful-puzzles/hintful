@@ -45,7 +45,6 @@ import {
 } from "../../engine/testing/render-scenario.ts";
 import { repaintDifferential } from "../../engine/testing/repaint-differential.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import cReference from "./__fixtures__/bricks-c-reference.json" with { type: "json" };
 import { newBricksDesc } from "./generator.ts";
 import { bricksGame } from "./index.ts";
 import { COL_CLEAR, COL_CLEAR_MARK, offsets, PREFERRED_TILE_SIZE } from "./render.ts";
@@ -76,15 +75,30 @@ import {
   newState,
 } from "./state.ts";
 
-interface Fixture {
-  seed: string;
-  desc: string;
+interface Board {
   w: number;
   h: number;
   diff: number;
+  desc: string;
 }
-const fixtures = (cReference as { fixtures: Fixture[] }).fixtures;
-const FIX = fixtures[0]; // 7x6 easy
+/** Boards upstream's generator dealt, as [w, h, diff, desc]. */
+const boards: Board[] = (
+  [
+    [7, 6, 0, "2c1_3ab0c2_3fb2_2a5a3fb2a2a2"],
+    [7, 6, 1, "c3c4fd4bb4b2a3fb2_2b1"],
+    [7, 6, 2, "ga6c3ac3a2af3_0_3b2_4ag"],
+    [10, 8, 0, "a4c1dc2_1b3_0a3d3de3b2ab2c2ca2c2c0_2a2c3b3_2a2b3d"],
+    [10, 8, 1, "f1b1b5b3_3cj0c3b3bh2aa4b2c1a1b5e2c3a3d"],
+    [10, 8, 2, "c3b2c2b4b2a2_1ja3a2f1c3a5ce4c0_3a4b3b3aa3f2a"],
+    [4, 4, 0, "2b1c0c2_2b1"],
+    [5, 5, 1, "2b3ab4a3_3da4ca3b2"],
+    [8, 5, 2, "2c3cb5d3a6fd2_3b2a3d2"],
+    [6, 7, 1, "1b1bd3a3a3a1afa6db3_2a2_2e"],
+    [9, 6, 0, "2c2c1b3_2b3b3b2c2ae4_1b2b2c4ac2e"],
+    [12, 8, 2, "g2_1cb4a2b3c2a1i4_2d1b2cd4a2b2bb3b3f2b3b4d4i2b"],
+  ] as [number, number, number, string][]
+).map(([w, h, diff, desc]) => ({ w, h, diff, desc }));
+const FIX = boards[0]; // 7x6 Easy
 const FIX_PARAMS: BricksParams = { w: FIX.w, h: FIX.h, diff: FIX.diff };
 const FIX_ID = `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`;
 
@@ -154,8 +168,8 @@ describe("bricks hex geometry", () => {
 });
 
 describe("bricks desc codec", () => {
-  it("validates and round-trips every fixture desc", () => {
-    for (const f of fixtures) {
+  it("validates and round-trips every sample desc", () => {
+    for (const f of boards) {
       const p: BricksParams = { w: f.w, h: f.h, diff: f.diff };
       expect(validateDesc(bricksGame, p, f.desc)).toBeNull();
       const st = newState(p, f.desc);
@@ -195,8 +209,8 @@ function solvedColors(st: BricksState): ReturnType<typeof answerColors> {
 }
 
 describe("bricks solver", () => {
-  it("finds every decoded fixture board its one answer", () => {
-    for (const f of fixtures) {
+  it("finds every decoded sample board its one answer", () => {
+    for (const f of boards) {
       const st = newState({ w: f.w, h: f.h, diff: f.diff }, f.desc);
       expect(answerOf(st).kind, f.desc).toBe("one");
     }
@@ -206,16 +220,16 @@ describe("bricks solver", () => {
   // dealt inside the budget: splitting on the first open square alone takes
   // this one 47 positions.
   it("searches upstream's 7x6 Normal board in 13 positions", () => {
-    const f = fixtures.find((x) => x.w === 7 && x.h === 6 && x.diff === 1);
-    if (!f) throw new Error("no 7x6 Normal fixture");
+    const f = boards.find((x) => x.w === 7 && x.h === 6 && x.diff === 1);
+    if (!f) throw new Error("no 7x6 Normal board");
     const st = newState({ w: f.w, h: f.h, diff: f.diff }, f.desc);
     expect(searchAnswers(st, 13).kind).toBe("one");
     expect(searchAnswers(st, 12).kind).toBe("out-of-reach");
   });
 
   it("a tricky board is not finished by the ladder alone", () => {
-    const tricky = fixtures.find((f) => f.diff === 2 && f.w * f.h > 6);
-    if (!tricky) throw new Error("no tricky fixture");
+    const tricky = boards.find((f) => f.diff === 2 && f.w * f.h > 6);
+    if (!tricky) throw new Error("no tricky board");
     const st = newState({ w: tricky.w, h: tricky.h, diff: tricky.diff }, tricky.desc);
     expect(deductionFinishes(st)).toBe(false);
     expect(answerOf(st).kind).toBe("one");

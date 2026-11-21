@@ -2,7 +2,7 @@
  * Behavioral tests for the Clusters port (tier 1 logic + tier 2.5 render): the
  * generator's tier property ("difficulty tiers"), the paint/keyboard input,
  * executeMove's completion, Solve through a real Midend, findMistakes, and a
- * render frame. clusters-differential.test.ts decodes the frozen C boards.
+ * render frame.
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";

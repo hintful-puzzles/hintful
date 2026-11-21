@@ -4,15 +4,11 @@
  * invariant, the bias protocol, and reproducibility for a fixed seed.
  *
  * **Where the line falls.** *Which* loop comes out of a given seed is not this
- * file's guarantee and deliberately not asserted here: the module is
- * RNG-faithful to upstream `generate_loop`, and that is checked byte-for-byte,
- * transitively, by Pearl's differential — the loop coloring drives Pearl's
- * desc. So a change to the candidate scoring, the selection order or the
- * random-flip pass is invisible to this file *by design* and loud in
- * `pearl-differential.test.ts` — verified, not assumed: reversing `faceScore`'s
- * sign takes that file from 14 passed / 1 skipped to **7 failed**, one for every
- * desc byte-match fixture it has. What belongs here is everything true of
- * *every* loop, whichever one a seed happens to produce.
+ * file's guarantee and deliberately not asserted here: which board a seed
+ * deals is free to change. So a change to the candidate scoring, the selection
+ * order or the random-flip pass is invisible to this file *by design*. What
+ * belongs here is everything true of *every* loop, whichever one a seed
+ * happens to produce.
  */
 import { describe, expect, it } from "vitest";
 import { gridNewSquare } from "../board/grid/index.ts";

@@ -3,11 +3,6 @@
  * `domino_layout`). Returns an `Int32Array` of length `w·h` where `grid[i]` is
  * the index of the other end of the domino covering cell `i` (or `i` itself
  * for a lone singleton, which happens only when `w·h` is odd).
- *
- * Byte-match critical: the RNG draw order is upstream's — the initial
- * `shuffle` of the `2·w·h − w − h` candidate positions, then the per-BFS-node
- * `shuffle` of a cell's neighbor directions during the chessboard-parity
- * singleton fixup — so a seed lays out the same dominoes as the C reference.
  */
 
 import { shuffle } from "../board/shuffle.ts";

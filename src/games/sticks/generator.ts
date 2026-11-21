@@ -1,8 +1,7 @@
 /**
  * Sticks generator — port of `new_game_desc` in `puzzles/unreleased/sticks.c`.
  *
- * This is the byte-match surface (see sticks-differential.test.ts). The RNG
- * draw order is upstream's exactly: the symmetric black placement (shared
+ * The RNG draws are upstream's: the symmetric black placement (shared
  * `placeSymmetricBlacks` — one `randomUpto` pair per rejection-sampling
  * attempt plus the `SYMM_ROT4` center draw), then per fill attempt one
  * `randomUpto(rs, 2)` per white cell and one `randomUpto(rs, n)` per
@@ -39,7 +38,7 @@ function clueFill(p: SticksParams, rng: RandomState): Dealt {
   const minimal = new Int32Array(s);
 
   // Symmetric black placement (upstream set_blacks, copied from lightup.c —
-  // the shared helper reproduces its draw order; the board starts cleared).
+  // the shared helper draws as it does; the board starts cleared).
   placeSymmetricBlacks({
     w,
     h,

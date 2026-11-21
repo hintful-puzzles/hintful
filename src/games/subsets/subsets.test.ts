@@ -41,7 +41,6 @@ import {
   winFlashAt,
   winFlashRun,
 } from "../../engine/testing/win-flash.ts";
-import cReference from "./__fixtures__/subsets-c-reference.json" with { type: "json" };
 import { generateCandidate, newSubsetsDesc } from "./generator.ts";
 import { subsetsGame } from "./index.ts";
 import { COL_CELL, COL_GIVEN, COL_RULED_OUT, newDrawState, redraw } from "./render.ts";
@@ -71,7 +70,8 @@ import {
 } from "./state.ts";
 
 const PARAMS = { w: 4, h: 4, n: 4, diff: DIFF_EASY };
-const FIX = cReference.fixtures[0];
+/** A 4x4 board upstream's generator dealt. */
+const FIX = { desc: "13R,_,_R,2D,_,_UD,_R,_,14D,5,6D,_U,_,_URL,_,9" };
 const FIX_ID = `4x4n4:${FIX.desc}`;
 
 /** The fixture board's unique solution (known === mask everywhere). */
@@ -318,10 +318,9 @@ describe("subsets difficulty tiers", () => {
   });
 
   it("Easy generation is untouched: it draws upstream's rules, in order", () => {
-    // The differential fixtures are the real statement of this (C-recorded
-    // descs, reproduced byte-for-byte on the live default path). This is the
-    // local restatement: the tier that reproduces upstream's boards is the
-    // default.
+    // No test compares Easy's boards with upstream's byte for byte. This holds
+    // what can be checked without upstream: Easy is the default tier, and the
+    // default params deal what Easy deals.
     expect(defaultParams().diff).toBe(DIFF_EASY);
     const { desc } = newSubsetsDesc(PARAMS, randomNew("tier1-seed"));
     expect(newSubsetsDesc(defaultParams(), randomNew("tier1-seed")).desc).toBe(desc);

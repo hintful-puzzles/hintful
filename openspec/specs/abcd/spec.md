@@ -146,8 +146,7 @@ The generator SHALL fill the grid with random letters that respect the no-touch
 rule, count the resulting clues, and at Easy accept the puzzle only when the
 solver reports it uniquely solvable, retrying otherwise. When "remove clues" is
 set, it SHALL then hide clues in a randomized order, keeping each removal only
-while the solver still solves the puzzle. An Easy board SHALL be the board
-upstream's generator deals from the same seed.
+while the solver still solves the puzzle.
 
 #### Scenario: A board with clues removed still has one solution
 

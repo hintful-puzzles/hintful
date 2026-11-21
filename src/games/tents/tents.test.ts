@@ -1,7 +1,6 @@
 /**
  * Tier-1 behavioral + tier-2 render tests for the tents port.
- * Byte-match generation/solver agreement lives in tents-differential.test.ts;
- * a render-scenario snapshot in tents-render-scenario.test.ts.
+ * A render-scenario snapshot is in tents-render-scenario.test.ts.
  */
 import { describe, expect, it } from "vitest";
 import {

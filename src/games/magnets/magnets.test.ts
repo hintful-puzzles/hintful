@@ -22,6 +22,7 @@ import {
   DIFF_EASY,
   DIFF_NORMAL,
   decodeParams,
+  encodeDesc,
   encodeParams,
   GS_SET,
   type MagnetsParams,
@@ -131,6 +132,8 @@ describe("magnets generator + solver", () => {
     for (const p of [P(6, 5, DIFF_EASY), P(6, 5, DIFF_NORMAL), P(8, 7, DIFF_NORMAL)]) {
       const { desc, aux } = newMagnetsDesc(p, randomNew(`gen-${p.w}x${p.h}-${p.diff}`));
       const s = newState(p, desc);
+      const { dominoes, rowcount, colcount } = s.common;
+      expect(encodeDesc(s.w, s.h, dominoes, rowcount, colcount)).toBe(desc);
       const solver = solveMagnets(s.w, s.h, s.common, DIFF_COUNT);
       expect(solver.verdict).toBe(1); // uniquely solvable
 

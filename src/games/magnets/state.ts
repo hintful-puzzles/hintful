@@ -295,7 +295,7 @@ export function newState(p: MagnetsParams, desc: string): MagnetsState {
   };
 }
 
-/** Encode the frozen layout + counts as the upstream desc (byte-faithful). */
+/** Encode the frozen layout + counts in upstream's desc format. */
 export function encodeDesc(
   w: number,
   h: number,

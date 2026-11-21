@@ -5,8 +5,7 @@
  * solvable boards at each difficulty, Solve completes a board, and
  * findMistakes flags wrong cells while clean boards report none. Tier 2.5:
  * a `renderScenario` of the initial frame and a black/circle/mistake frame
- * (targeted op assertions + a snapshot). The byte-match C differential
- * lives in `singles-differential.test.ts`.
+ * (targeted op assertions + a snapshot).
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";

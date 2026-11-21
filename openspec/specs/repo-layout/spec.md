@@ -167,7 +167,7 @@ directories at `src/` root:
 
 ### Requirement: A shared library lives under `src/engine/`
 
-A shared leaf library, such as `random/`, is an engine library and SHALL live under `src/engine/`, keeping its own frozen characterization corpus where it has one. There SHALL NOT be a separate top-level category for a shared or leaf module.
+A shared leaf library, such as `random/`, is an engine library and SHALL live under `src/engine/`. There SHALL NOT be a separate top-level category for a shared or leaf module.
 
 #### Scenario: A shared library is not given its own top-level directory
 
@@ -358,8 +358,7 @@ script SHALL remove it.
 
 The scaffold SHALL NOT emit a C-differential stub or instruct a contributor to
 write a trace harness: a new game has no upstream oracle to record a fixture
-against. The frozen fixtures of games ported while a C build existed are
-unaffected.
+against, and no game's generator is held to upstream's output.
 
 #### Scenario: The scaffold does not promise an oracle that no longer exists
 
@@ -986,11 +985,11 @@ what it has to say.
 
 #### Scenario: A comment defends a byte-match
 
-- **WHEN** a comment justifies reproducing upstream's logic so that a recorded
-  fixture still matches
-- **THEN** it is kept while that fixture exists and is checked by a test
-- **AND** it is removed, or reduced to a statement of provenance, once nothing
-  checks it
+- **WHEN** a comment justifies reproducing upstream's logic so that upstream's
+  output is matched
+- **THEN** it is kept only where a test still checks that output, as the grid
+  numbering and upstream's game IDs are checked
+- **AND** otherwise it is removed, or reduced to a statement of provenance
 
 #### Scenario: A comment records provenance or an absence
 
@@ -1027,8 +1026,8 @@ the code both shorter and easier to read; shorter alone does not qualify.
 #### Scenario: A style pass over a game is committed
 
 - **WHEN** a commit makes only comment, naming or simplifying edits to a game
-- **THEN** the game's frozen differential fixtures and render snapshots pass
-  without being re-recorded
+- **THEN** the game's hint-walk snapshots and render snapshots pass without
+  being re-recorded
 - **AND** the commit removes more lines than it adds
 
 ### Requirement: Cloudflare Pages deploy tooling lives in the CI deploy job

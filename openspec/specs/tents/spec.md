@@ -217,19 +217,19 @@ every technique SHALL fire on them.
 #### Scenario: A mis-tiered Normal technique fails
 
 - **WHEN** either Normal technique is declared at Easy
-- **THEN** the generator's gate accepts different boards, and the frozen
-  differential fails
+- **THEN** the generator's gate accepts different boards, and the hint-walk
+  snapshots move or the tier gate fails
 
 #### Scenario: A silenced technique fails
 
 - **WHEN** any technique is removed from the description
-- **THEN** the firing census or the frozen differential fails
+- **THEN** the firing census fails
 
 #### Scenario: A Normal rung nothing depends on is still certified
 
 - **WHEN** the tree diagonal-pair technique is silenced
-- **THEN** the census reports it as never fired, even though the frozen
-  differential still passes, because other techniques reach its conclusions
+- **THEN** the census reports it as never fired, even though every board is
+  still dealt at its tier, because other techniques reach its conclusions
 
 ### Requirement: Solver: Tents' techniques by tier
 

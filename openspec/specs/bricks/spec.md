@@ -208,7 +208,7 @@ Solve, the hint's refusal and the mistake check SHALL know a board's answer from
 
 #### Scenario: Solve on an upstream Tricky board
 
-- **WHEN** the player asks for the solution of one of upstream's frozen Tricky boards
+- **WHEN** the player asks for the solution of one of the Tricky boards upstream's generator dealt
 - **THEN** the board is solved
 
 ### Requirement: Controls: Bricks cells cycle by a click or a drag

@@ -22,8 +22,7 @@
  * diagonal) and the single shuffle; everything after that is decided by the
  * solver's verdict on each intermediate board. So an Easy board, which no
  * final gate decides, is fixed by the draws, the strip loop and the Easy
- * ladder's closure, and a frozen fixture of them checks all three — but any
- * reordering of the draws changes every board.
+ * ladder's closure, and any reordering of the draws changes every board.
  */
 
 import { shuffle } from "../../engine/board/shuffle.ts";

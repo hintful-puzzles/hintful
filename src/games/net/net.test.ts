@@ -1,8 +1,7 @@
 /**
  * Behavioral tests for the Net port (tier 1 — pure logic).
  *
- * The byte-for-byte fidelity of the generator/solver is guarded separately by
- * `net-differential.test.ts`; these assert the port *behaves* — round-trips its
+ * These assert the port *behaves* — round-trips its
  * codecs, generates uniquely-solvable spanning trees, and transitions correctly
  * under each move.
  */

@@ -7,8 +7,8 @@
  * capital letters, one generator per row, that the generator's BFS
  * (`generator.ts`) decompresses into the full table. `autosize` is upstream's
  * automorphism count, unused by game logic but carried for provenance. A
- * transcription slip here is silent until the byte-match differential fires, so
- * it is machine-extracted from the C.
+ * transcription slip here could deal a wrong table without any error, so it is
+ * machine-extracted from the C.
  */
 
 export interface GroupDatum {

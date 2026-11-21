@@ -1,8 +1,6 @@
 /**
  * Behavioral tests for the Rome port (tier 1 logic + a Midend integration
- * pass). The byte-match generator/solver/codec check lives in
- * `rome-differential.test.ts`; these cover what a desc differential never
- * touches — the validity check's error flags, the interactive drag/keyboard
+ * pass): the validity check's error flags, the interactive drag/keyboard
  * input, `executeMove`'s completion path, Solve through a real `Midend`, the
  * two layers of `findMistakes`, and the save round-trip of pencil marks.
  *
@@ -330,8 +328,7 @@ describe("generation", () => {
     let swept = 0;
     for (const entry of presetMenu(romeGame).submenu ?? []) {
       const p = entry.params as RomeParams;
-      // Only the small presets, so the sweep stays cheap; the differential
-      // covers every preset against the C.
+      // Only the small presets, so the sweep stays cheap.
       if (p.w > 6) continue;
       const { desc } = newRomeDesc(p, randomNew(`rome-gen-${entry.title}`));
       expect(validateDesc(romeGame, p, desc)).toBeNull();

@@ -106,7 +106,7 @@ export function hatsValidateDesc(
  * 2. **No re-centering.** Penrose and spectres shift their trimmed patch to sit
  *    inside the extent `gridComputeSize` reports; hats keeps whatever survived
  *    trimming, so its bounding box generally will *not* match that extent. The
- *    asymmetry is upstream's, and is load-bearing for byte-match.
+ *    asymmetry is upstream's.
  *
  * Trimming runs *before* `makeConsistent` — the hat walk emits a ragged edge of
  * hats that fell partly outside the region — which is why this assembles the

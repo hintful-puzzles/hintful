@@ -13,7 +13,7 @@
  * in that report have exactly *one* entry in `killedBy`. So the column records
  * *which covering test happened to run first*, not *which test files can catch
  * the defect*. Vitest orders files roughly alphabetically, so `grid.ts` scored
- * 1/40 because `grid-aperiodic-differential.test.ts`, `grid-desc.test.ts` and
+ * 1/40 because `grid-aperiodic-numbering.test.ts`, `grid-desc.test.ts` and
  * `grid-incenter.test.ts` all sort ahead of `grid.test.ts`. Deleting the
  * `case "cairo":` arm and running `grid.test.ts` **alone** fails nine tests in
  * 1.5 seconds. The module was never locally silent.
@@ -134,9 +134,8 @@ export function engineFiles(dir = ENGINE, out = []) {
   return out;
 }
 
-/** Engine test files, minus the differentials — the pool `ownTests` filters. */
-const testFilePool = (files) =>
-  files.filter((f) => f.endsWith(".test.ts") && !f.endsWith("-differential.test.ts"));
+/** Engine test files — the pool `ownTests` filters. */
+const testFilePool = (files) => files.filter((f) => f.endsWith(".test.ts"));
 
 /**
  * Fail if the walk found fewer engine test files than the committed floor.
@@ -184,14 +183,11 @@ function checkTestFileFloor(files) {
  * module's test file" would report a feedback hole that is really a filing
  * convention.
  *
- * Two exclusions, both because the requirement is about *feedback*, not about
- * coverage: a **game's** test file (that distant guarantee is the thing being
- * separated out) and any `*-differential.test.ts`, even an engine-local one. A
- * differential's guarantee is a frozen fixture noticing that the boards moved,
- * which is a real and deliberate division of labor — counting it here would
- * let `grid.ts` score full marks on assertions it does not make. A case that
- * survives the local tests but is caught by a differential is exactly the split
- * the requirement says must be *stated in the test file and verified*.
+ * A **game's** test file is excluded, because the requirement is about
+ * *feedback*, not about coverage: that distant guarantee is the thing being
+ * separated out. A case that survives the local tests but is caught by a game's
+ * is exactly the split the requirement says must be *stated in the test file
+ * and verified*.
  */
 export function ownTests(modulePath, files = engineFiles()) {
   const wanted = resolve(modulePath);
@@ -448,8 +444,8 @@ function main() {
     for (const { mod, probe } of findings) console.log(`  ${label(mod)}: ${probe.why}`);
     console.log(
       "\nEach is either a test worth writing or a guarantee that genuinely belongs\n" +
-        "to a differential — and if it is the second, say so in the test file and\n" +
-        "verify the differential does fail on it (the testing spec requires both).",
+        "to the games' tests — and if it is the second, say so in the test file and\n" +
+        "verify a game's test does fail on it (the testing spec requires both).",
     );
   }
 }

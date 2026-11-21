@@ -49,8 +49,8 @@ import {
 } from "./state.ts";
 
 const P: PearlParams = { w: 6, h: 6, difficulty: 0 };
-// A recorded fixture desc (see __fixtures__/pearl-c-reference.json, pearl-0):
-// a real 6x6 Easy board with both black (B) and white (W) pearls.
+// A 6x6 Easy board upstream's generator dealt, with both black (B) and white
+// (W) pearls.
 const DESC = "dWbWWcBaWaWdBhBbBaB";
 const ID = `${pearlGame.encodeParams(P, true)}:${DESC}`;
 

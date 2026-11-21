@@ -134,7 +134,7 @@ export function maxRegionSize(mode: number): number {
  *
  * **Chosen by measurement against upstream, not invented.** Region layout is
  * emergent in the C (it falls out of random merging) and so is not readable from
- * its source — but it *is* recoverable from the 28 frozen C descriptions, whose
+ * its source — but it *is* recoverable from 28 descriptions upstream's C dealt, whose
  * partitions decode to:
  *
  * | size | 1     | 2     | 3     | 4     | 5    | 6    |

@@ -534,6 +534,69 @@ describe("inertia generator", () => {
     }
   });
 
+  // A route has no right answer, only shorter and longer ones, so its length
+  // is a ratchet: lower a ceiling when the solver improves, never raise one.
+  // The boards are upstream's, whose nearest-first tours were 553 moves in all.
+  it("finds routes no longer than it did", () => {
+    const boards: [number, number, string, number][] = [
+      [
+        10,
+        8,
+        "gmbmggwssgbwgsssssmwbmmSgmwswmsgbbsmbwggmwmgwmmwsbbwwbbwmbsmgwbsgwgssbggbswmgmbw",
+        42,
+      ],
+      [
+        10,
+        8,
+        "gmmssbsmbmmgwmgssbgbwwgwsgbswwwbmgmsmsmwsgsgbgmsmwgbmssSgmwbswbwbgwgwwmgbgbmbbws",
+        33,
+      ],
+      [
+        15,
+        12,
+        "gbsgmbmbsgmgbsbsssswmwmmswbgbmmbbgggmbsgwbbgswmbgsbmbmbswbgsbwgssbmssmgggmgbwwgwgsgwmsgssswmmwggmwbgwsmwwbwbbsmmmSwswbgbsgwbgwbbwsgbswssbgmwbmwswggwwmmmmgmbgwgwwmsmmmbbmsgsswwwsmgw",
+        75,
+      ],
+      [
+        15,
+        12,
+        "mbwmwwbwmwgmwbswbgbmwwgSsbsgbsgwwbbwgsbswmgwsbmggswbsbbmsmbbggmmgggssswggsmgwsswbggmbwgbgwssssmsgwwswmbgbmbmbgbmswgssmbsgwwwbmmswsswbsmmbmgbmgsgmsgbbwwwbgbsmmgsgmwgmbmmwwmgsswmmmgb",
+        63,
+      ],
+      [
+        20,
+        16,
+        "swgsmwsmwbmbbwmwsgbgwmmsggsggswmwsggbmwbmbbmwsmbgwsbgmwbsmmbmwwswgmswbgswsmmmsmgbwmbmgsswwwmmgbgwmsgbmwbmgswsmsbbgsmbwbwwwwbwbmgbsswbgwsssggbbmmmsgbgswmbmggwggggwsgbwssmmmbwggwwsgwmgswggwgmbgbmbsbgsbmswsggwwmsbwbmswgmsmbwsbbbbmmsbwggggbmsssmbsgbsmbwbgggbsbmgsswwsmwbmbsmmmmgSwgwwgbsgwsgmgbgwwsbswbwgmbbsggwsbmsbbsmwmmwss",
+        116,
+      ],
+      [
+        20,
+        16,
+        "wswsmwbmbgwwbwmwmmmmsmggwssbSbgwmwwsmbsbsmsbswwwmgmbsgwgwssgmwgwsmggwgbbsgbbwsmmbmwmmgsbsgbbbgsgswmbwwsggmswmgsggbbwggmbmmmsgbmsbwgmwbggwwwgbbbbmbsbgbsgggbggbggbwbbmgggwbbmsggwsbsgmmbwwwmsmwggsssgsswmbmbbbmmswwssggmssswwbmwbswgwgbmbgmbbwwsbwbmwmgmwgggswmgwbgmmmbsssbggmmwwssswwwsbsbgmswwmmssbsgsgmbwmbmswggwmmssbmmswmssb",
+        119,
+      ],
+      [
+        12,
+        12,
+        "bmmmsswgwmbsgmmwssmswmmbsmbsbwmgbgwmgbgsbbssbswgwsmbwsbbmwgsmswwgwgmwbbbswbgbbwbwmbmsggmmwbswbggsgmbsgmbbggwsgmgwmbmgwwgssgwsbgwmwswbwsSgggmbmsb",
+        57,
+      ],
+      [3, 2, "sSmgbw", 2],
+      [4, 4, "wmswbbsmgmbgSgws", 8],
+      [6, 4, "bwwsmgmbbbgssbmswwgbgbSm", 6],
+    ];
+    for (const [w, h, desc, ceiling] of boards) {
+      let state: InertiaState = newState({ w, h }, desc);
+      const result = solveRoute(state);
+      expect(result.ok, desc).toBe(true);
+      if (!result.ok) continue;
+      expect(result.route.length, desc).toBeLessThanOrEqual(ceiling);
+      for (const dir of result.route) state = play(state, dir);
+      expect(state.dead).toBe(false);
+      expect(inertiaGame.status(state)).toBe("solved");
+    }
+  });
+
   // The game ends on the last gem, so the route need not come home from it.
   it("ends the route on a gem there is no way back from", () => {
     const boards: [{ w: number; h: number }, string][] = [

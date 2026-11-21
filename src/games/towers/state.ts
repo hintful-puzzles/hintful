@@ -50,7 +50,7 @@ const DIFF_NAMES = towers.tiers;
 export function diffToLevel(d: Difficulty): number {
   return Math.max(DIFF_EASY, DIFFS.indexOf(d));
 }
-export function diffFromLevel(level: number): Difficulty {
+function diffFromLevel(level: number): Difficulty {
   return DIFFS[level] ?? "easy";
 }
 

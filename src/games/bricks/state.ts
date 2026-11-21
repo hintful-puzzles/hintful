@@ -189,7 +189,7 @@ export function applyBounds(w: number, h: number, grid: Uint16Array): void {
  * Upstream's tiers were lookahead depth: Easy assumed nothing, Normal assumed
  * a cell and looked for an Easy-level contradiction, and Tricky let that
  * sub-solve recurse in turn. Tricky dealt no board of its own: 999 of 999
- * boards generated at it, and all four frozen C Tricky fixtures, fell to
+ * boards generated at it, and four Tricky boards from upstream's C, fell to
  * Normal, since Bricks' rules are local enough that a contradiction surfaces
  * at once or not at all. So it is not offered.
  */
@@ -300,7 +300,8 @@ export function newState(p: BricksParams, desc: string): BricksState {
 
 /**
  * Encode a generated board as a desc — the exact inverse of {@link newState}
- * and byte-for-byte upstream `new_game_desc`'s encode tail: a clue cell (bare
+ * and a port of upstream `new_game_desc`'s encode tail, writing upstream's desc
+ * format: a clue cell (bare
  * value 0..7) becomes its decimal digits, with `_` separating two adjacent
  * clues; any playable non-clue cell (`COL_MASK` set: shade / unshade / empty)
  * contributes to a run-length lowercase blank run (chaining `z` past 26);

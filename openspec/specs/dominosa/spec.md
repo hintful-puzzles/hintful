@@ -158,17 +158,17 @@ deduction. Tricky SHALL additionally perform set analysis without doubles.
   Normal
 - **THEN** the verdict is ambiguous (2)
 
-### Requirement: Generation: A Dominosa tier deals the boards it alone finishes
+### Requirement: Generation: A Dominosa board is dealt at the tier that alone finishes it
 
 A board of a tier below Unreasonable SHALL be one the ladder finishes at that
 tier and not below it. An `Unreasonable` board SHALL be one the ladder at
 Tricky stops on and the search finds one answer for.
 
-#### Scenario: Upstream's boards keep their tiers
+#### Scenario: A dealt board is graded at its tier
 
-- **WHEN** each board upstream's generator dealt is graded
-- **THEN** it is graded at the tier upstream dealt it at, its Unreasonable
-  board by the search
+- **WHEN** a board dealt at a tier is graded
+- **THEN** it is graded at that tier and not below it, an Unreasonable board by
+  the search
 
 ### Requirement: Solver: What the parity and forcing-chain deductions conclude
 

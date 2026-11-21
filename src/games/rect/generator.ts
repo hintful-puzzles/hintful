@@ -1,7 +1,5 @@
 /**
- * Rectangles board generator (`new_game_desc`), ported byte-faithfully so that
- * for a given seed and params the produced desc and `aux` match the C output
- * exactly (the differential's guard).
+ * Rectangles board generator (`new_game_desc`).
  *
  * The shape, transliterated from upstream:
  *  1. Build a *base* grid at `size / (1 + expandfactor)` by repeatedly picking a

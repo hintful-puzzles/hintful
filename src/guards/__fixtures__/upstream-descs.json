@@ -1,0 +1,1060 @@
+{
+  "abcd": {
+    "4x4n4de": [
+      "2,0,0,2,2,0,1,1,1,1,2,0,1,0,1,2,1,0,1,2,2,0,2,0,2,0,1,1,1,1,0,2,",
+      "0,1,1,2,1,1,1,1,1,2,1,0,0,1,1,2,0,1,2,1,1,1,0,2,0,2,1,1,1,1,1,1,"
+    ],
+    "4x4n4Rde": ["-,2,1,-,-,-,-,1,-,-,-,-,0,-,-,-,0,-,1,2,1,2,1,-,2,-,-,-,0,1,-,-,"],
+    "5x5n4de": [
+      "1,1,1,2,2,0,2,1,0,3,0,2,1,2,2,0,1,3,0,1,0,2,2,1,2,1,1,1,1,2,2,0,1,1,0,3,1,3,0,1,"
+    ],
+    "5x5n4Rde": [
+      "-,1,-,-,-,2,2,-,-,2,-,0,-,-,-,-,1,-,-,1,-,1,-,2,2,-,-,-,-,-,0,2,3,0,1,-,0,-,-,1,",
+      "0,-,-,-,0,-,1,-,-,1,-,1,-,1,-,-,-,-,0,0,1,-,-,-,-,0,-,-,-,-,-,1,-,-,2,-,-,2,2,-,",
+      "-,2,-,2,2,-,2,-,-,-,-,1,2,-,-,-,-,2,-,-,-,0,-,1,-,-,2,1,-,-,-,1,-,0,3,-,2,-,-,-,"
+    ],
+    "6x6n4de": [
+      "2,1,0,3,2,2,2,0,2,0,2,2,1,2,2,1,2,2,2,0,1,1,1,3,1,0,2,3,3,2,1,0,2,1,1,2,0,3,2,1,2,0,1,3,2,2,2,0,"
+    ],
+    "7x7n3de": [
+      "1,3,3,2,3,2,1,2,4,3,1,3,2,1,4,3,1,3,1,3,3,2,2,3,1,3,3,2,1,4,2,2,3,2,2,3,1,3,3,3,1,3,"
+    ],
+    "7x7n4de": [
+      "2,1,2,2,2,1,3,1,3,2,1,1,1,2,2,2,3,3,1,0,2,0,3,2,3,1,1,2,4,1,2,0,0,0,4,3,3,3,0,1,4,0,2,1,2,2,2,1,3,2,0,2,0,2,3,2,"
+    ],
+    "3x3n3de": ["1,1,1,2,0,1,0,1,2,1,0,2,1,1,1,1,1,1,"],
+    "5x3n3de": ["2,0,3,2,1,2,1,1,3,0,1,2,2,0,1,1,0,2,1,1,1,1,0,2,"],
+    "3x5n4de": ["0,0,2,1,2,0,1,0,0,2,0,1,0,1,0,2,1,1,1,0,1,2,1,1,0,1,2,2,2,1,1,1,"],
+    "5x5n3de": ["1,2,2,1,2,2,2,1,2,2,2,1,1,2,2,2,2,1,0,3,2,2,0,3,2,2,1,1,2,2,"],
+    "4x4n5de": [
+      "2,0,1,1,0,1,1,2,0,0,0,0,2,2,0,1,1,1,1,0,1,1,1,1,0,1,0,2,1,0,0,0,2,2,0,2,1,1,0,0,"
+    ],
+    "7x5n4de": [
+      "1,2,2,2,3,2,1,1,1,3,2,1,2,2,1,2,0,2,3,2,2,3,0,0,0,0,3,2,0,1,2,2,2,2,1,0,2,0,2,1,0,2,1,2,1,3,0,1,"
+    ],
+    "5x5n5Dde": [
+      "1,0,1,1,2,1,2,1,1,0,1,0,1,2,1,1,2,1,1,0,0,0,1,2,2,1,2,0,2,0,1,0,2,0,2,0,2,0,3,0,2,0,3,0,0,0,0,0,2,3,"
+    ],
+    "6x6n5Dde": [
+      "1,0,3,0,2,0,3,0,2,1,2,0,3,0,1,1,2,0,2,1,2,0,2,1,1,1,2,0,2,1,1,0,1,1,3,1,1,2,2,0,2,2,1,0,1,1,1,2,2,0,0,2,1,1,2,2,1,1,1,1,"
+    ]
+  },
+  "adjacent": {
+    "5dk": [
+      "0D,0D,0R,0DL,0D,0URD,0UDL,0D,0U,2U,0URD,0URL,0URL,0DL,0,0U,0D,0D,0URD,0DL,0R,0UL,0U,0UR,0UL,"
+    ],
+    "6dk": [
+      "0,0RD,0DL,0R,0L,0,0,0UR,0URL,0L,0R,0DL,5,0RD,0L,6,0D,0U,0R,0UDL,0,0,0UR,0DL,0,0U,0D,0,0R,0UL,4,0R,0URL,0L,0R,0L,"
+    ],
+    "7dk": [
+      "0RD,0RL,0L,0R,0DL,0,0D,0U,0,0D,2,0U,0,0U,0,0R,0URL,0L,0RD,0RL,0L,0,0RD,0L,0,0UR,0L,0,0R,0UL,0,0D,0R,0DL,0D,0R,0RL,0DL,0U,0,0U,0U,0,0,0UR,0L,0,0,2,"
+    ]
+  },
+  "ascent": {
+    "5x5mRde": ["5b2_1b22c14c8_11b24a10_16_17_25"],
+    "5x5mRdn": ["17a15a12a1a11a24a4c25f7a"],
+    "5x5mRdt": ["d25_14a16_24_21a11a18b9a1a7a4b"],
+    "5x5mRdh": ["25_22a17a24a20b8a12_15a7_11b1d2"],
+    "4x4mRdn": ["c11_16_15_8a3b9a1a6"],
+    "7x6mRde": ["e24a4a1a26b7_6a30_31e12a20_19a41_38b35a42_40a37_36a17"],
+    "7x6mRdh": ["a18_21_24f22a42a16_15e10a14a30_34b8a2a36b6_3a1a38"],
+    "5x5mOde": ["e4_9c3e13c1c25"],
+    "5x5mOdn": ["d25d10b3_2b15a1f"],
+    "6x5mOdt": ["b24b15g21i10_30a2_1a9"],
+    "6x5mOdh": ["30f28f16d6c12a1d"],
+    "5x5mHdn": ["BcAa11_14a2_4a17a1b19Aa7aB"],
+    "5x5mHdt": ["BcAd4b7c1aA19bB"],
+    "7x7mHdn": ["Ca1bBd8A16c10_30a19_14_25a29gAeB22_37bC"],
+    "7x7mHdh": ["Ca8bBa13a1aA16c3b19d33c29bAa22a27aBb37aC"],
+    "6x5mCdn": ["B30d1Ba23c3Aa13b10aBd5aA19eB"],
+    "7x6mCdt": ["B12d20aBc28a22_24Aa10_15a27bBc32b42Aa4b36bB6a1b39aB"],
+    "7x6mCdh": ["B2_1d23Bb15_18_20_24aAa13eBc33_31bAf28Bb9_38b42B"],
+    "5x5mEEdn": ["14_12_9_15_5_17_4_8e6_3e11_1e13_24e18_25d19_21_22_10_23_7_20_2_16"],
+    "5x5mEEdt": ["17_19_20_2_5_7_22_18e21_24e9_8e15_14b1b6_12e3_11_13_16_10_23_25_4"],
+    "5x5mEEdh": ["25_19_24_15_12_1_20_2e3_8_23d4_22e21_10e13_11e17_7_18_16_5_6_9_14"],
+    "5x5mEdn": ["16_12_13_21_23_25_10_5e4_22e18_8_1d17_11e24_15e14_7_2_6_9_20_19_3"],
+    "6x5mRdnS": ["4a6_7_20_19a2c21b1_16b11c26a13_12_30_29a24"],
+    "6x6mRdhS": ["c19_36_1_15a20a2b13_22f23_32b10a24a30_8_9_26c"],
+    "5x5mREdn": ["a9a7_5b10a6_14_20a2b18a24a16a22b"]
+  },
+  "boats": {
+    "6x6f3de,3,2,1": ["0,2,3,1,1,3,3,1,1,1,2,2,bWaWwWcB"],
+    "6x6f3dn,3,2,1": ["3,0,2,3,0,2,1,4,1,3,0,1,qW", "3,0,4,0,3,0,1,1,2,2,2,2,bWeToW"],
+    "6x6f3dh,3,2,1": ["2,1,2,1,3,1,0,2,0,5,0,3,hSz"],
+    "8x8f4de,4,3,2,1": ["2,3,1,3,1,3,3,4,1,4,2,3,3,4,0,3,zcWdWjLlW"],
+    "8x8f4dn,4,3,2,1": ["2,4,1,3,1,5,0,4,2,3,1,4,3,1,5,1,uTiTxB"],
+    "8x8f4dh,4,3,2,1": [
+      "2,2,5,1,3,2,1,4,5,1,3,1,5,0,2,3,gWiWziT",
+      "4,1,4,1,1,4,0,5,2,4,2,2,2,4,1,3,hTnWaWaSdWgLdWgWfS"
+    ],
+    "10x10f4de,4,3,2,1": ["3,1,0,4,0,0,1,5,3,3,1,1,2,2,0,2,3,5,2,2,gWvWhWuRziWaW"],
+    "10x10f4dn,4,3,2,1": [
+      "0,1,1,2,2,3,3,2,4,2,2,0,6,0,2,2,0,6,0,2,bWeWmWbCsTkWpRcCmWbWcS"
+    ],
+    "10x10f4dt,4,3,2,1": [
+      "0,4,0,4,1,3,2,2,3,1,3,2,2,2,2,4,0,4,0,1,aTcTbSnWqSoRoWaC",
+      "0,7,1,2,2,5,1,0,2,0,2,3,1,2,2,1,1,3,1,4,eWiWoBfWdWzfWaSnL"
+    ],
+    "10x10f4dh,4,3,2,1": ["4,2,0,2,4,2,0,1,1,4,1,4,1,0,1,3,4,1,5,0,dTiCbWzjWfWaWtC"],
+    "10x12f5dt,5,4,3,2,1": [
+      "2,7,3,5,2,2,2,4,3,5,3,5,2,5,0,3,2,6,0,3,2,4,oStLmLaRsCuWlTdL"
+    ],
+    "10x12f5dh,5,4,3,2,1": [
+      "2,1,5,5,4,3,6,1,6,2,2,4,2,0,5,0,6,1,4,3,4,4,aWdWcWqBkSdWwSaWcWbWdWhCmCbWdB"
+    ],
+    "6x6f3deS,3,2,1": ["3,-,2,-,1,1,-,2,2,1,-,3,bTnW"],
+    "6x6f3dnS,3,2,1": ["0,-,0,2,-,-,3,-,3,1,-,2,eSiWkW"],
+    "6x6f3dtS,3,2,1": ["3,1,3,1,1,1,4,-,2,1,2,-,lSvS"],
+    "6x6f3dhS,3,2,1": ["2,1,3,2,1,1,-,-,3,0,-,1,cRkWaWjW"],
+    "8x8f4dtS,4,3,2,1": ["3,1,4,2,3,3,1,3,1,3,-,5,1,-,1,-,gWWdWnLmClWeRaW"],
+    "8x8f4dhS,4,3,2,1": ["3,2,4,-,-,1,2,3,5,2,3,0,4,0,4,2,eSjWbWz"],
+    "10x10f4dtS,4,3,2,1": ["2,3,-,-,1,4,-,1,1,4,1,-,8,-,2,-,1,2,3,3,zcRlWWziBdWgRaWdW"],
+    "4x4f2de,2,1": ["0,3,0,1,1,0,2,1,"],
+    "4x4f2dn,2,1": ["1,1,1,1,0,3,0,1,lWaW"],
+    "5x4f2de,2,1": ["1,0,0,2,1,2,1,0,1,cT"],
+    "4x5f2de,2,1": ["1,0,2,1,2,0,1,1,0,lS"],
+    "7x5f3dn,3,2,1": ["1,2,0,2,2,0,3,2,2,3,1,2,dRjBiWfW"],
+    "5x7f3dn,3,2,1": ["3,1,2,3,1,0,4,0,3,0,3,0,qW"],
+    "9x6f4dt,4,3,2,1": ["5,0,3,1,4,1,1,1,4,3,4,1,5,2,5,bSzeWlScS"],
+    "6x9f4dt,4,3,2,1": ["6,2,1,5,2,4,1,3,3,1,4,0,3,0,5,rWdWzW"],
+    "9x9f4dh,4,3,2,1": ["2,5,0,5,1,1,2,4,0,1,2,4,1,2,4,2,1,3,aSzuRpWjS"],
+    "6x6f1de,4": ["1,0,0,1,2,0,2,0,1,0,0,1,dWz"],
+    "7x7f3dn,3,0,1": ["2,0,0,4,0,0,0,0,1,1,2,1,0,1,nWzaW"],
+    "8x8f3dn,2,2,2": ["6,0,3,2,0,0,1,0,1,1,2,3,1,0,2,2,bWzvT"]
+  },
+  "bricks": {
+    "7x6de": ["2c1_3ab0c2_3fb2_2a5a3fb2a2a2"],
+    "7x6dn": ["c3c4fd4bb4b2a3fb2_2b1"],
+    "7x6dt": ["ga6c3ac3a2af3_0_3b2_4ag"],
+    "10x8de": ["a4c1dc2_1b3_0a3d3de3b2ab2c2ca2c2c0_2a2c3b3_2a2b3d"],
+    "10x8dn": ["f1b1b5b3_3cj0c3b3bh2aa4b2c1a1b5e2c3a3d"],
+    "10x8dt": ["c3b2c2b4b2a2_1ja3a2f1c3a5ce4c0_3a4b3b3aa3f2a"],
+    "4x4de": ["2b1c0c2_2b1"],
+    "5x5dn": ["2b3ab4a3_3da4ca3b2"],
+    "8x5dt": ["2c3cb5d3a6fd2_3b2a3d2"],
+    "6x7dn": ["1b1bd3a3a3a1afa6db3_2a2_2e"],
+    "9x6de": ["2c2c1b3_2b3b3b2c2ae4_1b2b2c4ac2e"],
+    "12x8dt": ["g2_1cb4a2b3c2a1i4_2d1b2cd4a2b2bb3b3f2b3b4d4i2b"]
+  },
+  "bridges": {
+    "7x7i30e10m2d0": ["3a3b4g25d6b2a3k3a5a3a2e3"],
+    "7x7i30e10m2d1": ["2b3b3g4e5g4b4a2e1a34b5a2a"],
+    "7x7i30e10m2d2": ["b4b4a1e2c1a3j4a2a4g3a5c3"],
+    "10x10i30e10m2d0": ["a4a6b6b4h2b2b2p1v3a3b41j2a4d3a3a3a2d3"],
+    "10x10i30e10m2d1": ["a2e4a43g3s2a4h4j3a3a3a6a2m1c4a2a1c4d3"],
+    "10x10i30e10m2d2": ["4d4a2c2d3b3k3e2d2c3n3d3c3f5a5k2a3c2a2"],
+    "15x15i30e10m2d0": [
+      "c1a3h42g3b3a2p5h6b4c3e2b2t5d3zg3a3k5c4c2b3y2a1c2a6c4a3d2j1d3b3d3"
+    ],
+    "15x15i30e10m2d1": [
+      "1a4e5e4i1e1q2c3p5d53a2h4a2b3e3d1a22p1d2a4a6b31o5f6b6a4c4d2b1c3m2c4e6a3c1a4e3a2a4a2a"
+    ],
+    "15x15i30e10m2d2": [
+      "4b3a2a3e3c4a5d3b2s2f1b1b5c6h5b1a2c3a3b1a24a2q1a5e3c1e2e54b3p1a3a2a6a4a4c4a2a2a1k1c3b3b2a3a3f4a3k2a2"
+    ],
+    "10x10i30e10m2Ld2": ["f1b23c3c1b4a2b2e3a6k5a4c1f43g1b5b4a6b61j2b1a2b2"],
+    "8x8i30e10m4d1": ["d1b37d5k4c7a7b3a8a4f2a66c8a4c3d4"],
+    "12x8i25e20m2d2": ["a1c5a5c3h2c3c1b2e2c6b4c5j4b1f3n3h4a2"]
+  },
+  "clusters": {
+    "7x7de": ["kbidDHgAac", "cGBadDDMCbAacAa"],
+    "8x8de": ["CbAfEecIaiDACaHCa", "cJddBFccfCcHEcAa"],
+    "9x9de": ["abAaDHaAbbAicBclbAabACs", "aADaAabbGBBabdFaeBBiBadcIabd"],
+    "10x10de": ["abeCacAaJcAbBCabdcHBgefAdAekc", "AabcbABBCBBcAIaECcCaBaedecEaHdfcd"],
+    "5x5de": ["AeEbjba"],
+    "6x9de": ["aeJCeaBfbDao"],
+    "12x8de": ["aCcFcEdjceAaDgcbAbDHCahccAaa"],
+    "4x4de": ["KaaABa"]
+  },
+  "crossing": {
+    "5x5de": [
+      "a2a3a2a2a2a6a1,12,59,71,83,95,242,487,911,992,53971",
+      "5b1b6b1a1a3,361,465,532,718,47231,63598",
+      "1a1a6b1a1a6a1a,42,44,62,78,6162,6243,6853,88158"
+    ],
+    "7x7de": [
+      "4a3b3b1a1a1a3a4a3a1a1a1a8a,12,16,27,46,57,62,66,86,92,156,288,526,548,687,882,893,6848,8281,167366",
+      "1a3a4a1a1a1a5b1b4a4a2b3a4,28,31,47,58,61,76,79,94,156,371,624,766,979,1962,6475,9829,2354169",
+      "4a1a1a1a4b1b7a1a1b8a1a1a1a1,18,19,24,55,72,95,118,189,2162,2979,126558,362461,2413916"
+    ],
+    "9x9de": [
+      "1a2a2a3a3a3a2a2a2a1b1b1a10b1b1a1a10a1b1a1a7,15,22,37,38,48,57,78,97,217,429,471,747,925,1577,3445,12919,49114,53367,96993,2833997,7675638,75654199",
+      "4b4b4a1a1a1b1a4b1a3a2a3b2a2a3a3a1a2a1a10c1,12,17,41,42,48,52,79,86,88,123,476,479,626,773,834,848,857,925,2645,7357,8559,8667,8896,55276,65997,651149"
+    ],
+    "5x5Sde": [
+      "d6a1a1a6d,24,26,285,486,26457,44924",
+      "2a3a2a2a2a2a3a2,18,22,38,42,49,54,62,82,215,228,328,449"
+    ],
+    "7x7Sde": [
+      "1a1b3a4a2a1a3a3a3a1a2a4a3b1a1,12,14,27,49,53,62,85,97,698,752,889,3438,5294,48979,62112,75481"
+    ],
+    "6x4Sde": ["4a2b6b2a4,78,95,379,828,1841,5161,7331,7527"],
+    "9x9Sde": [
+      "c1b4a3b1a3a1a4a5a4a1a4a5a4a1a3a1b3a4b1c,22,91,164,338,349,434,488,718,825,851,873,886,981,996,11515,88177,154736,484586,485314,831988,5754189"
+    ],
+    "4x2de": ["4c1,17,1511"],
+    "2x4de": ["a1a1a3,84,7734"],
+    "4x3de": ["a1b4a1a1,14,749,8481"],
+    "4x4de": ["1a2a2a2a1a3,12,16,55,65,66,528,846", "4a1a5a1a1,2348,2476,4435,6786"],
+    "6x4de": ["1a3a3a1a1b1a7,13,41,75,78,417,611,9662,254823"],
+    "4x6de": ["3c4a2b6a1a,17,62,67,76,497,1728,2161,7231"],
+    "6x6de": ["1a6b1a1a5a1b5a1a1a3,38,76,85,371,539,944,3318,3346,6399,9892,57743"],
+    "8x5de": ["9b1a1a4a4b1b1b8,35,321,385,511,613,6581,53574,66931563,71131461"],
+    "5x8de": [
+      "3a2a6a2a6a1a1a6b1a2,89,97,175,447,479,561,951,968,3236,7921,14145,92551,978997"
+    ],
+    "10x7de": [
+      "3a5b1b1a1a1a4a6a1a1a1a1a2b6a4a1a1a2a1a5,46,56,59,61,79,159,267,346,388,826,3653,5977,21673,42762,79534,654743,2734487,7296441"
+    ],
+    "7x10de": [
+      "1a8a1a2a3a3b3a4a2a1a6b1a1a7a1a1a1a5,25,27,72,414,495,531,617,819,826,912,2267,2391,2542,19829,26227,42251,72273,98624,128746,295678"
+    ]
+  },
+  "dominosa": {
+    "3dt": ["22031003220330112131"],
+    "4dt": ["304011032404012122421334321034"],
+    "6dt": ["36152104000201616453416144502563223250646332463355504112"],
+    "4db": ["124234124212003414033014320310"],
+    "6db": ["03463254351641642333315622304102510022615665062450541410"],
+    "7db": ["405652347075202142431552422425156640535163713163360021406130043716777677"],
+    "6dh": ["41342544620032340045515254033652011620206136256641365131"],
+    "5dh": ["503200102544153154114132450043252212305334"],
+    "6de": ["02561565425636651114411246262356331014003200540432032534"]
+  },
+  "filling": {
+    "9x7de": [
+      "3g3b477a7a23b9b2a4b9b52b999a887a24i3a3a7c",
+      "24427c5a44b5b5d55d8b57a6b4a333b5b2d42a2c74b",
+      "9j9a2e49a2a7b25a5g5a65a4d397a7f9c",
+      "g2a72b88a8c7723a2b3a4b5a4b3a5c8d5a8c6b7a8b"
+    ],
+    "13x9de": [
+      "b9775f4a77c32b999e3a44a999a3a2a9a44a9995b299d3a23e96d6a3a3b5a34b2b24a45b4b6b6c3556c",
+      "4b6e4h2a42a23c5a3b2a8a4a26a5d8c2a2a3a3a7c7a4f5a4b723c3b53b5f2a4a5a4a352132c5b",
+      "7b223b5c4b7b3b76a33b2a43b73e955a7a2c49c5c9a94b993a39f4c6a99d22c343e6f5e4",
+      "h4a3c8a8c6a54f2d99a42a3a4a5c9a95c455c4b6a3e85f4h86b22a6a55b42a4c642a4a2"
+    ],
+    "17x13de": [
+      "4c5333c6d3c5d844a8c8234a566b86a8c64c3b8c7a44c3a2a93387a5b4b5a523a3b77c2776a5c6b5a57g8d5a26c4e3355a54a4c6a6c5a5a394b6b48a4b6f9a4b88a266a46a9c2c2d3a4b7b2a",
+      "4b27d4d6a93a7a7a2a4a69h75b35d9322c2558d4b3d46a4b58844b5g33c2b3c734e6a2b84b83a648a6a6b8a4d8a8c52b35c688b5c4499d69d7b44c3b44244a77c3b93a4e3c2d5",
+      "2c3a7d328b27a2c7765a5b5c79a5a7e858d2c4b66c88c55c64a6f4f29a8e6b49b659a777a43d3a4b9a7a5662c8a3a4c7a56a4b832a3c7e4425c5b4b4g25d4a66a477g3a6a3a6a3b",
+      "39f33a445f97a7a6a74b344d37776f4a27a3a53a6a53c4e5b5b5a3b6b4a744a6c3d2a85b4a665a5a464b8b5b882c2b38c4d235a344a2a84b377e6g37a7c9a6667a2b5266c9b72b37f3a37c"
+    ]
+  },
+  "flip": {
+    "3x3c": [
+      "d074191345d1644c17058,770",
+      "d074191345d1644c17058,308",
+      "d074191345d1644c17058,258",
+      "d074191345d1644c17058,c90",
+      "d074191345d1644c17058,488"
+    ],
+    "4x4c": [
+      "c800e400720031008c804e402720131008c804e402720131008c004e00270013,52fd",
+      "c800e400720031008c804e402720131008c804e402720131008c004e00270013,a616",
+      "c800e400720031008c804e402720131008c804e402720131008c004e00270013,9a94",
+      "c800e400720031008c804e402720131008c804e402720131008c004e00270013,a41e",
+      "c800e400720031008c804e402720131008c804e402720131008c004e00270013,3bf4"
+    ],
+    "5x5c": [
+      "c400007100001c4000071000018400043100011c400047100011c400046100010c400047100011c4000471000118400043100011c400047100011c400046100010c000047000011c0000470000118,3835fb8",
+      "c400007100001c4000071000018400043100011c400047100011c400046100010c400047100011c4000471000118400043100011c400047100011c400046100010c000047000011c0000470000118,b1bf990",
+      "c400007100001c4000071000018400043100011c400047100011c400046100010c400047100011c4000471000118400043100011c400047100011c400046100010c000047000011c0000470000118,abd65e8",
+      "c400007100001c4000071000018400043100011c400047100011c400046100010c400047100011c4000471000118400043100011c400047100011c400046100010c000047000011c0000470000118,16db6f0",
+      "c400007100001c4000071000018400043100011c400047100011c400046100010c400047100011c4000471000118400043100011c400047100011c400046100010c000047000011c0000470000118,f9c84d8"
+    ],
+    "3x3r": [
+      "98780b1b4ccb244c07058,a80",
+      "d072190b69a1646c07058,668",
+      "d8360b1a69a3244c07058,018",
+      "d0781b134cc12c4c070d8,f38",
+      "c8741b1267c1244c27058,e80"
+    ],
+    "4x4r": [
+      "c400e4007100310088c0ce8033201310088c0e400073011100cc000e00270033,491a",
+      "c800e000700033008c80ce003620111004cc08c803310133008c004e00670013,d5bf",
+      "c800e800720031008c80c440362013100888044c0137031100cc00ce00330023,6759",
+      "8c00e80071003300cc00c64006303100088c00e802710113008c00ce00270033,9f17",
+      "c800e20071003300c880066037001130088c0c6204710111008c008e00470033,7db5"
+    ],
+    "5x5r": [
+      "c6000071000018c000071800018400062100021c400063000018c200046100010c40000720001884000061800018c00063100001cc000423000188600086100018c000047000011c0000870000318,768d548",
+      "c600007300001c4000071000018c00043100031c000062100019c000046100000c6000c6000009c00000618001184000431000018e000c62000198000042300010c000067000018c0000870000318,3110250",
+      "c600007100001c2000033800018c0004310002184000c610002188000c2100010c600007300001c4000861000308400043100000ce00023100018c200042300010c000027000021c0000c30000318,49e12b8",
+      "c600007080000cc000070800018c00062100029c400087000008c2000c2100018c000007200010c4000461000018c00043180001ca000e2000011c200042300018c000047000021c0000470000318,62a7668",
+      "c600007200001c4000033000018c000421800388000046100019c8000461000108600042380009c000007100011840004318003188000070800118800042300010c000027000009c0000a70000318,3c87500"
+    ]
+  },
+  "flood": {
+    "12x12c6m5": [
+      "545322511034032533352001334523351000233003120344054315523244305103535133205121131442151045555435553213515414121413525424142520305220552234315014,23",
+      "553511353132323003125440321242110413043430335003121434524212024333510340530132012331041134005540023244404525313320243015431351232233120340134025,22"
+    ],
+    "12x12c6m0": [
+      "144025202200520502250343340541351420513231421433322012524254345303222241454021231322542152423323300431131052234250555255502015315224242331402322,21",
+      "102043121450321141351024010112130340321254502341441455010540512544302004033202055153021511555503502553352155430151315442425040433114424502335041,19"
+    ],
+    "16x16c6m2": [
+      "1003221451100012243154232055102030000335215544433301023051154433442510531121050523050542351231055002314012241143215103410222454211204124503005150100532403145310215232300020140413012315220005254034011150331503524504113235143345110040042403344551352334113352,24",
+      "3513434015431000412500530504341342052555234400235030400050323135532410103210140025223412511154123225113524205225252200511205244102000554012233414505354340053222245220334321112403110444252212401010104254515311404324123105024521540344420212430353413522100331,27"
+    ],
+    "16x16c6m0": [
+      "2115355412125203240220522355114420121045545213124144451343001552541334210001145511510420444120105542052114032220300244502410545304340411354205543532211411530133241532424131452022314340534330043214003101513453313005044131412242345543000154410104042351515551,22"
+    ],
+    "12x12c3m0": [
+      "202211020222001220112100000110210202000121100011200011120222200122012200202202010121120012001211011102121001110122011002021022212022001011222210,9",
+      "221100100022111222122001222102011022211210021221102202102220200000102210220222021100001002002211110102212220110202112010221011112011110200202201,11"
+    ],
+    "12x12c4m0": [
+      "323203200021022310010232323202031312113231013110011122000230133321132112201033200301332132323202011230031123121232033110130002321320022122323231,13"
+    ],
+    "6x6c5m0": ["124304303201340014241400421000121410,9"],
+    "8x10c4m1": [
+      "13130010200003232230000033210323002201103032333112111101200310230103330013123012,11"
+    ]
+  },
+  "galaxies": {
+    "7x7dn": ["geofvbozfbsugk", "aihqdbzgroiqhhjh"],
+    "7x7du": ["axcrqdkzhqiiq", "jedzedlxpbcqpv"],
+    "10x10dn": ["adkfiphzodzecmzuzgwcfyztcjmi", "mjckjbzglvegzrjmuzvcubhzhqdhc"],
+    "10x10du": ["eezdhcdympgwdzcpkzxbzaoiuczd", "gmlizqewmcffpqpgdjznigfizgzcim"]
+  },
+  "group": {
+    "4dn": ["1_2_3_4_2c3c4_1b"],
+    "4dni": ["4k3b2"],
+    "5dh": ["1_2_3_4_5_2d3a5a2_4d5d"],
+    "5du": ["1_2_3_4_5_2d3d4b5a5c3"],
+    "6dt": ["1_2_3_4_5_6_2c6_1_3a5c4_5d5d4_6c4a"],
+    "6dn": ["1_2_3_4_5_6_2e3d5_4e5a1c6_3d"],
+    "6dni": ["4f6j2_3_1o"],
+    "6dhi": ["b6d4a6k3n"],
+    "6dxi": ["q4e5b6a1e3a"],
+    "7dhi": ["b7s3a5d6a7q"],
+    "8dn": ["1_2_3_4_5_6_7_8_2_1f3b5d4g5_6e3_6c1c7c8c8a6e"],
+    "8dni": ["4c3a2f3b5w8_3b7i4i"],
+    "8dh": ["1_2_3_4_5_6_7_8_2g3a7_8d4e5a5g6f3_7e2a8b6d"],
+    "8dhi": ["e5m7w8f4c3_1b2e"],
+    "8dxi": ["h6b1_8d4e2l4za"],
+    "10dni": ["c7f8b10b3a6a2zzp2a4g1"],
+    "12dn": [
+      "1_2_3_4_5_6_7_8_9_10_11_12_2k3_8a10h4c3g5_6c9e4_6b2h7j8_8k9k10f7_6c11k12_1j"
+    ]
+  },
+  "guess": {
+    "c6p4g10BM": [
+      "acfdf55f",
+      "d1c962a5",
+      "8cee508b",
+      "7de8c720",
+      "8bfca5e4",
+      "aa753fa9"
+    ],
+    "c8p5g12BM": [
+      "eb712e93c8",
+      "b8c69877a9",
+      "e2fa25d9ec",
+      "1ebae1a2e3",
+      "272d1fe171",
+      "b7a9ebd18d"
+    ],
+    "c6p4g10Bm": [
+      "2bebff56",
+      "b2f69110",
+      "6244b20a",
+      "7de8c720",
+      "d5cdd0ce",
+      "aa753fa9"
+    ],
+    "c8p4g10bM": [
+      "8aaf56af",
+      "85636215",
+      "b0f2496e",
+      "06843bb5",
+      "c98b7a17",
+      "8fe5cfe6"
+    ],
+    "c10p4g10BM": [
+      "dd933160",
+      "49e784c1",
+      "73e427f8",
+      "52fdc336",
+      "d2c863d8",
+      "6f5b7887"
+    ]
+  },
+  "inertia": {
+    "10x8": [
+      "gmbmggwssgbwgsssssmwbmmSgmwswmsgbbsmbwggmwmgwmmwsbbwwbbwmbsmgwbsgwgssbggbswmgmbw",
+      "gmmssbsmbmmgwmgssbgbwwgwsgbswwwbmgmsmsmwsgsgbgmsmwgbmssSgmwbswbwbgwgwwmgbgbmbbws"
+    ],
+    "15x12": [
+      "gbsgmbmbsgmgbsbsssswmwmmswbgbmmbbgggmbsgwbbgswmbgsbmbmbswbgsbwgssbmssmgggmgbwwgwgsgwmsgssswmmwggmwbgwsmwwbwbbsmmmSwswbgbsgwbgwbbwsgbswssbgmwbmwswggwwmmmmgmbgwgwwmsmmmbbmsgsswwwsmgw",
+      "mbwmwwbwmwgmwbswbgbmwwgSsbsgbsgwwbbwgsbswmgwsbmggswbsbbmsmbbggmmgggssswggsmgwsswbggmbwgbgwssssmsgwwswmbgbmbmbgbmswgssmbsgwwwbmmswsswbsmmbmgbmgsgmsgbbwwwbgbsmmgsgmwgmbmmwwmgsswmmmgb"
+    ],
+    "20x16": [
+      "swgsmwsmwbmbbwmwsgbgwmmsggsggswmwsggbmwbmbbmwsmbgwsbgmwbsmmbmwwswgmswbgswsmmmsmgbwmbmgsswwwmmgbgwmsgbmwbmgswsmsbbgsmbwbwwwwbwbmgbsswbgwsssggbbmmmsgbgswmbmggwggggwsgbwssmmmbwggwwsgwmgswggwgmbgbmbsbgsbmswsggwwmsbwbmswgmsmbwsbbbbmmsbwggggbmsssmbsgbsmbwbgggbsbmgsswwsmwbmbsmmmmgSwgwwgbsgwsgmgbgwwsbswbwgmbbsggwsbmsbbsmwmmwss",
+      "wswsmwbmbgwwbwmwmmmmsmggwssbSbgwmwwsmbsbsmsbswwwmgmbsgwgwssgmwgwsmggwgbbsgbbwsmmbmwmmgsbsgbbbgsgswmbwwsggmswmgsggbbwggmbmmmsgbmsbwgmwbggwwwgbbbbmbsbgbsgggbggbggbwbbmgggwbbmsggwsbsgmmbwwwmsmwggsssgsswmbmbbbmmswwssggmssswwbmwbswgwgbmbgmbbwwsbwbmwmgmwgggswmgwbgmmmbsssbggmmwwssswwwsbsbgmswwmmssbsgsgmbwmbmswggwmmssbmmswmssb"
+    ],
+    "12x12": [
+      "bmmmsswgwmbsgmmwssmswmmbsmbsbwmgbgwmgbgsbbssbswgwsmbwsbbmwgsmswwgwgmwbbbswbgbbwbwmbmsggmmwbswbggsgmbsgmbbggwsgmgwmbmgwwgssgwsbgwmwswbwsSgggmbmsb"
+    ],
+    "3x2": ["sSmgbw"],
+    "4x4": ["wmswbbsmgmbgSgws"],
+    "6x4": ["bwwsmgmbbbgssbmswwgbgbSm"]
+  },
+  "keen": {
+    "4de": ["aa_a_aa_ba_5a,d2s1a9m4d2m6s2"],
+    "5de": ["a_7a_a__a_aa__a_a_ba3_,s1m10a5s2s2a7m5m20s1m12a6d2"],
+    "5dem": ["a_b_a__a_3aa__a__a3_3a__a,m20m3m2m8m15m15m2m8m5m40m12m3"],
+    "6de": ["aa_3a_16a_4aa_aa__aa_ababaa,d3s3s1m10s1m15m6m6a8d3a7s2d2a9d3a6s1m6"],
+    "6dn": ["a3_aa_3b_3aa_bba_3a_4a_3a_4a_3a_,m6m12s3d2m12m6s1s3d2d2a9s1a7s3a9a13m10"],
+    "6dnm": ["aa_a_18c_3b__a4_a4cb,m20m6m12m60m18m6m2m24m5m10m24m20m12m180m6"],
+    "6dh": ["_a_a_20a_ba4_a7_aa_,d2a5s1m24m24s2a6m6s2d3a7m6m6a5s2d2a5s1"],
+    "6dx": ["b_a_6aa__aa_aa_bb__aa_bb_3a_4aa_,m60m6m10m60s2a10a8m8s1a9s1d3d3a12"],
+    "6du": ["_b_aa_a_3a_11aa__a_3a_a5bac,m18a15d2m6m15a7s3m18a16d2d3s2s2a5s1"]
+  },
+  "lightup": {
+    "7x7b20s4d0": ["h00b3f1i0f1b01h"],
+    "7x7b20s4d1": ["aBBf0c1e01c1c1Be0cBfBBa"],
+    "7x7b20s4d2": ["e2a2h2aBk1a1h1aBe"],
+    "10x10b20s2d0": ["aBdBe3eBbBaB2cBbBb0c3h3d2h2cBb1bBc1BaBb0e2e0dBa"],
+    "10x10b20s2d1": ["c2eBaBd1hBa0bBlBbBa3b0aBbBlBbBa3h1d2a2eBc"],
+    "10x10b20s2d2": ["cBa1dBh1a0aBc3d2b0c1c3cBdBcBc1c1bBd3cBaBa1h2d0aBc"],
+    "14x14b20s2d0": [
+      "BBe3hBeBb10gBd1bBc2cBdBb1aBb1eBa1B2BBaBa2zj0a1aBBBB2a1eBb1a3b1d3c1cBbBdBgB0bBe1h0eBB"
+    ],
+    "14x14b20s2d1": [
+      "d00c0fBfBc32bBBaBc1Bb0bBiBa1bBBbBi0e2f1b2a2j2aBbBfBeBiBb2Bb2a1i0bBbBBc1a20b0BcBf1f1c11d"
+    ],
+    "14x14b20s2d2": [
+      "2a2aBkBb2B2e0f2a1rBg0b2a3aBBbBf2aBaBb0B2aBjBaBB1b1a2aBf1b01a3a0b0gBr2aBf1eBBBbBkBa1aB"
+    ],
+    "10x8b25s1d1": ["b0c0i1a0B1BlBaBBf1aB1b1Bn1a11b1cBc"],
+    "9x9b30s0d2": ["B0d1iBg1i0b1a1a3aBBB0BcB2fBbBa2cBb1BBBf"],
+    "11x11b20s3d0": [
+      "bBaBaBaBcB1eBBa3cBa0c3aBg3e0a1eBgBeBa0eBgBa1cBaBcBaB1eBBcBaBa0a1b"
+    ]
+  },
+  "loopy": {
+    "4x4t0de": ["c33a1c023a3a"],
+    "4x4t0dn": ["1e3230a2b3a"],
+    "5x5t0dt": ["f1a333a221b1c3a23"],
+    "5x5t0dh": ["a3a23a1a22a2113a3d2a3a"],
+    "6x4t0de": ["3c3c30a1b3a3d22a"],
+    "4x6t0dn": ["31a3b32302b2b12c3a3"],
+    "4x4t1de": ["0_c1a22a1b11a11a021a0f02221a1a"],
+    "4x4t1dn": ["0_2c2a2d10a1b2b1c20c11212b"],
+    "4x4t2de": ["5334c3a5a2c0"],
+    "5x3t2dn": ["1a03c2a4c43"],
+    "4x4t3de": ["3a1b22201112a2b01b1a1b2f23d0"],
+    "3x4t3dn": ["2a2a02230c2c1b2c11a211"],
+    "3x4t4de": ["c24a23a1032b1a"],
+    "4x4t4dn": ["4a4d1c22a4432c10a"],
+    "3x3t5de": ["11b4g2a5a1a5a1b0e1a02"],
+    "4x3t5dn": ["b2a4a22c1111g2a01c13b32e5a5a325"],
+    "3x3t6de": ["7a7a3e0a0"],
+    "4x3t6dn": ["a2c20b5302d1"],
+    "3x3t7de": ["1b3a22b23a2b201b2f2b33111a2d3b2a132c1a"],
+    "4x3t7dn": ["a2k0a3b2121b23322a3122a2c1e2d2d3122a3c23b21b"],
+    "2x2t8de": ["b4e02b2e"],
+    "1x3t8dn": ["a4d3b302a11c"],
+    "2x2t9de": ["a70b9"],
+    "3x2t9dn": ["2b90a27b"],
+    "2x2t10de": ["1b0d3a1"],
+    "3x2t10dn": ["2a82b32a0b522d"],
+    "6x6t11de": ["00BBABAVBABBBB_a2b23b2a2c2a30"],
+    "6x6t11dn": ["32UAABUAVBABUAB_22c20b31f"],
+    "6x6t12de": ["20XXXXXXXDY_a22320c01a122"],
+    "6x6t12dn": ["71XYXXYYYXXYYXXXYX_a1b103a2b2b3a"],
+    "2x2t13de": ["Bb2h33290"],
+    "3x2t13dn": ["b5bB24c0f42a0b13a3b1"],
+    "3x3t14de": ["a203e222a4b32a0b0a2"],
+    "4x3t14dn": ["5213b521b4f100134e4c2"],
+    "2x2t15de": ["b0b3a9a"],
+    "3x2t15dn": ["2a2b2b2b0a0aB"],
+    "6x6t16de": ["6,1,8,0,6,H_b0b694CBd7"],
+    "6x6t17de": ["802025X_7a79a60a0a8b7a"],
+    "5x5t1dt": ["0_g22b1b0a21c120c1a1020b021a1c1d20c"],
+    "5x5t2dh": ["54a3d55d4b5b1b52"],
+    "5x5t4dt": ["3e31a3444222e24333g32c42"],
+    "4x4t7dt": [
+      "2a13c2b132c0a2c2b2b1c3a23c1a2a1c322b2213a321b2c3b1a313a2b1a1c23a3b23d"
+    ],
+    "4x3t9dh": ["B9142Bd8a2c2BAc11"],
+    "6x6t11dh": ["91UUABBAVVBB_b3a232b12b0b3"],
+    "6x6t12dt": ["82YYCXYYXDDDY_b3213a3b1c"],
+    "4x4t14dt": ["a2b222c23b1b1232e40132a3b4c4b30b"],
+    "6x6t16dn": ["7,1,3,8,1,F_a10b37bC5b9Cc"],
+    "6x6t17dn": ["40344146F_aBB4a7b20aC0"]
+  },
+  "magnets": {
+    "6x5de": ["221122,32023,212131,22123,LRTTLRLRBBTTLRLRBBTLRLRTBLRLRB"],
+    "6x5dt": ["212123,32123,122132,23222,TTTTTTBBBBBBTTLRTTBBTTBBLRBBLR"],
+    "6x5dtS": ["1..12.,23.3.,2..1..,322..,TTTLRTBBBLRBTLRTLRBLRBLRLRLRLR"],
+    "8x7de": [
+      "32223243,2432244,23232234,4233234,TLRLRTLRBLRLRBTTTTLRLRBBBBLRTTLRTLRTBBLRBLRBTTLRLRLRBBLR"
+    ],
+    "8x7dt": [
+      "23331232,3433222,33232312,3443203,TTTTLRLRBBBBTLRTTTTTBTTBBBBBTBBTLRLRBTTBTLRTTBBTBLRBBLRB"
+    ],
+    "8x7dtS": [
+      "..2..2..,.3.3.33,.2.1.0..,4.33..4,LRTLRLRTLRBLRLRBTTLRLRLRBBTTLRTTTTBBLRBBBBLRTLRTLRLRBLRB"
+    ],
+    "10x9dt": [
+      "5133424432,534231445,4232424343,354421354,TTTTTTLRLRBBBBBBTTTTLRLRLRBBBBTTTLRTTLRTBBBTTBBTTBTTTBBLRBBTBBBLRLRLRBTTLRTTTTTTBBLRBBBBBB"
+    ],
+    "7x7de": [
+      "4323212,2342132,3423230,3233132,LRLRTTTLRTTBBBLRBBTLRLRLRBTTTTLR*BBBBTTTLRLRBBBLR"
+    ],
+    "5x5dtS": ["..2..,22..2,1.2..,.2.1.,*LRLRTTLRTBBTTBLRBBTLRLRB"]
+  },
+  "map": {
+    "20x15n30de": [
+      "hbabaaaacbbaaaaafacacbbaeadabbabobaabaababiddaaacadabaabgaaabcbbaabbaaeaaacabebdbafabacacafbbabbgaabcababaecdakaiaeadbcbbcdbaabacaabbbbaabebabeabbbbaadadabaaaaccaaeaabadacchdcaafdacabagdbcbbbadacbbbabacdhbadaeddaecabfgbbcadbeaaam,0a3a01a233a10d2c020b1b3"
+    ],
+    "20x15n30dn": [
+      "gaibaadebaacbaaabbecfaabfgdecbabaabagbdadafacaacaebabbcacadacbbabacaaedabbdaeabbaaccdcaakbaamadcgaoacadcmbgacaabcababbabacdbaedahaffceebaaacdbcaabbbcbjbcaeaeaaaabaaecbdacbbbadcgabbbbbfgbeaaagbcbaaaadaaafbca,320b230b3b2a01a1d2a31b1",
+      "aadacgabdbacebaacbfdcbbaaaccaccaaaaebakaabbbabcaaagaaadacaaaabdbabfaaabaaebgiajbbbcaabiaaccaoafbbaeabababaaabaaadababciaebbaacaaaaeaaagbgacbcacaaccaaaaccbaababacbbbecbcdcbadabagagbdaaabalbabcdacdafagbaeaaadagbaaacaibcabadefbb,1b0a3a2d3a3b0a2b22e0"
+    ],
+    "20x15n30dh": [
+      "aabaaaababiacacacbgaabbacanaafhababadeaaabcadbccaaaabbaabbabehacdbdaebbabacafacaadjadbccdcaaebfaabgbiagaaaaacadacbeacdeabbaafcbcaaadbaaaeacaaaaaabbaeaaacbfaeabaabaaddbabbdacbaacchafababbafbaabdacaeaadbaabbebabagcbbgababbiaaacaeabcd,a2a12e1b32b30c3a321012"
+    ],
+    "20x15n30du": [
+      "bcbababaccaaaagcbadchaabaaabheaaabbabkabdbfbaacaifbbaaaaabfacaibbcbanbgaabdabcaaaabbgacabbaaabccacfbbchajacabfcajabaaffajbkbaacfeabahbhajdbdabcafcabdaaaedabbaabbacaaaaaaehabacaecgacaaaaeaadbaaaacaadbacdefeab,02a3a231e1b1a2b1c2a201"
+    ],
+    "30x25n75dn": [
+      "haaagadalaeaabcafabdabddaaabacdbdcbbaaadbdcaiccbabcabafagcdbgbbbhafadabbabpbcahcbabbbacbebdadaabjaaacabbaabagacadadedabaaaagaaaceaabaabaaadcacaafcccccebbabacadabbcfcadeddabbacaaaaahadabaddacadhaaahcabbaeaacaacaadhbabbadbcceewadaaaaabaccbddaaabaaaabeaehaacacaacfhibcdjaaaiabdecabdcfaeaeabaradbabbabaaadgaaaeabgcaebbaabdacccafcadaadagdaaababcbagadbcbcccdadacaahamaaafadabacdaaacabaabaabfcaaaaaadbbaahaacaadhaabcaaadbbcdeibdaaddiaaaabbiabcdabafafabbdaababaaabcaecbccbbaabaabbaagbaacadaeccacaaagacaccbdbbbfgdaadbeabajagbaaaabgfagbaadegafababaf,21b3210a3a01a1d0b2e2b1c00c3b0b1a20e0a330d023213b3a2"
+    ],
+    "30x25n75dh": [
+      "ebebabdaaadaecbccaadecdabccbbabbhabaaacbeaaaabbaaaecabahaaaadaaababaeccaaaabcbfaabbadccadbbddaaabdcaaaebhabddacdebdahbabcabaabaacdaajbdbbaabbaedcaaddaaaeecacaoaaclaachadbbadcaabdababacbbaafabadacbecabbacaaagbaaeaaaebbaldbaabaaabbaebbabbbbaaabbaadaadaacdbfaabcaabaafedaaacbgdaafaaacaadbagcgadadbgaaaeagaaccaabiefaacdadacadacabaaadabcabdaeaadaaaaeabaaeddbaaabbdcachabadbebideacabhlbgbbfafaacababbeabdkbaadbbaaceaabacbbbaaaeabbabcbbdccaccacabaaggbacaadbaakabccbabbbadbceaabbabbddaacaaagahabaaaiaafaacabcbabadaaadaaccabbcbacaaibaabdbccabbbaeadbcabaccbcdaeacbiaiababbbdabibebebcacbd,23d30h2b1c1a0c0c312c12f0a2d0a11a20d1b112a0a2"
+    ],
+    "15x12n20dn": [
+      "bbaaabcacaacndaabgbaaacbafddbaaadcdaabgccadbabaadabbaacadcbaeabaeagcbagbbbcbdabaaabaabaababaaajbaadaeadacabeaaaacadcaecacaeafdcdhafaacaab,2b0a1a2g3a2b"
+    ],
+    "10x10n8dh": ["cbgbccefbdaahaabgabbeadembiabcabbbfabapbbaiaabeaaaacbag,a3a03201"],
+    "25x20n50du": [
+      "caebiadabbaaaabdbcdbdaaaebfadbaadbbagddbaafgecdacbcbadaaaafbhahdabbbeabaiabbcdcgaecbbbcdccbbabdaacjbaaaabbaadabadabaaaabdadbfbaaaaeabbbgaabahbfabaaadecacaaaabgcahcacacbcacegbibedbafaccaeaabcbbcaabaadeabbbabeaeaaebcnabeabcaedbacaabbabcbadabaabicbbaaccbcbbabhgbbafcadbbaaaidbaaaabaadafavagbcacagcbcacbaeahcabbcbaaadbccfcaahbbbdadbdaaaibbadadffbfacbfag,20a31a2a02g1g2f11d1e01a3a2"
+    ]
+  },
+  "mathrax": {
+    "5de": ["u2c,cS1aS0bS0S3bS3aS2a"],
+    "5dn": ["j1c4j,S1dS2bS2eM4a"],
+    "5dt": ["f3f1k,kS1S0S3b"],
+    "6de": ["i3z,aD2bS1bA7A6bA9aA5aS4bA8A7e"],
+    "6dn": ["j6y,A5A9hA8cS3aObA8cS1a"],
+    "6dt": ["zj,bS1A6bS2S3A8S2dA8bS2A7A10S2d"],
+    "7dn": ["g1r5k5j,bD2cA7eS1eObS0S3aS3cS1aM12aObA8"],
+    "8dn": ["f3zg6a35a2i6h,eD2aS4aEkA10S1eD2bA10aA8fS3dS0S1b"],
+    "9dn": ["h5t4a7c2a8c7e9q5d8c6c3b,eA10D3S2aS3iOcM18eS2gS1aOS4aObS2nOc"],
+    "3de": ["a3g,A4c"],
+    "3dt": ["a1e2a,cA4"],
+    "4dn": ["a1g4f,aS2fS2"],
+    "7dt": ["t6i1r,dS2aA8D2S1OkA10bD3bA9bS0aA9S0b"],
+    "8de": ["f1v5j64b1p4b,S1OeD4bA9eS4dA11A9jS4aS3fS4A9aS2bA9"],
+    "9dt": ["v8q5zf9d7b,fOaS5eA11fM12fOaM6M12A12A13dS0aA10aS2dObA9S0dS0g"],
+    "6dnA": ["d3k6b5c6b62c1a4b,bA7uA7"],
+    "6dnS": ["n6j2d3e,aS1S1cS2cS1bS2eS1e"],
+    "6dnM": ["a3c5b1e2h6c2b56c3,iM12o"],
+    "6dnD": ["b16a2a6a3e43a4b2f1a34b6a,y"],
+    "6dnE": ["3a65d4b62b6c1c25g5a1a,y"],
+    "6dnO": ["5d12a5e6c612a4e3b2d,wOa"],
+    "6dtAS": ["j4y,A5gA8fS4S3cA10aS1b"],
+    "6dnMDE": ["d1b4j1a25e2g2,D2hM12lD2b"],
+    "7deSMDEO": ["b15k34b7n3c3b1e2a,S0S1mD3aS2dS2aOaD2i"],
+    "5dtAO": ["g1q,iEA5aA8c"]
+  },
+  "net": {
+    "5x5de": ["19818ad2d3a6bec35b4185774"],
+    "7x7de": ["3413e5837e5be363ed22416969428165b7337bb5d81347262"],
+    "9x9de": [
+      "38119b4c8745aa56d29799b9c611db4b7d719bde71233578acdeac8e154c514c94e68ee3845592b38"
+    ],
+    "11x11de": [
+      "11ec6528c249945bc14a7c47dd5873ae4791cb4e5de2a2ad777688818dbcd1aab3457267bbeb917b6ecb89ea3b5248a33458a51eab3e258612925ad88"
+    ],
+    "5x5wde": ["19d7aaae8449d5636cad43c44"],
+    "7x7wde": ["721642cd7cdd34a11a3a79c2bbc4d72de5665ee4844ac6a21"],
+    "9x9wde": [
+      "d48a4855ca2a65a81823a87b14a87e5b38aa17b4edd6e1628e17851228b9dad7ebee8b8521d7b3b95"
+    ],
+    "6x4de": ["2912d8cb27981767d6857994"],
+    "13x11de": [
+      "4853361c83ae87d496a9dde29283ac27d32eec2475ec7e2531cb892d61beeae4813a817dcb3288cb7ec9d89b5d9c91a69b5c9ed64c6395e83164a2c4572726546c1e55627eb5864"
+    ],
+    "5x5b0.5de": ["2h6v3411v6ev2b7e77d8v5v85va16ccv4"],
+    "9x9b0.25de": [
+      "2v2v84b4928abd451v72h5av1v9hbav554b9b79ad7e9977aee4ve228hdd4he9h3h1h9a3h54h7a38a19badceb48bb14442"
+    ],
+    "8x6wb0.3de": ["35647dv2v2v38d14dcv92v2ebdb2v13h5h6bdha7949dda44vhb2hba2v811bv"]
+  },
+  "netslide": {
+    "3x3b1": ["4v6bh8ev98v23"],
+    "3x3": ["61c974583"],
+    "3x3w": ["e824b29d2"],
+    "4x4b1": ["ch2h5hcahev7199hev12v56v1"],
+    "4x4": ["1781846a137cdc75"],
+    "4x4w": ["94966d9652e1d143"],
+    "5x5b1": ["bvdh57h4h5vcv2b3av2hevdvh4he9h2v4ah1v1887"],
+    "5x5": ["e11a9e3e6611e25789ca791c4"],
+    "5x5w": ["b9b7859d747d5428237445449"],
+    "5x5b0.5": ["ec2v822h6294hbceehbh63h8b11vd1cvb"],
+    "6x4b0.3": ["1h2166h57ca9cd4d1hav514b653d"],
+    "4x6b1m25": ["ev94h6hbv1vah23h8v94h59h7h4c7vh1h5eacv3"],
+    "5x5wb0.75": ["8vh1hc63h4hch5v1heh5h5h7h71h1vdh14hd5v7heh51"],
+    "2x2b1": ["ch116"],
+    "7x7wb0.2m60": ["725b815he56b1941d171h4vc4vh2b55h1e582c5ccbvae6h384671hedbbh"]
+  },
+  "pattern": {
+    "5x5de": ["4/2.2/2/1/2/2/2/1/3.1/4"],
+    "10x10de": [
+      "3.4/3.6/3/3/3/4.5/3.3/3.3/1.2/1/2.4/2.3/2.3/1/3/5.1/6/2.4/2.4/2.4",
+      "7/1.7/3.2/3.1/1.1.1/3.3/6.2/2.1/2.1.1/1.1/3/1.3/3/4.2.2/7/4.4/2/2.1/3.2/7"
+    ],
+    "15x15de": [
+      "5.1/9/4.6/3.6/1.2/2.1.1.2/1.4.1.1.2/2.9/11/3.3/3.2.2/5.1/5/5.2/6.2/2.1.2/3.2.2/4.2.3/4.1.3/4.3.5/1.4.2/11.2/3.6.2/4.2.2/2.4.1/3.4/9/1.1/2.2/2.2",
+      "8/4/7/2.1.4/3.6/1.3.1/2.3.2.1/3.2.3/2.4.2/2.2.2/3.1.6/6.1.3/6.4/2.1.2/2.5/1.7/1.7/3/1.5.2/1.1.3.2/1.1.6/2.2/3.2.1/3.2/5.1.1.1/1.1.2.1.1/5.1.3/6.3.1/3.8/11"
+    ],
+    "20x20de": [
+      "1.1.4.3/3.1/3.4/2.1.3.1.1/1.1.1.2.1/1.1.2.3.1/6.4.3/8.8/7.6/10.3/4.1.2.3/4.1.2.4/8.1/5.3.2.2/1.3.7.2/1.1.7.2/2.1/3.1.5/1.3.2.4/2.7.6/2.1.7.2/1.12.1/1.10/1.10.2/4.3.2/2.10.2/2.5.1.1.1/4.7.3/1.2.3.3.3/2.1.3.1/1.1.2/1.2.3/4.4/1.5.3/2.4.3.1/1.2.3.1.1/1.4.1.3/6.4/3.2.3.3/6.3"
+    ],
+    "10x15de": [
+      "3.4.1/3.5/1.3.1/4.3/8.3/8/6.1.1/2.1.1.6/2.1.4/1.2/1.6/5/3/2.3/2.4/2.6/3/1.5/3/3.2/3.1/2.2/2.2/3.3/1.2.3"
+    ],
+    "15x10de": [
+      "2.4/2.5/8/4.1/3.2/7/4.5/5/3/1.2/6/5/3/1/2/2.1.3/2.1.2/1.1.3/5.5/4.4.1/10/4.4/3.4/3.4/8"
+    ]
+  },
+  "pearl": {
+    "6x6de": ["dWbWWcBaWaWdBhBbBaB"],
+    "6x6dt": ["aWWmBaWBdWbWeWaB"],
+    "8x8de": ["dWdWWbBfWcWfWhBaBWaWWeWaWWBbBd"],
+    "8x8dt": ["BcBBjWeWaBaBBbWeWdWaWeWeWaWcBb"],
+    "10x10de": ["BdBBeWaBbBgWeWaBcBaBbBaBhBaWdWfBaBaBfBaWWbBBn"],
+    "12x8dt": ["cWWdBcWaWiWaWaBaBiWaWcWBaBBaBcWgWWaBoBcWbWBbB"],
+    "7x7de": ["fBWWfWWBkBbWWaWeWdBb"]
+  },
+  "rect": {
+    "7x7de": ["f6a4e2b6a3a3b3b2_2d4c5b2c4a3b", "g3b6a4_2c6d2a3d2_2b4_2a6a2h3_2"],
+    "9x9de": ["a3b6g4a4_3d3_3c3_3b6b2o2g9a3_12f8c2_2b3f"],
+    "11x11de": ["b3p12d2a4j3a8_2b2m18i18b14e2j2e5a2b2b3b4c2_2_8g3b"],
+    "9x7de": ["6e2c5d2b3b2c5f3_2a6_10d3e2_4b2b2a2d2a"],
+    "6x10de": ["h2e6_6a6_4h4b4h10a4a8l6c"],
+    "5x5de": ["2a2b4c4c3b2b3a3a2a"],
+    "8x8e0.3de": ["a2a5c2a2h2b8j6_3c10a3d5g10e6e"],
+    "10x10e0.5de": ["a3c4b3g2_3f16_12n4i4c5b3g21m8h4a4e4c"]
+  },
+  "rome": {
+    "4x4de": ["a2a2b4c3a,aRXcLLURUbLaU"],
+    "4x4dn": ["2b1a5a3bb,XaLbLULRaLe"],
+    "4x4dt": ["2c1aaa2b5a,RXeLRDaDd"],
+    "6x6de": ["aaa1aa4a1a2a1ab7b1ac7a3a,aDaLRcRaDbULRbRcDLaXLUbUaUaRa"],
+    "6x6dn": ["baaba1ab2a1a2b11a1ab6a2a,bRcRbLRaRbRcRaUDLRcLLXcLa"],
+    "6x6dt": ["a1a2aa2a1aa1aa3baa6cba3a1a2,gLRbUbXRcLaLcUDbUaRcL"],
+    "8x8de": [
+      "3b7a3a3aa1a1a1c1aa1a2a3a2b3bba1b4aaab12a2c1aa,eLDLUDaLXaRbLRaDeUaLaUUbDaDaLbUaUaURcLbRDaURUe"
+    ],
+    "8x8dn": [
+      "1a1aaaaab1a2aa3aa16a2ab1a10a2a1ac1ba1aaadaaa1a1,aLcLRbRaRaUDaRbDbLDaLbRdDcLDUbLDaRaLdULaLRbXbLa"
+    ],
+    "8x8dt": [
+      "a1bba1a2b1b1a2aba2aba3aa1a4a8bb3b2a3aa9a1a1b1b,RdDcLDaLDcXaDbDaRbRaLbDaLUaUDaXLUDUcRbLeLUcUL"
+    ],
+    "10x10de": [
+      "5a1a1a1a1aa1a2b1ab1a6b4a2ab1aa1a2ba3a2aa1a1ca1a5ab2aa4a1a3b2d4a4aa5a4bb6b1b,cXaLaLaLDRaLaDbLDbURRaLbLaRDUDbLdRRDUbRDaUbLDbXaXaRaRcLDRaDLDcDaUdDRaRaURaRbLc"
+    ],
+    "10x10dn": [
+      "a2ba1a4a1a3a1aa1aa2a1aab2a1c2aa3aa1aaaa8a1ab10ba1ab3a3c3aa2a5c4b2ab3b1aa1a2a,fLDaXRaLRXLDbLXbULRbLUaUaRDaULDcULbRbURaDaUbDaDaLaURDaRcDUaLaULdDdLDDXUbUaLc"
+    ],
+    "10x10dt": [
+      "aa2ab1a9aaba4baaab2b2a1a10a10a1a1a4a1ab1aa4a2a1b5b4a4a3a4baba1dab2aa3,aRaRaRaRDbDDLRaDUdXaDUcDbLRdUbRaLRaRUbDaLcUDUDbURUbXcLcDRUbXcULUUaDRaRbRaLb"
+    ],
+    "3x3de": ["3b3aa,XaLaUaRb"],
+    "3x3dn": ["ac5a,bXRcLa"],
+    "3x3dt": ["2a3ba,aDfX"],
+    "3x5de": ["1a1a3a2abaa,DaLaXaUcLd"],
+    "5x3de": ["a3b3b2baa,bDXcLbUcU"],
+    "3x7dt": ["a1c1aaca4aa2a2,cUcUaXcUDaLcL"],
+    "7x3dt": ["a1ba3c9a1d,hUbUaDcURaX"],
+    "4x7dn": ["a1a4a1a4b2b1aa1a4aa1b,aRcDdUbUcRXaUfU"],
+    "7x4dn": ["ab3ba1a2a1a1a6a1a1a3b,bLbDDUcUcUaUbUaLXaLb"],
+    "5x5de": ["3a3aaab2aa2aaa5b1,RaXfURaLcRbUbLUa"],
+    "9x6dn": [
+      "2a1a1a6a1aab1a4a2a2b3b4c1aa5a2b4bc3a2,aXDRDaDRaDUaDaDdLRRbDaUaUDLeRaRXcLUeRRaU"
+    ],
+    "6x9dt": [
+      "1ac2aa13b1aa6aa1a6aabab2a2ab5aaba1a,bRcUaLLDdDaDaRdRUaXDUULcDbUbLUaLaLg"
+    ],
+    "12x12de": [
+      "aa1a1aaa2a4b7baa12aa1aaaa3ba4aa11a19a1aa1a4b1ba1a1a1aa1b2b6c1a1b2aa6a5b4a1ba3ab3a1abbcd1b8a1bb2a2,aLeRaLfLUaDRaLDbDRaLUbLRbDLUaULUaXaLDRDXaLaLaDUDaLbRaLRgLULbLUDbLbLRUDURDbURDbDaUUbUdUaLULULRbUaDLUDaLUaRURcRcL"
+    ],
+    "12x12dt": [
+      "2aaabaa1ab3a3a2a2aa1a1aa5a3a8aaaa5a1aa1a2a2aa5bb1a1a1b2b2bc11b2cb2a3a2aa1b4a1b2aa5aa1a2c2b1b6b2b7ac2a1a3a3,ReRaLbDbDbUaLaURaDLaDULfRaLaDUaLUaRcDdDLULcLUaRUbLUbLXRUaRDLdDaLDUcLUDbUDRDLUXLDbLDRDaRaRaLcLDcUbLbLfRc"
+    ]
+  },
+  "salad": {
+    "4n3Lde": ["CaCbAfBaAa,p"],
+    "4n3Ldx": ["aBcCcAbAbB,p"],
+    "5n3Lde": ["cAABdCaCdCCa,y"],
+    "5n3Ldx": ["aBbBaAcAbAaCcB,y"],
+    "5n3Bde": ["d1cO32b3aXa1d2b"],
+    "5n3Bdx": ["bOa1X2bX3f1Of"],
+    "5n4Lde": ["aAdDaBCbDBbACb,y"],
+    "5n4Ldx": ["aCAfBCbDcBBa,y"],
+    "6n3Bde": ["hX2aXaOa3OdOc2c3aOOaOa"],
+    "6n3Bdx": ["aObXb32bX3f2OaOa2aXg3X"],
+    "6n4Lde": ["aDaADcDeCBCeAA,zj"],
+    "6n4Ldx": ["bADAbAaDDaCaBACaDaBBb,zj"],
+    "6n4Bde": ["c24X2Oi1Ob43c1bXc3b"],
+    "6n4Bdx": ["a3b2bO4Xc13bObXXg34dX"],
+    "7n4Lde": ["bCBCaAbDCDDDDDAaAcBbCb,zw"],
+    "7n4Ldx": ["aBaABCaCCABaCbAaCaDDaBbDb,zw"],
+    "7n4Bde": ["aXa1aX3aX4a1aXOb4c4XbXaXdXaXa1g3d"],
+    "7n4Bdx": ["b4b3a4OaOd3a1cO2fXaX2aXb1aXf42a"],
+    "8n5Lde": ["cECaBCCBAaCbDbDCaCbADaEaCaB,iBjXXtXfAaXl"],
+    "8n5Ldx": ["aDaBaCcDaEaEDaCAEAaAcCAAEBaE,qBdXfDdXCeXiAl"],
+    "8n5Bde": ["a5XbXbO2aX1cXa43hXa2bX2c31c5aXXa4a1XbXXcO5aO2"],
+    "8n5Bdx": ["Xa2aX5X11aX2XXd4Xa1XXXb31bXa5mXXbXbXa2cXb5"],
+    "3n2Lde": ["cBcAcA,i"],
+    "3n2Bde": ["b2Ob2b"],
+    "4n2Bdx": ["XbOc2X1f"],
+    "7n6Lde": ["aAaBFaBDaAaCDaBCCcDaFaADb,zw"],
+    "9n5Lde": ["DaEAbAEcEEaBAcCbDDcBEBaDAaAD,aDaXzaXaDcXdXeBjXCfXfCXe"],
+    "9n8Bdx": ["a4Xc8233Ob7a14d6a1X5773b4a5a6a6a21e16b3g2a7a1c46c2c8cXa"]
+  },
+  "samegame": {
+    "5x5c3s2": [
+      "3,1,3,2,2,3,1,3,1,2,2,3,2,2,3,3,1,3,1,2,1,3,2,2,3",
+      "1,1,3,1,2,2,1,3,2,3,2,3,1,2,3,1,3,1,3,1,2,2,3,2,2"
+    ],
+    "10x5c3s2": [
+      "2,1,1,2,3,1,2,2,1,3,1,2,3,1,2,1,1,3,1,3,2,1,1,2,3,3,2,1,3,2,1,3,2,1,1,1,1,3,2,1,2,1,2,3,2,3,3,2,3,1",
+      "2,1,2,3,2,3,2,3,2,3,1,1,2,3,1,3,1,2,1,3,1,2,3,2,2,1,2,3,2,1,2,3,2,3,1,3,2,1,2,3,2,3,1,3,2,3,1,3,1,3"
+    ],
+    "8x8c4s2": [
+      "2,4,3,4,3,4,1,2,4,2,3,1,3,4,1,2,4,3,1,3,1,3,2,3,1,3,4,4,1,3,2,3,1,2,3,2,3,4,3,4,2,4,1,2,1,2,1,1,4,3,1,4,1,2,3,4,4,3,2,2,3,4,1,1"
+    ],
+    "5x5c3s1": ["1,2,3,1,3,1,2,3,2,1,3,3,1,3,1,2,1,3,2,2,2,3,2,1,1"]
+  },
+  "seismic": {
+    "4x4de": ["11bafa,d4c1f3", "2a1a1cd4aa,b3m"],
+    "4x4Tde": ["a9bi,a3c2a35a4b3b"],
+    "4x4dh": ["2a1a1a1aa1b1d,j4b4b"],
+    "4x4Tdh": ["f1ab4a1ab,a4h1b3a4", "abacf3a1,a2a13d1f"],
+    "6x6de": ["2c1aa4aaa6bb4aba2a1aba3a,g2b5l3l", "1a4a1aa2b4a1aab1cc4a5bd,f2m2n1"],
+    "6x6Tde": ["b1bac1b1aaac1cc2a1b1a2a1cc,2b4c5a1h2a1e3a5a1d4"],
+    "6x6dh": ["2b1a1a3aa2a2a1bbaaa3a1bab1a4,zj"],
+    "6x6Tdh": [
+      "aa1aa3abb2ccg2a1cb4b2a,3a2i4b5a3b2c4c3c1c",
+      "1baa1ab1aac1bfc2aaba3da1,c3c1d4a3a41g2d4b21a"
+    ],
+    "7x7de": ["1a1aa1ba1b1aaa3caaaa1aa1b2a2b1b1bab6b1aa,d5i1k45c6k3e"],
+    "7x7Tde": ["a1baba3aa2a1aa1aa1ab1d3a1a1abcaac2a1ae,3f54b4a5m1b1e35a2f5b"],
+    "7x7dh": ["bbab1a2c1b1a2cabc6caa7aaa6b6,zw"],
+    "7x7Tdh": ["ab1a1a1aaa2aeababba2g1cb3a1b6cd,2b2f3j5h5a2a3e41a5b2b"],
+    "4x5de": ["1d1a1a1b4ba1d,f5b1d2b4b"],
+    "5x4Tde": ["ca1cca1ac5b,2a4d1d2f3"],
+    "5x5de": ["1bba2b1a1b5a4ca2,w1a"],
+    "5x5dh": ["a1a2a1a2bcf2d5,c3b3c1b4i1a"],
+    "5x5Tde": ["3a1ba1a1bac2a1bbba,2c2d345c1g3a"],
+    "5x5Tdh": ["a1ba2a1aaadbb1a1f,5c213d5e2a5a3c"],
+    "6x4dh": ["4bb1b5aaaa3aaa1a,e2d4m"],
+    "4x6Tdh": ["1ca1a1aa1cba1e1d,a54b2e11h53a"],
+    "7x4de": ["b1aa1a1a1a2a5a1dba1ac,f3f12c3f4b"],
+    "4x7Tde": ["eaa2abd2a1a1a1aad3,b3b2a5h1c2e4a"],
+    "6x5de": ["a1a4ab1b2a1aaba10a3b,zd"],
+    "5x6Tdh": ["2da1baba1b1aba2aa1a2bc,c2d3a4f4b2c4b2b"]
+  },
+  "separate": {
+    "4x4n4de": ["BCDADDDCCBCBAAAB", "BACDBADDCADCCBAB"],
+    "5x5n5de": ["ADEBCADEEEEDAAACCDCDBBBCB", "AECBBDECBDADCEAEDCBAEDCBA"],
+    "6x6n4de": [
+      "BACADBBDCCBBAADABADCDACDCCBDCCDABBAD",
+      "DACADCBACCDBBDCBBCAADBABCBDCAACBADDD"
+    ],
+    "6x6n6de": ["BFAFBAEFCEDDDEEACDCDFFCACBBBCEABFADE"],
+    "5x4n4de": ["DDCBDAAABCBBCCACBDDA"]
+  },
+  "signpost": {
+    "4x4cde": ["1edegeebfbdag2abc16a"],
+    "4x4de": ["d5gg1fdb16agcadachag"],
+    "5x5cde": ["1ce2fee12ccf14bfcedc18ebcaghacag25a"],
+    "5x5de": ["dgcgeeec3e25acbagge23cghaab1a4hg"],
+    "6x6cde": ["1ce16eecgcghefecaaee26gecgc29aacghgaeccbb28a36a"],
+    "7x7cde": [
+      "1c20ce19gge2eecc5da45e36fc18bcdfaebc32feega4bce40h12abgbbhcg26haaa15ga23gg49a"
+    ],
+    "2x2de": ["c4a1ch"],
+    "3x4cde": ["1cefcdecagag12a"],
+    "5x7de": ["cegffdd24ee3gbbcfgdah14ehbde22b18ab1g29ahec35abga"],
+    "6x4cde": ["1ccdcfedeggf4gbfac14gebhcca24a"]
+  },
+  "singles": {
+    "5x5de": [
+      "1151314235223534532154432",
+      "1212544523152542355124322",
+      "1143211524253544234543255"
+    ],
+    "5x5dk": [
+      "4353412353523214122534145",
+      "1512431223541323351153411",
+      "3241153512211151532455213"
+    ],
+    "6x6de": [
+      "623116664122451663262364316342255611",
+      "624621416231342554243552215216521623",
+      "552444451235514654614155246213622464"
+    ],
+    "6x6dk": [
+      "626344334416263621316124153163165431",
+      "416654352626153145642515423136631366",
+      "211254652411665442511231463165342523"
+    ],
+    "8x8de": [
+      "7862641444557761521568485347412531514571478127467672325827362554",
+      "8675351158814776258817524713626225457438183454311427615383344186",
+      "2244366848671256268628173511868412164332143158767124628131577312"
+    ],
+    "8x8dk": [
+      "1645824378866531235725113664743221745856177351586838134564386337",
+      "5156843722147664183825322435168353512142658134244743322848466351",
+      "7655834372556372258741272874751235431645143728535624716111636727"
+    ],
+    "10x10de": [
+      "a23a63988914781529a6285a96628a96a24835731351aa8857a83251626a27952a1693539115493a39478611655543949a12",
+      "36915a27146352a618831255587a9793a362716865782478a5a21933856269a68837722a8736a389443a7569213122978631",
+      "68a39842a32414886253964aa217188669a3544a92315a289aa38891277934a9378955358a6641485a9864a4827a66831535"
+    ],
+    "10x10dk": [
+      "342786a862a7634514791369655319759146a1a31385823a9179795a8811579154918222a6938543421a1997289956187326",
+      "76947a841aaa217418319463127758637139271a873565829719783137a638145aa9844485a6517117a2985489a64493a682",
+      "653a126717a798156658aa7891574213816a465a814567214652a176a58624755a89615619a51977881a23a4956132817338"
+    ]
+  },
+  "slant": {
+    "5x5de": ["c1c3a2a01a3c02a1b1c3d1b"],
+    "5x5dh": ["a11f12b3131a222c1b12b1d"],
+    "8x8de": ["b110c1c2b2c22c21b3a14a2d2113a12d1b21a2a322a2b22e10a2a01a0a"],
+    "8x8dh": ["b1d1b332a2b1a2a2332a1b23a2a3e2a3211c21d33c3a1b32b21f1c"],
+    "12x10de": [
+      "b2c1a11a0a0b2d213c2a4b231c1b311c3311a13g21b2c3a32b3a2b3b13a3a3e4a1a2a12c2b1b2d10a2e32b0a0a0b0c2b"
+    ],
+    "12x10dh": [
+      "a1e11f223a3c21b2b1b1a231a11a11b11a3c2a1a122c2b22c1d11a2c1a21a1b1b231b2a11c11e3d1a1123a21221b1c1d1a"
+    ],
+    "2x2de": ["d1a1b"],
+    "7x12dh": ["b11e2d4a1a1132c2a1a1d2b32b331a3c2a13a2f21b11b1c31a1311a1b3a1a1b22h11a"],
+    "10x6dh": ["c1a1a1d3b313213a1b2b23a2b323a22122a11a1a3b3b1a2a11b11e1a1d"],
+    "16x12de": [
+      "0c111a10b12a1d3a2b2g1a3b1a22124a3b3c22a113b13a322a0c122b2a2b2312b23a3a1a1a3a21a1a23a2a3b23b1a2a13c3a2a1222a211c32a13a32b1b1a33a22311b1331c2a2a11g2b2e22a3a3a31c0a0c1b0a2c"
+    ]
+  },
+  "slide": {
+    "7x6m25": ["w8md1a2d1w2d6d1ad1aw2a4efewad7d1aefew7,5,3,24"],
+    "7x6u": ["w8md1ad1aw2d6d1ad7d7w2a3d1efewad1a2efew7,5,3,47"],
+    "8x6u": ["w9md1a3d1w2d7d1ad1d7d1w2a2d1ad1efewd8a2d1aefew8,6,3,62"],
+    "5x5u": ["w6md1aw2d4d1efewa2efew5,3,2,6"],
+    "6x5u": ["w7md1a2w2d5d1aefewa3efew6,4,2,11"],
+    "5x6u": ["w6md1aw2d4d1aw2a2efewad5efew5,3,3,14"],
+    "7x5u": ["w8md1ad1aw2d6d1a2efewa2d1aefew7,5,2,31"],
+    "6x6u": ["w7md1a2w2d5d1ad1w2ad1aefewad1aefew6,4,3,19"],
+    "8x5u": ["w9md1a2d1aw2d7d1ad1aefewa2d1ad1efew8,6,2,50"],
+    "6x8u": ["w7md1ad1w2d5d1a2w2a3d6w2ad6ad1w2ad1aefewd5d5d1efew6,4,5,158"],
+    "6x5m10": ["w7md1aew2d5d1aefewa3efew6,4,2,10"],
+    "7x5m20": ["w8md1a3w2d6d1ad1efewa4efew7,5,2,20"],
+    "7x6m40": ["w8md1a3w2d6d1ad1d7w2a2d6d1efewd7d7a2efew7,5,3,30"]
+  },
+  "sokoban": {
+    "12x10": [
+      "w13s2ts2fufstw2bsbs2b2s3w2s5ts4w2tfs2bstbstw2stbsbtst2bw2s2ts3bs3w2sbtbfs2b2sw2ts2ts5w14",
+      "w13s2tstbswtw3sbs2ts3bw3s2bsbswsbtw2tbstsbstsw3bvbsbt2bsw3tbt2bts3tw3tbsbswbsbw2tbs4ts3w13",
+      "w13tw5s2fuw2sbsw3s2bfw2s3btwtsbsw4s6btw4sws4wtw3s2bftbsbtw3sbstbtbtw4ts5w16"
+    ],
+    "16x12": [
+      "w18tbsw3tbtbtbsw4s3tbs2fs2t2w2tw2bs5btsb2w2bwstsbs8w2s3bfts3ws2tw3sbs4bfbs2bftw2bvb2sts2tws3bw2tbt2bstfs3ws2w3t2bstw2s3bstw4tbsw2tbsw21",
+      "w18sbt2bsw4sbtw3s13w4sfs2bwtsbsfsw3tbstsfts2btsw4bs2bt3bsbstw4sts2b2w3sbfw6s2btws3btw6s4btbt2s2w4s8btbsw4sbtwtbsbvftw18"
+    ],
+    "20x16": [
+      "w22twtstsws2w2tbsbtw3sb2tb2s2tbw4tst2w2s3bs3bwt2btb2sb2w2fs4ts3t2bstststw2s5tfbsbfs2bs2btw3tbsfs2ws4tswbsbw2twswtbs2tw2tsbs2wsw2bs6bs2tbfs3ftw2s3fs2ws3bs3fsbsw2ts4ts4ws3b2s2w2btbstbtbs3bs3t3w2s3fts2ws9bw2sbs3btbtbstsbfws2w3s3bst2bubtws2tw23",
+      "w21tbvbsw3sbstwtw2s2w3sfs2bts2btw2btwsbw3st2s2fsbtbws2bs3w2sbsbws2ts5bs2wtw2s4btswtwstwt2sw4tbs4twbwsbwsbsbtw3s3bsbs8tw5swsfs3ws2tsftbt2w3s2ftw2btbsbs2bsb2w3sw2tbstbts5bstw3s2w2tbs4w2sbts2w2tsbs2btw2bs8w2bs6w2tbsbtsfs2w2s2twtbsw3tw28"
+    ],
+    "4x4": ["w6uw9"],
+    "5x9": ["w6s3w2tbsw2sbtw2sbsw2tbuw2tbsw2tfsw6"],
+    "9x5": ["w10ts6w2sfsbsbsw2tsbufstw10"],
+    "7x7": ["w8ts2buw2tsbf2w3sbs2w3sts2w3s4w8"],
+    "13x11": [
+      "w14tws3fts2w4bs2bfwtsbt2w2s2bs5btbw2st2sbsfsbtsw2bstfb2ts4w2tbs3ts3bsw2t2sbs5t2w2bs4b3sbtw2s2btsfufstw15"
+    ]
+  },
+  "solo": {
+    "2x2": ["c1_2f4_3c"],
+    "2x3db": ["a2_1b3h3a1b4a6h3b4_5a"],
+    "3x3db": ["d1b4c6_3_7_2a1g2_6a7b6b5_3a6g7a8_2b4b6a6_4g2a5_6_7_4c9b4d"],
+    "3x3di": ["c2c3_7d4_3a1a4_3a9c8a2f4a8b1a6b3a6f1a8c4a2_5a4a7_9d3_9c8c"],
+    "3x3da": ["a4_9a2g6_5g9c2_1_2b4d7_7_5e6_9_1d9b3_9_7c3g6_2g9a7_8a"],
+    "3x3de": ["e9_3e2a4_1c4b5a7_6b7c3_9_5c6c4c8_1_5c3b3_8a2b9c9_4a7e4_3e"],
+    "3x3du": ["b2b7b8b1a2_6_5c7a1c9a4b8c1a1g9a2c9b5a5c1a8c6_4_9a7b2b6b9b"],
+    "3x3xdb": ["9h5c1b6d2a4c7_9a5e6_2e5_4e2a9_7c6a7d5b8c9h8"],
+    "3x3xda": ["b5f9_2c1_4b4a1_2_9_8k2i2k4_1_7_6a8b9_6c3_4f7b"],
+    "9jdb": [
+      "e5i4_3b2_6_7a3b5c5_3e1b2b7e9_8c9b8a7_2_4b6_7i4e,_afb__b__aa___ba___b_a___aa__b___c_b_ciaade____ba____bdbbea_a__bf_"
+    ],
+    "9jda": [
+      "6c5a2d7_2b1e3f5d3_7a8g7a4_3d1f5e1b3_7d9a6c2,cacababaea______bdab_abdb_cdbba__a_d_bcaadbdba__a__dcbca"
+    ],
+    "9jxdb": [
+      "h8b2_8_4b7e6_9a2a9y5a7a2_9e9b5_3_8b4h,b_f_ca__d___a_c_aaa___c___a__b__e__ebebbbl_f_a__bbab____baca"
+    ],
+    "3x3ka": [
+      "zzzc,__aa____aa____a_b__a_a_aaa__a_____aa___a_a____ca__ba__aaa_________a_____aa__a_aa____ab__a_b_a___ba_a_,5_5_12a13a9_9_16b9a13d9_13_8a7_20e12b11a5_13_17a13a7a5b4a8a14_12a13a15b14b15a12a12b18_4_8b15f10a"
+    ],
+    "3x4db": [
+      "a12a5_3d1c2b12b8a3e3a9a2a7b4d3a6f6_2a5_9_11b4a7_1a10_8c11f9c12_7a3_8a7b9_6_3a12_10f11a1d9b4a6a2a3e2a4b9b8c10d3_2a11a"
+    ]
+  },
+  "spokes": {
+    "4x4de": ["1111432442253111", "3341113113311523"],
+    "4x4dt": ["2411161213441311", "1111512222711111"],
+    "4x4dh": ["1211225145631121", "2241147213221411"],
+    "6x6de": [
+      "143221141155338233432231442451144541",
+      "112521216311221471421551421651142122"
+    ],
+    "6x6dt": ["133441357461465563444323237264214312"],
+    "6x6dh": ["151211446512313161444521214661113111"],
+    "2x2de": ["3111"],
+    "2x2dt": ["1212"],
+    "2x2dh": ["1122"],
+    "3x2de": ["331111"],
+    "2x5dt": ["1115222121"],
+    "3x3de": ["141125121"],
+    "3x3dt": ["211271132"],
+    "3x3dh": ["131261231"],
+    "5x3de": ["111334342131232"],
+    "5x3dt": ["111124462221311"],
+    "3x5dh": ["321121162151132"],
+    "5x5de": ["1521134652125132642415411"],
+    "5x5dt": ["1112213381463315226311121"],
+    "7x4de": ["1423521541416144143421134311"],
+    "4x7dt": ["1341424116534341151251121231"]
+  },
+  "sticks": {
+    "7x7b20s2de": [
+      "c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4",
+      "3bB_1a1b5bB3_1b4aBc5c4cB_2b4_1B0b2eB3a3a"
+    ],
+    "10x10b20s2de": [
+      "1a4c2aB1_1a3e1a2B1B0b3_2a4c2aB0a1B2a1bB1BBBBb2c4aBBBBB0_2b2Ba2B2c3_1b3_1_1aBB0b5d1cB_2c1a1a",
+      "B0Ba2_1aB1b1bBa2c1bB3a1bB2Ba1_1B1a1_1_2d2bBa1b1B1B1_1a3bB3_2_2a2b2b1aB1b1BB2b2aB2a1_2d3B_2c3B3b3aBB"
+    ],
+    "5x5b20s0de": ["c5aB0B1d1_1B1_4a4cBa1B1a"],
+    "6x4b30s1de": ["B1_1c3_1_2aBB_2b1B0B1aB_1d"],
+    "8x6b20s2de": ["B1a1B0a2eB_3cB2c4b1a2_1b3aBa1bB1c3a1aB0_1_1B0"],
+    "7x7b20s3de": ["B1_1a1bB1c2_1a1B2a1cB1aBcB1aB_2a3a2B2b6c1Ba5cB"],
+    "7x7b20s4de": ["b3b3a2_1B_2a1b2BaBB1c1b1_1aB2B0aBa1b3aB0b3c2a2"],
+    "8x8b50s4de": [
+      "a2bB1BBaBB0B1a1aBaBaBB2aB1B_3B0bBBB0dB0BBbB0aBBaB0B0aB_1B1b3BB1BaBBB0b1a"
+    ],
+    "5x5b60s0de": ["BBBBB1B1a1B_1BB1Ba2bBBB1B1_1aBa"],
+    "4x4b20s2de": ["a1aB0_1a2_1a3a2B0a2a"],
+    "12x5b25s0de": ["1cB1B1_1_2a2a2b1a1B3bB1bB1B1_5B3aBb4bB_1d2BaBaB_2_2B0a2b2B2aB0c"]
+  },
+  "subsets": {
+    "4x4n4de": [
+      "13R,_,_R,2D,_,_UD,_R,_,14D,5,6D,_U,_,_URL,_,9",
+      "_R,_,12DL,_D,_UR,10UR,_,_,_R,_,_,_L,3,_U,4,_UL",
+      "7D,_RD,_D,3,_,_R,_,_UDL,_U,10U,_UL,_,12,_,_,11UL",
+      "_D,13,_R,_,_,_URDL,14U,_U,_RD,_,5D,_L,_R,_R,_,_L",
+      "_,_L,_,_,_URD,9,_RL,2,_RD,_R,_,_U,8,1,_UL,13L",
+      "_,_,14L,_D,_R,_UD,_URDL,_D,_D,8,2,_,_,_L,_U,3U",
+      "9D,_,_R,_,_,_L,_URDL,3UD,_D,11UR,_,1,_,14R,_,_L",
+      "14,5,_RDL,_,_R,_,7,12,_UR,_D,_D,_DL,_R,_,_L,_L",
+      "_,_RDL,13RD,_,14,_,8D,_,_D,_URDL,_,_L,_,6L,5U,_",
+      "_,14DL,_RDL,2,_UR,_,5R,4,_R,10R,_,_D,_,_,_R,_",
+      "11R,10D,7,_DL,_,_D,_,_,_UR,_,5L,8,_,12U,6,_U",
+      "_,_L,_,6,_,5D,_L,_D,13R,_,10L,_,_,_URL,_U,9"
+    ]
+  },
+  "tents": {
+    "8x8de": ["bcd_geddcjfbb,1,2,0,4,0,3,0,2,3,1,2,1,1,1,2,1"],
+    "8x8dt": ["_bhbj_jjaacad,1,2,2,1,2,1,1,2,1,2,1,2,1,2,1,2"],
+    "10x10de": ["_d_ape_b_cccgfalbbdbg,4,0,3,1,3,2,2,2,0,3,3,1,3,1,3,1,3,1,3,1"],
+    "10x10dt": ["bfgb_eac_fcpeao_aa_ea,3,1,2,3,0,3,1,2,1,4,1,3,1,4,1,2,1,3,1,3"],
+    "15x15de": [
+      "aefbbbcadcfjic_cfgbgebcchiceaeeaf_afbdhmaaabab,4,1,5,2,4,2,4,4,2,4,0,6,1,5,1,3,3,4,2,2,3,4,3,2,2,3,4,3,0,7"
+    ],
+    "15x15dt": [
+      "facdadd_egbhda__acdhlaafcdahbeadtcaeicbhh_cd__,3,2,4,2,3,2,3,4,3,4,3,4,2,3,3,5,2,4,1,6,1,5,1,4,2,2,4,2,2,4"
+    ],
+    "4x4de": ["cdcc,1,1,1,0,1,1,0,1"],
+    "6x9dt": ["aiaf_bdijb_,2,2,1,1,2,2,1,1,2,1,1,2,0,1,1"],
+    "12x8de": ["cfbdbem_b_a_fmccef_c,1,2,2,1,1,2,1,2,0,4,0,3,4,0,3,2,3,2,3,2"]
+  },
+  "towers": {
+    "4de": ["4/1/2/2/1/4/2/2/2/3/2/1/2/2/1/3", "2/1/2/3/2/3/2/1/2/1/2/2/3/4/2/1"],
+    "5de": ["2/3/2/5/1/3/2/2/1/3/2/1/2/2/4/1/3/2/3/2"],
+    "5dh": ["1/////3////////4///2///4,h2p", "2////1/////2////3/2///5//,a1w"],
+    "6de": ["1/3/3/2/2/3/2/2/3/4/1/2/1/3/3/3/2/2/3/2/3/1/5/2,a4c1d2b5f3o"],
+    "6dh": ["2//3//2//2/2/2/4////2/3//3/////2//,q3b4l2b"],
+    "6dx": ["///4/2/4/2/2/2//3///2///////3/3//,t3d1d2e"],
+    "6du": [
+      "//3/2/2/2/2///3/1/5//2////////2/3/,g3f1u",
+      "2//3///4//2//2/3//3/3//////3//4/2/,n1u"
+    ]
+  },
+  "undead": {
+    "4x4de": ["4,4,1,aRRaLRaLdLbL,1,0,0,0,2,1,1,3,0,3,3,0,0,1,0,1"],
+    "4x4dn": ["3,4,1,bRLRbRLaRaLaRa,0,2,1,0,0,0,1,1,2,0,2,0,0,0,1,1"],
+    "4x4dt": ["3,3,5,dLcRaRcLR,3,3,2,4,2,4,4,0,0,0,3,4,2,0,0,2"],
+    "5x5de": ["3,9,2,LaRaRbRRLhLLaRaLR,0,5,0,3,0,0,0,4,2,0,0,0,3,0,1,0,2,4,2,3"],
+    "5x5dn": ["6,6,4,gRLRRaLaRRfRRa,2,2,1,0,2,2,0,2,3,0,1,1,0,2,3,2,2,2,3,2"],
+    "5x5dt": ["4,7,3,LbLRaLeRaRcRLaRRRa,4,1,3,0,0,0,3,0,0,1,1,1,1,0,4,3,6,2,3,1"],
+    "7x7de": [
+      "16,10,9,bLaRLRdRLnRLRbLReRbLcRb,6,4,0,3,0,0,0,7,0,0,3,2,1,0,0,2,2,3,7,7,0,0,6,2,6,0,5,6"
+    ],
+    "7x7dn": [
+      "7,15,4,bLLLRaLaRRRRLdRRaLhRRbLRaRRReRLaL,3,3,1,0,0,0,1,3,0,2,4,4,2,1,0,4,0,0,1,3,1,5,0,2,0,2,5,2"
+    ]
+  },
+  "unequal": {
+    "4de": ["0,0D,0,0,0,0,0,0,0R,0,0U,0U,2,0,0,4,"],
+    "5dt": ["3,0,1,2,0,0,2,0,0,0,1,0,0,0,0,0,0,0,3,0,0,0,2,5,3,"],
+    "5de": ["0R,0R,0R,0R,0,0,0D,0,0,0,0,0,4,0,0,0,0,0,3DL,0,0R,0R,0,0,0,"],
+    "5dk": ["0,0D,0D,0,0L,0,0,0,0,4,0,0,0,0,0,0R,0U,0,0,0D,0,0,0,0,0L,"],
+    "5dx": ["0,0D,0,0,3,0D,0RL,0,0U,0,0,0,0L,0L,0,0D,0D,0,0R,0,0,0,0,2,0,"],
+    "6dk": [
+      "0,0R,3,0D,0D,0,0R,0,0,0L,0,0D,0D,0,0,0U,0,0L,0,0,0,0,0,0L,0R,0U,0,0U,0,0,0R,0,0,0R,0U,5,"
+    ],
+    "6dx": [
+      "0,0RL,0,0R,0,0,0,0,0,0D,0L,0,0,0RD,0D,0,0,0,0,0,0,4,0,0L,0,0,0,0,0L,0U,0U,0L,0U,0R,0,0U,"
+    ]
+  },
+  "unruly": {
+    "8x8dt": ["aCaEbibbfGcbDcBHBc"],
+    "8x8de": ["abJCabaKbAdcabcdBBj"],
+    "8x8dn": ["bCBBMEaBBBFACEFia"],
+    "10x10de": ["fBcDeBAcbblamBACaEeFFFeBAb"],
+    "10x10dn": ["AHAcaFdEGbIBEhbdODeah"],
+    "14x14dn": ["AAbceHiGdbeCCGhbAbicALDFCAaeCAocebHBHbDABHgaEb"],
+    "8x8ude": ["CCacLDACBKeBAbDh"],
+    "8x8udn": ["fbbaFGcjCAJbaEf"]
+  },
+  "untangle": {
+    "6": [
+      "0-1,0-3,0-4,0-5,1-2,1-4,1-5,2-3,2-4,2-5,3-4",
+      "0-1,0-2,0-5,1-2,2-4,2-5,3-4,3-5,4-5"
+    ],
+    "10": [
+      "0-3,0-4,0-6,0-7,1-2,1-5,1-8,1-9,2-3,2-5,2-6,3-5,3-6,4-7,4-8,6-9,7-8,7-9,8-9",
+      "0-2,0-3,0-4,0-6,1-2,1-7,2-4,2-8,3-4,3-5,3-8,4-8,5-6,5-9,6-7,6-9,7-9"
+    ],
+    "15": [
+      "0-4,0-5,0-9,0-14,1-9,1-10,1-11,1-12,2-3,2-10,2-11,2-12,3-6,3-8,3-12,4-5,4-7,4-13,5-13,5-14,6-7,6-8,7-8,7-13,8-13,9-10,9-14,10-11,11-12"
+    ],
+    "20": [
+      "0-8,0-11,0-18,1-10,1-17,1-19,2-3,2-6,2-9,2-17,3-4,3-5,3-16,4-9,4-12,4-16,5-13,5-14,5-16,6-7,6-14,6-15,7-10,7-11,7-15,8-10,8-18,9-12,10-18,11-18,12-17,12-19,13-14,13-15,14-15,17-19"
+    ],
+    "25": [
+      "0-2,0-13,0-22,0-24,1-2,1-4,1-8,1-19,2-18,2-19,3-11,3-17,3-19,4-9,4-12,4-16,5-7,5-9,5-14,6-10,6-15,6-20,6-21,7-12,7-14,7-23,8-11,8-19,8-23,9-12,9-16,10-18,10-21,10-24,11-14,11-17,12-23,13-16,13-22,13-24,14-23,15-17,15-20,16-22,17-20,18-21,18-24,20-21"
+    ]
+  }
+}

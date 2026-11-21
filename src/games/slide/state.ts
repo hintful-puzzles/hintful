@@ -292,7 +292,7 @@ const CELL_OF_LETTER: Record<string, number> = {
  *
  * Note that a `d` cell carries **no** `f` prefix — upstream cannot express a
  * forcefield on a block square, and never needs to (the generator sets its
- * forcefield squares `EMPTY`). Byte-match surface, so it is ported exactly.
+ * forcefield squares `EMPTY`). This is upstream's desc format, ported exactly.
  */
 export function encodeDesc(
   wh: number,
@@ -416,7 +416,7 @@ export function newState(p: SlideParams, desc: string): SlideState {
  *
  * Two display-only corrections to the C, both invisible outside this function
  * (docs/rendering.md § "Display state in a narrow type" — a display bug with unambiguous intent is one you may just
- * fix; the desc differential never touches this path):
+ * fix):
  *
  *  - The C decides "is this the main block?" with `data[t] == MAINANCHOR`,
  *    where `t` is the block's *disjoint-set root*. Union-by-size makes that

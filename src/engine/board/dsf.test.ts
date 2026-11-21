@@ -97,8 +97,8 @@ describe("Dsf", () => {
   // of the union-by-size rule were therefore unasserted — and the root choice
   // is not an implementation detail here: `merge`'s doc comment records that
   // upstream algorithms branch on the canonical root's *identity* (Filling's
-  // `learn_critical_square` walks a region from its canonical cell), so it is
-  // required for differential parity, not just for connectivity.
+  // `learn_critical_square` walks a region from its canonical cell), so what
+  // those games do depends on it, not just connectivity.
   it("makes the larger class the root, whichever argument it arrived as", () => {
     for (const [big, small] of [
       [0, 2],

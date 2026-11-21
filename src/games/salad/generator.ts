@@ -1,7 +1,7 @@
 /**
  * Salad's generator — `latinGenerate` plus solver-gated clue removal.
  *
- * Both modes build a complete order-`o` Latin square (the shared RNG-faithful
+ * Both modes build a complete order-`o` Latin square (the shared
  * `latinGenerate`), read its symbols above `nums` as the empty squares — a
  * cheap way to draw a random pseudo-Latin solution with exactly `o − nums`
  * empties per line — turn that into a full clue set, and then remove clues one
@@ -72,9 +72,8 @@ function solvesAt(base: SaladBoard, diff: number): boolean {
  * be thrown away.
  *
  * Upstream has no such gate: it strips clues while the board still solves at
- * the target tier and publishes whatever that leaves. Measured over this game's
- * frozen C fixtures, **12 of its 13 top-tier boards were solvable one tier
- * down**, and over 80 freshly generated boards the rate was 71/80 — at 5×5 and
+ * the target tier and publishes whatever that leaves. Of 13 top-tier boards
+ * upstream's C dealt, **12 were solvable one tier down**, and over 80 freshly generated boards the rate was 71/80 — at 5×5 and
  * 6×6, every single board.
  */
 function tooEasy(base: SaladBoard, diff: number): boolean {

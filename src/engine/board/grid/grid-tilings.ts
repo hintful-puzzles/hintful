@@ -19,9 +19,10 @@
  *    integer division, use `Math.trunc`, never `/` (this bites in `floret`,
  *    whose basis vectors have negative components).
  * 2. **Emission order is observable.** Dot indices are assigned in
- *    first-encounter order, driven by these loops. `grid-differential.test.ts`
- *    compares indices, not just shapes, so reordering face emission within a
- *    cell is a behavior change even when the resulting geometry is identical.
+ *    first-encounter order, driven by these loops, and a Loopy game ID indexes
+ *    faces by them. `grid-numbering.test.ts` compares indices, not just
+ *    shapes, so reordering face emission within a cell breaks shared game IDs
+ *    even when the resulting geometry is identical.
  */
 
 import { Grid, GridDot, GridFace, makeConsistent } from "./grid-core.ts";

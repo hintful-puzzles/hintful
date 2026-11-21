@@ -146,8 +146,7 @@ export const menu: PresetBoards<SamegameParams> = {
  *
  * The `randomUpto` calls (the blob-color seed, the shuffle-and-consume of the
  * insertion list, the neighbor-excluding color pick, the extension direction)
- * happen in C's order, so the grid matches the frozen differential bit for
- * bit. Returns the grid as a flat color array.
+ * happen in upstream's order. Returns the grid as a flat color array.
  */
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: grid generation with color-run constraints and solvability retry.
 function genGrid(w: number, h: number, nc: number, rng: RandomState): number[] {

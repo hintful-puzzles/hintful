@@ -8,8 +8,7 @@
  * corpus is dealt by the generator, which is gated on the very solver under
  * test. Silencing the runs rung (2026-09-26) left all 24 board comparisons
  * against upstream's hand-written loop green, because the weakened solver then
- * dealt only boards it could finish; the census went red, and so did 11 of the
- * differential's 18 fixtures. Runs fires on almost every board it could:
+ * dealt only boards it could finish; the census went red. Runs fires on almost every board it could:
  * measured over 40 boards per preset, on 16 of the 40 at 4x4 with every clue
  * shown and on 34 to 40 everywhere else.
  *

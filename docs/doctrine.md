@@ -187,8 +187,6 @@ run, so a new question about upstream behavior is answered behaviorally.
 - **Do not recreate a directory named for a source tree that no longer
   exists.** The name misleads the next reader even when the contents are
   legitimate.
-
-## Open questions
-
-- Whether any one game warrants a stricter, corpus-like differential. It
-  would be a per-game option, never a default.
+- **Nothing ties a game to the C beyond what a player sees.** No test holds a
+  generator to upstream's boards, its draws or its tiers; what stays is that
+  upstream's game IDs load and the credit and licenses.

@@ -2,10 +2,8 @@
  * Behavioral tests for the Spokes port.
  *
  * Tier 1 (params / codec / solver / generator / input / completion) plus the
- * tier-2 and tier-2.5 render checks. The generator's agreement with upstream is
- * covered separately and far more strongly by `spokes-differential.test.ts`;
- * what lives here is everything that differential cannot see — the interactive
- * `executeMove` → completion path, the drag and keyboard input, `findMistakes`,
+ * tier-2 and tier-2.5 render checks: the interactive `executeMove` → completion
+ * path, the drag and keyboard input, `findMistakes`,
  * and the frames the renderer actually paints.
  */
 
@@ -87,7 +85,7 @@ import {
   textFormat,
 } from "./state.ts";
 
-// A frozen 4×4 Easy board (the first fixture of the C differential), so every
+// A fixed 4×4 Easy board, as upstream's C generator wrote it, so every
 // test below runs on a real, uniquely-soluble puzzle without generating one.
 const FIX: SpokesParams = { w: 4, h: 4, diff: "easy" };
 const FIX_DESC = "1111432442253111";
@@ -307,9 +305,8 @@ describeDealtTiers(spokesGame, ["2x2dt", "2x3dt", "3x3dh"]);
 
 describe("spokes generator", () => {
   it("is reproducible from a seed", () => {
-    // Small and Easy on purpose: the differential already exercises every
-    // preset and difficulty against the C, and generation at the harder tiers
-    // is genuinely expensive (it re-solves the board once per candidate line).
+    // Small and Easy on purpose: generation at the harder tiers is genuinely
+    // expensive (it re-solves the board once per candidate line).
     const p: SpokesParams = { w: 4, h: 4, diff: "easy" };
     const a = newSpokesDesc(p, randomNew("repeat-me")).desc;
     const b = newSpokesDesc(p, randomNew("repeat-me")).desc;

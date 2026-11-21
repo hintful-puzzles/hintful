@@ -1,9 +1,9 @@
 /**
  * Behavioral tests for the hat aperiodic monotile.
  *
- * The heavy lifting is done by `grid-aperiodic-differential.test.ts`, which
- * byte-matches both the generated desc and the resulting grid against the C.
- * What is left for here is what a differential *cannot* see: that the generated
+ * `grid-aperiodic-numbering.test.ts` holds that a recorded desc builds the
+ * patch the C built, numbered index for index. What is left for here is what
+ * a recorded patch *cannot* show: that the generated
  * tables really contain what the C survey said they do, that malformed descs
  * are rejected with the right reason, and that the deterministic short-desc
  * replay path is actually deterministic.

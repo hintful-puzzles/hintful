@@ -5,7 +5,7 @@
  * Both helpers are **input/display only**: `gridNearestEdge` decides which edge
  * a click lands on (Loopy's whole pointer path), and `gridFindIncenter` decides
  * where a clue digit is drawn. Neither influences a grid description,
- * generation or solving, so neither needs to match the C bit for bit.
+ * generation or solving.
  */
 
 import type { Grid, GridDot, GridEdge, GridFace } from "./grid-core.ts";

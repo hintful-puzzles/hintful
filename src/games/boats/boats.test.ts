@@ -1,13 +1,10 @@
 /**
  * Boats — behavioral tests (tier 1) plus render scenarios (tier 2.5).
  *
- * The byte-match differential (`boats-differential.test.ts`) covers the
- * generator, the solver and the codec against the C. What it cannot reach is
- * everything downstream of `newDesc`: input mapping, `executeMove`'s shape
- * resolution and completion check, the mistake overlay, and the frame the
- * player actually sees. That is what this file is for (docs/testing.md §
- * "What a new game ships": a byte-match differential does not exercise the
- * interactive completion path).
+ * This file covers what lies downstream of `newDesc`: input mapping,
+ * `executeMove`'s shape resolution and completion check, the mistake overlay,
+ * and the frame the player actually sees (docs/testing.md § "What a new game
+ * ships").
  */
 
 import { describe, expect, it } from "vitest";
@@ -212,8 +209,8 @@ describe("boats desc codec", () => {
     const clues = new Int8Array(9);
     clues[6] = WATER;
     expect(encodeDesc(3, 3, border, clues)).toBe("1,1,1,1,1,1,fW");
-    // An all-empty grid therefore encodes as no grid part at all — which the
-    // C fixtures confirm (the 4x4 Easy board's desc ends at its last comma).
+    // An all-empty grid therefore encodes as no grid part at all, as upstream's
+    // C writes it (its 4x4 Easy board's desc ends at its last comma).
     expect(encodeDesc(3, 3, border, new Int8Array(9))).toBe("1,1,1,1,1,1,");
   });
 

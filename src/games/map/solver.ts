@@ -32,7 +32,7 @@ import {
 } from "../../engine/solve/ladder-runtime.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import { graphNeighbors } from "./graph.ts";
-import { DIFF_UNREASONABLE, DIFFCOUNT } from "./state.ts";
+import { DIFF_UNREASONABLE } from "./state.ts";
 
 export const SOLVER_IMPOSSIBLE = 0;
 export const SOLVER_UNIQUE = 1;
@@ -146,20 +146,4 @@ export function isColored(graph: Int32Array, n: number, coloring: Int32Array): b
     describedSpace(map.units, n, 1),
     dealtOf(graph, n),
   );
-}
-
-/**
- * Grade a board: the easiest difficulty at which it is uniquely solvable, or
- * null if none (matches the C standalone rater). `clues` is the immutable clue
- * coloring (0..3 / -1).
- */
-export function gradeMap(
-  graph: Int32Array,
-  n: number,
-  clues: Int32Array,
-): number | null {
-  for (let diff = 0; diff < DIFFCOUNT; diff++) {
-    if (mapSolver(graph, n, clues.slice(), diff) === SOLVER_UNIQUE) return diff;
-  }
-  return null;
 }

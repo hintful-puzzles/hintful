@@ -34,8 +34,7 @@ gate CPU.
 
 **A shrunk denominator is not a pass mark.** A module's rate leaves out a case
 argued **equivalent** (§5), and once a case was removed for probing the wrong
-layer: it changed which loop a seed produces, which is a differential's
-guarantee and not a local test's. Each exclusion buys a written argument, and
+layer: it changed which loop a seed produces, which no one is promised. Each exclusion buys a written argument, and
 the harness re-checks every equivalent on every run: one that starts being
 *caught* means the argument expired under a code change.
 
@@ -112,8 +111,6 @@ What the harness does that the ad-hoc probe does not:
   been answered wrongly three ways: by filename (§7), as the one file named
   after the module when several drive it, and by direct imports only, missing
   the tests that go through a barrel.
-- **It excludes `*-differential.test.ts` even when engine-local**, so a module
-  cannot score full marks on assertions it does not make.
 - **It carries `equivalent: true` cases with their argument**, excluded from
   the rate, and flags one that starts being *caught*.
 - **It walks `src/engine/` recursively, and refuses to run below a committed
@@ -264,31 +261,27 @@ for the wrong reason. A save validator's only malformed input failed its
 happy path and could be replaced with `true` with the suite green. Line
 coverage cannot see this, because the lines run.
 
-## 4. The boundary with the differentials — state it, then verify it
+## 4. What no test pins: which board a seed deals
 
-**Some guarantees belong to a game's frozen differential, not a local test**:
-an RNG draw order, a region sizing that decides *which boards exist*.
-Restating those locally cannot be done better and is pointless done worse.
-
-**The boundary is checked, not asserted.** Run the differential against the
-mutation rather than reasoning about it, and record the division in the
-module's own test file, so a later reader can place a new case on the right
-side of the line. `src/engine/solve/latin.test.ts` and
-`src/engine/generate/symmetric-blacks.test.ts` are the worked examples. A local test
-asserts what is order-independent, such as a matching's maximality against
-brute force; a test pinning a particular matching would break on any
-deliberate generator change while proving nothing new.
+**An RNG draw order, or a randomized helper's particular output, is no one's
+promise** (`testing.md` § "When the boards a seed deals move"), so no local
+test pins one. A test pinning a particular matching would break on any
+deliberate generator change while proving nothing. A local test asserts what
+is order-independent, such as a matching's maximality against brute force,
+and says in its file that the order is left alone, so a later reader places
+a new case on the right side of the line. `src/engine/solve/latin.test.ts`
+and `src/engine/generate/symmetric-blacks.test.ts` are the worked examples.
 
 **Extracted logic arrives with its tests** (`testing.md` § "A shared module
 needs its own tests").
 
 ### 4a. A frozen capture used as a *quality bar* is on the wrong side of the line
 
-**A capture is a specification only for what is underivable**: which board a
-solver-gated generator produces, an RNG stream, a tiling's incidence in
-emission order. No local test can replace those.
+**A capture is a specification only for what is underivable and still
+promised**: a tiling's incidence in emission order, which every Loopy game ID
+indexes (`grid-numbering.test.ts`). No local test can replace that.
 
-**A capture used as a peer comparison is not a differential**, whatever it
+**A capture used as a peer comparison is not a specification**, whatever it
 looks like: "our answer is within a tolerance of the other implementation's",
 for a quantity with a definition you could compute. It is green whenever both
 implementations are wrong the same way, and its tolerance cannot be

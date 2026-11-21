@@ -1,8 +1,7 @@
 /**
  * Group behavioral tests (tier 1, pure logic): params codec, generation +
  * unique-solvability at target difficulty, desc round-trip, move transitions
- * (multifill, reorder, divider), completion, and findMistakes. The byte-match
- * differential against the C reference lives in `group-differential.test.ts`.
+ * (multifill, reorder, divider), completion, and findMistakes.
  */
 
 import { describe, expect, it } from "vitest";

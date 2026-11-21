@@ -165,10 +165,11 @@ collection, a vocabulary unified, a loop moved onto the shared runner) is held
 to four invariants, and a diff that moves one of them is wrong until the
 owner says otherwise:
 
-- **Game IDs and descs are player promises.** Hand-written codecs stay,
-  `src/engine/random/` stays bit-identical, and no byte of any `params:desc`
-  or `params#seed` id changes. The frozen differentials are the net for this
-  ([`testing.md`](./testing.md) § "The frozen differentials").
+- **Game IDs and descs are player promises.** Hand-written codecs stay, and
+  every `params:desc` id still loads as the same board: the games' codec
+  round-trips, `upstream-descs.test.ts` and the grid numbering tests hold it.
+  A re-expression moves no seed's board either, which the hint walks show
+  ([`testing.md`](./testing.md) § "When the boards a seed deals move").
 - **Narration is frozen through a re-expression.** Every hint suite's wording
   assertions pass unedited, or the re-expression is wrong.
 - **Render output is stable where behavior is.** Tier-2.5 snapshots move only
@@ -180,7 +181,7 @@ owner says otherwise:
 Two rules make a sweep across the collection affordable:
 
 - **Two lanes.** A re-expression whose whole guard set passes unchanged
-  (differentials, narration and snapshots all byte-clean) is provably
+  (hint walks, narration and snapshots all byte-clean) is provably
   invisible and takes spot acceptance for its batch; one that re-baselines a
   single snapshot takes the full acceptance gate.
 - **A capability diff per game.** A sweep's risk is silent capability loss:

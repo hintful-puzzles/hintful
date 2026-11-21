@@ -9,9 +9,8 @@
  * sighting clues from that solution; then grade by the deductive ladder and
  * accept only at the requested tier (regenerate otherwise).
  *
- * Not byte-matched with upstream: C orders equal-length paths with `qsort`,
- * whose tie order is unspecified, where this port sorts stably. The
- * differential validates the solver and codec instead.
+ * C orders equal-length paths with `qsort`, whose tie order is unspecified,
+ * where this port sorts stably.
  */
 
 import { retryLimit } from "../../engine/contract/retry-limit.ts";

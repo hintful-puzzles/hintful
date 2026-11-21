@@ -1,8 +1,8 @@
 /**
  * Behavioral tests for Sticks: the desc codec, the contradiction solver, the
  * drag/click/keyboard input machine, `findMistakes`, completion through
- * `executeMove` (the path the differential never exercises), the midend
- * lifecycle + save round-trip, and tier-2.5 render scenarios with snapshots.
+ * `executeMove`, the midend lifecycle + save round-trip, and tier-2.5 render
+ * scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
@@ -40,7 +40,6 @@ import {
   winFlashAt,
   winFlashRun,
 } from "../../engine/testing/win-flash.ts";
-import cReference from "./__fixtures__/sticks-c-reference.json" with { type: "json" };
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";
 import { COL_CELL, COL_LINE, newDrawState, redraw } from "./render.ts";
@@ -65,10 +64,9 @@ import {
   textFormat,
 } from "./state.ts";
 
-// The small frozen C fixture (4x4, ROT2) — a real, uniquely-solvable board.
-const FIX0 = cReference.fixtures.find((f) => f.w === 4 && f.h === 4);
-if (!FIX0) throw new Error("4x4 fixture missing from sticks-c-reference.json");
-const FIX = FIX0;
+// A small board upstream's generator dealt (4x4, ROT2) — a real,
+// uniquely-solvable board.
+const FIX = { w: 4, h: 4, blackpc: 20, symm: 2, desc: "a1aB0_1a2_1a3a2B0a2a" };
 const FIX_PARAMS = {
   w: FIX.w,
   h: FIX.h,
@@ -130,8 +128,8 @@ describe("sticks desc codec", () => {
   it("decodes the fixture desc to a consistent board", () => {
     const s = newState(FIX_PARAMS, FIX.desc);
     expect(s.grid.length).toBe(16);
-    // Re-encoding is the exact inverse (also asserted across all fixtures
-    // by the differential's extra check).
+    // Re-encoding is the exact inverse; this board is the only one any test
+    // re-encodes.
     expect(encodeDesc(s.grid, s.numbers, s.w, s.h)).toBe(FIX.desc);
   });
 

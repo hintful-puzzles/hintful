@@ -1117,9 +1117,8 @@ verdict passing.
 
 #### Scenario: A game ID upstream's generator wrote
 
-- **WHEN** a desc from a frozen upstream fixture is loaded under the params its
-  fixture states, every field of which is placed or known to describe the
-  fixture
+- **WHEN** a desc in `src/guards/__fixtures__/upstream-descs.json` is loaded
+  under the params string it is listed under
 - **THEN** it loads
 
 ### Requirement: A board loads only if the game's own solver solves it

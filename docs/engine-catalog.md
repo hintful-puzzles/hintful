@@ -30,7 +30,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – What decides whether something is shared |
 | – Measure before proposing an extraction |
 | – Where a promoted helper lands |
-| – Byte-match critical entries |
+| – Entries whose order deals the boards |
 | `contract/` — the `Game` contract and its vocabulary |
 | – `retry-limit.ts` — a bound on generate-until-it-works |
 | – `deal-census.ts` — why a draw was thrown away |
@@ -156,7 +156,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `rules-out.ts` — the key and help words of `Game.rulesOut`'s preference |
 | Libraries: `color/` and `random/` |
 | – `color/` — the palette |
-| – `random/` — the bit-identical RNG |
+| – `random/` — the seeded RNG |
 | Testing harness |
 
 ## Sharing a helper
@@ -220,14 +220,12 @@ which repoints whatever names it.
   bracket access marks a key as dynamic. When adding a lint rule, check that
   it does not invert a compiler flag.
 
-### Byte-match critical entries
+### Entries whose order deals the boards
 
-Where an entry says *byte-match critical*, keep the helper's observable
-order in any change that means to deal the same boards: its draw order, its
-comparator, its emission order. These are RNG-faithful ports whose order
-shows in generated descs, and a frozen differential fails when one moves
-([`testing.md`](./testing.md) § "The frozen differentials"). What is held,
-and for whom, is § "`random/` — the bit-identical RNG".
+Where an entry says *its order deals the boards*, the helper's draw order,
+comparator or emission order shows in generated descs. Changing it is
+allowed, and moves which board a seed deals, so it is no pure refactor
+([`testing.md`](./testing.md) § "When the boards a seed deals move").
 
 ## `contract/` — the `Game` contract and its vocabulary
 
@@ -411,10 +409,10 @@ it (`EdgeRelation` in `describe-runtime/marks.ts`).
 - **For a class's minimal element, precompute a `minimal[i]` map after all
   merges** (`buildMinimal` in `keen/state.ts`). It does not change the
   canonical root.
-- **Do not "fix" an upstream loop that uses the canonical root as an index
-  bound** and not as an identity to compare. Which members the scan skips
-  decides which boards a solver-gated generator emits.
-  Byte-match critical: `Dsf` keeps `dsf.c`'s tie-break.
+- **An upstream loop that uses the canonical root as an index bound**, and
+  not as an identity to compare, decides by which members it skips which
+  boards a solver-gated generator emits: its order deals the boards. `Dsf`
+  keeps `dsf.c`'s tie-break.
 
 ### `square-edges.ts` — square-grid edges
 
@@ -451,14 +449,16 @@ rules:
 - **Normalize negative zero once, where exact arithmetic becomes pixels.**
   A negative factor times a zero index is `-0`, so expect it wherever a
   basis vector is signed. It passes `===` and fails `Object.is`, and a
-  structural differential with it.
-- **Emission order is observable.** Dot indices come from first encounter.
-  Verify with `grid-differential.test.ts` and
-  `grid-aperiodic-differential.test.ts`, never by eye.
+  structural comparison with it.
+- **Emission order is in every Loopy game ID.** Face, edge and dot indices
+  come from first encounter, and a Loopy desc lists a clue per face in face
+  order, so a renumbering opens every shared link on another board. Verify
+  with `grid-numbering.test.ts` and `grid-aperiodic-numbering.test.ts`, never
+  by eye.
 - **A random draw is an observable side effect.** The aperiodic tilings
-  draw even when the candidate list has one entry; skipping that draw gives
-  a different, plausible tiling and nothing fails. Do not correct a weight
-  constant that looks wrong either.
+  draw even when the candidate list has one entry; skipping that draw deals
+  a different, plausible tiling and nothing fails. Which patch a seed deals
+  is free to change, but not what a dealt patch's desc builds.
 
 ### `geometry.ts` — cell ↔ pixel
 
@@ -502,7 +502,7 @@ the methods' comments name the upstream calls they replace. Exemplar:
 `pegs/generator.ts`.
 
 - **Port the comparator exactly.** `removeAt(randomUpto(set.size))` indexes
-  the sorted order, so the comparator is byte-match critical.
+  the sorted order, so the comparator's order deals the boards.
 - **Count the roles first.** A `newtree234(NULL)`, or a comparator whose
   ordering the algorithm never reads back, is not a sorted collection: one
   that only deduplicates is a keyed set, and a null-comparator FIFO is a
@@ -517,7 +517,8 @@ the methods' comments name the upstream calls they replace. Exemplar:
 
 `shuffle` for a random order in a generator, and `permParity` for a
 sliding-tile generator's reachability check; correcting the parity stays
-the game's. Byte-match critical wherever the shuffled order feeds a desc.
+the game's. Its order deals the boards wherever the shuffled order feeds a
+desc.
 Exemplar: `fifteen/state.ts`.
 
 ### `candidate-bits.ts` — one candidate encoding, range-checked
@@ -1104,7 +1105,7 @@ the bits `0x0F` are wires; each game owns the high bits**, and the header's
 A Latin square whose clues sit in the gaps between neighboring cells is
 `edge-clue-latin/`: the board and its desc, the moves, the input with its
 spent-clue drag, the cell drawing, the solver's driver and the generator
-(*byte-match critical*). The game declares its clue as a `ClueKind` (what it
+(its order deals the boards). The game declares its clue as a `ClueKind` (what it
 says, whether every true one is dealt, whether both ends flag it, its
 compiled ladder, its drawing and its text glyph) and writes its own `Game`,
 its reasons and its hint's sentences. Exemplars: `unequal/`, `adjacent/`.
@@ -1135,7 +1136,7 @@ the census of the draws it threw away are the contract's (`retry-limit.ts`,
 ### `divvy.ts` — random equal-omino partition
 
 `divvyRectangle` divides a rectangle into connected regions of equal size.
-Byte-match critical. Exemplar: `palisade/generator.ts`.
+Its order deals the boards. Exemplar: `palisade/generator.ts`.
 
 ### `redivide.ts` — divide a few regions of a partition again
 
@@ -1160,8 +1161,8 @@ grows a region round each cell it is given (`scatterSeeds` draws them), and
 from. Which walk
 suits which rule is
 [`solver-and-generator.md`](./solver-and-generator.md) § "A division into
-regions is the engine's". Byte-match critical: `mergeNeighbors` and
-`growFromSeeds` are upstream's draws, which Rome's and Map's fixtures pin.
+regions is the engine's". The order of `mergeNeighbors` and
+`growFromSeeds` deals the boards; both are upstream's draws.
 Exemplars: `rome/generator.ts`, `map/generator.ts`, `seismic/generator.ts`.
 
 ### `mend-division.ts` — mend a division until it has one answer
@@ -1179,24 +1180,24 @@ is usually `solvedPositions` from `answer-search.ts`. Exemplar:
 
 ### `laydomino.ts` — random domino tiling
 
-`dominoLayout(w, h, rs)` is a random tiling by 2×1 dominoes. Byte-match
-critical. Exemplar: `dominosa/generator.ts`.
+`dominoLayout(w, h, rs)` is a random tiling by 2×1 dominoes. Its order
+deals the boards. Exemplar: `dominosa/generator.ts`.
 
 ### `symmetric-blacks.ts` — symmetric black-square placement
 
 Reach for `placeSymmetricBlacks` when black squares are placed
 symmetrically; the `SYMM_*` values and their Custom-dialog labels are beside
 it. It works through callbacks over the caller's board, and **the
-caller clears its board first**. Byte-match critical, the `SYMM_ROT4`
-odd-center `<=` included. Exemplar: `lightup/generator.ts`.
+caller clears its board first**. Its order deals the boards, the
+`SYMM_ROT4` odd-center `<=` included. Exemplar: `lightup/generator.ts`.
 
 ### `loopgen.ts` — random loop generation
 
 `generateLoop(g, board, rng, bias?)` draws a random loop over a `Grid`.
-Byte-match critical; its header records the draw order. A `bias` callback's
-only observable effect is its return value, so one that recomputes from
-scratch on each call is byte-identical to upstream's incremental one and
-far simpler. Exemplar: `pearl/generator.ts`.
+Its order deals the boards; its header records the draw order. A `bias`
+callback's only observable effect is its return value, so one that
+recomputes from scratch on each call deals what an incremental one would,
+and is far simpler. Exemplar: `pearl/generator.ts`.
 
 ### `word-list/` — English words to deal and to accept
 
@@ -1234,9 +1235,9 @@ its fills are tried. Two callers, which differ only in that choice:
   pieces on a quiet surface" says what a game owes when it takes them.
   Exemplar: `starbattle/render.ts`.
 - **A generator whose answer is a coloring** passes a `choice` that draws.
-  Byte-match critical there: the walk asks once for the region and once for
-  its fills at every step, and Map's frozen differential pins the draws of
-  upstream's four-coloring through it. Exemplar: `map/generator.ts`.
+  Its order deals the boards there: the walk asks once for the region and
+  once for its fills at every step, which are the draws of upstream's
+  four-coloring. Exemplar: `map/generator.ts`.
 
 **Pieces that outnumber a set's colors** are not a division, and take
 `spreadColors(boxes, colors)` (`spread-colors.ts`) instead: where a number
@@ -1351,7 +1352,7 @@ typecheck. Exemplar: `src/skeleton/grid/solver.ts`.
   soundness check says a technique is right, and only the census says a
   board reaches it
   ([`solver-and-generator.md`](./solver-and-generator.md) § "Proving an
-  adoption: the fixtures are not enough").
+  adoption: a census and a plant").
 
 ### `step-budget.ts` — the fixpoint non-termination guard
 
@@ -1811,26 +1812,17 @@ single games; `color-token.ts` is how a color is declared and combined, and
 [`rendering.md`](./rendering.md) § "The palette: three layers, meaning
 first".
 
-### `random/` — the bit-identical RNG
+### `random/` — the seeded RNG
 
-Draw every random number a generator uses from here. Two things are held
-bit-identical today, both for the test suite and neither for a player: the
-app hands out boards, never seeds, so changing which board a seed deals
-breaks no save and no shared ID ([`doctrine.md`](./doctrine.md) §
-"Upstream").
-
-- **The stream.** A seed gives the same numbers on every run, which every
-  seeded test, pinned position and `dealt` board rests on. `random.test.ts`
-  holds it to the C-recorded corpus in `__fixtures__/`: correct the module,
-  never the corpus.
-- **A generator's draws, while a frozen differential pins that generator.**
-  For that fixture every draw is an observable side effect, so a change
-  that means to deal the same boards never skips, adds or reorders one. A
-  change that means to deal other boards states its player-visible benefit
-  and retires or re-founds the fixture ([`testing.md`](./testing.md) § "The
-  frozen differentials";
-  [`solver-and-generator.md`](./solver-and-generator.md) § "Divergence and
-  what it costs").
+Draw every random number a generator uses from here. A seed gives the same
+numbers on every run, which every seeded test and `dealt` board rests on;
+`random.test.ts` holds that, a draw's range, and a copied or encoded state
+continuing the stream. The stream is a port of upstream's `random.c`, but
+nothing holds it to upstream's or to its own past: the app hands out boards,
+never seeds, so changing which board a seed deals breaks no save and no
+shared ID ([`doctrine.md`](./doctrine.md) § "Upstream"). A change to the
+stream moves every seeded deal, so the hint walks re-record
+([`testing.md`](./testing.md) § "When the boards a seed deals move").
 
 ## Testing harness
 
@@ -1859,8 +1851,6 @@ test or a cross-game guard reaches for:
   seconds a board.
 - **`dealt.ts`.** `dealt` and `beginDealt` give a cross-game sweep its
   boards ([`testing.md`](./testing.md) § "Deal through `dealt`").
-- **`differential.ts`.** `describeDescDifferential` is the byte-for-byte
-  desc check ([`testing.md`](./testing.md) § "The frozen differentials").
 - **`enrollment.ts`, `hint-games.ts`.** How a cross-game guard derives its
   population ([`testing.md`](./testing.md) § "How a cross-game guard finds
   its population").
@@ -1874,7 +1864,7 @@ test or a cross-game guard reaches for:
   `hint-scan-report.ts` is the report a scan fails with.
 - **`ladder-census.ts`, `hint-binding.ts`.** The census that certifies a
   ladder, and the check that a rendered frame matches a step's words.
-- **`slow.ts`.** `itSlow` and `describeSlow` defer a case to the slow tier
+- **`slow.ts`.** `itSlow` defers a case to the slow tier
   ([`testing.md`](./testing.md) § "Running the slow tier").
 - **`oklch.ts`, `polygon-yardstick.ts`.** Independent yardsticks, so a test
   cannot agree vacuously with the implementation it measures. Never import

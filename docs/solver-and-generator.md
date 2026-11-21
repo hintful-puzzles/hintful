@@ -40,7 +40,7 @@ In this order, each step as the skeleton
    solvable-game contract".
 6. **Pin the deal and the ladder in `<game>-generation.test.ts`** with
    `describeDealtTiers` and `describeLadderCensus`. See § "Proving an
-   adoption: the fixtures are not enough" and § "A size that cannot carry a
+   adoption: a census and a plant" and § "A size that cannot carry a
    tier".
 
 ## Sections
@@ -50,7 +50,7 @@ In this order, each step as the skeleton
 | One engine, two projections | you are about to write a solver, a generator or a hint for a logic game |
 | The deduction fixpoint | your solver or hint runs the game's ladder |
 | – A fixpoint is order-independent only if every rule is monotone | a board's grade changes with the order its parts are listed or visited in |
-| – Proving an adoption: the fixtures are not enough | you add, split, move or re-tier a rung |
+| – Proving an adoption: a census and a plant | you add, split, move or re-tier a rung |
 | – What the runner does not carry: the record | you want a technique to carry its own narration, or propose splitting one into find, apply and narrate |
 | Guess-free generation | your game has difficulty tiers, or you are deciding whether a board may need trial and error |
 | – No option switches the generator's checks off | upstream has a checkbox or a tier that deals unchecked boards, or you write what `loadDesc` accepts |
@@ -79,8 +79,7 @@ In this order, each step as the skeleton
 | – Bound a generator by its tail, not its median | you pick the sizes of a preset menu, or set a memory bound |
 | – A Custom size is not refused for its wait | a large or rare Custom size deals slowly, or not at all, and you are about to refuse it |
 | – Solver-gated generation | your generator keeps or strips clues by running the solver, or you refactor such a solver |
-| – A divergence retires or re-founds its fixture | a fix moves boards a frozen differential recorded |
-| – Recover emergent parameters from the fixtures | you replace a generator whose output had a shape the code does not state |
+| – Recover emergent parameters from upstream's boards | you replace a generator whose output had a shape the code does not state |
 | – Reuse the solver's pruning, not just its propagation | a constructive generator built on the solver backtracks heavily |
 | Solve and the generator's aux | you write `solve`, or it wants the generator's `aux` |
 | findMistakes | your game has an answer a player's board can disagree with |
@@ -157,12 +156,12 @@ board is dealt at one tier and solves at another once loaded.
   the defect may show on a few boards in a hundred. Exemplar:
   `bridges.test.ts`, "the grade does not depend on island order".
 
-### Proving an adoption: the fixtures are not enough
+### Proving an adoption: a census and a plant
 
 **Prove a ladder by a census of which rungs fire, and plant a defect in each
-upper-tier rung before trusting the corpus.** A byte-match differential
-certifies only the rungs it fires and cannot say which those are: a rung that
-fires on no recorded board can be deleted with every test green. The census
+upper-tier rung before trusting the corpus.** A tier test certifies only the
+rungs it fires and cannot say which those are: a rung that fires on no board
+it deals can be deleted with every test green. The census
 is `describeLadderCensus`
 ([`engine/testing/ladder-census.ts`](../src/engine/testing/ladder-census.ts)),
 which reads the runner's `firings` tally through one optional parameter of
@@ -181,8 +180,8 @@ the game's solve. Exemplar:
   the shape a porting bug takes. An entry may be structural, a rung foreclosed
   by the one beneath it; then say so.
 - **A census cannot see a mis-tiered or reordered rung**, because the rung
-  still fires. A frozen differential can. A game with no differential has
-  only the census, so plant a mis-tier before relying on it.
+  still fires. The tier gate can, on a board where that rung decides the
+  tier, so plant a mis-tier before relying on either.
 - **Size the corpus by planting, once per upper-tier rung.** A mis-tiered
   rung shows only at a cap that excludes it, on a board where it is the first
   rung of its tier to fire after the lower tier stalls. Only a plant says the
@@ -278,7 +277,7 @@ game's own solver cannot solve:
   and Unreasonable (§ "Giving a deductive game an Unreasonable tier").
 
 A desc upstream's generator wrote that fails these checks is refused, and
-`upstream-descs.test.ts` holds the fixtures that are.
+`upstream-descs.test.ts` holds that the ones it has do not.
 
 ### The lowest tier asks the hint as well as the solver
 
@@ -1232,7 +1231,7 @@ long.
   option that passes it one. The first suspect is a port that
   rescans the whole board where upstream kept incremental state: a pure
   function of the board can be made incremental without moving a verdict, so
-  no seed's board moves and the frozen differential guards the speed-up.
+  no seed's board moves and the hint walks not moving shows it.
 - **Check whether the wall is time or memory.** A retry budget assumes
   failure is recoverable; an out-of-memory in the worker is a crash, so that
   boundary belongs in `validateParams`. Measure at least one size past the
@@ -1310,12 +1309,13 @@ the generator's limit:
 **When a generator strips or accepts clues by re-running the solver, the
 solver's verdict on every intermediate board decides which boards exist, so
 the verdict and its quirks are part of the algorithm.** A change that
-strengthens or weakens the solver changes every board. The frozen
-differentials ([testing.md](./testing.md) § "The frozen differentials")
-catch a refactor that moves a verdict.
+strengthens or weakens the solver changes every board, and the hint walks
+notice a refactor that moves a verdict ([testing.md](./testing.md) § "When
+the boards a seed deals move").
 
-- **Do not tidy a preserved quirk; the comment at its definition is the
-  contract.** Such a quirk may be a deliberate skip, verbatim dead code, the
+- **A preserved quirk is part of the algorithm; the comment at its
+  definition says what it does.** Tidying it moves the boards, which is
+  allowed for a player-visible reason and is no refactor. Such a quirk may be a deliberate skip, verbatim dead code, the
   release build's semantics where a diagnostics `#ifdef` had early-outs, or a
   contradiction the shipped build does not report. Exemplars: `mergeSomeCages`
   in [`solo/generator.ts`](../src/games/solo/generator.ts) and `fillSquare` in
@@ -1349,26 +1349,15 @@ catch a refactor that moves a verdict.
   a map precomputed after all merges answers (`buildMinimal` in
   [`keen/state.ts`](../src/games/keen/state.ts)).
 
-### A divergence retires or re-founds its fixture
-
-**Do not keep upstream's behavior reachable so a differential stays green.**
-Ship the fix, and retire or re-found the fixture it moves, saying what
-replaces it. Upstream being clearly wrong is a reason to fix it.
-
-A frozen fixture holds more than generation, so re-found it as a check over
-the same recorded boards: every description still validates, loads and
-round-trips through the codec, so an older shared ID stays playable, and the
-solver still finds each board uniquely solvable. Generation is then carried
-by the game's property test that every generated board is uniquely solvable
-at exactly its tier.
-
-### Recover emergent parameters from the fixtures
+### Recover emergent parameters from upstream's boards
 
 **When you replace a generator, do not guess the shape of what it produced:
-decode the frozen descriptions and measure it.** A distribution that is
-emergent in the C, such as region sizes, can be read off a histogram of the
-fixtures. Match the measured one and deviate deliberately. Check the fixtures
-whenever a rewrite has a free parameter the old output fixed implicitly.
+decode the boards it dealt and measure it.** A distribution that is emergent
+in the C, such as region sizes, can be read off a histogram of the descs
+upstream's generator wrote (`src/guards/__fixtures__/upstream-descs.json`)
+or of the boards the current generator deals. Match the measured one and
+deviate deliberately, whenever a rewrite has a free parameter the old output
+fixed implicitly.
 
 ### Reuse the solver's pruning, not just its propagation
 

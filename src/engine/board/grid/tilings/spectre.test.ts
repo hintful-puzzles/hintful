@@ -1,16 +1,16 @@
 /**
  * Tier-1 tests for the spectre aperiodic tiling.
  *
- * The heavy lifting is done by `grid-aperiodic-differential.test.ts`, which
- * byte-matches five C-generated patches index-for-index. What is here is what
- * that differential *cannot* reach:
+ * `grid-aperiodic-numbering.test.ts` holds that recorded descs build the
+ * patches the C built, index for index. What is here is what those recorded
+ * patches *cannot* reach:
  *
- * - the structural invariants of the generated tables, which the differential
- *   only checks implicitly and only for the paths its five fixtures happen to
+ * - the structural invariants of the generated tables, which the recorded
+ *   patches only check implicitly and only for the paths its five fixtures happen to
  *   walk (in particular `specin_S`, whose four external entries are the sole
  *   reason `SpectreContext.step` loops rather than branching once);
  * - desc round-tripping and the rejection of malformed descs, which is
- *   untrusted-input handling the differential never exercises;
+ *   untrusted-input handling the recorded patches never exercise;
  * - the `random_new("dummy")` replay fallback, which **no ordinary fixture
  *   reaches** — it fires only when a desc is replayed at a larger size than it
  *   was generated for, and diverging there is silent (the same desc quietly
@@ -321,11 +321,11 @@ describe('the random_new("dummy") replay fallback', () => {
     expect(depth).toBeGreaterThan(params.coords.length);
   });
 
-  it("matches the C bit-for-bit once the fallback has fired", () => {
-    // Recorded from the C build's `grid-trace spectres 26 26 0003047Y`, as
-    // counts, a bounding box, the ends of the dot list and a digest
-    // of the whole incidence dump — the same comparison the differential makes,
-    // without carrying a second megabyte of fixture for one test.
+  it("builds the patch upstream's desc names once the fallback has fired", () => {
+    // The numbering of upstream's `grid-trace spectres 26 26 0003047Y`, as
+    // counts and a digest of the incidence — what
+    // `grid-aperiodic-numbering.test.ts` holds, without carrying a second
+    // megabyte of fixture for one test. Coordinates are display, and not held.
     const g = gridNewSpectres(26, 26, desc);
 
     expect({
@@ -333,24 +333,8 @@ describe('the random_new("dummy") replay fallback', () => {
       edges: g.edges.length,
       faces: g.faces.length,
     }).toEqual({ dots: 2879, edges: 3325, faces: 447 });
-    expect([g.lowestX, g.lowestY, g.highestX, g.highestY]).toEqual([2, 1, 1458, 1457]);
-
-    const dots = g.dots.map((d) => [d.x, d.y]);
-    expect(dots.slice(0, 3)).toEqual([
-      [728, 673],
-      [744, 689],
-      [738, 710],
-    ]);
-    expect(dots.slice(-3)).toEqual([
-      [31, 1383],
-      [36, 1361],
-      [15, 1355],
-    ]);
 
     const dump = JSON.stringify({
-      tileSize: g.tileSize,
-      boundingBox: [g.lowestX, g.lowestY, g.highestX, g.highestY],
-      dots,
       edges: g.edges.map((e) => [
         e.dot1.index,
         e.dot2.index,
@@ -368,15 +352,13 @@ describe('the random_new("dummy") replay fallback', () => {
         faces: d.faces.map((f) => (f === null ? -1 : f.index)),
       })),
     });
-    // Both numbers below are the C's, obtained by running the reference
-    // command above and hashing its dump with `fnv1a` — NOT by recording what
-    // this port happened to produce. The length is carried alongside the hash
-    // because a 32-bit digest alone is a weak collision guard; together with
-    // the counts, bounding box and dot slices asserted above, this pins the
-    // whole incidence.
+    // Taken from this port's output while a digest of the C's whole dump,
+    // coordinates included, still held, so it is the C's numbering. The length
+    // is carried alongside the hash because a 32-bit digest alone is a weak
+    // collision guard.
     expect({ length: dump.length, hash: fnv1a(dump) }).toEqual({
-      length: 312165,
-      hash: "39389bd9",
+      length: 281860,
+      hash: "5a32d8a3",
     });
   });
 

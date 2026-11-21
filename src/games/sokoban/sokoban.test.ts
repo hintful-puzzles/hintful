@@ -5,10 +5,6 @@
  * "cannot become more complete" win rule, and generator determinism.
  * Tier 2.5 — a render-scenario frame with targeted op assertions + a
  * snapshot (a generated board and a completed/flash frame).
- *
- * The byte-match generator differential lives in
- * `sokoban-differential.test.ts`; these cover the interactive paths the
- * differential never touches (execute/win/pits).
  */
 import { describe, expect, it } from "vitest";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";

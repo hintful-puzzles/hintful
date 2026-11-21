@@ -6,8 +6,7 @@
  *
  * One ladder serves the generator, which keeps a board only where the ladder
  * finishes it at its tier and not at the tier below, so its verdict on every
- * board decides which puzzles exist (the frozen differential holds those
- * verdicts to upstream's); Solve; the mistake check's answer; the difficulty
+ * board decides which puzzles exist; Solve; the mistake check's answer; the difficulty
  * probe; and the hint, which walks it from the player's squares and links
  * ({@link tentsHintWalk}). Finished means every square decided and every tent
  * linked, as upstream's was.

@@ -2,16 +2,13 @@
  * Tier-1 tests for the shared omino partitioner (`divvy_rectangle`).
  *
  * The partitioner behind Solo's jigsaw sub-blocks, Palisade's regions and
- * Separate's k-omino partition. Those games' frozen differentials catch a
- * defect too, but as a differing description string rather than as "a region
- * came out disconnected".
+ * Separate's k-omino partition.
  *
  * What is asserted here is the *contract* the callers rely on and that a
  * reader would call the point of the code: a partition of every cell into
  * connected regions of exactly `k`. The RNG draw order is deliberately not
- * restated — the module's doc comment calls it byte-match critical and the
- * differentials pin it exactly (the boundary `symmetric-blacks.test.ts` records
- * for the same reason).
+ * asserted: which board a seed deals is free to change (the boundary
+ * `symmetric-blacks.test.ts` records for the same reason).
  *
  * **One path here is deliberately not covered, and was measured rather than
  * assumed:** `divvyRectangle`'s retry loop never iterates for any shape below —

@@ -9,9 +9,7 @@
  * the number of track-bearing cells in it.
  *
  * The per-cell flag word keeps upstream's exact bit layout (an `Int32Array`
- * of `sflags`): the solver is byte-match-critical, so reproducing its bit
- * arithmetic verbatim is the lowest-risk choice
- * (docs/solver-and-generator.md § "Solver-gated generation"). Edges are
+ * of `sflags`), so the solver's bit arithmetic is ported verbatim. Edges are
  * shared between neighboring cells: setting one cell's edge mirrors the bit
  * onto the adjacent cell, so the two never disagree.
  */

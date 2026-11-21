@@ -1,8 +1,7 @@
 /*
- * Upstream `random.c` (Simon Tatham's portable RNG), byte for byte: identical
- * seeds produce identical streams in every build, so a seed keeps feeding a
- * generator the same numbers. `__fixtures__/corpus.json` is a C-recorded replay
- * corpus of it.
+ * Simon Tatham's portable RNG, ported from upstream's `random.c`: SHA-1 over
+ * a seed buffer counted up as a little-endian integer. The stream is not held to
+ * upstream's, or to its own past; `random.test.ts` holds what a generator asks.
  */
 
 import { shaSimple } from "./sha1.ts";

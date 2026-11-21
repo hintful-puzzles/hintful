@@ -26,11 +26,9 @@
  *    keeps an unrelated edit elsewhere in the module from breaking a case that
  *    never touched it; the `why` was always a claim about one function.
  * 2. **No RNG draw-order cases.** Reordering a shuffle or a comparator changes
- *    *which boards exist*, which is a differential's guarantee by design, not a
- *    local test's. Probing for it here would manufacture "findings" that the
- *    `testing` requirement explicitly says belong elsewhere. Where that
- *    boundary is load-bearing the module's own test file states it in prose and
- *    verifies it (`symmetric-blacks.test.ts` is the worked example).
+ *    *which board a seed deals*, which no one is promised (`docs/doctrine.md`
+ *    § "Upstream"), so it is no defect and a case for it would manufacture a
+ *    finding.
  * 3. **The corpus includes a control group.** `wires.ts`, `divvy.ts` and
  *    `symmetric-blacks.ts` got purpose-written local tests in
  *    `audit-test-suite-strength`, so they should score near the top. If they do
@@ -1150,21 +1148,12 @@ export const MODULES = [
 
   {
     // The shared random-loop generator. Per corpus rule 2 the cases stay off the
-    // draw order and off *which* loop comes out — that is Pearl's differential's
-    // guarantee, by design — and aim instead at the two things this module owns
-    // locally: the coloring is a single closed loop, and the bias protocol is
-    // the sequence the doc comment promises.
-    //
-    // Two candidates were written, measured and **removed** for being on the
-    // wrong side of that line: reversing `faceScore`'s sign, and counting
-    // opposite-colored neighbors in `faceNumNeighbors`. Both survive the local
-    // tests and should: they change which loop a seed yields, not whether it is
-    // one. Carrying them would have manufactured findings the `testing`
-    // requirement says belong elsewhere — and elsewhere does catch them, checked
-    // rather than assumed: under the `faceScore` reversal
-    // `pearl-differential.test.ts` goes from 14 passed / 1 skipped to 7 failed,
-    // one per desc byte-match fixture. `loopgen.test.ts`'s header records the
-    // same split for a reader who arrives from the other direction.
+    // draw order and off *which* loop comes out, and aim instead at the two
+    // things this module owns: the coloring is a single closed loop, and the
+    // bias protocol is the sequence the doc comment promises. Reversing
+    // `faceScore`'s sign, or counting opposite-colored neighbors in
+    // `faceNumNeighbors`, changes which loop a seed yields, not whether it is
+    // one, so neither is a case.
     module: "src/engine/generate/loopgen.ts",
     cases: [
       {
@@ -1271,8 +1260,7 @@ export const MODULES = [
     // The grid module's only floating-point code, and **display/input only** —
     // `gridNearestEdge` decides which edge a click lands on, `gridFindIncenter`
     // where a clue digit is drawn. Neither reaches a description, a generator or
-    // a solver, which is the boundary that makes float arithmetic safe here and
-    // the reason none of these cases belongs to a differential.
+    // a solver, which is the boundary that makes float arithmetic safe here.
     module: "src/engine/board/grid/grid-geometry.ts",
     cases: [
       {

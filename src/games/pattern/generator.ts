@@ -6,14 +6,10 @@
  * of the tier asked for: decided a line at a time, or with one answer that
  * the lines alone do not reach.
  *
- * Byte-match note: upstream computes the value grid in single-precision
- * `float`, and the median threshold decides each cell with a `>=`, so
- * reproducing the C desc bit-for-bit needs single-precision arithmetic: every
- * intermediate goes through `Math.fround`. A division is computed in double
- * then rounded (JS has no single-precision divide), so a double-rounding ULP
- * difference could in principle flip a knife-edge cell; the differential is
- * what shows the match holds on real boards (docs/testing.md
- * § "Byte-match: fidelity where there is a right answer").
+ * Upstream computes the value grid in single-precision `float`, and the
+ * median threshold decides each cell with a `>=`; that arithmetic is kept as
+ * ported, so every intermediate goes through `Math.fround`. A division is
+ * computed in double then rounded (JS has no single-precision divide).
  */
 
 import { retryLimit } from "../../engine/contract/retry-limit.ts";

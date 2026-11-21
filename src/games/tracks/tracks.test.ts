@@ -3,7 +3,7 @@
  * grade, `findMistakes`, input mapping, and the mistake render overlay
  * (paint-twice, so the overlay is proven to live in the diff key).
  *
- * Heavy solver checks use frozen fixture descs (not fresh generation), so they
+ * Heavy solver checks use fixed descs (not fresh generation), so they
  * are fast and deterministic.
  */
 import { describe, expect, it } from "vitest";
@@ -64,7 +64,7 @@ import {
 
 const DEFAULT_BACKGROUND: [number, number, number] = [0.9, 0.9, 0.9];
 
-// Known boards from the C-reference fixtures.
+// Known boards, as upstream's C generator wrote them.
 const SMALL: { p: TracksParams; desc: string } = {
   p: { w: 6, h: 6, diff: 0, singleOnes: true },
   desc: "f6pCkC,2,3,3,2,3,S3,3,S3,3,3,2,2",

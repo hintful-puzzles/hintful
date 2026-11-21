@@ -151,8 +151,7 @@ export type SubsetsMistake =
 
 // --- params -----------------------------------------------------------------
 
-/** Easy is the default: it *is* upstream's shipped solver strength, so it is
- * the tier the differential fixtures record. */
+/** Easy is the default: it *is* upstream's shipped solver strength. */
 export function defaultParams(): SubsetsParams {
   return { w: 4, h: 4, n: 4, diff: DIFF_EASY };
 }
@@ -230,7 +229,7 @@ export function cloneState(s: SubsetsState): SubsetsState {
   };
 }
 
-// --- desc codec (byte-match surface) ----------------------------------------
+// --- desc codec (upstream's format) -----------------------------------------
 
 /**
  * What {@link encodeDesc} writes: one token per cell in row-major order,
@@ -280,7 +279,8 @@ export function newState(p: SubsetsParams, desc: string): SubsetsState {
 
 /**
  * Encode a board's givens + arrow clues as a desc — the exact inverse of
- * {@link newState} and byte-for-byte upstream `new_game_desc`'s emit loop.
+ * {@link newState}, writing upstream's desc format as `new_game_desc`'s emit
+ * loop does.
  * Only `immutable`/`known`/`clues` are read, so the encoding is stable
  * across play (player edits touch blank cells' `known`/`mask` only).
  */

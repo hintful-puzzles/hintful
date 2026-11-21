@@ -6,8 +6,7 @@
  * division's alone; and the fills are spread, so a board of ten regions is
  * not two colors and a stray third. What a generator relies on from
  * `colorRegions` is the order it is asked in, which is the order of its
- * draws: Map's frozen differential pins that on dealt maps, and the walk's
- * own shape is pinned here on a graph small enough to read.
+ * draws: the walk's shape is pinned here on a graph small enough to read.
  */
 import { describe, expect, it } from "vitest";
 import { randomNew } from "../random/index.ts";

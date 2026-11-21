@@ -5,8 +5,7 @@
  * a full square whose surplus symbols are reinterpreted as holes.
  *
  * Two families of guarantee: that the extension is **inert** when not declared
- * (the shape every Latin-square game relies on, and which their byte-match
- * differentials pin from the outside), and that with a repeat declared each
+ * (the shape every Latin-square game relies on), and that with a repeat declared each
  * deduction reasons about the repeated symbol with its multiplicity — placed
  * when exactly `times` cells remain for it, struck from a line only once the
  * line holds all of it, handled by set elimination with its weight, and never

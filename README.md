@@ -101,8 +101,7 @@ templates under [templates/](templates/). `src/` is organized by role:
 * `src/puzzle/` — the puzzle runtime + the Comlink worker boundary.
 * `src/engine/` — the `Game` interface, the `Midend`, the game registry,
   the drawing/color contracts and the in-process test harness.
-  `src/engine/random/` is the bit-identical RNG port, which the fixtures
-  and seeded tests rest on.
+  `src/engine/random/` is the seeded RNG, which every seeded test rests on.
 * `src/games/<id>/` — each game.
 * `src/store/` — Dexie (IndexedDB) schema for settings and saved games.
 * Page entries, `main.ts`, the old-browser `preflight.ts` gate, the

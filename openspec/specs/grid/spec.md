@@ -377,18 +377,6 @@ triangular tiling and null for every other periodic tiling.
 - **THEN** the two grids are identical in every dot coordinate, edge and face,
   and in the same order, and no dot coordinate is fractional or negative zero
 
-### Requirement: Aperiodic description generation is stable across builds
-
-For the aperiodic tilings, description generation SHALL be a deterministic
-function of the random stream and stable across builds. Its weight constants
-SHALL be integers and SHALL NOT be recomputed from irrational expressions.
-
-#### Scenario: Description generation is stable for a seed
-
-- **WHEN** `gridNewDesc` is called for an aperiodic tiling with a given seed
-- **THEN** the description string it produces matches the one the committed
-  fixture records for that seed
-
 ### Requirement: The fallback generator behaves the same in every build
 
 Where a stored description is replayed and its coordinates are exhausted, the
@@ -402,3 +390,24 @@ different grid for the same description with no detectable error.
   exhausted partway through the patch
 - **THEN** the fallback generator is created at the same step both times and
   the two grids are identical
+
+### Requirement: An aperiodic description builds the same grid in every build
+
+For the aperiodic tilings, a description SHALL build the same grid, numbered
+the same, in every build, because a Loopy game ID carries the patch's
+description and then a clue per face in face order. Which patch a seed deals
+is not held across builds. The weight constants SHALL be integers and SHALL
+NOT be recomputed from irrational expressions.
+
+#### Scenario: A recorded description builds its recorded grid
+
+- **WHEN** `grid-aperiodic-numbering.test.ts` builds each description its
+  committed fixture records, drawing no randomness
+- **THEN** the faces, edges and dots it builds are numbered and linked as the
+  fixture records
+
+#### Scenario: A seed deals another patch after a change
+
+- **WHEN** a change makes `gridNewDesc` deal another patch for a seed
+- **THEN** no test fails for that alone, since no saved game or shared game ID
+  names a seed

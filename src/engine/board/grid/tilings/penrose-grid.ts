@@ -178,8 +178,7 @@ export function penroseValidateDesc(
  * Build the grid a description names.
  *
  * A pure deterministic function of its arguments — no randomness reaches here,
- * which is what lets the differential test geometry and RNG fidelity
- * separately.
+ * so a game ID, which carries the desc, always rebuilds the same patch.
  */
 export function gridNewPenrose(
   which: PenroseWhich,
@@ -214,7 +213,7 @@ export function gridNewPenrose(
         // The one negative-zero choke point. Signed basis vectors run through
         // the whole tiling, and `-0` survives `===` *and* the dot-dedup key, so
         // a grid carrying one is structurally perfect and visible only to a
-        // comparison like the differential's `toEqual`. Normalize here, where
+        // structural comparison like `toEqual`. Normalize here, where
         // exact arithmetic becomes a pixel.
         return [gx === 0 ? 0 : gx, gy === 0 ? 0 : gy];
       }),

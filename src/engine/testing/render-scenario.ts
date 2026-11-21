@@ -32,7 +32,7 @@ const SETTLE_SECONDS = 60;
 export interface RenderScenario<Params, State, Move, Ui, DrawState, Mistake> {
   game: Game<Params, State, Move, Ui, DrawState, Mistake>;
   /** Full game id: `<params>:<desc>` (descriptive) or `<params>#<seed>`
-   * (random, reproducible via the bit-identical RNG). */
+   * (random, reproducible via the seeded RNG). */
   id: string;
   /** Game `Move`s to replay before capture, applied directly (not via
    * pointer events) — the deterministic way to reach a board state. */

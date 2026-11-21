@@ -1,7 +1,7 @@
 /**
- * Behavioral tests for the Solo solver (tier 1), on hand-built boards. Exact
- * C-difficulty agreement across the jigsaw, X and killer paths is the byte-match
- * differential's job.
+ * Behavioral tests for the Solo solver (tier 1), on hand-built boards. That the
+ * jigsaw, X and killer presets deal boards needing the tier they claim is held
+ * by `src/guards/difficulty-contract.test.ts` (every preset in the slow tier).
  */
 import { describe, expect, it } from "vitest";
 import { runSolver, solveSolo } from "./solver.ts";
@@ -78,8 +78,9 @@ describe("solo solver — variant paths (codec → solve round-trips)", () => {
   // These reuse the standard solution but route it through the killer and
   // jigsaw code paths (cages / jigsaw-blocks shaped as the 3×3 rectangles, so
   // the known SOLUTION stays valid). They confirm the variant deductions run
-  // end-to-end and stay consistent; exact C-difficulty agreement across
-  // genuinely irregular boards is the differential's job.
+  // end-to-end and stay consistent; grading genuinely irregular boards is held
+  // by the tier gate, `src/guards/difficulty-contract.test.ts`, which deals each
+  // preset at its tier.
 
   it("solves a killer board (cages = blocks, sums = 45) to the solution", () => {
     const gridDesc = encodeGrid(PUZZLE, 81);

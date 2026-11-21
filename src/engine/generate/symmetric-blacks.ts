@@ -2,14 +2,8 @@
  * Symmetric black-square placement: upstream `set_blacks`, which `sticks.c`
  * copied verbatim from `lightup.c` (its own comment says so).
  *
- * Byte-match critical: the symmetry-reduced region sizing, the
- * rejection-sampling draw order (one `randomUpto` pair per placement
- * attempt, retried while the cell is already black), the x-outer/y-inner
- * symmetry copy order (which reads the *current* board, so overlapping
- * regions behave exactly as C's in-place assignment), and the
- * `SYMM_ROT4` odd-center fix-up draw (`randomUpto(rs, 100) <= blackpc`,
- * note the `<=`) are all observable in the RNG stream the callers' descs
- * depend on.
+ * The x-outer/y-inner symmetry copy reads the *current* board, so
+ * overlapping regions behave as C's in-place assignment does.
  *
  * The caller clears its board first (C's `set_blacks` memsets; the TS
  * callers own their board representation, so clearing stays with them).

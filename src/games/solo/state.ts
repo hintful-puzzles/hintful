@@ -14,9 +14,9 @@
  * The block partition(s) and given cells are immutable (shared by reference);
  * the working `grid` and `pencil` bitmaps are cloned per move.
  *
- * The codecs transcribe `solo.c`'s and are held to it by the byte-match
- * differential: the block-structure run-length encoding's 'z' handling must
- * match `solo.c` exactly, so do not copy Keen's, whose convention differs.
+ * The codecs transcribe `solo.c`'s, so that upstream's game IDs load: the
+ * block-structure run-length encoding's 'z' handling must match `solo.c`
+ * exactly, so do not copy Keen's, whose convention differs.
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";

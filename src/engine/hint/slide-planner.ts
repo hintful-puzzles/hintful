@@ -538,8 +538,8 @@ function zobristTable(cells: number, values: number): Int32Array {
   // time and never correctness (`find` compares the boards it matches), but a
   // *non-deterministic* one would make the same board produce different plans on
   // different runs, and a hint has to be reproducible. Nothing here needs the
-  // project's bit-identical RNG, and reaching for it would tie a search to the
-  // library that exists to keep shared game IDs stable.
+  // project's seeded RNG, and reaching for it would tie a search to the
+  // library that deals boards.
   let state = 0x9e3779b9;
   const table = new Int32Array(cells * (values + 1));
   for (let i = 0; i < table.length; i++) {

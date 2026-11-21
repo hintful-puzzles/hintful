@@ -2,10 +2,6 @@
  * Divide a rectangle into equally-sized connected ominoes at random (upstream
  * `divvy.c`'s `divvy_rectangle`).
  *
- * RNG-faithful: the draw order (the `order` shuffle, the per-iteration
- * `random_upto` omino pick, the BFS over the same `order` permutation) is
- * upstream's, so a generated desc matches the C reference byte for byte.
- *
  * Callers read the returned `Dsf` for membership only (Solo's `blocksFromDsf`
  * numbers regions by first appearance), so the partition feeds a desc and the
  * root choice does not.
@@ -215,8 +211,7 @@ const MAX_DIVVY_ATTEMPTS = 10000;
 /**
  * Partition a `w × h` rectangle into size-`k` connected ominoes, retrying
  * failed attempts as upstream does, capped so a divergence fails loudly instead
- * of hanging (docs/testing.md § "Quirks are load-bearing — capped, not
- * cleaned").
+ * of hanging (docs/solver-and-generator.md § "Every retry loop is bounded").
  */
 export function divvyRectangle(w: number, h: number, k: number, rng: RandomState): Dsf {
   for (let attempt = 0; attempt < MAX_DIVVY_ATTEMPTS; attempt++) {

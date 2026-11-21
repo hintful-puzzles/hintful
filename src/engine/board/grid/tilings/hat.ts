@@ -716,8 +716,7 @@ export type HatTileCallback = (nvertices: number, coords: readonly number[]) => 
  * `scale(-1, {x: 0, y: 0})` yields `-0` in JS where C yields `0`, and `-0`
  * survives everything that would normally catch it: `===`, the dot-dedup key
  * (`` `${-0}` === "0" ``), and `Map` lookup. The grid comes out structurally
- * perfect and only a structural comparison such as the differential's `toEqual`
- * disagrees.
+ * perfect and only a structural comparison such as `toEqual` disagrees.
  */
 const normalizeZero = (n: number): number => (n === 0 ? 0 : n);
 

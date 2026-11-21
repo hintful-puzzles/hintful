@@ -6,8 +6,7 @@
  *
  * One ladder serves the generator, which keeps a removed pearl only while
  * the ladder still finishes the board at its tier, so its verdict on every
- * intermediate board decides which puzzles exist (the frozen differential
- * holds those verdicts to upstream's); Solve; the mistake check's answer;
+ * intermediate board decides which puzzles exist; Solve; the mistake check's answer;
  * the difficulty probe; and the hint, which walks it from the player's lines
  * and crosses (`hint.ts`). No technique supposes anything, so a board the
  * ladder finishes has one answer.
@@ -205,12 +204,4 @@ function transcribe(g: PearlGeometry, grid: Uint8Array, result: Uint8Array): voi
           nx >= 0 && nx < w && ny >= 0 && ny < h && result[ny * w + nx] & opposite(d);
         if (!linksBack) result[y * w + x] &= ~d;
       }
-}
-
-/** Easiest difficulty (0-based) at which `clues` has a unique solution, or
- * -1 if none. */
-export function gradePearl(w: number, h: number, clues: Uint8Array): number {
-  for (let diff = 0; diff < pearl.tiers.length; diff++)
-    if (pearlMarks(w, h, clues, diff).ret === 1) return diff;
-  return -1;
 }

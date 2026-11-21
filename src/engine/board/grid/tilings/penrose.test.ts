@@ -1,9 +1,9 @@
 /**
  * Unit tests for the Penrose P2/P3 tilings.
  *
- * The heavy lifting is done by `grid-aperiodic-differential.test.ts`, which
- * byte-matches 13 C-generated fixtures across both variants. These cover what
- * a fixture cannot: the shape of the hand-transcribed transition tables, the
+ * `grid-aperiodic-numbering.test.ts` holds that recorded descs across both
+ * variants build the patches the C built, numbered index for index. These
+ * cover what a fixture cannot: the shape of the hand-transcribed transition tables, the
  * description parser's rejection paths (which are untrusted-input surface), and
  * the `"dummy"` replay RNG, which no ordinary fixture reaches.
  */
@@ -33,7 +33,7 @@ describe("penrose transition tables", () => {
   // of what was typed. The counts come
   // from the C: 60 leaves in `transition` (penrose.c:100-266) and 36 in
   // `transition_in` (penrose.c:275-361). A dropped or duplicated row moves a
-  // count; the differential then says which row.
+  // count; `grid-aperiodic-numbering.test.ts` then says which row.
   it("has exactly the C's 60 outward leaves", () => {
     const defined: string[] = [];
     for (const parent of PENROSE_LETTERS) {
@@ -220,7 +220,7 @@ describe('penrose "dummy" replay RNG', () => {
   // When a stored description is replayed at a larger size than it was
   // generated for, the search asks for metatile levels the description never
   // recorded. Upstream conjures a fixed-seed RNG at that moment; this is the
-  // only path that exercises it, and no differential fixture reaches it.
+  // only path that exercises it, and no recorded patch reaches it.
   //
   // The 20×20 size is chosen because it is *verified* to reach the fallback:
   // instrumenting the branch shows a 4×4 description (9 coordinates for P2,
@@ -253,7 +253,7 @@ describe("penrose degenerate patches", () => {
     // runs the search at all; the tell is a description with a single
     // coordinate letter. Upstream then aborts inside `dsf_new(0)`; trimming
     // catches it here instead, which is the better failure. Not a bug to work
-    // around — the differential fixtures deliberately start above this size.
+    // around — the recorded patches deliberately start above this size.
     const desc = "50A";
     expect(penroseValidateDesc("p2", 1, 1, desc)).toBeNull();
     expect(() => gridNewPenrose("p2", 1, 1, desc)).toThrow(GridTrimmedAwayError);

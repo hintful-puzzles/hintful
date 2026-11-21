@@ -7,8 +7,7 @@
  * every hinting game at once; Galaxies is enrolled in
  * `engine/testing/hint-games.ts`. What is here is what only Galaxies can say:
  * that each rung fires with the evidence its sentence claims, that every
- * association it offers is the one the unique solution holds (the property
- * that replaces the byte-match oracle on this new code path), and that
+ * association it offers is the one the unique solution holds, and that
  * following a hint by any of the three gestures counts as following it.
  */
 import { describe, expect, it } from "vitest";
@@ -164,9 +163,8 @@ function solution(s: GalaxiesState): GalaxiesState {
 }
 
 describe("the plan is sound: every step agrees with the unique solution", () => {
-  // The property that stands in for the byte-match oracle here. A hint is a
-  // second projection of the solver, so a wrong deduction would not show up
-  // in the generator's frozen differential at all — it would show up as a
+  // A hint is a second projection of the solver, so a wrong deduction would
+  // not show up in the generator's boards at all — it would show up as a
   // player being told to draw an arrow the puzzle contradicts.
   for (const [name, params] of [
     ["Easy", NORMAL_7],

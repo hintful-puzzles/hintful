@@ -9,11 +9,10 @@
  * solvable by construction, which is why no solver gates generation. Leftover
  * `INITIAL` squares become walls in the desc.
  *
- * Every `randomUpto` draw, and the order of upstream's hand-rolled binary
- * min-heap (keyed on how many `INITIAL` squares a route carves through), match
- * the C, so a level reproduces the C engine's byte-for-byte; the differential
- * test pins that. A dealt board is the first such level the hint's search can
- * finish, which is the C's own for every seed whose first level it can.
+ * The `randomUpto` draws, and the order of upstream's hand-rolled binary
+ * min-heap (keyed on how many `INITIAL` squares a route carves through), are
+ * upstream's. A dealt board is the first such level the hint's search can
+ * finish.
  *
  * Upstream also has a NetHack variant (a deep pit in a corner that barrels are
  * pulled out of) and scores each pull by the damage it does to `INITIAL`
@@ -223,8 +222,7 @@ export function dealTries(area: number): number {
   return Math.max(8, Math.ceil(5 * (area / 260) ** 2));
 }
 
-/** A level as upstream generates it, unchecked: what the frozen C reference
- * pins (`sokoban-differential.test.ts`). */
+/** A level as upstream generates it, unchecked. */
 export function sokobanLevel(p: SokobanParams, rng: RandomState): SokobanState {
   // An INITIAL square generation never touched is a wall.
   const grid = sokobanGenerate(p.w, p.h, rng).map((v) => (v === INITIAL ? WALL : v));

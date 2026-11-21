@@ -5,8 +5,8 @@
  * solver / moves / mistakes, tier 2 and 2.5 for every frame the renderer can
  * reach.
  *
- * The boards are the C-reference descriptions the differential already pins, so
- * every test runs against a real upstream puzzle without generating one.
+ * The boards are descriptions upstream's generator dealt, so every test runs
+ * against a real upstream puzzle without generating one.
  */
 import { describe, expect, it } from "vitest";
 import { Dsf } from "../../engine/board/dsf.ts";
@@ -40,7 +40,6 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import cReference from "./__fixtures__/seismic-c-reference.json" with { type: "json" };
 import { maxGeneratedRegionSize, maxRegionSize, newSeismicDesc } from "./generator.ts";
 import { seismicGame } from "./index.ts";
 import {
@@ -89,39 +88,67 @@ import {
 /** Every line of the menu, in order. */
 const PRESETS = leafPresets(seismicGame).map((l) => l.params);
 
-interface Fixture {
-  seed: string;
+interface Board {
   desc: string;
   w: number;
   h: number;
   diff: number;
   mode: number;
 }
-const FIXTURES = (cReference as { fixtures: Fixture[] }).fixtures;
 
-const paramsOf = (f: Fixture): SeismicParams => ({
+/** Boards dealt by upstream's generator, each mode and band at several sizes:
+ * `[w, h, diff, mode, desc]`. */
+const BOARDS: readonly Board[] = (
+  [
+    [4, 4, 0, 0, "11bafa,d4c1f3"],
+    [4, 4, 0, 1, "a9bi,a3c2a35a4b3b"],
+    [4, 4, 1, 0, "2a1a1a1aa1b1d,j4b4b"],
+    [4, 4, 1, 1, "f1ab4a1ab,a4h1b3a4"],
+    [6, 6, 0, 0, "2c1aa4aaa6bb4aba2a1aba3a,g2b5l3l"],
+    [6, 6, 0, 1, "b1bac1b1aaac1cc2a1b1a2a1cc,2b4c5a1h2a1e3a5a1d4"],
+    [6, 6, 1, 0, "2b1a1a3aa2a2a1bbaaa3a1bab1a4,zj"],
+    [6, 6, 1, 1, "aa1aa3abb2ccg2a1cb4b2a,3a2i4b5a3b2c4c3c1c"],
+    [7, 7, 0, 0, "1a1aa1ba1b1aaa3caaaa1aa1b2a2b1b1bab6b1aa,d5i1k45c6k3e"],
+    [7, 7, 0, 1, "a1baba3aa2a1aa1aa1ab1d3a1a1abcaac2a1ae,3f54b4a5m1b1e35a2f5b"],
+    [7, 7, 1, 0, "bbab1a2c1b1a2cabc6caa7aaa6b6,zw"],
+    [7, 7, 1, 1, "ab1a1a1aaa2aeababba2g1cb3a1b6cd,2b2f3j5h5a2a3e41a5b2b"],
+    [4, 4, 0, 0, "2a1a1cd4aa,b3m"],
+    [4, 4, 1, 1, "abacf3a1,a2a13d1f"],
+    [6, 6, 0, 0, "1a4a1aa2b4a1aab1cc4a5bd,f2m2n1"],
+    [6, 6, 1, 1, "1baa1ab1aac1bfc2aaba3da1,c3c1d4a3a41g2d4b21a"],
+    [4, 5, 0, 0, "1d1a1a1b4ba1d,f5b1d2b4b"],
+    [5, 4, 0, 1, "ca1cca1ac5b,2a4d1d2f3"],
+    [5, 5, 0, 0, "1bba2b1a1b5a4ca2,w1a"],
+    [5, 5, 1, 0, "a1a2a1a2bcf2d5,c3b3c1b4i1a"],
+    [5, 5, 0, 1, "3a1ba1a1bac2a1bbba,2c2d345c1g3a"],
+    [5, 5, 1, 1, "a1ba2a1aaadbb1a1f,5c213d5e2a5a3c"],
+    [6, 4, 1, 0, "4bb1b5aaaa3aaa1a,e2d4m"],
+    [4, 6, 1, 1, "1ca1a1aa1cba1e1d,a54b2e11h53a"],
+    [7, 4, 0, 0, "b1aa1a1a1a2a5a1dba1ac,f3f12c3f4b"],
+    [4, 7, 0, 1, "eaa2abd2a1a1a1aad3,b3b2a5h1c2e4a"],
+    [6, 5, 0, 0, "a1a4ab1b2a1aaba10a3b,zd"],
+    [5, 6, 1, 1, "2da1baba1b1aba2aa1a2bc,c2d3a4f4b2c4b2b"],
+  ] as const
+).map(([w, h, diff, mode, desc]) => ({ w, h, diff, mode, desc }));
+
+const paramsOf = (f: Board): SeismicParams => ({
   w: f.w,
   h: f.h,
   diff: f.diff,
   mode: f.mode,
 });
-const idOf = (f: Fixture) => `${encodeParams(paramsOf(f), true)}:${f.desc}`;
-const findFixture = (seed: string): Fixture => {
-  const f = FIXTURES.find((x) => x.seed === seed);
-  if (!f) throw new Error(`no such fixture: ${seed}`);
-  return f;
-};
+const idOf = (f: Board) => `${encodeParams(paramsOf(f), true)}:${f.desc}`;
 
 /** A small Seismic board with real clues — the workhorse for the move and
  * mistake tests. */
-const SMALL = findFixture("seismic-4x4-e-s");
+const SMALL = BOARDS[0];
 /** A Tectonic board, so the mode-dependent keep-apart rule is exercised too. */
-const SMALL_TECTONIC = findFixture("seismic-4x4-e-t");
+const SMALL_TECTONIC = BOARDS[1];
 
-const stateOf = (f: Fixture): SeismicState => newState(paramsOf(f), f.desc);
+const stateOf = (f: Board): SeismicState => newState(paramsOf(f), f.desc);
 
-/** The unique solution of a fixture, via the solver. */
-function solutionOf(f: Fixture): Uint8Array {
+/** The unique solution of a board, via the solver. */
+function solutionOf(f: Board): Uint8Array {
   const board = stateOf(f);
   expect(solveGame(board, 2)).not.toBe(SOLVE_FAILED);
   return board.grid;
@@ -244,8 +271,8 @@ describe("seismic params", () => {
 // --- description codec -----------------------------------------------------
 
 describe("seismic description codec", () => {
-  it("re-encodes every C description to itself", () => {
-    for (const f of FIXTURES) {
+  it("re-encodes every upstream description to itself", () => {
+    for (const f of BOARDS) {
       expect(encodeDesc(stateOf(f))).toBe(f.desc);
       expect(validateDesc(seismicGame, paramsOf(f), f.desc)).toBeNull();
     }
@@ -284,8 +311,8 @@ describe("seismic description codec", () => {
 // --- solver ----------------------------------------------------------------
 
 describe("seismic solver", () => {
-  it("solves every C board at exactly its recorded difficulty band", () => {
-    for (const f of FIXTURES) {
+  it("solves every upstream board at exactly its difficulty band", () => {
+    for (const f of BOARDS) {
       const atTarget = stateOf(f);
       expect(solveGame(atTarget, f.diff)).not.toBe(SOLVE_FAILED);
       expect(isComplete(atTarget)).toBe(true);
@@ -391,12 +418,10 @@ describe("seismic generator", () => {
 // --- the constructive generator ---------------------------------------------
 
 /**
- * These are what **replaces the byte-match** for the shipped region generator.
- *
- * The generator partitions first and fills second, so it does not reproduce the
- * frozen C descriptions. What a byte-match once guaranteed about the *regions*
- * is therefore checked directly here: the structure, the mode's keep-apart rule,
- * unique solubility at the requested band, and determinism.
+ * The shipped region generator partitions first and fills second, so it does
+ * not deal upstream's boards. What its boards must satisfy is therefore checked
+ * directly here: the structure, the mode's keep-apart rule, unique solubility
+ * at the requested band, and determinism.
  *
  * Every case is a fixed seed, so the work and the verdict are identical on every
  * run, and nothing is clock-gated (docs/testing.md § "Seed-deterministic, never clock-gated").
@@ -806,8 +831,8 @@ describe("seismic moves", () => {
   });
 
   it("completes the board on Solve, and marks it solved-with-help", () => {
-    // Driven through a real Midend: the interactive completion path is not the
-    // one the differential exercises (docs/testing.md § "What a new game ships").
+    // Driven through a real Midend, so the interactive completion path is the
+    // one exercised (docs/testing.md § "What a new game ships").
     const h = driveMidend(seismicGame);
     const me = h.midend;
     expect(me.newGameFromId(idOf(SMALL))).toBeNull();
@@ -974,8 +999,8 @@ describe("seismic midend lifecycle", () => {
     expect(restored.getParams()).toBe(me.getParams());
   });
 
-  it("accepts every recorded board as a game id", () => {
-    for (const f of FIXTURES) {
+  it("accepts every upstream board as a game id", () => {
+    for (const f of BOARDS) {
       const me = new Midend(seismicGame);
       expect(me.newGameFromId(idOf(f))).toBeNull();
     }

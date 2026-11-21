@@ -1,9 +1,9 @@
 // Tier-1 tests for the shared border-marking mechanic (Palisade + Separate).
 //
-// The games' own suites exercise this through their differentials and render
-// snapshots. These tests pin the mechanic's contract *directly*, so a change
-// to it fails here — naming the rule it broke — rather than only as a moved
-// fixture in the games that use it.
+// The games' own suites exercise this through their render snapshots. These
+// tests pin the mechanic's contract *directly*, so a change to it fails here —
+// naming the rule it broke — rather than only as a moved snapshot in the games
+// that use it.
 import { describe, expect, it } from "vitest";
 import {
   CURSOR_DOWN,

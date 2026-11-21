@@ -97,7 +97,7 @@ export const LOOPY_GRIDS = [
  * (`d<c>`), and its index the internal `diff` value the solver caps its rungs
  * by. */
 const LOOPY_DIFF_CHARS = "enth";
-export const LOOPY_DIFFS: readonly string[] = loopy.tiers;
+const LOOPY_DIFFS: readonly string[] = loopy.tiers;
 
 export const DIFF_EASY = loopy.TIER.easy;
 export const DIFF_NORMAL = loopy.TIER.normal;

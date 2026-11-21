@@ -1,7 +1,6 @@
 /**
  * Behavioral tests for the Map port (tier 1 + a tier-2 paint-twice render
- * check). Byte-match generation/solver fidelity lives in
- * `map-differential.test.ts`; this file covers the codec, input → move mapping,
+ * check): the codec, input → move mapping,
  * `executeMove`, completion, `findMistakes`, and `solve`.
  */
 

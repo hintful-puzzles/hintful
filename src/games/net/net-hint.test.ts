@@ -3,10 +3,6 @@
  * board the generator deals, soundly; the words of a step that reads a
  * square as turned; keep-track on a turn and a lock; the refusal on a
  * mistake; and the marks on the frame.
- *
- * "Every generated board is hinted to the end, every step agreeing with the
- * solution" is the property that stands in for the byte-match the generator
- * left behind with upstream's solver (`net-differential.test.ts`).
  */
 
 import { describe, expect, it } from "vitest";

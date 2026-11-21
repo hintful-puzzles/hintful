@@ -5,8 +5,8 @@
 How behavior is tested here: the in-process tiers and the render harness, the
 rules that keep the suite deterministic under load and its workers from
 outliving it, the rule against mocking a module, how a test's strength is
-audited and probed, what an assertion must be able to catch, the frozen C
-fixtures and what they still guarantee, the capability snapshot, the harness
+audited and probed, what an assertion must be able to catch, the recordings
+of upstream's C kept where a game ID depends on them, the capability snapshot, the harness
 that pins a hint test's positions, and the boards a cross-game sweep walks
 and how many of them on a commit. What the gate runs, and
 what it may defer, is `build-pipeline`; how to write a test is
@@ -105,47 +105,6 @@ real-canvas smoke checks.
   baseline after a rendering change
 - **THEN** an unintended visual change surfaces as a text diff an agent reviews,
   and an intended one is re-baselined with `vitest -u`
-
-### Requirement: A shared helper carries the byte-for-byte differential shape
-
-The engine testing utilities SHALL provide `describeDescDifferential` in
-`src/engine/testing/differential.ts`: given fixtures, a `params` mapper and a
-game's `newDesc`, it asserts that each fixture's seed generates the recorded C
-desc, and `aux` where one was recorded, with an optional `extra` callback for
-a follow-on assertion. A game whose gated differential has that shape SHALL
-use the helper. The solver-agreement shape is game-specific and is not
-modeled by it.
-
-#### Scenario: A game's byte-match differential uses the helper
-
-- **WHEN** a game's gated differential asserts its `newDesc` reproduces the C desc
-  byte-for-byte across a fixture set
-- **THEN** it calls `describeDescDifferential` with its fixtures, params mapper, and
-  `newDesc`, rather than re-declaring the `describe`/`for`/`it`/`expect` loop
-
-#### Scenario: A differential decodes a board and runs the solver
-
-- **WHEN** a game's differential decodes a recorded board, runs the solver and
-  asserts the recorded difficulty
-- **THEN** it is written in the game's own test, not through this helper
-
-#### Scenario: A fixture that recorded the aux
-
-- **WHEN** a fixture carries the `aux` the C generator wrote beside its desc
-- **THEN** the helper asserts the TS generator's `aux` equals it too
-
-### Requirement: The frozen fixtures' provenance is stated once, and no recipe is carried
-
-The C-reference fixtures are frozen and cannot be regenerated. That fact SHALL
-be stated once, in the shared differential helper, rather than repeated per
-game, and a differential test file SHALL NOT carry a regeneration recipe,
-because no such recipe can be executed.
-
-#### Scenario: A fixture's provenance is recorded but its recipe is not
-
-- **WHEN** a differential test file documents where its fixture came from
-- **THEN** it names the harness that captured it, as history
-- **AND** it does NOT carry the commands, because none of them can be run
 
 ### Requirement: The test suite is deterministic under parallel load
 
@@ -269,17 +228,17 @@ regression, not merely whether they execute the code, by mutation-testing the
 shared engine and triaging the survivors. The deliverable SHALL be a triaged
 survivor list, each survivor classified as a missing assertion, a genuinely
 unreachable branch or an equivalent mutant. Where survivors cluster SHALL be
-reported: survivors in code the differentials are meant to protect mean the
-fixture net is thinner than believed.
+reported: survivors in code the hint walks are meant to protect mean that net
+is thinner than believed.
 
 #### Scenario: A refactor is justified by an unmoved fixture
 
-- **WHEN** a change argues it is behavior-preserving because a differential
-  fixture did not move
-- **THEN** that argument is only as strong as the fixture's measured coverage of
+- **WHEN** a change argues it is behavior-preserving because no hint-walk
+  snapshot moved
+- **THEN** that argument is only as strong as the walks' measured coverage of
   the paths the change touched
 - **AND** where the audit has shown that coverage to be thin, the change adds a
-  direct assertion rather than relying on the fixture alone
+  direct assertion rather than relying on the walks alone
 
 #### Scenario: A snapshot's paired assertions are not load-bearing
 
@@ -293,7 +252,7 @@ fixture net is thinner than believed.
 #### Scenario: A shared module's semantics are pinned only by a distant consumer
 
 - **WHEN** a mutant in a shared engine module survives that module's own test file
-  and is killed only by a game's tests or a frozen differential
+  and is killed only by a game's tests or a cross-game guard
 - **THEN** an assertion is added to the module's own test file, naming the
   behavior rather than the mutant
 - **BECAUSE** coverage several layers away is adequate as protection and poor as
@@ -315,8 +274,8 @@ against behavior.
 ### Requirement: A shared module's tests give feedback where the code lives
 
 A module in `src/engine/` SHALL be able to fail its own tests when its behavior
-changes, and SHALL NOT rely solely on a consumer's tests or a game's frozen
-differential to notice. Logic that moves from a game into `src/engine/` SHALL
+changes, and SHALL NOT rely solely on a consumer's tests or a cross-game guard
+to notice. Logic that moves from a game into `src/engine/` SHALL
 have its tests written in the same change. A session runs the files it
 touched, so a module whose own tests cannot see its defects returns green on a
 broken module.
@@ -326,7 +285,7 @@ broken module.
 - **WHEN** logic moves from a game into `src/engine/`
 - **THEN** its tests are written in the same change
 - **BECAUSE** extraction moves the code but not its tests: the game's
-  differential still catches defects, so nothing turns red and the module
+  tests still catch defects, so nothing turns red and the module
   silently arrives with no local assertions
 
 #### Scenario: A module is fully protected but locally silent
@@ -355,9 +314,9 @@ rate rather than chased.
 
 A module's own tests SHALL be derived rather than assumed: they are every
 engine test file that imports the module, or imports a barrel re-exporting it,
-and not one file named after it. A differential SHALL NOT count as a local
-test, even an engine-local one, because its guarantee is a frozen fixture
-noticing that the boards moved.
+and not one file named after it. A game's test file SHALL NOT count as a local
+test, because its guarantee is the distant one local feedback is separated
+from.
 
 #### Scenario: A module is tested through its barrel
 
@@ -380,20 +339,6 @@ place.
 - **THEN** the probe fails on the discovered-test-file floor
 - **AND** it does NOT report a lower rate, which would be indistinguishable from
   the tests having genuinely got worse
-
-### Requirement: A guarantee left to a differential is stated and verified
-
-Where a module's guarantee genuinely belongs to a differential, such as an RNG
-draw order or a region sizing that decides which boards exist, that division of
-labor SHALL be stated in the module's test file and SHALL be verified, by
-confirming the differential does fail on the defect the local tests
-deliberately let through.
-
-#### Scenario: A draw order is left to the differential
-
-- **WHEN** a module's own tests deliberately let a change of draw order through
-- **THEN** its test file says the differential holds that guarantee
-- **AND** the differential has been seen to fail on that defect
 
 ### Requirement: A firing census certifies a solver's ladder
 
@@ -449,23 +394,6 @@ SHALL be paired with at least one targeted assertion. The negative form
   characters
 - **BECAUSE** a board whose empty-cell character `"."` is corrupted into `"./"`
   still contains `"."`
-
-### Requirement: A C-recorded fixture is kept for what cannot be derived, not as a quality bar
-
-The frozen C captures under `__fixtures__/` SHALL be retained where they record
-a fact that has no independent derivation: which board a solver-gated generator
-produces for a seed, the RNG stream, a tiling's incidence in emission order.
-There the recording is the specification. This covers the per-game desc
-differentials, the grid incidence differentials and the RNG corpus, which
-remain the regression net for refactoring.
-
-#### Scenario: A generator differential is kept
-
-- **WHEN** a fixture records the description a solver-gated generator produced for
-  a given seed
-- **THEN** it is retained, because no independent computation yields that board
-- **AND** a change that deliberately diverges retires or re-founds it, rather than
-  re-recording it against a C build that no longer exists
 
 ### Requirement: A local-feedback probe case is anchored within a named function
 
@@ -1192,3 +1120,37 @@ the index, for assertions that mean a particular palette slot.
 
 - **WHEN** a game drops a palette entry, renumbering every later index
 - **THEN** only the snapshots of frames that painted in the removed color change
+
+### Requirement: A recording of upstream's C is kept only where a game ID depends on it
+
+A recording of upstream's C SHALL be kept only where a game ID a player holds
+depends on what it records: a tiling's incidence numbering, which a Loopy game
+ID indexes its clues by, and the descs and params strings upstream's
+generator wrote, which keep loading. Neither can be re-recorded or added to.
+Which board a seed deals, the RNG stream and a tier upstream graded SHALL NOT
+be held to a recording.
+
+#### Scenario: A seed's board is not held to upstream's
+
+- **WHEN** a test would assert that a seed deals the desc upstream dealt for it
+- **THEN** it is not written, since which board a seed deals is free to change
+
+#### Scenario: An upstream desc stops loading
+
+- **WHEN** a change makes a desc in `src/guards/__fixtures__/upstream-descs.json`
+  fail to load
+- **THEN** the change is a compatibility break for the owner to decide, and the
+  desc is not removed from the corpus to make the guard pass
+
+### Requirement: A guarantee left to a game's tests is stated and verified
+
+Where a module's own tests deliberately let a defect through because a game's
+tests hold that guarantee, that division of labor SHALL be stated in the
+module's test file and SHALL be verified, by confirming the game's test does
+fail on the defect the local tests let through.
+
+#### Scenario: A guarantee is left to a game
+
+- **WHEN** a module's own tests deliberately let a defect through
+- **THEN** its test file names the game's test that holds that guarantee
+- **AND** that test has been seen to fail on the defect

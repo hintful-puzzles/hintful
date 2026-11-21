@@ -42,7 +42,6 @@ import { colorToOKLCH } from "../../engine/testing/oklch.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";
 import { crossingGame } from "./index.ts";
 import { numbers } from "./numbers.ts";
@@ -88,20 +87,21 @@ import {
 
 const P5 = { w: 5, h: 5, sym: false, diff: DIFF_EASY };
 const check = (p: CrossingParams, full: boolean) => paramsError(crossingGame, p, full);
-const FIX = cReference.fixtures[0]; // 5x5, seed crossing-5x5-1
-const FIX_ID = `5x5:${FIX.desc}`;
+/** A 5x5 board upstream's generator dealt. */
+const FIX_DESC = "a2a3a2a2a2a6a1,12,59,71,83,95,242,487,911,992,53971";
+const FIX_ID = `5x5:${FIX_DESC}`;
 const TS = PREFERRED_TILE_SIZE;
 
 /** The unique solution of the fixture board. */
 function fixtureSolution(): Uint8Array {
-  const solved = solveCrossing(newState(P5, FIX.desc).puzzle);
+  const solved = solveCrossing(newState(P5, FIX_DESC).puzzle);
   expect(solved.status).toBe("valid");
   return solved.grid;
 }
 
 /** Every ink move that fills the fixture board with its solution. */
 function solutionMoves(): CrossingMove[] {
-  const state = newState(P5, FIX.desc);
+  const state = newState(P5, FIX_DESC);
   const answer = fixtureSolution();
   const moves: CrossingMove[] = [];
   for (let y = 0; y < 5; y++)
@@ -113,7 +113,7 @@ function solutionMoves(): CrossingMove[] {
   return moves;
 }
 
-const newUi = (): CrossingUi => crossingGame.newUi(newState(P5, FIX.desc));
+const newUi = (): CrossingUi => crossingGame.newUi(newState(P5, FIX_DESC));
 
 /** Drive `interpretMove` at the preferred tile size. */
 function press(
@@ -203,13 +203,13 @@ describe("crossing params", () => {
 
 describe("crossing desc codec", () => {
   it("decodes a fixture desc and re-encodes it identically", () => {
-    const { walls, numbers } = newState(P5, FIX.desc).puzzle;
-    expect(encodeDesc(5, 5, walls, numbers)).toBe(FIX.desc);
+    const { walls, numbers } = newState(P5, FIX_DESC).puzzle;
+    expect(encodeDesc(5, 5, walls, numbers)).toBe(FIX_DESC);
   });
 
   it("reads letters as wall runs and decimals as open runs", () => {
     // "a2a3a2a2a2a6a1" — wall, 2 open, wall, 3 open, …
-    const { walls } = newState(P5, FIX.desc).puzzle;
+    const { walls } = newState(P5, FIX_DESC).puzzle;
     expect(walls[0]).toBe(1);
     expect(walls[1]).toBe(0);
     expect(walls[2]).toBe(0);
@@ -218,7 +218,7 @@ describe("crossing desc codec", () => {
   });
 
   it("stores the numbers sorted by (length, lexicographic)", () => {
-    const { numbers } = newState(P5, FIX.desc).puzzle;
+    const { numbers } = newState(P5, FIX_DESC).puzzle;
     const sorted = [...numbers].sort((a, b) =>
       a.length !== b.length
         ? a.length - b.length
@@ -228,7 +228,7 @@ describe("crossing desc codec", () => {
   });
 
   it("reports what is wrong with a desc", () => {
-    expect(validateDesc(crossingGame, P5, FIX.desc)).toBeNull();
+    expect(validateDesc(crossingGame, P5, FIX_DESC)).toBeNull();
     // '!' is not a wall character; the cursor parks on it short of the ','.
     expect(validateDesc(crossingGame, P5, "a2!3a2a2a2a6a1,12,59")).toBe(
       descBadCharacter("!"),
@@ -256,18 +256,18 @@ describe("crossing desc codec", () => {
     expect(v(`${walls},12,59,`)).toBe(DESC_TOO_SHORT);
     expect(v(`${walls},12;59`)).toBe(DESC_TOO_LONG);
     // An open run of no cells, and a final run past the board.
-    expect(v(`a0a3a2a2a2a6a1,${FIX.desc.split(",").slice(1).join(",")}`)).toBe(
+    expect(v(`a0a3a2a2a2a6a1,${FIX_DESC.split(",").slice(1).join(",")}`)).toBe(
       DESC_OUT_OF_RANGE,
     );
-    expect(v(`a2a3a2a2a2a6a2,${FIX.desc.split(",").slice(1).join(",")}`)).toBe(
+    expect(v(`a2a3a2a2a2a6a2,${FIX_DESC.split(",").slice(1).join(",")}`)).toBe(
       DESC_TOO_LONG,
     );
-    expect(v(`a2a3a2a2a2a6c,${FIX.desc.split(",").slice(1).join(",")}`)).toBe(
+    expect(v(`a2a3a2a2a2a6c,${FIX_DESC.split(",").slice(1).join(",")}`)).toBe(
       DESC_TOO_LONG,
     );
     // Numbers that do not fit the board's runs: one too few, and every square
     // open where the board's runs are all five long.
-    expect(v(FIX.desc.replace(",53971", ""))).toBe(DESC_CONTRADICTORY);
+    expect(v(FIX_DESC.replace(",53971", ""))).toBe(DESC_CONTRADICTORY);
     expect(v("25,12")).toBe(DESC_CONTRADICTORY);
   });
 
@@ -312,7 +312,7 @@ describe("crossing runs", () => {
 
 describe("crossing solver", () => {
   it("solves the fixture board to a complete unique grid", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const solved = solveCrossing(state.puzzle);
     expect(solved.status).toBe("valid");
     for (let i = 0; i < 25; i++) {
@@ -342,7 +342,7 @@ describe("crossing solver", () => {
   });
 
   it("reports invalid when a full run matches no listed number", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const answer = fixtureSolution();
     const grid = answer.slice();
     // Corrupt one cell of a full board: its run now reads as nothing listed.
@@ -424,7 +424,7 @@ describe("crossing generator", () => {
 
 describe("crossing input", () => {
   it("left-click selects an open cell, and a repeat click deselects it", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const puzzle = state.puzzle;
     // Pick a cell that is NOT a crossing: at a crossing the repeat click flips
     // the fill direction instead (see the auto-advance suite).
@@ -445,7 +445,7 @@ describe("crossing input", () => {
   });
 
   it("never selects a wall", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const ui = newUi();
     const wall = state.puzzle.walls.indexOf(1);
     const c = cellCenter(wall % 5, Math.floor(wall / 5));
@@ -454,7 +454,7 @@ describe("crossing input", () => {
   });
 
   it("right-click toggles the sticky pencil mode (the fork default)", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const ui = newUi();
     expect(ui.pencilSticky).toBe(true);
     const open = state.puzzle.walls.indexOf(0);
@@ -475,7 +475,7 @@ describe("crossing input", () => {
   });
 
   it("right-click without the sticky pref is upstream's per-cell pencil select", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const ui = newUi();
     ui.pencilSticky = false;
     const open = state.puzzle.walls.indexOf(0);
@@ -487,7 +487,7 @@ describe("crossing input", () => {
   });
 
   it("arrow keys move the cursor and Enter toggles ink/pencil", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const ui = newUi();
     expect(press(state, ui, CURSOR_RIGHT, 0, 0)).toBe(UI_UPDATE);
     expect(ui).toMatchObject({
@@ -499,7 +499,7 @@ describe("crossing input", () => {
   });
 
   it("enters a digit, and suppresses the no-op moves locally", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const ui = newUi();
     const open = state.puzzle.walls.indexOf(0);
     const [ox, oy] = [open % 5, Math.floor(open / 5)];
@@ -530,7 +530,7 @@ describe("crossing input", () => {
   });
 
   it("pencil marks toggle, and never touch a filled cell", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const ui = newUi();
     const open = state.puzzle.walls.indexOf(0);
     const [ox, oy] = [open % 5, Math.floor(open / 5)];
@@ -577,7 +577,7 @@ describe("crossing cursor auto-advance", () => {
 
   /** A horizontal run of the fixture board, and its first cell. */
   function acrossRun(): { x: number; y: number; len: number } {
-    const puzzle = newState(P5, FIX.desc).puzzle;
+    const puzzle = newState(P5, FIX_DESC).puzzle;
     const run = puzzle.runs.find((r) => r.horizontal);
     if (!run) throw new Error("fixture has no horizontal run");
     const first = run.cells[0];
@@ -585,7 +585,7 @@ describe("crossing cursor auto-advance", () => {
   }
 
   it("steps along the run as digits are typed, and stops at its end", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const ui = newUi();
     const { x, y, len } = acrossRun();
     const c = cellCenter(x, y);
@@ -609,7 +609,7 @@ describe("crossing cursor auto-advance", () => {
   it("steps on past a cell that already holds the digit typed", () => {
     const { x, y } = acrossRun();
     const c = cellCenter(x, y);
-    const filled = crossingGame.executeMove(newState(P5, FIX.desc), {
+    const filled = crossingGame.executeMove(newState(P5, FIX_DESC), {
       kind: "set",
       x,
       y,
@@ -627,7 +627,7 @@ describe("crossing cursor auto-advance", () => {
     const { x, y } = acrossRun();
     const c = cellCenter(x, y);
 
-    const filled = crossingGame.executeMove(newState(P5, FIX.desc), {
+    const filled = crossingGame.executeMove(newState(P5, FIX_DESC), {
       kind: "set",
       x,
       y,
@@ -638,7 +638,7 @@ describe("crossing cursor auto-advance", () => {
     press(filled, clearing, 8, 0, 0); // Backspace
     expect(clearing.cursor).toMatchObject({ x: x, y: y });
 
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const pencil = newUi();
     press(state, pencil, RIGHT_BUTTON, c.x, c.y);
     press(state, pencil, 0x33, 0, 0);
@@ -651,7 +651,7 @@ describe("crossing cursor auto-advance", () => {
   });
 
   it("clicking the selected cell again flips across/down at a crossing", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const puzzle = state.puzzle;
     // A cell that lies in both a horizontal and a vertical run.
     let crossX = -1;
@@ -677,7 +677,7 @@ describe("crossing cursor auto-advance", () => {
   });
 
   it("snaps the direction when a cell lies in only one run", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const puzzle = state.puzzle;
     // A cell in a vertical run only: selecting it must mean "down", whatever the
     // player last did, since there is nothing to fill across.
@@ -696,7 +696,7 @@ describe("crossing cursor auto-advance", () => {
   });
 
   it("arrow keys set the direction they move in", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const puzzle = state.puzzle;
     const crossing = (i: number): boolean =>
       puzzle.acrossRun[i] >= 0 && puzzle.downRun[i] >= 0;
@@ -732,14 +732,14 @@ describe("crossing number-list placement", () => {
 
   /** Pixel center of clue number `l` in the panel. */
   function numberCenter(l: number): { x: number; y: number } {
-    const { slots } = layoutNumbers(TS, 5, 5, newState(P5, FIX.desc).puzzle.numbers);
+    const { slots } = layoutNumbers(TS, 5, 5, newState(P5, FIX_DESC).puzzle.numbers);
     const b = slots[l].hit;
     return { x: b.x + Math.floor(b.w / 2), y: b.y + Math.floor(b.h / 2) };
   }
 
   /** A run of the fixture board and the index of a number that fits it. */
   function fittingPair(): { run: number; number: number } {
-    const { puzzle, grid } = newState(P5, FIX.desc);
+    const { puzzle, grid } = newState(P5, FIX_DESC);
     for (let r = 0; r < puzzle.runs.length; r++) {
       for (let l = 0; l < puzzle.numbers.length; l++) {
         if (numberFitsRun(puzzle, grid, puzzle.runs[r], l))
@@ -750,7 +750,7 @@ describe("crossing number-list placement", () => {
   }
 
   it("only offers numbers of the run's length that agree with what is typed", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const { puzzle } = state;
     const run = puzzle.runs.find((r) => r.cells.length === 2);
     // A fixture with no 2-cell run would skip both loops below in silence.
@@ -780,7 +780,7 @@ describe("crossing number-list placement", () => {
   });
 
   it("places a clue into the selected cell's run when it is clicked", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const { run, number } = fittingPair();
     const cells = state.puzzle.runs[run].cells;
     const ui = newUi();
@@ -800,7 +800,7 @@ describe("crossing number-list placement", () => {
   });
 
   it("holds a clue when nothing is selected, and drops it on a run", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const { run, number } = fittingPair();
     const ui = newUi();
 
@@ -822,7 +822,7 @@ describe("crossing number-list placement", () => {
   });
 
   it("will not place a clue already used in another run", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const { run, number } = fittingPair();
     const placedState = crossingGame.executeMove(state, {
       kind: "place",
@@ -869,7 +869,7 @@ describe("crossing number-list placement", () => {
     dr.ops.flatMap((o) => (o.op === "text" && o.color === COL_GHOST ? [o.text] : []));
 
   it("washes every run a held clue could still go in", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     expect(washedCells(paintWith(state, newUi()))).toBe(0);
 
     const l = 0;
@@ -888,7 +888,7 @@ describe("crossing number-list placement", () => {
     // meets a cold panel cache and repaints unconditionally. A real game paints
     // the same draw state for the whole session, and the held clue has to be an
     // input to the panel's cache key or the box is never drawn — nor erased.
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     const ds = newDrawState(state, TS);
     const paint = (ui: CrossingUi): RecordingDrawing => {
@@ -916,7 +916,7 @@ describe("crossing number-list placement", () => {
   });
 
   it("previews the digits only when a single run could take the clue", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const l = 0;
     // Several candidates: the wash says where it might go, but writing the
     // digits into all of them would assert placements the game cannot know
@@ -946,7 +946,7 @@ describe("crossing number-list placement", () => {
   });
 
   it("shows where a clue already on the board is", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const { run, number } = fittingPair();
     const after = crossingGame.executeMove(state, { kind: "place", run, number });
 
@@ -958,7 +958,7 @@ describe("crossing number-list placement", () => {
   });
 
   it("leaves the list plain and lets the reference say what fits the selected cell", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const textColors = (ui: CrossingUi): Map<string, number> => {
       const dr = paintWith(state, ui);
       const m = new Map<string, number>();
@@ -1026,7 +1026,7 @@ describe("crossing number-list placement", () => {
     // matching the channels numerically is *not* the same as matching what the
     // eye sees, since blue carries far less luminance than amber: an
     // RGB-mirrored pair reads as the vertical run mattering more.
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const puzzle = state.puzzle;
     let cell = -1;
     for (let i = 0; i < 25 && cell < 0; i++) {
@@ -1057,7 +1057,7 @@ describe("crossing number-list placement", () => {
   });
 
   it("washes the runs through the selected cell under its preference", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const puzzle = state.puzzle;
     let cell = -1;
     for (let i = 0; i < 25 && cell < 0; i++) {
@@ -1073,7 +1073,7 @@ describe("crossing number-list placement", () => {
   });
 
   it("washes both runs through a cell selected for pencil marks, list uncolored", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const puzzle = state.puzzle;
     let cell = -1;
     for (let i = 0; i < 25 && cell < 0; i++) {
@@ -1143,7 +1143,7 @@ describe("crossing number-list placement", () => {
   it("crosses a clue off the list once it is on the board, without dimming alone", () => {
     // "Already used" and "cannot go in this run" both gray out, so the used
     // ones are struck through to keep the two apart.
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const { run, number } = fittingPair();
     const after = crossingGame.executeMove(state, { kind: "place", run, number });
 
@@ -1169,7 +1169,7 @@ describe("crossing number-list placement", () => {
 
 describe("crossing moves and completion", () => {
   it("executeMove is pure and rejects a wall", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const before = state.grid.slice();
     const open = state.puzzle.walls.indexOf(0);
     crossingGame.executeMove(state, {
@@ -1201,7 +1201,7 @@ describe("crossing moves and completion", () => {
     // …it is the last move that solves it.
     const penultimate = moves
       .slice(0, -1)
-      .reduce((s2, mv) => crossingGame.executeMove(s2, mv), newState(P5, FIX.desc));
+      .reduce((s2, mv) => crossingGame.executeMove(s2, mv), newState(P5, FIX_DESC));
     const final = crossingGame.executeMove(penultimate, moves[moves.length - 1]);
     expect(crossingGame.status(penultimate)).toBe("ongoing");
     expect(crossingGame.status(final)).toBe("solved");
@@ -1215,7 +1215,7 @@ describe("crossing moves and completion", () => {
   });
 
   it("clearing a digit un-fills the cell without un-completing", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const open = state.puzzle.walls.indexOf(0);
     const [x, y] = [open % 5, Math.floor(open / 5)];
     const set = crossingGame.executeMove(state, { kind: "set", x, y, digit: 4 });
@@ -1224,7 +1224,7 @@ describe("crossing moves and completion", () => {
   });
 
   it("a pencil clear erases every mark in the cell", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const open = state.puzzle.walls.indexOf(0);
     const [x, y] = [open % 5, Math.floor(open / 5)];
     let s = crossingGame.executeMove(state, { kind: "pencil", x, y, digit: 3 });
@@ -1237,7 +1237,7 @@ describe("crossing moves and completion", () => {
 
 describe("crossing findMistakes", () => {
   it("flags a wrong digit but not a correct one", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const answer = fixtureSolution();
     const open = state.puzzle.walls.indexOf(0);
     const [x, y] = [open % 5, Math.floor(open / 5)];
@@ -1269,7 +1269,7 @@ describe("crossing findMistakes", () => {
     // distinguishable. So this asserts *lines*, not rects — the per-game shape
     // that is exactly why a single collection-wide overlay guard is not
     // available.
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const answer = fixtureSolution();
     const open = state.puzzle.walls.indexOf(0);
     const [x, y] = [open % 5, Math.floor(open / 5)];
@@ -1295,7 +1295,7 @@ describe("crossing findMistakes", () => {
   });
 
   it("flags notes that have ruled out the answer, but not extra candidates", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const answer = fixtureSolution();
     const open = state.puzzle.walls.indexOf(0);
     const [x, y] = [open % 5, Math.floor(open / 5)];
@@ -1317,7 +1317,7 @@ describe("crossing findMistakes", () => {
 
 describe("crossing text format", () => {
   it("renders the grid then the numbers grouped by length", () => {
-    const text = textFormat(newState(P5, FIX.desc)) ?? "";
+    const text = textFormat(newState(P5, FIX_DESC)) ?? "";
     const [grid, ...groups] = text.split("\n\n");
     expect(grid.split("\n")).toHaveLength(5);
     for (const row of grid.split("\n")) {
@@ -1339,14 +1339,14 @@ describe("crossing rendering", () => {
     expect(r.recording.ops.length).toBeGreaterThan(0);
     // Every wall and every clue number is on screen from the first frame.
     const texts = r.recording.ops.filter((o) => o.op === "text");
-    for (const num of newState(P5, FIX.desc).puzzle.numbers) {
+    for (const num of newState(P5, FIX_DESC).puzzle.numbers) {
       expect(texts.some((o) => o.op === "text" && o.text === num.join(""))).toBe(true);
     }
     expect(r.recording.ops).toMatchSnapshot();
   });
 
   it("frames a full-but-unlisted run in red", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     // Fill the first run with digits that spell no listed number.
     const run = state.puzzle.runs[0];
     const moves: CrossingMove[] = run.cells.map((i, k) => ({
@@ -1368,7 +1368,7 @@ describe("crossing rendering", () => {
     // The paint-twice test (docs/rendering.md § "Prove the overlay repaints"): the overlay must sit in the diff
     // key, or Check & Save — which runs a frame *after* the move that drew the
     // cell — would silently highlight nothing.
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const answer = fixtureSolution();
     const open = state.puzzle.walls.indexOf(0);
     const dirty = crossingGame.executeMove(state, {
@@ -1426,7 +1426,7 @@ describe("crossing rendering", () => {
   });
 
   it("highlights the selected cell and marks a keyboard cursor", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     const open = state.puzzle.walls.indexOf(0);
     const paint = (ui: CrossingUi): RecordingDrawing => {
@@ -1478,7 +1478,7 @@ describe("crossing rendering", () => {
   });
 
   it("draws pencil marks in an empty cell", () => {
-    const state = newState(P5, FIX.desc);
+    const state = newState(P5, FIX_DESC);
     const open = state.puzzle.walls.indexOf(0);
     const noted = crossingGame.executeMove(state, {
       kind: "pencil",
@@ -1503,7 +1503,7 @@ describe("crossing rendering", () => {
   it("sweeps the win flash across the squares holding digits, from the bottom left", () => {
     const solved = solutionMoves().reduce(
       (s2, mv) => crossingGame.executeMove(s2, mv),
-      newState(P5, FIX.desc),
+      newState(P5, FIX_DESC),
     );
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     // The squares filled in either tone of the flash, as their bodies' origins.
@@ -1553,7 +1553,7 @@ describe("crossing rendering", () => {
     // drag-and-drop design; its author asked for them to go.
     const withDigits = solutionMoves()
       .slice(0, 4)
-      .reduce((s2, mv) => crossingGame.executeMove(s2, mv), newState(P5, FIX.desc));
+      .reduce((s2, mv) => crossingGame.executeMove(s2, mv), newState(P5, FIX_DESC));
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     // The last slot is the wall cursor's: nothing past it.
     expect(palette).toHaveLength(COL_WALLCURSOR + 1);

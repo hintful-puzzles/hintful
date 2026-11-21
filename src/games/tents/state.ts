@@ -164,7 +164,7 @@ export function validateParams(p: TentsParams, full: boolean): string | null {
 // (a pre-placed tent/non-tent), which no encoder here writes, so they are
 // refused.
 
-/** Encode a tree grid + numbers as the upstream desc (byte-faithful). */
+/** Encode a tree grid + numbers in upstream's desc format. */
 export function encodeDesc(
   w: number,
   h: number,

@@ -162,12 +162,13 @@ of each found unsound.
 #### Scenario: A mis-tiered shortcut rung fails
 
 - **WHEN** the early-loop technique is declared at Easy
-- **THEN** boards that need it pass as Easy, and the frozen differential fails
+- **THEN** boards that need it pass as Easy, and the tier gate fails or the
+  hint-walk snapshots move
 
 #### Scenario: A silenced rung fails
 
 - **WHEN** any technique is removed from the description
-- **THEN** the firing census or the frozen differential fails
+- **THEN** the firing census fails
 
 ### Requirement: Controls: Pearl draws the loop by dragging along grid edges
 

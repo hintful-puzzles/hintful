@@ -68,8 +68,8 @@ interface Square {
 }
 
 /** `(type, random, y, x)` total order (upstream `squarecmp`, mines.c:1408) — a
- * genuine total order, which is why the perturb candidate list is deterministic
- * and a byte-match differential is achievable. */
+ * genuine total order, which is why the perturb candidate list is
+ * deterministic. */
 function squarecmp(a: Square, b: Square): number {
   if (a.type !== b.type) return a.type - b.type;
   if (a.random !== b.random) return a.random - b.random;
