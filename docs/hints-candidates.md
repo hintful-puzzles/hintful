@@ -803,8 +803,7 @@ the hint a finder that yields one line's firing at a time
 premise"). The plan owns the order: a rung returns every firing it can take
 now and the frontier chooses, so the order a solver sweeps in never reaches
 the player and nothing about ordering is added to the walk. Exemplar:
-`satisfiedLines` and `packedLines` in
-[`abcd/hint.ts`](../src/games/abcd/hint.ts).
+`lineFiring` in [`abcd/hint.ts`](../src/games/abcd/hint.ts).
 
 - **A counting argument fits one step when the picture carries the parts.**
   Hatch the line through its clue, draw the count the sentence reads in the

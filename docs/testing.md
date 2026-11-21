@@ -140,7 +140,7 @@ scan for a hint position.
 
 `describeHintPins`
 ([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts))
-keys each pin on a rung's id (`Game.hintRungs`, [`hints.md`](./hints.md)
+keys each pin on a rung's id (`hint.rungs`, [`hints.md`](./hints.md)
 § "Name the rung a step speaks"). It declares two tests: every pin still
 fires its kind, and a snapshot of the sentence said at each pin, which is
 where a rung's wording is held. It returns the loader the game's own tests
@@ -400,8 +400,8 @@ Match an op by the name the shared `RecordingDrawing` records it under, and
 use that recorder, not a local double. Its op types say what each records;
 these are the ones that mislead:
 
-- A filled `drawRect` is `op === "rect"`. `drawRectOutline` (a hint ring, an
-  error outline, a cursor frame) records as `op === "line"` segments.
+- A filled `drawRect` is `op === "rect"`. `drawRectOutline` (an error outline, a
+  cursor frame) records as `op === "line"` segments.
 - A `drawCircle` records `fill` and `outline`, not `color`.
 - `paintsWith(op, color)` answers "is anything painted in this color"
   whichever primitive carries it, and `opsOfKind(ops, kind)` narrows a list

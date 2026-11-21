@@ -40,8 +40,8 @@ already does it.
 8. Where a sentence names a line or region, stripe it under the content
    (§ "Hatch the line the sentence names").
 9. When keep-track shrinks a step, narrow its words with it, as
-   `skeletonKeepTrack` does in `hint.ts` (§ "Group one firing into one
-   step").
+   `skeletonKeepTrack` does in `src/skeleton/edges/hint.ts` (§ "Group one
+   firing into one step").
 10. Assert the frame in `<game>-hint.test.ts` as `skeleton-hint.test.ts`
     does, then run the app and read each kind of step against its sentence.
 
@@ -385,8 +385,7 @@ run", a run is striped. The target stays the one ring.
   board the hint was asked on: the plan is computed once and a frozen area
   goes stale. Thread the solver's working grid through each recorded move and
   build the marks from that snapshot, which has the move applied (§ "Whether
-  the target belongs in its own evidence"). Exemplar: `markedOf` in
-  [`range/index.ts`](../src/games/range/index.ts).
+  the target belongs in its own evidence").
 - **Assert in the game's test that each deduction's evidence is non-empty.**
   The cross-game walk in `hint-quality.test.ts` asks only that a step shows
   something, marks or words. A filter is the usual cause of an empty area: a
@@ -543,8 +542,7 @@ evidence.
   necessity voice, so the voice guard passes on every leg.
 
 Exemplar: `componentSquares` and `incidentSquares` in
-[`slant/hint.ts`](../src/games/slant/hint.ts), and `seedFrom` in
-[`slant/solver.ts`](../src/games/slant/solver.ts).
+[`slant/hint.ts`](../src/games/slant/hint.ts).
 
 ## Hatch the line the sentence names
 
@@ -664,7 +662,7 @@ would leave the old measure painting a ring the frame no longer draws.
 ## A hint that suppresses a game's aid dismisses on a UI update
 
 **When a displayed hint hides or takes over something the game also draws,
-implement `Game.uiUpdateClearsHint(step, state, ui)`.** `hint.keepTrack` is
+implement `hint.uiUpdateClears(step, state, ui)`.** `hint.keepTrack` is
 consulted for moves only. In a game where a click is a `UI_UPDATE` (a
 selection), nothing else dismisses the hint, and the player who touches the
 suppressed surface sees no change and no way out. The midend calls the hook
@@ -774,14 +772,13 @@ is one journey").
   forced square has a different figure to quote, each is a leg with its own
   sentence; where one sentence is true of all, they are one step.
 - **For legs of one compiled firing**, the firing's facts share a record
-  group, so its first cell opens a journey and the rest continue it
-  (`deduceHintPlan` in [`unruly/solver.ts`](../src/games/unruly/solver.ts)).
+  group, so its first cell opens a journey and the rest continue it.
 
 Exemplars: `mustGrow` in
 [`filling.description.yaml`](../src/games/filling/filling.description.yaml),
 one firing that places every square a region cannot do without, the plan and
 `hint.keepTrack` in [`filling/index.ts`](../src/games/filling/index.ts), and
-`skeletonKeepTrack` in the skeleton's `hint.ts`.
+`skeletonKeepTrack` in [`skeleton/edges/hint.ts`](../src/skeleton/edges/hint.ts).
 
 ### A journey completes leg by leg
 
@@ -1165,8 +1162,7 @@ Exemplars: `planSteps`, `sentenceExpires` and `sentenceHolds` in
 [`loopy/hint.ts`](../src/games/loopy/hint.ts), whose player's notes are the
 walk's roots; `markRuleOuts` and `canHold` in
 [`subsets/solver.ts`](../src/games/subsets/solver.ts), where one predicate
-answers the aid, the hint's premises and "is this already on the board";
-`drawLinkFor` in [`tents/solver.ts`](../src/games/tents/solver.ts).
+answers the aid, the hint's premises and "is this already on the board".
 
 ### Place the notes a fixpoint rests on
 
@@ -1213,7 +1209,7 @@ placement leans on a visible mark and its sentence stays short.
   does not vouch for the player's annotation, the recorder re-derives every
   rule-out; one the player already drew is skipped for display while the
   solver state still advances. Where the check does vouch, the marks are
-  replayed (`seedFrom` in [`slant/solver.ts`](../src/games/slant/solver.ts)).
+  replayed.
 - **Easy boards come out all placements**, so the annotation appears only
   where a harder tier needs it. Assert the annotation path on a hard board in
   the game's own test.

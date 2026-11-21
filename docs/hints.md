@@ -317,7 +317,8 @@ What binding a hint turns up:
   finds some gone rewrites "cross out 2 and 4" as "cross out the 4".
 - **A step that shrinks on keep-track narrows its words** with
   `Narration.narrow`, which re-renders them from the references' remaining
-  elements, and resets `explanation` (`skeletonKeepTrack`).
+  elements, and resets `explanation` (`skeletonKeepTrack` in
+  `src/skeleton/edges/hint.ts`).
 - **Two marks of one role are told apart by their kind, not their color.**
   Where a step decides two different things, give one a kind of its own and
   let the game draw its ring, so the sentence can say "this arrow" and "the
@@ -789,8 +790,9 @@ only has to be forced.
   the solve; if suppressing it would stall the plan, narrate it.
 
 Exemplar: Spokes, which hints a line before a mark and skips the rule-out
-between two finished hubs: the skip is asserted in `spokes-hint.test.ts`,
-and why it is safe is argued at `markHelps` in `spokes/solver.ts`.
+between two finished hubs: `spokes-hint.test.ts`, "never marks a spoke
+whose both hubs are already satisfied", asserts the skip and says which
+filters keep the rule-out out of a plan.
 
 ### Show only what the board does not already say
 
@@ -891,8 +893,8 @@ what asserts wording. A game writes three things, each once:
 3. **The declaration**: `Game<…, FooHint, FooRung>` and `hint.rungs:
    FOO_RUNGS`.
 
-Exemplar: `SKELETON_RUNGS` in `src/skeleton/grid/solver.ts` and `stepOf` in
-its `hint.ts`.
+Exemplar: `SKELETON_RUNGS` in `src/skeleton/grid/solver.ts`, the
+description's `says` kinds, which `describedFiringHint` stamps.
 
 - **A rung is the deduction at the grain the solver or the plan already
   names it.** A reason union gives its `kind`s; a hint that picks a branch
@@ -1454,7 +1456,7 @@ needs.
 
 ### Stale plans and hint.refreshStep
 
-Implement `Game.refreshHintStep(step, state)` wherever a followed move or a
+Implement `hint.refreshStep(step, state)` wherever a followed move or a
 preference change can settle part of a later step. Return the step with its
 dead marks dropped and `highlights` rebuilt to match, the same object when
 nothing changed, or `null` when the step is fully resolved. The `Midend`

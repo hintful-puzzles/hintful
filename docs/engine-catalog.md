@@ -1038,8 +1038,8 @@ Reach for it to draw a border-grid game's tile: the error model, the
 half-grid cursor, the edges, the tile skeleton and the board geometry. The
 game supplies its palette indices as `BorderGridColors` and a `drawContent`
 callback for the middle of the tile. `hintTileBits` folds a hint step into
-the tile flags and an `edge-hint.ts` word a cell; pass both to
-`borderTileStale` and the word to `drawBorderTile`, and the marks are drawn
+the tile flags and an `edge-hint.ts` word a cell; key the tile cache on
+both and pass the word to `drawBorderTile`, and the marks are drawn
 when the palette names `hintEdge` and `hintEvidence`. Exemplar:
 `palisade/render.ts`.
 
@@ -1138,8 +1138,8 @@ Byte-match critical. Exemplar: `palisade/generator.ts`.
 
 Reach for it in a generator that mends a division where it fails and does
 not draw a whole new one
-([`solver-and-generator.md`](./solver-and-generator.md) § "Unlucky,
-impossible, and load-bearing validation"). `redivide` divides the cells of
+([`solver-and-generator.md`](./solver-and-generator.md) § "A draw that
+fails often is mended, not retried"). `redivide` divides the cells of
 some neighboring regions among them again at random, `regionsBeside` names
 the neighbors to widen it by, and `ringless` grows each piece as a tree.
 Exemplar: `separate/generator.ts`.

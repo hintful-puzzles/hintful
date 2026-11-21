@@ -1315,7 +1315,7 @@ technique's reported growth. Exemplars:
 map from a name to a `when` condition over the binding, each arm adding its
 own `terms` and `marks` to the shared ones, the first true arm winning (an
 arm that holds none throws). The kind is `<id>.<arm>` and `SAYS_KINDS` in the
-compiled module lists them, which a game hands to `Game.hintRungs`; the
+compiled module lists them, which a game hands to `hint.rungs`; the
 terms are a union keyed by `arm`, so a sentence narrows on `spoken.arm`.
 Arms are conditions on the binding and not parts of the conclusion: Singles'
 corner reads as four, apex, across or a pair by which of its numbers match.

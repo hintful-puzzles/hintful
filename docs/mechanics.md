@@ -429,9 +429,6 @@ Also:
   `difficulty-contract.test.ts` asks it of every preset (`lowestSolvingCap`),
   on the gate for the first preset of each tier and on the slow tier for
   all. Run it with the slow tier on when you change a menu.
-- **Three sizes written as `[4, 5, 6]` read as a color** to
-  `palette-source.test.ts`. Add the line to its `NOT_COLORS` with the
-  reason.
 - **A test that needs a particular board names its params**, never an index
   into the menu.
 

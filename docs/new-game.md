@@ -251,6 +251,9 @@ the population of any row with `ls src/games/*/<file>`.
 
 | File | Holds |
 | --- | --- |
+| `catalog.ts` | The game's entry in the app's list: its name and family. A directory without one is refused. |
+| `<game>.description.yaml` | The rules, the techniques and their sentences, and the help page ([`descriptions.md`](./descriptions.md)). |
+| `<game>.plants.yaml` | A defect planted in each stated technique, which the soundness check must find unsound ([`descriptions.md`](./descriptions.md) § "Checking a technique sound"). |
 | `index.ts` | The `Game` object and its glue. |
 | `state.ts` | The types, params and desc, and `executeMove`, here so that `hint.ts` can run a move without importing `index.ts`. |
 | `solver.ts` | The deduction ladder, declared once and run two ways: to a fixpoint (the generator's gate, `solve`, `findMistakes`) and one firing at a time (the hint). |

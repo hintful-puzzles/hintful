@@ -98,26 +98,38 @@ copies point.
 
 ### Stale names (verify with grep, then fix or delete)
 
-- [ ] hints-marks: `Game.uiUpdateClearsHint` (is `hint.uiUpdateClears`);
-      `seedFrom` (Slant), `analyzeLine` (Pattern), Boats' `unfinishable`,
-      `hintFirings` (Dominosa), `markedOf` (Range), `deduceHintPlan` in
-      Unruly, `drawLinkFor` (Tents); the advice around them may be obsolete
-      now these games run compiled ladders.
-- [ ] hints-candidates: `satisfiedLines`, `packedLines` (ABCD).
+- [x] Renamed: `hint.uiUpdateClears`, `hint.refreshStep`, `hint.rungs`;
+      `skeletonKeepTrack` is `src/skeleton/edges/hint.ts`'s; Path's Checks
+      are its description's `lineBreaks`, `pairBreaks`, `weighed`; ABCD's
+      exemplar is `lineFiring`; the catalog's border grid keys the tile
+      cache (no `borderTileStale`), `redivide.ts` points at § "A draw that
+      fails often is mended, not retried".
+- [x] Deleted as stale details: `markedOf` (Range), Unruly's
+      `deduceHintPlan`, `drawLinkFor` (Tents), `seedFrom` (Slant, twice),
+      `markHelps` (Spokes; the test's header now named), `stepOf`,
+      `NOT_COLORS` (the ledger is gone), "a hint ring" from
+      `drawRectOutline`.
+- [x] new-game § "File anatomy" gains `catalog.ts`, the description and
+      `plants.yaml`.
+- [ ] hints-marks sections written for hand-written recorders, now that
+      Slant, Pattern, Boats and Dominosa run compiled ladders: § "Evidence
+      for a connectivity deduction" ("seed the recording solver… copying
+      the grid leaves the union-find behind"), § "Re-derive the named
+      technique" (`analyzeLine`, "keep the hint's functions separate from
+      the generator's solver"), the Boats bullets near "the one ending in
+      `unfinishable`", § "Rule-outs as board marks" (`hintFirings`, "Gate
+      the recorder"). Read each against the game's code and
+      `descriptions.md` § "The runtime a ladder runs on": keep what still
+      binds a game, delete the rest.
 - [ ] hints.md § "The shared plan loop: deduceHintPlan" says to build every
       plan with it, exemplar `skeletonHint`; only Ascent and Loopy import
       it (2026-11-21), a described game plans in `described-hint.ts`.
       Rewrite to what a game does now. (`deduceHintPlan` in Range and
       `deduceForcedEdges` in Palisade: removed from § "The step budget".)
-- [ ] hints.md:
-      `Game.refreshHintStep`; `markHelps` (Spokes); `stepOf`;
-      `skeletonKeepTrack` location.
-- [ ] descriptions, testing: `Game.hintRungs` (is `hint.rungs`).
-- [ ] testing: `drawRectOutline` draws "a hint ring".
-- [ ] mechanics: `NOT_COLORS`; solver-and-generator: `findBreaks`,
-      `findWeighed`; catalog: `easyRungs`/`offered`/`available()`,
-      `borderTileStale`, `redivide.ts`'s pointer.
-- [ ] new-game § "File anatomy" omits `catalog.ts` and the description.
+- [ ] Still open from the duplicates list: `keepTrack` shrinking
+      (hints-marks, hints.md, catalog), `NoteEncoding.all(i)`
+      (hints-candidates, catalog), the hint-resume slicing (hints-search,
+      hints.md; home testing).
 
 ## 2. One home each
 
@@ -125,10 +137,24 @@ copies point.
       file and heading. Remove passages the earlier changes made obsolete.
 - [x] 2.2 Re-measure the route and record it with its query:
       `node scripts/checks/guide-sections.mjs --route`, named in
-      `new-game.md` § "The route by kind of game". 2026-11-21, before the
-      folds: Cells with notes 4,295 lines; Cells marked by state 4,234;
-      Edges and loops 4,329; Moves and search 3,414; Hidden answer 4,826.
+      `new-game.md` § "The route by kind of game". 2026-11-21, after the
+      first four folds: Cells with notes 4,295 lines; Cells marked by state
+      4,234; Edges and loops 4,329; Moves and search 3,414; Hidden answer
+      4,826. After the third part (net 130 lines out of the guides):
+      4,298; 4,233; 4,324; 3,414; 4,817. Folding copies does not shrink the
+      route: most copies sat outside the sections it names, or moved into a
+      home it already reads. What the route costs is the size of the
+      sections it sends every kind to, a question for the review pass (3.3).
 
 ## 3. Finish
 
-- [ ] 3.1 Commit, push, archive.
+- [ ] 3.1 Re-run `node scripts/checks/guide-sections.mjs --route` and
+      record the after-figures beside 2.2's.
+- [ ] 3.2 Commit, push, archive.
+- [ ] 3.3 The owner asked (2026-11-21): "when you're done with this change,
+      please do another architecture review pass in the next session".
+      After archiving, scaffold `architectural-review-second-pass` on the
+      shape of `archive/2026-11-20-architectural-review` (a measured,
+      prioritized list in `design.md`, each count with its query, no
+      refactoring made), and hand on with
+      `Hi, please take on openspec/changes/architectural-review-second-pass`.

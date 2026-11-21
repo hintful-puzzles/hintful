@@ -636,8 +636,9 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   2026-10-28). A supposed mark that forces one square, which then breaks
   the board, is the same look. Weighing every value of one element, each read
   by a look, and keeping what they all share, is a Check too. Exemplars:
-  `findBreaks` and `findWeighed` in
-  [`path/solver.ts`](../src/games/path/solver.ts), and the wing, the XY- and
+  `lineBreaks`, `pairBreaks` and `weighed` in
+  [`path.description.yaml`](../src/games/path/path.description.yaml), and
+  the wing, the XY- and
   XYZ-wing, where each value of one element is read off the notes of an
   element it sees: the Latin library's `wing` over every candidate game's
   cells, and Map's `weigh` over its regions by their dots, where a
