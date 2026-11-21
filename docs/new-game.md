@@ -115,7 +115,7 @@ is one to weigh against a pointer.
   live in the description"; `hints.md` § "The hooks a hinted game
   implements", without its parts; `hints.md` § "Name the rung a step speaks";
   `hints.md` § "Every step is a gesture"; `hints.md` § "Refusal wording comes
-  from one module". The other parts of the narration are read when a
+  from one module", without its parts. The other parts of the narration are read when a
   sentence meets the case its row names.
 - [`hints-marks.md`](./hints-marks.md) § "Highlight, never perform";
   `hints-marks.md` § "Shade vs ring", without its parts; `hints-marks.md` §
@@ -150,6 +150,7 @@ is one to weigh against a pointer.
 
 - [`hints-candidates.md`](./hints-candidates.md): its opening, and the
   sections its table sends your game to. No other kind opens it.
+- `hints.md` § "The candidate walk stamps its own rungs".
 - `mechanics.md` § "Pencil marks: the full note-taking UX".
 - `input.md` § "The on-screen keypad"; `input.md` § "The numeric keypad never
   arrives".
@@ -190,6 +191,7 @@ is one to weigh against a pointer.
 
 - [`hints-search.md`](./hints-search.md): its opening, and the sections its
   table sends your game to.
+- `hints.md` § "A board that is lost, dead, or past a search's reach".
 - `descriptions.md` § "A planning game's position and moves": every planning
   game describes its position, moves and finish.
 - `input.md` § "Drag models" and `input.md` § "Giving a drag game a

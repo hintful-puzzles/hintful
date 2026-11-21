@@ -229,7 +229,7 @@ side's ring goes (`EdgeShapes.ring`); both squares draw that one ring, each
 in its own clip, with the asked shape inside.
 
 On the border grid ([`engine/mechanics/border-grid-render.ts`](../src/engine/mechanics/border-grid-render.ts),
-`hintTileBits`) a wall and a not-wall share one shape, the edge: a wall ask
+`packHintMarks`) a wall and a not-wall share one shape, the edge: a wall ask
 is the edge in the ring's ink, and a not-wall ask a cross on the edge,
 because the edge in that ink would read as a wall. **A mark drawn in a hint
 ink cannot be covered**: the app repaints each ink's marks over the board, so

@@ -1038,10 +1038,9 @@ wraps it, so no two save formats are coupled. Exemplar: `palisade/index.ts`.
 Reach for it to draw a border-grid game's tile: the error model, the
 half-grid cursor, the edges, the tile skeleton and the board geometry. The
 game supplies its palette indices as `BorderGridColors` and a `drawContent`
-callback for the middle of the tile. `hintTileBits` folds a hint step into
-the tile flags and an `edge-hint.ts` word a cell; key the tile cache on
-both and pass the word to `drawBorderTile`, and the marks are drawn
-when the palette names `hintEdge` and `hintEvidence`. Exemplar:
+callback for the middle of the tile. `packHintMarks` packs a hint step onto
+the draw state's sidecar and returns an `edge-hint.ts` word a cell; key the
+tile cache on the word and pass it to `drawBorderTile`. Exemplar:
 `palisade/render.ts`.
 
 ### `border-grid-hint.ts` — that mechanic's explained hint
