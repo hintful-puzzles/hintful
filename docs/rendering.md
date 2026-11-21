@@ -83,10 +83,14 @@ The skeleton's [`render.ts`](../src/skeleton/grid/render.ts) does steps 1 to
 | – Display state in a narrow type | the C keeps a frame counter or a mask in a `bool` or a `char` |
 | Animation and flash | a move animates, or `redraw` reads `animTime` |
 | – The win flash | always: every game says where its elements are |
+| – A route of lines, jumps or joined pieces | the route runs along lines, jumps across the board, or a piece covers several cells |
 | – A flash that is not a win | the game flashes for a death, a loss or a dead end, or reacts to being solved |
 | Sizing | you write `computeSize` or `newDrawState`, or are tempted to guard on the tile size |
 | The palette: three layers, meaning first | you assign any slot in `colors()` |
 | – What a board looks like: pieces on a quiet surface | you choose how a cell, a state, a given, a wall or a ruled-out mark looks |
+| – A region the puzzle gives takes a fill | the board is divided into regions, the player colors regions, or a color names a group |
+| – Pieces told apart by color, and a color's name | pieces differ by color alone, or a sentence or the help names a color |
+| – A board that has spent a default | a shared role's color (the cursor, a hint, a mistake) is already used on your board |
 | – A relative color is a named function | a color is a shade of the background or of another color |
 | – Black pieces stay black | a piece, or a word in the help or a hint, is black, white, shaded or lit |
 | – Assign the color, never a copy | you spread or rebuild a named color |
@@ -172,18 +176,10 @@ cell, so an overlay compared nowhere never shows.
 
 **Never hand-write the two-array comparison.** `OverlaySidecar`
 ([`engine/render/overlay-sidecar.ts`](../src/engine/render/overlay-sidecar.ts)) owns
-repack, stale and commit, one instance per overlay on the draw state, and
-each is registered on the `TileCache` when the draw state is built, which
-then tests and commits it with the key. Pack a hint step's marks with
-`pack` (no `markBits` in a game without notes), a `findMistakes` list with
-`packCells`, and an overlay with its own topology with `clear` and `add`, as
-Galaxies' `ds.wrongEdges` lights a different bit in each of a wrong wall's
-two tiles. Exemplars: [`towers/render.ts`](../src/games/towers/render.ts),
-[`starbattle/render.ts`](../src/games/starbattle/render.ts).
-
-`pack` also keys each evidence cell on its outline sides, so a cell that
-stays evidence while the shape around it changes still repaints
-(`hints-marks.md` § "Where the band goes, and who rubs it out"). A game that
+repack, stale and commit, one instance per overlay, registered on the
+`TileCache` when the draw state is built; its doc says which packer an
+overlay takes. Exemplars: the skeleton's `render.ts`,
+[`starbattle/render.ts`](../src/games/starbattle/render.ts). A game that
 folds the overlay bit into the packed tile value, as the skeleton does with
 its mistake flag, cannot leave it out of the diff test.
 
@@ -679,6 +675,19 @@ color"). `flash.win` answers `WIN_LEAD` or `WIN_BODY`, and `winSlot(tone)`
 picks the role slot for it, `COL_FLASH_LEAD` or `COL_FLASH`.
 An element with a ground has the ground filled and keeps what it holds on
 top; a line is drawn in the color, and a thin one wider than at rest.
+
+**A game writes nothing for when the flash plays** (`ts-engine` § "The win
+flash plays on a forward move that solves the board"): the midend starts it
+after the winning move's own animation, and withholds it after Solve.
+
+`src/guards/win-flash.test.ts` paints every solvable game's solved board
+through a flash. Pin the route in the game's own test: `winFlashRun` paints
+the flash and `expectWinFlashTravels` asserts it lit every element once, in
+the order of the positions handed over (`engine/testing/win-flash.ts`;
+exemplar `tracks-flash.test.ts`).
+
+### A route of lines, jumps or joined pieces
+
 **Where the route runs along lines across the cells (a track, a path, a
 network's wires), light the lines and leave the cells** (`engine-colors` §
 "A route drawn as a line lights the line"; exemplars Tracks, Path, Net). A
@@ -697,18 +706,6 @@ crosses tiles: the frame after one drew it repaints every tile.
 **A piece over several cells lights whole** (Dominosa's domino, a Boats
 boat): each of its cells asks about the piece's middle, and the piece is
 filled in the tone over its cells' own surface.
-
-**A game writes nothing for when the flash plays** (`ts-engine` § "The win
-flash plays on a forward move that solves the board"). The midend starts it
-when the winning move's own animation ends, so a game that slides or spins a
-tile writes no guard, and it is the midend that withholds it after the Solve
-command.
-
-`src/guards/win-flash.test.ts` paints every solvable game's solved board
-through a flash. Pin the route in the game's own test: `winFlashRun` paints
-the flash and `expectWinFlashTravels` asserts it lit every element once, in
-the order of the positions handed over (`engine/testing/win-flash.ts`;
-exemplar `tracks-flash.test.ts`).
 
 ### A flash that is not a win
 
@@ -796,43 +793,11 @@ its own, from `FIRST_GAME_SLOT` on. A test names a slot, never its number.
   `REGION_DONE` for a completed fill.
 - **Reach past a meaning to a named color only where the name is
   load-bearing to the player**: a member of a set whose job is to be told
-  apart (`FREE`), or a color the game says out loud (`FREE_NAMES`, read off
-  `FREE` so word and color cannot drift).
-- **A color's name is a `ColorWord`** (`engine/color/color-word.ts`), a word
-  for each scheme, since a dark value can leave its light word (Map's dark
-  yellow is a brown). A sentence takes it as a `phrase` part and is shown in
-  the scheme in force. A text shown alike in every scheme, a help page, a
-  control's `does` or a mark's own words, takes `.only`, which refuses a
-  color with two words. `colors.test.ts` holds every word to its color in
-  both schemes.
-- **Pieces told apart by a color that means nothing take `FREE`**, the one
-  such set, its first members first: Flood's tiles and Guess's pegs, whose
-  color is all that tells them apart, and Path's pairs, whose numbers say
-  which is which. Only a game with that second carrier may repeat it past
-  its ten, spread by `spreadColors` (`engine/render/spread-colors.ts`). No member
-  is near the error, the cursor, the drag or the hint's first ring and
-  outline, so a piece never hides a mark. A game drawing pale members as
-  lines on the light cell edges them in `BLACK`, and one that writes a
-  number on a member takes `FREE_TEXT`. Exemplar:
-  [`path/render.ts`](../src/games/path/render.ts).
+  apart, or a color the game says out loud (§ "Pieces told apart by color,
+  and a color's name").
 - **A game whose board has spent the default may pick a different named
   color, and says why on the assignment's line or the line above**
-  (`engine-colors` § "A departure from a shared role is stated at the
-  assignment").
-  [`palette-departures.test.ts`](../src/engine/color/palette-departures.test.ts)
-  fails a bare departure in a slot named for a cursor, a held or dragged
-  item, a hint or a mistake. Exemplar:
-  [`spokes/render.ts`](../src/games/spokes/render.ts) (`PURPLE` cursor).
-- **Pick the replacement against everything it lands on, in both schemes.**
-  A cursor sits on every material the board has, and the lightness ladder
-  flips in the dark scheme, so an argument from one scheme's ordering fails
-  in the other. Where no lightness clears both ends, choose by chroma and
-  hue: a strong color against a neutral reads at equal lightness, and it
-  should be opposite in hue to the materials, not adjacent. Exemplar:
-  [`slide/render.ts`](../src/games/slide/render.ts).
-- **If nothing in the palette fits**, record a function in
-  `palette-games.ts` under the game's prefix, with why no meaning and no
-  named color serves. Aim to add none.
+  (§ "A board that has spent a default").
 
 ### What a board looks like: pieces on a quiet surface
 
@@ -844,36 +809,6 @@ names the one it applies.
 - **The board recedes and the content carries the color.** A cell is
   `cellSurface`, the line between cells is `surfaceGrid`, thin, and the
   frame around the grid is no heavier than it.
-- **A region the puzzle gives may take a fill in place of `cellSurface`**
-  ("The palette holds one set of fills for regions"): one of `REGION_FILLS`,
-  the region palette, eight faint fills of which a board takes the first
-  four, six or eight, with `regionFills`
-  ([`engine/generate/region-fill.ts`](../src/engine/generate/region-fill.ts)) choosing so
-  that regions sharing a side differ. It says only "these cells are one
-  region": the heavy border still tells two regions apart, and everything
-  else is drawn over the fill as over the plain surface. A mistake's wash
-  and the win flash take its place. Exemplar:
-  [`starbattle/render.ts`](../src/games/starbattle/render.ts), on the first
-  four.
-  - **A region's color is one value a scheme in every game** (the owner,
-    2026-10-15: consistency first), so a yellow region in Map and in Star
-    Battle is one yellow in both schemes.
-  - **Where the fill is the player's answer**, the game takes `FOUR_FILLS`,
-    the first four as themselves in the order its numbers name them, and
-    `FOUR_NAMES` for the words. Only the first four stand off a region with
-    no color, so such a game has four. A dot or a swatch of the color drawn
-    on a surface that is not the color takes `FOUR_FILL_MARKS`, stronger in
-    the dark scheme, where a dot of the fill's own value does not show.
-    Exemplar: Map, its pencil stipples.
-  - **A color that names a group rather than a region**, as Signpost's
-    chains do, is the palette's eight in turn and repeats past the eighth;
-    the group's own label tells two of one color apart. Two fills are never
-    mixed for a ninth: a mix of two fills this faint is a gray near the
-    others.
-  - **A game with numbers, notes or `REGION_DONE` in its regions is put to
-    the owner with a drawing first.** Measured on the palette, not yet in
-    the app: a pencil note and a player's entry read weaker on a dark fill
-    than on a plain cell, and `REGION_DONE` is close to the light violet.
 - **A state is a piece, drawn with `drawPiece`**
   ([`engine/render/piece.ts`](../src/engine/render/piece.ts); "A piece is drawn inset on
   its cell"). State is never a step of gray alone.
@@ -934,6 +869,79 @@ names the one it applies.
   in the fill's text color (`ERROR` under `ERROR_TEXT`).
 - **A bevel is kept only where the tile is an object the player moves**
   (Fifteen, Sixteen, Twiddle, Slide).
+
+### A region the puzzle gives takes a fill
+
+- **A region the puzzle gives may take a fill in place of `cellSurface`**
+  ("The palette holds one set of fills for regions"): one of `REGION_FILLS`,
+  the region palette, eight faint fills of which a board takes the first
+  four, six or eight, with `regionFills`
+  ([`engine/generate/region-fill.ts`](../src/engine/generate/region-fill.ts)) choosing so
+  that regions sharing a side differ. It says only "these cells are one
+  region": the heavy border still tells two regions apart, and everything
+  else is drawn over the fill as over the plain surface. A mistake's wash
+  and the win flash take its place. Exemplar:
+  [`starbattle/render.ts`](../src/games/starbattle/render.ts), on the first
+  four.
+  - **A region's color is one value a scheme in every game** (the owner,
+    2026-10-15: consistency first), so a yellow region in Map and in Star
+    Battle is one yellow in both schemes.
+  - **Where the fill is the player's answer**, the game takes `FOUR_FILLS`,
+    the first four as themselves in the order its numbers name them, and
+    `FOUR_NAMES` for the words. Only the first four stand off a region with
+    no color, so such a game has four. A dot or a swatch of the color drawn
+    on a surface that is not the color takes `FOUR_FILL_MARKS`, stronger in
+    the dark scheme, where a dot of the fill's own value does not show.
+    Exemplar: Map, its pencil stipples.
+  - **A color that names a group rather than a region**, as Signpost's
+    chains do, is the palette's eight in turn and repeats past the eighth;
+    the group's own label tells two of one color apart. Two fills are never
+    mixed for a ninth: a mix of two fills this faint is a gray near the
+    others.
+  - **A game with numbers, notes or `REGION_DONE` in its regions is put to
+    the owner with a drawing first.** Measured on the palette, not yet in
+    the app: a pencil note and a player's entry read weaker on a dark fill
+    than on a plain cell, and `REGION_DONE` is close to the light violet.
+
+### Pieces told apart by color, and a color's name
+
+- **A color's name is a `ColorWord`** (`engine/color/color-word.ts`), a word
+  for each scheme, since a dark value can leave its light word (Map's dark
+  yellow is a brown). A sentence takes it as a `phrase` part and is shown in
+  the scheme in force. A text shown alike in every scheme, a help page, a
+  control's `does` or a mark's own words, takes `.only`, which refuses a
+  color with two words. `colors.test.ts` holds every word to its color in
+  both schemes.
+- **Pieces told apart by a color that means nothing take `FREE`**, the one
+  such set, its first members first: Flood's tiles and Guess's pegs, whose
+  color is all that tells them apart, and Path's pairs, whose numbers say
+  which is which. Only a game with that second carrier may repeat it past
+  its ten, spread by `spreadColors` (`engine/render/spread-colors.ts`). No member
+  is near the error, the cursor, the drag or the hint's first ring and
+  outline, so a piece never hides a mark. A game drawing pale members as
+  lines on the light cell edges them in `BLACK`, and one that writes a
+  number on a member takes `FREE_TEXT`. Exemplar:
+  [`path/render.ts`](../src/games/path/render.ts).
+
+### A board that has spent a default
+
+- **A departure from a shared role says why on the assignment's line or the
+  line above** (`engine-colors` § "A departure from a shared role is stated
+  at the assignment").
+  [`palette-departures.test.ts`](../src/engine/color/palette-departures.test.ts)
+  fails a bare departure in a slot named for a cursor, a held or dragged
+  item, a hint or a mistake. Exemplar:
+  [`spokes/render.ts`](../src/games/spokes/render.ts) (`PURPLE` cursor).
+- **Pick the replacement against everything it lands on, in both schemes.**
+  A cursor sits on every material the board has, and the lightness ladder
+  flips in the dark scheme, so an argument from one scheme's ordering fails
+  in the other. Where no lightness clears both ends, choose by chroma and
+  hue: a strong color against a neutral reads at equal lightness, and it
+  should be opposite in hue to the materials, not adjacent. Exemplar:
+  [`slide/render.ts`](../src/games/slide/render.ts).
+- **If nothing in the palette fits**, record a function in
+  `palette-games.ts` under the game's prefix, with why no meaning and no
+  named color serves. Aim to add none.
 
 ### A relative color is a named function
 
