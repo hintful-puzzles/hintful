@@ -2,17 +2,24 @@
 #
 # Trunk-based (no PRs), so the gate runs after the push: the SAME gate as the
 # husky hooks, `npm run gate`, whose steps are defined in `scripts/gate.sh` and
-# nowhere else, with no role toggle set, so it is the whole suite at its widest.
-# It is what catches a `--no-verify` commit or a clone whose hooks never
-# installed, and it is the only run of what the local hooks scope away: the
-# sweeps' wider boards and the checks deferred to it.
+# nowhere else, with no hook's toggle set, so it is the whole suite at its
+# widest. It is what catches a `--no-verify` commit or a clone whose hooks
+# never installed, and it is the only run of what the local hooks scope away:
+# the sweeps' wider boards and the checks deferred to it.
+#
+# It runs in parts, each a job, which `GATE_CI_PART` names and `scripts/gate.sh`
+# (section 0-) says the steps of: the checks and the build once, the tests in
+# shards on runners of their own, and last the shards' costs summed and judged.
+# So the run's wall time is its dearest shard's, and the suite grows a shard at
+# a time instead of lengthening the run. Any part failing fails the run, which
+# is the one verdict `scripts/checks/ci-status.mjs` reads.
 #
 # A workflow of its own, beside `ci.yml`'s build and deploy and not a job in
 # it, for two reasons. The deploy does not wait on it (owner, 2026-09-27: ten
 # minutes per push was the velocity cost). And the two want opposite answers
 # when a newer commit lands, with one verdict each: a moot build is canceled,
 # and a run in which the build was canceled would conclude as canceled whatever
-# the suite found, which is the conclusion `scripts/checks/ci-status.mjs` reads.
+# the suite found.
 #
 # (If contributors arrive later and PRs become useful, add a `pull_request:`
 # trigger here.)
@@ -39,16 +46,11 @@ permissions:
 jobs:
   # It builds too, and throws that build away: `vite build` is one of the
   # gate's steps, and the artifact that ships is `ci.yml`'s.
-  gate:
+  checks:
     runs-on: ubuntu-latest
-    # The wall time is the suite's test time over the runner's workers, since
-    # `vitest.config.ts` spreads the files that would each set it alone
-    # (`SPREAD`), and the cost budget holds that test time down
-    # (`scripts/checks/test-cost.ts`). A run took 9.7 minutes on 2026-10-27
-    # (Gate run 40572795933), and runners vary by 1.8x: the limit is about
-    # 1.7 times a slow runner's run, since a limit too close to it had six of
-    # eight runs canceled with no verdict on 2026-10-22.
-    timeout-minutes: 30
+    timeout-minutes: 15
+    env:
+      GATE_CI_PART: checks
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -61,13 +63,69 @@ jobs:
       # `npm ci` and the gate.
       - name: Install npm dependencies
         run: npm ci
-      - name: Run the gate
+      - name: Run the gate's checks and build
         run: npm run gate
       # The research tools import `src/describe/` and the engine, so a change
       # there can break them, and no hook runs their tests: a commit touching
       # only `research/` takes the documentation-only path. Their guards
-      # (`research/vitest.guards.config.ts`) run here instead, even when the gate
-      # failed, so one run gives both verdicts.
+      # (`research/vitest.guards.config.ts`) run here instead, even when the
+      # checks failed, so one run gives both verdicts.
       - name: Run the research tools' guards
         if: ${{ success() || failure() }}
         run: npm run test:research-guards
+
+  tests:
+    runs-on: ubuntu-latest
+    # Runners differ by 1.8x, and a limit too close to a slow runner's run had
+    # six of eight runs canceled with no verdict on 2026-10-22: the limit is
+    # about twice the slowest shard's run, the setup included.
+    timeout-minutes: 20
+    strategy:
+      # Every shard runs to its verdict, so one run names every failure.
+      fail-fast: false
+      # One more shard is the answer when the shards' mean nears its budget
+      # (`scripts/checks/test-cost.ts`, `BUDGET.shard`). The count is read
+      # from here, so this list is the only place it is written.
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      GATE_CI_PART: ${{ matrix.shard }}/${{ strategy.job-total }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install npm dependencies
+        run: npm ci
+      - name: Run the gate's tests, shard ${{ matrix.shard }} of ${{ strategy.job-total }}
+        run: npm run gate
+      # Where `test-cost.ts` writes a shard's costs (`SHARDS` there).
+      - uses: actions/upload-artifact@v7
+        with:
+          name: test-costs-${{ matrix.shard }}
+          path: node_modules/.cache/test-cost/shards/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  suite:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GATE_CI_PART: suite
+    steps:
+      # The sum reads the shards' costs with `test-cost.ts` alone, which
+      # imports nothing installed.
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: test-costs-*
+          path: node_modules/.cache/test-cost/shards/
+          merge-multiple: true
+      - name: Sum and judge the shards' costs
+        run: npm run gate

@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { globSync, readdirSync } from "node:fs";
 import { availableParallelism } from "node:os";
 import {
   configDefaults,
@@ -7,6 +7,7 @@ import {
 } from "vitest/config";
 import { sourceScanTests } from "./scripts/checks/source-scans.ts";
 import { otherGamesFilter, scopeFromEnv } from "./src/engine/testing/game-scope.ts";
+import { inShard, shardFromEnv, sharesOf } from "./src/engine/testing/gate-shard.ts";
 import { describeFirst } from "./vite-plugins/describe.ts";
 import { draftPuzzles } from "./vite-plugins/draft-puzzles.ts";
 import { gameCodeLoader } from "./vite-plugins/game-code.ts";
@@ -59,37 +60,50 @@ const SPREAD = [
   "src/puzzle/mark-collisions.test.ts",
 ];
 
-/** How many shares a spread file is walked in: CI's core count, so each file
- * can take every worker. */
+/** How many shares of a spread file one runner walks: CI's core count, so
+ * each file can take every worker. A shard of CI's suite walks shares of its
+ * own, numbered after the shards before it (`sharesOf`). */
 const SHARES = 4;
+
+/** The shard of CI's suite this run is, or `null` for the whole suite. */
+const SHARD = shardFromEnv(process.env);
 
 /**
  * The suite as vitest projects: the spread files once per share, every other
  * file once. The scan pass runs no spread file, so it has no share projects.
  * A project's own `include` and `exclude` are kept apart from the root's,
  * which `extends` would concatenate onto them.
+ *
+ * A shard of CI's suite names its files one by one, since a glob cannot say
+ * which shard a file is in. An empty `include` reads as vitest's default, so
+ * a shard holding no file of a pass names one that does not exist.
  */
 function projects(): TestProjectInlineConfiguration[] {
   const { include, exclude } = passFiles();
   const spread = process.env["GATE_TEST_PASS"] === "scan" ? [] : SPREAD;
+  let own = { include, exclude: [...exclude, ...spread] };
+  if (SHARD !== null) {
+    const files = globSync(own.include, { exclude: own.exclude })
+      .filter((file) => inShard(file, SHARD))
+      .sort();
+    own = { include: files.length > 0 ? files : [NO_FILE], exclude: [] };
+  }
   return [
-    {
-      extends: true,
-      test: { name: "main", include, exclude: [...exclude, ...spread] },
-    },
-    ...Array.from(
-      { length: spread.length === 0 ? 0 : SHARES },
-      (_, index): TestProjectInlineConfiguration => ({
+    { extends: true, test: { name: "main", ...own } },
+    ...(spread.length === 0 ? [] : sharesOf(SHARD, SHARES)).map(
+      (share): TestProjectInlineConfiguration => ({
         extends: true,
         test: {
-          name: `share ${index + 1} of ${SHARES}`,
+          name: `share ${share.index + 1} of ${share.of}`,
           include: spread,
-          provide: { sweepShare: { index, of: SHARES } },
+          provide: { sweepShare: share },
         },
       }),
     ),
   ];
 }
+
+const NO_FILE = "a shard with no file of this pass";
 
 /**
  * The name filter that skips every other game's cross-game cases, when the

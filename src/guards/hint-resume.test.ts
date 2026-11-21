@@ -384,14 +384,29 @@ describe("a kept hint plan leaves the board alone, and its every step changes it
           plain = plainAfter;
         });
       }
-      framesJudged += judged;
+      framesJudged.set(name, judged);
     });
   }
 });
 
-/** How many steps the frame sweep judged, across this share's games: its
- * vacuity guard, asserted in "the resume walk" below. */
-let framesJudged = 0;
+/** How many steps the frame sweep judged, by game: its vacuity guard,
+ * asserted in "the resume walk" below. */
+const framesJudged = new Map<string, number>();
+
+/**
+ * The games the frame sweep's floor is held on, each in the share that walks
+ * it, and a quarter of what each judged (2026-11-21: Loopy 6,689 frames over
+ * 21 boards, Solo 843 over 15, Keen 498 over 6, Mathrax 316 over 10). One
+ * board a game, or a slice keyed on tier alone, judges under each floor. Not a
+ * floor on a share's sum: Loopy holds half of every frame, and a share of four
+ * games without it judged 79.
+ */
+const JUDGES: Record<string, number> = {
+  loopy: 1600,
+  solo: 200,
+  keen: 120,
+  mathrax: 80,
+};
 
 /** Each compiled game description's ladder, by its module's path. */
 const LADDERS = import.meta.glob<readonly { readonly id: string }[]>(
@@ -582,12 +597,18 @@ describe("the resume walk", () => {
     expect(walkedCases).toBeGreaterThan(shareFloor(100));
   });
 
+  if (FIRST_SHARE)
+    it("pins the frame sweep's floor on games it walks", () => {
+      for (const id of Object.keys(JUDGES))
+        expect(HINT_GAMES.map(([name]) => name)).toContain(id);
+    });
+
   itOverWholeSweep("judged enough frames to mean something", () => {
-    // A floor per game walked, as the games are what the shares deal evenly:
-    // the frames are not, one game's boards holding most of them (shares of
-    // 951 to 8,404 frames, 2026-11-16). Twenty a game sits far above one
-    // small board's steps and far below the 60 a game the lightest share
-    // judges.
-    expect(framesJudged).toBeGreaterThan(SHARE_GAMES.length * 20);
+    expect(framesJudged.size).toBe(SHARE_GAMES.length);
+    for (const [id, floor] of Object.entries(JUDGES))
+      if (framesJudged.has(id))
+        expect(framesJudged.get(id), `${id}'s judged frames`).toBeGreaterThanOrEqual(
+          floor,
+        );
   });
 });

@@ -21,7 +21,7 @@ import { dealtBoards } from "../engine/testing/presets.ts";
 import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import { itOverWholeSweep, SLOW_TESTS_ENABLED } from "../engine/testing/slow.ts";
-import { FIRST_SHARE, ofThisShare, shareFloor } from "../engine/testing/sweep-share.ts";
+import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";
 
 const MALFORMED = ["", "!", "~,~,~", "_", "9".repeat(4000), "z".repeat(4000)];
 
@@ -196,19 +196,32 @@ describe("a near-miss game ID", () => {
     });
   }
 
-  // How many accepted near misses reached `newState`, over the share's games.
-  // Several games accept none (an exact validator refuses every one-edit
-  // change), so the floor is on the sum: a mutator or a slice that went blind
-  // would drop it. The shares loaded 227, 420, 407 and 134 (2026-11-09), so
-  // the floor is a quarter of 400, under the least of them.
+  if (FIRST_SHARE)
+    it("pins its floor on games the sweep walks", () => {
+      for (const id of Object.keys(ACCEPTS))
+        expect(REGISTERED_GAMES.map(([g]) => g)).toContain(id);
+    });
+
   // Loading refuses most near misses before `newState`: a strict parser refuses
   // a malformed one, and one edit to a puzzle with one answer usually leaves it
   // with several or none, which the answer check and the deduction check
-  // refuse. A stricter loader lowers the sum, and the floor with it; a blind
-  // sweep falls far below either.
+  // refuse. So a stricter loader lowers the count, and a mutator or a slice
+  // that went blind drops it to nothing in every game at once.
   itOverWholeSweep("loaded enough accepted near misses to mean something", () => {
     expect(accepted.size).toBe(SHARE_GAMES.length);
-    const total = [...accepted.values()].reduce((a, b) => a + b, 0);
-    expect(total).toBeGreaterThanOrEqual(shareFloor(400));
+    for (const [id, floor] of Object.entries(ACCEPTS))
+      if (accepted.has(id))
+        expect(accepted.get(id), `${id}'s accepted near misses`).toBeGreaterThanOrEqual(
+          floor,
+        );
   });
 });
+
+/**
+ * The games the floor on accepted near misses is held on, each in the share
+ * that walks it, and a quarter of what each accepted (2026-11-21: Flood 140,
+ * Numgame 119, Pegs 100, Loopy 58). Not a sum over a share's games: 15 of 65
+ * games accept none, so a share of a few games summed to 4 where another
+ * summed to hundreds.
+ */
+const ACCEPTS: Record<string, number> = { flood: 35, numgame: 30, pegs: 25, loopy: 15 };

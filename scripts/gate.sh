@@ -47,6 +47,31 @@
 # competing with it.
 set -e
 
+# --- 0-. Which part of CI's run this is. ---
+#
+# CI runs the gate in parts, each a job of `.github/workflows/gate.yml`, so
+# that its wall time follows the suite's CPU time over the shards rather than
+# one runner's workers. `GATE_CI_PART` names the part, and unset this is the
+# whole gate, as everywhere but CI:
+#
+#   checks    every step but the tests: the fast checks and the build
+#   <i>/<n>   the tests of shard i of n (`src/engine/testing/gate-shard.ts`)
+#   suite     the shards' costs summed and judged, once every shard passed
+#
+# The parts are this script's steps and nothing else, so CI and `npm run gate`
+# cannot run different gates.
+ci_part=${GATE_CI_PART:-}
+shard=""
+case "$ci_part" in
+  "" | checks) ;;
+  suite) exec node scripts/checks/test-cost.ts suite ;;
+  [1-9]*/[1-9]*) shard=$ci_part ;;
+  *)
+    echo "✗ GATE_CI_PART is checks, suite or <shard>/<shards>, not \"$ci_part\"."
+    exit 1
+    ;;
+esac
+
 # --- 0a. Which paths is this run about, and is there anything to run? ---
 #
 # Four roles run this script, and three of them are about a set of paths. A
@@ -187,10 +212,13 @@ sh "$(dirname -- "$0")/reap-orphaned-workers.sh" || true
 # A step that needs an earlier one keeps its place after it; the steps that
 # every other reads (the descriptions' modules) are not steps, and a failure
 # there ends the keep-going run as it ends the gate.
+#
+# A shard of CI's suite runs no step: the checks part runs each of them once.
 refused=""
 step_as() {
   reproducer=$1
   shift
+  [ -z "$shard" ] || return 0
   if [ "${GATE_KEEP_GOING:-}" != "1" ]; then
     # The refusal is where a session learns the command exists.
     "$@" || {
@@ -631,6 +659,11 @@ fi
 # would report a narrow plan that looks like health. ~1s.
 step node scripts/checks/source-scans.ts --verify
 step node scripts/checks/select-tests.ts --verify
+# CI's checks part ends with the build, which the shards do not run.
+if [ "$ci_part" = checks ]; then
+  npx vite build
+  exit 0
+fi
 # Every vitest pass below appends what each test file cost in CPU time to one
 # log (`scripts/checks/test-cost.ts`), read once the suite has run.
 TEST_COST_RUN=$(mktemp)
@@ -685,11 +718,13 @@ build_rc=0
 # captured log is printed only on failure, avoiding two interleaved streams.
 build_log=$(mktemp)
 trap 'rm -f "$build_log" "$TEST_COST_RUN"' EXIT
-$NICE npx vite build >"$build_log" 2>&1 &
-build_pid=$!
+if [ -z "$shard" ]; then
+  $NICE npx vite build >"$build_log" 2>&1 &
+  build_pid=$!
+fi
 
 run_tests main || vitest_rc=$?
-wait "$build_pid" || build_rc=$?
+[ -n "$shard" ] || wait "$build_pid" || build_rc=$?
 if [ "$build_rc" -ne 0 ]; then
   echo ""
   echo "✗ vite build failed (exit $build_rc):"
@@ -703,8 +738,14 @@ if [ "$vitest_rc" -ne 0 ] || [ "$build_rc" -ne 0 ]; then
 fi
 # Every file's CPU time against its budget, and the suite's where it all ran.
 # Recorded too, for the next hook's plan; a push that ran clears what the
-# commits left it.
-if ! node scripts/checks/test-cost.ts report "$TEST_COST_RUN" $whole_suite; then
+# commits left it. A shard of CI's suite writes its costs for the suite part.
+if [ -n "$shard" ]; then
+  cost_report="shard $TEST_COST_RUN $shard"
+else
+  cost_report="report $TEST_COST_RUN $whole_suite"
+fi
+# shellcheck disable=SC2086 # the words of one command line, no globs.
+if ! node scripts/checks/test-cost.ts $cost_report; then
   echo ""
   echo "gate failed on the cost budget"
   exit 1

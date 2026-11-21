@@ -84,7 +84,7 @@ runs, and what a commit may leave to the push and to CI).
 | – Walk a midend's hints through `walkHints` | you are writing a cross-game guard on what pressing Hint shows or plays |
 | – One board of each kind, and the rest in the slow tier | you are writing a cross-game guard, not a game, and it could walk more of the same |
 | – A cross-game guard the hooks can narrow | you are writing a cross-game guard, not a game: its case titles and whole-sweep assertions |
-| – A sweep too long for one worker | a cross-game sweep alone would take more than half a CI run |
+| – A sweep too long for one worker | a cross-game sweep alone would take more than half a CI shard's run |
 | – A guard that only reads source | you are writing a guard, not a game, and it scans source text |
 | – One concept under several names | you suspect games name the same `Ui` or draw-state field differently |
 | Metrics and instruments | you start or end a refactoring change, or read a jscpd, madge or biome figure |
@@ -616,12 +616,19 @@ to write.
   to the slow tier (§ "One board of each kind, and the rest in the slow
   tier"); the conditions are in the `build-pipeline` spec.
 
-**The gate holds every test file to a budget of CPU time, and the suite to
-one.** The budgets, and the margin past which a cost fails, are the owner's
-numbers in [`scripts/checks/test-cost.ts`](../scripts/checks/test-cost.ts)
+**The gate holds every test file to a budget of CPU time, and CI's shards to
+one on average.** The budgets, and the margin past which a cost fails, are
+in [`scripts/checks/test-cost.ts`](../scripts/checks/test-cost.ts)
 (`BUDGET`, and `MARGIN` with its reason; the header says how a cost is
 scaled to the reference runner). A spread file's share counts as one
 file.
+
+- **The suite as a whole has no budget; it grows a shard at a time.** CI runs
+  the tests in shards on runners of their own, so a run takes as long as its
+  dearest shard. When the shards' mean nears its budget, the gate says so, and
+  the answer is one more shard in the matrix of
+  [`gate.yml`](../.github/workflows/gate.yml), the one place the count is
+  written. A file over its budget is still cut, never given a shard.
 
 - **The seconds are a reference runner's.** Each run times a fixed workload
   (`cpu-unit.ts`) and scales its costs by it, since GitHub's runners differ by
@@ -675,7 +682,7 @@ and their reasons.
 | --- | --- | --- |
 | The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other, up to a ceiling of CPU time. |
 | The push hook | every push | The gate's fast checks and no test. Asked with `GATE_PUSH_TESTS=1`, it also runs what the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries (nothing, when every commit was a game's own or documentation), up to its own ceiling. |
-| CI | every push | Everything but the games' deep tiers. Never canceled by a newer push. |
+| CI | every push | Everything but the games' deep tiers, in parts: the fast checks and the build in one job, the tests in shards beside it, and their costs summed once every shard passed. Never canceled by a newer push. |
 
 - **Before a commit, `npm run fast-checks`** runs the gate's fast checks
   past every refusal, in under a minute, and names each one with the command
@@ -1049,7 +1056,7 @@ games it stages and skips the rest by title, so:
 ### A sweep too long for one worker
 
 vitest runs one file's tests in turn, so a cross-game sweep that alone would
-take more than half a CI run is spread: list it in `SPREAD` in
+take more than half a CI shard's run is spread: list it in `SPREAD` in
 `vitest.config.ts`, and it runs once per share, each run walking the share
 [`sweep-share.ts`](../src/engine/testing/sweep-share.ts) gives it. The
 `build-pipeline` spec's "No one test file sets the gate's wall clock" is the
@@ -1060,12 +1067,21 @@ bound.
   does (`hint-resume.test.ts`'s `SOLVE_CASES`). One board no share can split
   is a walk to trim, not to share.
 - **Put a check that walks nothing under `FIRST_SHARE`**, so it runs once.
+- **CI walks more, smaller shares than a runner has workers**: each of its
+  shards walks four shares of its own, so a share holds a sixteenth of the
+  sweep's list with four shards, and less with each shard added
+  ([`gate-shard.ts`](../src/engine/testing/gate-shard.ts)). A share may hold
+  three or four games, so a floor summed over a share's games passes or fails
+  by which games it drew.
 - **A share can hold none of a small population**, and vitest fails a suite
   with no case: register the block only where the share holds a member, and
   hold the population's size in the first share (`hint-resume.test.ts`'s
   `LATIN`).
 - **Hold a census to the share's own games**, with every walk of a game in one
-  share, and a vacuity floor at `shareFloor` of the whole one. A check that
+  share. A vacuity floor at `shareFloor` of the whole one fits only a count
+  the share deals evenly, such as its cases; a count that varies by game
+  (frames judged, near misses accepted) is held on named games, a floor each,
+  in the share that walks them (`hint-resume.test.ts`'s `JUDGES`). A check that
   asks whether *any* game met something is held on a game that meets it, in
   the share that walks it (`hint-quality.test.ts`'s `MET_ON`).
 - **Run it wide as before**: `npx vitest run <file>` runs every share.

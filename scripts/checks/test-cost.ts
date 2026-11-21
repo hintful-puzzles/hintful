@@ -8,8 +8,20 @@
  *
  * reads the costs `test-cost-setup.ts` appended to the log the gate names in
  * `TEST_COST_RUN`, prints the dearest files, records the costs for the hooks'
- * next plans, and fails when a file is over its budget, or, with `--suite`
- * (the whole suite ran), when the total is over the suite's.
+ * next plans, and fails when a file is over its budget. With `--suite` (the
+ * whole suite ran on this machine) it prints the total and the games' own
+ * files, and judges neither: CI judges them, over its shards.
+ *
+ *     node scripts/checks/test-cost.ts shard <log> <shard>/<shards>
+ *
+ * is `report` for a shard of CI's suite (`src/engine/testing/gate-shard.ts`),
+ * which also writes
+ * the shard's costs, in reference seconds, where CI's last job reads them:
+ *
+ *     node scripts/checks/test-cost.ts suite
+ *
+ * sums the shards, and fails when a game's own files are over their budget,
+ * or when the shards' mean is over a shard's.
  *
  *     node scripts/checks/test-cost.ts fit <commit|push>
  *
@@ -24,20 +36,37 @@
  * runner GitHub hands out.
  */
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
+import { shardFromEnv } from "../../src/engine/testing/gate-shard.ts";
 import { cpuUnit } from "./cpu-unit.ts";
 
 /**
  * The budgets in reference seconds (design D3 of `enforce-test-time-budgets`):
- * no one file is a fifth of a worker's share of a ten-minute run, and the
- * suite is about ten minutes on four workers. A game's own files are held in
- * CI to seconds (owner, 2026-11-09: CI's time is the engine's, and dozens of
- * games are to come): 25 s is the dearest game's on the first CI run with
- * the deep tier (Sixteen's 27 s, within the margin; Gate run 42709305769),
- * so that a game grows no further, and the rest averaged 8 s.
+ * no one file is a fifth of a worker's share of a ten-minute run.
+ *
+ * A shard of CI's suite runs on a runner of its own, so the run's wall time is
+ * its dearest shard's, and the suite as a whole has no budget: it grows a
+ * shard at a time (the matrix in `.github/workflows/gate.yml`). What is held
+ * is the shards' mean, since the placement of files is blind to their cost
+ * (`gate-shard.ts`). 1200 s is half the whole suite's budget before the shards
+ * (2400 s, about ten minutes on four workers): the dearest shard, a third over
+ * the mean (Gate run 44851276935's costs placed in four shards), then runs
+ * about seven minutes, and a run with its setup stays under the ten.
+ *
+ * A game's own files are held in CI to seconds (owner, 2026-11-09: CI's time
+ * is the engine's, and dozens of games are to come): 25 s is the dearest
+ * game's on the first CI run with the deep tier (Sixteen's 27 s, within the
+ * margin; Gate run 42709305769), so that a game grows no further, and the
+ * rest averaged 8 s.
  */
-const BUDGET = { file: 120, suite: 2400, commit: 90, push: 300, game: 25 };
+const BUDGET = { file: 120, shard: 1200, commit: 90, push: 300, game: 25 };
 
 /** The workload's main-thread CPU seconds on the reference runner: its
  * process CPU there (Gate run 40553996591, the least of three, 1.458 s) times
@@ -63,6 +92,10 @@ const CACHE = "node_modules/.cache/test-cost";
 const RECORD = path.join(CACHE, "costs.json");
 /** The files a commit hook left out, one per line. */
 const DEFERRED = path.join(CACHE, "deferred");
+/** Each shard's costs in reference seconds, as `<shard>-of-<shards>.jsonl`:
+ * where a shard of CI's suite writes them and CI's last job reads them, which
+ * `.github/workflows/gate.yml` names to carry them between the two. */
+const SHARDS = path.join(CACHE, "shards");
 
 const TREATMENTS =
   'docs/testing.md § "Right-sizing the gate" gives the treatments: write down a ' +
@@ -117,17 +150,24 @@ function label(file: string, project: string): string {
 
 const seconds = (s: number): string => `${s.toFixed(0).padStart(5)} s`;
 
-/** Prints the run's costs, records them, and says whether they are within
- * budget. */
-function report(log: string, wholeSuite: boolean): boolean {
+/** What a run's files cost together: a board one file dealt and others used
+ * counts once, where it was dealt. */
+const totalOf = (lines: readonly Line[]): number =>
+  lines.reduce((sum, l) => sum + l.cpu - l.inherited, 0);
+
+const minutes = (s: number): string => (s / 60).toFixed(1);
+
+/** Prints the run's costs, records them, and says whether each file is within
+ * its budget, beside the costs in reference seconds, dearest first. */
+function report(log: string, wholeSuite: boolean): { lines: Line[]; ok: boolean } {
   const unit = cpuUnit();
   const lines = readRun(log)
     .map((l) => toReference(l, REFERENCE_UNIT / unit))
     .sort((a, b) => b.cpu - a.cpu);
-  const total = lines.reduce((sum, l) => sum + l.cpu - l.inherited, 0);
+  const total = totalOf(lines);
   console.log(
-    `Test CPU time: ${(total / 60).toFixed(1)} minutes over ${lines.length} files, ` +
-      `${(lines.reduce((sum, l) => sum + l.dealt, 0) / 60).toFixed(1)} of them dealing boards, ` +
+    `Test CPU time: ${minutes(total)} minutes over ${lines.length} files, ` +
+      `${minutes(lines.reduce((sum, l) => sum + l.dealt, 0))} of them dealing boards, ` +
       `in reference seconds (this machine's unit ${unit.toFixed(3)} s, the reference's ${REFERENCE_UNIT}).`,
   );
   const failed: string[] = [];
@@ -145,39 +185,98 @@ function report(log: string, wholeSuite: boolean): boolean {
     else if (l.cpu >= 10) console.log(at);
   }
   record(lines);
-  let ok = true;
-  if (wholeSuite) ok = reportGames(lines) && ok;
+  if (wholeSuite) reportGames(lines, false);
   if (failed.length > 0) {
     console.log(
       `\n✗ over the budget of ${BUDGET.file} s a file by more than the runners differ:`,
     );
     for (const at of failed) console.log(at);
-    ok = false;
+    console.log(TREATMENTS);
   }
-  if (wholeSuite) {
-    const minutes = (s: number) => (s / 60).toFixed(1);
-    if (total > MARGIN * BUDGET.suite) {
-      console.log(
-        `\n✗ the suite cost ${minutes(total)} minutes, over its budget of ${minutes(BUDGET.suite)} by more than the runners differ.`,
-      );
-      ok = false;
-    } else if (total > NEAR * BUDGET.suite) {
-      console.log(
-        `The suite is ${standing(total, BUDGET.suite)} of ${minutes(BUDGET.suite)} minutes.`,
-      );
-    }
+  return { lines, ok: failed.length === 0 };
+}
+
+/** `report` for a shard of CI's suite, which also writes the shard's costs for
+ * {@link reportSuite}. */
+function reportShard(log: string, part: string): boolean {
+  const shard = shardFromEnv({ GATE_CI_PART: part });
+  if (shard === null) throw new Error(`not a shard: ${part}`);
+  const { lines, ok } = report(log, false);
+  mkdirSync(SHARDS, { recursive: true });
+  writeFileSync(
+    path.join(SHARDS, `${shard.index + 1}-of-${shard.of}.jsonl`),
+    lines.map((l) => `${JSON.stringify(l)}\n`).join(""),
+  );
+  return ok;
+}
+
+/**
+ * Sums the shards of CI's suite, and says whether their mean is within a
+ * shard's budget and each game's own files within theirs. Refuses a set of
+ * shards with one missing, which would read as a cheaper suite.
+ */
+function reportSuite(): boolean {
+  const found = existsSync(SHARDS) ? readdirSync(SHARDS) : [];
+  const shards = found.map((name) => {
+    const match = /^(\d+)-of-(\d+)\.jsonl$/.exec(name);
+    if (match === null)
+      throw new Error(`not a shard's costs: ${path.join(SHARDS, name)}`);
+    return {
+      index: Number(match[1]),
+      of: Number(match[2]),
+      lines: readRun(path.join(SHARDS, name)),
+    };
+  });
+  const of = shards[0]?.of ?? 0;
+  const indices = shards.map((s) => s.index).sort((a, b) => a - b);
+  if (
+    of === 0 ||
+    shards.some((s) => s.of !== of) ||
+    indices.join() !== Array.from({ length: of }, (_, i) => i + 1).join()
+  ) {
+    console.log(
+      `✗ the shards' costs in ${SHARDS} are not one whole set: ${found.join(", ") || "none"}.`,
+    );
+    return false;
+  }
+  const lines = shards.flatMap((s) => s.lines);
+  const total = totalOf(lines);
+  const mean = total / of;
+  console.log(
+    `Test CPU time: ${minutes(total)} minutes over ${lines.length} files in ${of} shards, ` +
+      `in reference seconds; by shard ` +
+      shards
+        .sort((a, b) => a.index - b.index)
+        .map((s) => `${minutes(totalOf(s.lines))}`)
+        .join(", ") +
+      ".",
+  );
+  let ok = reportGames(lines, true);
+  if (mean > MARGIN * BUDGET.shard) {
+    console.log(
+      `\n✗ the shards cost ${minutes(mean)} minutes on average, over a shard's budget of ` +
+        `${minutes(BUDGET.shard)} by more than the runners differ. Add a shard to the matrix ` +
+        "in .github/workflows/gate.yml, or cut what costs most.",
+    );
+    ok = false;
+  } else if (mean > NEAR * BUDGET.shard) {
+    console.log(
+      `The shards' mean is ${standing(mean, BUDGET.shard)} of ${minutes(BUDGET.shard)} minutes: ` +
+        "the next growth wants a shard more in .github/workflows/gate.yml.",
+    );
   }
   if (!ok) console.log(TREATMENTS);
   return ok;
 }
 
 /**
- * Prints what the games' own files cost, and says whether each game's are
- * within {@link BUDGET}'s `game`. Held only in CI, where a game's deep tier
- * does not run (`inDeepTier` in `src/engine/testing/slow.ts`): everywhere
- * else a game's own files are as deep as the session working on it wants.
+ * Prints what the games' own files cost, and, when `judge`, says whether each
+ * game's are within {@link BUDGET}'s `game`. Judged only in CI, where a game's
+ * deep tier does not run (`inDeepTier` in `src/engine/testing/slow.ts`):
+ * everywhere else a game's own files are as deep as the session working on it
+ * wants.
  */
-function reportGames(lines: readonly Line[]): boolean {
+function reportGames(lines: readonly Line[], judge: boolean): boolean {
   const byGame = new Map<string, number>();
   for (const l of lines) {
     const game = /^src\/games\/([^/]+)\//.exec(l.file)?.[1];
@@ -193,7 +292,7 @@ function reportGames(lines: readonly Line[]): boolean {
         .map(([game, s]) => `${game} ${s.toFixed(0)} s`)
         .join(", "),
   );
-  if (!process.env["CI"]) return true;
+  if (!judge) return true;
   const over = ranked.filter(([, s]) => s > MARGIN * BUDGET.game);
   if (over.length === 0) return true;
   console.log(
@@ -387,11 +486,18 @@ function fitPlan(role: "commit" | "push", text: string): string {
 
 if (process.argv[1] === import.meta.filename) {
   const [command, arg] = process.argv.slice(2);
+  const part = process.argv[4];
   if (command === "report" && arg !== undefined) {
-    if (!report(arg, process.argv.includes("--suite"))) process.exitCode = 1;
+    if (!report(arg, process.argv.includes("--suite")).ok) process.exitCode = 1;
+  } else if (command === "shard" && arg !== undefined && part !== undefined) {
+    if (!reportShard(arg, part)) process.exitCode = 1;
+  } else if (command === "suite") {
+    if (!reportSuite()) process.exitCode = 1;
   } else if (command === "fit" && (arg === "commit" || arg === "push")) {
     process.stdout.write(`${fitPlan(arg, readFileSync(0, "utf8"))}\n`);
   } else {
-    throw new Error("usage: test-cost.ts report <log> [--suite] | fit <commit|push>");
+    throw new Error(
+      "usage: test-cost.ts report <log> [--suite] | shard <log> <shard>/<shards> | suite | fit <commit|push>",
+    );
   }
 }
