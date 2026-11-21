@@ -26,7 +26,8 @@
       Moved: lightup (its `rules.grid` reads a lit or crossed square as
       holding no bulb; it gains a red cross where nothing can light the
       square). A count written through a definition (`bulbs(k)`) is
-      bounded now, as a count written out is. Run `src/guards` before a
+      bounded now, as a count written out is. Moved: mosaic (its state
+      cells hold only the mark; "done" is the renderer's). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

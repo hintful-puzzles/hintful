@@ -36,6 +36,7 @@ import {
   MOSAIC_RUNGS,
   type MosaicRung,
   newDesc,
+  rules,
   status,
 } from "./solver.ts";
 import {
@@ -52,7 +53,6 @@ import {
   newState,
   paramConfig,
   STATE_BLANK,
-  STATE_MARK_MASK,
   STATE_MARKED,
   STATE_UNMARKED,
   statusbarText,
@@ -92,7 +92,7 @@ const targetVerbs: TargetVerbs<
     apply: toggle(true),
   }),
   sweep: {
-    holds: (s, { x, y }) => s.cells[y * s.width + x] & STATE_MARK_MASK,
+    holds: (s, { x, y }) => s.cells[y * s.width + x],
   },
 };
 
@@ -127,11 +127,7 @@ function clearMistakes(
  * before the clear ones, which are the ruling-out mark. */
 function revealOne(state: MosaicState, solved: MosaicState): MosaicMove | null {
   const empty = (mark: number): number =>
-    state.cells.findIndex(
-      (c, i) =>
-        (c & STATE_MARK_MASK) === STATE_UNMARKED &&
-        (solved.cells[i] & STATE_MARK_MASK) === mark,
-    );
+    state.cells.findIndex((c, i) => c === STATE_UNMARKED && solved.cells[i] === mark);
   for (const mark of [STATE_MARKED, STATE_BLANK]) {
     const at = empty(mark);
     if (at >= 0) return { type: "fill", cells: [at], mark };
@@ -186,6 +182,7 @@ export const mosaicGame: Game<
     answerOf,
   }),
 
+  rules,
   findMistakes,
   clearMistakes,
   revealOne,

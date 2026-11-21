@@ -38,8 +38,9 @@ import {
   type MosaicMove,
   type MosaicParams,
   newState,
-  STATE_MARK_MASK,
+  STATE_BLANK,
   STATE_MARKED,
+  STATE_UNMARKED,
 } from "./state.ts";
 
 /** How many ways every square of `board` can be shaded or left clear so that
@@ -374,7 +375,7 @@ describe("the hint on an Unreasonable Mosaic board", () => {
     let state = newState(p, NEEDS_SEARCH);
     const answer = answerOf(state);
     if (answer.kind !== "one") throw new Error("no answer found");
-    const firstEmpty = () => state.cells.findIndex((c) => (c & STATE_MARK_MASK) === 0);
+    const firstEmpty = () => state.cells.findIndex((c) => c === STATE_UNMARKED);
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
@@ -401,7 +402,7 @@ describe("the hint on an Unreasonable Mosaic board", () => {
     const tried = mosaicGame.executeMove(state, {
       type: "fill",
       cells: [open],
-      mark: right === STATE_MARKED ? STATE_MARK_MASK - STATE_MARKED : STATE_MARKED,
+      mark: right === STATE_MARKED ? STATE_BLANK : STATE_MARKED,
     });
     expect(mosaicGame.findMistakes?.(tried)).toEqual([
       { x: open % 5, y: Math.floor(open / 5), kind: "cell" },

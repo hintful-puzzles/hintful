@@ -12,6 +12,7 @@
 
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
@@ -44,7 +45,6 @@ import {
   type MosaicParams,
   type MosaicState,
   STATE_BLANK,
-  STATE_MARK_MASK,
   STATE_MARKED,
   STATE_UNMARKED,
 } from "./state.ts";
@@ -59,9 +59,20 @@ export const MOSAIC_RUNGS = mosaic.SAYS_KINDS;
 export type MosaicRung = (typeof MOSAIC_RUNGS)[number];
 
 /** The board's numbers as the description reads them. */
-function dealtOf(board: MosaicBoard): mosaic.Dealt {
+export function dealtOf(board: MosaicBoard): mosaic.Dealt {
   return { count: cluesWhere(board.clues, (n) => n >= 0) };
 }
+
+/** The board as its rules read it: a square's mark is its value. */
+export const rules: RulesOf<MosaicState> = {
+  grid: (s) => s.cells,
+  violations: (s, g) =>
+    mosaic.violations(
+      g,
+      describedSpace(mosaic.units, s.width, s.height),
+      dealtOf(s.board),
+    ),
+};
 
 /** The values a square may hold: shaded or clear. */
 const DOMAIN = (1 << STATE_MARKED) | (1 << STATE_BLANK);
@@ -90,12 +101,7 @@ function isAnswer(board: MosaicBoard, grid: Uint8Array): boolean {
 /** Solved where every square is shaded or clear and the numbers say so, by
  * the rules the description compiles to. */
 export function status(state: MosaicState): GameStatus {
-  return isAnswer(
-    state.board,
-    state.cells.map((v) => v & STATE_MARK_MASK),
-  )
-    ? "solved"
-    : "ongoing";
+  return isAnswer(state.board, state.cells) ? "solved" : "ongoing";
 }
 
 /** What deducing on a grid established, and the highest tier that fired. */
@@ -168,7 +174,7 @@ export function hintWalk(state: MosaicState): {
   marks: CellMarks;
   entries: readonly LadderEntry[];
 } {
-  const grid = state.cells.map((v) => v & STATE_MARK_MASK);
+  const grid = state.cells.slice();
   return {
     marks: marksOf(state.board, grid),
     entries: describedLadder(mosaic, dealtOf(state.board)).entries,
@@ -486,7 +492,7 @@ export function findMistakes(state: MosaicState): MosaicMistake[] {
   return entryMistakes(
     {
       answer: answer.solution,
-      entry: Array.from(cells, (c) => c & STATE_MARK_MASK),
+      entry: Array.from(cells),
       empty: STATE_UNMARKED,
     },
     gridCell(width),

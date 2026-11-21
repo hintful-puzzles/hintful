@@ -22,11 +22,13 @@ import {
   RIGHT_BUTTON,
   RIGHT_DRAG,
 } from "../../engine/input/pointer.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { mosaicGame } from "./index.ts";
-import { status } from "./solver.ts";
+import { rules, status } from "./solver.ts";
 import {
+  clueDone,
   cluesLeft,
   DIFF_NORMAL,
   DIFF_UNREASONABLE,
@@ -38,9 +40,7 @@ import {
   type MosaicUi,
   newState,
   STATE_BLANK,
-  STATE_ERROR,
   STATE_MARKED,
-  STATE_SOLVED,
   STATE_UNMARKED,
   statusbarText,
   textFormat,
@@ -288,37 +288,33 @@ describe("Mosaic moves", () => {
       }
     }
     expect(cluesLeft(s)).toBe(0);
-    expect(s.cells[4] & STATE_SOLVED).toBeTruthy();
+    expect(clueDone(s, 4)).toBe(true);
     expect(status(s)).toBe("solved");
   });
 
-  it("flags an overcommitted clue ERROR", () => {
-    // All-white board: every clue is 0; marking a cell black contradicts
-    // its neighboring clues (clue < marked).
+  it("an overcommitted number breaks its rule until the shading is undone", () => {
+    // All-white board: every square holds a 0, so a square's index is its
+    // number's; shading the middle overcommits all nine.
+    const broken = (s: MosaicState) => [
+      ...(liveErrors(rules, s).clues.get("count") ?? []),
+    ];
     let s = newState(P3, "000000000");
     s = executeMove(s, { type: "toggle", x: 1, y: 1, double: false });
-    expect(s.cells[0] & STATE_ERROR).toBeTruthy();
-    expect(s.cells[4] & STATE_ERROR).toBeTruthy();
+    expect(broken(s).sort()).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+    // shaded → clear: no contradiction left.
+    s = executeMove(s, { type: "toggle", x: 1, y: 1, double: false });
+    expect(broken(s)).toEqual([]);
   });
 
-  it("clears the ERROR flag when the contradiction is undone", () => {
-    let s = newState(P3, "000000000");
-    s = executeMove(s, { type: "toggle", x: 1, y: 1, double: false });
-    expect(s.cells[0] & STATE_ERROR).toBeTruthy();
-    // marked → blank: no contradiction left.
-    s = executeMove(s, { type: "toggle", x: 1, y: 1, double: false });
-    expect(s.cells[0] & STATE_ERROR).toBeFalsy();
-  });
-
-  it("applies a solve bitmap with SOLVED flags and zero clues left", () => {
+  it("applies a solve bitmap, every number done and zero clues left", () => {
     const s = newState(P3, ALL_BLACK_DESC);
     // 9 cells all marked: 0xff 0x80.
     const solved = executeMove(s, { type: "solve", solution: "ff80" });
     expect(cluesLeft(solved)).toBe(0);
     expect(status(solved)).toBe("solved");
     for (let i = 0; i < 9; i++) {
-      expect(solved.cells[i] & 3).toBe(STATE_MARKED);
-      expect(solved.cells[i] & STATE_SOLVED).toBeTruthy();
+      expect(solved.cells[i]).toBe(STATE_MARKED);
+      expect(clueDone(solved, i)).toBe(true);
     }
     // The completion words are the engine's.
     expect(statusbarText(solved, freshUi())).toBe("");

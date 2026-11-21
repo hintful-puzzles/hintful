@@ -28,18 +28,16 @@ import {
 } from "../../engine/solve/answer-search.ts";
 import * as mosaic from "../../generated/games/mosaic/mosaic.compiled.ts";
 
-// --- cell-state flags (upstream `enum cell_state`) ----------------------
+// --- a square's mark ----------------------------------------------------
 
-// The low two bits are the player's mark; SOLVED/ERROR are derived
-// overlays on clue cells. The toggle cycle `(mark + steps) % 3` and the
-// paint guard `mark === 0` rely on this encoding.
+// The values the description reads: shaded 1, clear 2, undecided 0. The
+// toggle cycle `(mark + steps) % MARKS` and the paint guard `mark === 0`
+// rely on this encoding.
 export const STATE_UNMARKED = 0;
 export const STATE_MARKED = 1;
 export const STATE_BLANK = 2;
-export const STATE_SOLVED = 4;
-export const STATE_ERROR = 8;
-/** Mask of the two mark bits; also the modulus of the toggle cycle. */
-export const STATE_MARK_MASK = STATE_BLANK | STATE_MARKED;
+/** How many marks a square cycles through. */
+const MARKS = 3;
 
 const DEFAULT_SIZE = 10;
 const DEFAULT_AGGRESSIVENESS = true;
@@ -288,49 +286,28 @@ export function countAround(
   return { marked, blank, total };
 }
 
-/** Re-derive the SOLVED/ERROR overlay of every shown clue in the 3×3
- * neighborhood of a just-changed cell (upstream
- * `update_board_state_around`). Mutates `cells` in place — callers pass
- * the already-cloned next state's array. */
-function updateBoardStateAround(
-  state: { width: number; height: number; board: MosaicBoard },
-  cells: Uint8Array,
-  x: number,
-  y: number,
-): void {
-  const { width, height, board } = state;
-  for (let j = Math.max(0, y - 1); j <= Math.min(height - 1, y + 1); j++) {
-    for (let i = Math.max(0, x - 1); i <= Math.min(width - 1, x + 1); i++) {
-      const pos = j * width + i;
-      const clue = board.clues[pos];
-      if (clue < 0) continue;
-      const { marked, blank, total } = countAround(width, height, cells, i, j);
-      const mark = cells[pos] & STATE_MARK_MASK;
-      if (clue === marked && total - marked - blank === 0) {
-        cells[pos] = mark | STATE_SOLVED;
-      } else if (clue < marked || clue > total - blank) {
-        cells[pos] = mark | STATE_ERROR;
-      } else {
-        cells[pos] = mark;
-      }
-    }
-  }
+/** Whether the number at `pos` is met with every square of its block
+ * decided: a number the player is done with. */
+export function clueDone(state: MosaicState, pos: number): boolean {
+  const { width, height, board, cells } = state;
+  const clue = board.clues[pos];
+  if (clue < 0) return false;
+  const { marked, blank, total } = countAround(
+    width,
+    height,
+    cells,
+    pos % width,
+    Math.floor(pos / width),
+  );
+  return clue === marked && marked + blank === total;
 }
 
-/** Shown clues not yet satisfied with every neighbor decided, read off the
- * marks rather than the SOLVED overlay, so it says what the board shows
- * however the board was reached. 0 means the board is complete. */
+/** Shown clues not yet done ({@link clueDone}). 0 means the board is
+ * complete. */
 export function cluesLeft(state: MosaicState): number {
-  const { width, height, board, cells } = state;
   let left = 0;
-  for (let pos = 0; pos < board.clues.length; pos++) {
-    const clue = board.clues[pos];
-    if (clue < 0) continue;
-    const x = pos % width;
-    const y = Math.floor(pos / width);
-    const { marked, blank, total } = countAround(width, height, cells, x, y);
-    if (clue !== marked || total - marked - blank !== 0) left++;
-  }
+  for (let pos = 0; pos < state.board.clues.length; pos++)
+    if (state.board.clues[pos] >= 0 && !clueDone(state, pos)) left++;
   return left;
 }
 
@@ -359,7 +336,7 @@ export function executeMove(state: MosaicState, move: MosaicMove): MosaicState {
       let byte = Number.parseInt(move.solution.slice(i, i + 2), 16);
       if (Number.isNaN(byte)) throw new Error("Bad solve bitmap");
       for (let bit = 0; bit < 8 && loc < size; bit++) {
-        cells[loc] = (byte & 0x80 ? STATE_MARKED : STATE_BLANK) | STATE_SOLVED;
+        cells[loc] = byte & 0x80 ? STATE_MARKED : STATE_BLANK;
         byte = (byte << 1) & 0xff;
         loc++;
       }
@@ -374,19 +351,13 @@ export function executeMove(state: MosaicState, move: MosaicMove): MosaicState {
   if (move.type === "toggle") {
     if (!inBounds(move.x, move.y)) throw new Error("Toggle out of bounds");
     const pos = move.y * width + move.x;
-    // Strip any SOLVED/ERROR overlay, then cycle the mark.
-    cells[pos] =
-      ((cells[pos] & STATE_MARK_MASK) + (move.double ? 2 : 1)) % STATE_MARK_MASK;
-    updateBoardStateAround(state, cells, move.x, move.y);
+    cells[pos] = (cells[pos] + (move.double ? 2 : 1)) % MARKS;
   } else if (move.type === "paint") {
     if (!inBounds(move.x, move.y)) throw new Error("Paint out of bounds");
     for (const { x, y } of paintRun(move.x, move.y, move.srcX, move.srcY)) {
       if (!inBounds(x, y)) throw new Error("Paint out of bounds");
       const pos = y * width + x;
-      if ((cells[pos] & STATE_MARK_MASK) === 0) {
-        cells[pos] = move.paintState;
-        updateBoardStateAround(state, cells, x, y);
-      }
+      if (cells[pos] === STATE_UNMARKED) cells[pos] = move.paintState;
     }
   } else if (move.type === "fill") {
     for (const [i, pos] of move.cells.entries()) {
@@ -394,7 +365,6 @@ export function executeMove(state: MosaicState, move: MosaicMove): MosaicState {
       const mark = typeof move.mark === "number" ? move.mark : move.mark[i];
       if (mark === undefined) throw new Error("Fill without a mark");
       cells[pos] = mark;
-      updateBoardStateAround(state, cells, pos % width, Math.floor(pos / width));
     }
   } else {
     return assertNever(move, "mosaic: executeMove");

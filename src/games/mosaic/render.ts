@@ -43,22 +43,23 @@ import {
   type MarkBand,
   MarkOutlines,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
 import { ringFits, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./kinds.ts";
+import { dealtOf, rules } from "./solver.ts";
 import {
+  clueDone,
   type MosaicMistake,
   type MosaicMove,
   type MosaicParams,
   type MosaicState,
   type MosaicUi,
   STATE_BLANK,
-  STATE_ERROR,
   STATE_MARKED,
-  STATE_SOLVED,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -112,8 +113,12 @@ export function computeSize(p: MosaicParams, ts: number): Size {
 
 // --- draw state ---------------------------------------------------------------
 
-// Extra flags packed above the cell-state bits in the cache (upstream's
-// DRAWFLAG_* values, plus our mistake-overlay bit).
+// Flags packed above a square's mark in the cache (upstream's DRAWFLAG_*
+// values, plus our mistake-overlay bit).
+/** A number the player is done with (`clueDone`). */
+const DRAWFLAG_DONE = 0x4;
+/** A number the board breaks: its block can no longer hold its count. */
+const DRAWFLAG_ERROR = 0x8;
 const DRAWFLAG_CURSOR = 0x100;
 const DRAWFLAG_CURSOR_U = 0x200;
 const DRAWFLAG_CURSOR_L = 0x400;
@@ -238,14 +243,14 @@ function drawCell(
     if (clueVal >= 0) {
       const at = clue.origin;
       let textColor: number;
-      if (cell & STATE_ERROR) {
+      if (cell & DRAWFLAG_ERROR) {
         // On the piece and on the clear square a contradicted number is a
         // badge: red ink on either is a difference of hue with little of
         // lightness in the dark scheme.
         const badged = shaded || clear;
         if (badged) dr.drawCircle(at, ts * 0.32, COL_ERROR, COL_ERROR);
         textColor = badged ? COL_ERROR_TEXT : COL_ERROR;
-      } else if (cell & STATE_SOLVED) {
+      } else if (cell & DRAWFLAG_DONE) {
         // A satisfied number's own square is decided, as every square round
         // it is, so it sits on the piece or on the clear square.
         textColor = shaded ? COL_TEXT_SOLVED_ON_PIECE : COL_CLEAR_MARK;
@@ -307,6 +312,10 @@ export function redraw(
   const named = new Set(marks.of("outline", BLOCK).map((c) => c.y * width + c.x));
 
   const mistakeSet = new Set(mistakes?.map((m) => m.y * width + m.x));
+  const { count } = dealtOf(board);
+  const broken = new Set(
+    [...(liveErrors(rules, state).clues.get("count") ?? [])].map((k) => count.at[k]),
+  );
 
   // A ring may reach into the tiles round its square, so when the rings
   // change those tiles repaint, before the rings that stay are drawn again.
@@ -338,6 +347,8 @@ export function redraw(
       if (inBounds && mistakeSet.has(y * width + x)) cell |= DRAWFLAG_MISTAKE;
       if (inBounds) cell |= hintSides(x, y) << HINT_SIDES_SHIFT;
       if (inBounds && named.has(y * width + x)) cell |= DRAWFLAG_HINT_NUMBER;
+      if (inBounds && broken.has(y * width + x)) cell |= DRAWFLAG_ERROR;
+      else if (inBounds && clueDone(state, y * width + x)) cell |= DRAWFLAG_DONE;
 
       const clueVal = inBounds ? board.clues[y * width + x] : -1;
 

@@ -15,12 +15,7 @@ import {
 import { type SaysById, STATED } from "../../generated/games/mosaic/mosaic.compiled.ts";
 import { BLOCK } from "./kinds.ts";
 import { hintWalk, type MosaicRung } from "./solver.ts";
-import {
-  executeMove,
-  type MosaicMove,
-  type MosaicState,
-  STATE_MARK_MASK,
-} from "./state.ts";
+import { executeMove, type MosaicMove, type MosaicState } from "./state.ts";
 
 /** A square a step decides and the mark it asks: shaded or clear, as the
  * description reads a square (`STATE_MARKED`, `STATE_BLANK`). */
@@ -31,8 +26,7 @@ export interface MosaicTarget extends Point {
 /** What a step decides: the squares, each with its mark. */
 export type MosaicHint = FiringHint<MosaicTarget>;
 
-const markAt = (state: MosaicState, cell: number): number =>
-  state.cells[cell] & STATE_MARK_MASK;
+const markAt = (state: MosaicState, cell: number): number => state.cells[cell];
 
 const described = describedFiringHint<
   MosaicState,
