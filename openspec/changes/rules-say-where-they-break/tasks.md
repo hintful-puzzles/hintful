@@ -95,9 +95,19 @@
       stretch ranges over the stretch's possible run, sure over its sure run,
       in the compiler; the length is the sum of the line's two ways, since
       the size of their union is not bounded; a line walled in turns red with
-      squares still open, which the old check waited for). Signpost waits: its numbers follow from chains
-      of links, and a chain is read only once every link of it is decided;
-      a bound on `chain` over the links decided so far comes first. Run
+      squares still open, which the old check waited for).
+      Signpost waits: its numbers follow from chains of links, and a chain is
+      read only once every link of it is decided. Its old check
+      (`checkCompletion` in `state.ts`) marks a number reached twice (two
+      squares a chain numbers alike, a given one included), a number and
+      the next placed apart, and a number below 1. Each relates two numbers
+      along one chain, so `|chain(c)|` bounded alone (the decided walk from
+      c, plus the open square it stops at, below; the board above) reaches
+      none: two chains' size intervals lose that they share a walk. What
+      comes first: a compiler reading of where one square stands along
+      another's chain (exact inside the decided walk, past it where it is
+      not in it), and the number clue restated through it, as Ascent's step
+      rule was said of the square the next number is on. Run
       `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
