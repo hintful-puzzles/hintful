@@ -12,6 +12,7 @@
  * linked, as upstream's was.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { spokenOf, techniqueOf } from "../../engine/hint/described-hint.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
@@ -102,7 +103,8 @@ export type TentsReason =
 
 /** The game's clue index of the space's line `L`: the space lists the rows
  * first, the game the columns. */
-const clueLine = (w: number, h: number, L: number): number => (L < h ? w + L : L - h);
+export const clueLine = (w: number, h: number, L: number): number =>
+  L < h ? w + L : L - h;
 
 /** The board as the description deals it: a tree on each square that has
  * one, and every row's and column's count. */
@@ -302,6 +304,18 @@ export function isSolved(
     b.dl,
   );
 }
+
+/** The squares as the rules read them: an open square is undecided, since a
+ * tent may still go there. Links are notes and play no part. */
+export const rules: RulesOf<TentsState> = {
+  grid: (s) => Uint8Array.from(s.grid, (v) => DESC_VALUE[v]),
+  violations: (s, g) =>
+    tents.violations(
+      g,
+      describedSpace(tents.units, s.w, s.h),
+      dealtOf(s.w, s.h, s.grid, s.numbers),
+    ),
+};
 
 /** Solved where the player's squares are an answer. */
 export function status(state: TentsState): GameStatus {

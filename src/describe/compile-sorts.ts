@@ -423,8 +423,10 @@ export interface Env {
   /** Where the code is the answer check, which reads a whole grid's values
    * (`g`) rather than the marks: whether the description has a repeated
    * value, which the check then reads with its count from the description
-   * (`_repeat`, `_times`) rather than from the marks. `null` elsewhere. */
-  answer: { repeats: boolean } | null;
+   * (`_repeat`, `_times`) rather than from the marks; and whether the grid
+   * may be partly undecided, 0 where it is, so a read of an undecided
+   * element stops the term (the violation check). `null` elsewhere. */
+  answer: { repeats: boolean; partial?: boolean } | null;
   /** Where the code reads a planning game's position (`p`): its layers, each
    * read as a function of a cell, or of a face. `null` elsewhere. */
   position: ReadonlyMap<string, LayerSort> | null;
@@ -674,6 +676,12 @@ export function markRead(
   if (env.answer) {
     if (fn === "cand")
       throw new CompileError("a rule reads the answer, never the marks");
+    if (env.answer.partial) {
+      env.used.add(fn === "known" ? "knownIn" : "heldIn");
+      return fn === "known"
+        ? { code: `knownIn(g, ${c.code}, _rd)`, sort: BOOL }
+        : { code: `heldIn(g, ${c.code}, _rd)`, sort: NUM };
+    }
     return fn === "known"
       ? { code: `(g[${c.code}] > 0)`, sort: BOOL }
       : { code: `(g[${c.code}] || -1)`, sort: NUM };

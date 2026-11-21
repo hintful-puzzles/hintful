@@ -77,6 +77,7 @@ The skeleton's [`render.ts`](../src/skeleton/grid/render.ts) does steps 1 to
 | – A shape another game also draws | you write vertex arithmetic for a frame, a bevel, an outline or brackets |
 | Bespoke board geometry, draw side | the board is sheared or not a plain grid |
 | A rule that input and display both need | `redraw` works out what a click or a move would do |
+| Live errors are the rules' | the game marks a broken rule while the board is being filled |
 | Special paint shapes | the game has a clue margin or region-inset cells, or its C stores display state |
 | – A clue-ring erase must not wipe the grid | clues sit in a margin around the grid and repaint one at a time |
 | – Negative-space grids | the grid lines are what the cell fills leave uncovered |
@@ -570,6 +571,29 @@ Exemplar: [`bricks/render.ts`](../src/games/bricks/render.ts) and
 
 **Render asks; move code decides**: one function, called by both
 ([`mechanics.md`](./mechanics.md) § "One function, both callers").
+
+## Live errors are the rules'
+
+**A described game writes no error checker.** Its `Game.rules` gives the
+board as its description reads it, 0 where undecided, and the module's
+`violations` over it ([`descriptions.md`](./descriptions.md) § "Where a rule
+breaks"); its redraw takes the marks from
+[`liveErrors`](../src/engine/render/live-errors.ts), passing the previewed
+grid while a gesture is live, and paints only what they say:
+
+- **A violation at two elements is a pair**, drawn between them where the
+  game has a mark for two pieces clashing (Tents' diamond on the shared side
+  or corner), and on both otherwise.
+- **Any other violation marks its elements**, and a clue's marks the clue.
+- **What the rules do not say is not an error.** A game that flagged more
+  (a heuristic, a "largest piece wins") flagged a guess; a game that flagged
+  less now shows what its rules already make certain. Where the marks are
+  too coarse, the fix is the statement's shape or the compiler's bound on
+  its form, so every game gains it.
+
+Exemplar: [`tents/render.ts`](../src/games/tents/render.ts) (`errorsOf`) and
+[`tents/solver.ts`](../src/games/tents/solver.ts) (`rules`). The games not
+yet moved are listed by `openspec/changes/rules-say-where-they-break`.
 
 ## Special paint shapes
 

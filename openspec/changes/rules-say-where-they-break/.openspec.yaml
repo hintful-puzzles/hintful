@@ -1,5 +1,2 @@
-# Drop skip_specs and add the latin-solver / described-ladder and game
-# deltas once the violation's shape is designed (tasks 1.2).
 schema: spec-driven
 created: 2026-11-21
-skip_specs: true

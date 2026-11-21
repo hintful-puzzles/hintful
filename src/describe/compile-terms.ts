@@ -322,7 +322,7 @@ export function fillConjuncts(e: Expr, scope: Scope, env: Env): Expr[] {
 
 /** `e` with each name `sub` maps replaced by its term, refusing a binder that
  * would capture a name the terms read (`avoid`). */
-function substitute(
+export function substitute(
   e: Expr,
   sub: ReadonlyMap<string, Expr>,
   avoid: ReadonlySet<string>,

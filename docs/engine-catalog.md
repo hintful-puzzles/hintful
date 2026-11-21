@@ -32,6 +32,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – Where a promoted helper lands |
 | – Entries whose order deals the boards |
 | `contract/` — the `Game` contract and its vocabulary |
+| – `rules.ts` — the board as its description's rules read it |
 | – `retry-limit.ts` — a bound on generate-until-it-works |
 | – `deal-census.ts` — why a draw was thrown away |
 | – `difficulty.ts` — the cross-game difficulty contract |
@@ -78,6 +79,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `modifier.ts` — the settings that change one rule |
 | – `param-help.ts` — the generated Parameters section |
 | `render/` — drawing, the tile cache and the hint's marks |
+| – `live-errors.ts` — the live error marks |
 | – `piece.ts` — a piece on its cell |
 | – `region-walls.ts` — the heavy walls round dealt regions |
 | – `ring.ts` — the round ring |
@@ -237,6 +239,12 @@ returns or refuses. What every game imports from here:
   descriptions, change notifications).
 - `catalog.ts`: `PuzzleData`, the shape of the game's own `catalog.ts`
   entry, and the families it names one of.
+
+### `rules.ts` — the board as its description's rules read it
+
+`RulesOf`, the shape of `Game.rules`: the board's values as the
+description reads them, and where they break its rules
+([`rendering.md`](./rendering.md) § "Live errors are the rules'").
 
 ### `retry-limit.ts` — a bound on generate-until-it-works
 
@@ -812,6 +820,13 @@ with that choice's name and throws on one that names no choice.
 
 Read this part when you are writing `redraw`, or drawing what a hint
 points at. How to write a renderer is [`rendering.md`](./rendering.md).
+
+### `live-errors.ts` — the live error marks
+
+Reach for it when the game marks a broken rule as the board is filled:
+`liveErrors(rules, state, g?)` gives the pairs, the elements and the clues
+to paint, from `Game.rules` ([`rendering.md`](./rendering.md) § "Live
+errors are the rules'"). Exemplar: `src/games/tents/render.ts`.
 
 ### `piece.ts` — a piece on its cell
 

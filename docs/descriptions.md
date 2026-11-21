@@ -106,7 +106,8 @@ and techniques, and:
 | The runtime a ladder runs on | you solve or hint a described game, or its board is not a Latin square |
 | A statement's order is behavior | you restate a technique, or a hint changes after a description edit |
 | A conclusion that is false is a contradiction | a technique must refuse a board, or a solver reports a false ambiguity |
-| The answer check | you decide whether a board is solved, or write an error overlay |
+| The answer check | you decide whether a board is solved |
+| Where a rule breaks | a game's live error marks are wrong or missing, or you write a rule whose breach should show |
 | A kind of rule places its techniques | a rule is "this group holds exactly k", and you would state its techniques by hand |
 | What a placement rules out | a placed thing rules out squares the player would cross by hand |
 | A firing's reason is built from its binding | a hint's words need a fact about a firing, or a Check must say what its tried value broke |
@@ -1015,13 +1016,48 @@ compiles; what a game acts on:
   is off, and needs nothing.
 - **A grid measured in other sizes** (Solo's `c * r`) reads that term as the
   grid's width, so the check needs no size the space already gives.
-- **An error overlay stays the game's own code.** It judges a board still
-  being filled, which no rule of the answer says, and what it marks (a
-  run of three, a row's count) is presentation. It never decides that a
+- **The live error marks come from the same statements**, read on a board
+  still being filled (§ "Where a rule breaks"). They never decide that a
   board is solved.
 
 Its comparison with the checks it replaced is in the `report.md` of
 `openspec/changes/archive/*-check-the-answer-from-the-rules`.
+
+## Where a rule breaks
+
+`npm run describe` compiles the same statements a second time, as the
+module's `violations(g, sp, cl)`: each statement a board still being filled
+(0 where an element is undecided) already breaks, false on every completion
+of it, and where. [`compile-violations.ts`](../src/describe/compile-violations.ts)
+says how each form is read; what a description's author acts on:
+
+- **Sound by construction, exact where decided.** A term the check does not
+  bound is evaluated as the answer check would, and a read of an undecided
+  element leaves it undecided. So no statement is ever reported broken on a
+  board an answer completes, and on a whole board the violations are empty
+  exactly where `isAnswer` holds. The check says more than "decided and
+  wrong" only where it bounds the form: Kleene's logic over the
+  connectives and quantifiers, the interval a count or a sum can still
+  reach, `value(x) = k` against `x`'s domain, `matched` by Hall's condition
+  on each group, and `latin`/`distinct` as each pair that repeats. A form
+  that reads only decided elements needs nothing: a connectivity or loop rule
+  is reported once its elements are decided, and bounding it earlier is that
+  form's work in the compiler, never a game's.
+- **Where is the statement's leading `forall`s and `and`s.** Each binding
+  whose body is false is one violation, at the elements of the answer's sort
+  it binds (two tents touching); where it binds none, at what its deciding
+  term names (the tents of a row with too many, an unpaired group) or else at
+  what it read. A clue's violation is the clue. So a rule written as
+  `forall L in lines: count(...) = k` marks each line it breaks, and the same
+  rule written as one `count` over the board marks nothing finer than the
+  board: write the quantifier where the place is worth showing.
+- **The rule's name is the violation's** (`shape.<i>` for a shape entry),
+  as the answer check reports it.
+
+The guard is `src/guards/rule-violations.test.ts`: every game that declares
+`rules` (`docs/rendering.md` § "Live errors are the rules'") undecides its
+answers at random and must report nothing, and must report most answers with
+one value changed.
 
 ## A kind of rule places its techniques
 

@@ -2849,6 +2849,14 @@ function call(
       if (env.answer) {
         if (vs.length === 3) throw new CompileError("a rule reads beam(s) alone");
         env.used.add("beamOf");
+        if (env.answer.partial) {
+          // A beam reads the grid itself: decided only on a whole one.
+          env.used.add("decidedAll");
+          return {
+            code: `(decidedAll(g, sp.cells), beamOf(sp, g, ${vs[0].code}))`,
+            sort: NUM,
+          };
+        }
         return { code: `beamOf(sp, g, ${vs[0].code})`, sort: NUM };
       }
       env.used.add("beam");

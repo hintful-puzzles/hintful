@@ -70,7 +70,7 @@ import {
   type TentsDrawState,
   TLBORDER,
 } from "./render.ts";
-import { status, TENTS_RUNGS, type TentsRung, tentsSolve } from "./solver.ts";
+import { rules, status, TENTS_RUNGS, type TentsRung, tentsSolve } from "./solver.ts";
 import {
   BLANK,
   canJoin,
@@ -511,6 +511,7 @@ export const tentsGame: Game<
   status,
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes,

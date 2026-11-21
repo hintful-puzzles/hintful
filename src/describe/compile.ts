@@ -36,6 +36,7 @@ import {
 import { statedTable, stepsBlock } from "./compile-stated.ts";
 import { capitalized, compileTechnique } from "./compile-technique.ts";
 import { freeNames, reads } from "./compile-terms.ts";
+import { violationCheck } from "./compile-violations.ts";
 import {
   cellMarkOf,
   type ClueKind as DescribedClueKind,
@@ -73,6 +74,7 @@ function runtimeImport(
     "type Fire",
     "type GridSpace",
     "type Marks",
+    "type Violation",
     ...(regions ? ["type Partition"] : []),
     ...[...used].sort(),
   ].filter(named);
@@ -354,6 +356,7 @@ export function compileGame(
       throw new CompileError(`${fn}: a kept definition and a technique share the name`);
   code.push(...[...kept.values()].map((k) => k.code));
   const check = Out.own("isAnswer", () => answerCheck(json, d, env));
+  const broken = Out.own("violations", () => violationsOf(json, d, env));
   const scales = Object.entries(d.json.scales ?? {});
   const sizes = [...env.sizes.read].sort();
   const clueLines =
@@ -567,6 +570,8 @@ export function compileGame(
     "",
     ...check,
     "",
+    ...broken,
+    "",
     code.join("\n\n"),
   ].join("\n");
   return `${[
@@ -671,15 +676,7 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
     out.emit(`const _repeat = ${value.code};`);
     out.emit(`const _times = ${times.code};`);
   }
-  // A variation's own rules, each after the description's.
-  const rules = [
-    ...(json.shape ?? []).map((src) => ({ src, on: null as string | null })),
-    ...Object.values(json.rules ?? {}).map((src) => ({ src, on: null })),
-    ...Object.entries(json.variations ?? {}).flatMap(([name, v]) => [
-      ...(v.add?.shape ?? []).map((src) => ({ src, on: name })),
-      ...Object.values(v.add?.rules ?? {}).map((src) => ({ src, on: name })),
-    ]),
-  ];
+  const rules = ruleList(json);
   for (const { src, on } of rules) {
     if (on !== null) out.open(`if (variations.includes(${JSON.stringify(on)})) {`);
     const v = compileExpr(measured(parse(src)), scope, cenv, out);
@@ -747,6 +744,64 @@ function answerCheck(json: DescriptionJson, d: Description, env: Env): string[] 
     ...out.text(),
     "}",
   ];
+}
+
+/** The shape and the rules, each with the name a violation reports it by: a
+ * variation's own rules, each after the description's. */
+function ruleList(
+  json: DescriptionJson,
+): { src: string; name: string; on: string | null }[] {
+  return [
+    ...(json.shape ?? []).map((src, i) => ({ src, name: `shape.${i}`, on: null })),
+    ...Object.entries(json.rules ?? {}).map(([name, src]) => ({ src, name, on: null })),
+    ...Object.entries(json.variations ?? {}).flatMap(([on, v]) => [
+      ...(v.add?.shape ?? []).map((src, i) => ({ src, name: `${on}.shape.${i}`, on })),
+      ...Object.entries(v.add?.rules ?? {}).map(([name, src]) => ({
+        src,
+        name: `${on}.${name}`,
+        on,
+      })),
+    ]),
+  ];
+}
+
+/** The violation check (`compile-violations.ts`) over the same statements
+ * as {@link answerCheck}. */
+function violationsOf(json: DescriptionJson, d: Description, env: Env): string[] {
+  const { grid } = json.space;
+  const measured = grid === undefined ? (e: Expr) => e : measuredBy(grid);
+  let domain: { mask: string; lines: string[] } | null = null;
+  if (env.cellDomain) domain = { mask: "domainOf", lines: [] };
+  else {
+    const at = new Out(0);
+    const dom = compileExpr(
+      measured(d.domain),
+      new Map(),
+      { ...env, answer: { repeats: false } },
+      at,
+    );
+    if (isMask(dom.sort))
+      domain = {
+        mask: "_domain",
+        lines: [...at.text(), `const _domain = ${dom.code};`],
+      };
+  }
+  const clueMeanings = [...d.clueKinds]
+    .filter(([, c]) => !(c.means.k === "name" && c.means.name === "true"))
+    .map(([kind, c]) => ({
+      kind,
+      means: c.means,
+      sorts: env.clues.get(kind) as ClueKind,
+      readsV: reads(c.means, "v"),
+    }));
+  return violationCheck(
+    ruleList(json).map((r) => ({ name: r.name, expr: parse(r.src), on: r.on })),
+    clueMeanings,
+    domain,
+    measured,
+    d.repeat,
+    { ...env, answer: { repeats: d.repeat !== null } },
+  );
 }
 
 /**

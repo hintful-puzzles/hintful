@@ -109,6 +109,8 @@ const KEPT_UNUSED = {
   // compiled today does.
   "src/engine/solve/describe-runtime.ts::linked":
     "called by compiled code for linked(k) read with a square supposed",
+  "src/engine/solve/describe-runtime.ts::knownIn":
+    "called by compiled code for known(x) read in a rule's violation check",
   "src/engine/solve/describe-runtime.ts::rectWithin":
     "called by compiled code for every cell of one rectangle in another",
   // Read by the soundness checker under research/, which this scan does not

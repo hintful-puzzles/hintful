@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/pattern/pattern.description.yaml: edit that, not this.
 
-import { type ListClues, type Fire, type GridSpace, type Marks, PLACE, freshBinding, listAt, rangeMask, runFits, runsOf, sameList, sameSet, staleChecking, stretch } from "../../../engine/solve/describe-runtime.ts";
+import { type ListClues, type Fire, type GridSpace, type Marks, type Violation, PLACE, freshBinding, heldIn, listAt, rangeMask, runFits, runsOf, sameList, sameSet, staleChecking, stretch, undecided } from "../../../engine/solve/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -145,6 +145,46 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     if (!(sameList(runsOf(sp.lineCells[_at2], _g4), _v3))) return false;
   }
   return true;
+}
+
+/** Each statement the board `g`, a value an element and 0 where it is
+ * undecided, already breaks: false on every completion of it. */
+export function violations(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): Violation[] {
+  const _g5: number[] = [];
+  const _out: Violation[] = [];
+  const _rd: number[] = [];
+  let _wit: readonly number[] | null = null;
+  const _sure: number = 1;
+  const _domain = rangeMask(1, 2);
+  for (const x of sp.cells) {
+    const held = g[x];
+    if (held > 0 && !((_domain >> held) & 1)) _out.push({ rule: "domain", clue: -1, at: [x] });
+  }
+  for (let _k1 = 0; _k1 < cl.runs.at.length; _k1++) {
+    const _at2 = cl.runs.at[_k1];
+    const _v3 = cl.runs.lists[_k1];
+    _rd.length = 0;
+    _wit = null;
+    let _vd4: number = 2;
+    try {
+      _g5.length = 0;
+      G6: {
+        const _a9 = sp.lineCells[_at2];
+        for (let _i10 = 0; _i10 < _a9.length; _i10++) {
+          const v_c = _a9[_i10];
+          if (!((heldIn(g, v_c, _rd) === 1))) continue;
+          _g5.push(v_c);
+        }
+      }
+      _vd4 = sameList(runsOf(sp.lineCells[_at2], _g5), _v3) ? 1 : 0;
+    } catch (e) {
+      undecided(e);
+    }
+    if (_vd4 === 0 && _sure === 1) {
+      _out.push({ rule: "clue.runs", clue: _k1, at: (_wit ?? _rd).slice() });
+    }
+  }
+  return _out;
 }
 
 export interface LineBinding {

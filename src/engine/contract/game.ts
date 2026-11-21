@@ -27,6 +27,7 @@ import type { Flash } from "../render/win-wave.ts";
 import type { DifficultyContract } from "./difficulty.ts";
 import type { HintRefusal, MarkedDeadEnd } from "./hint-refusal.ts";
 import type { MarkRole, Sentence } from "./hint-words.ts";
+import type { RulesOf } from "./rules.ts";
 import type { NotApplicableReasons } from "./sections.ts";
 import type { SolveFailure } from "./solve-failure.ts";
 import type {
@@ -818,6 +819,11 @@ export interface Game<
    * The move must leave a board whose status is solved: `Midend.solve` throws
    * on one that does not, so a game that cannot finish from `curr` refuses. */
   solve(orig: State, curr: State, aux?: string): SolveResult<Move>;
+
+  /** The board as its description's rules read it, for a game whose
+   * description states them: where the board breaks them is what its live
+   * error marks draw (`docs/rendering.md` § "Live errors are the rules'"). */
+  rules?: RulesOf<State>;
 
   /** Whether this board is proved to have no solution: no moves from it reach
    * a solved one. `loadDesc` refuses a board that is, so nobody is handed one

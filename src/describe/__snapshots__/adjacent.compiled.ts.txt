@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/adjacent/adjacent.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, STRIKE, clueAt, freshBinding, rangeMask, setOf, staleChecking } from "../../../engine/solve/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, type Violation, STRIKE, clueAt, freshBinding, heldIn, rangeMask, setOf, staleChecking, undecided } from "../../../engine/solve/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -119,6 +119,68 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     if (!(((_v9 === 1) === (Math.abs(((g[sp.edgeEnds[2 * _at8]] || -1) - (g[sp.edgeEnds[2 * _at8 + 1]] || -1))) === 1)))) return false;
   }
   return true;
+}
+
+/** Each statement the board `g`, a value an element and 0 where it is
+ * undecided, already breaks: false on every completion of it. */
+export function violations(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): Violation[] {
+  const _out: Violation[] = [];
+  const _rd: number[] = [];
+  let _wit: readonly number[] | null = null;
+  const _sure: number = 1;
+  const _domain = rangeMask(1, sp.w);
+  for (const x of sp.cells) {
+    const held = g[x];
+    if (held > 0 && !((_domain >> held) & 1)) _out.push({ rule: "domain", clue: -1, at: [x] });
+  }
+  try {
+    const _a1 = sp.lines;
+    for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+      const v_u0 = _a1[_i2];
+      try {
+        const _a3 = sp.lineCells[v_u0];
+        for (let _i4 = 0; _i4 < _a3.length; _i4++) {
+          const v_c0 = _a3[_i4];
+          const _a5 = sp.lineCells[v_u0];
+          const _n6 = _i4;
+          for (let _i7 = 0; _i7 < _n6; _i7++) {
+            const v_c0_0 = _a5[_i7];
+            _rd.length = 0;
+            _wit = null;
+            let _vd8: number = 2;
+            try {
+              _vd8 = (heldIn(g, v_c0, _rd) !== heldIn(g, v_c0_0, _rd)) ? 1 : 0;
+            } catch (e) {
+              undecided(e);
+            }
+            if (_vd8 === 0 && _sure === 1) {
+              _out.push({ rule: "shape.0", clue: -1, at: [v_c0, v_c0_0] });
+            }
+          }
+        }
+      } catch (e) {
+        undecided(e);
+      }
+    }
+  } catch (e) {
+    undecided(e);
+  }
+  for (let _k9 = 0; _k9 < cl.bar.at.length; _k9++) {
+    const _at10 = cl.bar.at[_k9];
+    const _v11 = cl.bar.v[_k9];
+    _rd.length = 0;
+    _wit = null;
+    let _vd12: number = 2;
+    try {
+      _vd12 = ((_v11 === 1) === (Math.abs((heldIn(g, sp.edgeEnds[2 * _at10], _rd) - heldIn(g, sp.edgeEnds[2 * _at10 + 1], _rd))) === 1)) ? 1 : 0;
+    } catch (e) {
+      undecided(e);
+    }
+    if (_vd12 === 0 && _sure === 1) {
+      _out.push({ rule: "clue.bar", clue: _k9, at: (_wit ?? _rd).slice() });
+    }
+  }
+  return _out;
 }
 
 export interface AdjacentBinding {

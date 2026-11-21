@@ -430,9 +430,9 @@ uniquely solvable at exactly its stated difficulty" as a property test
 - **Reuse the frontend of a shipped game whose task matches.** Take its data
   model, input and render shape, and change only the cell content and the win
   rule. Separate on Palisade's wall model is the exemplar.
-- **Flag only provably wrong state.** A live error check that fires on every
-  cell of an untouched board is noise: gate it on the region or line being
-  complete.
+- **Take the live errors from the rules.** Declare `Game.rules` and draw
+  what it reports ([`rendering.md`](./rendering.md) § "Live errors are the
+  rules'"): it flags only what no completion can mend.
 - **Probe the edges of the parameter space before advertising a range.** Deal
   at the smallest and largest sizes `validateParams` accepts. Where a size
   provably cannot generate, refuse it in `validateParams` and cover the

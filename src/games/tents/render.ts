@@ -17,7 +17,6 @@
  * numbers diff a parallel key of their error flag and hatch.
  */
 
-import { Dsf } from "../../engine/board/dsf.ts";
 import {
   BROWN,
   GREEN,
@@ -51,10 +50,12 @@ import {
   type MarkCell,
   MarkOutlines,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import { type HintLink, LINK, NUMBER } from "./hint-marks.ts";
+import { clueLine, rules } from "./solver.ts";
 import {
   BLANK,
   canJoin,
@@ -180,7 +181,7 @@ export function newDrawState(state: TentsState, tileSize: number): TentsDrawStat
   };
 }
 
-// --- live error analysis (upstream find_errors) ---------------------------
+// --- live errors ------------------------------------------------------------
 
 interface TentsErrors {
   /** Per-cell error bitmask (ERR_ADJ_* / ERR_OVERCOMMITTED bits). */
@@ -189,89 +190,45 @@ interface TentsErrors {
   num: Uint8Array;
 }
 
-function findErrors(
-  w: number,
-  h: number,
-  grid: Int8Array,
-  numbers: Int32Array,
-): TentsErrors {
+/** The squares and numbers to paint red, from where `grid` breaks the rules:
+ * two tents touching are a diamond on the edge or corner they share, any
+ * other square a rule breaks is red, and so is a number its line breaks. */
+function errorsOf(state: TentsState, grid: Int8Array): TentsErrors {
+  const { w, h } = state;
   const cell = new Int32Array(w * h);
   const num = new Uint8Array(w + h);
-
-  // Tent-adjacency violations: a diamond on the shared edge or corner.
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (
-        y + 1 < h &&
-        x + 1 < w &&
-        ((grid[i] === TENT && grid[i + w + 1] === TENT) ||
-          (grid[i + w] === TENT && grid[i + 1] === TENT))
-      ) {
-        cell[i] |= ERR_ADJ_BOTRIGHT;
-        cell[i + w] |= ERR_ADJ_TOPRIGHT;
-        cell[i + 1] |= ERR_ADJ_BOTLEFT;
-        cell[i + w + 1] |= ERR_ADJ_TOPLEFT;
-      }
-      if (y + 1 < h && grid[i] === TENT && grid[i + w] === TENT) {
-        cell[i] |= ERR_ADJ_BOT;
-        cell[i + w] |= ERR_ADJ_TOP;
-      }
-      if (x + 1 < w && grid[i] === TENT && grid[i + 1] === TENT) {
-        cell[i] |= ERR_ADJ_RIGHT;
-        cell[i + 1] |= ERR_ADJ_LEFT;
-      }
+  const s = { ...state, grid };
+  const live = liveErrors(rules, s);
+  for (const [a, b] of live.pairs) {
+    const [ax, ay, bx, by] = [a % w, (a / w) | 0, b % w, (b / w) | 0];
+    const [dx, dy] = [bx - ax, by - ay];
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+      cell[a] |= ERR_OVERCOMMITTED;
+      cell[b] |= ERR_OVERCOMMITTED;
+    } else if (dx === 0 || dy === 0) {
+      cell[a] |= SIDE_ERROR[dy + 1][dx + 1];
+      cell[b] |= SIDE_ERROR[1 - dy][1 - dx];
+    } else {
+      // A corner is four tiles', and each paints its quarter of the diamond.
+      const i = Math.min(ay, by) * w + Math.min(ax, bx);
+      cell[i] |= ERR_ADJ_BOTRIGHT;
+      cell[i + w] |= ERR_ADJ_TOPRIGHT;
+      cell[i + 1] |= ERR_ADJ_BOTLEFT;
+      cell[i + w + 1] |= ERR_ADJ_TOPLEFT;
     }
   }
-
-  // Numeric-clue violations: too many tents, or too few squares left for them.
-  const tents = new Int32Array(w + h);
-  const maybe = new Int32Array(w + h);
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const v = grid[y * w + x];
-      if (v !== TENT && v !== BLANK) continue;
-      const counts = v === TENT ? tents : maybe;
-      counts[x]++;
-      counts[w + y]++;
-    }
-  }
-  for (let i = 0; i < w + h; i++) {
-    num[i] = tents[i] > numbers[i] || tents[i] + maybe[i] < numbers[i] ? 1 : 0;
-  }
-
-  // Per cell, the trees minus the `partner` squares in its component, where a
-  // component joins each tree to its orthogonally adjacent partners.
-  const balance = (partner: (v: number) => boolean): ((i: number) => number) => {
-    const linked = (a: number, b: number) =>
-      (grid[a] === TREE && partner(grid[b])) || (partner(grid[a]) && grid[b] === TREE);
-    const dsf = new Dsf(w * h);
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const i = y * w + x;
-        if (x + 1 < w && linked(i, i + 1)) dsf.merge(i, i + 1);
-        if (y + 1 < h && linked(i, i + w)) dsf.merge(i, i + w);
-      }
-    }
-    const sum = new Int32Array(w * h);
-    for (let i = 0; i < w * h; i++) {
-      if (grid[i] === TREE) sum[dsf.canonify(i)]++;
-      else if (partner(grid[i])) sum[dsf.canonify(i)]--;
-    }
-    return (i) => sum[dsf.canonify(i)];
-  };
-  // A group of tents with too few trees flags every tent in it. A group of
-  // trees with too few tents flags its trees, counting a blank as a potential
-  // tent, so a tree is flagged only when there is no room left for its tents.
-  const tentBalance = balance((v) => v === TENT);
-  const treeBalance = balance((v) => v === TENT || v === BLANK);
-  for (let i = 0; i < w * h; i++) {
-    if (grid[i] === TENT && tentBalance(i) < 0) cell[i] |= ERR_OVERCOMMITTED;
-    if (grid[i] === TREE && treeBalance(i) > 0) cell[i] |= ERR_OVERCOMMITTED;
-  }
-
+  for (let i = 0; i < w * h; i++) if (live.at[i]) cell[i] |= ERR_OVERCOMMITTED;
+  for (const L of live.clues.get("count") ?? []) num[clueLine(w, h, L)] = 1;
   return { cell, num };
 }
+
+/** The diamond's bit on a square's side toward `(dx, dy)`, by `dy + 1` and
+ * `dx + 1`. */
+const SIDE_ERROR: readonly (readonly number[])[] = [
+  [0, ERR_ADJ_TOP, 0],
+  [ERR_ADJ_LEFT, 0, ERR_ADJ_RIGHT],
+  [0, ERR_ADJ_BOT, 0],
+];
 
 // --- drag transform (upstream drag_xform) ---------------------------------
 
@@ -589,7 +546,7 @@ export function redraw(
     errGrid = Int8Array.from(grid);
     errGrid[sy * w + sx] = dragXform(ui, state, sx, sy);
   }
-  const errors = findErrors(w, h, errGrid, numbers);
+  const errors = errorsOf(state, errGrid);
 
   // The links as drawn, with a link drag's result previewed.
   let links = state.links;

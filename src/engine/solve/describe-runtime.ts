@@ -163,3 +163,11 @@ export {
   tilingSpace,
   within,
 } from "./describe-runtime/space.ts";
+export {
+  decidedAll,
+  heldIn,
+  knownIn,
+  undecided,
+  unmatched,
+  type Violation,
+} from "./describe-runtime/violations.ts";
