@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ColorWord } from "../color/color-word.ts";
-import { judgeRivals } from "../rival-judging.ts";
+import { judgeRivals } from "../hint/rival-judging.ts";
 import {
   CELL,
   listOf,

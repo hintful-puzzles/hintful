@@ -8,11 +8,11 @@
 import { describe, expect, it } from "vitest";
 import { CELL } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { type Clauses, statedParts, statedSentence } from "../../engine/hint/stated.ts";
 import {
   EDGE,
   type ForcedBorderEdge,
 } from "../../engine/mechanics/border-grid-hint.ts";
-import { type Clauses, statedParts, statedSentence } from "../../engine/stated.ts";
 import { STATED } from "../../generated/games/separate/separate.compiled.ts";
 
 const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });

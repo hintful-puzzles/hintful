@@ -19,6 +19,7 @@ import {
   dimensionParamConfig,
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
+import { solveBySearch } from "../../engine/hint/search-outcome.ts";
 import {
   type Game,
   registerGame,
@@ -34,7 +35,6 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/input/pointer.ts";
-import { solveBySearch } from "../../engine/search-outcome.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import type * as pegs from "../../generated/games/pegs/pegs.compiled.ts";
 import { newDesc } from "./generator.ts";

@@ -6,6 +6,8 @@
  * it builds on `candidate-plan.ts`, which builds on that.
  */
 
+import { type Ladder, TIERS } from "../solve/ladder-runtime.ts";
+import { type LatinReason, type LatinRepeats, LatinSolver } from "../solve/latin.ts";
 import type { Mark, NoteEncoding } from "./candidate-hint.ts";
 import {
   type CandidateRung,
@@ -13,8 +15,6 @@ import {
   strikesOf,
   techniqueRung,
 } from "./candidate-plan.ts";
-import { type Ladder, TIERS } from "./solve/ladder-runtime.ts";
-import { type LatinReason, type LatinRepeats, LatinSolver } from "./solve/latin.ts";
 
 /**
  * A Latin game's ladder as a plan that deduces from the notes runs it

@@ -11,16 +11,16 @@
  * mutable per-region `coloring` and `pencil` arrays.
  */
 
-import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
-import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import { isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import {
   AREA_TOO_LARGE,
   endParams,
   paramsLetter,
 } from "../../engine/game-id/params.ts";
+import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
+import type { EntryMistakeKind } from "../../engine/hint/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";

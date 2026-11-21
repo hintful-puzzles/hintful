@@ -2,7 +2,7 @@
  * Skeleton's explained hint: the compiled ladder (`solver.ts`) walked from the
  * player's own marks, a step a firing, built by the engine from what
  * `skeleton.description.yaml` says of a firing
- * (`engine/described-firing-hint.ts`; docs/hints.md § "Recording the
+ * (`engine/hint/described-firing-hint.ts`; docs/hints.md § "Recording the
  * deduction").
  *
  * Every fact a step rests on is a number or a mark the player has made: the
@@ -13,7 +13,7 @@ import type { Point } from "../../engine/contract/types.ts";
 import {
   describedFiringHint,
   type FiringHint,
-} from "../../engine/described-firing-hint.ts";
+} from "../../engine/hint/described-firing-hint.ts";
 import {
   type SaysById,
   STATED,

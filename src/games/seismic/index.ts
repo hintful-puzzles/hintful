@@ -13,8 +13,6 @@
  * entries — and notes — that contradict the unique solution.
  */
 
-import { candidateHint } from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
@@ -25,14 +23,21 @@ import {
 } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
+import { candidateHint } from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
 import {
   clearEntries,
   entryMistakes,
   gridCell,
   revealEntry,
   setMoves,
-} from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/game-id/params.ts";
+} from "../../engine/hint/entry-mistakes.ts";
+import {
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import { digitKeys } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT2,
@@ -48,11 +53,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NAMES } from "../../generated/games/seismic/seismic.compiled.ts";
 import { maxGeneratedRegionSize, newSeismicDesc } from "./generator.ts";

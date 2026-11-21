@@ -36,7 +36,7 @@ export const HINT_GAMES: [string, AnyGame][] = REGISTERED_GAMES.filter(([, game]
  */
 export const SEARCH_PLANNING_GAMES: readonly string[] = gamesUsing(
   HINT_GAMES.map(([id]) => id),
-  { module: "src/engine/slide-planner.ts", name: "planSlides" },
+  { module: "src/engine/hint/slide-planner.ts", name: "planSlides" },
   "call",
 );
 
@@ -60,7 +60,7 @@ export const SEARCH_REACH_GAMES: readonly string[] = (() => {
   });
   const handed = gamesUsing(
     ids,
-    { module: "src/engine/search-outcome.ts", name: "searchRefusal" },
+    { module: "src/engine/hint/search-outcome.ts", name: "searchRefusal" },
     "call",
   );
   return ids.filter((id) => named.includes(id) || handed.includes(id));

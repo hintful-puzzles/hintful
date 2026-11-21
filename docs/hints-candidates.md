@@ -81,7 +81,7 @@ each of these the shared way is
 ## The shared candidate-hint machinery
 
 Write `buildSteps` as one call to `runCandidatePlan`
-([`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)), or to
+([`engine/hint/candidate-plan.ts`](../src/engine/hint/candidate-plan.ts)), or to
 `runLatinCandidatePlan` for a plain row/column Latin square (§ "The
 row/column preset"). The walk owns the loop and builds every step; the game
 supplies what carries its meaning, each a field of `CandidatePlan`, whose
@@ -133,7 +133,7 @@ relation", "Every notes cull reads every declared region", "Only two kinds of
 region are declared".
 
 - **A row/column game passes none**: the preset supplies `rowColRegions`
-  from [`engine/latin-hint.ts`](../src/engine/latin-hint.ts).
+  from [`engine/hint/latin-hint.ts`](../src/engine/hint/latin-hint.ts).
 - **Return every region a value may not repeat in, as a `CellRegion`, and
   flag each `holdsEvery`.** "Holds every value" and "forbids repeats" are two
   relations. A hidden single needs the first (a value with one home left
@@ -159,7 +159,7 @@ column, block, diagonals, then the Killer cage as `holdsEvery: false`);
 
 Where what a placed value rules out depends on the value, give the plan a
 `reach(i, n)`: the cells an `n` at cell `i` rules `n` out of
-(`Reach` in [`engine/candidate-hint.ts`](../src/engine/candidate-hint.ts)).
+(`Reach` in [`engine/hint/candidate-hint.ts`](../src/engine/hint/candidate-hint.ts)).
 The walk reads it wherever it asks what a placed value rules out: the
 placement cull, the obvious clean, a note-less cell's implied candidates, and
 a fold's check of what an earlier fold placed. Requirements: "What a placed
@@ -204,7 +204,7 @@ Exemplar: `regionsOf` and `noRepeatRegionNames` in
 ## A strike's words are a premise
 
 Return from `strikeWords` a `Premise`
-([`engine/hint-text.ts`](../src/engine/hint-text.ts)): the clause saying why
+([`engine/hint/hint-text.ts`](../src/engine/hint/hint-text.ts)): the clause saying why
 the values go, and no ending. The walk ends it with the plan's `conclude`
 words for the move the step turns out to make: "so 2 and 4 must go" as a
 strike, and under the implicit reading "so this cell must be 3" or
@@ -235,7 +235,7 @@ strike's conclusion names the struck values, even after its premise".
 
 A game whose values may not repeat in a row or a column, and nowhere else,
 calls `runLatinCandidatePlan`
-([`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts)) and supplies
+([`engine/hint/candidate-plan.ts`](../src/engine/hint/candidate-plan.ts)) and supplies
 its rungs and its words. It is `runCandidatePlan` with
 the answers a row and a column force filled in; its doc lists each and why
 it is not a parameter. Exemplar:
@@ -287,7 +287,7 @@ reasoning over other regions cannot take the preset".
 Never rename a game's moves to fit the helpers: a save replays the move log,
 so a discriminator rename breaks every existing save. Describe the
 difference to the helpers instead
-([`engine/candidate-hint.ts`](../src/engine/candidate-hint.ts)).
+([`engine/hint/candidate-hint.ts`](../src/engine/hint/candidate-hint.ts)).
 Requirement: "The shared track and refresh read a game's move dialect".
 
 - **`CandidateMoveAdapter<M>`** for a move union that is not `{ type: "set" |
@@ -405,7 +405,7 @@ check vouches for them".
   reading what a note-less cell's reach leaves it, which always holds the
   answer too. The walk reads the singles off the same view.
 - **A rung is a compiled technique run on the notes**: `techniqueRung`
-  (`engine/candidate-plan.ts`) builds the marks from the values placed and
+  (`engine/hint/candidate-plan.ts`) builds the marks from the values placed and
   the notes shown, asks the ladder's technique for its firings, and hands
   each to the game to make legs of, from what its `says` names. So what a
   step finds is the solver's technique by construction, and the soundness
@@ -428,7 +428,7 @@ check vouches for them".
   only inside it. A game whose board keeps no tier (Rome) passes its top
   one.
 - **A Latin game's marks are a `LatinSolver`**: `latinNotesLadder`
-  (`engine/latin-notes.ts`) builds them over the walk's grid, so its own
+  (`engine/hint/latin-notes.ts`) builds them over the walk's grid, so its own
   techniques read what they read when solving. The library's `set`, `fish`
   and `wing` say their terms, and `latinStrikeRungs` makes each a rung whose
   strikes carry the `LatinReason` that `latinPremise` narrates; the game
@@ -488,7 +488,7 @@ the cells its words do not name".
   their notes first. Words that already name the cells need nothing more.
 - **A read the player must check is drawn, not only carried.** `reads` shows
   nothing. A value confined across several lines stripes them through
-  `confinedPremise` (`engine/hint-text.ts`); a technique with such a firing
+  `confinedPremise` (`engine/hint/hint-text.ts`); a technique with such a firing
   says the lines, built into `ConfinedLines` (`engine/solve/latin.ts`), and calls
   it ("A value confined across several lines shows the lines").
 - **A fish has two readings; name the smaller.** `k` columns holding a value
@@ -523,7 +523,7 @@ does this; a game supplies the moves it is written in.
 - **`pencilAdd`** writes notes into a note-less cell under the implicit
   reading ("The plan writes notes through a move that only adds").
 - **A placement is the game's real `set`.** `applyNoteMove`
-  ([`engine/candidate-hint.ts`](../src/engine/candidate-hint.ts)) applies the
+  ([`engine/hint/candidate-hint.ts`](../src/engine/hint/candidate-hint.ts)) applies the
   three note moves.
 - **`keepCandidateHintTrack`** judges a pencil toggle that clears a subset of
   the step's marks as `onTrack` (the step shrinks in place) or `completed`, a
@@ -549,7 +549,7 @@ does this; a game supplies the moves it is written in.
 - **Notes are markings `findMistakes` checks.** Flag an empty cell whose
   non-empty notes exclude its answer, as `kind: "note"`; notes with extra
   candidates are ordinary. Pass `notes` to `entryMistakes`
-  ([`engine/entry-mistakes.ts`](../src/engine/entry-mistakes.ts)). A note
+  ([`engine/hint/entry-mistakes.ts`](../src/engine/hint/entry-mistakes.ts)). A note
   claims its value is still possible. A game whose notes have no stated
   meaning decides this before its hint, since a candidate hint cannot read a
   note it cannot trust.
@@ -559,7 +559,7 @@ does this; a game supplies the moves it is written in.
 `pencilAll` is additive: it fills only cells with no mark yet. The hint's
 opener and the Mark-all press both use it, the press through
 `adaptiveMarkAllMove`
-([`engine/candidate-hint.ts`](../src/engine/candidate-hint.ts)), so a press
+([`engine/hint/candidate-hint.ts`](../src/engine/hint/candidate-hint.ts)), so a press
 only ever adds or removes. A fill that resets every cell throws away the
 player's deductions as soon as one cell is blank.
 
@@ -577,9 +577,9 @@ player's deductions as soon as one cell is blank.
 
 How a blank cell with no notes reads is the player's choice, and the walk
 owns both answers: `CandidateReading` in
-[`engine/candidate-hint.ts`](../src/engine/candidate-hint.ts), set by the
+[`engine/hint/candidate-hint.ts`](../src/engine/hint/candidate-hint.ts), set by the
 `hint-notes` preference, `candidateReadingPref` in
-[`engine/pencil-prefs.ts`](../src/engine/pencil-prefs.ts). Requirements: "A
+[`engine/hint/pencil-prefs.ts`](../src/engine/hint/pencil-prefs.ts). Requirements: "A
 candidate hint plan reads an unmarked cell the way the player chose", "The
 implicit reading writes the notes a firing rests on", "A strike from one
 note-less cell is folded", "A game states the reading it starts on".
@@ -712,7 +712,7 @@ within that:
   `towers-hint.test.ts` "populates before the first elimination".
 - **A firing's legs follow what the narration names singular.** The game's
   `legs` cut a technique's firing into legs (`byCell` in
-  [`engine/latin-notes.ts`](../src/engine/latin-notes.ts) cuts by cell), and
+  [`engine/hint/latin-notes.ts`](../src/engine/hint/latin-notes.ts) cuts by cell), and
   the walk flags the later ones as continuing. A firing whose sentence names
   one value ("a tower of height 5…")
   splits by value: one step striking two values under it contradicts the

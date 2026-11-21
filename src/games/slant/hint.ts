@@ -23,7 +23,7 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { judgeWalked } from "../../engine/move-judge.ts";
+import { judgeWalked } from "../../engine/hint/move-judge.ts";
 import { PLACE } from "../../engine/solve/describe-runtime.ts";
 import { placeNotes } from "../../engine/solve/fact-graph.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";

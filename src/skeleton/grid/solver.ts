@@ -128,7 +128,7 @@ export function answerOf(
 /**
  * What the hint walks: the player's marks on a copy of the board, and the
  * ladder. The engine takes one firing at a time from it, the one that carries
- * on from the squares the last decided (`engine/described-firing-hint.ts`).
+ * on from the squares the last decided (`engine/hint/described-firing-hint.ts`).
  */
 export function hintWalk(
   state: SkeletonBoard,

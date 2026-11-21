@@ -23,14 +23,16 @@ import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { changedCells, trackTargets } from "../../engine/contract/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
 import type { KeyLabel, Point, Size } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import {
   clearEntries,
   type EntryMoves,
   entryMistakes,
   gridCell,
   revealEntry,
-} from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/game-id/params.ts";
+} from "../../engine/hint/entry-mistakes.ts";
+import { type Judging, judgeWalked } from "../../engine/hint/move-judge.ts";
+import { statedSentence } from "../../engine/hint/stated.ts";
 import { drag, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
 import {
@@ -46,14 +48,12 @@ import {
   newCursor,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   searchTierContract,
   solveFromAnswer,
 } from "../../engine/solve/answer-search.ts";
 import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
-import { statedSentence } from "../../engine/stated.ts";
 import { STATED } from "../../generated/games/filling/filling.compiled.ts";
 import { newFillingDesc } from "./generator.ts";
 import {

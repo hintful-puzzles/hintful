@@ -27,8 +27,8 @@
  * `strengthen-the-sokoban-solver`'s design.
  */
 
-import type { Allowance } from "../../engine/rival-judging.ts";
-import type { SearchOutcome } from "../../engine/search-outcome.ts";
+import type { Allowance } from "../../engine/hint/rival-judging.ts";
+import type { SearchOutcome } from "../../engine/hint/search-outcome.ts";
 import {
   DEEP_PIT,
   isBarrel,

@@ -14,15 +14,15 @@
  * construction (docs/hints-search.md § "Recompute-stable plans").
  */
 
-import { bestBy } from "../../engine/best-by.ts";
 import { FREE_NAMES } from "../../engine/color/colors.ts";
 import type {
   HintResult,
   HintStep,
   HintTrackVerdict,
 } from "../../engine/contract/game.ts";
-import { judgeRivals } from "../../engine/rival-judging.ts";
-import { searchRefusal } from "../../engine/search-outcome.ts";
+import { bestBy } from "../../engine/hint/best-by.ts";
+import { judgeRivals } from "../../engine/hint/rival-judging.ts";
+import { searchRefusal } from "../../engine/hint/search-outcome.ts";
 import { voice } from "../../generated/games/ballsort/ballsort.compiled.ts";
 import { BALL, type Marked, POUR, RUN, TUBE } from "./kinds.ts";
 import { Reach } from "./solver.ts";

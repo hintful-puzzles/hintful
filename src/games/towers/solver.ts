@@ -15,7 +15,7 @@
  * each, left of each row, right of each, and sees its line nearest it first.
  */
 
-import type { SingleReason } from "../../engine/latin-hint.ts";
+import type { SingleReason } from "../../engine/hint/latin-hint.ts";
 import {
   clueAt,
   type GridSpace,

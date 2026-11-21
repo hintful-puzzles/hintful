@@ -9,26 +9,6 @@
  * & Save additionally flags cells that contradict the unique solution.
  */
 
-import {
-  adaptiveMarkAllMove,
-  applyNoteMove,
-  type CandidatePlanPrefs,
-  candidateGesture,
-  candidateHint,
-  keepCandidateHintTrack,
-  type Mark,
-  refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
-import {
-  type CandidateRung,
-  type Firing,
-  LATIN_RUNGS,
-  type PlanRung,
-  runLatinCandidatePlan,
-  strikesOf,
-  techniqueRung,
-} from "../../engine/candidate-plan.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
@@ -47,17 +27,45 @@ import {
 } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import {
+  adaptiveMarkAllMove,
+  applyNoteMove,
+  type CandidatePlanPrefs,
+  candidateGesture,
+  candidateHint,
+  keepCandidateHintTrack,
+  type Mark,
+  refreshCandidateHintStep,
+} from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
+import {
+  type CandidateRung,
+  type Firing,
+  LATIN_RUNGS,
+  type PlanRung,
+  runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
+} from "../../engine/hint/candidate-plan.ts";
+import {
   clearEntries,
   entryMistakes,
   gridCell,
   revealEntry,
   setMoves,
-} from "../../engine/entry-mistakes.ts";
+} from "../../engine/hint/entry-mistakes.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
-} from "../../engine/hint-text.ts";
+} from "../../engine/hint/hint-text.ts";
+import { hiddenSingleLine, rowColRegions } from "../../engine/hint/latin-hint.ts";
+import { latinNotesLadder, latinStrikeRungs } from "../../engine/hint/latin-notes.ts";
+import {
+  autoPencilPref,
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_DOWN,
@@ -76,20 +84,12 @@ import {
   stripModifiers,
 } from "../../engine/input/pointer.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/input/target-verb.ts";
-import { hiddenSingleLine, rowColRegions } from "../../engine/latin-hint.ts";
-import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  autoPencilPref,
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { latinSpace, PLACE } from "../../engine/solve/describe-runtime.ts";
 import type {

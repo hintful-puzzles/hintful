@@ -38,7 +38,6 @@
  * needs.
  */
 
-import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import type { ColorWord } from "../../engine/color/color-word.ts";
 import { FOUR_NAMES } from "../../engine/color/colors.ts";
 import type {
@@ -51,8 +50,12 @@ import {
   type Sentence,
   unshaped,
 } from "../../engine/contract/hint-words.ts";
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
+import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
+import {
+  describedEdgeHint,
+  type Fired,
+} from "../../engine/hint/described-edge-hint.ts";
+import { spokenOf, techniqueOf } from "../../engine/hint/described-hint.ts";
 import { popcount } from "../../engine/solve/describe-runtime.ts";
 import type {
   CellMarks,

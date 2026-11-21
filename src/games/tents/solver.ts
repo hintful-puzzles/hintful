@@ -14,7 +14,7 @@
  */
 
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
+import { spokenOf, techniqueOf } from "../../engine/hint/described-hint.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,

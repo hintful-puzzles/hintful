@@ -9,7 +9,7 @@
  * `Game`'s `executeMove` stays pure.
  */
 
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,

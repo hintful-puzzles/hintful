@@ -25,8 +25,8 @@
  * needs every line to be a shortest one, which the breadth-first search gives.
  */
 
-import { hashWords, PositionStore } from "../../engine/position-store.ts";
-import type { SearchOutcome } from "../../engine/search-outcome.ts";
+import { hashWords, PositionStore } from "../../engine/hint/position-store.ts";
+import type { SearchOutcome } from "../../engine/hint/search-outcome.ts";
 import type { GridSquare } from "./grid.ts";
 import { dealtOf } from "./roll.ts";
 import type { CubeState } from "./state.ts";

@@ -41,10 +41,10 @@ const UNTIERED = REGISTERED_GAMES.filter(([, game]) => game.difficulty === undef
  * that returns the refusal cannot go unlisted.
  */
 const RELAYS: Record<string, string> = {
-  "src/engine/candidate-hint.ts": "candidateHint",
-  "src/engine/described-edge-hint.ts": "describedEdgeHint",
-  "src/engine/described-firing-hint.ts": "describedFiringHint",
-  "src/engine/described-hint.ts": "describedHint",
+  "src/engine/hint/candidate-hint.ts": "candidateHint",
+  "src/engine/hint/described-edge-hint.ts": "describedEdgeHint",
+  "src/engine/hint/described-firing-hint.ts": "describedFiringHint",
+  "src/engine/hint/described-hint.ts": "describedHint",
 };
 const REFUSAL = {
   module: "src/engine/contract/hint-refusal.ts",

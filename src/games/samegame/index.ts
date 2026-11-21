@@ -6,6 +6,7 @@ import {
   type UiUpdate,
 } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { solveBySearch } from "../../engine/hint/search-outcome.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
@@ -14,7 +15,6 @@ import {
   verbGesture,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { solveBySearch } from "../../engine/search-outcome.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import {
   hasNoSolution,

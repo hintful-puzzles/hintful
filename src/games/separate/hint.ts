@@ -1,14 +1,17 @@
 /**
  * Separate's explained hint: the firings of the ladder
  * [`separate.description.yaml`](./separate.description.yaml) states, one at a
- * time, which `engine/described-edge-hint.ts` walks, and whose words the
+ * time, which `engine/hint/described-edge-hint.ts` walks, and whose words the
  * description states. This file turns a firing into its journey: a leg for each
  * edge it sets, on the border grid's shared step.
  */
 
 import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import { edgeContinuation } from "../../engine/hint-text.ts";
+import {
+  describedEdgeHint,
+  type Fired,
+} from "../../engine/hint/described-edge-hint.ts";
+import { edgeContinuation } from "../../engine/hint/hint-text.ts";
 import {
   type BorderHint,
   borderEdgeEdits,

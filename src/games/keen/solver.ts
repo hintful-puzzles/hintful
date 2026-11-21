@@ -17,7 +17,8 @@
  */
 
 import type { Point } from "../../engine/contract/types.ts";
-import type { SingleReason } from "../../engine/latin-hint.ts";
+import type { SingleReason } from "../../engine/hint/latin-hint.ts";
+import type { Clauses } from "../../engine/hint/stated.ts";
 import { latinSpace } from "../../engine/solve/describe-runtime.ts";
 import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
@@ -28,7 +29,6 @@ import {
   latinLadder,
   latinSolver,
 } from "../../engine/solve/latin.ts";
-import type { Clauses } from "../../engine/stated.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
 import {
   type Cages,
@@ -46,7 +46,7 @@ export { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE };
  * pruning: every such filling puts a value in the cage's part of a line, so it
  * goes from the rest of the line. Both carry the cage's cells, for the
  * shading, and the clause the description states for what holds, with the
- * terms it reads (`engine/stated.ts`). */
+ * terms it reads (`engine/hint/stated.ts`). */
 export type KeenReason =
   | { kind: "cage"; cells: Point[]; clause: Clauses; terms: StatedTerms }
   | { kind: "cageLine"; cells: Point[]; clause: Clauses; terms: StatedTerms }

@@ -19,7 +19,6 @@
 
 import { Dsf } from "../../engine/board/dsf.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
-import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -45,6 +44,7 @@ import {
   gapLetters,
   readRegionWalls,
 } from "../../engine/game-id/wall-runs.ts";
+import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";

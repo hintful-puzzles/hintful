@@ -6,24 +6,6 @@
  * plays too; what is Unequal's is its sign.
  */
 
-import {
-  type CandidatePlanPrefs,
-  candidateGesture,
-  candidateHint,
-  keepCandidateHintTrack,
-  type Mark,
-  refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
-import {
-  type CandidateRung,
-  type Firing,
-  LATIN_RUNGS,
-  type PlanRung,
-  runLatinCandidatePlan,
-  strikesOf,
-  techniqueRung,
-} from "../../engine/candidate-plan.ts";
 import type {
   Game,
   HintResult,
@@ -73,27 +55,45 @@ import {
   textFormat,
 } from "../../engine/edge-clue-latin/state.ts";
 import {
+  type CandidatePlanPrefs,
+  candidateGesture,
+  candidateHint,
+  keepCandidateHintTrack,
+  type Mark,
+  refreshCandidateHintStep,
+} from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
+import {
+  type CandidateRung,
+  type Firing,
+  LATIN_RUNGS,
+  type PlanRung,
+  runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
+} from "../../engine/hint/candidate-plan.ts";
+import {
   latinPremise,
   narrateLatinReason,
   type Premise,
-} from "../../engine/hint-text.ts";
+} from "../../engine/hint/hint-text.ts";
 import {
   byCell,
   latinNotesLadder,
   latinStrikeRungs,
-} from "../../engine/latin-notes.ts";
+} from "../../engine/hint/latin-notes.ts";
 import {
   autoPencilPref,
   candidateReadingPref,
   pencilKeepHighlightPref,
   stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
+} from "../../engine/hint/pencil-prefs.ts";
+import { statedParts } from "../../engine/hint/stated.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type {
   Firing as LadderFiring,
   Said,
 } from "../../engine/solve/ladder-runtime.ts";
-import { statedParts } from "../../engine/stated.ts";
 import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
 import type { HintReason } from "./solver.ts";
 import {

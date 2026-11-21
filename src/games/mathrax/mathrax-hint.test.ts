@@ -9,12 +9,12 @@
  * of four.
  */
 import { describe, expect, it } from "vitest";
-import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
+import { statedParts } from "../../engine/hint/stated.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { statedParts } from "../../engine/stated.ts";
 import {
   describeHintKindPins,
   describeHintPins,

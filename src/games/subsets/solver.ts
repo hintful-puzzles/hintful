@@ -13,7 +13,7 @@
  * arrow rule that it wrote, commented out and never compiled.
  */
 
-import type { Judging } from "../../engine/move-judge.ts";
+import type { Judging } from "../../engine/hint/move-judge.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,

@@ -32,7 +32,7 @@ export interface SaysById {
 export const SAYS_KINDS = ["adjacent","adjacentSet"] as const;
 
 /** Each kind of step's words as the description states them, and each
- * fact's, by wording (`engine/stated.ts`); and the flag terms the engine
+ * fact's, by wording (`engine/hint/stated.ts`); and the flag terms the engine
  * sets to whether the step decides several elements (`several`). */
 export const STATED = {
   "adjacent": {"step":[{"look":"{outline pair: a bar} joins {ring} to {outline a: the {v} beside it}: they differ by 1"},{"look":"{outline pair: no bar} joins {ring} to {outline a: the {v} beside it}: they can't differ by 1"}]},

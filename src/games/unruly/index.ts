@@ -12,8 +12,8 @@ import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import type { Game, UiUpdate } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { type CellHint, describedHint } from "../../engine/described-hint.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
+import { type CellHint, describedHint } from "../../engine/hint/described-hint.ts";
 import { digitOf, newCursor, stripModifiers } from "../../engine/input/pointer.ts";
 import {
   ERASE_KEYS,
@@ -128,7 +128,7 @@ function interpretMove(
 // --- hint -----------------------------------------------------------------
 
 /** The hint's steps, kinds and track-keeping, built by the engine from the
- * description's firings (`engine/described-hint.ts`) with Unruly's sentences. */
+ * description's firings (`engine/hint/described-hint.ts`) with Unruly's sentences. */
 const described = describedHint<UnrulyState, UnrulyMove, SaysById>({
   name: "unruly hint",
   marks: ({ w2, h2, unique, grid }) =>

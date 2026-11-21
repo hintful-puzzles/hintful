@@ -13,25 +13,6 @@
  * contradict the unique solution.
  */
 
-import {
-  adaptiveMarkAllMove,
-  applyNoteMove,
-  type CandidatePlanPrefs,
-  candidateGesture,
-  candidateHint,
-  keepCandidateHintTrack,
-  type Mark,
-  refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
-import {
-  LATIN_RUNGS,
-  type PlanRung,
-  runLatinCandidatePlan,
-  strikesOf,
-  techniqueRung,
-  valuesOf,
-} from "../../engine/candidate-plan.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   type DifficultyContract,
@@ -52,20 +33,48 @@ import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
 import { SQUARE_GRID } from "../../engine/contract/sections.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+import {
+  adaptiveMarkAllMove,
+  applyNoteMove,
+  type CandidatePlanPrefs,
+  candidateGesture,
+  candidateHint,
+  keepCandidateHintTrack,
+  type Mark,
+  refreshCandidateHintStep,
+} from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
+import {
+  LATIN_RUNGS,
+  type PlanRung,
+  runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
+  valuesOf,
+} from "../../engine/hint/candidate-plan.ts";
 import {
   clearEntries,
   entryMistakes,
   gridCell,
   revealEntry,
   setMoves,
-} from "../../engine/entry-mistakes.ts";
-import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+} from "../../engine/hint/entry-mistakes.ts";
 import {
   type LatinVocab,
   latinPremise,
   narrateLatinReason,
   type Premise,
-} from "../../engine/hint-text.ts";
+} from "../../engine/hint/hint-text.ts";
+import { rowColRegions } from "../../engine/hint/latin-hint.ts";
+import { latinNotesLadder, latinStrikeRungs } from "../../engine/hint/latin-notes.ts";
+import {
+  autoPencilPref,
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
+import { statedParts } from "../../engine/hint/stated.ts";
 import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT2,
@@ -75,23 +84,14 @@ import {
   isEraseKey,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { rowColRegions } from "../../engine/latin-hint.ts";
-import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  autoPencilPref,
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import type { Said } from "../../engine/solve/ladder-runtime.ts";
 import type { LatinSolver } from "../../engine/solve/latin.ts";
-import { statedParts } from "../../engine/stated.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { newMathraxDesc } from "./generator.ts";
 import {

@@ -8,7 +8,6 @@
 
 import "./games/index.ts";
 
-export { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "./engine/candidate-hint.ts";
 export { hasHint } from "./engine/contract/game.ts";
 export {
   HINT_MARKS_PLACEHOLDER,
@@ -30,6 +29,12 @@ export {
   rulesetField,
   rulesetsMarkdown,
 } from "./engine/game-id/ruleset.ts";
+export { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "./engine/hint/candidate-hint.ts";
+export {
+  offersStickyPencil,
+  STICKY_PENCIL_HELP,
+  STICKY_PENCIL_PLACEHOLDER,
+} from "./engine/hint/pencil-prefs.ts";
 export {
   CONTROLS_PLACEHOLDER,
   controlsMarkdown,
@@ -37,11 +42,6 @@ export {
   doneCluesMarkdown,
 } from "./engine/input/target-verb.ts";
 export { TOUCH_PLACEHOLDER, touchHelp } from "./engine/input/touch-help.ts";
-export {
-  offersStickyPencil,
-  STICKY_PENCIL_HELP,
-  STICKY_PENCIL_PLACEHOLDER,
-} from "./engine/pencil-prefs.ts";
 export { getTsGame, registeredGameIds } from "./engine/registry.ts";
 export { expandPair } from "./engine/render/piece.ts";
 export { RULES_OUT_PLACEHOLDER, rulesOutHelp } from "./engine/rules-out.ts";

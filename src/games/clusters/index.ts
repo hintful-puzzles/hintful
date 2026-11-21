@@ -19,8 +19,8 @@ import {
   type UiUpdate,
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
+import { entryMistakes } from "../../engine/hint/entry-mistakes.ts";
 import {
   gridCursorMove,
   isCursorMove,

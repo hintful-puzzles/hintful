@@ -17,8 +17,11 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point, Rect } from "../../engine/contract/types.ts";
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
+import {
+  describedEdgeHint,
+  type Fired,
+} from "../../engine/hint/described-edge-hint.ts";
+import { spokenOf } from "../../engine/hint/described-hint.ts";
 import type { CellMarks, Ladder, Taken } from "../../engine/solve/ladder-runtime.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 import { LINE, RECTANGLE, type RectEdge } from "./hint-marks.ts";

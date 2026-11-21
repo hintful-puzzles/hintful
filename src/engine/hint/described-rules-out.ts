@@ -14,12 +14,12 @@
  * could read off.
  */
 
-import type { RulesOut } from "./contract/game.ts";
-import type { Point } from "./contract/types.ts";
+import type { RulesOut } from "../contract/game.ts";
+import type { Point } from "../contract/types.ts";
+import { PLACE } from "../solve/describe-runtime.ts";
+import type { CellMarks, LadderEntry } from "../solve/ladder-runtime.ts";
+import { stepBudget } from "../solve/step-budget.ts";
 import { premiseOf } from "./described-hint.ts";
-import { PLACE } from "./solve/describe-runtime.ts";
-import type { CellMarks, LadderEntry } from "./solve/ladder-runtime.ts";
-import { stepBudget } from "./solve/step-budget.ts";
 
 /** The compiled module's `RULES_OUT`. */
 export interface DescribedRulesOut {

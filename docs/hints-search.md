@@ -21,7 +21,7 @@ and `index.ts`, beside these steps.
    proof").
 2. Put the search in the game's `solver.ts`, budgeted in positions and never
    in time, returning a `SearchOutcome`
-   ([`engine/search-outcome.ts`](../src/engine/search-outcome.ts)): a line
+   ([`engine/hint/search-outcome.ts`](../src/engine/hint/search-outcome.ts)): a line
    that finishes, a proof that none does, or out of reach. A proof that none
    does goes through `searchFinish`. Use two searches where one cannot both
    find and prove (§ "Find with one search, prove with another").
@@ -31,7 +31,7 @@ and `index.ts`, beside these steps.
 4. In `hint`, refuse through `searchRefusal` where the search found no line.
    Otherwise offer the plan's first move, or a short plan.
 5. Judge the move's rivals with `judgeRivals`
-   ([`engine/rival-judging.ts`](../src/engine/rival-judging.ts)), and say only
+   ([`engine/hint/rival-judging.ts`](../src/engine/hint/rival-judging.ts)), and say only
    the claim it returns, with the relation it returns (§ "Judge the rivals of
    a searched move").
 6. Derive the goal a run of moves serves once, from the plan, and carry it on
@@ -297,9 +297,9 @@ depth-first search with a memo of lost positions does not, but a beam can
 never say a position is lost. So the beam finds, and a budgeted exhaustive
 search only proves loss; that proof is what lets the hint refuse with
 `NO_SOLUTION_FROM_HERE`, and past the budget with `SEARCH_OUT_OF_REACH`
-(`searchRefusal`, [`engine/search-outcome.ts`](../src/engine/search-outcome.ts)).
+(`searchRefusal`, [`engine/hint/search-outcome.ts`](../src/engine/hint/search-outcome.ts)).
 The exhaustive search is the engine's `searchFinish`
-([`engine/finish-search.ts`](../src/engine/finish-search.ts), whose
+([`engine/hint/finish-search.ts`](../src/engine/hint/finish-search.ts), whose
 `FinishSearch` lists what the game gives it). Exemplar:
 [`pegs/solver.ts`](../src/games/pegs/solver.ts).
 
@@ -340,7 +340,7 @@ The exhaustive search is the engine's `searchFinish`
 A search hint teaches by setting the move it offers against its rivals, the
 other moves from the same position; narrating the offered move alone teaches
 nothing. `judgeRivals`
-([`engine/rival-judging.ts`](../src/engine/rival-judging.ts)) takes the
+([`engine/hint/rival-judging.ts`](../src/engine/hint/rival-judging.ts)) takes the
 rivals, one allowance counted in positions and a judge of one rival, and
 returns the claim the verdicts allow, with the relation the sentence must use.
 The judge, the
@@ -410,7 +410,7 @@ finishing move's sentence too: it must not read as setting up.
 ## Sliding-permutation games
 
 A game on a toroidal grid whose move slides a whole line plans with
-[`engine/slide-planner.ts`](../src/engine/slide-planner.ts), `planSlides`,
+[`engine/hint/slide-planner.ts`](../src/engine/hint/slide-planner.ts), `planSlides`,
 which owns the searches (its header lists them). The game supplies the board,
 the heuristic and the budgets, and never decides when the exact search
 (`exactSearch`) runs. Exemplar:

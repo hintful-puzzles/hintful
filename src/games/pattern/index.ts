@@ -22,6 +22,7 @@ import { trackTargets } from "../../engine/contract/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
+import { type Judging, judgeWalked } from "../../engine/hint/move-judge.ts";
 import {
   endDrag,
   isCursorMove,
@@ -49,7 +50,6 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/render/piece.ts";
 import {

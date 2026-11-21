@@ -638,7 +638,7 @@ game on a dealt board, and SHALL NOT skip the game.
 ### Requirement: Sliding-permutation games share one slide planner whose exact search always runs
 
 The engine SHALL provide a shared toroidal slide planner
-(`src/engine/slide-planner.ts`) that every sliding-permutation game's `hint`
+(`src/engine/hint/slide-planner.ts`) that every sliding-permutation game's `hint`
 uses, and no such game SHALL carry its own copy of the search. The planner
 SHALL own the parts that are hard and game-independent: a heuristic forward
 search over slide moves, and an exact bidirectional search that returns a
@@ -2175,7 +2175,7 @@ draws any move.
 
 ### Requirement: A searched move's rivals SHALL be judged through the engine
 
-The engine SHALL provide `judgeRivals` (`src/engine/rival-judging.ts`): given
+The engine SHALL provide `judgeRivals` (`src/engine/hint/rival-judging.ts`): given
 the rivals of the move a hint offers, an allowance counted in positions, and
 the game's judge of one rival (finishes, lost, or unsettled), it SHALL return
 the verdicts and the claim they allow, with the relation that claim's sentence

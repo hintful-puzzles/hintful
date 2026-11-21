@@ -13,8 +13,8 @@
  * can leave a position unsettled.
  */
 
-import { bestBy } from "../../engine/best-by.ts";
-import type { SearchOutcome } from "../../engine/search-outcome.ts";
+import { bestBy } from "../../engine/hint/best-by.ts";
+import type { SearchOutcome } from "../../engine/hint/search-outcome.ts";
 import { type BallsortPour, type BallsortState, legalPour, rulesOf } from "./state.ts";
 
 /** A position as the search holds it: each tube's balls from the bottom,

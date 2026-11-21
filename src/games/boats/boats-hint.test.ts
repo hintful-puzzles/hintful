@@ -18,9 +18,9 @@ import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { CELL, NARRATION_LIMIT } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { type Clauses, statedSentence } from "../../engine/hint/stated.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
-import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import {
   describeHintKindPins,
   describeHintPins,

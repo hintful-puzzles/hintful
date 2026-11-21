@@ -19,7 +19,8 @@
  */
 
 import type { Point } from "../../engine/contract/types.ts";
-import type { SingleReason } from "../../engine/latin-hint.ts";
+import type { SingleReason } from "../../engine/hint/latin-hint.ts";
+import type { Clauses } from "../../engine/hint/stated.ts";
 import { latinSpace } from "../../engine/solve/describe-runtime.ts";
 import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
@@ -31,7 +32,6 @@ import {
   latinLadder,
   latinSolver,
 } from "../../engine/solve/latin.ts";
-import type { Clauses } from "../../engine/stated.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { DIFF_RECURSIVE, dealtOf } from "./state.ts";
 
@@ -55,7 +55,7 @@ export const SOLVE_AMBIGUOUS = 2;
 export type MathraxReason =
   /** The clue at corner `terms.k`, the cells it speaks of (the pair through
    * it, or all four around it) and the clause the description states for it,
-   * with the terms the clause reads (`engine/stated.ts`). */
+   * with the terms the clause reads (`engine/hint/stated.ts`). */
   | { kind: "clue"; cells: Point[]; clause: Clauses; terms: StatedTerms }
   /** The singles the hint plan re-derives from the working board. */
   | SingleReason;

@@ -39,7 +39,7 @@ import {
 } from "../../engine/contract/hint-refusal.ts";
 import { type Sentence, StepMarks } from "../../engine/contract/hint-words.ts";
 import { NARRATION_LIMIT } from "../../engine/contract/wording-rules.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
+import { deduceHintPlan } from "../../engine/hint/hint-plan.ts";
 import {
   type FrontierCandidate,
   HintFrontier,

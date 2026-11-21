@@ -7,9 +7,9 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
 import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
+import { spokenOf } from "../../engine/hint/described-hint.ts";
 import {
   BORDER,
   BORDER_MASK,

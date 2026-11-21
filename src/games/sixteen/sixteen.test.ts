@@ -11,11 +11,11 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
+import { type SlideMove, slidePieces } from "../../engine/hint/slide-planner.ts";
 import type { HintStep } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { raisedBevelWidth } from "../../engine/render/draw.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
-import { type SlideMove, slidePieces } from "../../engine/slide-planner.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -628,7 +628,7 @@ describe("Sixteen hint", () => {
    * deliberately pathological 5×5 to solved, recomputing a full exact search
    * after every move. The Sixteen hint is not expected to change again (owner
    * decision), so they are deferred, not deleted: run the command above when
-   * anything under `engine/slide-planner.ts` or this game's heuristic moves.
+   * anything under `engine/hint/slide-planner.ts` or this game's heuristic moves.
    *
    * **What the gate still checks, on every commit.** Real 5×5 hint coverage:
    * "solves the two-swap 5x5 endgame that previously halted auto-hint" drives

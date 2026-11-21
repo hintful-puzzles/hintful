@@ -56,11 +56,11 @@ describe("a family the code can vouch for agrees with the code", () => {
    * Latin squares, bounded from both sides by what a game's own code imports:
    *
    * - **below**: every game narrating with the shared Latin hint vocabulary
-   *   (`engine/latin-hint`, or the Latin sentences `engine/hint-text.ts`
+   *   (`engine/hint/latin-hint`, or the Latin sentences `engine/hint/hint-text.ts`
    *   shares) is a Latin square — its hints speak of rows and columns holding
    *   each symbol once;
    * - **above**: every game tagged Latin squares uses the shared Latin engine
-   *   (`engine/solve/latin`, `engine/latin-hint` or those sentences) — a Latin square
+   *   (`engine/solve/latin`, `engine/hint/latin-hint` or those sentences) — a Latin square
    *   that built its own solver from nothing would be a family member the
    *   shared work could not reach, and that is worth hearing about.
    *
@@ -71,10 +71,10 @@ describe("a family the code can vouch for agrees with the code", () => {
    * borrow a Latin helper without being Latin squares.
    */
   const latin = puzzlesInFamily("latin");
-  const sentence = (name: string) => ({ module: "src/engine/hint-text.ts", name });
+  const sentence = (name: string) => ({ module: "src/engine/hint/hint-text.ts", name });
   /** The games importing the Latin hint helpers, or calling one of `sentences`. */
   const speaking = (ids: readonly string[], sentences: string[]): string[] => {
-    const importing = gamesImporting(ids, (m) => m === "src/engine/latin-hint.ts");
+    const importing = gamesImporting(ids, (m) => m === "src/engine/hint/latin-hint.ts");
     const saying = gamesUsing(ids, sentences.map(sentence), "call");
     return ids.filter((id) => importing.includes(id) || saying.includes(id));
   };
@@ -98,8 +98,8 @@ describe("a family the code can vouch for agrees with the code", () => {
     // The Latin engine: its modules, and its compiled ladder.
     const LATIN_ENGINE = new Set([
       "src/engine/solve/latin.ts",
-      "src/engine/latin-hint.ts",
-      "src/engine/latin-notes.ts",
+      "src/engine/hint/latin-hint.ts",
+      "src/engine/hint/latin-notes.ts",
       "src/generated/engine/solve/latin.compiled.ts",
     ]);
     const engine = gamesImporting([...latin], (m) => LATIN_ENGINE.has(m));

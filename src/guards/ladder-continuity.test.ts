@@ -77,7 +77,7 @@ describe("ladder hint plans continue from their latest step where they can", () 
   it("finds every game on deduceHintPlan continuing, or taking the frontier itself", () => {
     const own = using("src/engine/solve/hint-frontier.ts", "HintFrontier", "new");
     expect(own.length).toBeGreaterThan(0);
-    const off = using("src/engine/hint-plan.ts", "deduceHintPlan", "call").filter(
+    const off = using("src/engine/hint/hint-plan.ts", "deduceHintPlan", "call").filter(
       (id) => !CONTINUING.includes(id) && !own.includes(id),
     );
     expect(

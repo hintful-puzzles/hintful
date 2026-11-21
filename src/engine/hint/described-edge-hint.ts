@@ -12,19 +12,27 @@
  * player makes along an edge (a bridge a drag at a time) are not the facts.
  */
 
-import type { HintResult, HintStep, MoveVerdict } from "./contract/game.ts";
+import type { HintResult, HintStep, MoveVerdict } from "../contract/game.ts";
 import {
   CONTRADICTION_UNLOCALIZED,
   DEDUCTION_EXHAUSTED,
-} from "./contract/hint-refusal.ts";
+} from "../contract/hint-refusal.ts";
 import {
   CELL,
   type MarkKind,
   type Narration,
   type Noun,
   type Sentence,
-} from "./contract/hint-words.ts";
-import type { Point } from "./contract/types.ts";
+} from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
+import {
+  type CellMarks,
+  type LadderEntry,
+  ladderWalk,
+  type Taken,
+  TIERS,
+} from "../solve/ladder-runtime.ts";
+import { stepBudget } from "../solve/step-budget.ts";
 import {
   DEFAULT_PLAN,
   type SuppliedHooks,
@@ -33,14 +41,6 @@ import {
   techniqueOf,
 } from "./described-hint.ts";
 import { type Judging, judgeWalked, type MovedFact } from "./move-judge.ts";
-import {
-  type CellMarks,
-  type LadderEntry,
-  ladderWalk,
-  type Taken,
-  TIERS,
-} from "./solve/ladder-runtime.ts";
-import { stepBudget } from "./solve/step-budget.ts";
 import {
   type Clauses,
   type StatedContext,

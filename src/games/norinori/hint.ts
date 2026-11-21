@@ -2,7 +2,7 @@
  * Norinori's explained hint: the compiled ladder (`solver.ts`) walked from the
  * player's own marks, a step a firing, each built and worded by the engine
  * from what `norinori.description.yaml` says of it
- * (`engine/described-firing-hint.ts`; docs/hints.md § "Recording the
+ * (`engine/hint/described-firing-hint.ts`; docs/hints.md § "Recording the
  * deduction").
  *
  * Every fact a step rests on is a region's border or a mark the player has
@@ -13,7 +13,7 @@ import type { Point } from "../../engine/contract/types.ts";
 import {
   describedFiringHint,
   type FiringHint,
-} from "../../engine/described-firing-hint.ts";
+} from "../../engine/hint/described-firing-hint.ts";
 import {
   RULES_OUT,
   type SaysById,

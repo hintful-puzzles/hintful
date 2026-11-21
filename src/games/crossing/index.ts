@@ -10,13 +10,6 @@
  * Save additionally flags any entry (or note) contradicting the unique answer.
  */
 
-import {
-  type CandidateMoveAdapter,
-  candidateHint,
-  keepCandidateHintTrack,
-  type Mark,
-  refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   type Game,
@@ -30,12 +23,24 @@ import {
 } from "../../engine/contract/game.ts";
 import { CELL } from "../../engine/contract/hint-words.ts";
 import type { KeyLabel, Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
+import {
+  type CandidateMoveAdapter,
+  candidateHint,
+  keepCandidateHintTrack,
+  type Mark,
+  refreshCandidateHintStep,
+} from "../../engine/hint/candidate-hint.ts";
 import {
   clearEntries,
   type EntryMoves,
   revealEntry,
-} from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/game-id/params.ts";
+} from "../../engine/hint/entry-mistakes.ts";
+import { type Judging, judgeWalked } from "../../engine/hint/move-judge.ts";
+import {
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
 import {
@@ -57,11 +62,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
-import {
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   searchTierContract,

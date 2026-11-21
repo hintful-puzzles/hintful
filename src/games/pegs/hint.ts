@@ -36,8 +36,8 @@ import {
   type Relation,
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
-import { judgeRivals } from "../../engine/rival-judging.ts";
-import { searchRefusal } from "../../engine/search-outcome.ts";
+import { judgeRivals } from "../../engine/hint/rival-judging.ts";
+import { searchRefusal } from "../../engine/hint/search-outcome.ts";
 import { voice } from "../../generated/games/pegs/pegs.compiled.ts";
 import { HOLE, JUMP, type Marked, PEG, SHAPE } from "./kinds.ts";
 import {

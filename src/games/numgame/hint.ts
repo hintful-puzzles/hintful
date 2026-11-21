@@ -22,7 +22,7 @@ import {
   markedDeadEnd,
 } from "../../engine/contract/hint-refusal.ts";
 import { phrase } from "../../engine/contract/hint-words.ts";
-import { judgeRivals } from "../../engine/rival-judging.ts";
+import { judgeRivals } from "../../engine/hint/rival-judging.ts";
 import { voice } from "../../generated/games/numgame/numgame.compiled.ts";
 import { SIGN, TILE } from "./kinds.ts";
 import { findLine, nextStep, OPS, type Op, reachOf, type Step } from "./solver.ts";

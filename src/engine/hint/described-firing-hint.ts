@@ -28,23 +28,23 @@ import type {
   HintTrackVerdict,
   MoveVerdict,
   RulesOut,
-} from "./contract/game.ts";
-import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
-import { changedCells, trackLeg, trackTargets } from "./contract/hint-track.ts";
-import { CELL, type MarkKind, type Sentence } from "./contract/hint-words.ts";
-import type { Point } from "./contract/types.ts";
-import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
-import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
-import { type Judging, judgeWalked } from "./move-judge.ts";
-import type { PairIndex } from "./render/piece.ts";
-import { PLACE } from "./solve/describe-runtime.ts";
+} from "../contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../contract/hint-refusal.ts";
+import { changedCells, trackLeg, trackTargets } from "../contract/hint-track.ts";
+import { CELL, type MarkKind, type Sentence } from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
+import type { PairIndex } from "../render/piece.ts";
+import { PLACE } from "../solve/describe-runtime.ts";
 import {
   type CellMarks,
   type LadderEntry,
   ladderWalk,
   TIERS,
-} from "./solve/ladder-runtime.ts";
-import { stepBudget } from "./solve/step-budget.ts";
+} from "../solve/ladder-runtime.ts";
+import { stepBudget } from "../solve/step-budget.ts";
+import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
+import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
+import { type Judging, judgeWalked } from "./move-judge.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
 
 /** What a step's highlights hold: the squares it decides, each with the value

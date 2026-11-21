@@ -4,7 +4,7 @@
  * and fails on any disagreement, naming it.
  */
 import { describe, expect, it } from "vitest";
-import { entryMistakes, gridCell } from "../../src/engine/entry-mistakes.ts";
+import { entryMistakes, gridCell } from "../../src/engine/hint/entry-mistakes.ts";
 import { brokenRules, searchAnswers } from "./answer-check.ts";
 import {
   adjacentBinding,

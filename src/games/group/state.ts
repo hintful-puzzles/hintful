@@ -21,7 +21,6 @@
  */
 
 import { gridText } from "../../engine/board/grid-text.ts";
-import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import {
   DESC_TOO_LONG,
   type DescParse,
@@ -30,10 +29,11 @@ import {
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import type { EntryMistakeKind } from "../../engine/entry-mistakes.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { paramsLetter, unreadParams } from "../../engine/game-id/params.ts";
+import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
+import type { EntryMistakeKind } from "../../engine/hint/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { latinSpace } from "../../engine/solve/describe-runtime.ts";

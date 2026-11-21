@@ -20,7 +20,6 @@
  */
 
 import { gridText } from "../../engine/board/grid-text.ts";
-import type { NoteEncoding } from "../../engine/candidate-hint.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -41,9 +40,10 @@ import {
   size,
 } from "../../engine/game-id/params-codec.ts";
 import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
+import type { NoteEncoding } from "../../engine/hint/candidate-hint.ts";
+import { type RowColRegion, rowColRegions } from "../../engine/hint/latin-hint.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
 import { clueList, latinSpace } from "../../engine/solve/describe-runtime.ts";
 import * as salad from "../../generated/games/salad/salad.compiled.ts";
 

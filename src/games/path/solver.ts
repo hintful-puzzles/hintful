@@ -21,7 +21,7 @@ import {
   squareEdges,
 } from "../../engine/board/square-edges.ts";
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
+import { spokenOf } from "../../engine/hint/described-hint.ts";
 import {
   CROSS,
   type EdgeMark,
@@ -491,7 +491,7 @@ export interface PathWalkContext {
 
 /**
  * The ladder over `puzzle` with the player's lines and crosses as its marks,
- * for the engine's hint to walk (`engine/described-edge-hint.ts`). The walk
+ * for the engine's hint to walk (`engine/hint/described-edge-hint.ts`). The walk
  * continues from a number's line, so the hooks read and write numbers, not
  * squares. No tier cap: a board that arrives by its ID carries no tier, and
  * the ladder tries the Easy rung first, which is the order a hint wants.

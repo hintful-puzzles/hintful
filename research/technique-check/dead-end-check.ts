@@ -61,7 +61,7 @@ export async function compiled(d: PlanningJson, label: string): Promise<Module> 
       label,
       `${ROOT}src/engine/solve/describe-runtime.ts`,
       `${ROOT}src/engine/solve/position-runtime.ts`,
-      `${ROOT}src/engine/step-voice.ts`,
+      `${ROOT}src/engine/hint/step-voice.ts`,
     ),
   );
   return (await import(path)) as Module;

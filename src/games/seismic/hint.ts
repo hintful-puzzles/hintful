@@ -11,6 +11,15 @@
  * to upstream's trial placement, and every plan to finishing its board.
  */
 
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import {
+  CELL,
+  type Narration,
+  type Note,
+  type Sentence,
+  whole,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   adaptiveMarkAll,
   anyEmptyLacksNotes,
@@ -24,7 +33,7 @@ import {
   obviousCandidateMarks,
   type Reach,
   refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
+} from "../../engine/hint/candidate-hint.ts";
 import {
   CANDIDATE_RUNGS,
   type CandidateRung,
@@ -32,26 +41,17 @@ import {
   type PlanRung,
   runCandidatePlan,
   techniqueRung,
-} from "../../engine/candidate-plan.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
-import {
-  CELL,
-  type Narration,
-  type Note,
-  type Sentence,
-  whole,
-} from "../../engine/contract/hint-words.ts";
-import type { Point } from "../../engine/contract/types.ts";
+} from "../../engine/hint/candidate-plan.ts";
 import {
   candidateConclusions,
   cleanObviousText,
   narrateLatinReason,
   placedRulesOut,
   populateText,
-} from "../../engine/hint-text.ts";
+} from "../../engine/hint/hint-text.ts";
+import type { CellRegion } from "../../engine/hint/latin-hint.ts";
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import { digitKeyCode } from "../../engine/input/key-labels.ts";
-import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
 import { describedSpace, rangeMask } from "../../engine/solve/describe-runtime.ts";
 import { CellMarks, type Said, TIERS } from "../../engine/solve/ladder-runtime.ts";

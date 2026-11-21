@@ -16,8 +16,11 @@
 
 import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
+import {
+  describedEdgeHint,
+  type Fired,
+} from "../../engine/hint/described-edge-hint.ts";
+import { spokenOf } from "../../engine/hint/described-hint.ts";
 import type { HintStep } from "../../engine/index.ts";
 import type { CellMarks } from "../../engine/solve/ladder-runtime.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";

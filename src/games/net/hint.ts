@@ -35,8 +35,8 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { type Judging, judgeWalked } from "../../engine/hint/move-judge.ts";
 import type { TargetVerbs } from "../../engine/input/target-verb.ts";
-import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { PLACE } from "../../engine/solve/describe-runtime.ts";
 import {
   type CellMarks,

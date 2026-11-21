@@ -38,7 +38,7 @@
  * reproduced exactly.
  */
 
-import type { SearchOutcome } from "../../engine/search-outcome.ts";
+import type { SearchOutcome } from "../../engine/hint/search-outcome.ts";
 import {
   EMPTY,
   isAnchor,

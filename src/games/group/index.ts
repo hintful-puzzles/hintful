@@ -9,26 +9,6 @@
  * Check & Save, and the config/pref forms.
  */
 
-import {
-  adaptiveMarkAllMove,
-  applyNoteMove,
-  type CandidateMoveAdapter,
-  type CandidatePlanPrefs,
-  candidateGesture,
-  candidateHint,
-  keepCandidateHintTrack,
-  type Mark,
-  refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
-import {
-  type Firing,
-  LATIN_RUNGS,
-  type PlanRung,
-  runLatinCandidatePlan,
-  strikesOf,
-  techniqueRung,
-} from "../../engine/candidate-plan.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   type DifficultyContract,
@@ -50,20 +30,47 @@ import {
   NO_SOLUTION,
 } from "../../engine/contract/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/contract/types.ts";
+import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+import {
+  adaptiveMarkAllMove,
+  applyNoteMove,
+  type CandidateMoveAdapter,
+  type CandidatePlanPrefs,
+  candidateGesture,
+  candidateHint,
+  keepCandidateHintTrack,
+  type Mark,
+  refreshCandidateHintStep,
+} from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
+import {
+  type Firing,
+  LATIN_RUNGS,
+  type PlanRung,
+  runLatinCandidatePlan,
+  strikesOf,
+  techniqueRung,
+} from "../../engine/hint/candidate-plan.ts";
 import {
   clearEntries,
   type EntryMoves,
   entryMistakes,
   gridCell,
   revealEntry,
-} from "../../engine/entry-mistakes.ts";
-import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+} from "../../engine/hint/entry-mistakes.ts";
 import {
   type LatinVocab,
   latinPremise,
   narrateLatinReason,
   type Premise,
-} from "../../engine/hint-text.ts";
+} from "../../engine/hint/hint-text.ts";
+import { rowColRegions, type SingleReason } from "../../engine/hint/latin-hint.ts";
+import { latinNotesLadder, latinStrikeRungs } from "../../engine/hint/latin-notes.ts";
+import {
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+} from "../../engine/hint/pencil-prefs.ts";
+import { statedParts, statedSentence } from "../../engine/hint/stated.ts";
 import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { clearKey } from "../../engine/input/key-labels.ts";
 import {
@@ -82,17 +89,11 @@ import {
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { rowColRegions, type SingleReason } from "../../engine/latin-hint.ts";
-import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { PLACE } from "../../engine/solve/describe-runtime.ts";
 import type {
@@ -105,7 +106,6 @@ import {
   type LatinSolver,
   latinVerdict,
 } from "../../engine/solve/latin.ts";
-import { statedParts, statedSentence } from "../../engine/stated.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";
 import { newGameDesc } from "./generator.ts";
 import {

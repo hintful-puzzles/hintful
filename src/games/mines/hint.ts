@@ -24,7 +24,6 @@
  * the player had not flagged it already.
  */
 
-import { apartByPosition } from "../../engine/apart-by-position.ts";
 import type {
   HintResult,
   HintStep,
@@ -41,7 +40,8 @@ import {
   so,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import type { Said, StepClause } from "../../engine/step-voice.ts";
+import { apartByPosition } from "../../engine/hint/apart-by-position.ts";
+import type { Said, StepClause } from "../../engine/hint/step-voice.ts";
 import * as mines from "../../generated/games/mines/mines.compiled.ts";
 import { firstOpen } from "./generator.ts";
 import {

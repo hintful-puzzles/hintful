@@ -21,12 +21,12 @@ import {
 } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
 import {
   describedFiringHint,
   type FiringHint,
-} from "../../engine/described-firing-hint.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/game-id/params.ts";
+} from "../../engine/hint/described-firing-hint.ts";
+import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import { isMouseDown, newCursor, stripModifiers } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,

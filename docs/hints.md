@@ -463,9 +463,9 @@ The deduction knows its targets, so read the digit off the state in `narrate`.
   4s" reads broken, so special-case it.
 - **Two squares of one value are named by where they sit.**
   `apartByPosition`
-  ([`engine/apart-by-position.ts`](../src/engine/apart-by-position.ts)) gives
+  ([`engine/hint/apart-by-position.ts`](../src/engine/hint/apart-by-position.ts)) gives
   "the upper 7" and "the lower 7", built over every number the one sentence
-  names. Its users: `npm run refs -- src/engine/apart-by-position.ts
+  names. Its users: `npm run refs -- src/engine/hint/apart-by-position.ts
   apartByPosition`.
 
 Exemplar: every branch of `narrate` in
@@ -622,7 +622,7 @@ search's, a planner's), a declared step in `steps`, spoken through the
 compiled module's `voice` (`docs/descriptions.md` § "A firing's reason is
 built from its binding"). The deduction decides which sentence and with what values; the
 description decides only how it reads. Sentences several games speak word
-for word are the engine's [`hint-text.ts`](../src/engine/hint-text.ts). No
+for word are the engine's [`hint-text.ts`](../src/engine/hint/hint-text.ts). No
 game or skeleton has a `hint-text.ts`, and the hint-text convention guard
 refuses one in a game, so a copy of a skeleton that kept one would be refused
 at birth. Exemplars: Ascent's and Sokoban's `steps`.
@@ -688,7 +688,7 @@ game's sentences there only have to read well before ", so …". Exemplar:
 The collection says one word for a board position, and ends a move in one of
 two ways (owner, 2026-11-13, `standardize-hint-vocabulary`).
 
-- **The noun is "square".** The engine's defaults (`engine/hint-text.ts`'s
+- **The noun is "square".** The engine's defaults (`engine/hint/hint-text.ts`'s
   `populateText`, `cleanObviousText`, `thisCell`, the Latin arms, `wingHelp`)
   say "square", and a game's own sentences and its help say it too. A game
   keeps "cell" only where its theme needs it, and **declares it once**, with
@@ -810,7 +810,7 @@ and why it is safe is argued at `markHelps` in `spokes/solver.ts`.
 ### Show only what the board does not already say
 
 A step must tell the player something their board does not already show.
-Filter with [`deduceHintPlan`](../src/engine/hint-plan.ts)'s
+Filter with [`deduceHintPlan`](../src/engine/hint/hint-plan.ts)'s
 `showable(board, firing)` (its users: `git grep -l showable -- src/games`). A
 firing that is not showable still advances the working board and becomes no
 step. The plan cap counts shown steps only, and the result's `hidden` count is
@@ -982,7 +982,7 @@ step completes throws, and `hint-gesture.test.ts` walks every plan.
 
 ### The shared plan loop: deduceHintPlan
 
-Build the plan with [`deduceHintPlan`](../src/engine/hint-plan.ts), not a
+Build the plan with [`deduceHintPlan`](../src/engine/hint/hint-plan.ts), not a
 loop of your own. Give it the working board (cloned by the caller), a
 `status` and `incomplete` pair, a `next(board)` firing finder, an optional
 `apply`, and the two bounds. Rung order, reason types and sentences stay in
@@ -999,7 +999,7 @@ the game. Exemplar: `skeletonHint` in `src/skeleton/grid/hint.ts`.
   rung's firings the one beside the work in hand (§ "Recording the
   deduction").
 
-Its users: `npm run refs -- src/engine/hint-plan.ts deduceHintPlan`. A game's
+Its users: `npm run refs -- src/engine/hint/hint-plan.ts deduceHintPlan`. A game's
 own `function deduceHintPlan` (`git grep -n "function deduceHintPlan" --
 src/games`) is its plan builder, which may or may not call this one. Moving a
 game onto it preserves behavior when its hint tests pass unedited.
@@ -1276,7 +1276,7 @@ with none, and a candidate plan's `RungNames` type refuses a rung with none.
 A name is a short lowercase noun phrase that reads after "follows from", and
 it can point at nothing on the board, so it never says "this". The words are
 `verdictOf`'s one table in `move-judge.ts`, and no builder writes its own.
-Tests: `src/engine/move-judge.test.ts` (a move two techniques make names
+Tests: `src/engine/hint/move-judge.test.ts` (a move two techniques make names
 both), and `move-judge-games.test.ts` (no verdict says an id, and every
 declared name passes the hint words' lint).
 
@@ -1352,7 +1352,7 @@ player's reading unchanged, such as the populate or a clean of what the
 implied notes never held, opens no firing. A firing is named by its first
 leg's rung, from the game's compiled `NAMES`; a technique of the description
 whose firings the plan records under a rung declares it (`rung:`), so the
-rung's name is its name too. Test: `src/engine/candidate-judge.test.ts`.
+rung's name is its name too. Test: `src/engine/hint/candidate-judge.test.ts`.
 
 The plan hands the judge its trace (`trace-candidate-plans`). Each step that
 makes a fact is a firing of the graph: its legs' facts, and under the

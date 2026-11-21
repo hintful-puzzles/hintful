@@ -60,12 +60,12 @@ import {
   type Relation,
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
-import { judgeRivals, type Verdict } from "../../engine/rival-judging.ts";
+import { judgeRivals, type Verdict } from "../../engine/hint/rival-judging.ts";
 import {
   searchRefusal,
   searchVerdict,
   type Unfinished,
-} from "../../engine/search-outcome.ts";
+} from "../../engine/hint/search-outcome.ts";
 import * as sokoban from "../../generated/games/sokoban/sokoban.compiled.ts";
 import { BARREL, GOAL, PUSH } from "./hint-marks.ts";
 import {

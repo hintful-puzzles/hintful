@@ -15,10 +15,6 @@
 import { valuesOneTo } from "../../engine/board/candidate-bits.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
 import {
-  type CandidateReading,
-  DEFAULT_CANDIDATE_READING,
-} from "../../engine/candidate-hint.ts";
-import {
   DESC_TOO_LONG,
   type DescParse,
   descValue,
@@ -30,6 +26,10 @@ import { isDigit } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { numberItem, squareSize } from "../../engine/game-id/params.ts";
 import { choice, flag, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
+import {
+  type CandidateReading,
+  DEFAULT_CANDIDATE_READING,
+} from "../../engine/hint/candidate-hint.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {

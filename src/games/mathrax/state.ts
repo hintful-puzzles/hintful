@@ -12,11 +12,10 @@
  * **Two bitmask conventions.** {@link mathraxOptions} and
  * {@link mathraxValidate} keep upstream's `BIT(d) = 1 << (d−1)`, as the C they
  * port reads it. The player's pencil marks use the Latin-family `1 << n` (bits
- * `1..o`), which `engine/candidate-hint.ts` reads. Marks never reach the desc
+ * `1..o`), which `engine/hint/candidate-hint.ts` reads. Marks never reach the desc
  * or a save (the save replays moves), so the divergence is free.
  */
 
-import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -27,6 +26,7 @@ import {
 import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { endParams, paramsLetter } from "../../engine/game-id/params.ts";
+import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
 import {
   type ClueList,

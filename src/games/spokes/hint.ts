@@ -1,14 +1,17 @@
 /**
  * Spokes' explained hint: the firings of the ladder
  * [`spokes.description.yaml`](./spokes.description.yaml) states, one at a time,
- * which `engine/described-edge-hint.ts` walks. This file turns a firing into its
+ * which `engine/hint/described-edge-hint.ts` walks. This file turns a firing into its
  * journey (a leg for each spoke it decides). What a Check's trial breaks is
  * the description's (`breaks`, said by `{broke}`).
  */
 
 import type { HintResult, MoveVerdict } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import {
+  describedEdgeHint,
+  type Fired,
+} from "../../engine/hint/described-edge-hint.ts";
 import { PLACE } from "../../engine/solve/describe-runtime.ts";
 import { STATED } from "../../generated/games/spokes/spokes.compiled.ts";
 import { HUB, SPOKE, type Spoke } from "./kinds.ts";

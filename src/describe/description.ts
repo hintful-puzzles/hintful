@@ -310,7 +310,7 @@ export interface StatedSays extends Worded {
 }
 
 /** A step's words as a description states them: clauses with slots, which
- * `engine/stated.ts` renders (docs/hints.md § "Writing the narration"). */
+ * `engine/hint/stated.ts` renders (docs/hints.md § "Writing the narration"). */
 export interface StatedClauses {
   look?: string;
   follows?: string;

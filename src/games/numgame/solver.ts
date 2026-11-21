@@ -10,7 +10,7 @@
  * design D3 and D4).
  */
 
-import type { SearchOutcome } from "../../engine/search-outcome.ts";
+import type { SearchOutcome } from "../../engine/hint/search-outcome.ts";
 
 /** An operator, as a move and a save write it. */
 export type Op = "+" | "-" | "*" | "/";

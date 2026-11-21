@@ -20,7 +20,7 @@
  * localizes each break into the flags the renderer draws.
  */
 
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
+import { entryMistakes } from "../../engine/hint/entry-mistakes.ts";
 import {
   type Answer,
   answerCache,

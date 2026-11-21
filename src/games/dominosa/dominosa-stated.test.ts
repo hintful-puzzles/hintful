@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { CELL } from "../../engine/contract/hint-words.ts";
-import { statedSentence } from "../../engine/stated.ts";
+import { statedSentence } from "../../engine/hint/stated.ts";
 import { STATED } from "../../generated/games/dominosa/dominosa.compiled.ts";
 import { SPOT } from "./kinds.ts";
 

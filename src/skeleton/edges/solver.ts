@@ -210,7 +210,7 @@ export interface SkeletonWalkContext {
 
 /**
  * The ladder over `state`'s lines and crosses, for the engine's hint to walk
- * (`engine/described-edge-hint.ts`). No tier cap: a board that arrives by its
+ * (`engine/hint/described-edge-hint.ts`). No tier cap: a board that arrives by its
  * ID carries no tier, and the ladder tries the Easy technique first, which is
  * the order a hint wants anyway.
  */

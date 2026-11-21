@@ -422,7 +422,7 @@ function verify(): void {
   );
 
   // A glob in a helper, not in the test file: the walk must read it.
-  const engine = push(["src/engine/latin-hint.ts"]);
+  const engine = push(["src/engine/hint/latin-hint.ts"]);
   expect(
     engine.whole.includes("src/guards/hint-em-dash.test.ts"),
     "engine-source.ts's glob puts hint-em-dash in whole for an engine module",
@@ -550,7 +550,10 @@ function verify(): void {
       !prose.lines.some((l) => l.endsWith(" src/guards/hint-resume.test.ts")),
     "a comment changed in the registry does not select hint-resume",
   );
-  const proseEngine = push(["src/engine/latin-hint.ts"], ["src/engine/latin-hint.ts"]);
+  const proseEngine = push(
+    ["src/engine/hint/latin-hint.ts"],
+    ["src/engine/hint/latin-hint.ts"],
+  );
   expect(
     proseEngine.whole.includes("src/guards/hint-em-dash.test.ts") &&
       !proseEngine.lines.some((l) => l.endsWith(" src/guards/hint-resume.test.ts")),

@@ -27,12 +27,21 @@
  *    A solved board legitimately leaves `order − nums` squares per line blank,
  *    so a fill-the-grid loop would never end.
  *
- * The reusable mechanics come from `engine/candidate-hint.ts` and
- * `engine/latin-hint.ts`; what lives here is the walk, the reason union and the
+ * The reusable mechanics come from `engine/hint/candidate-hint.ts` and
+ * `engine/hint/latin-hint.ts`; what lives here is the walk, the reason union and the
  * meaning — plus the `NoteEncoding` (`bit(n) = 1 << (n − 1)`, `values = nums + 1`)
  * that lets those helpers read Salad's notes at all.
  */
 
+import {
+  type HintResult,
+  type HintStep,
+  type HintTrackVerdict,
+  type MoveVerdict,
+  narratedStep,
+} from "../../engine/contract/game.ts";
+import type { Narration, Sentence } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   type CandidateHighlights,
   type CandidateMoveAdapter,
@@ -46,8 +55,8 @@ import {
   populateStep,
   refreshCandidateHintStep,
   regionReach,
-} from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
+} from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
 import {
   type CandidateRung,
   evidenceOf,
@@ -59,29 +68,23 @@ import {
   populateThenClean,
   runLatinCandidatePlan,
   techniqueRung,
-} from "../../engine/candidate-plan.ts";
-import {
-  type HintResult,
-  type HintStep,
-  type HintTrackVerdict,
-  type MoveVerdict,
-  narratedStep,
-} from "../../engine/contract/game.ts";
-import type { Narration, Sentence } from "../../engine/contract/hint-words.ts";
-import type { Point } from "../../engine/contract/types.ts";
+} from "../../engine/hint/candidate-plan.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
-} from "../../engine/hint-text.ts";
-import type { PointerAction } from "../../engine/input/hint-gesture.ts";
-import { hiddenSingleLine, type SingleReasonUnder } from "../../engine/latin-hint.ts";
+} from "../../engine/hint/hint-text.ts";
+import {
+  hiddenSingleLine,
+  type SingleReasonUnder,
+} from "../../engine/hint/latin-hint.ts";
 import {
   byCell,
   type LatinStrikeReason,
   latinNotesLadder,
   latinStrikeRungs,
-} from "../../engine/latin-notes.ts";
+} from "../../engine/hint/latin-notes.ts";
+import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import { noteEntryGesture } from "../../engine/mechanics/note-taking-cell.ts";
 import type { Said } from "../../engine/solve/ladder-runtime.ts";
 import { type LatinSolver, setCells } from "../../engine/solve/latin.ts";

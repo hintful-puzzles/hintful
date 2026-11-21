@@ -29,12 +29,17 @@ import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/contract/types.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   dimensionParamConfig,
   numberItem,
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
+import { entryMistakes } from "../../engine/hint/entry-mistakes.ts";
+import {
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import { markAllPress, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { colorKeys, digitKeyCode } from "../../engine/input/key-labels.ts";
 import {
@@ -62,11 +67,6 @@ import {
   releaseHighlightAfterEntry,
   tapNoteTakingCell,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newMapDesc } from "./generator.ts";
 import {

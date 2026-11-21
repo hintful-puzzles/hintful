@@ -18,7 +18,6 @@ import {
 } from "../../engine/contract/difficulty.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { describedFiringHint } from "../../engine/described-firing-hint.ts";
 import {
   dimensionParamConfig,
   numberItem,
@@ -30,6 +29,7 @@ import {
   SYMM_ROT4,
   SYMMETRY_CHOICES,
 } from "../../engine/generate/symmetric-blacks.ts";
+import { describedFiringHint } from "../../engine/hint/described-firing-hint.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,

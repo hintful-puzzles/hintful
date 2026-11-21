@@ -21,9 +21,9 @@
 import { describe, expect, it } from "vitest";
 import { dirX, dirY, opposite } from "../../engine/board/square-edges.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
+import { statedSentence } from "../../engine/hint/stated.ts";
 import { EDGE } from "../../engine/mechanics/edge-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { STATED } from "../../generated/games/pearl/pearl.compiled.ts";
 import { type PearlHint, type PearlRung, pearlKeepTrack } from "./hint.ts";

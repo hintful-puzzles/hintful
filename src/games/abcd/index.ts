@@ -9,8 +9,6 @@
  * flags any entry contradicting the unique solution.
  */
 
-import { adaptiveMarkAll, candidateHint } from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   type Game,
@@ -19,6 +17,9 @@ import {
   type UiUpdate,
 } from "../../engine/contract/game.ts";
 import type { KeyLabel, Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
+import { adaptiveMarkAll, candidateHint } from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
 import {
   clearEntries,
   type EntryMistakeKind,
@@ -26,8 +27,12 @@ import {
   entryMistakes,
   gridCell,
   revealEntry,
-} from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/game-id/params.ts";
+} from "../../engine/hint/entry-mistakes.ts";
+import {
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import { clearKey } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT2,
@@ -42,11 +47,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   searchTierContract,

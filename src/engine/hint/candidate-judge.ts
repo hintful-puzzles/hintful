@@ -11,6 +11,9 @@
  * plan hands the judge its trace, so a chain's start is named where the
  * replay confirms it.
  */
+
+import type { HintStep, MoveVerdict } from "../contract/game.ts";
+import type { CellMarks } from "../solve/ladder-runtime.ts";
 import {
   type CandidatePlanPrefs,
   type CandidatePrefsUi,
@@ -18,9 +21,7 @@ import {
   type NotesRung,
   planPrefs,
 } from "./candidate-hint.ts";
-import type { HintStep, MoveVerdict } from "./contract/game.ts";
 import { judgeByWalk, movedFacts, verdictOf } from "./move-judge.ts";
-import type { CellMarks } from "./solve/ladder-runtime.ts";
 
 /** What a player calls each of a plan's deductions, by rung: the game's
  * compiled `NAMES`, which must name every rung but the setup's. */

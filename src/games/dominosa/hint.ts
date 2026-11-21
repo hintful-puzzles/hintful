@@ -1,7 +1,7 @@
 /**
  * Dominosa's explained hint: the firings of the ladder
  * [`dominosa.description.yaml`](./dominosa.description.yaml) states, one at a
- * time, which `engine/described-edge-hint.ts` walks. This file turns a firing
+ * time, which `engine/hint/described-edge-hint.ts` walks. This file turns a firing
  * into its steps (a domino placed, or a barrier on each spot it rules out that
  * the player has not already drawn); the words are the description's.
  */
@@ -14,7 +14,10 @@ import type {
 } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import {
+  describedEdgeHint,
+  type Fired,
+} from "../../engine/hint/described-edge-hint.ts";
 import {
   SAYS_KINDS,
   STATED,

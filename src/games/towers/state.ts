@@ -1,9 +1,5 @@
 import { gridText } from "../../engine/board/grid-text.ts";
 import {
-  type CandidateReading,
-  DEFAULT_CANDIDATE_READING,
-} from "../../engine/candidate-hint.ts";
-import {
   DESC_TOO_LONG,
   type DescParse,
   descValue,
@@ -15,6 +11,10 @@ import { isDigit } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { numberItem, squareSize } from "../../engine/game-id/params.ts";
 import { choice, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
+import {
+  type CandidateReading,
+  DEFAULT_CANDIDATE_READING,
+} from "../../engine/hint/candidate-hint.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { clueList, latinSpace } from "../../engine/solve/describe-runtime.ts";

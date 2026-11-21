@@ -11,8 +11,8 @@ import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
+import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
   ERASE_KEYS,

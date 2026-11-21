@@ -5,15 +5,15 @@
  * reason its words narrate, built from what the technique says.
  */
 
-import type { Mark } from "../../engine/candidate-hint.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import type { Mark } from "../../engine/hint/candidate-hint.ts";
 import {
   type CandidateRung,
   type Firing,
   strikesOf,
   techniqueRung,
-} from "../../engine/candidate-plan.ts";
-import type { Point } from "../../engine/contract/types.ts";
-import { byCell } from "../../engine/latin-notes.ts";
+} from "../../engine/hint/candidate-plan.ts";
+import { byCell } from "../../engine/hint/latin-notes.ts";
 import type { GridSpace } from "../../engine/solve/describe-runtime.ts";
 import { PLACE, valuesOf } from "../../engine/solve/describe-runtime.ts";
 import type {

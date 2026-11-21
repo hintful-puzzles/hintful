@@ -20,8 +20,8 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import type { LatinVocab } from "../../engine/hint-text.ts";
-import { lineUnit } from "../../engine/step-voice.ts";
+import type { LatinVocab } from "../../engine/hint/hint-text.ts";
+import { lineUnit } from "../../engine/hint/step-voice.ts";
 import { voice, WORDS } from "../../generated/games/towers/towers.compiled.ts";
 
 /** A clue and the line it sees along, as the sentence names them: the clue's
@@ -71,7 +71,7 @@ export const say = {
     }),
 
   // The strike arms below are premises, which the walk concludes with the move
-  // it makes (`engine/hint-text.ts`'s `Premise`). The struck cells are named
+  // it makes (`engine/hint/hint-text.ts`'s `Premise`). The struck cells are named
   // there, by the notes the step rings.
 
   lineFull: (c: ClueSight, n: number): Narration =>

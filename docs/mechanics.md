@@ -1012,7 +1012,7 @@ does".
   the game's hook").
 - **A candidate-elimination game builds that move with
   `adaptiveMarkAllMove`**
-  ([`engine/candidate-hint.ts`](../src/engine/candidate-hint.ts)), which
+  ([`engine/hint/candidate-hint.ts`](../src/engine/hint/candidate-hint.ts)), which
   fills, or on a fully noted board strikes the obvious candidates, and is
   `null` when there is nothing to do (`engine-notes`, "Mark-all is adaptive
   in a game with an obvious-candidate rule"). Such a game is one with a
@@ -1033,7 +1033,7 @@ does".
   too, because a saved move log from before the refusal replays through
   `executeMove`.
 - **Declare the pencil preferences from
-  [`engine/pencil-prefs.ts`](../src/engine/pencil-prefs.ts), never by
+  [`engine/hint/pencil-prefs.ts`](../src/engine/hint/pencil-prefs.ts), never by
   hand**: `stickyPencilPref()`, `pencilKeepHighlightPref()`, and
   `autoPencilPref(name)`, which takes its label because the sentence names
   the regions the game clears. `pencil-prefs.test.ts` fails a divergent copy

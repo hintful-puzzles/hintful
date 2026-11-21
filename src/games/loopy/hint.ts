@@ -31,11 +31,11 @@ import {
   DEDUCTION_EXHAUSTED,
 } from "../../engine/contract/hint-refusal.ts";
 import type { Sentence } from "../../engine/contract/hint-words.ts";
-import { deduceHintPlan } from "../../engine/hint-plan.ts";
-import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
+import { deduceHintPlan } from "../../engine/hint/hint-plan.ts";
+import { type Judging, judgeWalked } from "../../engine/hint/move-judge.ts";
+import { type Clauses, statedSentence } from "../../engine/hint/stated.ts";
 import { type FactGraph, placeNotes } from "../../engine/solve/fact-graph.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
-import { type Clauses, statedSentence } from "../../engine/stated.ts";
 import { STATED, voice } from "../../generated/games/loopy/loopy.compiled.ts";
 import type { LoopyMove, LoopyOp } from "./index.ts";
 import { CORNER, DOT, EDGE, FACE, PAIR } from "./kinds.ts";

@@ -40,12 +40,12 @@ import {
   type UiUpdate,
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { describedFiringHint } from "../../engine/described-firing-hint.ts";
 import {
   dimensionParamConfig,
   parseConfigInt,
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
+import { describedFiringHint } from "../../engine/hint/described-firing-hint.ts";
 import { drag, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   endDrag,

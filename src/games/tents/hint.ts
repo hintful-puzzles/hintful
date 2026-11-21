@@ -22,9 +22,12 @@ import {
   whole,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
-import { statedParts } from "../../engine/stated.ts";
+import {
+  describedEdgeHint,
+  type Fired,
+} from "../../engine/hint/described-edge-hint.ts";
+import { spokenOf, techniqueOf } from "../../engine/hint/described-hint.ts";
+import { statedParts } from "../../engine/hint/stated.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { type HintLink, LINK, lineSquares, NUMBER, pointOf } from "./hint-marks.ts";
 import {

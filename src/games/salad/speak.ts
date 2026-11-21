@@ -6,7 +6,7 @@
  * ([`hint.ts`](./hint.ts)'s `narrate` and `premise`); the words are the
  * description's. Each function here supplies a step of that name with the flags
  * it is told by and the squares and border clues it points at. The generic
- * Latin arms are the engine's (`engine/hint-text.ts`), spoken in
+ * Latin arms are the engine's (`engine/hint/hint-text.ts`), spoken in
  * {@link saladVocab}.
  *
  * Salad's two modes speak two vocabularies, so {@link say} takes the mode and
@@ -19,8 +19,8 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { cleanObviousText, type LatinVocab } from "../../engine/hint-text.ts";
-import { lineUnit } from "../../engine/step-voice.ts";
+import { cleanObviousText, type LatinVocab } from "../../engine/hint/hint-text.ts";
+import { lineUnit } from "../../engine/hint/step-voice.ts";
 import { voice, WORDS } from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";
 import { GAMEMODE_LETTERS, symbolChar } from "./state.ts";
@@ -65,7 +65,7 @@ export function say(mode: number) {
     cleanObvious: cleanObviousText(noun, "placed", "row or column", WORDS.cell),
 
     // The strike arms below are premises, which the walk concludes with the
-    // move it makes (`engine/hint-text.ts`'s `Premise`).
+    // move it makes (`engine/hint/hint-text.ts`'s `Premise`).
 
     /** The clue sees `clueVal` first, and the `between` squares between it and
      * the one at `at` are empty: only `clueVal` can go there. */

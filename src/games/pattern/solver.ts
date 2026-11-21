@@ -21,8 +21,8 @@
  */
 
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
-import type { Judging } from "../../engine/move-judge.ts";
+import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
+import type { Judging } from "../../engine/hint/move-judge.ts";
 import {
   type Answer,
   answerCache,

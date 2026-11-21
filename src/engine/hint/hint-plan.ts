@@ -19,7 +19,7 @@
  * questions, so the helper takes both.
  */
 
-import type { StepBudget } from "./solve/step-budget.ts";
+import type { StepBudget } from "../solve/step-budget.ts";
 
 export interface HintPlanSpec<Board, Firing, Status> {
   /**

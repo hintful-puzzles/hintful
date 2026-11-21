@@ -52,7 +52,7 @@ const struckCells = (m: Marked): Point[] => [
 
 export const say = {
   // Undead's opener is its own: it pencils monsters, not the candidate games'
-  // values (`engine/hint-text.ts`'s `populateText`).
+  // values (`engine/hint/hint-text.ts`'s `populateText`).
   populate: unshaped(speak.premise("populate", {}), "setup"),
 
   /** The sightline's clues `a` and `b` leave no room for the struck monsters

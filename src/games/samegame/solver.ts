@@ -11,9 +11,9 @@ import {
   type FinishSearch,
   type Plan,
   searchFinish,
-} from "../../engine/finish-search.ts";
-import type { Allowance, Verdict } from "../../engine/rival-judging.ts";
-import { type SearchOutcome, searchVerdict } from "../../engine/search-outcome.ts";
+} from "../../engine/hint/finish-search.ts";
+import type { Allowance, Verdict } from "../../engine/hint/rival-judging.ts";
+import { type SearchOutcome, searchVerdict } from "../../engine/hint/search-outcome.ts";
 import type { SamegameState } from "./state.ts";
 
 /** A removable group: its squares' grid indices, ascending. */

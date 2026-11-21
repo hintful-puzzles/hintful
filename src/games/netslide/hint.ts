@@ -35,7 +35,7 @@ import {
   type SlideMove,
   slidePieces,
   toroidalDist,
-} from "../../engine/slide-planner.ts";
+} from "../../engine/hint/slide-planner.ts";
 import { voice } from "../../generated/games/netslide/netslide.compiled.ts";
 import { TILE } from "./kinds.ts";
 import { reconstructSolution } from "./reconstruct.ts";

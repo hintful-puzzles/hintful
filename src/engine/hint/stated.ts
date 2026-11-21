@@ -11,7 +11,7 @@
  * technique does not state.
  */
 
-import type { ColorWord } from "./color/color-word.ts";
+import type { ColorWord } from "../color/color-word.ts";
 import {
   CELL,
   derived,
@@ -33,14 +33,14 @@ import {
   sentence,
   unshaped,
   whole,
-} from "./contract/hint-words.ts";
-import type { Point } from "./contract/types.ts";
+} from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
 import {
   PAIR_NAMES,
   type PairIndex,
   SHADED_NAME,
   UNSHADED_NAME,
-} from "./render/piece.ts";
+} from "../render/piece.ts";
 import {
   DEFAULT_FORMS,
   DRAWN,

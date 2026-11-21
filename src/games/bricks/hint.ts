@@ -12,7 +12,7 @@ import type { Point } from "../../engine/contract/types.ts";
 import {
   describedFiringHint,
   type FiringHint,
-} from "../../engine/described-firing-hint.ts";
+} from "../../engine/hint/described-firing-hint.ts";
 import {
   SAYS_EACH,
   type SaysById,

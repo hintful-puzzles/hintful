@@ -8,11 +8,11 @@
  * `move-judge-games.test.ts`.
  */
 import { describe, expect, it } from "vitest";
-import { towersGame } from "../games/towers/index.ts";
-import type { TowersState } from "../games/towers/state.ts";
-import { NAMES } from "../generated/games/towers/towers.compiled.ts";
+import { towersGame } from "../../games/towers/index.ts";
+import type { TowersState } from "../../games/towers/state.ts";
+import { NAMES } from "../../generated/games/towers/towers.compiled.ts";
+import { dealt } from "../testing/dealt.ts";
 import { verdictOf } from "./move-judge.ts";
-import { dealt } from "./testing/dealt.ts";
 
 const game = towersGame;
 const params = game.defaultParams();

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { PUZZLE_NOT_REASONABLE, SEARCH_OUT_OF_REACH } from "./contract/hint-refusal.ts";
-import { NO_SOLUTION, NO_SOLUTION_FROM_HERE } from "./contract/solve-failure.ts";
+import {
+  PUZZLE_NOT_REASONABLE,
+  SEARCH_OUT_OF_REACH,
+} from "../contract/hint-refusal.ts";
+import { NO_SOLUTION, NO_SOLUTION_FROM_HERE } from "../contract/solve-failure.ts";
 import {
   type SearchOutcome,
   searchRefusal,

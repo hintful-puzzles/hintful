@@ -14,9 +14,9 @@
  * is true of the board rather than merely present.
  */
 import { describe, expect, it } from "vitest";
-import type { CandidatePlanPrefs } from "../../engine/candidate-hint.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
+import type { CandidatePlanPrefs } from "../../engine/hint/candidate-hint.ts";
 import { Midend } from "../../engine/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

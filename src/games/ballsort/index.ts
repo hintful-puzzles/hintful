@@ -11,6 +11,7 @@
 
 import type { SolveResult } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { solveBySearch } from "../../engine/hint/search-outcome.ts";
 import {
   type Game,
   registerGame,
@@ -32,7 +33,6 @@ import {
   pressTarget,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { solveBySearch } from "../../engine/search-outcome.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { newDesc } from "./generator.ts";
 import {

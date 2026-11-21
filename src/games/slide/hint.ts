@@ -27,7 +27,7 @@ import type {
 } from "../../engine/contract/game.ts";
 import { CELL, type Sentence, whole } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { searchRefusal, type Unfinished } from "../../engine/search-outcome.ts";
+import { searchRefusal, type Unfinished } from "../../engine/hint/search-outcome.ts";
 import { voice } from "../../generated/games/slide/slide.compiled.ts";
 import { computeReachable, executeMove } from "./moves.ts";
 import { findExit } from "./solver.ts";

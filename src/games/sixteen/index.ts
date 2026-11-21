@@ -11,6 +11,13 @@ import { SEARCH_OUT_OF_REACH } from "../../engine/contract/hint-refusal.ts";
 import type { Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
+import {
+  planSlides,
+  type SlideMove,
+  type SlidePuzzle,
+  slidePieces,
+  toroidalDist,
+} from "../../engine/hint/slide-planner.ts";
 import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
@@ -30,13 +37,6 @@ import {
   showCursor,
 } from "../../engine/input/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
-import {
-  planSlides,
-  type SlideMove,
-  type SlidePuzzle,
-  slidePieces,
-  toroidalDist,
-} from "../../engine/slide-planner.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import * as sixteen from "../../generated/games/sixteen/sixteen.compiled.ts";

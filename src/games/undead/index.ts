@@ -32,8 +32,12 @@ import type {
   Point,
   Size,
 } from "../../engine/contract/types.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
+import { entryMistakes } from "../../engine/hint/entry-mistakes.ts";
+import {
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import { markAllPress, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { clearKey } from "../../engine/input/key-labels.ts";
 import {
@@ -58,10 +62,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";

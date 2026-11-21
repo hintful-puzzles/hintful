@@ -389,7 +389,7 @@ export interface BridgesWalkContext {
 
 /**
  * What a hint walks: the ladder on the player's own bridges and marks, which
- * the engine's walk takes a firing at a time (`engine/described-edge-hint.ts`).
+ * the engine's walk takes a firing at a time (`engine/hint/described-edge-hint.ts`).
  * `state` is read, never written.
  */
 export function bridgesWalk(state: BridgesState): {

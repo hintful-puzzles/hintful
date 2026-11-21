@@ -63,7 +63,7 @@
     "clause": {
       "type": "string",
       "minLength": 1,
-      "description": "A part of a hint step's sentence, whole, with slots: `{term}`, `{word}`, `{role}`, `{role: one | several}`, `{role term: words}` (`engine/stated.ts`)."
+      "description": "A part of a hint step's sentence, whole, with slots: `{term}`, `{word}`, `{role}`, `{role: one | several}`, `{role term: words}` (`engine/hint/stated.ts`)."
     },
     "wordings": {
       "type": "array",

@@ -20,10 +20,10 @@
  * on a graph (`premiseOf`).
  */
 import { describe, expect, it } from "vitest";
-import { type CandidateReading, candidateHint } from "../engine/candidate-hint.ts";
 import { permitsSearch } from "../engine/contract/difficulty.ts";
 import { DRAFT_HINT } from "../engine/contract/game.ts";
 import type { Narration } from "../engine/contract/hint-words.ts";
+import { type CandidateReading, candidateHint } from "../engine/hint/candidate-hint.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { enrolledIn } from "../engine/testing/enrollment.ts";
 import {

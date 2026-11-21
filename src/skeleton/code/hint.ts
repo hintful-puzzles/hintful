@@ -23,12 +23,12 @@ import type {
 } from "../../engine/contract/game.ts";
 import { GAME_OVER } from "../../engine/contract/hint-refusal.ts";
 import type { MarkKind, Relation, Sentence } from "../../engine/contract/hint-words.ts";
+import { claimRelation, judgeRivals } from "../../engine/hint/rival-judging.ts";
 import {
   pendingRuleOuts,
   type RuleOut,
   ruleOutProgress,
 } from "../../engine/mechanics/code-rows.ts";
-import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import { describedSpace, type GridSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,

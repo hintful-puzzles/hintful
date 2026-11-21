@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { GamePref } from "./contract/game.ts";
+import type { GamePref } from "../contract/game.ts";
+import { dealt } from "../testing/dealt.ts";
+import { REGISTERED_GAMES } from "../testing/enrollment.ts";
 import {
   autoPencilPref,
   offersStickyPencil,
@@ -7,8 +9,6 @@ import {
   STICKY_PENCIL_HELP,
   stickyPencilPref,
 } from "./pencil-prefs.ts";
-import { dealt } from "./testing/dealt.ts";
-import { REGISTERED_GAMES } from "./testing/enrollment.ts";
 
 describe("the shared pencil preferences", () => {
   it("drives ui.pencilSticky under upstream's keyword", () => {

@@ -1,7 +1,7 @@
 /**
  * Every sentence Solo's hint speaks: its own are the steps
  * `solo.description.yaml` declares, spoken through the module's voice; the
- * generic Latin arms are the engine's (`engine/hint-text.ts`), their reasons
+ * generic Latin arms are the engine's (`engine/hint/hint-text.ts`), their reasons
  * naming the units they read ("row, column and block", or the block or
  * diagonal a hidden single sits in).
  *
@@ -29,8 +29,8 @@ import {
   noteText,
   placedRulesOut,
   populateText,
-} from "../../engine/hint-text.ts";
-import type { Unit } from "../../engine/step-voice.ts";
+} from "../../engine/hint/hint-text.ts";
+import type { Unit } from "../../engine/hint/step-voice.ts";
 import { voice, WORDS } from "../../generated/games/solo/solo.compiled.ts";
 import type { CageOrigin, SoloRegion } from "./hint-reasons.ts";
 import { digitChar } from "./render.ts";
@@ -124,7 +124,7 @@ export const say = {
     }),
 
   // The strike arms below are premises, which the walk concludes with the move
-  // it makes, in these words (`engine/hint-text.ts`'s `Premise`).
+  // it makes, in these words (`engine/hint/hint-text.ts`'s `Premise`).
   conclude: candidateConclusions(SOLO_VOCAB),
 
   /** The `n` just placed at `placed`; `regions` names the kinds of region it

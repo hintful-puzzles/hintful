@@ -30,8 +30,8 @@ import type { Point } from "../../engine/contract/types.ts";
 import {
   describedEdgeHint,
   type Fired as FiredOf,
-} from "../../engine/described-edge-hint.ts";
-import type { SuppliedHooks } from "../../engine/described-hint.ts";
+} from "../../engine/hint/described-edge-hint.ts";
+import type { SuppliedHooks } from "../../engine/hint/described-hint.ts";
 import {
   EDGE,
   type ShapedEdge,

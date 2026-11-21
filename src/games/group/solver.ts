@@ -14,6 +14,7 @@
  * Cells are numbered `y·o + x`; row `a`, column `b` holds the product `a·b`.
  */
 
+import type { Clauses } from "../../engine/hint/stated.ts";
 import { latinSpace } from "../../engine/solve/describe-runtime.ts";
 import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
@@ -22,7 +23,6 @@ import {
   latinLadder,
   latinSolver,
 } from "../../engine/solve/latin.ts";
-import type { Clauses } from "../../engine/stated.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";
 import { DIFF_UNREASONABLE } from "./state.ts";
 
@@ -32,7 +32,7 @@ export type StatedTerms = Readonly<Record<string, number>>;
 
 /** Why a Group-specific step placed or struck, as the hint narrates it: the
  * clause the description states for what holds, and the terms it reads
- * (`engine/stated.ts`). Combined with {@link LatinReason} (the generic
+ * (`engine/hint/stated.ts`). Combined with {@link LatinReason} (the generic
  * positional and set steps) it covers every technique; the `kind` fields never
  * collide. `identityElim` also names the element it rules out as the identity,
  * for its strike's words. */

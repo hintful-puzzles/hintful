@@ -8,9 +8,12 @@
  * duty are theirs and are not repeated here.
  */
 import { describe, expect, it } from "vitest";
-import { type CandidateReading, nakedSingles } from "../../engine/candidate-hint.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
+import {
+  type CandidateReading,
+  nakedSingles,
+} from "../../engine/hint/candidate-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import type { CellMarks, Firing } from "../../engine/solve/ladder-runtime.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

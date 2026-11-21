@@ -9,22 +9,22 @@
  * `docs/hints-candidates.md` § "What every game does".
  */
 
-import { valueBit, valuesOneTo } from "./board/candidate-bits.ts";
-import type { HintResult, HintStep, HintTrackVerdict } from "./contract/game.ts";
-import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
+import { valueBit, valuesOneTo } from "../board/candidate-bits.ts";
+import type { HintResult, HintStep, HintTrackVerdict } from "../contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../contract/hint-refusal.ts";
 import {
   CELL,
   Narration,
   NOTE,
   type Sentence,
   unshaped,
-} from "./contract/hint-words.ts";
-import type { Point } from "./contract/types.ts";
-import { markAllPress, type PointerAction } from "./input/hint-gesture.ts";
+} from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
+import { markAllPress, type PointerAction } from "../input/hint-gesture.ts";
+import { type NoteTakingUi, noteEntryGesture } from "../mechanics/note-taking-cell.ts";
+import type { CellMarks } from "../solve/ladder-runtime.ts";
 import type { CellRegion } from "./latin-hint.ts";
-import { type NoteTakingUi, noteEntryGesture } from "./mechanics/note-taking-cell.ts";
 import type { Judging } from "./move-judge.ts";
-import type { CellMarks } from "./solve/ladder-runtime.ts";
 
 /** A board cell. */
 export type Cell = Point;

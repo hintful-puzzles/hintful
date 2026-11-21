@@ -9,25 +9,25 @@
  * are `verdictOf`'s table.
  */
 import { describe, expect, it } from "vitest";
-import { lightupGame } from "../games/lightup/index.ts";
-import { answerOf, holdsBulb } from "../games/lightup/solver.ts";
+import { lightupGame } from "../../games/lightup/index.ts";
+import { answerOf, holdsBulb } from "../../games/lightup/solver.ts";
 import {
   F_BLACK,
   F_LIGHT,
   idx,
   type LightupParams,
   type LightupState,
-} from "../games/lightup/state.ts";
-import { mapGame } from "../games/map/index.ts";
-import { mathraxGame } from "../games/mathrax/index.ts";
-import { pathGame } from "../games/path/index.ts";
-import { pathWalk } from "../games/path/solver.ts";
+} from "../../games/lightup/state.ts";
+import { mapGame } from "../../games/map/index.ts";
+import { mathraxGame } from "../../games/mathrax/index.ts";
+import { pathGame } from "../../games/path/index.ts";
+import { pathWalk } from "../../games/path/solver.ts";
 import {
   DIFF_NORMAL,
   MODE_PATH,
   newState as newPathState,
-} from "../games/path/state.ts";
-import { tracksGame } from "../games/tracks/index.ts";
+} from "../../games/path/state.ts";
+import { tracksGame } from "../../games/tracks/index.ts";
 import {
   E_NOTRACK,
   E_TRACK,
@@ -36,12 +36,29 @@ import {
   stateToBoard,
   type TracksOp,
   type TracksState,
-} from "../games/tracks/state.ts";
-import { unrulyGame } from "../games/unruly/index.ts";
-import { NAMES } from "../generated/games/lightup/lightup.compiled.ts";
-import { NAMES as UNRULY_NAMES } from "../generated/games/unruly/unruly.compiled.ts";
-import { D, dirX, dirY, L, R, U } from "./board/square-edges.ts";
-import { SYMM_ROT4 } from "./generate/symmetric-blacks.ts";
+} from "../../games/tracks/state.ts";
+import { unrulyGame } from "../../games/unruly/index.ts";
+import { NAMES } from "../../generated/games/lightup/lightup.compiled.ts";
+import { NAMES as UNRULY_NAMES } from "../../generated/games/unruly/unruly.compiled.ts";
+import { D, dirX, dirY, L, R, U } from "../board/square-edges.ts";
+import { SYMM_ROT4 } from "../generate/symmetric-blacks.ts";
+import { randomNew } from "../random/index.ts";
+import type { Reads } from "../solve/describe-runtime.ts";
+import {
+  describedSpace,
+  type Fire,
+  type GridSpace,
+  type Marks,
+  PLACE,
+} from "../solve/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  type LadderEntry,
+  ladderWalk,
+  TIERS,
+} from "../solve/ladder-runtime.ts";
+import { dealt } from "../testing/dealt.ts";
 import {
   auditChains,
   type ChainAudit,
@@ -50,23 +67,6 @@ import {
   judgeByWalk,
   verdictOf,
 } from "./move-judge.ts";
-import { randomNew } from "./random/index.ts";
-import type { Reads } from "./solve/describe-runtime.ts";
-import {
-  describedSpace,
-  type Fire,
-  type GridSpace,
-  type Marks,
-  PLACE,
-} from "./solve/describe-runtime.ts";
-import {
-  CellMarks,
-  compiledRung,
-  type LadderEntry,
-  ladderWalk,
-  TIERS,
-} from "./solve/ladder-runtime.ts";
-import { dealt } from "./testing/dealt.ts";
 
 const EASY: LightupParams = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
 const UNREASONABLE: LightupParams = { ...EASY, difficulty: 2 };

@@ -73,7 +73,7 @@ export const STEPS: {
   },
 };
 
-import { stepVoice, type StepVoice, type Voice } from "../../../engine/step-voice.ts";
+import { stepVoice, type StepVoice, type Voice } from "../../../engine/hint/step-voice.ts";
 
 /** The steps, spoken: a game declares once what its marks are drawn on and
  * how its values print, the description's nouns filled in. */

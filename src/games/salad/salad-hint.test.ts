@@ -14,8 +14,8 @@
  * cannot touch the board the generator sees.
  */
 import { describe, expect, it } from "vitest";
-import { evidenceOf } from "../../engine/candidate-plan.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
+import { evidenceOf } from "../../engine/hint/candidate-plan.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { confinedLines } from "../../engine/solve/latin.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

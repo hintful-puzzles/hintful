@@ -14,15 +14,6 @@
  * live checks cannot give — see {@link findMistakes}.
  */
 
-import {
-  adaptiveMarkAll,
-  anyEmptyLacksNotes,
-  candidateHint,
-  type Mark,
-  obviousCandidateMarks,
-  regionReach,
-} from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
@@ -34,14 +25,28 @@ import {
 } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
+import {
+  adaptiveMarkAll,
+  anyEmptyLacksNotes,
+  candidateHint,
+  type Mark,
+  obviousCandidateMarks,
+  regionReach,
+} from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
 import {
   clearEntries,
   type EntryMistakeKind,
   type EntryMoves,
   entryMistakes,
   revealEntry,
-} from "../../engine/entry-mistakes.ts";
-import { transposeDimensions } from "../../engine/game-id/params.ts";
+} from "../../engine/hint/entry-mistakes.ts";
+import {
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import {
   drag,
   type GestureButton,
@@ -74,11 +79,6 @@ import {
   releaseHighlightAfterEntry,
   tapNoteTakingCell,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NAMES } from "../../generated/games/rome/rome.compiled.ts";
 import { newRomeDesc } from "./generator.ts";
@@ -533,7 +533,7 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
   }
   // ## THE ADDITIVE RULE, stated once
   //
-  // `engine/candidate-hint.ts` § "THE ADDITIVE RULE, stated once". A square the
+  // `engine/hint/candidate-hint.ts` § "THE ADDITIVE RULE, stated once". A square the
   // player has already narrowed keeps its marks; only a note-less empty square
   // is filled. What "every candidate" means is Rome's own, and it is per
   // square rather than a board-wide mask: see `legalDirs`.

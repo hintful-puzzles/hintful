@@ -30,6 +30,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
+import { slidePieces } from "../../engine/hint/slide-planner.ts";
 import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
@@ -40,7 +41,6 @@ import {
 import { offset } from "../../engine/mechanics/wires.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import type { Flash } from "../../engine/render/win-wave.ts";
-import { slidePieces } from "../../engine/slide-planner.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";

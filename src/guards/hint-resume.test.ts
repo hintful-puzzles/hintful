@@ -429,7 +429,7 @@ if (FIRST_SHARE) {
 if (SHARE_LATIN.length > 0)
   describe("a Latin-family placement never falsely claims a naked single", () => {
     // The shared `latin.ts` solver records naked and hidden singles under one
-    // `single` reason; a hint must re-derive which (engine/latin-hint.ts) so it never
+    // `single` reason; a hint must re-derive which (engine/hint/latin-hint.ts) so it never
     // says "every other number/height has been ruled out in this cell" about a cell
     // that still visibly shows several candidates (owner-reported on Keen). Walk each
     // Latin game and assert the naked-single phrasing only ever appears on a cell

@@ -312,7 +312,7 @@ export interface DominosaWalkContext {
 
 /**
  * The marks over the player's dominoes and the ladder, for the engine's walk
- * to take a firing at a time (`engine/described-edge-hint.ts`). The player's
+ * to take a firing at a time (`engine/hint/described-edge-hint.ts`). The player's
  * lines between squares are not read: a wrong one must not mislead the hint,
  * which works each out again. Null where the player's dominoes clash.
  */

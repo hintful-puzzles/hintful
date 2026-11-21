@@ -13,7 +13,7 @@
  * `block_structure`; a cage keeps its index as its filled cells leave it.
  */
 
-import type { NotesLadder } from "../../engine/candidate-plan.ts";
+import type { NotesLadder } from "../../engine/hint/candidate-plan.ts";
 import type {
   CompiledTechniques,
   FiringTally,

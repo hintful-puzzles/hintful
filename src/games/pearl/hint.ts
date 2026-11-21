@@ -25,8 +25,8 @@ import { keepTrackBy } from "../../engine/contract/hint-track.ts";
 import {
   describedEdgeHint,
   type Fired as FiredOf,
-} from "../../engine/described-edge-hint.ts";
-import type { SuppliedHooks } from "../../engine/described-hint.ts";
+} from "../../engine/hint/described-edge-hint.ts";
+import type { SuppliedHooks } from "../../engine/hint/described-hint.ts";
 import { EDGE } from "../../engine/mechanics/edge-hint.ts";
 import type { CellMarks, Ladder } from "../../engine/solve/ladder-runtime.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
@@ -470,7 +470,7 @@ function stepOf(fired: FiredOf<PearlSays[keyof PearlSays], PearlWalkContext>): {
 
 /**
  * The ladder over the player's lines and crosses, for the engine's hint to
- * walk (`engine/described-edge-hint.ts`).
+ * walk (`engine/hint/described-edge-hint.ts`).
  */
 function pearlWalk(state: PearlState): {
   marks: CellMarks;

@@ -12,7 +12,7 @@
  * is to have judged them all lost (`hint-words.ts`'s `Relation`).
  */
 
-import type { Relation } from "./contract/hint-words.ts";
+import type { Relation } from "../contract/hint-words.ts";
 
 /** Positions the searches of one hint request may still visit between them.
  * Counted, never timed, so a position's verdicts do not depend on the

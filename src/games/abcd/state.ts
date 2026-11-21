@@ -14,10 +14,6 @@
  */
 
 import { gridText } from "../../engine/board/grid-text.ts";
-import {
-  type CandidateReading,
-  DEFAULT_CANDIDATE_READING,
-} from "../../engine/candidate-hint.ts";
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
@@ -25,6 +21,10 @@ import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { modifierItem } from "../../engine/game-id/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
+import {
+  type CandidateReading,
+  DEFAULT_CANDIDATE_READING,
+} from "../../engine/hint/candidate-hint.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
 import {
   DIFF_EASY,

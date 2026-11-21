@@ -7,7 +7,7 @@
  * and "the lower 3".
  */
 
-import type { Point } from "./contract/types.ts";
+import type { Point } from "../contract/types.ts";
 
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
 

@@ -15,7 +15,7 @@ import {
 
 const RUNTIME = "src/engine/solve/describe-runtime.ts";
 const POSITION_RUNTIME = "src/engine/solve/position-runtime.ts";
-const STEP_VOICE = "src/engine/step-voice.ts";
+const STEP_VOICE = "src/engine/hint/step-voice.ts";
 
 /** Where every compiled module is written: generated, and ignored by git. */
 export const GENERATED = "src/generated";

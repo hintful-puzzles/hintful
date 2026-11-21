@@ -3,8 +3,8 @@
  * every game that has one.
  */
 import { describe, expect, it } from "vitest";
-import type { CandidateReading } from "../candidate-hint.ts";
 import type { Point } from "../contract/types.ts";
+import type { CandidateReading } from "../hint/candidate-hint.ts";
 import { dealt } from "../testing/dealt.ts";
 import { enrolledIn, gamesImporting, gamesUsing } from "../testing/enrollment.ts";
 import { HINT_GAMES } from "../testing/hint-games.ts";
@@ -125,7 +125,7 @@ describe("HintFrontier", () => {
 const FRONTIER_GAMES: readonly string[] = gamesUsing(
   HINT_GAMES.map(([id]) => id),
   ["runCandidatePlan", "runLatinCandidatePlan"].map((name) => ({
-    module: "src/engine/candidate-plan.ts",
+    module: "src/engine/hint/candidate-plan.ts",
     name,
   })),
   "call",
@@ -140,7 +140,7 @@ const FRONTIER_GAMES: readonly string[] = gamesUsing(
  * honest outcome; it is not a remembered count. */
 const PLAN_IMPORTERS: readonly string[] = gamesImporting(
   HINT_GAMES.map(([id]) => id),
-  (m) => m === "src/engine/candidate-plan.ts",
+  (m) => m === "src/engine/hint/candidate-plan.ts",
 );
 
 /**

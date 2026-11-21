@@ -15,7 +15,7 @@ import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import { SQUARE_GRID } from "../../engine/contract/sections.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
   ERASE_KEYS,

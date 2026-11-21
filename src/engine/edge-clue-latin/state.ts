@@ -13,7 +13,6 @@
 
 import { MAX_CANDIDATE_VALUE } from "../board/candidate-bits.ts";
 import { gridText } from "../board/grid-text.ts";
-import type { CandidateReading } from "../candidate-hint.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_OUT_OF_RANGE,
@@ -30,6 +29,7 @@ import {
   paramsCodec,
   size,
 } from "../game-id/params-codec.ts";
+import type { CandidateReading } from "../hint/candidate-hint.ts";
 import { digitOf, type GridCursor, isEraseKey, newCursor } from "../input/pointer.ts";
 import type { Ladder } from "../solve/ladder-runtime.ts";
 import type { LatinSolver } from "../solve/latin.ts";

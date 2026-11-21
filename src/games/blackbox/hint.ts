@@ -40,7 +40,7 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
+import { claimRelation, judgeRivals } from "../../engine/hint/rival-judging.ts";
 import { clueList, traceBeam } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,

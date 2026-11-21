@@ -17,6 +17,33 @@
  * so what the plan continues from can never differ from what the steps carry.
  */
 
+import type { HintStep } from "../contract/game.ts";
+import {
+  CELL,
+  mark,
+  type Narration,
+  NOTE,
+  phrase,
+  type Sentence,
+  so,
+} from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
+import { describedSpace, PLACE, STRIKE } from "../solve/describe-runtime.ts";
+import { FactGraph } from "../solve/fact-graph.ts";
+import {
+  type FrontierCandidate,
+  gridKey,
+  HintFrontier,
+} from "../solve/hint-frontier.ts";
+import {
+  admits,
+  type Caps,
+  CellMarks,
+  type Ladder,
+  type Firing as LadderFiring,
+  techniqueFirings,
+} from "../solve/ladder-runtime.ts";
+import { stepBudget } from "../solve/step-budget.ts";
 import {
   addMove,
   type CandidateHighlights,
@@ -37,17 +64,6 @@ import {
   regionDuplicateMarks,
   regionReach,
 } from "./candidate-hint.ts";
-import type { HintStep } from "./contract/game.ts";
-import {
-  CELL,
-  mark,
-  type Narration,
-  NOTE,
-  phrase,
-  type Sentence,
-  so,
-} from "./contract/hint-words.ts";
-import type { Point } from "./contract/types.ts";
 import {
   type Conclusions,
   candidateConclusions,
@@ -67,22 +83,6 @@ import {
   type WholeRegion,
 } from "./latin-hint.ts";
 import type { Judging, TracedFiring } from "./move-judge.ts";
-import { describedSpace, PLACE, STRIKE } from "./solve/describe-runtime.ts";
-import { FactGraph } from "./solve/fact-graph.ts";
-import {
-  type FrontierCandidate,
-  gridKey,
-  HintFrontier,
-} from "./solve/hint-frontier.ts";
-import {
-  admits,
-  type Caps,
-  CellMarks,
-  type Ladder,
-  type Firing as LadderFiring,
-  techniqueFirings,
-} from "./solve/ladder-runtime.ts";
-import { stepBudget } from "./solve/step-budget.ts";
 
 /** Why a placement's row/column cull strikes what it strikes: the value just
  * placed at `(px, py)`. Every candidate game's reason union carries it. */

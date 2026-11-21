@@ -17,7 +17,7 @@
  * A hint walks the same ladder, one firing at a time ({@link deduceHintPlan}).
  */
 
-import type { Judging } from "../../engine/move-judge.ts";
+import type { Judging } from "../../engine/hint/move-judge.ts";
 import {
   type Answer,
   answerCache,

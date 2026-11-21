@@ -1504,7 +1504,7 @@ from those marks. Marks with extra candidates beside the answer are ordinary
 mid-solve state, and a cell with no marks says nothing.
 
 Do not write the loop. `entryMistakes` in
-[`engine/entry-mistakes.ts`](../src/engine/entry-mistakes.ts) owns it; the
+[`engine/hint/entry-mistakes.ts`](../src/engine/hint/entry-mistakes.ts) owns it; the
 game hands it the answer, its arrays, its `NoteEncoding` and its fixed cells
 ([engine-catalog.md](./engine-catalog.md) § "`entry-mistakes.ts` — Check &
 Save for one value or a set of marks per cell").

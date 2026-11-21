@@ -15,7 +15,6 @@
 
 import { valueBit } from "../../engine/board/candidate-bits.ts";
 import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
-import type { CandidateHighlights } from "../../engine/candidate-hint.ts";
 import {
   cellSurface,
   clueDoneColor,
@@ -42,6 +41,7 @@ import type {
   Point,
   Size,
 } from "../../engine/contract/types.ts";
+import type { CandidateHighlights } from "../../engine/hint/candidate-hint.ts";
 import {
   type CellHighlight,
   cellHighlight,

@@ -25,7 +25,7 @@ import type {
   HintTrackVerdict,
 } from "../../engine/contract/game.ts";
 import type { Sentence } from "../../engine/contract/hint-words.ts";
-import { searchRefusal } from "../../engine/search-outcome.ts";
+import { searchRefusal } from "../../engine/hint/search-outcome.ts";
 import { voice } from "../../generated/games/cube/cube.compiled.ts";
 import { SQUARE } from "./kinds.ts";
 import { DIR_CHARS, dealtOf, executeMove, rollDest } from "./roll.ts";

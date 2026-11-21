@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { ColorWord } from "./color/color-word.ts";
-import { CELL, type MarkKind, markKeys, stepMarks } from "./contract/hint-words.ts";
-import type { Point } from "./contract/types.ts";
-import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "./render/piece.ts";
+import { ColorWord } from "../color/color-word.ts";
+import { CELL, type MarkKind, markKeys, stepMarks } from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
+import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../render/piece.ts";
 import { type StatedContext, statedParts, statedSentence } from "./stated.ts";
 import { parseClause } from "./stated-clauses.ts";
 import { type StepClause, stepVoice } from "./step-voice.ts";

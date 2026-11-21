@@ -1,4 +1,18 @@
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../contract/game.ts";
+import { DEDUCTION_EXHAUSTED } from "../contract/hint-refusal.ts";
+import {
+  CELL,
+  mark,
+  Narration,
+  NOTE,
+  phrase,
+  type Sentence,
+  so,
+  unshaped,
+} from "../contract/hint-words.ts";
+import { click, markAllPress, key as press } from "../input/hint-gesture.ts";
+import { PENCIL_MODE_BUTTON } from "../input/pointer.ts";
 import {
   adaptiveMarkAllMove,
   anyEmptyLacksNotes,
@@ -22,21 +36,7 @@ import {
   regionDuplicateMarks,
   regionReach,
 } from "./candidate-hint.ts";
-import type { HintStep } from "./contract/game.ts";
-import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
-import {
-  CELL,
-  mark,
-  Narration,
-  NOTE,
-  phrase,
-  type Sentence,
-  so,
-  unshaped,
-} from "./contract/hint-words.ts";
 import { cleanObviousText, joinNums, populateText } from "./hint-text.ts";
-import { click, markAllPress, key as press } from "./input/hint-gesture.ts";
-import { PENCIL_MODE_BUTTON } from "./input/pointer.ts";
 import { rowColRegions } from "./latin-hint.ts";
 
 /** Build a working board from a `grid` (0 = empty) and a matching `pencil`

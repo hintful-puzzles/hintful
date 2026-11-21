@@ -779,7 +779,7 @@ export const MODULES = [
     // toward branch coverage: a narration whose premise is not actually checked
     // is the failure `docs/hints.md` § "The quality bar" rule 5 names, and it is
     // invisible to a render snapshot, which records whatever the game emits.
-    module: "src/engine/candidate-hint.ts",
+    module: "src/engine/hint/candidate-hint.ts",
     cases: [
       {
         within: "planPrefs",
@@ -932,7 +932,7 @@ export const MODULES = [
     // `candidate-hint.ts` and `latin-hint.ts` by `extract-hint-strings`. Its own
     // tests are the engine hint suites that pin those sentences, so both cases
     // keep asking the files they asked before the move.
-    module: "src/engine/hint-text.ts",
+    module: "src/engine/hint/hint-text.ts",
     cases: [
       {
         within: "populateText",
@@ -950,7 +950,7 @@ export const MODULES = [
     // a plan is recomputed whenever the player goes their own way, and a first
     // move that does not provably shorten the distance to the goal is how a hint
     // ends up walking a board round a loop for ever. Cases are biased there.
-    module: "src/engine/slide-planner.ts",
+    module: "src/engine/hint/slide-planner.ts",
     cases: [
       {
         within: "toroidalDist",

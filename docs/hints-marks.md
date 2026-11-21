@@ -202,7 +202,7 @@ step crosses each note out, in the note's own ink, and rings nothing. Draw it
 with `drawStrike` ([`engine/render/draw.ts`](../src/engine/render/draw.ts)), every game's
 one strike. A premise's "this cell" on a cell whose notes are struck is not
 ringed but outlined, by the engine (`struckCellsOutlined` in
-[`engine/candidate-plan.ts`](../src/engine/candidate-plan.ts); § "Outline the
+[`engine/hint/candidate-plan.ts`](../src/engine/hint/candidate-plan.ts); § "Outline the
 evidence"), so its words must not say "ringed".
 Measured, the alternative cost 9×9 Keen about 40% of its pencil marks' size
 (`make-rings-round`, D6).

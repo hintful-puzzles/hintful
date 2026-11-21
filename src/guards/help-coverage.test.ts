@@ -28,7 +28,6 @@ import {
 } from "../describe/help-pages.ts";
 import { loadDescriptionFile } from "../describe/load.ts";
 import { descriptionPath } from "../describe/paths.ts";
-import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "../engine/candidate-hint.ts";
 import { TWO, wordOf } from "../engine/color/colors.ts";
 import {
   difficultyChoiceItem,
@@ -47,15 +46,16 @@ import {
   rulesetField,
   rulesetsMarkdown,
 } from "../engine/game-id/ruleset.ts";
+import { MARK_ALL_HELP, MARK_ALL_PLACEHOLDER } from "../engine/hint/candidate-hint.ts";
+import {
+  offersStickyPencil,
+  STICKY_PENCIL_PLACEHOLDER,
+} from "../engine/hint/pencil-prefs.ts";
 import {
   CONTROLS_PLACEHOLDER,
   DONE_CLUES_PLACEHOLDER,
 } from "../engine/input/target-verb.ts";
 import { TOUCH_PLACEHOLDER } from "../engine/input/touch-help.ts";
-import {
-  offersStickyPencil,
-  STICKY_PENCIL_PLACEHOLDER,
-} from "../engine/pencil-prefs.ts";
 import { getTsGame } from "../engine/registry.ts";
 import { expandPair, PAIR_NAMES } from "../engine/render/piece.ts";
 import { RULES_OUT_PLACEHOLDER } from "../engine/rules-out.ts";

@@ -279,7 +279,7 @@ export interface WordtrailWalkContext {
 
 /**
  * The ladder over `state`'s lines and crosses, for the engine's hint to walk
- * (`engine/described-edge-hint.ts`).
+ * (`engine/hint/described-edge-hint.ts`).
  */
 export function wordtrailWalk(state: WordtrailBoard): {
   marks: CellMarks;

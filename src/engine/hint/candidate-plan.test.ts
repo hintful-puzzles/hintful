@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import type { HintStep } from "../contract/game.ts";
+import { CELL, mark, Narration, phrase, unshaped } from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
 import type { CandidateHighlights, CandidateReading } from "./candidate-hint.ts";
 import {
   type CandidatePlan,
@@ -8,9 +11,6 @@ import {
   runCandidatePlan,
   runLatinCandidatePlan,
 } from "./candidate-plan.ts";
-import type { HintStep } from "./contract/game.ts";
-import { CELL, mark, Narration, phrase, unshaped } from "./contract/hint-words.ts";
-import type { Point } from "./contract/types.ts";
 import { type Conclusions, narrateLatinReason } from "./hint-text.ts";
 import { type RowColRegion, rowColRegions, type SingleReason } from "./latin-hint.ts";
 

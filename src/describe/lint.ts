@@ -22,13 +22,13 @@ import {
   unboundDefect,
 } from "../engine/contract/wording-rules.ts";
 import { WORD_LENGTHS } from "../engine/generate/word-list/index.ts";
-import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../engine/render/piece.ts";
 import {
   DEFAULT_FORMS,
   DRAWN,
   type Piece,
   parseClause,
-} from "../engine/stated-clauses.ts";
+} from "../engine/hint/stated-clauses.ts";
+import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../engine/render/piece.ts";
 import { judge } from "../engine/testing/hint-reference.ts";
 import {
   type DescriptionFile,

@@ -3,7 +3,7 @@
  * the compiler (`compile.ts`) writes and the functions its terms walk.
  */
 
-import { slotsOf } from "../engine/stated-clauses.ts";
+import { slotsOf } from "../engine/hint/stated-clauses.ts";
 import { CompileError, type Env, isArray, Out, type Val } from "./compile-sorts.ts";
 import type { Definition, Says } from "./description.ts";
 import { children, type Expr } from "./expr.ts";

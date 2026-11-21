@@ -8,23 +8,6 @@
  * additionally flags cells that contradict the unique solution.
  */
 
-import {
-  adaptiveMarkAllMove,
-  applyNoteMove,
-  type CandidatePlanPrefs,
-  candidateGesture,
-  candidateHint,
-  keepCandidateHintTrack,
-  type Mark,
-  refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
-import { candidateJudge } from "../../engine/candidate-judge.ts";
-import {
-  CANDIDATE_RUNGS,
-  type PlanRung,
-  runCandidatePlan,
-  valuesOf,
-} from "../../engine/candidate-plan.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   type DifficultyContract,
@@ -47,21 +30,45 @@ import {
   NO_SOLUTION,
 } from "../../engine/contract/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/contract/types.ts";
+import { modifierItem } from "../../engine/game-id/modifier.ts";
+import { numberItem } from "../../engine/game-id/params.ts";
+import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
+import {
+  adaptiveMarkAllMove,
+  applyNoteMove,
+  type CandidatePlanPrefs,
+  candidateGesture,
+  candidateHint,
+  keepCandidateHintTrack,
+  type Mark,
+  refreshCandidateHintStep,
+} from "../../engine/hint/candidate-hint.ts";
+import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
+import {
+  CANDIDATE_RUNGS,
+  type PlanRung,
+  runCandidatePlan,
+  valuesOf,
+} from "../../engine/hint/candidate-plan.ts";
 import {
   clearEntries,
   entryMistakes,
   gridCell,
   revealEntry,
   setMoves,
-} from "../../engine/entry-mistakes.ts";
-import { modifierItem } from "../../engine/game-id/modifier.ts";
-import { numberItem } from "../../engine/game-id/params.ts";
-import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
+} from "../../engine/hint/entry-mistakes.ts";
 import {
   latinPremise,
   narrateLatinReason,
   type Premise,
-} from "../../engine/hint-text.ts";
+} from "../../engine/hint/hint-text.ts";
+import type { SingleWhy } from "../../engine/hint/latin-hint.ts";
+import {
+  autoPencilPref,
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT2,
@@ -71,19 +78,12 @@ import {
   moveCursor,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import type { SingleWhy } from "../../engine/latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  autoPencilPref,
-  candidateReadingPref,
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { NAMES } from "../../generated/games/solo/solo.compiled.ts";
 import { newSoloDesc } from "./generator.ts";

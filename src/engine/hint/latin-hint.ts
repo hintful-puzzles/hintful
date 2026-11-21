@@ -6,9 +6,9 @@
  * a region, names and shades the whole region.
  */
 
+import type { Point } from "../contract/types.ts";
+import type { LatinSetReason, LatinWingReason } from "../solve/latin.ts";
 import type { CandidateReading } from "./candidate-hint.ts";
-import type { Point } from "./contract/types.ts";
-import type { LatinSetReason, LatinWingReason } from "./solve/latin.ts";
 
 /** A region a value may not repeat in: its member cell indices (`y * w + x`),
  * and whether it also holds every value once. A game declares each of a cell's

@@ -43,7 +43,7 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
-import { judgeRivals } from "../../engine/rival-judging.ts";
+import { judgeRivals } from "../../engine/hint/rival-judging.ts";
 import { voice } from "../../generated/games/inertia/inertia.compiled.ts";
 import { ARROW, GEM } from "./kinds.ts";
 import { solveRoute, unreachableGems } from "./solver.ts";

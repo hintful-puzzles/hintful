@@ -28,11 +28,6 @@
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
-import type {
-  CandidateReading,
-  Mark,
-  NoteEncoding,
-} from "../../engine/candidate-hint.ts";
 import { DESC_TOO_LONG } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
@@ -44,8 +39,13 @@ import {
   gapLetters,
   readRegionWalls,
 } from "../../engine/game-id/wall-runs.ts";
+import type {
+  CandidateReading,
+  Mark,
+  NoteEncoding,
+} from "../../engine/hint/candidate-hint.ts";
+import type { CellRegion } from "../../engine/hint/latin-hint.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import type { CellRegion } from "../../engine/latin-hint.ts";
 import * as rome from "../../generated/games/rome/rome.compiled.ts";
 
 // --- cell bit-field (upstream values, verbatim) -----------------------------

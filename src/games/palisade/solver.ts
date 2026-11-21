@@ -373,7 +373,7 @@ export function wallsAreAnswer(m: CellMarks, { dl }: PalisadeWalkContext): boole
 /**
  * The marks over the player's `borders` (their no-wall marks joining squares,
  * their walls keeping groups apart) and the ladder, for the engine's walk to
- * take a firing at a time (`engine/described-edge-hint.ts`).
+ * take a firing at a time (`engine/hint/described-edge-hint.ts`).
  */
 export function palisadeWalk(
   state: PalisadeShape & { clues: Int8Array; borders: Uint8Array },

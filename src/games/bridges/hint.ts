@@ -1,7 +1,7 @@
 /**
  * Bridges' explained hint: the narration of the firings the ladder
  * [`bridges.description.yaml`](./bridges.description.yaml) states makes, one at
- * a time, which `engine/described-edge-hint.ts` walks. This file turns each
+ * a time, which `engine/hint/described-edge-hint.ts` walks. This file turns each
  * firing into the move and the picture, and its words are the steps the
  * description declares.
  *
@@ -19,7 +19,7 @@ import {
   describedEdgeHint,
   type EdgeSpoken,
   type Fired,
-} from "../../engine/described-edge-hint.ts";
+} from "../../engine/hint/described-edge-hint.ts";
 import { SAYS_KINDS, voice } from "../../generated/games/bridges/bridges.compiled.ts";
 import { PIECE, type Piece, SPAN } from "./hint-marks.ts";
 import {

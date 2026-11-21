@@ -5,7 +5,7 @@
  * drawn on and how its values print, and then names a step and supplies what
  * `StepsById` says it is told by.
  */
-import type { ColorWord } from "./color/color-word.ts";
+import type { ColorWord } from "../color/color-word.ts";
 import {
   listOf,
   type MarkKind,
@@ -15,7 +15,7 @@ import {
   type Noun,
   type Relation,
   type Sentence,
-} from "./contract/hint-words.ts";
+} from "../contract/hint-words.ts";
 import {
   type ClausePart,
   type Clauses,

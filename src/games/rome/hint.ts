@@ -36,6 +36,14 @@
  * loop's chain, a goal's group) is read off the arrows placed.
  */
 
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import {
+  CELL,
+  type Narration,
+  type Sentence,
+  whole,
+} from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import {
   type CandidateHighlights,
   type CandidateMoveAdapter,
@@ -43,7 +51,7 @@ import {
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
+} from "../../engine/hint/candidate-hint.ts";
 import {
   CANDIDATE_RUNGS,
   type CandidateRung,
@@ -54,23 +62,15 @@ import {
   runCandidatePlan,
   strikesOf,
   techniqueRung,
-} from "../../engine/candidate-plan.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
-import {
-  CELL,
-  type Narration,
-  type Sentence,
-  whole,
-} from "../../engine/contract/hint-words.ts";
-import type { Point } from "../../engine/contract/types.ts";
+} from "../../engine/hint/candidate-plan.ts";
 import {
   candidateConclusions,
   cleanObviousText,
   narrateLatinReason,
   type Premise,
   populateText,
-} from "../../engine/hint-text.ts";
-import type { CellRegion } from "../../engine/latin-hint.ts";
+} from "../../engine/hint/hint-text.ts";
+import type { CellRegion } from "../../engine/hint/latin-hint.ts";
 import {
   describedSpace,
   rangeMask,

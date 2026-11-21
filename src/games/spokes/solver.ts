@@ -15,7 +15,7 @@
  */
 
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
+import { spokenOf } from "../../engine/hint/described-hint.ts";
 import {
   type Answer,
   answerCache,
@@ -439,7 +439,7 @@ export interface SpokesWalkContext {
 
 /**
  * The ladder over the player's board, for the engine's hint to walk
- * (`engine/described-edge-hint.ts`), up to Normal: the search beneath is not a
+ * (`engine/hint/described-edge-hint.ts`), up to Normal: the search beneath is not a
  * deduction, so the plan stops where the ladder does and the hint says so. A
  * player follows the hubs: a firing reads the hubs it argues from and the ends
  * of the spokes it decides.

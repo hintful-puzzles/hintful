@@ -6,7 +6,7 @@
 
 import type { Narration } from "../../engine/contract/hint-words.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
-import type { SingleReason } from "../../engine/latin-hint.ts";
+import type { SingleReason } from "../../engine/hint/latin-hint.ts";
 import { clueList, latinSpace } from "../../engine/solve/describe-runtime.ts";
 import { type LatinReason, latinLadder } from "../../engine/solve/latin.ts";
 import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";

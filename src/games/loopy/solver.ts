@@ -18,7 +18,7 @@
  */
 
 import type { Grid } from "../../engine/board/grid/index.ts";
-import type { Judging } from "../../engine/move-judge.ts";
+import type { Judging } from "../../engine/hint/move-judge.ts";
 import {
   clueList,
   type GridSpace,

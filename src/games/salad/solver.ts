@@ -29,7 +29,7 @@
  * the cube never recurses or follows a forcing chain at either tier.
  */
 
-import { type EntryBoard, entryMistake } from "../../engine/entry-mistakes.ts";
+import { type EntryBoard, entryMistake } from "../../engine/hint/entry-mistakes.ts";
 import { latinSpace } from "../../engine/solve/describe-runtime.ts";
 import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {

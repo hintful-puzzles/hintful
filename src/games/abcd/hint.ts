@@ -17,24 +17,6 @@
  * player.
  */
 
-import {
-  type CandidateHighlights,
-  type CandidateMoveAdapter,
-  type CandidatePlanPrefs,
-  candidateGesture,
-  keepCandidateHintTrack,
-  type Mark,
-  type NoteEncoding,
-  refreshCandidateHintStep,
-} from "../../engine/candidate-hint.ts";
-import {
-  CANDIDATE_RUNGS,
-  type Firing,
-  type NotesLadder,
-  type PlanRung,
-  runCandidatePlan,
-  techniqueRung,
-} from "../../engine/candidate-plan.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
 import {
   CELL,
@@ -45,15 +27,33 @@ import {
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import {
+  type CandidateHighlights,
+  type CandidateMoveAdapter,
+  type CandidatePlanPrefs,
+  candidateGesture,
+  keepCandidateHintTrack,
+  type Mark,
+  type NoteEncoding,
+  refreshCandidateHintStep,
+} from "../../engine/hint/candidate-hint.ts";
+import {
+  CANDIDATE_RUNGS,
+  type Firing,
+  type NotesLadder,
+  type PlanRung,
+  runCandidatePlan,
+  techniqueRung,
+} from "../../engine/hint/candidate-plan.ts";
+import {
   candidateConclusions,
   cleanObviousText,
   type LatinVocab,
   narrateLatinReason,
   placedRulesOut,
   populateText,
-} from "../../engine/hint-text.ts";
+} from "../../engine/hint/hint-text.ts";
+import type { CellRegion } from "../../engine/hint/latin-hint.ts";
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
-import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
 import { rangeMask } from "../../engine/solve/describe-runtime.ts";
 import {

@@ -6,13 +6,13 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { narrateCrossing } from "../games/crossing/hint.ts";
-import type { CrossingFiring } from "../games/crossing/solver.ts";
-import type { CrossingPuzzle } from "../games/crossing/state.ts";
-import { SPOT } from "../games/dominosa/kinds.ts";
-import { STATED as DOMINOSA } from "../generated/games/dominosa/dominosa.compiled.ts";
-import { STATED as KEEN } from "../generated/games/keen/keen.compiled.ts";
-import { CELL } from "./contract/hint-words.ts";
+import { narrateCrossing } from "../../games/crossing/hint.ts";
+import type { CrossingFiring } from "../../games/crossing/solver.ts";
+import type { CrossingPuzzle } from "../../games/crossing/state.ts";
+import { SPOT } from "../../games/dominosa/kinds.ts";
+import { STATED as DOMINOSA } from "../../generated/games/dominosa/dominosa.compiled.ts";
+import { STATED as KEEN } from "../../generated/games/keen/keen.compiled.ts";
+import { CELL } from "../contract/hint-words.ts";
 import { indefinite } from "./hint-text.ts";
 import { statedParts, statedSentence } from "./stated.ts";
 

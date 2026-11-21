@@ -20,7 +20,7 @@
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
+import { entryMistakes } from "../../engine/hint/entry-mistakes.ts";
 import {
   type Answer,
   answerCache,

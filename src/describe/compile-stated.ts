@@ -10,7 +10,7 @@ import {
   STATED_INNER_WORDS,
   STATED_WORDS,
   slotsOf,
-} from "../engine/stated-clauses.ts";
+} from "../engine/hint/stated-clauses.ts";
 import {
   BOOL,
   CompileError,
@@ -181,14 +181,14 @@ export function checkStated(
   }
 }
 
-/** A wording's clauses as `engine/stated.ts` renders them, with the reason it
+/** A wording's clauses as `engine/hint/stated.ts` renders them, with the reason it
  * may run past the line where it has one, which the sentence carries. */
 function spokenClauses(w: Wording): StatedClauses & { long?: string } {
   return w.long === null ? w.clauses : { ...w.clauses, long: w.long.why };
 }
 
 /** The module's `STATED`: each kind of step's clauses as the description
- * states them, by wording, and each fact's, for `engine/stated.ts` to render.
+ * states them, by wording, and each fact's, for `engine/hint/stated.ts` to render.
  * A firing's `wording`, and a fact's, is the index of the one that held; it is
  * absent where there is one. Empty where nothing states a clause. */
 export function statedTable(own: readonly Technique[]): string[] {
@@ -216,7 +216,7 @@ export function statedTable(own: readonly Technique[]): string[] {
   if (rows.length === 0) return [];
   return [
     "/** Each kind of step's words as the description states them, and each",
-    " * fact's, by wording (`engine/stated.ts`); and the flag terms the engine",
+    " * fact's, by wording (`engine/hint/stated.ts`); and the flag terms the engine",
     " * sets to whether the step decides several elements (`several`). */",
     "export const STATED = {",
     ...rows,

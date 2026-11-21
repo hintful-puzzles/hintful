@@ -18,17 +18,17 @@
  * `described-edge-hint.ts`).
  */
 
-import type { MoveVerdict } from "./contract/game.ts";
-import { phrase, type Sentence, unshaped } from "./contract/hint-words.ts";
+import type { MoveVerdict } from "../contract/game.ts";
+import { phrase, type Sentence, unshaped } from "../contract/hint-words.ts";
 import {
   type Facts,
   MARK,
   PLACE,
   STRIKE,
   STRIKE_EDGE,
-} from "./solve/describe-runtime.ts";
-import type { FactGraph } from "./solve/fact-graph.ts";
-import type { CellMarks, Firing } from "./solve/ladder-runtime.ts";
+} from "../solve/describe-runtime.ts";
+import type { FactGraph } from "../solve/fact-graph.ts";
+import type { CellMarks, Firing } from "../solve/ladder-runtime.ts";
 
 /** A fact a move made: a value placed, a candidate struck, an edge's mark
  * struck, a cell marked; `at` is the cell or the edge. */

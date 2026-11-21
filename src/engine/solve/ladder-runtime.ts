@@ -9,7 +9,7 @@
  * recursion); a game whose whole solve is its ladder uses it as it is.
  */
 
-import type { Traced } from "../move-judge.ts";
+import type { Traced } from "../hint/move-judge.ts";
 import type {
   CompiledTechniques,
   DeductionTechnique,

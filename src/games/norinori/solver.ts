@@ -122,7 +122,7 @@ export function answerOf(
  * ladder (every tier: a board that arrives by its ID carries no tier, and the
  * ladder tries its easier techniques first). The engine takes one firing at a
  * time from it, the one that carries on from the squares the last decided
- * (`engine/described-firing-hint.ts`).
+ * (`engine/hint/described-firing-hint.ts`).
  */
 export function hintWalk(state: NorinoriBoard): {
   marks: CellMarks;

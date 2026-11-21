@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { LatinSolver, latinLadder } from "../solve/latin.ts";
 import type { Firing, RungContext } from "./candidate-plan.ts";
 import {
   type LatinStrikeReason,
   latinNotesLadder,
   latinStrikeRungs,
 } from "./latin-notes.ts";
-import { LatinSolver, latinLadder } from "./solve/latin.ts";
 
 describe("a Latin ladder run on the notes", () => {
   const ladder = latinLadder<string, string, LatinSolver, Record<never, never>>(

@@ -8,19 +8,20 @@
  * unique solution.
  */
 
-import { adaptiveMarkAllMove, applyNoteMove } from "../candidate-hint.ts";
 import { assertNever } from "../contract/assert-never.ts";
 import type { DifficultyContract } from "../contract/difficulty.ts";
 import { type SolveResult, UI_UPDATE, type UiUpdate } from "../contract/game.ts";
 import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../contract/solve-failure.ts";
 import type { KeyLabel, Point } from "../contract/types.ts";
+import { adaptiveMarkAllMove, applyNoteMove } from "../hint/candidate-hint.ts";
 import {
   clearEntries,
   entryMistakes,
   gridCell,
   revealEntry,
   setMoves,
-} from "../entry-mistakes.ts";
+} from "../hint/entry-mistakes.ts";
+import { rowColRegions } from "../hint/latin-hint.ts";
 import { clearKey } from "../input/key-labels.ts";
 import {
   CURSOR_DOWN,
@@ -37,7 +38,6 @@ import {
   stripModifiers,
 } from "../input/pointer.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../input/target-verb.ts";
-import { rowColRegions } from "../latin-hint.ts";
 import {
   noOpEntryResult,
   pressNoteTakingCell,

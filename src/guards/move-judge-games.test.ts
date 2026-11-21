@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { sectionState } from "../engine/contract/sections.ts";
-import { verdictOf } from "../engine/move-judge.ts";
+import { verdictOf } from "../engine/hint/move-judge.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   type AnyGame,

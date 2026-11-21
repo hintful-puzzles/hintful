@@ -13,11 +13,6 @@
  * flags every marking that contradicts the unique solution.
  */
 
-import {
-  adaptiveMarkAll,
-  obviousCandidateMarks,
-  regionReach,
-} from "../../engine/candidate-hint.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import {
@@ -30,10 +25,19 @@ import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { SQUARE_GRID } from "../../engine/contract/sections.ts";
 import type { GameStatus, KeyLabel, Point } from "../../engine/contract/types.ts";
 import {
+  adaptiveMarkAll,
+  obviousCandidateMarks,
+  regionReach,
+} from "../../engine/hint/candidate-hint.ts";
+import {
   clearEntries,
   type EntryMoves,
   revealEntry,
-} from "../../engine/entry-mistakes.ts";
+} from "../../engine/hint/entry-mistakes.ts";
+import {
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../../engine/hint/pencil-prefs.ts";
 import { clearKey } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT2,
@@ -49,10 +53,6 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import {
-  pencilKeepHighlightPref,
-  stickyPencilPref,
-} from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newSaladDesc } from "./generator.ts";
 import {

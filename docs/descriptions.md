@@ -1285,7 +1285,7 @@ rulesOut:
 
 Each named technique must `say` (its `marks.reads` is what the move's
 evidence is). `describedFiringHint({ rulesOut: RULES_OUT, ... })` returns
-`rulesOut`, which the game sets as `Game.rulesOut` (`engine/described-rules-out.ts`).
+`rulesOut`, which the game sets as `Game.rulesOut` (`engine/hint/described-rules-out.ts`).
 The engine runs those techniques on the board after a move and brings the
 conclusions of every firing whose premise (`premiseOf`: what it reads,
 outlines and decides) holds a square the move set to `placing`, on the
@@ -1309,8 +1309,8 @@ the `terms` its step's sentence reads and the `marks` (`outline`, `stripes`,
 at the firing, on the marks before its facts are made and under the
 technique's own `with`, and only where a hint asks (a solve passes no `fire`).
 The rung `describedLadder` builds for it then records `{ binding, says }` for each fact, and
-`describedHint` (`engine/described-hint.ts`, a step a fact) or
-`describedFiringHint` (`engine/described-firing-hint.ts`, a step a firing)
+`describedHint` (`engine/hint/described-hint.ts`, a step a fact) or
+`describedFiringHint` (`engine/hint/described-firing-hint.ts`, a step a firing)
 builds the steps from it: the firing's facts are the ringed targets, evidence
 is the outline less them and less the `strand`, drawn apart. **What the walk
 reads is the outline, the strand, the facts and a `reads` set where a
@@ -1382,11 +1382,11 @@ differs by what the board shows is a wording, never an arm. A wording with a
 look alone, `evident`: the ringed squares and the board say the move
 (Filling's region that fits exactly into them). A clause is
 whole, with slots, and its grammar is
-[`engine/stated-clauses.ts`](../src/engine/stated-clauses.ts)'s header; the
+[`engine/hint/stated-clauses.ts`](../src/engine/hint/stated-clauses.ts)'s header; the
 compiler refuses a slot that names no number term, lexicon word, role the
 technique marks, or term of elements, and writes the clauses into the module
 as `STATED`, by kind and wording, which
-[`engine/stated.ts`](../src/engine/stated.ts) renders over what a firing says.
+[`engine/hint/stated.ts`](../src/engine/hint/stated.ts) renders over what a firing says.
 `describedFiringHint` speaks every kind its `stated` holds, and a game's `say`
 keeps only overrides (none in Singles). Where a sentence branches on which
 end of a relation a square is, restate the conclusion with that square as a
@@ -1414,7 +1414,7 @@ terms, `|outlineAngle|`-style sizes and `|ring|`, the count of what the step
 decides; a wording of a `move` alone is said as the move, `bare`: Flood's fill
 that joins no square) and `StepsById<E>` (what the planner
 supplies), and **`voice`, the one call a game speaks a step through**
-(`engine/step-voice.ts`): the game declares once what its marks are drawn on
+(`engine/hint/step-voice.ts`): the game declares once what its marks are drawn on
 (`kind`, and `kinds` for the sorts drawn on another), how a value prints and,
 where a step decides something other than its cell, the `nouns` of its ring
 sorts; then `speak.sentence(id, { ring, terms, marks })` says a step,
@@ -1536,7 +1536,7 @@ placing techniques decide on their own are read off the marks across the firing
 and shown and made with it, and `tiers` and `plan` start a walk at the board's
 own tier and cap its length. **A game whose answer is on the edges** (Bridges: the facts strike values from
 an edge, and a step's move is the bridges, crosses and limits a line ended up
-with) gives `describedEdgeHint` (`engine/described-edge-hint.ts`) the walk,
+with) gives `describedEdgeHint` (`engine/hint/described-edge-hint.ts`) the walk,
 `writes` (the elements a player's attention follows: Bridges' islands) and a
 `step` that makes the move and the highlights from the marks as the firing found
 them and left them. Its `says` marks are cells (the islands outlined and the
@@ -1685,7 +1685,7 @@ reason is not the bare binding where its words quote the board: a sign's
 reason quotes the other end's least candidate as it stood when the step
 fired. A reason names the unit it reads where that is not a row or a
 column (Solo's blocks and diagonals), so the engine's Latin sentences
-(`engine/hint-text.ts`) speak it in every game.
+(`engine/hint/hint-text.ts`) speak it in every game.
 
 ## What the compiler checks of a wording
 

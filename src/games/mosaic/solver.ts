@@ -13,7 +13,7 @@
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import { type RandomState, randomBits } from "../../engine/random/index.ts";
 import {
   type Answer,

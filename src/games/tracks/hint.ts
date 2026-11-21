@@ -18,7 +18,7 @@ import type { MarkKind } from "../../engine/contract/hint-words.ts";
 import {
   describedEdgeHint,
   type Fired as FiredOf,
-} from "../../engine/described-edge-hint.ts";
+} from "../../engine/hint/described-edge-hint.ts";
 import { PLACE, STRIKE_EDGE } from "../../engine/solve/describe-runtime.ts";
 import type { CellMarks, Ladder } from "../../engine/solve/ladder-runtime.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
@@ -279,7 +279,7 @@ function stepOf(fired: FiredOf<TracksSays[keyof TracksSays], TracksWalkContext>)
 
 /**
  * The ladder over the player's marks, for the engine's hint to walk
- * (`engine/described-edge-hint.ts`). The tier cap is the board's own
+ * (`engine/hint/described-edge-hint.ts`). The tier cap is the board's own
  * difficulty: the generator certified the board at that tier, every technique
  * is monotone in what is marked, so a correct partial board stays soluble
  * there, and an easiest-tier board is never handed a parity argument it did
