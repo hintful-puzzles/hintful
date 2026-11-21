@@ -1508,9 +1508,9 @@ exports[`subsets rendering (tier 2.5) > mistake frame: a duplicated placement dr
   {
     "cx": 108,
     "cy": 54,
-    "fillRgb": "rgb(0, 0, 0)",
+    "fillRgb": "rgb(223, 34, 37)",
     "op": "circle",
-    "outlineRgb": "rgb(0, 0, 0)",
+    "outlineRgb": "rgb(223, 34, 37)",
     "r": 12,
   },
   {
@@ -1524,7 +1524,7 @@ exports[`subsets rendering (tier 2.5) > mistake frame: a duplicated placement dr
   {
     "h": 25,
     "op": "rect",
-    "rgb": "rgb(0, 0, 0)",
+    "rgb": "rgb(223, 34, 37)",
     "w": 12,
     "x": 96,
     "y": 42,

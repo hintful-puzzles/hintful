@@ -45,6 +45,7 @@ import { generateCandidate, newSubsetsDesc } from "./generator.ts";
 import { subsetsGame } from "./index.ts";
 import { COL_CELL, COL_GIVEN, COL_RULED_OUT, newDrawState, redraw } from "./render.ts";
 import {
+  brokenEdges,
   deduceHintPlan,
   findMistakes,
   solveCopy,
@@ -52,6 +53,7 @@ import {
   subsetsValidate,
 } from "./solver.ts";
 import {
+  ADJTHAN,
   ALL_BITS,
   CELL_WIDTH,
   cloneState,
@@ -552,6 +554,35 @@ describe("subsets findMistakes", () => {
     expect(cells.map((m) => m.pos).sort((a, b) => a - b)).toEqual(
       [blank, given].sort((a, b) => a - b),
     );
+  });
+
+  it("a gap beside the empty set flags that edge, from its upper or left cell", () => {
+    const state = newState(PARAMS, FIX.desc);
+    const gap = (i: number, j: number): boolean =>
+      !ADJTHAN.some(
+        (d) =>
+          (state.clues[i] & d.f && i + d.dy * 4 + d.dx === j) ||
+          (state.clues[j] & d.f && j + d.dy * 4 + d.dx === i),
+      );
+    for (let i = 0; i < 16; i++)
+      for (const [d, j] of [
+        [1, i + 1],
+        [2, i + 4],
+      ] as const) {
+        if ((d === 1 && i % 4 === 3) || j >= 16 || !gap(i, j)) continue;
+        if (state.immutable[j]) continue;
+        // The empty set sits inside every set, so a gap beside it is broken.
+        const s2 = cloneState(state);
+        s2.known[j] = 0;
+        s2.mask[j] = 0;
+        if (!state.immutable[i]) {
+          s2.known[i] = 1;
+          s2.mask[i] = 1;
+        }
+        expect(brokenEdges(s2)[i] & ADJTHAN[d].f).toBeTruthy();
+        return;
+      }
+    throw new Error("the fixture has no gap");
   });
 
   it("a violated arrow relation flags that edge", () => {

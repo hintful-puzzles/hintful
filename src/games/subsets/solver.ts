@@ -14,6 +14,7 @@
  * arrow rule that it wrote, commented out and never compiled.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { Judging } from "../../engine/hint/move-judge.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
@@ -24,6 +25,7 @@ import {
   rangeMask,
   STRIKE,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   compiledRung,
   describedLadder,
@@ -38,6 +40,7 @@ import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import {
   ADJTHAN,
+  type AdjDir,
   ALL_BITS,
   cloneState,
   DIFF_NORMAL,
@@ -48,89 +51,50 @@ import {
 export type SubsetsStatus = "complete" | "unfinished" | "invalid";
 
 /**
- * Classify the board (upstream `subsets_validate`): `complete` when every
- * cell is decided and the description's rules hold of it, which its answer
- * check says (`isAnswer`), `invalid` on a duplicated placement or a
- * violated (missing-)arrow relation between decided cells, else
- * `unfinished`.
+ * Classify the board (upstream `subsets_validate`): `invalid` where it
+ * breaks a rule (`rules`), `complete` when every cell is decided and it is
+ * the answer, else `unfinished`.
  *
- * With `flags` given, every violated edge is recorded as the `ADJTHAN` flag
- * bit on the cell it was found from (and the scan runs to completion instead
- * of early-exiting). With `counts` given, `counts[v]` receives the number of
- * decided cells holding set-value `v` (the solver's and the tally's input;
- * sized `w·h`, which equals `2^n` at the only legal params).
+ * With `counts` given, `counts[v]` receives the number of decided cells
+ * holding set-value `v` (the solver's and the tally's input; sized `w·h`,
+ * which equals `2^n` at the only legal params).
  */
 export function subsetsValidate(
   state: SubsetsState,
-  flags?: Uint8Array | null,
   counts?: Int32Array | null,
 ): SubsetsStatus {
-  const { w, h } = state;
-  const hasCounts = counts != null;
-
-  let ret: SubsetsStatus = "complete";
-
-  for (let i = 0; i < w * h; i++) {
-    if (state.known[i] !== state.mask[i]) {
-      if (!flags && !hasCounts) return "unfinished";
-      ret = "unfinished";
-    }
+  const g = rules.grid(state);
+  if (counts) {
+    counts.fill(0);
+    for (const v of g) if (v > 0) counts[v - 1]++;
   }
+  if (rules.violations(state, g).length > 0) return "invalid";
+  if (g.includes(0)) return "unfinished";
+  return rules.isAnswer(state, g) ? "complete" : "invalid";
+}
 
-  if (flags) flags.fill(0);
-  const cnt = counts ?? new Int32Array(w * h);
-  cnt.fill(0);
-
-  // Validate counts (each set placed at most once).
-  for (let i = 0; i < w * h; i++) {
-    if (state.known[i] === state.mask[i]) {
-      cnt[state.known[i]]++;
-      if (cnt[state.known[i]] > 1) ret = "invalid";
-      if (!flags && ret === "invalid") break;
-    }
+/** The horseshoes and gaps the board breaks, as the `ADJTHAN` bit of the
+ * edge's direction on the cell it is drawn from: a horseshoe's open end,
+ * and the upper or left cell of a gap. */
+export function brokenEdges(state: SubsetsState): Uint8Array {
+  const { w } = state;
+  const flags = new Uint8Array(w * state.h);
+  const sp = describedSpace(subsets.units, w, state.h);
+  const dirOf = (a: number, b: number): AdjDir => {
+    const d = ADJTHAN.find(
+      (t) => a + t.dy * w + t.dx === b && (b % w) - (a % w) === t.dx,
+    );
+    if (d === undefined) throw new Error("subsets: an edge joins no neighbors");
+    return d;
+  };
+  for (const v of rules.violations(state, rules.grid(state))) {
+    if (v.rule !== "clue.shoe") continue;
+    const a = sp.edgeEnds[2 * v.clue];
+    const b = sp.edgeEnds[2 * v.clue + 1];
+    const from = opensToward(state, b, a) ? b : a;
+    flags[from] |= dirOf(from, from === a ? b : a).f;
   }
-
-  // Validate arrows between decided cells.
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      if (ret === "invalid" && !flags) break;
-
-      const i = y * w + x;
-      if (state.known[i] !== state.mask[i]) continue;
-
-      for (let dir = 0; dir < 4; dir++) {
-        const x2 = x + ADJTHAN[dir].dx;
-        const y2 = y + ADJTHAN[dir].dy;
-        if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) continue;
-
-        const i2 = y2 * w + x2;
-        if (state.known[i2] !== state.mask[i2]) continue;
-
-        // Validate disjoint pairs only once.
-        if (!(state.clues[i] & ADJTHAN[dir].f) && (x2 < x || y2 < y)) continue;
-
-        const intersect = state.known[i] & state.known[i2];
-
-        if (state.clues[i] & ADJTHAN[dir].f) {
-          // Arrow i -> i2: set(i2) must be contained in set(i).
-          if (intersect !== state.known[i2]) {
-            ret = "invalid";
-            if (flags) flags[i] |= ADJTHAN[dir].f;
-          }
-        } else if (!(state.clues[i2] & ADJTHAN[dir].fo)) {
-          // No arrow either way: neither set may contain the other.
-          if (intersect === state.known[i2] || intersect === state.known[i]) {
-            ret = "invalid";
-            if (flags) flags[i] |= ADJTHAN[dir].f;
-          }
-        }
-      }
-    }
-  }
-
-  // Whether a whole board is solved is the rules' to say.
-  if (ret === "complete" && !isAnswer(state)) return "invalid";
-  return ret;
+  return flags;
 }
 
 // --- the board as the description reads it -----------------------------------
@@ -169,14 +133,13 @@ function decidedGrid(s: SubsetsState): Uint8Array {
   return Uint8Array.from(s.known, (k, i) => (decided(s, i) ? k + 1 : 0));
 }
 
-/** Whether a board's letters are its answer, by the description's rules. */
-function isAnswer(s: SubsetsState): boolean {
-  return subsets.isAnswer(
-    decidedGrid(s),
-    describedSpace(subsets.units, s.w, s.h),
-    dealtOf(s),
-  );
-}
+/** The board as its rules read it: a square holds its set once its letters
+ * are all decided. */
+export const rules: RulesOf<SubsetsState> = describedRules(subsets, {
+  grid: decidedGrid,
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s)],
+});
 
 /** Why a technique struck or placed a set, as the hint reads it: the
  * horseshoe a carried letter crosses, from its open end `from` to its closed
@@ -314,10 +277,10 @@ export function findMistakes(state: SubsetsState): readonly SubsetsMistake[] {
     }
   }
 
-  const flags = new Uint8Array(w * h);
   const counts = new Int32Array(w * h);
-  if (subsetsValidate(state, flags, counts) !== "invalid") return mistakes;
+  if (subsetsValidate(state, counts) !== "invalid") return mistakes;
 
+  const flags = brokenEdges(state);
   for (let i = 0; i < w * h; i++) {
     if (state.known[i] === state.mask[i] && counts[state.known[i]] > 1)
       mistakes.push({ kind: "cell", pos: i });

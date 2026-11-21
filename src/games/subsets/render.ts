@@ -11,8 +11,7 @@
  * below the grid tallies every set-value with a color for its placement
  * count (red = duplicated, grayed back = placed once, ink = unplaced), and a
  * set ruled out of the cell in focus struck through in the player's ink. All
- * error verdicts are live (recomputed from the committed state each frame,
- * as upstream). The win flash fills every slot of each cell it passes with
+ * error verdicts are live, the board's rules read each frame. The win flash fills every slot of each cell it passes with
  * the flash color; there is no move animation.
  *
  * Divergence from the C: the keyboard cursor's corner marks are drawn
@@ -66,7 +65,12 @@ import { textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
-import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
+import {
+  brokenEdges,
+  candidateCells,
+  candidateSets,
+  subsetsValidate,
+} from "./solver.ts";
 import {
   ADJTHAN,
   ALL_BITS,
@@ -249,11 +253,10 @@ export function redraw(
   const cshow = ui.cursor.visible && ui.tallyCursor === null && !flash.winning;
   const firstDraw = ds.cells.firstFrame();
 
-  // Live error verdicts and the tally, recomputed pure from the committed
-  // state (upstream recomputes on each state change; this is 16 cells).
-  const flags = new Uint8Array(w * h);
+  // Where the board breaks its rules, and the tally.
+  const flags = brokenEdges(state);
   const counts = new Int32Array(w * h);
-  subsetsValidate(state, flags, counts);
+  subsetsValidate(state, counts);
 
   // Check & Save overlay: duplicated placements, and cells holding a wrong
   // rule-out, get an inset red frame; a wrong letter slot is drawn red itself.

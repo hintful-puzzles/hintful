@@ -56,7 +56,10 @@
       another domino reads as holding none; a square no domino can cover,
       and a spot of a domino with nowhere left, show a red number; a count
       binding no element of the answer names where it breaks by what it
-      read, in the compiler). Run `src/guards` before a
+      read, in the compiler). Moved: subsets (its validator asks the rules;
+      a horseshoe joins two different sets, so one between equal sets is
+      red, and an edge to an undecided cell is red once no set there could
+      keep it). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

@@ -91,6 +91,7 @@ import {
   findMistakes,
   pickExclusion,
   type RuleOutMark,
+  rules,
   type SubsetsDeduction,
   solveCopy,
   subsetsSolveGame,
@@ -868,6 +869,7 @@ export const subsetsGame: Game<
   },
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes,

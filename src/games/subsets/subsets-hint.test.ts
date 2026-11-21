@@ -476,8 +476,7 @@ describe("hint", () => {
         const wrong = cloneState(state);
         wrong.known[i] = solved.known[i] & bit ? 0 : bit;
         wrong.mask[i] = ALL_BITS(P.n) & ~(solved.known[i] & bit);
-        if (subsetsValidate(wrong, null, new Int32Array(P.w * P.h)) === "invalid")
-          continue;
+        if (subsetsValidate(wrong) === "invalid") continue;
         asked++;
         expect(findMistakes(wrong)).toEqual([{ kind: "letter", pos: i, bit: b }]);
         // The same slot decided the solution's way is no mistake.
