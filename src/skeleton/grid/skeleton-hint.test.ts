@@ -28,8 +28,10 @@ const pinned = describeHintPins({
   game: skeletonGame,
   params: [{ w: 5, h: 5, diff: DIFF_NORMAL }],
   pins: {
+    /** Held on 108 of 112 positions walked. */
+    "count.met": "5x5dn:____0111___2_1_1_____12_1",
     /** Held on 112 of 112 positions walked. */
-    count: "5x5dn:_1___1_1121__1_1__2101___",
+    "count.exact": "5x5dn:_1___1_1121__1_1__2101___",
     /** Held on 90 of 112 positions walked. */
     shared: {
       id: "5x5dn:____0111___2_1_1_____12_1",
@@ -97,7 +99,7 @@ describe("skeleton hint plans", () => {
   });
 
   it("a move the step does not ask for drops it", () => {
-    const { state, step } = pinned("count");
+    const { state, step } = pinned("count.met");
     if (step.move.kind !== "mark") throw new Error("a step marks squares");
     const { index, mark } = step.move.cells[0];
     const other = mark === 1 ? 2 : 1;

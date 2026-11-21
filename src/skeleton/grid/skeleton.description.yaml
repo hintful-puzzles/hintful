@@ -32,8 +32,8 @@ answer:
 define:
   # The shaded squares the number at c still needs beside it.
   need(c): "clue(count, c) - count(d in adj4(c) where value(d) = 1)"
-  # The undecided squares beside c that have no number.
-  open(c): "{d in adj4(c) where not known(d) and clue(count, d) = none}"
+  # The undecided squares of S that have no number.
+  open(S): "{d in S where not known(d) and clue(count, d) = none}"
 clues:
   # A number is never shaded, and counts the shaded squares beside it.
   count:
@@ -48,45 +48,34 @@ deal:
     order while the ladder still finishes the board at the tier
   tier: one of the tiers
 tiers: [Easy, Normal]
+# A number's count over the squares beside it: the group a count kind reads.
+kindWords:
+  group: "k in clues(count), c = at(k)"
+  set: "adj4(c)"
+  need: "need(c)"
+  rest: 2
+  fill: 1
+  zero: "v(k) = 0"
+  mark: outline c
+  marks: { reads: "{c} + adj4(c)" }
+  unit: "the outlined {value}"
+  has: "its {value} {shaded} {value: square | squares} beside it"
+  items: "{shaded} {n: square | squares}"
+  slots: "open {n: square | squares} beside it"
+  restWord: "must be {unshaded}"
+  fillWord: "must be {shaded}"
+  terms: { c: c, value: v(k) }
 names:
   count: "one number's count on its own"
   shared: "two overlapping numbers compared"
 techniques:
-  # One number alone, n the shaded squares it still needs among its open
-  # squares O: with none, they are all clear; with as many as there are,
-  # they are all shaded. A number that needs fewer than none, or more than
-  # it has open squares, makes the marks inconsistent.
-  - id: count
+  # One number alone: with all its shaded squares, the rest beside it are
+  # clear; with only as many open squares as it needs, they are all shaded.
+  - kind: count.both
+    as: count
     tier: Easy
-    for: >-
-      k in clues(count), c = at(k), n = need(c), O = open(c)
-      where |O| > 0 and (n <= 0 or n >= |O|)
-    conclude: >-
-      n >= 0 and n <= |O|
-      and (n = 0 implies (forall d in O: place(d, 2)))
-      and (n = 0 or (forall d in O: place(d, 1)))
-    # The hint names the number, how many it counts, how many it still needs
-    # and how many open squares it has, and outlines it; it reads the squares
-    # round it.
-    # A number that needs none says whether it counts any; one that needs
-    # some says "more" once it has some beside it already.
-    says:
-      terms:
-        c: "c"
-        value: "clue(count, c)"
-        need: "n"
-        open: "|O|"
-        placed: "n < clue(count, c)"
-      marks: { outline: "{c}", reads: "{c} + adj4(c)" }
-      wordings:
-        - when: "n = 0 and clue(count, c) = 0"
-          look: "{outline c: the outlined {value}} has no {shaded} square beside it"
-          move: "{ring} must be {unshaded}"
-        - when: "n = 0"
-          look: "{outline c: the outlined {value}} already has its {value} {shaded} {value: square | squares} beside it"
-          move: "{ring} must be {unshaded}"
-        - look: "{outline c: the outlined {value}} needs {need} {if placed: more {shaded} | {shaded}} {need: square | squares} and has only {open} open {open: square | squares} beside it"
-          move: "{ring} must be {shaded}"
+    with:
+      terms: { placed: "n < v(k)" }
   # Two numbers, every open square of b's also one of c's: those are where
   # the two meet, M, and b gets exactly what it needs there, so c needs the
   # difference, by, on the rest of its own, R. With none, they are clear;
@@ -95,9 +84,9 @@ techniques:
   - id: shared
     tier: Normal
     for: >-
-      k in clues(count), c = at(k), O = open(c) where |O| >= 2,
+      k in clues(count), c = at(k), O = open(adj4(c)) where |O| >= 2,
       b in within(c, 2) where b != c and clue(count, b) != none,
-      M = open(b) where |M| > 0 and |M| < |O| and M subset O,
+      M = open(adj4(b)) where |M| > 0 and |M| < |O| and M subset O,
       by = need(c) - need(b), R = O - M
       where by <= 0 or by >= |R|
     conclude: >-
