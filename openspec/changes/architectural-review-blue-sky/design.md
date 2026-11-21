@@ -390,9 +390,9 @@ description's soundness check and the deal's tier gate).
 
 ## Open questions for the owner
 
-1. **Saves.** If games move onto the engine's `Edit`, should old saves load
-   through a legacy reader per game (recommended, about 10–30 lines a game),
-   or is a clean break acceptable?
+1. **Saves.** Answered 2026-11-21: "Happy to break compatibility with old
+   saves too." A game moved onto the engine's `Edit` writes no legacy
+   reader; a save from before its move stops loading.
 2. **The frozen C generator fixtures.** Answered 2026-11-21: retire every tie
    to the C version with no other benefit (§ "Ties to the C version").
    Upstream's game IDs keep loading, since that serves players, unless the

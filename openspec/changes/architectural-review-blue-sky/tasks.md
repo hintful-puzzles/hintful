@@ -13,8 +13,9 @@
 - [ ] 1.5 Deliver to the owner, and wait for their pick.
       2026-11-21: delivered at `017e0b32c`. The owner answered the C-fixture
       question: retire every tie to the C version with no other benefit;
-      census and verdicts in `design.md` § "Ties to the C version". Saves
-      and which stages to file are still open.
+      census and verdicts in `design.md` § "Ties to the C version". Saves:
+      a clean break is accepted. Which stages to file waits on a discussion
+      the owner opened of a fully declarative end state.
 
 ## 2. The owner's pick
 
