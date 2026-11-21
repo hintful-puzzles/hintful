@@ -64,6 +64,7 @@ import {
   COMPLETE,
   findErrors,
   isAnswer,
+  rules,
   solveGame,
 } from "./solver.ts";
 import {
@@ -368,6 +369,7 @@ export const clustersGame: Game<
   status,
 
   solve,
+  rules,
   difficulty,
   hint: {
     ...clustersHint,

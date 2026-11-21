@@ -274,6 +274,17 @@ describe("solver classification", () => {
     expect(Array.from(grid)).toEqual([F_COLOR_0, F_COLOR_1]);
   });
 
+  it("findErrors marks a dot touching two of its color at the dot", () => {
+    // A red dot touching three reds, each of which still has an open square
+    // beside it: only the dot breaks its rule.
+    const dot = F_COLOR_0 | F_SINGLE;
+    expect(
+      findErrors(Uint8Array.from([0, F_COLOR_0, 0, F_COLOR_0, dot, F_COLOR_0]), 3, 2),
+    ).toEqual([4]);
+    // An open square beside it leaves the dot unbroken.
+    expect(findErrors(Uint8Array.from([0, 0, 0, F_COLOR_0, dot, 0]), 3, 2)).toEqual([]);
+  });
+
   it("solves every preset's generated board to a unique completion", () => {
     for (const [w, h] of [
       [7, 7],

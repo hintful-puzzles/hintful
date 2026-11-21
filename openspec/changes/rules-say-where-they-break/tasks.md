@@ -59,7 +59,9 @@
       read, in the compiler). Moved: subsets (its validator asks the rules;
       a horseshoe joins two different sets, so one between equal sets is
       red, and an edge to an undecided cell is red once no set there could
-      keep it). Run `src/guards` before a
+      keep it). Moved: clusters (its marks are unchanged: the rules flagged
+      the same 465 tiles over 40 random partial fills, and no other). Run
+      `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

@@ -2,8 +2,8 @@
  * Clusters' solver: the ladder `clusters.description.yaml` states, compiled, on
  * the engine's marks and runner (`engine/solve/cell-marks.ts` and
  * `ladder-runtime.ts`), with the walk a hint takes over it; the answer check
- * its rules compile to; the search for a board's answers over the ladder; and
- * the error overlay the renderer and the mistake check read.
+ * its rules compile to, and where a board breaks them; and the search for a
+ * board's answers over the ladder.
  *
  * Easy's techniques each refute one color of one square by the rule it would
  * break at once, at the square or at a tile beside it. Normal's read two
@@ -14,9 +14,11 @@
  * ladder's verdict on every board it tries decides which puzzles exist.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { type Answer, searchAnswers } from "../../engine/solve/answer-search.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type LadderEntry,
@@ -25,110 +27,39 @@ import {
   TIERS as SCALE,
 } from "../../engine/solve/ladder-runtime.ts";
 import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
-import { COLMASK, DIFF_NORMAL, F_COLOR_0, F_COLOR_1, F_SINGLE } from "./state.ts";
+import {
+  type ClustersState,
+  COLMASK,
+  DIFF_NORMAL,
+  F_COLOR_0,
+  F_COLOR_1,
+  F_SINGLE,
+} from "./state.ts";
 
 export const COMPLETE = 0;
 export const UNFINISHED = 1;
 export const INVALID = 2;
 export type ClustersStatus = typeof COMPLETE | typeof UNFINISHED | typeof INVALID;
 
-const DX = [-1, 1, 0, 0];
-const DY = [0, 0, -1, 1];
+// --- where the board breaks its rules ----------------------------------------
 
-// --- the error overlay -------------------------------------------------------
-//
-// The overlay marks a tile whose rule is already broken on a board still
-// being filled, which no rule of the answer says; the answer check is the
-// description's rules, compiled.
-
-/** Same- and other-color orthogonal-neighbor counts of cell `(x,y)` relative
- * to color `col` (a `COLMASK` value), plus how many neighbors exist at all
- * (`max`) — upstream `clusters_count` summed over the four directions. */
-function neighborCounts(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-  x: number,
-  y: number,
-  col: number,
-): { same: number; other: number; max: number } {
-  let same = 0;
-  let other = 0;
-  let max = 0;
-  for (let d = 0; d < 4; d++) {
-    const nx = x + DX[d];
-    const ny = y + DY[d];
-    if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-    max++;
-    const nc = grid[ny * w + nx] & COLMASK;
-    if (nc === col) same++;
-    else if (nc !== 0) other++;
-  }
-  return { same, other, max };
-}
-
-/** Which rule the filled cell `i` breaks, or null — upstream
- * `clusters_validate`'s three error conditions, in its order:
- *  - `surrounded`: wholly surrounded by the other color (`other === max`);
- *  - `dotOvercount`: a dot (`F_SINGLE`) touching more than one same-color
- *    neighbor;
- *  - `reachTwo`: a non-dot that can no longer reach two same-color neighbors
- *    (`other === max - 1`). */
-function errorKind(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-  i: number,
-): "surrounded" | "dotOvercount" | "reachTwo" | null {
-  const cell = grid[i];
-  const col = cell & COLMASK;
-  if (col === 0) return null;
-  const x = i % w;
-  const y = (i - x) / w;
-  const { same, other, max } = neighborCounts(grid, w, h, x, y, col);
-  if (other === max) return "surrounded";
-  if (cell & F_SINGLE && same > 1) return "dotOvercount";
-  if (!(cell & F_SINGLE) && other === max - 1) return "reachTwo";
-  return null;
-}
-
-/** Classify `grid`: INVALID where a tile breaks a rule, else UNFINISHED where
- * a square is empty, else COMPLETE. `errors`, if given, collects the
- * offending cells. */
-function classify(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-  errors?: number[],
-): ClustersStatus {
-  let anyEmpty = false;
-  let anyError = false;
-  for (let i = 0; i < w * h; i++) {
-    if (grid[i] === 0) {
-      anyEmpty = true;
-      continue;
-    }
-    if (errorKind(grid, w, h, i) !== null) {
-      anyError = true;
-      errors?.push(i);
-    }
-  }
-  if (anyError) return INVALID;
-  return anyEmpty ? UNFINISHED : COMPLETE;
-}
-
-/** Whether `grid` breaks a rule, is unfinished, or is complete, read off its
- * tiles. */
-export function clustersStatus(grid: Uint8Array, w: number, h: number): ClustersStatus {
-  return classify(grid, w, h);
-}
-
-/** The indices of every cell that breaks a rule, for `findMistakes` and the
- * live-error renderer. */
+/** Every tile that breaks a rule (`rules`), in reading order: a tile that
+ * can no longer touch two of its own color, and a dot that can no longer
+ * touch exactly one. For `findMistakes` and the live-error renderer. */
 export function findErrors(grid: Uint8Array, w: number, h: number): number[] {
-  const errors: number[] = [];
-  classify(grid, w, h, errors);
-  return errors;
+  const state = { w, h, grid };
+  const dots = dealtOf(grid).dot.at;
+  const at = new Set<number>();
+  for (const v of rules.violations(state, rules.grid(state)))
+    at.add(v.clue >= 0 ? dots[v.clue] : v.at[0]);
+  return [...at].sort((a, b) => a - b);
+}
+
+/** Whether `grid` breaks a rule, is unfinished, or is complete. */
+export function clustersStatus(grid: Uint8Array, w: number, h: number): ClustersStatus {
+  if (findErrors(grid, w, h).length > 0) return INVALID;
+  if (grid.some((tile) => (tile & COLMASK) === 0)) return UNFINISHED;
+  return isAnswer(grid, w, h) ? COMPLETE : INVALID;
 }
 
 // --- the described ladder ------------------------------------------------------
@@ -161,6 +92,13 @@ function marksOf(colors: Uint8Array, w: number, h: number): CellMarks {
   m.seed(colors);
   return m;
 }
+
+/** The board as its rules read it: each square's color, or 0. */
+export const rules: RulesOf<ClustersState> = describedRules(clusters, {
+  grid: (s) => s.grid.map((tile) => tile & COLMASK),
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s.grid)],
+});
 
 /** Whether every square of `grid` holds a color and the rules hold of them,
  * by the rules the description compiles to. */
