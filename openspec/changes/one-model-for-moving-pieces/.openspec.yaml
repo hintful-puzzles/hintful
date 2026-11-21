@@ -1,0 +1,5 @@
+# Drop skip_specs and add the moving-pieces, slide and arrow-game deltas
+# when a session takes this draft up and designs the model.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true
