@@ -54,7 +54,11 @@
       its hint corpus walks one seed in CI and five in its deep tier, since on
       the first seed the shapes fire every arm and the shipped presets every
       arm but `mustReachOut`, which a pinned board holds (unpinned, the
-      ledger check failed). Each shard
+      ledger check failed).
+      Then green (Gate run 44878403485, `f68af5f65`): 5 minutes from the
+      first job to the verdict, against 14.7 before; shards 11.4, 9.6, 7.1
+      and 8.2 reference minutes, a mean of 545 s (61% of a shard's budget);
+      the games' own files 8.3 minutes, Path the dearest at 24 s. Each shard
       scales its costs on its own runner and the `suite` job sums them, and
       judges the games' own files there, where a game's files split between
       shards are summed again. Four shards: the suite's 2030 s is a mean of
@@ -71,8 +75,22 @@
 - [ ] 3.1 Profile each of the six; cut a board or round only where another
       already covers what it would catch. Plant the guard's defect again
       after each cut.
+      Where to start (2026-11-21): the per-game costs in 1.1 say the cost
+      sits in a few games (Loopy, Group, Solo, Mosaic, Sixteen), and
+      hint-resume's and candidate-reading's untitled cost and all of
+      difficulty-contract's are not charged to a game, so profile those by
+      case first. Each walk already holds "one board of every kind"
+      (`build-pipeline`, the boards a cross-game sweep walks), so a cut needs
+      another guard that walks the same kind for the same defect, named at
+      the site. Sharding took the wall-time pressure off, so a guard with no
+      such board is recorded as kept, with why. Per-game counts are taken by
+      appending from the test to a scratch file
+      (`process.getBuiltinModule("node:fs")`): vitest swallows a test's
+      console output here.
 
 ## 4. Finish
 
 - [ ] 4.1 `docs/testing.md` § "What runs when" and `gate.yml`'s comment say
       how it runs now. Commit, push, watch one CI run to green, archive.
+      Done but the archive, which waits on 3.1: the guide and the workflow
+      say it, and Gate run 44878403485 is green.
