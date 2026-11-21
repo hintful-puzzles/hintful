@@ -16,6 +16,12 @@
 - [ ] 2.1 Move the games in batches by variant; each runs in the app (a
       hint's ring, outline and stripes, through an auto-solve) before it
       counts. Record which moved, which keep a form of their own, and why.
+      A game that gains `ds.hint` changes `capability-surface.test.ts`'s
+      snapshot: update it (`-u`) with only that game's edit in the tree.
+      Lightup, read 2026-11-21: `DF_HINT_AREA` and `DF_HINT_DARKREF` draw
+      the same doubled inset outline and `DF_HINT_CLUE` is an outlined
+      wall, so the sidecar carries all three: a wall keeps its inset band
+      with the white line, an open square takes the contour.
   - [x] Singles (pilot).
   - [x] Mines: onto the sidecar; ring and outline no longer exclusive on a
         square, the mistake frame its own flag.
