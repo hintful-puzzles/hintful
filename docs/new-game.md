@@ -92,9 +92,10 @@ is one to weigh against a pointer.
   dialog"; `mechanics.md` § "interpretMove and UI_UPDATE"; `mechanics.md` §
   "A move you do not recognize is refused, never guessed"; `mechanics.md` §
   "Status".
-- [`input.md`](./input.md) § "Targets and verbs"; `input.md` § "Button codes
-  and a key held with Shift"; `input.md` § "A touch hold arrives as the right
-  button"; `input.md` § "Keyboard cursors".
+- [`input.md`](./input.md) § "Targets and verbs", without its parts;
+  `input.md` § "Button codes and a key held with Shift"; `input.md` § "A
+  touch hold arrives as the right button"; `input.md` § "Keyboard cursors",
+  without its parts.
 - [`rendering.md`](./rendering.md) § "The first frame and a fresh draw
   state"; `rendering.md` § "The tile cache and the diff key", without its
   parts; `rendering.md` § "Overlay sidecars"; `rendering.md` § "The win

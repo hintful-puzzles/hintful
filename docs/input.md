@@ -101,11 +101,6 @@ exists. [`emittable-keys.test.ts`](../src/guards/emittable-keys.test.ts)
 derives the export list from the module and fails on a game-local
 declaration that shadows one.
 
-A press reaches a game from `puzzle/components/view-interactive.ts`, through
-the worker, as `Midend.processInput` calling `interpretMove`. A key arrives as
-a bare character code from the engine's `puzzleKeyMap` (`engine/input/key-map.ts`),
-which the view reads.
-
 **Shift on a key is yours to read, and you need not strip it.** A key held
 with Shift arrives with `MOD_SHFT` set, a capital letter included. If the game
 declines it, the midend offers the same key again without Shift
@@ -272,14 +267,10 @@ button means:
   the press at once, the Bar offers no "Right click" toggle, and the midend
   hands the game a mouse's right button as the left, so a right click plays
   as a click. A game never folds the right button onto the left itself.
-  `input-parity.test.ts` asserts the biconditional: the flag is declared
-  exactly when no secondary gesture changes anything a player can perceive,
-  in the frame or the save, that the primary gesture would not, and a
-  declaring game does nothing with a right button handed to it directly. A
-  pencil press through `pressNoteTakingCell` counts as an action with no
-  `RIGHT_BUTTON` branch of the game's own. The flag is not upstream's
-  `REQUIRE_RBUTTON` inverted: a game may use the right button without
-  needing it.
+  `input-parity.test.ts` holds the flag to exactly the games whose right
+  button does nothing a player can perceive that the left would not; a
+  pencil press through `pressNoteTakingCell` counts as an action. The flag
+  is not upstream's `REQUIRE_RBUTTON` inverted.
 - **A meaning the drag keeps: continue the drag on the button class.** Test
   `isMouseDrag` and `isMouseRelease`, not `LEFT_DRAG`, so a promoted press
   starts and finishes its own right-button drag. Exemplar:
@@ -290,11 +281,8 @@ button means:
   [`galaxies/index.ts`](../src/games/galaxies/index.ts).
 
 The tell of a stranded touch player is a drag lifecycle that matches
-`LEFT_DRAG` where `isMouseDrag` is meant.
-
-Before changing the detector's timings, read
-[`utils/touch.test.ts`](../src/utils/touch.test.ts), which asserts the window,
-the radius, the second finger's timer reset and `unhandledEvent`.
+`LEFT_DRAG` where `isMouseDrag` is meant. The detector's timings are pinned
+in [`utils/touch.test.ts`](../src/utils/touch.test.ts).
 
 ## The board keeps the keyboard after a control
 
@@ -355,21 +343,11 @@ and "Only the Menu scrolls".
 ## Targets and verbs
 
 **If the game is "aim at a target, and each button does something there",
-declare it and write no press handling.** Set `Game.targetVerbs` and end
-`interpretMove` with `interpretTargetVerbs(targetVerbs, …)`
-([`engine/input/target-verb.ts`](../src/engine/input/target-verb.ts)). The declaration is
-a geometry and a verb for each button; a verb is a `does` phrase for the help
-and an `apply(state, target, ui)` that returns the game's own `Move`, `null`,
-or `UI_UPDATE` for a verb that only changes what is shown. Exemplars: the
-skeleton's `index.ts`; [`lightup/index.ts`](../src/games/lightup/index.ts)
-(verbs only); [`unruly/index.ts`](../src/games/unruly/index.ts) (verbs, a
-digit arm and an erase key).
-
-The model owns, and a game does not write: a press parks the cursor, hidden,
-on the target it hit; the first Enter or Space on a hidden cursor only shows
-it; Enter applies `primary`, Space applies `secondary` (or `primary` again
-where there is none), and a verb's own `keys` apply it; a press on no target,
-or a button with no verb, is `null`.
+declare it and write no press handling.** The declaration's types are in
+[`engine/input/target-verb.ts`](../src/engine/input/target-verb.ts), and the
+skeleton's `index.ts` declares one; [`unruly/index.ts`](../src/games/unruly/index.ts)
+adds a digit arm and an erase key. The model owns the cursor's parking and
+reveal, and Enter and Space; a game writes none of it.
 
 What a game decides:
 
@@ -405,16 +383,11 @@ What a game decides:
   seeded from entropy) runs the walk out of budget. State that is neither
   the player's position nor read by replay belongs outside the `Ui`.
 
-[`target-verb.test.ts`](../src/engine/input/target-verb.test.ts) plays every
-declaring game: at every cursor position on a target, Enter leaves the board a
-left-click leaves at that target's `pointAt`, Space that of its button, each
-verb key that of its button. An arm that handles Enter differently from the
-click fails there, and so does one that acts on the square beside the cursor.
-
-The model is not for a drag game's drag, nor for a keyboard that walks
-something other than the targets. Measure such a game with `boardsReached`
-(`testing/input-probe.ts`), naming where a press addresses what its cursor
-rests on, before bending the model to it.
+[`target-verb.test.ts`](../src/engine/input/target-verb.test.ts) holds every
+declaring game's keys to its clicks at each target, so an arm that handles
+Enter differently from the click fails there. The model is not for a drag
+game's drag, nor for a keyboard that walks something other than the targets;
+the parts below say what such a game declares.
 
 ### A key-only verb and its pointer route
 
