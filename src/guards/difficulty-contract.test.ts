@@ -32,9 +32,9 @@ import {
 import type { Game } from "../engine/contract/game.ts";
 import { presetMenu } from "../engine/game-id/param-label.ts";
 import { paramsError } from "../engine/game-id/params.ts";
-import { Midend } from "../engine/midend.ts";
+import { Midend } from "../engine/midend/midend.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { randomNew } from "../engine/random/index.ts";
-import { getTsGame } from "../engine/registry.ts";
 import * as answerSearch from "../engine/solve/answer-search.ts";
 import { dealRare, dealsPromptly, dealt } from "../engine/testing/dealt.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";

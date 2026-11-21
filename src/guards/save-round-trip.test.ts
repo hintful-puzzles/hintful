@@ -29,10 +29,10 @@ import {
   MARK_ALL_BUTTON,
   RIGHT_BUTTON,
 } from "../engine/input/pointer.ts";
-import { Midend } from "../engine/midend.ts";
+import { Midend } from "../engine/midend/midend.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
+import { encodeSave } from "../engine/midend/save.ts";
 import { randomNew } from "../engine/random/index.ts";
-import { getTsGame } from "../engine/registry.ts";
-import { encodeSave } from "../engine/save.ts";
 import { observeMidend } from "../engine/testing/drive-midend.ts";
 import {
   REGISTERED_GAME_COUNT,

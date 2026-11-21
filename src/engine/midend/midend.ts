@@ -12,11 +12,10 @@
  * never need to erase generics (no `any`).
  */
 
-import { paletteSchemeOf, resolvePalette } from "./color/color-mkhighlight.ts";
-import { darkValue } from "./color/color-token.ts";
-import { HINT_INK } from "./color/palette.ts";
-import { completionStatus } from "./completion-status.ts";
-import { DESC_MALFORMED, loadDesc } from "./contract/desc-error.ts";
+import { paletteSchemeOf, resolvePalette } from "../color/color-mkhighlight.ts";
+import { darkValue } from "../color/color-token.ts";
+import { HINT_INK } from "../color/palette.ts";
+import { DESC_MALFORMED, loadDesc } from "../contract/desc-error.ts";
 import {
   cappedSolveFor,
   dealGaveUp,
@@ -26,7 +25,7 @@ import {
   tierNameOf,
   tierOf,
   withTier,
-} from "./contract/difficulty.ts";
+} from "../contract/difficulty.ts";
 import {
   type ActiveHint,
   type Game,
@@ -36,7 +35,7 @@ import {
   hasHint,
   UI_UPDATE,
   type UiUpdate,
-} from "./contract/game.ts";
+} from "../contract/game.ts";
 import {
   ALREADY_SOLVED,
   DEDUCTION_EXHAUSTED,
@@ -48,9 +47,9 @@ import {
   NO_MOVE_WORTH_MAKING,
   SEARCH_OUT_OF_REACH,
   type WayForward,
-} from "./contract/hint-refusal.ts";
-import { type MarkRole, markKeys } from "./contract/hint-words.ts";
-import { NO_SOLUTION_FROM_HERE } from "./contract/solve-failure.ts";
+} from "../contract/hint-refusal.ts";
+import { type MarkRole, markKeys } from "../contract/hint-words.ts";
+import { NO_SOLUTION_FROM_HERE } from "../contract/solve-failure.ts";
 import type {
   ChangeNotification,
   CheckVerdict,
@@ -69,10 +68,9 @@ import type {
   ReferenceModel,
   Size,
   TimerReadout,
-} from "./contract/types.ts";
-import { freshSeed, generate } from "./deal.ts";
-import { paramsError, UnreadableParams } from "./game-id/params.ts";
-import { pencilModeKey, takesNotes } from "./input/key-labels.ts";
+} from "../contract/types.ts";
+import { paramsError, UnreadableParams } from "../game-id/params.ts";
+import { pencilModeKey, takesNotes } from "../input/key-labels.ts";
 import {
   cancelDrags,
   isMarkAllLetter,
@@ -88,18 +86,20 @@ import {
   RIGHT_RELEASE,
   stripModifiers,
   withoutShift,
-} from "./input/pointer.ts";
+} from "../input/pointer.ts";
 import {
   endSweep,
   hintGesture,
   sweepContinues,
   sweepPending,
-} from "./input/target-verb.ts";
+} from "../input/target-verb.ts";
+import { type RandomState, randomNew } from "../random/index.ts";
+import { completionStatus } from "./completion-status.ts";
+import { freshSeed, generate } from "./deal.ts";
 import { MoveAnimation } from "./midend-animation.ts";
 import { ChosenParams, largestTile } from "./midend-params.ts";
 import { Preferences } from "./midend-prefs.ts";
 import { Restart, type RunRecord, readSave, writeSave } from "./midend-save.ts";
-import { type RandomState, randomNew } from "./random/index.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
 import { sameShown, sameValue } from "./same-value.ts";
 import { copyUi, restoreUi } from "./ui-snapshot.ts";

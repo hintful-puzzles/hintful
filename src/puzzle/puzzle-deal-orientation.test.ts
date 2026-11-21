@@ -8,8 +8,8 @@ import type {
   ChangeNotification,
   PuzzleStaticAttributes,
 } from "../engine/contract/types.ts";
-import type { EngineCore } from "../engine/midend.ts";
-import { createTsEngine } from "../engine/registry.ts";
+import type { EngineCore } from "../engine/midend/midend.ts";
+import { createTsEngine } from "../engine/midend/registry.ts";
 import { Puzzle } from "./puzzle.ts";
 import type { RemoteWorkerPuzzle } from "./worker.ts";
 import { TsWorkerPuzzle } from "./worker-adapter.ts";

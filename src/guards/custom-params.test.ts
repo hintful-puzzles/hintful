@@ -7,7 +7,7 @@ import {
 } from "../engine/contract/game.ts";
 import { SOLUTION_UNKNOWN } from "../engine/contract/solve-failure.ts";
 import { presetMenu } from "../engine/game-id/param-label.ts";
-import { Midend } from "../engine/midend.ts";
+import { Midend } from "../engine/midend/midend.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,

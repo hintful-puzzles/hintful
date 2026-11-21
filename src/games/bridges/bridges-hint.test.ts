@@ -10,9 +10,9 @@
  * through the real `executeMove`.
  */
 import { describe, expect, it } from "vitest";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
+import { decodeSave, encodeSave } from "../../engine/midend/save.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { observeMidend } from "../../engine/testing/drive-midend.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";

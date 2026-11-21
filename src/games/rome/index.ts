@@ -79,7 +79,7 @@ import {
   releaseHighlightAfterEntry,
   tapNoteTakingCell,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { NAMES } from "../../generated/games/rome/rome.compiled.ts";
 import { newRomeDesc } from "./generator.ts";
 import {

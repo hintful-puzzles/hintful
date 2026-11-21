@@ -20,6 +20,7 @@ import type { Point } from "../../engine/contract/types.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/input/pointer.ts";
+import { decodeSave, encodeSave } from "../../engine/midend/save.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   type Flash,
@@ -27,7 +28,6 @@ import {
   ownFlash,
   sweepStep,
 } from "../../engine/render/win-wave.ts";
-import { decodeSave, encodeSave } from "../../engine/save.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";

@@ -171,7 +171,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/midend.ts",
+    module: "src/engine/midend/midend.ts",
     cases: [
       {
         // Moved here from `candidate-hint.ts` by `own-the-hint-refusals`, with
@@ -296,8 +296,8 @@ export const MODULES = [
   {
     // The midend's collaborators are reached through `Midend`, so the
     // midend's own tests are theirs.
-    module: "src/engine/midend-params.ts",
-    testedVia: "src/engine/midend.ts",
+    module: "src/engine/midend/midend-params.ts",
+    testedVia: "src/engine/midend/midend.ts",
     cases: [
       {
         within: "ChosenParams.set",
@@ -310,8 +310,8 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/midend-save.ts",
-    testedVia: "src/engine/midend.ts",
+    module: "src/engine/midend/midend-save.ts",
+    testedVia: "src/engine/midend/midend.ts",
     cases: [
       {
         within: "readSave",
@@ -347,7 +347,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/save.ts",
+    module: "src/engine/midend/save.ts",
     cases: [
       {
         within: "isSaveEnvelope",

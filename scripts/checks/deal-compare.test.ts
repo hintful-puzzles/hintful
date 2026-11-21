@@ -37,8 +37,8 @@ import "../../src/games/index.ts";
 import { difficultyTiers } from "../../src/engine/contract/difficulty.ts";
 import type { Game } from "../../src/engine/contract/game.ts";
 import { paramsError } from "../../src/engine/game-id/params.ts";
+import { getTsGame } from "../../src/engine/midend/registry.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
-import { getTsGame } from "../../src/engine/registry.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.
@@ -87,7 +87,7 @@ async function baseTree(
       });
   }
   await import(`${root}/src/games/index.ts`);
-  const registry = (await import(`${root}/src/engine/registry.ts`)) as {
+  const registry = (await import(`${root}/src/engine/midend/registry.ts`)) as {
     getTsGame: typeof getTsGame;
   };
   const random = (await import(`${root}/src/engine/random/index.ts`)) as {

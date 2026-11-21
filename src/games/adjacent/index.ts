@@ -90,7 +90,7 @@ import {
   stickyPencilPref,
 } from "../../engine/hint/pencil-prefs.ts";
 import { statedParts } from "../../engine/hint/stated.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import type { Said } from "../../engine/solve/ladder-runtime.ts";
 import type { LatinSolver } from "../../engine/solve/latin.ts";
 import * as adjacent from "../../generated/games/adjacent/adjacent.compiled.ts";

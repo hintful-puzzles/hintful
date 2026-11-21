@@ -22,7 +22,7 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { statedSentence } from "../../engine/hint/stated.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { PAIR_NAMES } from "../../engine/render/piece.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

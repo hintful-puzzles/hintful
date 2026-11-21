@@ -25,8 +25,8 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { decodeSave } from "../../engine/midend/save.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
-import { decodeSave } from "../../engine/save.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { untangleGame } from "./index.ts";
 import {

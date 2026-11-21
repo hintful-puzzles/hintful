@@ -11,7 +11,7 @@
  * cannot be reached, so either is an error as the games load.
  */
 
-import { hasTsGame } from "../engine/registry.ts";
+import { hasTsGame } from "../engine/midend/registry.ts";
 
 const directoryOf = (path: string) => path.split("/")[1] ?? path;
 

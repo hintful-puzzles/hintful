@@ -4,7 +4,7 @@
  * with an absent section is a draft.
  */
 import { describe, expect, it } from "vitest";
-import { getTsGame } from "../registry.ts";
+import { getTsGame } from "../midend/registry.ts";
 import { REGISTERED_GAMES } from "../testing/enrollment.ts";
 import { DRAFT_HINT, hasHint } from "./game.ts";
 import { draftSections, notApplicableFeatures, sectionState } from "./sections.ts";

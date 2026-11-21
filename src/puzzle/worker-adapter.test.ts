@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { EngineCore } from "../engine/midend.ts";
+import type { EngineCore } from "../engine/midend/midend.ts";
 import { TsWorkerPuzzle } from "./worker-adapter.ts";
 
 describe("TsWorkerPuzzle — the first palette install must repaint", () => {

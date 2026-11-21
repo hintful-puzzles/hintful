@@ -27,7 +27,7 @@
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { it } from "vitest";
-import { getTsGame } from "../../src/engine/registry.ts";
+import { getTsGame } from "../../src/engine/midend/registry.ts";
 import { puzzleIds } from "../../src/puzzle/catalog.ts";
 import { colorToOKLCH, isGrayChroma, type OKLCH } from "../../src/utils/color.ts";
 import "../../src/games/index.ts";

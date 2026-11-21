@@ -23,7 +23,7 @@ import {
   MOD_NUM_KEYPAD,
   numpadDirection,
 } from "../../engine/input/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { newDesc } from "./generator.ts";
 import { Direction } from "./grid.ts";

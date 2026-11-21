@@ -32,7 +32,7 @@ describe("completionStatus", () => {
   });
 });
 
-const gameSources = import.meta.glob<string>("../games/**/*.ts", {
+const gameSources = import.meta.glob<string>("../../games/**/*.ts", {
   query: "?raw",
   import: "default",
   eager: true,

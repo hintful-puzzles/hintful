@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { MarkRef } from "../engine/contract/hint-words.ts";
-import { LOOK_HERE } from "../engine/midend.ts";
+import { LOOK_HERE } from "../engine/midend/midend.ts";
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { type WalkBoard, walkHints } from "../engine/testing/hint-walk.ts";
 import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";

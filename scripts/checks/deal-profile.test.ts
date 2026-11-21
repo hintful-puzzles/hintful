@@ -33,8 +33,8 @@ import { compiledPath } from "../../src/describe/sources.ts";
 import "../../src/games/index.ts";
 import { type Game, hasHint } from "../../src/engine/contract/game.ts";
 import { paramsError } from "../../src/engine/game-id/params.ts";
+import { getTsGame } from "../../src/engine/midend/registry.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
-import { getTsGame } from "../../src/engine/registry.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a deliberately game-agnostic probe.

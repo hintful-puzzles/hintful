@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { cubeGame } from "../../games/cube/index.ts";
 import { CURSOR_RIGHT } from "../input/pointer.ts";
-import { Midend } from "../midend.ts";
+import { Midend } from "../midend/midend.ts";
 import { driveMidend, type Notification, observeMidend } from "./drive-midend.ts";
 
 describe("driveMidend", () => {

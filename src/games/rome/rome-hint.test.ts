@@ -17,7 +17,7 @@ import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
 import type { CandidatePlanPrefs } from "../../engine/hint/candidate-hint.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { markSides, ringsOf } from "../../engine/testing/mark-shape.ts";

@@ -50,7 +50,7 @@ import {
   startDrag,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { newBridgesDesc } from "./generator.ts";
 import {
   BRIDGES_RUNGS,

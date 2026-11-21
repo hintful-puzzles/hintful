@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { loadVerdict, validateDesc } from "../engine/contract/desc-error.ts";
-import { Midend } from "../engine/midend.ts";
+import { Midend } from "../engine/midend/midend.ts";
 import { randomNew } from "../engine/random/index.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { descAlphabet, descMutants } from "../engine/testing/desc-mutants.ts";

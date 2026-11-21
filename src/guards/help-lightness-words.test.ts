@@ -24,7 +24,7 @@ import { mkhighlightBackground } from "../engine/color/color-mkhighlight.ts";
 import { darkValue } from "../engine/color/color-token.ts";
 import { FLASH, FLASH_LEAD, SHADED } from "../engine/color/palette.ts";
 import type { Color } from "../engine/contract/types.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { colorToOKLCH } from "../engine/testing/oklch.ts";
 import { puzzleIds } from "../puzzle/catalog.ts";
 

@@ -19,8 +19,7 @@ import {
 } from "../engine/contract/desc-error.ts";
 import { DRAFT_HINT } from "../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../engine/contract/hint-refusal.ts";
-import { fakeGame } from "../engine/fake-game.ts";
-import { _unregisterGame, registerGame } from "../engine/registry.ts";
+import { _unregisterGame, registerGame } from "../engine/midend/registry.ts";
 import { hintFinishes, nothingToDeduce } from "../engine/solve/hint-finishes.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
@@ -28,6 +27,7 @@ import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,
 } from "../engine/testing/enrollment.ts";
+import { fakeGame } from "../engine/testing/fake-game.ts";
 import { gatePresets } from "../engine/testing/hint-games.ts";
 import { expectLedger } from "../engine/testing/ledger.ts";
 import { parsed, resolveSpecifier, usesOf } from "../engine/testing/syntax.ts";
@@ -176,7 +176,7 @@ describe("an untiered game's answer to whether deduction finishes a board", () =
     expect(Object.keys(modules).length).toBeGreaterThanOrEqual(50);
     // The fake game is a game, not a helper one calls.
     expect(returning).toEqual(
-      [...Object.keys(RELAYS), "src/engine/fake-game.ts"].sort(),
+      [...Object.keys(RELAYS), "src/engine/testing/fake-game.ts"].sort(),
     );
   });
 });

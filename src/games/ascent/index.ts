@@ -32,7 +32,7 @@ import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import { clearKey, numberKeys } from "../../engine/input/key-labels.ts";
 import { LEFT_BUTTON, LEFT_RELEASE } from "../../engine/input/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { newAscentDesc } from "./generator.ts";
 import {
   ASCENT_RUNGS,

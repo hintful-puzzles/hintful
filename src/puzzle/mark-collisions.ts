@@ -20,8 +20,8 @@
  */
 
 import { hasHint } from "../engine/contract/game.ts";
-import { Midend } from "../engine/midend.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { Midend } from "../engine/midend/midend.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { dealtBoards } from "../engine/testing/presets.ts";
 import { type DrawOp, RecordingDrawing } from "../engine/testing/recording-drawing.ts";

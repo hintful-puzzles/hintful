@@ -19,7 +19,7 @@ import {
   CURSOR_SELECT,
   LEFT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { executeMove, floodGame } from "./index.ts";
 import { completed, solveMoves } from "./solver.ts";

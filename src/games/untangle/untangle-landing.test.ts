@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { LEFT_BUTTON, LEFT_DRAG, LEFT_RELEASE } from "../../engine/input/pointer.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { untangleGame } from "./index.ts";

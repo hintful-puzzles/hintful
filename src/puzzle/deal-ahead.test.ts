@@ -10,9 +10,9 @@ import type {
   DealtBoard,
   PuzzleStaticAttributes,
 } from "../engine/contract/types.ts";
-import { dealBoard } from "../engine/deal.ts";
-import type { EngineCore } from "../engine/midend.ts";
-import { createTsEngine, getTsGame } from "../engine/registry.ts";
+import { dealBoard } from "../engine/midend/deal.ts";
+import type { EngineCore } from "../engine/midend/midend.ts";
+import { createTsEngine, getTsGame } from "../engine/midend/registry.ts";
 import { KeptBoards } from "../store/kept-boards.ts";
 import {
   DealAhead,

@@ -33,7 +33,7 @@ import {
   LINE,
   lineDrawing,
 } from "../../engine/mechanics/line-drawing.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { newDesc } from "./generator.ts";
 import {
   PEARL_RUNGS,

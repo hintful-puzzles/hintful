@@ -13,7 +13,7 @@ import { describe, expect, it } from "vitest";
 import { difficultyItem, tierNames } from "../contract/difficulty.ts";
 import type { Game, ParamConfigItem } from "../contract/game.ts";
 import type { ConfigDescription, ConfigItem, ConfigValues } from "../contract/types.ts";
-import { Midend } from "../midend.ts";
+import { Midend } from "../midend/midend.ts";
 import { REGISTERED_GAMES } from "../testing/enrollment.ts";
 import { leafPresets } from "../testing/presets.ts";
 import { offeredOf, offeredValues } from "./config-narrowing.ts";

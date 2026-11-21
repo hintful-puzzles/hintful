@@ -10,7 +10,7 @@
 import { paletteSchemeOf, resolvePalette } from "../engine/color/color-mkhighlight.ts";
 import { darkValue } from "../engine/color/color-token.ts";
 import type { Color, PaletteScheme } from "../engine/contract/types.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { colorToOKLCH, oklchToColor } from "../utils/color.ts";
 import { darkModePalette } from "./dark-palette.ts";
 

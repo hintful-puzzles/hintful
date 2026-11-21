@@ -17,7 +17,7 @@
 
 import type { Game, HintStep } from "../contract/game.ts";
 import type { Color, Point, Size } from "../contract/types.ts";
-import { Midend } from "../midend.ts";
+import { Midend } from "../midend/midend.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 
 /** A neutral light-gray default background, standing in for the

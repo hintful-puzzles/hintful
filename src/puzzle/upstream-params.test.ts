@@ -12,7 +12,7 @@
 
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { expectLedger } from "../engine/testing/ledger.ts";
 import { puzzleDataMap as catalog } from "./catalog.ts";
 

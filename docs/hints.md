@@ -852,7 +852,7 @@ Implement these on `Game`, whose doc on each hook in
 [`engine/contract/game.ts`](../src/engine/contract/game.ts) says what it is handed and returns.
 The contract and the `Midend` lifecycle are the
 [`engine-hints`](../openspec/specs/engine-hints/spec.md) spec, and the
-implementation is [`src/engine/midend.ts`](../src/engine/midend.ts). Exemplar:
+implementation is [`src/engine/midend/midend.ts`](../src/engine/midend/midend.ts). Exemplar:
 `src/skeleton/grid/index.ts` and `hint.ts`.
 
 A game's hint is one object, `Game.hint` (`GameHint` in

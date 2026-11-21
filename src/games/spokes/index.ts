@@ -49,7 +49,7 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { type SpokesHint, spokesHint, spokesJudgeMove } from "./hint.ts";

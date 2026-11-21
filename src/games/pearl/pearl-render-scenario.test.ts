@@ -16,7 +16,7 @@ import {
 } from "../../engine/color/roles.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { EDGE } from "../../engine/mechanics/edge-hint.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import type { Flash } from "../../engine/render/win-wave.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";

@@ -62,8 +62,8 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { registerGame } from "../../engine/registry.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import { newUndeadDesc } from "./generator.ts";
 import {

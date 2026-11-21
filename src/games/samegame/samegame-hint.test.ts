@@ -14,7 +14,7 @@ import { isDeadEnd } from "../../engine/contract/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { NO_SOLUTION_FROM_HERE } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
   bindingDefects,

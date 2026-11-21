@@ -15,7 +15,7 @@ import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { statedSentence } from "../../engine/hint/stated.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

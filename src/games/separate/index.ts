@@ -28,7 +28,7 @@ import {
   type BorderHint,
   borderStepEdge,
 } from "../../engine/mechanics/border-grid-hint.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import {
   searchTierContract,
   solveFromAnswer,

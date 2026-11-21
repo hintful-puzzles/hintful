@@ -15,8 +15,8 @@
 
 import { hasHint } from "../engine/contract/game.ts";
 import type { Color, Size } from "../engine/contract/types.ts";
-import { Midend } from "../engine/midend.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { Midend } from "../engine/midend/midend.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import {
   type NeighborKind,
   paintedNeighbors,

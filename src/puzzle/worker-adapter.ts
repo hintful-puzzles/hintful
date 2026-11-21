@@ -35,7 +35,7 @@ import type {
   ReferenceModel,
   Size,
 } from "../engine/contract/types.ts";
-import type { EngineCore } from "../engine/midend.ts";
+import type { EngineCore } from "../engine/midend/midend.ts";
 import { Drawing } from "./drawing.ts";
 import type { HintReferenceMarks, PuzzleEngineSurface } from "./engine-surface.ts";
 import {

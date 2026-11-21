@@ -14,7 +14,7 @@ import { DESC_NO_SOLUTION } from "../../engine/contract/desc-error.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { isDeadEnd } from "../../engine/contract/hint-refusal.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import {
   bindingDefects,
   deadEndBindingDefects,

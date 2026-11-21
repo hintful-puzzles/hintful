@@ -1,5 +1,5 @@
-import type { Game } from "./contract/game.ts";
-import type { ConfigDescription, ConfigValues } from "./contract/types.ts";
+import type { Game } from "../contract/game.ts";
+import type { ConfigDescription, ConfigValues } from "../contract/types.ts";
 import { asChecked } from "./midend-params.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
 

@@ -24,7 +24,7 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { newNorinoriDesc } from "./generator.ts";
 import { type NorinoriHint, norinoriHint, norinoriRulesOut } from "./hint.ts";
 import {

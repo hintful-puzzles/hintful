@@ -49,7 +49,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { NOT_STARTED } from "../engine/contract/solve-failure.ts";
-import { Midend } from "../engine/midend.ts";
+import { Midend } from "../engine/midend/midend.ts";
 import { beginDealt } from "../engine/testing/dealt.ts";
 import {
   capabilitySets,

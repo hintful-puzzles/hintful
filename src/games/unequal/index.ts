@@ -89,7 +89,7 @@ import {
   stickyPencilPref,
 } from "../../engine/hint/pencil-prefs.ts";
 import { statedParts } from "../../engine/hint/stated.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import type {
   Firing as LadderFiring,
   Said,

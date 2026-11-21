@@ -24,7 +24,7 @@ import {
   type TargetGeometry,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { answerCount, newDesc } from "./answer.ts";
 import { BLACKBOX_RUNGS, type BlackboxRung, hint, hintKeepTrack } from "./hint.ts";

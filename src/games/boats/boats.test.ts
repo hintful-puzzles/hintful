@@ -35,7 +35,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

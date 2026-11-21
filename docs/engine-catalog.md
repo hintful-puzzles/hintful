@@ -711,7 +711,7 @@ grading: [`solver-and-generator.md`](./solver-and-generator.md).
   ([`solver-and-generator.md`](./solver-and-generator.md) § "A Custom size is
   not refused for its wait").
 - A game never calls `dealGaveUp`, nor `generate` and `dealBoard` in
-  [`deal.ts`](../src/engine/deal.ts): they are the midend's and the deal
+  [`deal.ts`](../src/engine/midend/deal.ts): they are the midend's and the deal
   worker's.
 
 ### `hint-finishes.ts` — whether deduction finishes a board

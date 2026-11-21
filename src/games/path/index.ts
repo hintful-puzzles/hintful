@@ -18,7 +18,7 @@ import {
   edgeMistakes,
   lineDrawing,
 } from "../../engine/mechanics/line-drawing.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newPathDesc } from "./generator.ts";
 import { type PathHighlights, pathHint, pathJudgeMove, pathKeepTrack } from "./hint.ts";

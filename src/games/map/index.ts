@@ -67,7 +67,7 @@ import {
   releaseHighlightAfterEntry,
   tapNoteTakingCell,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { newMapDesc } from "./generator.ts";
 import {
   hintKeepTrack,

@@ -13,8 +13,8 @@
  * Dev/test-only; never imported by production code.
  */
 import "../../games/index.ts";
-import { Midend } from "../midend.ts";
-import { getTsGame, registeredGameIds } from "../registry.ts";
+import { Midend } from "../midend/midend.ts";
+import { getTsGame, registeredGameIds } from "../midend/registry.ts";
 
 export type GameIdResult = { ok: true; id: string } | { ok: false; error: string };
 

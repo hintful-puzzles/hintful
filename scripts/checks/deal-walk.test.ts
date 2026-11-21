@@ -42,10 +42,10 @@ import {
 } from "../../src/engine/contract/difficulty.ts";
 import type { Game, ParamConfigItem } from "../../src/engine/contract/game.ts";
 import { RetryLimitExceeded } from "../../src/engine/contract/retry-limit.ts";
-import { generate } from "../../src/engine/deal.ts";
 import { paramsError } from "../../src/engine/game-id/params.ts";
+import { generate } from "../../src/engine/midend/deal.ts";
+import { getTsGame } from "../../src/engine/midend/registry.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
-import { getTsGame } from "../../src/engine/registry.ts";
 import { REGISTERED_IDS } from "../../src/engine/testing/enrollment.ts";
 import { leafPresets } from "../../src/engine/testing/presets.ts";
 import type { DealWalkCell, DealWalkState } from "../deal-walk-report.ts";

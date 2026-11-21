@@ -39,7 +39,7 @@ import {
   MOD_SHFT,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";

@@ -408,7 +408,7 @@ function verify(): void {
     "a Pearl-only push selects hint-resume through the registry",
   );
 
-  const midend = push(["src/engine/midend.ts"]);
+  const midend = push(["src/engine/midend/midend.ts"]);
   expect(
     midend.whole.includes("src/guards/hint-resume.test.ts"),
     "the midend is read by every guard itself, so hint-resume runs whole",
@@ -478,7 +478,7 @@ function verify(): void {
     ),
     "the push that carries a game.ts commit runs hint-quality whole",
   );
-  const ownMidend = commit(["src/engine/midend.ts"]);
+  const ownMidend = commit(["src/engine/midend/midend.ts"]);
   expect(
     ownMidend.scope.length === 0 &&
       ownMidend.narrow.includes("src/guards/hint-resume.test.ts") &&
@@ -486,10 +486,12 @@ function verify(): void {
     "a commit to the midend runs hint-resume with no game's cases, and no game's own tests",
   );
   expect(
-    owed(["src/engine/midend.ts"]).includes("whole src/guards/hint-resume.test.ts"),
+    owed(["src/engine/midend/midend.ts"]).includes(
+      "whole src/guards/hint-resume.test.ts",
+    ),
     "the push that carries a midend commit runs hint-resume whole",
   );
-  const both = commit(["src/engine/midend.ts", "src/games/pearl/hint.ts"]);
+  const both = commit(["src/engine/midend/midend.ts", "src/games/pearl/hint.ts"]);
   expect(
     both.scope.join() === "pearl" &&
       both.lines.some((l) => l.includes(" src/games/pearl/")) &&
@@ -505,7 +507,7 @@ function verify(): void {
   const config = commit(["vitest.config.ts"]);
   expect(
     config.scope.length === 0 &&
-      config.narrow.includes("src/engine/midend.test.ts") &&
+      config.narrow.includes("src/engine/midend/midend.test.ts") &&
       !config.lines.some((l) => l.includes(" src/games/pearl/")),
     "a commit to a path with an unknown blast radius runs every file outside the games",
   );

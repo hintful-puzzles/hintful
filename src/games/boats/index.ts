@@ -73,7 +73,7 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import {
   SAYS_KINDS,
   type SaysById,

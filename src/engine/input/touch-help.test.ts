@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import "../../games/index.ts";
-import { getTsGame } from "../registry.ts";
+import { getTsGame } from "../midend/registry.ts";
 import { touchHelp } from "./touch-help.ts";
 
 function sentence(id: string): string {

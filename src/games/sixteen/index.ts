@@ -36,7 +36,7 @@ import {
   RIGHT_BUTTON,
   showCursor,
 } from "../../engine/input/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import * as sixteen from "../../generated/games/sixteen/sixteen.compiled.ts";

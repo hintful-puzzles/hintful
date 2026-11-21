@@ -24,7 +24,7 @@ import {
   squareGrid,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { hint, hintKeepTrack, TWIDDLE_RUNGS, type TwiddleRung } from "./hint.ts";
 import {

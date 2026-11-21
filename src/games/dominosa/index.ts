@@ -38,7 +38,7 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newDominosaDesc } from "./generator.ts";
 import {

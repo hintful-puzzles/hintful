@@ -175,7 +175,7 @@ describe("module layering", () => {
     for (const [path, text] of modules) {
       if (!gameOf(path)) continue;
       for (const { spec } of imports(text, path)) {
-        if (resolve(path, spec) === "src/engine/midend.ts") {
+        if (resolve(path, spec) === "src/engine/midend/midend.ts") {
           offenders.push(`${path} → ${spec}`);
         }
       }

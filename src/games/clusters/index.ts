@@ -44,7 +44,7 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { type Answer, solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newClustersDesc } from "./generator.ts";
 import { type ClustersHint, clustersHint } from "./hint.ts";

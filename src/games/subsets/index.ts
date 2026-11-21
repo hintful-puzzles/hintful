@@ -69,7 +69,7 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import { newSubsetsDesc } from "./generator.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";

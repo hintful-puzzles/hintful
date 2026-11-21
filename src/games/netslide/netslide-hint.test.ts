@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { D, dirCount, L, R, U } from "../../engine/board/square-edges.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { ALREADY_SOLVED } from "../../engine/contract/hint-refusal.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

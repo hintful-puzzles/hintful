@@ -42,7 +42,7 @@ export {
   doneCluesMarkdown,
 } from "./engine/input/target-verb.ts";
 export { TOUCH_PLACEHOLDER, touchHelp } from "./engine/input/touch-help.ts";
-export { getTsGame, registeredGameIds } from "./engine/registry.ts";
+export { getTsGame, registeredGameIds } from "./engine/midend/registry.ts";
+export { RULES_OUT_PLACEHOLDER, rulesOutHelp } from "./engine/midend/rules-out.ts";
 export { expandPair } from "./engine/render/piece.ts";
-export { RULES_OUT_PLACEHOLDER, rulesOutHelp } from "./engine/rules-out.ts";
 export { WING_PLACEHOLDER, wingHelp } from "./engine/solve/wing.ts";

@@ -6,7 +6,7 @@
 import drafts from "virtual:draft-puzzles";
 import { describe, expect, it } from "vitest";
 import { draftSections } from "../engine/contract/sections.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import {
   REGISTERED_GAME_COUNT,
   REGISTERED_GAMES,

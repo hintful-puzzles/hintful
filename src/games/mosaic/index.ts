@@ -16,7 +16,7 @@ import {
   squareGrid,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/render/piece.ts";
 import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";

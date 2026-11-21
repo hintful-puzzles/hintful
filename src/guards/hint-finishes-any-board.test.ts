@@ -18,7 +18,7 @@
 import { describe, expect, it } from "vitest";
 import { permitsSearch } from "../engine/contract/difficulty.ts";
 import { ALREADY_SOLVED } from "../engine/contract/hint-refusal.ts";
-import { Midend } from "../engine/midend.ts";
+import { Midend } from "../engine/midend/midend.ts";
 import { randomNew } from "../engine/random/index.ts";
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";
 import {

@@ -7,7 +7,7 @@
  * caps solve, which is impossible to arrange with a real generator.
  */
 import { describe, expect, it } from "vitest";
-import { type FakeParams, fakeGame } from "../fake-game.ts";
+import { type FakeParams, fakeGame } from "../testing/fake-game.ts";
 import {
   type CappedSolve,
   cappedSolveFor,

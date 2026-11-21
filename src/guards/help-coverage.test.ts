@@ -56,9 +56,9 @@ import {
   DONE_CLUES_PLACEHOLDER,
 } from "../engine/input/target-verb.ts";
 import { TOUCH_PLACEHOLDER } from "../engine/input/touch-help.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
+import { RULES_OUT_PLACEHOLDER } from "../engine/midend/rules-out.ts";
 import { expandPair, PAIR_NAMES } from "../engine/render/piece.ts";
-import { RULES_OUT_PLACEHOLDER } from "../engine/rules-out.ts";
 import { WING_PLACEHOLDER } from "../engine/solve/wing.ts";
 import {
   OPTIONAL_GAME_MEMBERS,

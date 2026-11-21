@@ -39,7 +39,7 @@ import {
   startDrag,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { DIFF_EASY, solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newDesc } from "./generator.ts";
 import {

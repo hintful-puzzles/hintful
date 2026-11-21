@@ -988,7 +988,7 @@ solver.
 given a label and no number.** Exhaustion throws `RetryLimitExceeded` and
 returns no fallback. The header says why every such loop needs a bound and
 why there are two: a deadline when the app deals (`generate` in
-[`engine/deal.ts`](../src/engine/deal.ts)), so a size with no board is
+[`engine/midend/deal.ts`](../src/engine/midend/deal.ts)), so a size with no board is
 answered after the same wait in every game, and a count of tries
 (`MAX_REGENERATE`) when a test or a census calls the generator directly.
 Exemplar: `newSkeletonDesc` in

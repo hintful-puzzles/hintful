@@ -53,7 +53,7 @@ import {
   type VerbKey,
   verbClicks,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { matching } from "../../engine/solve/latin.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsHint, tentsJudgeMove, tentsKeepTrack } from "./hint.ts";

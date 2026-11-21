@@ -14,8 +14,8 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { decodeSave } from "../../engine/midend/save.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { decodeSave } from "../../engine/save.ts";
 import { type AnyGame, probeBoard } from "../../engine/testing/input-probe.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";

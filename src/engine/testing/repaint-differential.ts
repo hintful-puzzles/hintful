@@ -47,7 +47,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../input/pointer.ts";
-import { Midend } from "../midend.ts";
+import { Midend } from "../midend/midend.ts";
 import { randomNew, randomUpto } from "../random/index.ts";
 import type { AnyGame } from "./input-probe.ts";
 import { type DrawOp, RecordingDrawing } from "./recording-drawing.ts";

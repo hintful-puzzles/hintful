@@ -48,7 +48,7 @@ import {
   newCursor,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import {
   searchTierContract,
   solveFromAnswer,

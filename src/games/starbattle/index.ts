@@ -1,4 +1,4 @@
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 /**
  * Star Battle: place stars in a square grid divided into regions, so that
  * every row, every column and every region holds the same number of them and

@@ -387,7 +387,7 @@ export const QUOTATIONS = {
   midend_serialise: [
     "openspec/specs/ts-engine/spec.md",
     "openspec/changes/derive-completion-from-the-position/specs/ts-engine/spec.md",
-    "src/engine/save.ts",
+    "src/engine/midend/save.ts",
   ],
   midend_deserialise: ["src/puzzle/puzzle.ts"],
   highlight_colour: ["src/games/twiddle/render.ts"],

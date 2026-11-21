@@ -22,7 +22,7 @@ import {
   CURSOR_SELECT,
   CURSOR_UP,
 } from "../../engine/input/pointer.ts";
-import { Midend } from "../../engine/midend.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { newTowersDesc } from "./generator.ts";

@@ -38,8 +38,8 @@ import {
   RetryLimitExceeded,
   underDealTries,
 } from "../contract/retry-limit.ts";
+import { getTsGame } from "../midend/registry.ts";
 import { type RandomState, randomNew } from "../random/index.ts";
-import { getTsGame } from "../registry.ts";
 
 /** A dealt board, as `newDesc` returns it. */
 type Board = { desc: string; aux?: string };

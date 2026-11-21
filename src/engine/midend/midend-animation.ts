@@ -1,5 +1,5 @@
-import { easeOut } from "./render/easing.ts";
-import { type Flash, NO_FLASH, ownFlash, WinWave } from "./render/win-wave.ts";
+import { easeOut } from "../render/easing.ts";
+import { type Flash, NO_FLASH, ownFlash, WinWave } from "../render/win-wave.ts";
 
 /** Wall-clock duration (seconds) of a hint-executed move's slow-motion
  * animation, whatever the game's own move-animation time. Keep it equal to

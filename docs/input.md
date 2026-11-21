@@ -800,7 +800,7 @@ claimed").
 
 **Write nothing for a cancel.** When the browser cancels a pointer, or Escape
 is pressed with a pointer down, `Midend.cancelPress` puts back the `Ui` it
-copied at the press ([`engine/ui-snapshot.ts`](../src/engine/ui-snapshot.ts))
+copied at the press ([`engine/midend/ui-snapshot.ts`](../src/engine/midend/ui-snapshot.ts))
 and the place in the history. Normative: `engine-input`, "A canceled press
 leaves the game as it was before the press". What it asks of a game:
 

@@ -34,10 +34,10 @@ import {
   RIGHT_RELEASE,
 } from "../input/pointer.ts";
 import { hintGesture, sweepOpen } from "../input/target-verb.ts";
-import { Midend } from "../midend.ts";
+import { Midend } from "../midend/midend.ts";
+import { copyUi, restoreUi } from "../midend/ui-snapshot.ts";
 import { type RandomState, randomNew, randomUpto } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
-import { copyUi, restoreUi } from "../ui-snapshot.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "./render-scenario.ts";
 import { sameState } from "./same-state.ts";

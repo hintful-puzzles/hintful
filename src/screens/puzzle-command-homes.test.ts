@@ -30,7 +30,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // none, and a disabled control still has the `data-command` this file reads.
 
 import { NOT_STARTED } from "../engine/contract/solve-failure.ts";
-import { createTsEngine } from "../engine/registry.ts";
+import { createTsEngine } from "../engine/midend/registry.ts";
 import "../games/index.ts";
 import {
   barCapacity,

@@ -8,10 +8,10 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { fakeGame } from "./fake-game.ts";
-import { LEFT_BUTTON } from "./input/pointer.ts";
+import { LEFT_BUTTON } from "../input/pointer.ts";
+import { driveMidend } from "../testing/drive-midend.ts";
+import { fakeGame } from "../testing/fake-game.ts";
 import { decodeSave, encodeSave } from "./save.ts";
-import { driveMidend } from "./testing/drive-midend.ts";
 
 function driven(target = 9) {
   const d = driveMidend(fakeGame);

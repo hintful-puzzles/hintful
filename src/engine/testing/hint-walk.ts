@@ -13,7 +13,7 @@
  */
 import type { HintStep } from "../contract/game.ts";
 import type { Size } from "../contract/types.ts";
-import { Midend } from "../midend.ts";
+import { Midend } from "../midend/midend.ts";
 import { beginDealt } from "./dealt.ts";
 import { type ObservedMidend, observeMidend } from "./drive-midend.ts";
 import { type AnyGame, gatePresets } from "./hint-games.ts";

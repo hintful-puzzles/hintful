@@ -1,32 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mkhighlightBackground } from "./color/color-mkhighlight.ts";
-import { darkValue, token } from "./color/color-token.ts";
-import { ColorWord } from "./color/color-word.ts";
-import { HINT_RING, HINT_STRIPES } from "./color/palette.ts";
-import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
-import { DESC_MALFORMED } from "./contract/desc-error.ts";
-import { dealGaveUp, difficultyItem } from "./contract/difficulty.ts";
-import type { Game, HintStep } from "./contract/game.ts";
-import { DRAFT_HINT, narratedStep, UI_UPDATE } from "./contract/game.ts";
+import { mkhighlightBackground } from "../color/color-mkhighlight.ts";
+import { darkValue, token } from "../color/color-token.ts";
+import { ColorWord } from "../color/color-word.ts";
+import { HINT_RING, HINT_STRIPES } from "../color/palette.ts";
+import { DESC_MALFORMED } from "../contract/desc-error.ts";
+import { dealGaveUp, difficultyItem } from "../contract/difficulty.ts";
+import type { Game, HintStep } from "../contract/game.ts";
+import { DRAFT_HINT, narratedStep, UI_UPDATE } from "../contract/game.ts";
 import {
   ALREADY_SOLVED,
   DEDUCTION_EXHAUSTED,
   FIX_MISTAKES_FIRST,
   GAME_OVER,
   NO_MOVE_WORTH_MAKING,
-} from "./contract/hint-refusal.ts";
-import { CELL, mark, phrase, stepMarks, unshaped } from "./contract/hint-words.ts";
-import { RetryLimitExceeded } from "./contract/retry-limit.ts";
-import { SOLUTION_UNKNOWN } from "./contract/solve-failure.ts";
-import type { ChangeNotification, Color, Point } from "./contract/types.ts";
-import {
-  type FakeDrawState,
-  type FakeMove,
-  type FakeState,
-  fakeGame,
-} from "./fake-game.ts";
-import { endParams } from "./game-id/params.ts";
-import { click, drag, key } from "./input/hint-gesture.ts";
+} from "../contract/hint-refusal.ts";
+import { CELL, mark, phrase, stepMarks, unshaped } from "../contract/hint-words.ts";
+import { RetryLimitExceeded } from "../contract/retry-limit.ts";
+import { SOLUTION_UNKNOWN } from "../contract/solve-failure.ts";
+import type { ChangeNotification, Color, Point } from "../contract/types.ts";
+import { endParams } from "../game-id/params.ts";
+import { click, drag, key } from "../input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -44,20 +37,27 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
   stripModifiers,
-} from "./input/pointer.ts";
+} from "../input/pointer.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
-} from "./input/target-verb.ts";
+} from "../input/target-verb.ts";
+import { easeOut } from "../render/easing.ts";
+import { WIN_FLASH_S, WIN_NONE } from "../render/win-wave.ts";
+import { driveMidend } from "../testing/drive-midend.ts";
+import {
+  type FakeDrawState,
+  type FakeMove,
+  type FakeState,
+  fakeGame,
+} from "../testing/fake-game.ts";
+import { RecordingDrawing } from "../testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
+import { AUTO_SOLVED, AUTO_SOLVER_USED, COMPLETED } from "./completion-status.ts";
 import { Midend } from "./midend.ts";
 import { SHOW_TIMER_PREF } from "./midend-prefs.ts";
-import { easeOut } from "./render/easing.ts";
-import { WIN_FLASH_S, WIN_NONE } from "./render/win-wave.ts";
 import { decodeSave, encodeSave } from "./save.ts";
-import { driveMidend } from "./testing/drive-midend.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
-import { DEFAULT_BACKGROUND } from "./testing/render-scenario.ts";
 
 function recordingDrawing() {
   const dr = new RecordingDrawing(fakeGame.colors(DEFAULT_BACKGROUND));

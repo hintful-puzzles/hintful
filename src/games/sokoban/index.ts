@@ -25,7 +25,7 @@ import {
   numpadDirection,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { newSokobanDesc } from "./generator.ts";
 import {

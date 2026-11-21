@@ -84,7 +84,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../../engine/mechanics/note-taking-cell.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { NAMES } from "../../generated/games/solo/solo.compiled.ts";
 import { newSoloDesc } from "./generator.ts";
 import { type RegionCells, regionName, SOLO_VOCAB, say } from "./hint.ts";

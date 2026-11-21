@@ -9,7 +9,7 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { CellMarks } from "../engine/solve/ladder-runtime.ts";
 import { dealt, dealtAgain } from "../engine/testing/dealt.ts";
 import { type AnyGame, gatePresets } from "../engine/testing/hint-games.ts";

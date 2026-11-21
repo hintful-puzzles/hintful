@@ -23,7 +23,7 @@ import "../games/index.ts";
 import { resolvePalette } from "../engine/color/color-mkhighlight.ts";
 import { REGION_FILLS } from "../engine/color/colors.ts";
 import type { Color } from "../engine/contract/types.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { expectLedger } from "../engine/testing/ledger.ts";
 import { inSweep } from "../engine/testing/slow.ts";
 import * as inertia from "../games/inertia/render.ts";

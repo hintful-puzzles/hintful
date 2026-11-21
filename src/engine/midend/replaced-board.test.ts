@@ -7,11 +7,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { RetryLimitExceeded } from "./contract/retry-limit.ts";
-import { fakeGame } from "./fake-game.ts";
-import { LEFT_BUTTON } from "./input/pointer.ts";
+import { RetryLimitExceeded } from "../contract/retry-limit.ts";
+import { LEFT_BUTTON } from "../input/pointer.ts";
+import { driveMidend } from "../testing/drive-midend.ts";
+import { fakeGame } from "../testing/fake-game.ts";
 import { encodeSave } from "./save.ts";
-import { driveMidend } from "./testing/drive-midend.ts";
 
 function driven() {
   const d = driveMidend(fakeGame);

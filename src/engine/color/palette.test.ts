@@ -15,7 +15,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { Color } from "../contract/types.ts";
-import { getTsGame } from "../registry.ts";
+import { getTsGame } from "../midend/registry.ts";
 import { colorToOKLCH, isGrayChroma, type OKLCH } from "../testing/oklch.ts";
 import "../../games/index.ts";
 import type { MarkRole } from "../contract/hint-words.ts";

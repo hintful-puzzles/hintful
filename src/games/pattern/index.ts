@@ -50,7 +50,7 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/render/piece.ts";
 import {
   searchTierContract,

@@ -38,7 +38,7 @@ import {
   selectedSlot,
   withRuleOuts,
 } from "../../engine/mechanics/code-rows.ts";
-import { registerGame } from "../../engine/registry.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import {
   GUESS_RUNGS,

@@ -9,12 +9,6 @@ import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { UI_UPDATE } from "../engine/contract/game.ts";
 import type { Point } from "../engine/contract/types.ts";
-import {
-  type FakeDrawState,
-  type FakeMove,
-  type FakeState,
-  fakeGame,
-} from "../engine/fake-game.ts";
 import { click, drag } from "../engine/input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
@@ -31,9 +25,15 @@ import {
   squareGrid,
   type TargetVerbs,
 } from "../engine/input/target-verb.ts";
-import { Midend } from "../engine/midend.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { Midend } from "../engine/midend/midend.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { driveMidend } from "../engine/testing/drive-midend.ts";
+import {
+  type FakeDrawState,
+  type FakeMove,
+  type FakeState,
+  fakeGame,
+} from "../engine/testing/fake-game.ts";
 
 /** The fake's moves, and one that builds a new state holding the same count. */
 type Move = FakeMove | "same";

@@ -12,7 +12,7 @@
 
 import type { Game } from "../contract/game.ts";
 import type { ChangeNotification } from "../contract/types.ts";
-import { Midend } from "../midend.ts";
+import { Midend } from "../midend/midend.ts";
 
 /** The notification whose `type` is `T`. */
 export type Notification<T extends ChangeNotification["type"]> = Extract<

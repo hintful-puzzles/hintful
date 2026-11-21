@@ -12,15 +12,15 @@
  * would complete nothing.
  */
 import { describe, expect, it } from "vitest";
-import { ALREADY_SOLVED } from "./contract/hint-refusal.ts";
-import { fakeGame } from "./fake-game.ts";
-import { LEFT_BUTTON } from "./input/pointer.ts";
+import { ALREADY_SOLVED } from "../contract/hint-refusal.ts";
+import { LEFT_BUTTON } from "../input/pointer.ts";
+import { beginDealt } from "../testing/dealt.ts";
+import { driveMidend } from "../testing/drive-midend.ts";
+import { REGISTERED_GAMES } from "../testing/enrollment.ts";
+import { fakeGame } from "../testing/fake-game.ts";
+import { gatePresets } from "../testing/hint-games.ts";
 import { Midend } from "./midend.ts";
 import { RULES_OUT_PREF } from "./rules-out.ts";
-import { beginDealt } from "./testing/dealt.ts";
-import { driveMidend } from "./testing/drive-midend.ts";
-import { REGISTERED_GAMES } from "./testing/enrollment.ts";
-import { gatePresets } from "./testing/hint-games.ts";
 
 /** Far above any plan a gate preset's board needs, so only a loop trips it. */
 const MAX_STEPS = 2000;

@@ -64,8 +64,8 @@ import {
   verbGesture,
 } from "../../engine/input/target-verb.ts";
 import { offset } from "../../engine/mechanics/wires.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
-import { registerGame } from "../../engine/registry.ts";
 import {
   DIFF_EASY,
   searchTierContract,

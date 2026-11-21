@@ -20,7 +20,7 @@
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { difficultyTiers } from "../engine/contract/difficulty.ts";
-import { getTsGame } from "../engine/registry.ts";
+import { getTsGame } from "../engine/midend/registry.ts";
 import { setStaleCheck } from "../engine/solve/describe-runtime.ts";
 import { dealt, dealtAgain } from "../engine/testing/dealt.ts";
 import { type AnyGame, gatePresets } from "../engine/testing/hint-games.ts";

@@ -622,7 +622,7 @@ place: redraw, no history entry). Devices, drags and keys are
 
 **Return a move when the input asks for one, and leave "did it change
 anything?" to the engine.** The midend compares the board the move leaves
-with the board before it ([`same-value.ts`](../src/engine/same-value.ts)) and
+with the board before it ([`same-value.ts`](../src/engine/midend/same-value.ts)) and
 keeps a move that changed nothing out of the history: no step of Undo, the
 input answered as a UI-only change, `changedState` still run (`ts-engine`,
 "A move that leaves the board as it was is no step of the history"). It
@@ -743,7 +743,7 @@ Exemplar: `status` in the skeleton's
 - **The words a player reads are the engine's.** A refused Solve returns a
   `SolveFailure` ([`solve-failure.ts`](../src/engine/contract/solve-failure.ts)). The
   midend prefixes the completion words to whatever `statusbarText` returns
-  ([`completion-status.ts`](../src/engine/completion-status.ts)), so
+  ([`completion-status.ts`](../src/engine/midend/completion-status.ts)), so
   `statusbarText` returns only the game's own phrase. The engine catalog's
   entries for both say which failure a solver's verdict entitles it to.
 
@@ -945,7 +945,7 @@ and the player then acts on a layout made for another move.
 
 Exemplars: [`mines/index.ts`](../src/games/mines/index.ts) and the `begin`
 arm of `MinesMove` in [`mines/state.ts`](../src/games/mines/state.ts);
-[`desc-supersede.test.ts`](../src/engine/desc-supersede.test.ts) is the
+[`desc-supersede.test.ts`](../src/engine/midend/desc-supersede.test.ts) is the
 shape in miniature.
 
 ## A deduction's notation is a mark the player can make
