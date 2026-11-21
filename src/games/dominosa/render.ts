@@ -32,6 +32,7 @@ import {
   type MarkCell,
   MarkOutlines,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   drawPiecePart,
   JOIN_DOWN,
@@ -42,11 +43,11 @@ import {
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, WIN_LEAD } from "../../engine/render/win-wave.ts";
+import type { RuleName } from "../../generated/games/dominosa/dominosa.compiled.ts";
 import type { DominosaHint } from "./hint.ts";
 import { SPOT } from "./kinds.ts";
 import {
   boardSize,
-  DCOUNT,
   DINDEX,
   type DominosaMistake,
   type DominosaMove,
@@ -57,6 +58,8 @@ import {
   EDGE_L,
   EDGE_R,
   EDGE_T,
+  rules,
+  spaceOf,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -140,6 +143,35 @@ const DF_REF = 0x8000000;
 // With `DF_FLASH`: the win flash's leading edge, and not its body, is on the
 // domino.
 const DF_FLASH_LEAD = 0x10000000;
+// An open square whose number breaks a rule: no domino can cover it any more,
+// or the domino its number makes with a neighbor's has no spot left.
+const DF_STRANDED = 0x20000000;
+
+/** Where the board breaks a rule, as each square's draw bits: `DF_CLASH` on
+ * both squares of two dominoes alike, and `DF_STRANDED` on a square no domino
+ * can cover any more and on each square of a pair whose domino has nowhere
+ * left to go. */
+function brokenSquares(state: DominosaState): Int32Array {
+  const sp = spaceOf(state.params);
+  const out = new Int32Array(state.w * state.h);
+  const ends = (e: number): [number, number] => [
+    sp.edgeEnds[2 * e],
+    sp.edgeEnds[2 * e + 1],
+  ];
+  const live = liveErrors(rules, state);
+  for (const pair of live.byRule.get(CLASH) ?? [])
+    for (const e of pair) for (const c of ends(e)) out[c] |= DF_CLASH;
+  // An uncovered square's violation names its spots, which all meet at it.
+  for (const spots of live.byRule.get(COVERED) ?? []) {
+    const [a, b] = ends(spots[0]);
+    const square = spots.every((e) => ends(e).includes(a)) ? a : b;
+    out[square] |= DF_STRANDED;
+  }
+  for (const k of live.clues.get("number") ?? []) out[k] |= DF_STRANDED;
+  return out;
+}
+const COVERED: RuleName = "shape.0";
+const CLASH: RuleName = "shape.1";
 
 // --- geometry ---------------------------------------------------------------
 const gutter = (ts: number) => Math.floor(ts / 16);
@@ -343,7 +375,9 @@ function drawTile(
     if (flags & DF_CURSOR_USEFUL) drawRectCorners(dr, ox, oy, cursorRadius(ts) + 1, nc);
   }
 
-  if (flags & DF_HIGHLIGHT_1) nc = COL_HIGHLIGHT_1;
+  // A clashing domino's ground is already the error color.
+  if (flags & DF_STRANDED && !(flags & DF_CLASH)) nc = COL_ERROR;
+  else if (flags & DF_HIGHLIGHT_1) nc = COL_HIGHLIGHT_1;
   else if (flags & DF_HIGHLIGHT_2) nc = COL_HIGHLIGHT_2;
   // A highlighted number on a domino sits on a badge of the board's own
   // color, so it reads there as it does on an open square: a hue on the
@@ -400,7 +434,6 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h, grid, numbers } = state;
   const wh = w * h;
-  const n = state.params.n;
 
   // The hint's marks. A square can be both acted on and part of the evidence,
   // and it then carries both.
@@ -421,14 +454,7 @@ export function redraw(
   // the cache key that repaints a square the ring leaves.
   const outlines = new MarkOutlines(hintTargets, hintEvidence, markStyle);
 
-  // Count domino-value occurrences (capped at 2) so a value placed twice
-  // highlights in red.
-  const used = new Uint8Array(DCOUNT(n));
-  for (let i = 0; i < wh; i++)
-    if (grid[i] > i) {
-      const di = DINDEX(numbers[i], numbers[grid[i]]);
-      if (used[di] < 2) used[di]++;
-    }
+  const broken = brokenSquares(state);
 
   const mistakeSet = mistakes?.length ? new Set(mistakes.map((m) => m.index)) : null;
 
@@ -462,12 +488,8 @@ export function redraw(
       else c = TYPE_BLANK;
 
       const n1 = numbers[i];
-      if (c !== TYPE_BLANK) {
-        const di = DINDEX(n1, numbers[grid[i]]);
-        if (used[di] > 1) c |= DF_CLASH;
-      } else {
-        c |= state.edges[i];
-      }
+      if (c === TYPE_BLANK) c |= state.edges[i];
+      c |= broken[i];
 
       if (n1 === ui.highlight1) c |= DF_HIGHLIGHT_1;
       if (n1 === ui.highlight2) c |= DF_HIGHLIGHT_2;

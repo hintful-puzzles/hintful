@@ -79,6 +79,7 @@ import {
   MAX_ORDER,
   menu,
   newState,
+  rules,
   status,
   TRI,
   validateParams,
@@ -612,6 +613,7 @@ export const dominosaGame: Game<
   status,
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes,

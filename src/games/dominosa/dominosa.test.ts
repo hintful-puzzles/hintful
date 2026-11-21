@@ -461,6 +461,26 @@ describe("dominosa render", () => {
     expect(clash).toBe(true);
   });
 
+  it("draws in COL_ERROR the number of a square barred on every side", () => {
+    const p = { n: 4, diff: DIFF_EASY, tall: false };
+    const { desc } = newDominosaDesc(p, randomNew("stranded"));
+    const { w } = newState(p, desc);
+    const i = w + 1;
+    const bar = (j: number): DominosaMove => ({
+      type: "edge",
+      d1: Math.min(i, j),
+      d2: Math.max(i, j),
+    });
+    const red = (moves: DominosaMove[]) =>
+      renderScenario({
+        game: dominosaGame,
+        id: `${encodeParams(p, true)}:${desc}`,
+        moves,
+      }).recording.ops.filter((o) => o.op === "text" && o.color === COL_ERROR).length;
+    expect(red([bar(i - 1), bar(i + 1), bar(i - w)])).toBe(0);
+    expect(red([bar(i - 1), bar(i + 1), bar(i - w), bar(i + w)])).toBe(1);
+  });
+
   it("sweeps the win flash over the dominoes from the bottom left, a domino at a time", () => {
     const p = { n: 4, diff: DIFF_EASY, tall: false };
     const { desc } = newDominosaDesc(p, randomNew("flash"));

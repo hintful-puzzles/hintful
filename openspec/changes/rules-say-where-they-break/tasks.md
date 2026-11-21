@@ -52,7 +52,11 @@
       is broken, for the clue's quarter at each cell). Moved: salad (a cross
       reads as the empty square; a border clue is red once its line can no
       longer show it first, an all-crossed line included). Moved: seismic
-      (its `FM_ERROR*` state bits go). Run `src/guards` before a
+      (its `FM_ERROR*` state bits go). Moved: dominosa (a spot touching
+      another domino reads as holding none; a square no domino can cover,
+      and a spot of a domino with nowhere left, show a red number; a count
+      binding no element of the answer names where it breaks by what it
+      read, in the compiler). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

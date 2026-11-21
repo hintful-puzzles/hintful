@@ -21,6 +21,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
@@ -34,6 +35,7 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import * as dominosa from "../../generated/games/dominosa/dominosa.compiled.ts";
 
 // --- combinatorial helpers (upstream TRI / DCOUNT / DINDEX macros) ----------
@@ -256,6 +258,26 @@ export function dealtOf(
  * side, as holding. */
 export const DOMINO = 1;
 export const NONE = 2;
+
+/** The board as its rules read it: a spot holds a domino where one is placed
+ * there, and none where a barrier is drawn across it or a domino elsewhere
+ * covers either of its squares; any other spot is undecided. */
+export const rules: RulesOf<DominosaState> = describedRules(dominosa, {
+  grid: (s) => {
+    const sp = spaceOf(s.params);
+    const g = new Uint8Array(sp.edges.length);
+    for (const e of sp.edges) {
+      const a = sp.edgeEnds[2 * e];
+      const b = sp.edgeEnds[2 * e + 1];
+      const barred = s.edges[a] & (b === a + 1 ? EDGE_R : EDGE_B);
+      if (s.grid[a] === b) g[e] = DOMINO;
+      else if (barred || s.grid[a] !== a || s.grid[b] !== b) g[e] = NONE;
+    }
+    return g;
+  },
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s.params, s.numbers)],
+});
 
 /** Whether `partner`, each square's domino partner or the square itself
  * where it has none, tiles the board with one of each domino, by the rules

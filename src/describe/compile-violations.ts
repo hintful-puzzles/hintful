@@ -572,6 +572,7 @@ class Check {
       out.emit(`let ${hi} = 0;`);
       out.emit(`const ${yes}: number[] = [];`);
       out.emit(`const ${no}: number[] = [];`);
+      let named = false;
       this.stoppedOr(
         () =>
           this.binders(agg.binders, scope, SURE, (sc, g, names) => {
@@ -597,6 +598,7 @@ class Check {
               out.emit("}");
             }
             if (el !== undefined) {
+              named = true;
               out.emit(`if (${sure} === ${T}) ${yes}.push(${el});`);
               out.emit(`else if (${sure} === ${F}) ${no}.push(${el});`);
             }
@@ -604,7 +606,9 @@ class Check {
         // A set it counts over that is itself undecided bounds nothing.
         [`${lo} = -Infinity;`, `${hi} = Infinity;`],
       );
-      return { lo, hi, yes, no };
+      // A count over no element of the answer names none, and where it
+      // breaks is what it read (a Dominosa square's barred sides).
+      return named ? { lo, hi, yes, no } : { lo, hi, yes: null, no: null };
     }
     out.emit(`let ${lo} = -Infinity;`);
     out.emit(`let ${hi} = Infinity;`);
