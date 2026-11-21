@@ -268,9 +268,8 @@ export interface LightupTarget extends Point {
 
 /** Plan data for a Light Up hint step. `kind` is the mark the step places on
  * its `targets`, which `hint.keepTrack` and `hint.refreshStep` read. `dark` is
- * the unlit square the deduction is about and `clue` the driving clue: the
- * words outline both alongside the rest of the evidence, and the renderer
- * reads them here to tell the clue's ring on its wall from a square's. */
+ * the unlit square the deduction is about and `clue` the driving clue, which
+ * the words outline alongside the rest of the evidence. */
 export interface LightupHint {
   kind: "light" | "impossible";
   targets: LightupTarget[];
@@ -432,7 +431,7 @@ export const lightupGame: Game<
       roles: {
         ring: 'each square the step decides: it takes a bulb, or, when the sentence says it "can\'t hold a bulb", a cross.',
         outline:
-          "what the step reasons from, told apart by the sentence's nouns: “the outlined clue” has a ring round its wall, and “the outlined dark square”, which still has to be lit, and the other squares the reason rests on, such as a clue's bulbs, have a double ring.",
+          "what the step reasons from, told apart by the sentence's nouns: “the outlined clue” has a box inside its wall, and “the outlined dark square”, which still has to be lit, and the other squares the reason rests on, such as a clue's bulbs, are outlined, one shape for each thing the sentence names.",
       },
     },
     gesture: (s, ui, ds, m) =>

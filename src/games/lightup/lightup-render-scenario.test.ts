@@ -13,7 +13,12 @@ import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { SYMM_ROT4 } from "../../engine/generate/symmetric-blacks.ts";
 import { describeHintKindPins } from "../../engine/testing/hint-positions.ts";
-import { expectContour, expectRing } from "../../engine/testing/mark-shape.ts";
+import {
+  expectContour,
+  expectRing,
+  isThin,
+  markSides,
+} from "../../engine/testing/mark-shape.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { lightupGame } from "./index.ts";
 import { COL_GRID, COL_LIGHT } from "./render.ts";
@@ -100,12 +105,9 @@ describe("Light Up hint render scenarios", () => {
     expect(h.dark).toBeDefined();
     expectRing(recording.ops);
     // The evidence is outlined, never washed.
-    expect(
-      recording.ops.some((o) => o.op === "line" && o.color === COL_HINT_OUTLINE),
-    ).toBe(true);
-    expect(
-      recording.ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE),
-    ).toBe(false);
+    const sides = markSides(recording.ops, COL_HINT_OUTLINE);
+    expect(sides.length).toBeGreaterThan(0);
+    for (const s of sides) expect(isThin(s)).toBe(true);
   });
 
   it("clueSatisfied frame: grouped impossible-mark targets are all ringed", () => {
@@ -118,8 +120,6 @@ describe("Light Up hint render scenarios", () => {
     const { recording, h } = hintFrame("discount");
     expect(h.kind).toBe("impossible");
     expect(h.targets.length).toBe(1);
-    expect(
-      recording.ops.some((o) => o.op === "line" && o.color === COL_HINT_OUTLINE),
-    ).toBe(true);
+    expect(markSides(recording.ops, COL_HINT_OUTLINE).length).toBeGreaterThan(0);
   });
 });

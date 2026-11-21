@@ -24,14 +24,19 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
-import type { Color, Point, Size } from "../../engine/contract/types.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color, Size } from "../../engine/contract/types.ts";
 import {
   drawRectCorners,
   drawRectOutline,
   glyphFont,
 } from "../../engine/render/draw.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import {
+  drawCellRing,
+  drawMarkSides,
+  MARK_ALL,
+} from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
@@ -118,24 +123,22 @@ const DF_IMPOSSIBLE = 256;
 const DF_WRONG = 512;
 /** Fork addition: the show-lit-blobs pref, in the key so a toggle repaints. */
 const DF_BLOBS_PREF = 1024;
-// Fork additions: the displayed hint step, in the key so hint changes repaint.
-const DF_HINT_TARGET = 2048; // forced cell — ringed
-const DF_HINT_AREA = 4096; // evidence — ringed
-const DF_HINT_DARKREF = 8192; // the unlit square the deduction is about — ringed
-const DF_HINT_CLUE = 16384; // driving clue: its wall ringed
 
 export interface LightupDrawState {
   tileSize: number;
   crad: number;
-  /** What each square shows, as its display flags. */
+  /** What each square shows, as its display flags, and the hint's marks. */
   tiles: TileCache;
+  hint: OverlaySidecar;
 }
 
 export function newDrawState(state: LightupState, tileSize: number): LightupDrawState {
+  const hint = new OverlaySidecar(state.w * state.h);
   return {
     tileSize,
     crad: Math.floor((3 * (tileSize - 1)) / 8),
-    tiles: new TileCache(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { overlays: [hint] }),
+    hint,
   };
 }
 
@@ -183,17 +186,15 @@ function tileRedraw(
   y: number,
 ): void {
   const ts = ds.tileSize;
-  const dsFlags = ds.tiles.shown(idx(x, y, state.w));
+  const i = idx(x, y, state.w);
+  const dsFlags = ds.tiles.shown(i);
+  const sides = ds.hint.outlineSides(i);
   const dx = coord(x, ts);
   const dy = coord(y, ts);
   // An open square's surface, inside the grid line on its top and left. The
   // lines on its other two sides are its neighbors', or the frame's.
   const box = { x: dx + 1, y: dy + 1, w: ts - 1, h: ts - 1 };
-  /** A doubled inset ring. */
-  const ring = (color: number): void => {
-    drawRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, color);
-    drawRectOutline(dr, dx + 2, dy + 2, ts - 3, ts - 3, color);
-  };
+  const band = { box, outer: 0, inner: Math.max(2, ts >> 4) };
 
   if (dsFlags & DF_BLACK) {
     // The whole tile, grid lines included, so a run of walls is one block.
@@ -213,10 +214,11 @@ function tileRedraw(
         String(state.lights[idx(x, y, state.w)]),
       );
     }
-    if (dsFlags & DF_HINT_CLUE) {
-      // A hint's driving clue is ringed at the wall's edge and keeps its white
-      // digit: no hint hue reads as a glyph on the wall's gray in both schemes.
-      // The white line inside the ring is what parts it from the wall.
+    if (sides !== 0) {
+      // An outlined wall is a clue the step names, never part of an area of
+      // squares, so it is a box of its own, inset from the wall's edge, and
+      // keeps its white digit: no hint hue reads as a glyph on the wall's gray
+      // in both schemes. The white line inside the box parts it from the wall.
       const m = Math.floor(ts / 12);
       const t = Math.max(2, Math.floor(ts / 10));
       const side = ts - 2 * m;
@@ -244,7 +246,7 @@ function tileRedraw(
       tone !== WIN_NONE ? winSlot(tone) : dsFlags & DF_LIT ? COL_LIT : COL_CELL;
     dr.drawRect({ x: dx, y: dy, w: ts, h: ts }, COL_GRID);
     dr.drawRect(box, fill);
-    if (dsFlags & (DF_HINT_AREA | DF_HINT_DARKREF)) ring(COL_HINT_OUTLINE);
+    drawMarkSides(dr, band, sides, COL_HINT_OUTLINE);
     if (dsFlags & DF_LIGHT) {
       const lcol = dsFlags & DF_OVERLAP ? COL_ERROR : COL_LIGHT;
       dr.drawCircle(
@@ -260,13 +262,15 @@ function tileRedraw(
       drawRuledOutCross(dr, box, COL_RULED_OUT);
     }
     // An open square shows no text, so its ring has none to keep clear of.
-    if (dsFlags & DF_HINT_TARGET)
-      dr.drawRing(box, NOTHING_TO_CLEAR, Math.max(2, ts >> 4));
+    if (ds.hint.ringed(i)) drawCellRing(dr, band, NOTHING_TO_CLEAR);
   }
 
   // Check & Save: this cell contradicts the unique solution (fork divergence;
-  // upstream has no mistake overlay).
-  if (dsFlags & DF_WRONG) ring(COL_ERROR);
+  // upstream has no mistake overlay), a doubled inset frame.
+  if (dsFlags & DF_WRONG) {
+    drawRectOutline(dr, dx + 1, dy + 1, ts - 1, ts - 1, COL_ERROR);
+    drawRectOutline(dr, dx + 2, dy + 2, ts - 3, ts - 3, COL_ERROR);
+  }
 
   if (dsFlags & DF_CURSOR) {
     // Out at the corners of the tile, clear of a bulb.
@@ -294,30 +298,7 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h } = state;
 
-  // Per-cell hint-role bits for the displayed step (fork addition).
-  const hintBits = new Map<number, number>();
-  const add = (cells: readonly Point[], bit: number): void => {
-    for (const c of cells) {
-      const i = idx(c.x, c.y, w);
-      hintBits.set(i, (hintBits.get(i) ?? 0) | bit);
-    }
-  };
-  // The evidence is all outlined, in one of three glyphs: the dark square's
-  // double ring, the clue's recolored digit, or the rest of the set's shade
-  // or ring. The step's highlights say which outlined square is which.
-  const marks = stepMarks(hint);
-  const hl = hint?.highlights;
-  add(marks.of("ring", CELL), DF_HINT_TARGET);
-  const is = (c: Point, p?: Point): boolean =>
-    p !== undefined && c.x === p.x && c.y === p.y;
-  for (const c of marks.of("outline", CELL)) {
-    const bit = is(c, hl?.dark)
-      ? DF_HINT_DARKREF
-      : is(c, hl?.clue)
-        ? DF_HINT_CLUE
-        : DF_HINT_AREA;
-    add([c], bit);
-  }
+  ds.hint.pack(stepMarks(hint), (x, y) => idx(x, y, w));
 
   if (ds.tiles.firstFrame()) {
     // One line wide, like the grid: its top and left lie under the first
@@ -335,7 +316,6 @@ export function redraw(
       let df = tileFlags(state, ui, x, y, flash);
       if (wrong?.has(i)) df |= DF_WRONG;
       if (ui.drawBlobsWhenLit) df |= DF_BLOBS_PREF;
-      df |= hintBits.get(i) ?? 0;
       if (ds.tiles.changed(i, df)) tileRedraw(dr, ds, state, ui, x, y);
     }
   }

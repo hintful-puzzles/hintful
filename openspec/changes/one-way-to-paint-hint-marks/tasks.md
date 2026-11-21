@@ -25,8 +25,13 @@
   - [x] Singles (pilot).
   - [x] Mines: onto the sidecar; ring and outline no longer exclusive on a
         square, the mistake frame its own flag.
+  - [x] Lightup: onto the sidecar. An open square takes the contour and the
+        dark square's doubled ring folds into it; an outlined wall is always
+        a strand reference of its own (the outline sets are open squares),
+        so it keeps its inset box with the white line. Run in the app: the
+        clue, the dark square and the other squares are closed shapes apart.
   - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2):
-        Lightup, Range, Slant, Signpost, Sticks, Boats, and the
+        Range, Slant, Signpost, Sticks, Boats, and the
         border grid (Palisade, Separate). Fold Range's and Slant's doubled
         "premise" outline and Lightup's dark-square ring into the one
         outline (`hints-marks.md` § "Outline the evidence": one shape for
