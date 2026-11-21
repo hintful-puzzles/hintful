@@ -43,17 +43,9 @@ itself is § "The file". A game whose techniques are stated:
 2. **Imports its compiled module from `src/generated/`**, where
    `npm run describe` writes `src/d/x.description.yaml` as
    `src/generated/d/x.compiled.ts`: generated, ignored by git, and never
-   edited. Every command that reads one writes them first (the typecheck,
-   Vitest and Vite through `vite-plugins/describe.ts`, the gate, the npm
-   scripts that run a game through their `pre` script, a fresh clone's
-   `npm ci`), and a dev server compiles a description again on its edit; a
-   new Vitest config or npm script that imports a game takes the same step.
-   A compiler change shows in the three samples `compile.test.ts` keeps
-   under `src/describe/__snapshots__/`, written again with
-   `npx vitest run src/describe/compile.test.ts --update`. A module reads by
-   function: each numbers its own fresh names, and what a rung keeps at the
-   module's scope is named after it (`Out.own`), so a function moves only
-   when its own code does.
+   edited. Every command that reads one writes them first; a new Vitest
+   config or npm script that imports a game takes the same step
+   (`vite-plugins/describe.ts`).
 3. **Checks every technique it states sound** with
    `npx vitest run -c research/technique-check/vitest.config.ts describe-check`,
    which records each verdict in `src/describe/soundness.json`. The gate
@@ -81,15 +73,9 @@ itself is § "The file". A game whose techniques are stated:
    the space the module's `units` declare, `describedSpace(units, w, h,
    parts)` (`latinSpace(o)` is a Latin square's), asked for where it is
    needed: the runtime keeps every space it builds, so a game keeps none
-   of its own. Where its domain is a cell's, each cell holds what the
-   module's `domainOf` gives it (§ "The runtime a ladder runs on"). A deal
-   that costs enough to keep is kept with `perBoard`, by the object it is
-   read from, which keeps what a compiled technique keeps for the board
-   too, since that is kept by the deal. Keep it no longer than the
-   structure it reads stays as it was: where a generator changes that
-   object in place between solves, `perBoard`'s `still` checks it (Pearl's
-   clues), and Solo's generator merges cages in place, so a partition kept
-   for the cage structure's life reads stale cages.
+   of its own (§ "The runtime a ladder runs on"). A deal that costs enough
+   to keep is kept with `perBoard`, whose doc says how a generator that
+   changes the board in place keeps it fresh.
 6. **Checks its answers by its rules**: its `status`, and every solver
    that asks whether a filled grid is right, call the module's `isAnswer`
    over the board as one `dealtOf` deals it, which the ladder reads too
@@ -1037,236 +1023,44 @@ Its comparison with the checks it replaced is in the `report.md` of
 
 **A technique that follows from one kind of rule alone is placed, not
 stated**: `- kind: count.met`, `as: <id>`, `tier`, `with: {...}` in
-`techniques`, where [`kinds.ts`](../src/describe/kinds.ts) holds the kind
-(Norinori's `fullRegion`, Starbattle's `fullLine`). The loader expands it
-into the technique it stands for, before anything else reads the file, so
-the compiler, the checker and the hint see a stated technique; the kind's
-formula reads the game's own `need(S)` and `open(S)`. `with` names the
-game's nouns (`$name` in the kind); its `terms` are added to the step's.
-A variation's added techniques may be placed the same way (ABCD's
-`placedDiagonal`). **A kind brings its own plant** (the defect is the same
-under any game's nouns), so a game's `plants.yaml` need state none for it; a
-plant it does state replaces the kind's, for a game whose rule has a boundary
-the coarse plant misses (ABCD's and Magnets' placed square, planted as
-reaching the diagonal too). **A counting game defines `open(S)`, the
-squares of a set not yet decided, and `need`**, what a group still wants:
-`need(S)` over the set where every group wants the same (Norinori, Star
-Battle), or over the group where its number is its own (`need(L)`, a line's
-clue less what it holds: Tracks, Loopy's `need(f)`), which the placement names
-in `need:` (Boats', which reads a hidden number apart, is its `need:` alone).
-A game whose squares are only struck gives the move (`restMove: "strike(c,
-1)"`, Tracks'). **What a game calls things is said once**, in `kindWords:`
-(the group a count reads, the rest value, the words for what is held), with
-`terms` added to every placement's; a placement's `with` gives only what
-differs and overrides (Loopy's dot over its clue). A `kindWords` name a kind
-does not take is ignored for it, so one block serves every kind placed. A
-parameter in a kind's `defaults` is the game's to give or leave, and a default
-reads only the parameters the game gave. The count kinds carry their
-sentence: "{unit} already has {has}", "{unit} takes no {items}" where its
-number may be 0 (`zero`), and "{unit} needs {n} {items} and has only {n}
-{slots}"; the game gives the nouns, how its group is drawn (`mark`, `marks`)
-and the move's predicate (`restWord`: "can't be a line"). **`count.both` is
-the two as one technique**, each group's two readings before the next
-group's, with the same sentences as its arms `met` and `exact`: placed where
-the game's order rests on the interleaving (Mosaic's Easy deal hides the
-numbers its deduction never read, so splitting `alone` in two moved its
-boards; Palisade's `numberExhausted`, over the edges round a number, a set
-it names in `set:`). **`count.value` is `count.both` read of one value by
-its candidates**, for a game whose squares hold several values each counted
-(Magnets' poles in a line, Undead's monsters on the board): the group binds
-the `value`, `need` is what it still owes, and `open` which squares may
-still take it (by default undecided with the value among its candidates;
-Undead counts a monster that is a square's one candidate as held). It
-carries no words, for each such game's walk speaks its readings. The count kinds count a group's open squares, never
-gather them: a set bound in `for` is made for every group on every pass,
-and only the conclusion that decides them walks them. A later leg of a
-firing walked in legs says the move again with "too" (`restLater`,
-`fillLater`, which a game whose move is a "can't" gives as "… either") and
-`again`, "{unit}": "…and each ringed spoke must be a line too, for this 5".
-A game's open squares need not be just the undecided ones: Spokes' set is
-the edges to squares that may still take a line (`free(c)`), and its
-`open(S)` the undecided edges of it.
-A game whose squares are cells says so in `words: { cell: cell }`
-and passes `WORDS.cell` as its hint's `noun`, or a kind's `{noun}` says
-"square". A kind is checked sound per game, as a
-stated technique is. A kind with no words of its own (`one.cell`,
-`peer.placed`, `fit.flip`) takes the game's `says:` beside the placement,
-and one with no parameters takes no `with`. `one.cell`'s sentence is the
-Latin library's `single` step, which every game that places it speaks (`docs/hints-candidates.md` § "The row/column preset"), so its `says:` holds only terms; its `square` narrows the squares it reads
-(Ascent's `not known(c) and open(c)`, leaving out walls and arrows).
-`one.cell` is any thing down to one option, which it binds as `U`: a game
-whose options are not a square's values names them (`options`: Signpost's
-squares an arrow may lead on to, Dominosa's spots round a square), the thing
-where it is not a square (`group`: Crossing's run, its `options` the numbers
-that still fit), and the `move` that takes `U`'s one member. A game whose
-walk speaks the firing in its own words keeps them (Signpost's, Crossing's).
-`one.place`, a value its unit owes with one open square left for it, is the
-library's `hiddenSingle` step, "No other cell in this {unit} can be 3", which a
-walk speaks through `narrateLatinReason` with the unit's name and squares
-(Seismic's area); the game gives the unit and value as `group` (leaving out a
-value the unit holds), its squares as `set`, and `move` where it gives the
-value by striking the rest (Rome's `onlyHome`). `may` says when a square of the
-set may still take it, where that is more than its candidates: Signpost's
-arrow that may still lead into a square, Dominosa's spot not yet ruled out
-(whose `group` leaves out a domino already placed).
-`peer.placed`'s is the library's `placed` ("the 2 just placed can't repeat in
-its {regions}"), which a walk speaks through `placedRulesOut` with the game's
-`{regions}`. A game whose placed thing is not a square's value names it in
-`group` and how it leaves a peer in `move`, and plants its own defect, for the
-kind's reads the value (Dominosa's spot holding a domino, whose peers are the
-spots sharing a square with it and those of the same domino, left empty;
-Light Up's bulb, the squares it lights left without one).
-`peer.pair` is two open squares down to the same two values, each a peer of
-the other: every square that sees both loses the two. The game binds `a` in
-`pair`, gives the squares `b` read beside it in `partners` (each pair once:
-Rome's earlier squares of the area, Map's later bordering regions), and the
-squares that see both in `peers`. It carries no words. `peer.touch`, no two squares holding `fill` touch, carries its
-sentence, "no {piece} may touch the outlined {piece}{how}, so each ringed
-square {restWord}"; the game gives `adj` (`adj4`, or `adj8` with `how`: ",
-even diagonally"), its nouns, and `square` where its open squares are not
-just the undecided ones (Tents' trees). A game's `says:` beside a placement is
-laid over the kind's own, so Range keeps a step a square (`shown: each`); a
-game whose hint is its own renders the compiled step (Tents' `hint.ts`).
-`loop.early` carries its own sentence ("this edge would close the
-outlined line into a loop that leaves other lines out"); a game gives its marks,
-which mark draws the line (`line`), and what else the loop may miss (`off`,
-`offWords`: Pearl's pearl, Loopy's unmet clues). A line that may never close
-(Tracks') gives `elsewhere: "true"` and `leaves: ""` ("this side would close
-the outlined track into a loop"), its nouns (`edgeWords`, `lineNoun`,
-`blockWord`), and in `edge` what else an edge must be to be read (" and …":
-Tracks' side between two track squares, not shut).
-`loop.closed` is the loop finished: lines with no loose end, while an edge is
-open, are the loop, and every other edge is empty; lines in more than one
-group are a contradiction. The game names how it counts a point's lines
-(`lines`: Loopy's `dotLines`, Pearl's `drawn`) and, in `more`, what else must
-lie on the loop `G` (Pearl's pearls). It carries no words.
-`loop.never` is a rule that allows no cycle at all: a value of an open square
-that the game's `closes` says would close one is ruled out (Slant's diagonal
-joining two points already joined, Rome's arrow into a chain leading back).
-The game gives `values` where they are not its candidates, `more` for what
-`closes` binds (Rome's `q`, the square pointed at), and `move` where it rules
-a value out by placing the other (Slant's). It carries no words, and its
-coarse plant is no game's: each plants the edge of its own `closes`.
-`rel.support` carries its look, "{link} joins {cell} to its neighbor with
-{none} {fits} {struckOr}", and the walk says the strike: Adjacent gives its bar
-(`{if bar: …}` inside the words), Subsets its horseshoe and the tally's sets.
-Unequal's sign is the same kind under `>`, its group each end of a sign in
-turn (`c`, its partner `p`), a firing an end: a game that words each end
-itself gives its own `says` and none of the kind's words (`link`, `cell`,
-`none`, `fits`), and a clause of the kind's sentence reading a word the game
-did not give is left out (Unequal names the bound the other end holds it to,
-"the outlined smaller side of this greater-than sign is at least 3").
-A partner already decided is the same kind, its group asking that it be
-(Adjacent's `adjacent`, a placed number, a tier below `adjacentSet`; Subsets'
-`noShoeBeside`): its one candidate is its value.
-A walk that speaks a kind's step itself (Subsets') renders the compiled
-`STATED` step with `statedParts`, as `placedRulesOut` does the library's; a
-`{fit: …}` there is never tried, for only `statedSentence` sees the whole
-sentence, so keep such words short.
-The region kinds read a board divided by walls on its edges, whose regions
-are what the game's `joined` runs `through` (Palisade, Separate).
-`region.apart` walls every edge between two groups side by side that `apart`
-says can never be one region (Palisade's too many squares, Separate's shared
-letter or wall already between); the game says why, the kind the move, and
-`more` binds what else the game reads of the two (Separate's letter and the
-squares holding it, which its generator records as read). `region.grow` is a
-group short of `size` whose every way out leads into one other group, and
-carries its sentence ("this region has 3 of its 4 squares and just one way left
-to grow", or a lone square "walled in on every side but one", named by `lone`).
-Both name their edges from the term `anchor`, the first group. `kindWords`'
-`terms` are added to every placement, so a term reading one kind's binding
-(Palisade's clue, `v(q)`) goes in that placement's `with.terms`.
-The area kinds are the same rule on a board with no walls, whose regions are
-the squares of one number side by side and a region of d holds d squares
-(Filling): a region grows by a number placed, not an edge opened, so they
-are kinds of their own. `area.must` places the squares a region short of its
-number cannot reach enough without, `area.grow` its one square left to grow
-into, and `area.over`, `area.short` and `area.far` strike a number that would
-make a region too big, could not make one big enough, or lies too far from
-every region of it. They read the game's `alike`, `room(d)`, `joins(c, d,
-O)` and `grown(A)` (and `fresh(d)`, `holding(a, c, O)` for `area.far`) and
-take no parameters. The two that place carry their sentence, a look alone
-("the striped region of 4 can't fully grow without these squares"); the three
-that strike carry none, a strike being no step where a player keeps no notes.
-`connect.cut` is a rule that a `set` of squares be one group (Range's clear
-squares, Singles' uncovered ones): an open square whose loss would split it
-takes `rest`, and a set already apart is a contradiction. It carries its
-sentence, "{tried} would cut off some of the outlined squares around it from
-the rest", the game giving the move tried on the ring (`tried`: "shading
-{ring: this {number}}") and `restWord`; "around it" is what ties the outline
-to the ring, which Range's hint test asks of every step.
-`count.compare` reads two counts whose open squares overlap (Mines' `pair`
-and `regions`, Mosaic's `compared`): where A needs at least `least` and B
-holds at most `most`, A's own squares hold the difference, and where that is
-all of them they are filled and B's own squares cleared, in one step. The
-game's `group` binds the pair and its look names both (only it can tell two
-3s apart); the kind says the move, where each set lies (`outsideA`,
-`outsideB`), with `{ring 1}` and `{ring 2}`, so a step gives two marks (Mosaic's
-`fill` takes a mark per square). `{ring 1}` and `{ring 2}` name squares by the
-value they take, so a game whose filled piece is not one value (Clusters', the
-first tile's own piece) gives its arms' `move` itself, shows each square a leg
-(`shown: legs`), and reads which side a square is on from a fact term (`own:
-"c in RA"`). A kind's frame is laid only under a game's
-`says`, so a game whose hint narrates the firing itself (Mines') gives none
-and takes no words. **A kind that carries its own sentence is placed without
-it by `says: false`**, for the same kind of game (Mines' `alone` on
-`count.both`, its set `adj8(c)`): only the parameters its formula and plant
-read are then wanted. A placement is checked against the schema again once
-expanded, so a game's words over a frame are checked whole.
-The room kinds read a game's `fits(S, n)`, whether `n` pieces fit in the open
-squares `S` with the game's rule kept, and `most(S, n)`, the most up to `n` that
-do, as the count kinds read `need` and `open` (Star Battle, Norinori).
-`room.needed` fills a square without which its group has room for too few,
-"{unit} needs 2 stars and without {ring} has room for only 1"; a game whose
-room is short beside squares it outlines says so in `given` (Norinori's
-shaded squares beside the region, ", given {outline}"). `room.crowded` empties
-a square where a piece tried there (`tried`: "a star on") rules out the squares
-`ruled` names and leaves a group near it too little room; `act` is what the
-piece does to them ("touch", "block"), and `cause` and `causeWords` name a
-group the piece would complete, where that is the reason (Star Battle's
-starved trials). Room is read with the piece in place, so a game's `fits` may
-read the squares beside the tried one. Not placed: Norinori's `crowded` and
-`blocked`, whose room runs out beside the tried square's domino rather than over
-what it rules out, which the kind's look would name wrongly. A wording a game's
-parameters leave `when: "false"` is dropped as the kind expands, so it may name
-marks or words that game lacks.
-`fill.support` strikes a value no filling of a set that keeps the rule puts
-in a square (Keen's cage, Towers' line from a clue, Undead's sightline): the
-game binds the set in `group`, names it in `set`, and gives the rule a
-filling `f` keeps as `fits`, which the kind sets in the filling's `where`
-beside `f(c) = d`, so the compiler prunes a part-filling by it; `each` is the
-squares one firing reads where it is not the whole set (Towers' one square a
-firing, `{q}`). It carries no words: each game's walk names its own rule.
-The sum kinds read a set of open squares and the `total` their values make
-(Solo's cage, its total less what is placed; or the part of a cage a unit's
-sum leaves): `sum.last` places what the total leaves in the one open square
-left, `sum.bounds` strikes a value the others' least and greatest cannot
-bring to the total, and `sum.sets` one in no set of different values that
-makes it and that each square can take one of (upstream's reading, weaker
-than `fill.support`). The game binds the set and total in `group` and gives
-the sizes it reads in a `where` there (Solo reads sets of two to four).
-The ways kinds read a square whose sides are each a line or empty, and the
-game's `fits`, whether some way of the square that keeps its rule has a side
-so (Net's ways of turning a piece, Pearl's of passing through a square):
-a side only one value fits is that value. `fits` is written with `@` for the
-value, which the kind reads as 1 and as 2 (`$fits[1]` in the kind):
-`fits: "loopFits(c, e, @, L, G)"`, its group binding what it reads.
-`ways.note` reads a side a firing; `ways.lock` the square whole, firing where
-every open side is decided (Net's lock, one way left) or, with `every:
-exists`, where some is (Pearl's), and deciding all it can. `side` and `sides`
-name the side and the square's sides where they are not `e` and `edges(c)`
-(Pearl's `whiteTurnsOpposite` reads the square past a white pearl), `least`
-the open sides a square needs more than. A lock binds what `fits` reads in
-`reads` (", G = through(c, L)"), after the open sides, not in its group: a
-walk bound in the group is made for every decided square too, which cost
-Net's solves 1.6×. They carry no words.
-`fit.flip` is the Check of a
-two-valued square (`holds`, `scope`). How the tried value breaks the rule is
-the game's to say, so the game's `says:` holds the look; the kind lays it over
-its frame (`saysBeneath`): legs, and the move "{flipCell} must be {flipped}"
-with the leg's `flipTerms`, which a game names once in `kindWords` (Sticks:
-`hor`, `own`). Its plant is the coarse one, a value that keeps `holds`
-struck; Sticks plants each technique's boundary in its plants file instead.
+`techniques` (Norinori's `fullRegion`, Starbattle's `fullLine`). The loader
+expands it into the technique it stands for before anything else reads the
+file, so the compiler, the checker and the hint see a stated technique. A
+variation's added techniques may be placed the same way (ABCD's
+`placedDiagonal`). **Each kind's parameters, defaults, sentence and what it
+reads of the game are its comment in [`kinds.ts`](../src/describe/kinds.ts)**;
+a game that places one is found by `git grep -l "kind: <kind>" src/games`.
+
+- **A kind brings its own plant** (the defect is the same under any game's
+  nouns), so a game's `plants.yaml` states none for it. A plant it does state
+  replaces the kind's, for a rule whose boundary the coarse plant misses
+  (ABCD's and Magnets' placed square, planted as reaching the diagonal too).
+- **A counting game defines `open(S)`**, the squares of a set not yet
+  decided, **and `need`**, what a group still wants: over the set where every
+  group wants the same (Norinori), or over the group where its number is its
+  own (`need(L)`: Tracks). The room kinds read `fits` and `most` the same
+  way.
+- **What a game calls things is said once**, in `kindWords:`, with `terms`
+  added to every placement's; a placement's `with` gives only what differs.
+  A `kindWords` name a kind does not take is ignored for it, so a term
+  reading one kind's binding goes in that placement's `with.terms`. A game
+  whose squares are cells says so in `words: { cell: cell }`.
+- **A game's `says:` beside a placement is laid over the kind's own**, and a
+  kind with no words of its own takes it whole. A kind that carries its own
+  sentence is placed without it by `says: false`, for a game whose hint
+  narrates the firing itself (Mines'). A wording the game's parameters leave
+  `when: "false"` is dropped as the kind expands, so it may name marks the
+  game lacks. The expanded placement is checked against the schema again.
+- **A kind counts a group's open squares and never gathers them**: a set
+  bound in `for` is made for every group on every pass, and only the
+  conclusion that decides them walks them.
+- **A walk that speaks a kind's step itself** renders the compiled `STATED`
+  step with `statedParts`; a `{fit: …}` there is never tried, for only
+  `statedSentence` sees the whole sentence, so keep such words short.
+- **A rule a kind would word wrongly is stated**, with why at the technique
+  (Norinori's `crowded`).
+
+A kind is checked sound per game, as a stated technique is.
 
 ## What a placement rules out
 

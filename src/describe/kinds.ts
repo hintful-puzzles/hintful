@@ -902,6 +902,13 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       for: "$group, $side in $sides where not known($side), A = $fits[1], B = ($fits[2] and not A) where not A or not B",
     },
   },
+  // The Check of a two-valued square: a blank square of `scope` whose value
+  // `a`, tried, breaks `holds` takes the other. How the tried value breaks
+  // the rule is the game's to say, so the game's `says:` holds the look and
+  // this frame lies beneath it: legs, and the move, with `flipTerms`, which a
+  // game names once in `kindWords`. The plant is the coarse one, a value that
+  // keeps `holds` struck; a game whose techniques each have a boundary of
+  // their own plants them in its plants file instead.
   "fit.flip": {
     params: ["group", "holds", "scope", "flipTerms", "flipCell", "flipped"],
     technique: {

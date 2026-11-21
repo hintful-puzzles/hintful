@@ -228,7 +228,9 @@ techniques:
         - look: "with {ring} {shaded}, {stripes: this region} has no room for its second {shaded} square in a domino"
   # A shaded square tried at x would leave clear the squares `ruled` names,
   # leaving a region it reaches without room for the shaded squares it
-  # needs: x is clear.
+  # needs: x is clear. Stated, not placed as `room.crowded`: the room runs
+  # out beside the tried square's domino rather than over what it rules out,
+  # which the kind's look would name wrongly.
   - id: crowded
     tier: Tricky
     for: >-
