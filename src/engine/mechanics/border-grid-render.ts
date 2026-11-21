@@ -147,7 +147,8 @@ export function newBorderGridDrawState(
   h: number,
   tileSize: number,
 ): BorderGridDrawState {
-  const hint = new OverlaySidecar(w * h);
+  // Its rings are on edges (`packHintMarks`).
+  const hint = new OverlaySidecar(w * h, { cellRing: false });
   return {
     tileSize,
     w,

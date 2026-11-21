@@ -77,7 +77,12 @@ export class OverlaySidecar {
   private readonly drawnOutline: Int32Array;
   private readonly drawnHatched: Uint8Array;
 
-  constructor(cells: number) {
+  /** Whether the game rings a cell: one whose rings are on edges (the border
+   * grid) has none, and its cell rings are not asked for. */
+  private readonly cellRing: boolean;
+
+  constructor(cells: number, { cellRing = true }: { cellRing?: boolean } = {}) {
+    this.cellRing = cellRing;
     this.packed = new Int32Array(cells);
     this.struck = new Int32Array(cells);
     this.outline = new Int32Array(cells);
@@ -127,7 +132,8 @@ export class OverlaySidecar {
       this.add(i, HINT_AREA);
       this.outline[i] = sides(a.x, a.y);
     }
-    for (const t of marks.of("ring", CELL)) this.add(index(t.x, t.y), HINT_TARGET);
+    if (this.cellRing)
+      for (const t of marks.of("ring", CELL)) this.add(index(t.x, t.y), HINT_TARGET);
     // A struck note is its own mark, never its cell's: a cell the words name
     // is outlined or striped in its own right.
     if (markBits !== null)
