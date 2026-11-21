@@ -162,7 +162,8 @@ appended to every palette, so a game cannot draw a "ringed" mark in another
 shape. `drawRing` fits the roundest shape that clears the text round the
 element (`ring.ts` says how), the ringed cell's own notes included. A game
 hands it the boxes from `textBox`, called with what it passes `drawText`, so
-it never estimates a glyph. Where nothing round fits, it throws, and the
+it never estimates a glyph; a game that hands it only the text nearby cuts
+no nearer than `ringReach`. Where nothing round fits, it throws, and the
 element is not a ring's: the game makes room for it (Mosaic's ring reaches
 between its neighbors' numbers on a tile too small to hold one, through
 `ringFits`) or marks it in another

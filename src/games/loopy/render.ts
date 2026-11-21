@@ -66,6 +66,7 @@ import {
 import {
   MARK_EDGE_PX,
   type RingClear,
+  ringReach,
   ringShape,
   textBox,
 } from "../../engine/render/ring.ts";
@@ -353,14 +354,14 @@ function boxAround(points: readonly Point[], pad: number): Rect {
 }
 
 /** The frame's text a ring at `box` might reach, `avoid`ed, and the text it
- * holds, `enclose`d. A ring never grows past half its box's short side, so
- * text further off than that is left out. */
+ * holds, `enclose`d. Text past `ringReach` is left out; the recorder rounds
+ * to whole pixels, hence the one more. */
 function clearOf(
   box: Rect,
   texts: readonly Rect[],
   enclose: readonly Rect[] = [],
 ): RingClear {
-  const reach = Math.min(box.w, box.h) / 2 + 2;
+  const reach = ringReach(box) + 1;
   const near = (r: Rect): boolean =>
     r.x < box.x + box.w + reach &&
     r.x + r.w > box.x - reach &&

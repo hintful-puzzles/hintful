@@ -96,18 +96,19 @@
       walks every step of each preset's opening plan, now draws each step's
       frame and fails on a throw: it failed at Signpost's step 2 with the
       defect planted, for about 2 s more over the collection.
-      Asserting `ringCrossings` there too was tried and dropped: its one
-      finding is Loopy's, below. `ringCrossings` called Mathrax's "12×"
+      It asserts `ringCrossings` too, since Loopy's (below) was fixed.
+      `ringCrossings` called Mathrax's "12×"
       crossed because a wide label's box corners leave the disc while its
       glyphs do not; it now takes a label centered on a disc and no wider
       than it as on the disc.
-- [ ] 2.5a Loopy, 9x11 Hats Hard (the gate's deal), step 308 of the opening
-      plan: about fifteen of the player's pair signs crowd one corner, some
-      overlapping each other, and none of `drawPairRing`'s three shapes fits
-      clear of them, so its fallback (`?? shapes[0]`) crosses an "=".
-      One game's issue, not a crash: raise with the owner, recommending the
-      fallback take the shape crossing the fewest signs, and that the
-      crowding itself (signs over signs) is the thing worth a look.
+- [x] 2.5a Loopy, 9x11 Hats Hard (the gate's deal), step 308 of the opening
+      plan: the pair ring crossed an "=". Not the fallback, as first read:
+      the ring fit, but Loopy's `clearOf` left out text past half the box's
+      short side, and `ringShape` also shifts a ring by up to a quarter, so
+      the sign it crossed was never handed to it. `ringReach` (`ring.ts`,
+      beside the moves it bounds) is now that bound, and the frame sweep
+      asserts `ringCrossings` on every plan step's frame (failed at step 308
+      with the old bound planted; 65 games pass).
 - [ ] 2.6 The app's repaint edges an outline or ring *outside* the mark
       (`mark-flash.ts` `repainted`), and the edge lands on content the game
       drew over the mark: on Mathrax, the evidence outline's edge replaces

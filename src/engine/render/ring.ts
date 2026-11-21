@@ -170,6 +170,15 @@ export function ringContentBox(box: Rect, thickness: number, room: Rect = box): 
   return inflate(box, -hi);
 }
 
+/** How far past `box` a ring round it may reach, its stroke and edge
+ * included: the most it grows plus the most it shifts ({@link movesFor}).
+ * Text further off than this cannot be crossed, so a game that keeps the
+ * text it hands a ring short may leave that out, and no nearer. */
+export function ringReach(box: Rect): number {
+  const short = Math.min(box.w, box.h);
+  return short / 2 + Math.floor(short / 4) + MARK_EDGE_PX;
+}
+
 /** A ring's way off its box: grown by `grow` all round (drawn in where it is
  * negative), then shifted by `dx`, `dy`. */
 interface Move {

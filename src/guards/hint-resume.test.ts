@@ -38,6 +38,7 @@ import {
   SEARCH_REACH_GAMES,
 } from "../engine/testing/hint-games.ts";
 import { expectLedger } from "../engine/testing/ledger.ts";
+import { ringCrossings } from "../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../engine/testing/preferred-draw-state.ts";
 import { type DrawOp, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
@@ -366,14 +367,18 @@ describe("a kept hint plan leaves the board alone, and its every step changes it
         if (!res?.ok) continue; // a refusal has no steps to check
         let plain = frameOf(game, state);
         res.steps.forEach((step, i) => {
-          // The frame the player sees with the step on display draws. A ring
-          // meets the board's content only as the walk fills it in, so a fresh
-          // board's first steps alone passed a ring that threw on any square
-          // showing a number.
+          // The frame the player sees with the step on display draws, and its
+          // rings cross none of its text. A ring meets the board's content only
+          // as the walk fills it in, so a fresh board's first steps alone
+          // passed a ring that threw on any square showing a number.
           let shown: DrawOp[] = [];
           expect(() => {
             shown = opsOf(game, state, step);
           }, `${at}: plan step ${i}'s frame does not draw: "${step.explanation}"`).not.toThrow();
+          expect(
+            ringCrossings(shown),
+            `${at}: plan step ${i}'s ring crosses text: "${step.explanation}"`,
+          ).toEqual([]);
           const after = game.executeMove(state, step.move);
           // The engine guarantees a displayed step is never stale. The
           // Towers-specific trigger (auto-pencil resolving a later step) has
