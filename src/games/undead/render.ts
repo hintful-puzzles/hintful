@@ -10,9 +10,11 @@
  * the diff key (docs/rendering.md § "The tile cache and the diff key"). The
  * fork's pencil-mode indicator sits in the top-right border corner.
  *
- * Upstream computes `cell_errors` but never *renders* them (only the count
- * blocks and edge clues turn red), and neither does this port; the inset red
- * outline is the separate Check & Save mistake overlay.
+ * The red is where the board breaks its rules (`Game.rules`): a total no
+ * longer met, and an edge clue its sightline can no longer show. Upstream also
+ * flags the squares of a broken sightline and never draws them, and neither
+ * does this port; the inset red outline is the separate Check & Save mistake
+ * overlay.
  */
 
 import {
@@ -50,6 +52,7 @@ import {
   type MarkBand,
   type MarkCell,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -64,6 +67,7 @@ import {
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
+import { edgeOfSees, rules, TOTALS } from "./solver.ts";
 import {
   CELL_MIRROR_L,
   COUNT_STYLE_PLACED_TOTAL,
@@ -611,6 +615,7 @@ function drawMonsterCount(
   state: UndeadState,
   c: number,
   placed: number,
+  broken: boolean,
   hflash: WinTone,
 ): void {
   const ts = ds.tileSize;
@@ -654,12 +659,7 @@ function drawMonsterCount(
       bufm,
     );
   }
-  const color =
-    state.countErrors[c] || placed > total
-      ? COL_ERROR
-      : placed === total
-        ? COL_DONE
-        : COL_TEXT;
+  const color = broken ? COL_ERROR : placed === total ? COL_DONE : COL_TEXT;
   dr.drawText(
     { x: dx + msize + ds.countPadding, y: dy + f(dh / 2) },
     {
@@ -763,6 +763,13 @@ export function redraw(
     else if (state.guess[i] === MON_ZOMBIE) placed[2]++;
   }
 
+  // Where the board breaks its rules: each total, and each edge clue.
+  const live = liveErrors(rules, state);
+  const brokenTotal = TOTALS.map((rule) => live.byRule.has(rule));
+  const brokenClues = new Set(
+    [...(live.clues.get("sees") ?? [])].map((k) => edgeOfSees(common, k)),
+  );
+
   if (changedCountStyle) drawMonsterCountBackground(dr, ds);
   if (changedCountStyle || first) calculateCountLayout(ds);
 
@@ -771,17 +778,17 @@ export function redraw(
     const column = (countX(ds, i) + ds.countW / 2 - b) / ts - 0.5;
     const hflash = flash.win(sweepStep(column, -1));
     const look =
-      (state.countErrors[i] ? 1 : 0) |
+      (brokenTotal[i] ? 1 : 0) |
       (hflash << 1) |
       ((ui.ascii ? 1 : 0) << 3) |
       (ui.countStyle << 4);
     if (ds.counts.changed(i, look, placed[i]))
-      drawMonsterCount(dr, ds, state, i, placed[i], hflash);
+      drawMonsterCount(dr, ds, state, i, placed[i], brokenTotal[i], hflash);
   }
 
   // The edge clues.
   const clueColor = (index: number): number => {
-    if (state.hintErrors[index]) return COL_ERROR;
+    if (brokenClues.has(index)) return COL_ERROR;
     if (state.hintsDone[index]) return COL_DONE;
     return COL_TEXT;
   };
@@ -789,7 +796,7 @@ export function redraw(
     const g = range2grid(index, common.w, common.h);
     const lit = flash.win(sweepStep(g.x, g.y));
     const key =
-      (state.hintErrors[index] ? 1 : 0) | (state.hintsDone[index] ? 2 : 0) | (lit << 2);
+      (brokenClues.has(index) ? 1 : 0) | (state.hintsDone[index] ? 2 : 0) | (lit << 2);
     if (ds.clues.changed(index, key))
       drawClue(dr, ds, g.x, g.y, clueColor(index), clue, lit);
   };

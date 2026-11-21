@@ -80,6 +80,7 @@ import {
 import {
   EASY_MAX_ARC_PASSES,
   findUndeadSolution,
+  rules,
   solveDeductive,
   status,
   TIER_RUNG,
@@ -106,7 +107,6 @@ import {
   newUi,
   paramConfig,
   rangeOfSlot,
-  recomputeErrors,
   textFormat,
   type UndeadCommon,
   type UndeadMove,
@@ -354,7 +354,6 @@ function executeMove(state: UndeadState, move: UndeadMove): UndeadState {
       return assertNever(move, "undead: executeMove");
   }
 
-  recomputeErrors(next);
   return next;
 }
 
@@ -944,6 +943,7 @@ export const undeadGame: Game<
   status: (s): GameStatus => status(s),
 
   solve,
+  rules,
   difficulty,
   hint: {
     plan: hint,

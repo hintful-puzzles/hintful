@@ -339,12 +339,6 @@ export interface UndeadState {
   guess: Uint8Array;
   /** `numTotal` pencil-mark bitmasks (only meaningful while `guess === 7`). */
   pencil: Uint8Array;
-  /** `wh` live cell-error flags. */
-  cellErrors: Uint8Array;
-  /** `2·numPaths` live edge-clue error flags (indexed by edge position). */
-  hintErrors: Uint8Array;
-  /** 3 live count-error flags (ghost / vampire / zombie). */
-  countErrors: Uint8Array;
   /** `2·numPaths` struck-through ("done") flags per edge clue. */
   hintsDone: Uint8Array;
 }
@@ -354,9 +348,6 @@ export function cloneState(s: UndeadState): UndeadState {
     common: s.common,
     guess: s.guess.slice(),
     pencil: s.pencil.slice(),
-    cellErrors: s.cellErrors.slice(),
-    hintErrors: s.hintErrors.slice(),
-    countErrors: s.countErrors.slice(),
     hintsDone: s.hintsDone.slice(),
   };
 }
@@ -366,9 +357,6 @@ function blankState(common: UndeadCommon): UndeadState {
     common,
     guess: new Uint8Array(common.numTotal).fill(MON_NONE),
     pencil: new Uint8Array(common.numTotal),
-    cellErrors: new Uint8Array(common.wh),
-    hintErrors: new Uint8Array(2 * common.numPaths),
-    countErrors: new Uint8Array(3),
     hintsDone: new Uint8Array(2 * common.numPaths),
   };
 }
@@ -523,64 +511,6 @@ function parseDesc(params: UndeadParams, desc: string): DescParse<UndeadState> {
 
 export function newState(params: UndeadParams, desc: string): UndeadState {
   return descValue(parseDesc(params, desc));
-}
-
-// --- live error recomputation (check_numbers_draw + check_path_solution) ----
-
-/**
- * Recompute the live legality overlays from `state.guess` (upstream
- * `execute_move`'s post-move sweep). Mutates `state.cellErrors`/`hintErrors`/
- * `countErrors`. It never decides that the board is solved: the rules do.
- */
-export function recomputeErrors(state: UndeadState): void {
-  state.cellErrors.fill(0);
-  state.hintErrors.fill(0);
-  state.countErrors.fill(0);
-  checkNumbersDraw(state);
-  for (const path of state.common.paths) checkPathSolution(state, path);
-}
-
-function checkNumbersDraw(state: UndeadState): void {
-  const common = state.common;
-  const stride = common.w + 2;
-  const counts = MONSTERS.map((m) => state.guess.filter((g) => g === m).length);
-  const totals = [common.numGhosts, common.numVampires, common.numZombies];
-  const filled = counts[0] + counts[1] + counts[2] >= common.numTotal;
-  for (let t = 0; t < 3; t++) {
-    if (counts[t] > totals[t] || (filled && counts[t] !== totals[t])) {
-      state.countErrors[t] = 1;
-      for (let x = 1; x <= common.w; x++) {
-        for (let y = 1; y <= common.h; y++) {
-          const xy = x + y * stride;
-          const xi = common.xinfo[xy];
-          if (xi >= 0 && state.guess[xi] === MONSTERS[t]) state.cellErrors[xy] = 1;
-        }
-      }
-    }
-  }
-}
-
-/** Flag each of `path`'s clues that its cells can no longer meet: more
- * monsters already visible than it says, or too few even if every undecided
- * cell turned out visible. */
-function checkPathSolution(state: UndeadState, path: UndeadPath): void {
-  let unfilled = 0;
-  for (let i = 0; i < path.length; i++) {
-    if (path.p[i] !== -1 && state.guess[path.p[i]] === MON_NONE) unfilled++;
-  }
-  let correct = true;
-  const check = (edge: number, clue: number, fromEnd: boolean): void => {
-    const seen = visibleCount(path, state.guess, fromEnd);
-    if (seen > clue || seen + unfilled < clue) {
-      correct = false;
-      state.hintErrors[edge] = 1;
-    }
-  };
-  check(path.gridStart, path.sightingsStart, false);
-  check(path.gridEnd, path.sightingsEnd, true);
-  if (!correct) {
-    for (let i = 0; i < path.length; i++) state.cellErrors[path.xy[i]] = 1;
-  }
 }
 
 // --- text ------------------------------------------------------------------

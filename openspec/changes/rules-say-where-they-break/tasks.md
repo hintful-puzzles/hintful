@@ -75,7 +75,10 @@
       Moved: crossing (its run rule is stated for rows and for columns, so a
       broken run is named by its first square and the rule; a run is framed
       once a digit rules out every number of its length, full or not, and a
-      number no run can still read turns red in the list). Run
+      number no run can still read turns red in the list). Moved: undead (a
+      rule a monster's total, so a broken total names its monster; a total
+      turns red once too few squares are left for it, where the old check
+      waited for a full grid; its three error fields leave the State). Run
       `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.

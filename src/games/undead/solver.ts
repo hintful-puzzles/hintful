@@ -19,6 +19,7 @@
  */
 
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
@@ -29,6 +30,7 @@ import {
   type GridSpace,
   STRIKE,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -171,20 +173,43 @@ function guessOf(board: Board, m: CellMarks): Uint8Array {
   return Uint8Array.from(board.squareOf, (c) => (m.cand(c) >> 1) & MON_NONE);
 }
 
-/** Whether `guess`, a game monster a square, answers the board, by the
- * rules the description compiles to. */
-function answers(board: Board, guess: ArrayLike<number>): boolean {
+/** `guess`, a game monster a square, as the description reads it: each
+ * monster placed, each mirror, and 0 where no monster is placed yet. */
+function valuesOf(board: Board, guess: ArrayLike<number>): Uint8Array {
   const { sp, dl, squareOf } = board;
   const grid = new Uint8Array(sp.cells.length);
   for (const c of dl.mirror.at) grid[c] = D_MIRROR;
   for (let i = 0; i < squareOf.length; i++)
     if (isSingleton(guess[i])) grid[squareOf[i]] = monsterValue(guess[i]);
-  return undead.isAnswer(grid, sp, dl);
+  return grid;
+}
+
+/** The board as its rules read it. */
+export const rules: RulesOf<UndeadState> = describedRules(undead, {
+  grid: (s) => valuesOf(boardOf(s.common), s.guess),
+  size: (s) => [s.common.w, s.common.h],
+  deals: (s) => [boardOf(s.common).dl],
+});
+
+/** The rule each monster's total breaks, ghost, vampire and zombie, in the
+ * order the game counts them. */
+export const TOTALS: readonly undead.RuleName[] = [
+  "ghostTotal",
+  "vampireTotal",
+  "zombieTotal",
+];
+
+/** Each edge clue's index, as the game numbers them round the grid, by its
+ * place in the description's `sees` clues, which are dealt one a slot. */
+export function edgeOfSees(common: UndeadCommon, k: number): number {
+  const { slots } = describedSpace(undead.units, common.w, common.h);
+  return rangeOfSlot(slots[k], common.w, common.h);
 }
 
 /** Solved where every monster square holds one and the board's rules hold. */
 export function status(state: UndeadState): GameStatus {
-  return answers(boardOf(state.common), state.guess) ? "solved" : "ongoing";
+  const g = rules.grid(state);
+  return !g.includes(0) && rules.isAnswer(state, g) ? "solved" : "ongoing";
 }
 
 // --- the ladder -------------------------------------------------------------
@@ -357,7 +382,7 @@ function solveBruteforce(board: Board, guess: Uint8Array): boolean {
   const loopGuess = loopPossible.map(lowestBit);
   let solutions = 0;
   do {
-    if (answers(board, loopGuess)) {
+    if (undead.isAnswer(valuesOf(board, loopGuess), board.sp, board.dl)) {
       if (++solutions > 1) return false;
       guess.set(loopGuess);
     }

@@ -19,6 +19,7 @@ import {
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import {
   type DrawOp,
@@ -38,7 +39,9 @@ import {
   RUNG_ARC,
   RUNG_COUNTING,
   RUNG_FORCING,
+  rules,
   solveDeductive,
+  TOTALS,
 } from "./solver.ts";
 import {
   type Difficulty,
@@ -228,14 +231,32 @@ describe("undead executeMove", () => {
     expect(undeadGame.status(broken)).toBe("ongoing");
   });
 
-  it("reddens the count when a monster type is over-placed", () => {
+  it("breaks the zombie total as soon as one zombie too many is placed", () => {
     const { state } = gen(4, 4, "normal", "overcount");
     let s = state;
-    // Place every cell as a zombie; once full, the counts must mismatch.
-    for (let i = 0; i < s.common.numTotal; i++) {
+    const zombieTotal = (): boolean => liveErrors(rules, s).byRule.has(TOTALS[2]);
+    for (let i = 0; i < s.common.numZombies; i++)
       s = undeadGame.executeMove(s, { type: "set", cell: i, monster: MON_ZOMBIE });
-    }
-    expect([...s.countErrors].some((e) => e === 1)).toBe(true);
+    expect(zombieTotal()).toBe(false);
+    s = undeadGame.executeMove(s, {
+      type: "set",
+      cell: s.common.numZombies,
+      monster: MON_ZOMBIE,
+    });
+    expect(zombieTotal()).toBe(true);
+  });
+
+  it("breaks a total once too few squares are left for it", () => {
+    const { state } = gen(4, 4, "normal", "overcount");
+    let s = state;
+    const ghostTotal = (): boolean => liveErrors(rules, s).byRule.has(TOTALS[0]);
+    // Vampires everywhere but the ghosts' own number of squares: still room.
+    const room = s.common.numTotal - s.common.numGhosts;
+    for (let i = 0; i < room; i++)
+      s = undeadGame.executeMove(s, { type: "set", cell: i, monster: MON_VAMPIRE });
+    expect(ghostTotal()).toBe(false);
+    s = undeadGame.executeMove(s, { type: "set", cell: room, monster: MON_VAMPIRE });
+    expect(ghostTotal()).toBe(true);
   });
 });
 
