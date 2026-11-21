@@ -926,23 +926,12 @@ uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
   ladder places each rung before the first technique of a higher tier on its
   scale (ABCD's diagonal strikes, `placedDiagonal`).
 - **A hint walks the same firings.** A candidate game records them into the
-  candidate walk (`record`); one without notes walks them with
-  `ladderWalk`, which takes the firing that continues from the walk's last
-  steps and never one harder than the ladder's own next firing. It is
-  `singleFirings`' continuing driver, so the continuity guard measures it as
-  it does every other ladder's. State the techniques in tier order: a
+  candidate walk (`record`); one without notes walks them with `ladderWalk`
+  ([`hints.md`](./hints.md) § "Recording the deduction", which says how it
+  continues and what `roles` say). State the techniques in tier order: a
   harder one stated first sets the walk's cap at its tier while an easier
   firing waits, and the hint teaches the harder reasoning (Slant's `pair`
-  above `loop` did). A game may name rungs whose order is not their tier's
-  (`ladderWalk`'s `roles`, `DeductionTechnique`'s meaning): the rungs after
-  a `prerequisite` are asked only once it has nothing left, and a
-  `fallback` only once every rung before it has nothing. Galaxies marks
-  each dot's own squares before any other step, and mirrors a wall only
-  when no arrow or line is otherwise forced, the order its hint had before
-  it was described. The walk continues from the cells a firing wrote,
-  unless `roles.writes` names other keys: Path continues along the numbers
-  a step's lines reach, since its edges' cells say nothing of which line a
-  player is following. A game whose ladder strikes candidates its player
+  above `loop` did). A game whose ladder strikes candidates its player
   cannot mark, and whose steps only place, does not walk the strikes as
   steps: it reads the board afresh through the striking techniques, weakest
   reading first, and takes a placing technique's firing on it, keeping its
@@ -1621,15 +1610,11 @@ strike. A technique whose firing should rest on a few marks reads those
 (`through(c, alike)` in place of a bound `A`), or the graph over-cites.
 Exemplar: `path-witness.test.ts`.
 
-**What a fact rests on is the engine's, derived from the reads**: `ladderWalk`
-keeps a `FactGraph` (`engine/solve/fact-graph.ts`, `walk.graph`) of every fact the
-walk made, with its firing, and a fact's parents are the earlier facts about
-any element its firing read. `restsOn(id)` answers from any fact: what it
-rests on transitively, the elements read that no fact made (the board's own
-marks), and `complete: false` where a firing in the chain did not say `reads`.
-A game writes no parent list. Relation facts have no readable element yet.
-`placeNotes` (same module) places the notes among a walk's steps from the
-graph, so no game keeps its own "where does this mark go" pass.
+**What a fact rests on is the engine's, derived from the reads**: the
+`reads` a firing says are what `ladderWalk`'s `FactGraph` (`walk.graph`)
+builds a fact's parents from, so a game writes no parent list
+([`engine-catalog.md`](./engine-catalog.md) § "`fact-graph.ts` — what a fact
+rests on"). Relation facts have no readable element yet.
 
 **A rule states how it is seen broken, with its words, in `breaks:`**, so a
 Check says what its tried value broke without the game finding it again. A

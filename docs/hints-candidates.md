@@ -443,8 +443,8 @@ check vouches for them".
   value (Rome's `onlyHome`, which the walk places). The rungs go in the
   ladder's order.
 - **A note outside the cell's full set (`NoteEncoding.all`) is no
-  candidate**: a player may pencil Rome's arrow off the board, and no
-  technique reads it.
+  candidate**, and input refuses it ([`mechanics.md`](./mechanics.md) §
+  "Pencil marks: the full note-taking UX"): no technique reads it.
 - **What a sentence names beyond the technique's terms is read off the
   values placed** in the game's `legs`: Rome's loop chain and goal group.
 - **The soundness check holds a technique, and the game's own hint test

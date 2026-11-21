@@ -343,19 +343,10 @@ wording".
 
 Return one of its constants from a refusing `hint`: `HintResult`'s error is
 `HintRefusal`, the union of their literal types, so one situation says one
-thing in every game.
-
-- **For a dead end only one puzzle has, use `puzzleDeadEnd(sentence)`**, or
-  `markedDeadEnd(phrase…)` when the words mark the cause.
-  `hint-refusal.test.ts` fails a sentence two games pass through either.
-- **Every refusal says whether it is a dead end** (`isDeadEnd`; its advice
-  is to undo), and the midend's `check` refuses a save on one.
-- **Do not refuse a finished board or a wrong one.** The midend says
-  `ALREADY_SOLVED` and `FIX_MISTAKES_FIRST` before it asks the game, and
-  `FIX_MISTAKES_FIRST` is not a `HintRefusal`.
-- **A game says `ALREADY_SOLVED` only where its status would not call a
-  finished board solved** (a sliding game's sorted board at move 0), and
-  `GAME_OVER` on a lost board that takes no more moves.
+thing in every game. `puzzleDeadEnd(sentence)` and `markedDeadEnd(phrase…)`
+make a dead end only one puzzle has, and `isDeadEnd` reads whether a
+refusal is one. Which refusal a game says, and when the midend says one
+first: [`hints.md`](./hints.md) § "Refusal wording comes from one module".
 
 ### `solve-failure.ts` — what Solve says when it will not solve
 
@@ -375,13 +366,9 @@ solver established.**
 
 ### `desc-error.ts` — why a game ID will not load
 
-**Read a desc once.** Write one `parseDesc(p, desc): DescParse<T>` and have
-`newState` build from `descValue(parseDesc(…))`; write no validator. A
-failed parse makes `descValue` throw, `loadDesc(game, p, desc)` turns that
-throw into a `DescParse<State>`, and `validateDesc` and `loadVerdict` are
-verdicts of that one reading. A check that needs the parsed board belongs
-inside the parse: a throw after `descValue` is a bug and propagates.
-Exemplar: `src/skeleton/grid/state.ts`.
+`DescParse`, `descValue` and `loadDesc` are the one reading of a desc
+([`mechanics.md`](./mechanics.md) § "Read a desc once"); `validateDesc` and
+`loadVerdict` are verdicts of it. Exemplar: `src/skeleton/grid/state.ts`.
 
 - **A parse fails with a `DescError`**, a branded string only this module
   makes; its `DESC_*` constants and `desc…` builders are the kinds. A helper on the desc path returns
@@ -400,12 +387,9 @@ Exemplar: `src/skeleton/grid/state.ts`.
 
 ### `assert-never.ts` — refusing a move the dispatch has no arm for
 
-End a discriminated `interpretMove` or `executeMove` chain with
-`assertNever`. Binding the value to `never` keeps the compile-time
-exhaustiveness and adds a legible runtime refusal for a save written by
-another build, whose moves are cast and not parsed. A bare `default: throw`
-loses the first, because any `default` makes the function total for the
-type checker. `rejectMove` is for a move type with no union to narrow.
+`assertNever` ends a discriminated dispatch, and `rejectMove` refuses a
+move type with no union to narrow ([`mechanics.md`](./mechanics.md) § "A
+move you do not recognize is refused, never guessed").
 
 ## `board/` — a board's structure
 
@@ -710,9 +694,9 @@ maximal digit run at `pos` as `{ value, next }`: `0` with no
 advance on a non-digit, which is how a caller tells "no number here" from
 "zero".
 
-- **The bound and what an out-of-range value means stay beside the call.**
-- **Write a single digit as `String(n)`**; anything wider is one of the
-  alphabets in `desc-alphabet.ts`. Hex is `Number.parseInt(c, 16)`.
+- How a game reads and writes digits:
+  [`mechanics.md`](./mechanics.md) § "Digits and numbers in a desc are one
+  fact, and it is not yours".
 - `decimal.test.ts` keys on the shape: a digit code as an operand, a
   comparison against a one-digit string, a private copy of an export here.
   Its header names the one shape it cannot see.
@@ -748,9 +732,9 @@ Reach for it when you declare `paramConfig` or validate params.
   10)" (`fieldLabel`). Leave it off a cap no sensible board reaches, which
   would only clutter the label.
 - `parseDimensions` reads a leading `WxH` or a bare square size.
-- **Write a float param with `formatG` and read it with `atof`.** A
-  full-precision float reads back as a different number, and the game ID
-  stops naming its board.
+- `formatG`, `parseLeadingFloat` and `atof` are a float param's codec
+  ([`mechanics.md`](./mechanics.md) § "Float params round-trip through
+  %g").
 
 ### `param-label.ts` — the one label of a params set
 
@@ -870,8 +854,8 @@ vs ring".
 
 Draw a hint's two cell marks with it: a round ring around the cell the
 deduction acts on, through `drawRing`, and an outline around the region it
-reasons from, a band on the cell's border. Neither goes behind content: no
-fill behind content stays readable in every hue and both schemes. The game
+reasons from, a band on the cell's border (why neither is a fill:
+[`hints-marks.md`](./hints-marks.md) § "Shade vs ring"). The game
 says what text each cell shows (`HintMarkStyle.text`, a `RingClear`;
 `NOTHING_TO_CLEAR` for none), and lays its notes and corner clue out in the
 cell's `ringTextBox`, so the centered ring on the cell goes round them.
@@ -916,11 +900,8 @@ paints with, are `color/roles.ts`.
 
 ### `overlay-sidecar.ts` — the overlay diff-key rule as a type
 
-Reach for it when a tile shows a hint or a mistake. **Never hand-write the
-two-array dance** for an overlay that is not in the packed tile value: `OverlaySidecar` owns the repack, the stale test and the
-commit, and is registered on the game's `TileCache`. Use `pack` for a hint step's highlights, `packCells` for a
-`findMistakes` list, and `clear()` with `add()` for an overlay with its own
-topology. A step's struck marks go in the `struck` lane, in the game's
+Reach for it when a tile shows a hint or a mistake
+([`rendering.md`](./rendering.md) § "Overlay sidecars"). A step's struck marks go in the `struck` lane, in the game's
 encoding (`valueBit(n)` for a candidate), never in the word beside the
 roles: a candidate mask needs every bit a cell's values reach. Exemplar:
 `src/skeleton/grid/render.ts`.
@@ -956,10 +937,8 @@ in a game's frames that no call to these helpers drew.
   draws it with these and no shape of its own, so it reads alike in every
   game (owner, 2026-11-19).
 
-When you extract a shape, check whether its dimensions were drifting too.
-An extraction that leaves the emitted op order unchanged moves no render
-snapshot, but an unchanged snapshot can also mean nothing was watching:
-break the helper on purpose and see what fails.
+Extracting a shape: [`rendering.md`](./rendering.md) § "A shape another
+game also draws".
 
 ### `drawing-rules.ts` — what a drawing accepts
 
@@ -1342,8 +1321,9 @@ typecheck. Exemplar: `src/skeleton/grid/solver.ts`.
   with a sticky `impossible()` and a required budget. It returns every
   firing; hiding one is `deduceHintPlan`'s `showable`. See
   [`hints.md`](./hints.md) § "Recording the deduction".
-- **With `continuing`, the hint stays where its work is**: each technique
-  declares `available()`, and the driver takes the firing that continues
+- **With `continuing`, the hint stays where its work is**: a compiled
+  technique's `available()` lists the firings it could make (the engine
+  builds it), and the driver takes the firing that continues
   from the plan's latest steps (`hint-frontier.ts`, below). Without it a
   plan takes whichever firing the scan meets first, and wanders.
 - **Certify a ladder with a census** (`testing/ladder-census.ts`): the
@@ -1354,11 +1334,10 @@ typecheck. Exemplar: `src/skeleton/grid/solver.ts`.
 
 ### `step-budget.ts` — the fixpoint non-termination guard
 
-Pass a `StepBudget` to every fixpoint on the hint or recording path. Ticked
-once per iteration, it turns a rule that reports progress without changing
-the board from a hang into a labeled failure, which names the techniques by
-firing count when ticked through `runDeductionFixpoint`. Generators run
-without one.
+`StepBudget`, ticked once an iteration, turns a fixpoint that never settles
+into a labeled failure, naming the techniques by firing count when ticked
+through `runDeductionFixpoint`. Where it goes:
+[`hints.md`](./hints.md) § "The step budget".
 
 ### `hint-finishes.ts` — whether deduction finishes a board
 
@@ -1440,18 +1419,9 @@ than grid cells keys it on that and drives it from its own plan
 "Continue from the last step" and `hints-candidates.md` § "A graph, not a
 grid (Map)".
 
-A deduction ladder's hint takes it through `singleFirings`' `continuing`:
-each technique declares `available()`, every firing it could make with what
-it reads and writes, and the driver keeps the frontier, a fresh one a plan.
-Key what a firing reads and writes on what the player follows, which need
-not be a cell: Path keys on the number whose line a step extends, and a
-cross writes nothing, so the plan stays with that line until it is joined.
-A firing that writes nothing keyed leaves the frontier where it was. Exemplar:
-`easyRungs` and `offered` in [`path/solver.ts`](../src/games/path/solver.ts).
-The ladder takes a continuing firing only at or below the tier its own
-order would fire at, so continuity never reaches for harder reasoning than
-the board needs; `fallback` and `prerequisite` on a technique keep a rung
-that presumes others ran dry from being asked before they have
+A deduction ladder's hint takes it through `singleFirings`' `continuing`,
+which keeps the frontier, a fresh one a plan, over the firings a compiled
+technique makes available
 ([`hints.md`](./hints.md) § "Recording the deduction").
 
 ### `permutation-planner.ts` — a staged plan over any permutation moves
@@ -1482,13 +1452,9 @@ sentences stay the game's. It takes a `planCap`, which bounds what the
 player is shown, and a `StepBudget`, which bounds non-termination.
 Exemplar: `src/skeleton/grid/hint.ts`.
 
-**Hide with `showable(board, firing)` a sound deduction that lands where
-the player's board already decides, or where the game would refuse the
-move.** A hidden firing still advances the working board, and the cap
-counts shown steps. Hide only what the player can already see, because a
-later step may cite it. A test reads the result's `hidden` count to prove
-it saw one. See [`hints.md`](./hints.md) § "Show only what the board does
-not already say".
+`showable(board, firing)` hides a firing, and the result's `hidden` counts
+them ([`hints.md`](./hints.md) § "Show only what the board does not
+already say").
 
 ### `described-hint.ts` — a described game's hint, built from its firings
 
@@ -1606,8 +1572,9 @@ ordered search where ties are many.
   count the finished test needs on the position rather than recounting it.
 - **Restarts do not help a proof of loss**: every position a cut does not
   stop is expanded whatever the order, so a short try only repeats work
-  (measured on Pegs in `own-the-finishability-search`, task 1.2). They help
-  where the search also has to find, as in Same Game.
+  (measured on Pegs in `own-the-finishability-search`, task 1.2). Where
+  they help is [`hints-search.md`](./hints-search.md) § "Find with one
+  search, prove with another".
 
 Exemplars: `pegs/solver.ts` (in place, one try) and `samegame/solver.ts`
 (a new board a move, with restarts).
@@ -1735,11 +1702,9 @@ its description's. Nothing here decides which sentence fires. See
 
 Reach for it when the player slides tiles toward one arrangement. It
 searches the board as the player sees it, one integer per cell, so two
-boards that show the same picture are one position. **The exact search runs
-on every board: a game supplies its budget and never when to spend it.**
-Gating it makes a hint cycle. `deepSearch` is the last resort past the
-exact search's reach, and it may reach exactly one ply further than the
-ungated search, which is what makes gating it safe. Exemplars:
+boards that show the same picture are one position. A game supplies the
+exact search's budget and `deepSearch`, and never when to spend them.
+Exemplars:
 `sixteen/index.ts` with `deepSearch`, `netslide/hint.ts` without. See
 `hints-search.md` § "Sliding-permutation games".
 

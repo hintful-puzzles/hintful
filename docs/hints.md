@@ -798,8 +798,10 @@ A step must tell the player something their board does not already show.
 Filter with [`deduceHintPlan`](../src/engine/hint/hint-plan.ts)'s
 `showable(board, firing)` (its users: `git grep -l showable -- src/games`). A
 firing that is not showable still advances the working board and becomes no
-step. The plan cap counts shown steps only, and the result's `hidden` count is
-what a test reads to prove its corpus exercised the hook.
+step. The plan cap counts shown steps only
+([`hints-marks.md`](./hints-marks.md) § "Bound a plan by the steps it
+offers"), and the result's `hidden` count is what a test reads to prove its
+corpus exercised the hook.
 
 Decide what is evident by asking the game's own move legality, from either
 side:
@@ -1172,6 +1174,8 @@ What a game answers for itself:
 - **`GAME_OVER` for a lost board that takes no more moves.** The midend does
   not refuse on `"lost"`, since a lost board may play on (Flood past its
   limit).
+- **`ALREADY_SOLVED` only where the game's status would not call a finished
+  board solved** (a sliding game's sorted board at move 0).
 - **`SEARCH_OUT_OF_REACH` when a bounded search comes back empty.** That says
   nothing about the board. `NO_MOVE_WORTH_MAKING` is a claim about the board
   and only a game that checked it may say it, as a backstop in a construction
@@ -1410,10 +1414,12 @@ refusal fails.
 
 ### A hint carries on from an entry the player made first
 
-Write every rule so that it concludes no less as cells are decided. Then
-what the rules reach from the opening they reach from any board with right
-entries added in any order. The resume walk does not check this: it visits
-only positions the plan's own order makes.
+Every rule concludes no less as cells are decided
+([`solver-and-generator.md`](./solver-and-generator.md) § "A fixpoint is
+order-independent only if every rule is monotone"). For the hint that
+means what the rules reach from the opening they reach from any board with
+right entries added in any order. The resume walk does not check this: it
+visits only positions the plan's own order makes.
 
 The shape to look for is a bound taken from the nearest undecided thing (the
 first gap, the next empty cell, the first candidate) where the true bound
@@ -1437,9 +1443,7 @@ and does not hang inside one `hint()` call.
 
 - **Never guard the generator's path.** Gate the budget on the recorder or
   hint signal the function already carries, so generation runs the same loop
-  unguarded. Exemplars: `deduceHintPlan` in `range/solver.ts`, which sets
-  the marks' budget that only a hint's walk carries (gated),
-  `deduceForcedEdges` in `palisade/solver.ts` (hint-only, so unconditional).
+  unguarded.
 - **A compiled ladder's loop ticks the budget**
   ([`deduction-fixpoint.ts`](../src/engine/solve/deduction-fixpoint.ts)): set the
   marks' `budget` on the hint's run and leave it unset on the generator's.

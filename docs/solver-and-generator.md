@@ -1434,11 +1434,14 @@ what the hook compares for each kind of entry.
 
 **A game with a unique solution ships `findMistakes`.** Check & Save
 (`src/puzzle/quick-save-actions.ts`) blocks a save on a wrong entry only
-through `game.findMistakes` (`Midend.check`); without the hook it saves a
-wrong board without complaint. Re-solve from the fixed clues and return
-every player cell that contradicts the unique solution, and `[]` when the
-board is not uniquely deducible: never guess. A permutation puzzle with no
-notion of a wrong-but-legal state omits the hook.
+through `game.findMistakes` (`Midend.check`), and the hint behind it catches
+only a position it calls a dead end, so without the hook it saves a wrong
+board without complaint. Re-solve from the fixed clues and return every
+player cell that contradicts the unique solution, and `[]` when the board
+is not uniquely deducible: never guess. A permutation puzzle with no notion
+of a wrong-but-legal state declares `notApplicable.findMistakes`
+([`mechanics.md`](./mechanics.md) § "Contract sections, and what makes a
+draft").
 
 Exemplar: `findMistakes` in
 [`skeleton/grid/index.ts`](../src/skeleton/grid/index.ts), and

@@ -584,9 +584,9 @@ is drawn over the bands.
   fact of the layout would point there at nothing about the board. No guard
   can tell the two apart, since a Sudoku row is just as fixed a set of
   squares: what differs is the claim, so read each rung that stripes.
-- **No line is named by a number the board does not draw.** Say "this row"
-  over the stripes, or name a destination by the mark on it;
-  `hint-quality.test.ts` rejects "row 3" in any sentence.
+- **The words say "this row" over the stripes**, never a number the board
+  does not draw ([`hints.md`](./hints.md) § "Name elements by what the
+  player can see").
 
 **Draw the stripes after the cell's background and before its content.** A
 game on `OverlaySidecar` names the cells as stripes in its words and calls

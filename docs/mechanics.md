@@ -207,11 +207,12 @@ compatibility decision for the owner.
   (`engine-params`, "A params refusal is a sentence").
   `params-refusal.test.ts` reads every string one can return, through
   constants (`AREA_TOO_LARGE`) and helper calls.
-- **Do not re-baseline
-  [`params-stability.test.ts`](../src/guards/params-stability.test.ts) with
-  `vitest -u`.** Every line of its table that moves is a shared game ID
-  that stops naming its board, so it needs the owner's say-so. A new game
-  adds its own lines and moves none: run with `--update` and read the diff.
+- **A line of
+  [`params-stability.test.ts`](../src/guards/params-stability.test.ts)
+  moves only with the owner's say-so.** Every line that moves is a shared
+  game ID that stops naming its board. A new game adds its own lines and
+  moves none; read the diff before writing the snapshot again
+  ([`testing.md`](./testing.md) § "A game's verdict in one command").
 
 ## Float params round-trip through %g
 
@@ -506,15 +507,11 @@ contract". Exemplar: the skeleton's
   ([`solver-and-generator.md`](./solver-and-generator.md) § "Giving a
   deductive game an Unreasonable tier").
 - **A game with no tiers declares `finishesByDeduction`** (`engine-params`,
-  "An untiered game says whether deduction finishes a board"):
-  `nothingToDeduce` where the board is moved, searched or guessed. A game
-  that deduces and has no tiers because its answer is hidden writes its own
-  test ([`solver-and-generator.md`](./solver-and-generator.md) § "No option
+  "An untiered game says whether deduction finishes a board";
+  [`solver-and-generator.md`](./solver-and-generator.md) § "No option
   switches the generator's checks off").
 - **A game with no mistake check declares `hasNoSolution` where it has a
-  cheap proof**, answering with a `markedDeadEnd` where the game can be lost
-  and the proof has a cause to outline, and pins a board with no solution
-  either way (`engine-params`, "A game with no mistake check is held to a
+  cheap proof** (`engine-params`, "A game with no mistake check is held to a
   board with no solution";
   [`solver-and-generator.md`](./solver-and-generator.md) § "One answer, even
   when it is hidden").
@@ -567,11 +564,9 @@ state 0. Exemplars: the skeleton's
   spelling of every board, and a player's typo loads.
 - **For the shared run-length grammar** (a value character, or a letter for
   a run of blanks) use [`engine/game-id/run-length.ts`](../src/engine/game-id/run-length.ts)
-  inside the one parse. `keepTrailingBlanks` decides whether the desc ends
-  with the run that reaches the last cell, and your parser depends on the
-  answer. A letter-run alone does not make it that grammar; the other token
-  decides. A multi-digit clue with separators, or a desc with no value
-  character, is a grammar of its own.
+  inside the one parse; when it is that grammar, and what
+  `keepTrailingBlanks` decides, is [`engine-catalog.md`](./engine-catalog.md)
+  § "`run-length.ts` — the letter-run desc grammar".
 
 [`desc-error-games.test.ts`](../src/guards/desc-error-games.test.ts) checks
 from outside: every desc the generator writes loads, every one-edit near
@@ -885,15 +880,9 @@ notes declares the shared ones ("Pencil marks: the full note-taking UX").
   `src/store/settings.ts` returns for the puzzle before your hook.
 - **What a placement rules out at a glance is declared, not a preference.**
   Where placing a thing rules out squares the player would otherwise cross
-  out by hand (the squares round a star or a tent), state `rulesOut` in the
-  game's description (`docs/descriptions.md` § "What a placement rules out")
-  and pass its `RULES_OUT` to `describedFiringHint`, whose `rulesOut` is the
-  `Game`'s: the engine brings the conclusions of the named techniques that
-  read the placed square, and writes no `bring` for the game. A game whose
-  rule-out is no technique of its ladder writes `Game.rulesOut` itself, a
-  `bring(before, after)` that answers with the marks as a move of the game's
-  own, and says why in a comment (Tents' row and column counts and Light Up's
-  numbered walls are inside techniques that also place). The engine offers the
+  out by hand (the squares round a star or a tent), the game declares it
+  (`docs/descriptions.md` § "What a placement rules out"), and writes no
+  preference of its own. The engine offers the
   `auto-cross` preference and makes the marks one step of Undo with the move.
   The hint judges the move alone and ends a plan where marks are brought.
   `rules-out.test.ts` plays every declaring game's hint with it on. Exemplar:
@@ -970,15 +959,15 @@ before it cites them.
 
 ## Mistake checking is part of done
 
-**A game with one answer ships `findMistakes`.** The midend's `check` blocks
-a save on a wrong entry only through `game.findMistakes`. The hint behind it
-catches only a position it calls a dead end, so without the hook Check &
-Save blesses a wrong board. With the hook, "Check & save" and "Check without
+**A game with one answer ships `findMistakes`**
+([`solver-and-generator.md`](./solver-and-generator.md) § "The
+solvable-game contract"). With the hook, "Check & save" and "Check without
 saving" are the shell's and cost the game nothing. A game with no mistake to
-check (rearranging pieces, many solutions, a hidden answer) says so in
-`notApplicable.findMistakes` ("Contract sections, and what makes a draft").
-Exemplar: `findMistakes` in the skeleton's
-[`index.ts`](../src/skeleton/grid/index.ts).
+check (rearranging pieces, many solutions, guesses none of which can be
+wrong) says so in `notApplicable.findMistakes` ("Contract sections, and what
+makes a draft"); a hidden answer is no such reason
+([`solver-and-generator.md`](./solver-and-generator.md) § "One answer, even
+when it is hidden").
 
 - How to compute it:
   [`solver-and-generator.md`](./solver-and-generator.md) § "findMistakes".

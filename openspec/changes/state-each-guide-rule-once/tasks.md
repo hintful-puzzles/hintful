@@ -35,52 +35,30 @@ copies point.
       `mechanics.md` § "Pencil marks: the full note-taking UX".
 - [x] `pointer.ts` rules in the catalog: home `input.md`.
 - [x] `copyUi`'s kinds: home `input.md` § "A canceled press is the engine's".
-- [ ] `findMistakes` and a hidden answer: mechanics § "Mistake checking is
-      part of done" excuses a hidden answer, solver-and-generator § "One
-      answer, even when it is hidden" does not (the code agrees: Mines,
-      Blackbox, Guess check). Home solver-and-generator; also "a
-      permutation puzzle omits the hook" vs `notApplicable` (Fifteen
-      declares it).
-- [ ] A deducing untiered game: mechanics "writes its own test" vs
-      solver-and-generator "answers with `hintFinishes`" (Mines does).
-      `hasNoSolution`/`markedDeadEnd`: mechanics and hints.md restate
-      solver-and-generator § "One answer, even when it is hidden".
-- [ ] A note outside a cell's full set: hints-candidates says Rome may
-      pencil an arrow off the board; mechanics and `rome/index.ts` refuse it.
-- [ ] `params-stability` re-baseline: mechanics contradicts itself
-      (`-u` vs `--update`); home `testing.md`.
-- [ ] Step budget: hints.md § "The step budget" home; catalog
-      `step-budget.ts`, solver-and-generator restate.
-- [ ] Hint refusals: catalog `hint-refusal.ts` restates hints.md §
-      "Refusal wording comes from one module"; move its `ALREADY_SOLVED`
-      sentence home.
-- [ ] `showable`: catalog `hint-plan.ts` restates hints.md § "Show only
-      what the board does not already say".
-- [ ] Read a desc once, `assertNever`: catalog `desc-error.ts`,
-      `assert-never.ts` restate mechanics.
-- [ ] Digits, run-length, params `kw`, floats: catalog `decimal.ts`,
-      `desc-alphabet.ts`, `run-length.ts`, `params.ts` restate mechanics
-      (the catalog's "read it with `atof`" is imprecise).
-- [ ] `auto-cross`/`rulesOut`: mechanics § "Preferences" restates
-      descriptions.md § "What a placement rules out".
-- [ ] Catalog render entries restating their guide: `overlay-sidecar.ts`
-      (rendering § "Overlay sidecars"), `pencil-indicator.ts` (rendering,
-      input § "A notes mode added to a game"), `draw.ts` (rendering § "A
-      shape another game also draws"), `ring.ts`, `hint-mark.ts`,
-      `hatch.ts` (hints-marks), `slide-planner.ts`, `finish-search.ts`
-      (hints-search), `easing.ts`, `drawRuledOutCross`, `sections.ts`,
-      `completion-status.ts`.
-- [ ] ladderWalk continuity: hints.md § "Recording the deduction" home;
-      descriptions.md § "The runtime a ladder runs on" and catalog
-      `hint-frontier.ts` restate.
-- [ ] FactGraph parents: descriptions.md restates catalog `fact-graph.ts`.
-- [ ] Monotone rules: hints.md § "A hint carries on from an entry the
-      player made first" restates solver-and-generator § "A fixpoint is
-      order-independent only if every rule is monotone".
-- [ ] No line named by a number: hints-marks § "Hatch the line the
-      sentence names" restates hints.md § "Name elements by what the
-      player can see"; plan cap counts shown steps: hints.md restates
-      hints-marks § "Bound a plan by the steps it offers".
+- [x] `findMistakes` and a hidden answer: mechanics excused a hidden
+      answer, the home does not (Mines, Blackbox, Guess check); "a
+      permutation puzzle omits the hook" is now `notApplicable` (Fifteen).
+- [x] A deducing untiered game: mechanics said "writes its own test", the
+      home `hintFinishes` (Mines); mechanics points.
+- [x] A note outside a cell's full set: hints-candidates said Rome may
+      pencil one; input refuses it (`rome/index.ts`).
+- [x] `params-stability`: mechanics contradicted itself; it keeps the
+      owner's say-so and points at testing.
+- [x] Step budget, hint refusals (the `ALREADY_SOLVED` sentence moved
+      home), `showable`, read a desc once, `assertNever`, digits, run-length,
+      floats: the catalog lists the exports and points.
+- [x] `auto-cross`/`rulesOut`: mechanics points at descriptions.
+- [x] Catalog `overlay-sidecar.ts`, `draw.ts`, `hint-mark.ts`,
+      `slide-planner.ts`, `finish-search.ts` point at their guides.
+- [ ] Catalog `pencil-indicator.ts` (rendering, input § "A notes mode added
+      to a game"), `easing.ts`, `drawRuledOutCross`, `sections.ts`,
+      `completion-status.ts`: smaller overlaps, read each.
+- [x] ladderWalk continuity: descriptions and the catalog's
+      `hint-frontier.ts` point at hints.md § "Recording the deduction";
+      the catalog's `available()` is the engine's for a compiled technique.
+- [x] FactGraph parents: descriptions points at the catalog.
+- [x] Monotone rules: hints.md points at solver-and-generator.
+- [x] No line named by a number; plan cap counts shown steps.
 - [ ] `keepTrack` shrinking: hints-marks, hints.md, catalog.
 - [ ] `NoteEncoding.all(i)`: hints-candidates and catalog.
 - [ ] The hint-resume slicing: hints-search, hints.md, testing.md (home).
@@ -128,8 +106,12 @@ copies point.
       Unruly, `drawLinkFor` (Tents); the advice around them may be obsolete
       now these games run compiled ladders.
 - [ ] hints-candidates: `satisfiedLines`, `packedLines` (ABCD).
-- [ ] hints.md: `skeletonHint`/`deduceHintPlan` as how games plan;
-      `deduceHintPlan` in Range, `deduceForcedEdges` in Palisade;
+- [ ] hints.md § "The shared plan loop: deduceHintPlan" says to build every
+      plan with it, exemplar `skeletonHint`; only Ascent and Loopy import
+      it (2026-11-21), a described game plans in `described-hint.ts`.
+      Rewrite to what a game does now. (`deduceHintPlan` in Range and
+      `deduceForcedEdges` in Palisade: removed from § "The step budget".)
+- [ ] hints.md:
       `Game.refreshHintStep`; `markHelps` (Spokes); `stepOf`;
       `skeletonKeepTrack` location.
 - [ ] descriptions, testing: `Game.hintRungs` (is `hint.rungs`).
