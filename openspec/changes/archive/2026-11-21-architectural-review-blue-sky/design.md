@@ -328,40 +328,45 @@ than the median 2,150.
 
 ## The route
 
-Stages, each its own change, each worth having if the next is never made:
+The owner, 2026-11-21, set the end state this route serves: no imperative
+code addressed to one game, a game being its description alone
+(`docs/doctrine.md` § "Where the engine is heading: a game is its
+description"). Under it the shared board (target 1) is not one option among
+several but the foundation: the next game's description can reuse a
+capability only if the capability speaks the engine's vocabulary rather
+than one game's own types. Stages, each its own change:
 
-0. **Corrections, now, whatever else is picked.**
+0. **`state-each-game-fact-once`**: corrections, whatever else happens.
    - The `DIFF_*` constants named by the description's tiers.
-   - `sizes` either consumed by `paramConfig` or deleted from the
-     description, with Wordtrail and Crossing's drift settled.
-   - One `name` and one meaning of `family`.
+   - `sizes` consumed by `paramConfig`'s bounds, or deleted from the
+     description, with Wordtrail's and Crossing's drift settled.
+   - One `name`, and one meaning of `family`.
    - The engine's `interpretMove` for a game whose `targetVerbs` say it all.
    - `animLength` absent rather than `() => 0`.
+1. **`retire-the-c-reference-ties`** (§ "Ties to the C version").
+2. **`rules-say-where-they-break`**: compiled violations (target 3), and
+   live errors drawn from them. Needed under any future, and the first
+   capability the description drives beyond the answer check.
+3. **`a-game-from-its-description-alone`**, the pilot (targets 1, 2, 4, 7,
+   8):
+   - the engine's board, `Edit` and `Ui`;
+   - a new fill game written with no TypeScript of its own, each gap closed
+     by an engine capability;
+   - Tents moved to the same standard, as the stress test.
 
-   All small and player-invisible, except where a drifted bound changes
-   what the Custom dialog accepts.
-1. **Compiled violations** (target 3). Independent of the model pivot,
-   player-visible only as consistency, and it removes the rule copies that
-   have drifted. A good first engine change: it adds to the compiler what a
-   later stage needs anyway.
-2. **The candidate family's kit** (target 6 for the 12 candidate games, on
-   `edge-clue-latin/play.ts`'s precedent, keeping each game's `Move`).
-   Removes about 2,000 lines without touching saves.
-3. **Pilot the model pivot** (targets 1, 2, 4, 7, 8):
-   - Build the next new fill game on `fillGame` from the start.
-   - Migrate Tents onto it: links, edge clues and a pairing rule, so it
-     pressures the design where Light Up would not.
-   - Measure lines, frame time, hint-walk time and the guards' behavior.
+   It measures lines, frame time, hint-walk time and hint quality, and
+   whether the second game needed fewer new capabilities than the first,
+   which is the vision's real test. It ends with a guard on the lines of
+   TypeScript under `src/games/`, a ratchet that only goes down.
+4. **Migrate by family**, each batch its own change once the pilot holds:
+   - the candidate family (the former "kit" stage, now an input capability
+     on the engine's board, since saves may break);
+   - the plain-cell games;
+   - the poor-fit third, with the explicit render walk kept where it must
+     be.
 
-   This decides whether the rest migrates.
-4. **Migrate by fit**, in batches by archetype, the plain-cell half first.
-   The poor-fit third keeps the explicit render walk but may still take the
-   store, the violations and the narration.
-
-The pivot is the large item, and the one that answers the owner's feeling:
-stages 0–2 trim what the split causes; stage 3 removes the split. I
-recommend 0, 1 and 2 as filed changes now, and 3 as a pilot whose result
-decides 4.
+Filed now: 0 to 3, in that order. Stage 1 frees the generators the pilot
+rewrites, and stage 2 is a capability the pilot uses.
 
 ## Ties to the C version
 
@@ -383,7 +388,7 @@ Queries: `git ls-files '*differential*' | xargs cat | wc -l`;
 `git grep -l describeDescDifferential -- 'src/games/*'`;
 `git grep -liE 'byte-match' -- 'src/games/*/generator.ts'`.
 
-This becomes stage 0b of the route, independent of the rest: retire the
+This becomes stage 1 of the route, independent of the rest: retire the
 first four rows, re-found the upstream-ID guard on a slim corpus, and
 rewrite the guides' byte-match passages as what replaces them (the
 description's soundness check and the deal's tier gate).
@@ -397,5 +402,7 @@ description's soundness check and the deal's tier gate).
    to the C version with no other benefit (§ "Ties to the C version").
    Upstream's game IDs keep loading, since that serves players, unless the
    owner says otherwise.
-3. **Which stages to file:** 0, 0b, 1 and 2 now and 3 as a pilot
-   (recommended), or a different cut.
+3. **Which stages to file.** Answered 2026-11-21: the owner took the end
+   state of a game being its description alone ("that does sound good.
+   Please write it up"), with the game's art from the engine left for a
+   later conversation. Stages 0 to 3 of § "The route" are filed.

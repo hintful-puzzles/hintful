@@ -1,0 +1,5 @@
+# Drop skip_specs and add deltas for the specs that require a byte-match or
+# a C-graded verdict (tasks 1.1): this change alters requirements.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true

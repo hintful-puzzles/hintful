@@ -100,9 +100,9 @@ The long form of each of these is `docs/doctrine.md`.
 - **A game that does not fit a convention is first a question about the
   convention.** Only when the shape cannot be made more flexible does the game
   take an override, and it says why. Game logic is never bent to fit a contract.
-- **Where several games write the same thing, the framework should own it.**
-  Refactor as you go: "noticeably cleaner" is reason enough. Record a decline
-  with its reason.
+- **A game is heading to be its description alone.** Code is addressed to a
+  concept, never to a game, and the framework owns what several games write.
+  Refactor as you go: "noticeably cleaner" is reason enough.
 - **Declare what the engine consumes; refuse a second copy.** A declaration the
   engine runs or builds from cannot drift from the game. A statement about a
   game that only a check reads will rot, and so will a hand-kept list of games:

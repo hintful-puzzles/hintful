@@ -26,6 +26,42 @@ that value lands early, and judge a game by whether it plays correctly.
   itself: the timer shows this board's time and keeps no record of it. Do not
   propose or scaffold these.
 
+## Where the engine is heading: a game is its description
+
+The end state (owner, 2026-11-21): **no imperative code addressed to one
+game**. A game is its description, which invokes kinds of rule, input,
+painting, dealing and encoding that the engine provides, with their
+parameters. Code that only one game uses today still exists, but it is a
+capability in the engine, written so that the next game uses it by writing
+a description. The review that set this course is
+`openspec/changes/archive/2026-11-21-architectural-review-blue-sky/design.md`.
+
+- **Code is addressed to a concept, never to a game.** The test of a
+  capability is that it reads only the engine's vocabulary: the board's
+  elements, values, clues and marks, never a game's own types. That is why
+  the board itself is the engine's first: without one model there is no
+  shared vocabulary to write a capability in.
+- **A description says what; a capability says how.** A description names
+  capabilities, their parameters and the elements they act on. When it
+  starts to need branching or a loop, a capability is missing; the
+  description language does not grow into a programming language.
+- **A capability's first user does not guess its generality.** It is
+  general in the data it reads and specific in what it does, and the second
+  game that wants it reshapes it, once, in the engine.
+- **Declarative is compiled, not interpreted.** Descriptions compile to
+  TypeScript, so a capability pays no interpretation cost; a step toward
+  this end state still measures frame time and hint-walk time, since the
+  scene-graph contract withdrawn in 2026-05 lost on frame time.
+- **The compiler's refusals are the porter's interface.** A description that
+  does not compile says which line is wrong and why, in the puzzle's terms.
+- **A game not yet moved is not a second way.** Once the engine can carry a
+  kind of game wholly from its description, a new game of that kind is born
+  so, and an older one is work not yet done, never a form to copy.
+
+Open, for a later conversation (owner, 2026-11-21): the game's art from the
+engine too, the description declaring the kinds of piece it needs, each
+instance and its properties, and the engine drawing them.
+
 ## Convention over configuration
 
 A game's directory holds what is essential to that puzzle: its rules, its
