@@ -1025,12 +1025,12 @@ assert in a structural test that every generated board fits it, and pin the
 
 **A sticky mode is visible, and that can cost geometry.** A game that gains
 `ui.pencilMode` gains the pencil-mode indicator's corner
-(`pencil-indicator-placement.test.ts`). Where the borders cannot hold the
-glyph, grow the canvas with `pencilIndicatorCanvas`, on every side so the
-board stays centered, route every drawing site through an `origin(ts)`, and
-shift `fromCoord` by the same margin. A game whose tiles never painted outside
-the board paints the new margin once. Exemplar:
-[`rome/render.ts`](../src/games/rome/render.ts).
+(`pencil-indicator-placement.test.ts`), found in the order
+[`engine-catalog.md`](./engine-catalog.md) § "`pencil-indicator.ts` — the
+pencil-mode indicator" gives. Growing the canvas moves every drawing site
+onto an `origin(ts)` and shifts `fromCoord` by the same margin, and a game
+whose tiles never painted outside the board paints the new margin once.
+Exemplar: [`rome/render.ts`](../src/games/rome/render.ts).
 
 **A note on the side two squares share has one gesture set.** A tap marks the
 side of the square it lands nearest. From the keyboard a select picks a

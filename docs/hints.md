@@ -27,9 +27,8 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 2. **Let the engine build the plan from the player's own marks.** `hint.ts`'s
    `describedFiringHint` (`describedEdgeHint` for edges) walks one firing at a
    time, takes the move that makes a firing's squares, and returns a
-   `HintRefusal` where there is no step (§ "The shared plan loop:
-   deduceHintPlan", § "The step budget", § "Refusal wording comes from one
-   module").
+   `HintRefusal` where there is no step (§ "Where the plan loop comes from",
+   § "The step budget", § "Refusal wording comes from one module").
 3. **State every sentence in the description**, a technique's `says` over
    its typed terms and the squares its step marks, its pointing words
    references to marks (§ "Writing the narration", § "The sentences live in
@@ -84,7 +83,7 @@ Each step names the file of `src/skeleton/grid/` that already does it.
 | The hooks a hinted game implements | you wire `hint`, `hint.keepTrack` or another hint hook into `Game` |
 | – Name the rung a step speaks | you add a deduction, or a test needs to know which one a step is |
 | – Every step is a gesture | you write `hint.targets` or `hint.gesture`, or a walk throws on a step's move |
-| – The shared plan loop: deduceHintPlan | you write the loop that turns firings into a plan |
+| – Where the plan loop comes from | your hint turns firings into a plan |
 | – Recording the deduction | the solver must say why each firing happened |
 | – A rung is not a premise, so return per premise | one rung holds several rules, or one step shows several deductions |
 | – A firing is not always a technique, so check the boundary too | true, forced steps split one thing a player sees at once |
@@ -858,7 +857,8 @@ under the same names, and the game spreads it and adds the rest.
   preference.
 - **`hint.keepTrack(move, step, state)`** returns `"completed"` when the move
   matches the step's intent, `"onTrack"` for partial progress on a step of
-  several moves, else `"off"`, which drops the plan. It is handed the state
+  several moves (shrunk in place: `hints-marks.md` § "Group one firing into
+  one step"), else `"off"`, which drops the plan. It is handed the state
   before the move (`Midend.processInput`), so a game that needs the result
   applies the move itself. For a pencil toggle, a candidate present now is
   one the toggle clears, the strike to follow, and an absent one is a toggle
@@ -969,13 +969,21 @@ step completes throws, and `hint-gesture.test.ts` walks every plan.
   `target-verb.test.ts`, and a game outside the target-verb model owes the
   same in its own tests.
 
-### The shared plan loop: deduceHintPlan
+### Where the plan loop comes from
 
-Build the plan with [`deduceHintPlan`](../src/engine/hint/hint-plan.ts), not a
-loop of your own. Give it the working board (cloned by the caller), a
+**A described game writes no plan loop.** `describedHint`,
+`describedFiringHint` and `describedEdgeHint` walk its ladder one firing at
+a time under a step budget and a plan length, and hand back `plan` with the
+hooks beside it ([`engine-catalog.md`](./engine-catalog.md) §
+"`described-hint.ts` — a described game's hint, built from its firings").
+Exemplar: `skeletonHint` in `src/skeleton/grid/hint.ts`.
+
+A hint outside the description that still takes one forced firing at a time
+builds its plan with [`deduceHintPlan`](../src/engine/hint/hint-plan.ts),
+not a loop of its own. Give it the working board (cloned by the caller), a
 `status` and `incomplete` pair, a `next(board)` firing finder, an optional
 `apply`, and the two bounds. Rung order, reason types and sentences stay in
-the game. Exemplar: `skeletonHint` in `src/skeleton/grid/hint.ts`.
+the game. Exemplar: [`loopy/hint.ts`](../src/games/loopy/hint.ts).
 
 - **`planCap` and a `StepBudget` are separate bounds**: one stops a plan
   running on, the other catches a rule that is not advancing.
@@ -1016,8 +1024,8 @@ record. What the ladder gives is the walk and a certified rung list:
 
 - **Walk it with `ladderWalk`**
   ([`ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts)), built once over
-  the working marks, whose doc says what it takes and returns. Turn each
-  firing it takes into a step and hand that to `deduceHintPlan`. It takes
+  the working marks, whose doc says what it takes and returns; a described
+  game's plan loop walks it for you. It takes
   the firing that continues from the plan's latest steps, rung order
   breaking ties, at no harder a tier than the ladder's own order would fire,
   so it finishes the work in front of the player before it starts elsewhere.
@@ -1072,8 +1080,8 @@ Rules for any recorder:
   wipe derived from the givens becomes an ordinary narrated firing, and so
   does a placement's side effect, or a later sentence describes a board that
   is not the player's. Exemplar: Boats' `givenClue` and `neverTouch`. Where
-  the wipe wraps only a loop, `deduceHintPlan` replaces it and the wrapper is
-  never called (Sticks).
+  the wipe wraps only a loop, the hint's plan loop replaces it and the hint
+  never calls the wrapper.
 - **A Latin candidate cube is a notes representation; record off it**
   (`hints-candidates.md` § "What every game does").
 

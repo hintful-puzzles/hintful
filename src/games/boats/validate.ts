@@ -14,8 +14,7 @@
  * generation").
  *
  * Each `errs` parameter is optional and, when given, is *filled in* with the
- * per-slot or per-cell error flags the renderer paints (and the hint reads back
- * to name the rule a refuted trial breaks); the solver passes none.
+ * per-slot or per-cell error flags the renderer paints; the solver passes none.
  */
 
 import {

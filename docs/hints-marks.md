@@ -82,7 +82,6 @@ already does it.
 | – A run the player writes in one go is one journey | a step starts a sequence the player would finish at once |
 | – A move with side effects ends the plan | a move can change more than the square it names |
 | Re-derive the named technique | the solver returns forced cells with no reason |
-| Read the reason off the validator | the solver forces a move by contradiction |
 | A deduction the player can run with a gesture is its own rung | an existing control already shows the player a forced move |
 | Give the facts a notation | a deduction rests on a fact the board does not show |
 | – Check a game for facts the player cannot mark | you audit a hint, or add a rung that keeps state |
@@ -534,10 +533,6 @@ the step rules out.** A dead-end firing traps a point that may have nothing
 placed on it, so the component alone comes back empty and the step shows no
 evidence.
 
-- **Seed the recording solver by replaying the player's marks** through the
-  same function that keeps the connectivity structures in step: copying the
-  grid leaves the union-find behind. The recorder and the seed are both
-  optional arguments the generator never passes.
 - **A clue firing groups as `continuesPrevious` legs**, each carrying the
   necessity voice, so the voice guard passes on every leg.
 
@@ -889,50 +884,20 @@ the case.
   arrangement fits", which is a different and false claim.
 - **Measure how often the bottom rung fires before enriching it**; rarity is
   what justifies keeping it over rejecting the boards that need it.
-- **Keep the hint's functions separate from the generator's solver**, so the
-  generator is untouched by construction.
 - **Word a premise without a flat state-of-being verb** ("has nowhere to
   slide", not "is pinned"): a guard aimed at the conclusion clause catches
   "is", and the guard is not loosened for it.
 - **A move over an arbitrary set of cells** lets one firing group cells that
   do not touch and lets `hint.keepTrack` shrink it in place.
 
-Exemplars: `packLeft`, `packRight` and `analyzeLine` in
-[`pattern/solver.ts`](../src/games/pattern/solver.ts), and `fillCells` in
-[`pattern/index.ts`](../src/games/pattern/index.ts).
-
-## Read the reason off the validator
-
-**Where the solver forces a move by contradiction and the validity check
-already says which rule broke and where, build the reason from the rejected
-trial's errors.** No separate recorder is needed, and the evidence cells are
-the flagged positions. This fits any game whose `findMistakes` or live-error
-check marks which rule each cell breaks.
-
-- **The reason is in the rejected trial, not the accepted move.** Set the
-  trial value, validate into an errors array, classify, restore. A fixed
-  priority picks the clearest when several rules break.
-- **The classifier is total.** Mirror the validator's own decision sequence,
-  so every place it returns invalid has a branch, the ones that set no flag
-  included. A trial skipped as unclassifiable silently empties a tier.
-- **End in a true catch-all, never in "no reason"**, and pair it with a
-  coverage sweep by technique over generated boards, so a rung that never
-  fires is visible.
-- **Name a flag by what it means.** A reason lifted off a flag inherits the
-  flag's exact meaning; read where it is set.
-- **Keep the recording functions beside the untouched solver**, out of the
-  generator's path.
-- **For a Check**, the first form is a proof by contradiction: the value
-  tried on the target, and the break it makes at once, read off the
-  validator's errors and outlined.
-
-A described game needs no classifier: each way a trial breaks is a technique
-of its own, and its reason is built from the binding
-([`descriptions.md`](./descriptions.md) § "A firing's reason is built from
-its binding"; Bricks and Sticks). Boats states every break as one
-`broken`, so its trials keep the classifier to name the one that happened:
-the one ending in `unfinishable` in
-[`boats/solver.ts`](../src/games/boats/solver.ts).
+Exemplars: the ladder's one `line` technique, told four ways by `reasonOf`
+from `packLeft` and `packRight` in
+[`pattern/solver.ts`](../src/games/pattern/solver.ts), and the four `steps`
+of [`pattern.description.yaml`](../src/games/pattern/pattern.description.yaml),
+with the `fillCells` move of [`pattern/index.ts`](../src/games/pattern/index.ts).
+A technique that forces by contradiction needs no such reading: each way its
+trial breaks is a technique of its own ([`descriptions.md`](./descriptions.md)
+§ "A firing's reason is built from its binding").
 
 ## A deduction the player can run with a gesture is its own rung
 
@@ -1202,24 +1167,20 @@ in its spec.
 rule-out deductions as steps that draw the annotation**, so the next
 placement leans on a visible mark and its sentence stays short.
 
-- **Placements lead.** The finder checks for a determined piece not yet
-  placed before running the rule-out deductions, and returns at the first
-  firing.
+- **Placements lead**: the ladder places before it rules out.
 - **Do not seed annotations that carry no validity.** Where the mistake check
-  does not vouch for the player's annotation, the recorder re-derives every
+  does not vouch for the player's annotation, the walk re-derives every
   rule-out; one the player already drew is skipped for display while the
-  solver state still advances. Where the check does vouch, the marks are
-  replayed.
+  marks still advance. Where the check does vouch, the marks are seeded with
+  them.
 - **Easy boards come out all placements**, so the annotation appears only
   where a harder tier needs it. Assert the annotation path on a hard board in
   the game's own test.
-- **Gate the recorder**, so the generator's path does not run it.
 
-Exemplar: `hintFirings` in
-[`dominosa/solver.ts`](../src/games/dominosa/solver.ts), whose ladder places
-before it rules out and is seeded from the player's dominoes alone, with
-requirement "A barrier step draws the edge a technique rules out" in its
-spec.
+Exemplar: `dominosaWalk` in
+[`dominosa/solver.ts`](../src/games/dominosa/solver.ts), seeded from the
+player's dominoes alone, with requirement "A barrier step draws the edge a
+technique rules out" in its spec.
 
 ### A right mark is not yet a premise
 

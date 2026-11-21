@@ -253,10 +253,9 @@ one command"), since a name filter still walks every game's boards. A test
 that follows whole plans, as the midend plays a followed hint, cannot see a
 cycle: following the plan is the one path that never recomputes.
 
-The gate walks each game's smallest boards, one per mode
-(`gatePresets` in `src/engine/testing/hint-games.ts` says which). The largest
-are the slow tier's (`npm run test:slow -- src/guards/hint-resume.test.ts`),
-which nothing automatic runs. So where the hint's hard case grows with the
+The gate walks the slice of [`testing.md`](./testing.md) § "Slicing a preset
+sweep for the gate", and the largest boards only the slow tier, which
+nothing automatic runs (`testing.md` § "Running the slow tier"). So where the hint's hard case grows with the
 board, run the slow tier on the game whenever its search changes, and keep a
 test in the game that walks a full-size board on every commit. A game that
 can refuse with `SEARCH_OUT_OF_REACH` names that test in the guard's

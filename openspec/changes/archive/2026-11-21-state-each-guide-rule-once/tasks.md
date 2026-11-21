@@ -50,18 +50,24 @@ copies point.
 - [x] `auto-cross`/`rulesOut`: mechanics points at descriptions.
 - [x] Catalog `overlay-sidecar.ts`, `draw.ts`, `hint-mark.ts`,
       `slide-planner.ts`, `finish-search.ts` point at their guides.
-- [ ] Catalog `pencil-indicator.ts` (rendering, input § "A notes mode added
-      to a game"), `easing.ts`, `drawRuledOutCross`, `sections.ts`,
-      `completion-status.ts`: smaller overlaps, read each.
+- [x] Catalog `pencil-indicator.ts` is the home; rendering's two lines and
+      input § "A notes mode added to a game" point at it. `easing.ts` and
+      `drawRuledOutCross` list the export and point at rendering.
+      `sections.ts` and `completion-status.ts` are the catalog's export
+      lists, with mechanics' one-line forms pointing; kept.
 - [x] ladderWalk continuity: descriptions and the catalog's
       `hint-frontier.ts` point at hints.md § "Recording the deduction";
       the catalog's `available()` is the engine's for a compiled technique.
 - [x] FactGraph parents: descriptions points at the catalog.
 - [x] Monotone rules: hints.md points at solver-and-generator.
 - [x] No line named by a number; plan cap counts shown steps.
-- [ ] `keepTrack` shrinking: hints-marks, hints.md, catalog.
-- [ ] `NoteEncoding.all(i)`: hints-candidates and catalog.
-- [ ] The hint-resume slicing: hints-search, hints.md, testing.md (home).
+- [x] `keepTrack` shrinking: home hints-marks § "Group one firing into one
+      step"; hints.md's contract and the catalog's `hint-track.ts` point.
+- [x] `NoteEncoding.all(i)`: not a copy. The catalog says it must agree
+      with the fill-all move, hints-candidates that a note outside it is no
+      candidate; kept.
+- [x] The hint-resume slicing: home testing § "Slicing a preset sweep for
+      the gate"; hints-search points. hints.md names the guard only.
 - [x] Bespoke geometry's draw bullets: mechanics points at rendering;
       "render asks, move code decides": rendering points at mechanics §
       "One function, both callers".
@@ -111,29 +117,24 @@ copies point.
       `drawRectOutline`.
 - [x] new-game § "File anatomy" gains `catalog.ts`, the description and
       `plants.yaml`.
-- [ ] hints-marks sections written for hand-written recorders, now that
-      Slant, Pattern, Boats and Dominosa run compiled ladders: § "Evidence
-      for a connectivity deduction" ("seed the recording solver… copying
-      the grid leaves the union-find behind"), § "Re-derive the named
-      technique" (`analyzeLine`, "keep the hint's functions separate from
-      the generator's solver"), the Boats bullets near "the one ending in
-      `unfinishable`", § "Rule-outs as board marks" (`hintFirings`, "Gate
-      the recorder"). Read each against the game's code and
-      `descriptions.md` § "The runtime a ladder runs on": keep what still
-      binds a game, delete the rest.
-- [ ] hints.md § "The shared plan loop: deduceHintPlan" says to build every
-      plan with it, exemplar `skeletonHint`; only Ascent and Loopy import
-      it (2026-11-21), a described game plans in `described-hint.ts`.
-      Rewrite to what a game does now. (`deduceHintPlan` in Range and
-      `deduceForcedEdges` in Palisade: removed from § "The step budget".)
-- [ ] Still open from the duplicates list: `keepTrack` shrinking
-      (hints-marks, hints.md, catalog), `NoteEncoding.all(i)`
-      (hints-candidates, catalog), the hint-resume slicing (hints-search,
-      hints.md; home testing).
+- [x] hints-marks sections written for hand-written recorders. Every game
+      has a description (2026-11-21), so: § "Evidence for a connectivity
+      deduction" loses the replay-seeding bullet; § "Re-derive the named
+      technique" keeps its rule, with Pattern's `line` firing told four ways
+      by `reasonOf` as exemplar; § "Read the reason off the validator" is
+      deleted, no game reading a validator's errors (Boats' and Clusters'
+      flags are the renderer's; `boats/validate.ts`'s header said
+      otherwise and is corrected), its one live rule being descriptions §
+      "A firing's reason is built from its binding"; § "Rule-outs as board
+      marks" keeps its rules, exemplar `dominosaWalk`.
+- [x] hints.md's section on the shared `deduceHintPlan` loop is now §
+      "Where the plan loop comes from": a described game's is the engine's
+      (`described*Hint`), `deduceHintPlan` the loop of a hint outside the
+      description (Loopy, Ascent). The catalog's `hint-plan.ts` follows.
 
 ## 2. One home each
 
-- [ ] 2.1 Keep each rule in its home; replace the copies with a pointer by
+- [x] 2.1 Keep each rule in its home; replace the copies with a pointer by
       file and heading. Remove passages the earlier changes made obsolete.
 - [x] 2.2 Re-measure the route and record it with its query:
       `node scripts/checks/guide-sections.mjs --route`, named in
@@ -148,9 +149,11 @@ copies point.
 
 ## 3. Finish
 
-- [ ] 3.1 Re-run `node scripts/checks/guide-sections.mjs --route` and
-      record the after-figures beside 2.2's.
-- [ ] 3.2 Commit, push, archive.
+- [x] 3.1 Re-run `node scripts/checks/guide-sections.mjs --route` and
+      record the after-figures beside 2.2's. 2026-11-21, last part: 4,296;
+      4,227; 4,314; 3,412; 4,811 lines. As 2.2 found, the route barely
+      moves; its cost is the size of the sections it names (3.3).
+- [x] 3.2 Commit, push, archive.
 - [ ] 3.3 The owner asked (2026-11-21): "when you're done with this change,
       please do another architecture review pass in the next session".
       After archiving, scaffold `architectural-review-second-pass` on the

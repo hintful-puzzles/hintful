@@ -297,13 +297,13 @@ draft".
 ### `hint-track.ts` — following a step that asks for several things
 
 `trackTargets` is the `hint.keepTrack` verdict for a step that decides
-several squares or edges, judged by what the player's move changed and not
-by its ops. `changedCells` is the diff for a board with one value per cell;
-a game whose elements are edges, links or flags writes its own. `keepTrackBy`
-is the whole `hint.keepTrack` from a codec: how the game executes a move,
-diffs two boards, keys and values a target, rebuilds the shrunk move (or
-leaves the step whole, as a Tents link is) and keys a target's ring. Exemplars: `tents/hint.ts`, `pearl/hint.ts`. See [`hints-marks.md`](./hints-marks.md) § "Group one
-firing into one step".
+several squares or edges, and the targets left. `changedCells` is the diff
+for a board with one value per cell. `keepTrackBy` is the whole
+`hint.keepTrack` from a codec: how the game executes a move, diffs two
+boards, keys and values a target, rebuilds the shrunk move (or leaves the
+step whole, as a Tents link is) and keys a target's ring. Exemplars:
+`tents/hint.ts`, `pearl/hint.ts`. What the verdict and the shrinking owe:
+[`hints-marks.md`](./hints-marks.md) § "Group one firing into one step".
 
 ### `hint-words.ts` — a hint's words bound to its marks
 
@@ -820,8 +820,9 @@ part of a piece over several cells, a domino or a boat, joined on the
 `src/games/dominosa/render.ts`. `TWO_SHAPES` goes with `TWO`
 (`colors.ts`) and `PAIR_NAMES`, each piece's word by its shape, and
 `expandPair` is what a help page's `{{pair:0}}` becomes. `SHADED_SHAPE`, `SHADED_NAME` and `UNSHADED_NAME` are
-the same for a game whose cells are shaded or not. **`drawRuledOutCross` is
-every game's mark for a cell ruled out**, a game with no pieces included.
+the same for a game whose cells are shaded or not. `drawRuledOutCross` is
+the cross for a cell ruled out, and who takes it is in the same rendering
+section.
 Exemplar: `src/skeleton/grid/render.ts`.
 
 ### `region-walls.ts` — the heavy walls round dealt regions
@@ -958,10 +959,9 @@ unordered links in route order first. The rules and the table of routes:
 
 ### `easing.ts` — the curve a move animates along
 
-The midend passes every move animation's `animTime` through `easeOut`, so
-a piece that answers the player starts fast and settles into place, where
-a constant speed reads as mechanical. A game interpolates linearly in the
-time it is handed (`rendering.md` § "Animation and flash").
+`easeOut` is the curve the midend applies to every move animation's
+`animTime`. What a game does with the eased time: `rendering.md` §
+"Animation and flash".
 
 ### `pencil-indicator.ts` — the pencil-mode indicator
 
@@ -1445,12 +1445,13 @@ Read this part when you are writing a hint. How to write one is
 
 ### `hint-plan.ts` — the plan-accumulation loop
 
-Reach for it when a hint takes one forced firing at a time.
+Reach for it when a hint outside the description takes one forced firing at
+a time; a described game's plan loop is the engine's.
 `deduceHintPlan` is the loop "while unfinished, ask for the next forced
 firing, apply it, record it". The rung order, the reason type and the
 sentences stay the game's. It takes a `planCap`, which bounds what the
 player is shown, and a `StepBudget`, which bounds non-termination.
-Exemplar: `src/skeleton/grid/hint.ts`.
+Exemplar: `src/games/loopy/hint.ts`.
 
 `showable(board, firing)` hides a firing, and the result's `hidden` counts
 them ([`hints.md`](./hints.md) § "Show only what the board does not

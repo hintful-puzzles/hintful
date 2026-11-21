@@ -195,7 +195,8 @@ silent.
 - **The pencil-mode indicator is the shared case.** The engine picks its
   position, and a game with the mode keeps `ds.pencilModeShown` beside its
   tile cache and repaints through `repaintPencilIndicator`
-  ([`engine/render/pencil-indicator.ts`](../src/engine/render/pencil-indicator.ts)).
+  ([`engine-catalog.md`](./engine-catalog.md) § "`pencil-indicator.ts` —
+  the pencil-mode indicator").
 - **When a cue stops being drawn as something the key already reads, give it
   its own term in the key.** Turning a cue from a color class into a box,
   passed to the painter as a separate predicate, drops it from a key that was
@@ -742,10 +743,9 @@ is the baseline (its default is on `Game.preferredTileSize`).
   tiled, whose scale is the number `newDrawState` is handed.
   `src/guards/capability-surface.test.ts` records the field names, and another
   spelling shows there as a line.
-- **A game with notes mode keeps its border no narrower than
-  `pencilIndicatorReach`**, or grows its canvas with `pencilIndicatorCanvas`
-  where its own corner is taken
-  ([`engine/render/pencil-indicator.ts`](../src/engine/render/pencil-indicator.ts)).
+- **A game with notes mode finds room for the pencil-mode indicator**
+  ([`engine-catalog.md`](./engine-catalog.md) § "`pencil-indicator.ts` —
+  the pencil-mode indicator").
 - **A border constant that looks surprisingly small is upstream's
   `NARROW_BORDERS` variant.** Leave it.
 
