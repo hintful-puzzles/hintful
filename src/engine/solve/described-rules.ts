@@ -21,8 +21,12 @@ export interface RulesModule<Deals extends readonly unknown[]> {
 export interface RulesReading<State, Deals extends readonly unknown[]> {
   /** The values, 0 where undecided ({@link RulesOf.grid}). */
   grid(state: State): Uint8Array;
-  /** The space's width and height, as `describedSpace` takes them. */
-  size(state: State): readonly [number, number];
+  /** The space's width and height, and the regions a space of dealt blocks
+   * has (Solo's jigsaw), as `describedSpace` takes them. */
+  size(state: State): readonly [number, number, (readonly (readonly number[])[])?];
+  /** The units the board has, where a variation adds one (Solo's
+   * diagonals); the module's `units` when absent. */
+  units?(state: State): readonly string[];
   /** What the module's checks take after the space, in its order. */
   deals(state: State): Deals;
 }
@@ -31,7 +35,8 @@ export function describedRules<State, Deals extends readonly unknown[]>(
   module: RulesModule<Deals>,
   read: RulesReading<State, Deals>,
 ): RulesOf<State> {
-  const space = (s: State): GridSpace => describedSpace(module.units, ...read.size(s));
+  const space = (s: State): GridSpace =>
+    describedSpace(read.units?.(s) ?? module.units, ...read.size(s));
   return {
     grid: read.grid,
     violations: (s, g) => module.violations(g, space(s), ...read.deals(s)),

@@ -121,6 +121,7 @@ import {
   ORDER_MAX,
   onDiag0,
   onDiag1,
+  rules,
   type SoloMistake,
   type SoloMove,
   type SoloParams,
@@ -791,6 +792,7 @@ export const soloGame: Game<
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
+  rules,
   difficulty,
   hint: {
     plan: hint,

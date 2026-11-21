@@ -37,7 +37,9 @@ describeAbsentTiers(soloGame, [
 // The tier under those, and the grid beside them.
 describeDealtTiers(soloGame, ["4jdi", "5jda", "5jdu", "3jka", "2x2ka"]);
 
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
+import type { RuleName } from "../../generated/games/solo/solo.compiled.ts";
 import {
   COL_KILLER,
   COL_XDIAGONALS,
@@ -46,8 +48,10 @@ import {
   type SoloHint,
 } from "./render.ts";
 import {
+  cagesDealt,
   encodeParams,
   newState,
+  rules,
   type SoloMove,
   type SoloParams,
   type SoloState,
@@ -116,6 +120,42 @@ function solvedGrid(f: Board): Int8Array {
   me.solve();
   return getState(me).grid.slice();
 }
+
+describe("solo live errors", () => {
+  const killer = () => {
+    const s = stateOf(KILLER);
+    const { cage, total } = cagesDealt(s);
+    const ks = Array.from({ length: total.at.length }, (_, k) => k);
+    return { s, cells: (k: number) => cage.cells[total.at[k]], total, ks };
+  };
+
+  it("a number repeated in a cage marks the two, its total still open", () => {
+    const { s, cells, ks, total } = killer();
+    // Two 1s leave a total the rest of the cage can still make.
+    const k = ks.find(
+      (k) => cells(k).length >= 3 && total.v[k] <= 2 + 9 * (cells(k).length - 2),
+    );
+    if (k === undefined) throw new Error("no cage of three cells");
+    const [a, b] = cells(k);
+    s.grid[a] = s.grid[b] = 1;
+    const live = liveErrors(rules, s);
+    const inCage: RuleName = "Killer.shape.0";
+    const pairs = (live.byRule.get(inCage) ?? []).map((p) => [...p].sort());
+    expect(pairs).toEqual([[a, b].sort()]);
+    expect(live.clues.get("total")).toBeUndefined();
+  });
+
+  it("a cage's total is broken once a number overshoots it, its other cells open", () => {
+    // An open cell adds at least 1.
+    const { s, cells, total, ks } = killer();
+    const k = ks.find(
+      (k) => cells(k).length >= 2 && total.v[k] < 9 + cells(k).length - 1,
+    );
+    if (k === undefined) throw new Error("no cage a 9 overshoots");
+    s.grid[cells(k)[0]] = 9;
+    expect([...(liveErrors(rules, s).clues.get("total") ?? [])]).toEqual([k]);
+  });
+});
 
 // --- tier 1: solve / moves / completion ------------------------------------
 

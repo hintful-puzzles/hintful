@@ -110,13 +110,16 @@ variations:
     add:
       space:
         regions: { cage: dealt }
+      # No number repeats within a cage.
+      shape:
+        - "forall r in cage: distinct(value(c) over c in cells(r))"
       # Every cage shows its total.
       clues:
         total:
           at: cage
           complete: true
           value: "range(1, 45)"
-          means: "sum(c in cells(at) of value(c)) = v and distinct(value(c) over c in cells(at))"
+          means: "sum(c in cells(at) of value(c)) = v"
 define:
   # What a cage's total leaves once its filled cells are taken out.
   owed(r): "clue(total, r) - sum(c in cells(r) where known(c) of value(c))"

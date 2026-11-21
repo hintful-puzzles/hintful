@@ -41,7 +41,11 @@
       names, checked against the grid), adjacent and unequal (a
       `ClueKind` gives its board's `rules`; a broken clue is marked at each
       end that shows it, both for Adjacent's missing bar; their specs'
-      marks are unchanged). Run `src/guards` before a
+      marks are unchanged). Moved: solo (Killer states "no number repeats
+      in a cage" as its own rule, out of the total's meaning, so a repeat
+      marks the two numbers and a total turns red once out of reach; a
+      board's units and dealt blocks reach `describedRules` through its
+      `units` and `size`). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

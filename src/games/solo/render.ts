@@ -69,6 +69,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -84,9 +85,10 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/r
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
 import {
-  checkKillerCageSum,
+  cagesDealt,
   onDiag0,
   onDiag1,
+  rules,
   type SoloMove,
   type SoloState,
   type SoloUi,
@@ -144,10 +146,23 @@ export interface SoloHint {
 // --- highlight byte (the `hl` argument of draw_number) ----------------------
 // Low nibble: the cell's `CellHighlight`, where the completion flash washes
 // every cell as an entry highlight would. Bit 16 = duplicate-digit error,
-// bit 32 = killer-cage sum wrong.
+// bit 32 = killer-cage total out of reach.
 
 const HL_ERROR = 16;
 const HL_KSUM = 32;
+
+/** Where the board breaks a rule, as each cell's highlight bits: `HL_ERROR`
+ * on each of two numbers alike in a unit or a cage, and `HL_KSUM` on every
+ * cell of a cage whose numbers can no longer make its total. */
+function errorFlags(state: SoloState): Uint8Array {
+  const out = new Uint8Array(state.cr * state.cr);
+  const live = liveErrors(rules, state);
+  for (const [a, b] of live.pairs) out[a] = out[b] = HL_ERROR;
+  const cages = cagesDealt(state);
+  for (const k of live.clues.get("total") ?? [])
+    for (const cell of cages.cage.cells[cages.total.at[k]]) out[cell] |= HL_KSUM;
+  return out;
+}
 
 // --- geometry --------------------------------------------------------------
 
@@ -600,37 +615,7 @@ export function redraw(
     ds.marks.reset(); // the backing rect just erased every gutter
   }
 
-  // Tally duplicate digits per row / column / block / diagonal / killer cage so
-  // an over-used digit can be flagged red (faithful to game_redraw's
-  // `entered_items`). We track a count per (region, digit).
-  const blocks = state.blocks;
-  const killer = state.killerData;
-  const nrBlocks = blocks.nrBlocks;
-  // Region layout: rows [0,cr), cols [cr,2cr), blocks [2cr, 2cr+nrBlocks),
-  // diag0/diag1, then killer cages.
-  const diagBase = 2 * cr + nrBlocks;
-  const kBase = diagBase + 2;
-  const nKiller = killer ? killer.kblocks.nrBlocks : 0;
-  const nregions = kBase + nKiller;
-  const count = new Int32Array(nregions * cr);
-  const bump = (region: number, digit: number) => {
-    count[region * cr + (digit - 1)]++;
-  };
-  for (let y = 0; y < cr; y++) {
-    for (let x = 0; x < cr; x++) {
-      const d = state.grid[y * cr + x];
-      if (!d) continue;
-      bump(y, d); // row y
-      bump(cr + x, d); // col x
-      bump(2 * cr + blocks.whichblock[y * cr + x], d); // block
-      if (ds.xtype) {
-        if (onDiag0(y * cr + x, cr)) bump(diagBase, d);
-        if (onDiag1(y * cr + x, cr)) bump(diagBase + 1, d);
-      }
-      if (killer) bump(kBase + killer.kblocks.whichblock[y * cr + x], d);
-    }
-  }
-  const dup = (region: number, digit: number) => count[region * cr + (digit - 1)] > 1;
+  const errors = errorFlags(state);
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * cr + x;
@@ -664,23 +649,7 @@ export function redraw(
       let hl: number =
         winHighlight(flash.win(sweepStep(x, y))) ?? cellHighlight(ui, x, y);
 
-      if (d) {
-        if (
-          dup(y, d) ||
-          dup(cr + x, d) ||
-          dup(2 * cr + blocks.whichblock[cell], d) ||
-          (ds.xtype &&
-            ((onDiag0(cell, cr) && dup(diagBase, d)) ||
-              (onDiag1(cell, cr) && dup(diagBase + 1, d)))) ||
-          (killer && dup(kBase + killer.kblocks.whichblock[cell], d))
-        )
-          hl |= HL_ERROR;
-        if (
-          killer &&
-          checkKillerCageSum(killer, state.grid, killer.kblocks.whichblock[cell]) === 0
-        )
-          hl |= HL_KSUM;
-      }
+      hl |= errors[cell];
 
       const tile = d | (hl << 8);
       if (ds.tiles.changed(cell, tile, state.pencil[cell]))

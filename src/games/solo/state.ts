@@ -27,6 +27,7 @@ import {
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { paramsLetter, unreadParams } from "../../engine/game-id/params.ts";
@@ -39,6 +40,7 @@ import {
   type GridSpace,
   partition,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import * as solo from "../../generated/games/solo/solo.compiled.ts";
 
 // --- difficulty (standard axis) --------------------------------------------
@@ -496,26 +498,6 @@ export interface SoloKiller {
   kgrid: Int32Array;
 }
 
-/**
- * `check_killer_cage_sum`: −1 if the cage has an empty cell; 0 if full but the
- * sum is wrong; +1 if full and correct.
- */
-export function checkKillerCageSum(
-  killer: SoloKiller,
-  grid: ArrayLike<number>,
-  blk: number,
-): number {
-  const cells = killer.kblocks.blocks[blk];
-  let sum = 0;
-  let clue = 0;
-  for (const xy of cells) {
-    if (grid[xy] === 0) return -1;
-    sum += grid[xy];
-    if (killer.kgrid[xy]) clue = killer.kgrid[xy];
-  }
-  return sum === clue ? 1 : 0;
-}
-
 // --- state -----------------------------------------------------------------
 
 export interface SoloState {
@@ -606,23 +588,47 @@ export function newState(p: SoloParams, desc: string): SoloState {
 
 // --- completion check ------------------------------------------------------
 
+/** The board as its rules read it: a number is its value, a blank square
+ * undecided. */
+export const rules: RulesOf<SoloState> = describedRules(solo, {
+  grid: (s) => Uint8Array.from(s.grid),
+  size: (s) => [s.cr, s.cr, s.blocks.blocks],
+  units: (s) => soloUnits(s.xtype),
+  deals: (s): [solo.Dealt, readonly string[]] => [cagesDealt(s), variationsOf(s)],
+});
+
 export function status(s: SoloState): "solved" | "ongoing" {
-  const space = soloSpace(s.cr, s.blocks, s.xtype);
-  const dealt = s.killerData
-    ? dealtOf(s.killerData.kblocks, s.killerData.kgrid, s.cr * s.cr)
-    : NO_CAGES;
-  return solo.isAnswer(s.grid, space, dealt) ? "solved" : "ongoing";
+  return rules.isAnswer(s, s.grid) ? "solved" : "ongoing";
 }
 
-/** The space a board's units make: its blocks, rows and columns, and its
- * diagonals only on an X board. */
+/** The cages a board deals, none off a Killer board. */
+export function cagesDealt(s: SoloState): solo.Dealt {
+  return s.killerData
+    ? dealtOf(s.killerData.kblocks, s.killerData.kgrid, s.cr * s.cr)
+    : NO_CAGES;
+}
+
+/** The variations a board has on, as the description names them. */
+function variationsOf(s: SoloState): readonly string[] {
+  return KILLER_ON[+s.killer];
+}
+const KILLER_ON = [[], ["Killer"]] as const;
+
+const UNITS_X = solo.units;
+const UNITS_PLAIN = solo.units.filter((u) => u !== "diagonals");
+/** The units of a board: its blocks, rows and columns, and its diagonals
+ * only on an X board. */
+function soloUnits(xtype: boolean): readonly string[] {
+  return xtype ? UNITS_X : UNITS_PLAIN;
+}
+
+/** The space a board's units make. */
 export function soloSpace(
   cr: number,
   blocks: BlockStructure,
   xtype: boolean,
 ): GridSpace {
-  const units = solo.units.filter((u) => u !== "diagonals" || xtype);
-  return describedSpace(units, cr, cr, blocks.blocks);
+  return describedSpace(soloUnits(xtype), cr, cr, blocks.blocks);
 }
 
 /** What a board without killer cages deals. */

@@ -29,7 +29,7 @@ import {
 import type { SetSays } from "../../generated/engine/solve/latin.compiled.ts";
 import type * as solo from "../../generated/games/solo/solo.compiled.ts";
 import { soloNotesLadder } from "./solver.ts";
-import { dealtOf, NO_CAGES, type SoloState, soloSpace } from "./state.ts";
+import { cagesDealt, type SoloState, soloSpace } from "./state.ts";
 
 /** A region a step names, and stripes. `index` is the row's y, the column's
  * x, or the block's number; the two diagonals carry no index. */
@@ -125,8 +125,7 @@ class SoloBoard {
   ) {
     this.cr = state.cr;
     this.sp = soloSpace(state.cr, state.blocks, state.xtype);
-    const k = state.killerData;
-    this.dealt = k ? dealtOf(k.kblocks, k.kgrid, state.cr * state.cr) : NO_CAGES;
+    this.dealt = cagesDealt(state);
   }
 
   at(c: number): Point {

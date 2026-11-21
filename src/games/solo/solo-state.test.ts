@@ -403,10 +403,10 @@ describe("solo completion check", () => {
       for (let x = 0; x < cr; x++)
         grid[y * cr + x] = (((y % 3) * 3 + ((y / 3) | 0) + x) % 9) + 1;
     const space = soloSpace(cr, blocks, false);
-    expect(solo.isAnswer(grid, space, NO_CAGES)).toBe(true);
+    expect(solo.isAnswer(grid, space, NO_CAGES, [])).toBe(true);
     // swap two cells in a row to break it
     const broken = grid.slice();
     broken[0] = broken[1];
-    expect(solo.isAnswer(broken, space, NO_CAGES)).toBe(false);
+    expect(solo.isAnswer(broken, space, NO_CAGES, [])).toBe(false);
   });
 });
