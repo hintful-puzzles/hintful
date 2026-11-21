@@ -103,14 +103,9 @@ inside the ring, and let the narration say which mark to place. Filling the
 cell with the black square, circle, color or digit the move would place hides
 what the cell holds, and reads as done while the move is still the player's.
 
-The move is made only when the hint is played: `executeHint` sends the step's
-gesture through the game's `interpretMove` and applies nothing itself
-(requirement "executeHint sends the gesture and never applies the move"), and
-the cell then draws as the actual mark with its placement animation. The Hint
-button's show-then-apply alternation is the midend's and needs nothing from a
-game's `hint()` (requirement "The toolbar Hint button alternates show and
-apply"). A player therefore meets the plan one step at a time, so the
-grouping of § "Group one firing into one step" is what makes it read well.
+The move is made only when the hint is played, through the game's own
+gesture, and the cell then draws as the actual mark with its placement
+animation.
 
 ## Echo the move's shape in the hint color
 
@@ -157,17 +152,10 @@ proposing.
 (`GameDrawing.drawRing`, [`engine/render/ring.ts`](../src/engine/render/ring.ts);
 requirement "A ring is round, crosses no number, and only the engine draws
 one"; the owner, 2026-10-25: "a ring should actually be round", and
-2026-10-28: "it doesn't write over numbers"). Its ink is the engine's,
-appended to every palette, so a game cannot draw a "ringed" mark in another
-shape. `drawRing` fits the roundest shape that clears the text round the
-element (`ring.ts` says how), the ringed cell's own notes included. A game
-hands it the boxes from `textBox`, called with what it passes `drawText`, so
-it never estimates a glyph; a game that hands it only the text nearby cuts
-no nearer than `ringReach`. Where nothing round fits, it throws, and the
-element is not a ring's: the game makes room for it (Mosaic's ring reaches
-between its neighbors' numbers on a tile too small to hold one, through
-`ringFits`) or marks it in another
-role.
+2026-10-28: "it doesn't write over numbers"). A game hands `drawRing` the
+boxes from `textBox`, called with what it passes `drawText`, so it never
+estimates a glyph. Where nothing round fits, it throws, and the game makes
+room for it (Mosaic's `ringFits`) or marks the element in another role.
 
 **A cell's text leaves the ring room, in every frame.** Notes and a corner
 clue reach the corners a round ring passes through, so a cell lays its text
@@ -183,13 +171,9 @@ reference. A clue drawn on a disc painted over the marks (Mathrax) is not
 text a ring keeps clear of: the ring passes under it.
 
 The parts are in [`engine/render/hint-mark.ts`](../src/engine/render/hint-mark.ts), whose
-exports' comments say what each owns: `MarkBand`, `HintMarks` (the band and
-the ring, around the tile loop), `MarkOutlines`, and `HintMarkStyle.text`
-(what a ring on the cell encloses, and the corner clue it goes round).
-Requirements "A hint mark is drawn on the cell's border" and "A hint marks
-beside the content, never behind it" are the rule, and `expectRing` in
+exports' comments say what each owns, and `expectRing` in
 [`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts)
-asserts it on a recorded frame. Exemplars:
+asserts a ring on a recorded frame. Exemplars:
 [`keen/render.ts`](../src/games/keen/render.ts) for a gutter between cells
 and a clue in a corner,
 [`skeleton/grid/render.ts`](../src/skeleton/grid/render.ts) for a number in
@@ -760,7 +744,9 @@ grow branch in [`unruly/render.ts`](../src/games/unruly/render.ts).
 **When one deduction forces several cells at once, emit one `HintStep` whose
 move makes all of them, and ring them all.** The other form of "one firing is
 one journey" is `continuesPrevious` legs (requirement "One deduction firing
-is one journey").
+is one journey"). A game whose plan is `describedFiringHint`'s or
+`describedEdgeHint`'s has all of this from the engine; the rules below, and
+the parts after them, are for a game that builds its own plan.
 
 - **Find the whole forced set of a firing**, against the board as handed in.
   A set that appears only after applying the first cell is a chain, and

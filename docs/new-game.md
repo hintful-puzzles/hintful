@@ -140,7 +140,7 @@ is one to weigh against a pointer.
 - `mechanics.md` § "Difficulty is a declared contract"; `mechanics.md` §
   "Mistake checking is part of done".
 - `hints.md` § "Cognitive load: one step per hint"; `hints-marks.md` § "Group
-  one firing into one step".
+  one firing into one step", without its parts.
 - `descriptions.md` § "A kind of rule places its techniques": a technique
   that follows from one rule alone is placed on a kind, not stated; state
   only what is the game's own.
