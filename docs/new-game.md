@@ -87,7 +87,8 @@ is one to weigh against a pointer.
 **Every game.**
 
 - [`mechanics.md`](./mechanics.md) § "The params codec and validation";
-  `mechanics.md` § "Params are declared once, on `paramConfig`";
+  `mechanics.md` § "Params are declared once, on `paramConfig`", without
+  its parts;
   `mechanics.md` § "The preset menu is a grid"; `mechanics.md` § "The Custom
   dialog"; `mechanics.md` § "interpretMove and UI_UPDATE"; `mechanics.md` §
   "A move you do not recognize is refused, never guessed"; `mechanics.md` §

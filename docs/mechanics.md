@@ -190,12 +190,8 @@ compatibility decision for the owner.
 - **A params string is read whole or refused** (`engine-params`, "A params
   string is read whole or refused"): a letter the game does not read where
   it stands is never defaulted and never skipped. A declared codec does
-  this itself. A hand-written `decodeParams` throws the engine's refusal
-  from
-  [`engine/game-id/params.ts`](../src/engine/game-id/params.ts): `paramsLetter(s, i,
-  letters)` for the letter after a tag, `unreadParams(s, i)` in the last arm
-  of a scanning loop, `endParams(s, i)` before a decoder that reads in order
-  returns.
+  this itself; a hand-written `decodeParams` throws the refusals of
+  [`engine/game-id/params.ts`](../src/engine/game-id/params.ts).
 - **A letter upstream's encoder writes for a setting this game has no field
   for is read by name**, with `unusedLetter` or an arm of its own. Add a new
   port's upstream strings, from its `encode_params`, to `UPSTREAM` in
@@ -204,9 +200,7 @@ compatibility decision for the owner.
 - **`validateParams` returns the reason, or `null` for valid**: one
   sentence with its full stop, saying what to change in the dialog's own
   words ("Width times height must be at most 54.", not "Grid is too big")
-  (`engine-params`, "A params refusal is a sentence").
-  `params-refusal.test.ts` reads every string one can return, through
-  constants and helper calls. A board's area is not the game's to bound:
+  (`engine-params`, "A params refusal is a sentence"). A board's area is not the game's to bound:
   `dimensionParamConfig` holds it to the engine's `MAX_BOARD_AREA`, and a game
   whose own logic needs less declares `maxArea`, saying why.
 - **A line of
@@ -273,35 +267,21 @@ something along one side only records it in `UNEVEN_FRAME`.
 
 ## Params are declared once, on `paramConfig`
 
-Put every fact about a params field on its `paramConfig` item. The engine
-builds the rest from it: the Custom dialog, the preset titles and the type
-header ([`engine/game-id/param-label.ts`](../src/engine/game-id/param-label.ts)), the bounds
-check (`paramsError` in [`engine/game-id/params.ts`](../src/engine/game-id/params.ts)), the
-Parameters section where a help page writes `{{parameters}}`
-([`engine/game-id/param-help.ts`](../src/engine/game-id/param-help.ts)), the tier accessors
-and the codec (`engine-params`, "A params field declares what it means, its
-range and its words" and "Params validity is the engine's check"). An item
-carries:
+Put every fact about a params field on its `paramConfig` item: the engine
+builds the Custom dialog, the preset titles, the bounds check, the help's
+`{{parameters}}` and the codec from it (`engine-params`, "A params field
+declares what it means, its range and its words"). The item type's doc says
+each member.
 
-- **`doc`**: what the field means, as HTML inside the help's `<dd>`, naming
-  every word choice of a choices field. `{ with: kw }` documents an item
-  with the one before it, as `dimensionParamConfig` does for Height.
-- **`bounds`** on a numeric text field: `{ min?, max? }`, an unconditional
-  range only. A limit that depends on another field, or that holds only
-  when generating (`full`), stays in `validateParams` (`engine-params`, "A
-  generation-only bound is gated on full"). `validateParams` never restates
-  a bound: the bounds are checked first, so the copy is dead code.
-- **`label`**: which slot of the params label the field's words fill
-  (`engine-params`, "One describer labels every params set"; the slots are
-  drawn in [`param-label.ts`](../src/engine/game-id/param-label.ts)'s header). `words` returning `null` leaves a
-  default unsaid. A checkbox must give words; a choices field says its choice's
-  name by default.
+- **`doc`** names every word choice of a choices field.
+- **`bounds`** is an unconditional range only. A limit that depends on
+  another field, or holds only when generating (`full`), stays in
+  `validateParams`, which never restates a bound.
+- **`label`**'s `words` returning `null` leaves a default unsaid; a checkbox
+  must give words.
 
 **A preset's name is its params' label.** Give the menu a `title` only for
-a board upstream named with words no field says (`engine-params`, "A preset
-keeps a declared title only for a name no field says";
-`params-declared.test.ts`). Read a preset's name as the `label` of its leaf
-in `presetMenu(game)`.
+a board upstream named with words no field says.
 
 ### A game that plays different puzzles on one board declares its rulesets
 
@@ -367,63 +347,27 @@ name and the tier names are outside that check.
 
 ## The preset menu is a grid
 
-A game declares its boards as `Game.menu` (a `PresetBoards`), and the engine
-builds the menu from them
-([`engine/game-id/preset-grid.ts`](../src/engine/game-id/preset-grid.ts)): name the boards,
-at least three and smallest first, and the engine writes each at every tier
-in order, then one board for each thing that is neither a size nor a tier
-(`variants`). A game without tiers lists its boards. `defaultParams()` is
-the start-up choice. Exemplar: the skeleton's
-[`state.ts`](../src/skeleton/grid/state.ts). `title` names a line upstream
-named (Guess's "Super"), and `more` puts boards in a "More..." section after
-the rest (Loopy's tilings); a game with rulesets has its sections already
-and takes no `more`.
-
-A test that wants the menu's lines reads `leafPresets(game)` or
-`presetMenu(game)`, never a list of its own: a copy of the menu in a test
-stays green when the menu moves.
+A game names its boards as `Game.menu`, at least three and smallest first,
+and the engine writes each at every tier (`PresetBoards` in
+[`engine/contract/game.ts`](../src/engine/contract/game.ts) says `variants`,
+`title`, `more`, `tiers` and `skips`). Exemplar: the skeleton's [`state.ts`](../src/skeleton/grid/state.ts).
+A test reads the menu through `leafPresets(game)` or `presetMenu(game)`,
+never a copy of its own, which stays green when the menu moves.
 
 [`preset-menu-shape.test.ts`](../src/guards/preset-menu-shape.test.ts) holds
-every game's menu to the shape
-(`engine-params`, "The preset menu is a grid", "A preset menu is short
-enough to choose from", "A board's tiers are one run of lines, and every
-tier is offered" and "A checkbox rule modifier has one line of the menu").
-What a game does to fit it:
+every menu to the shape `engine-params` states, from "The preset menu is a
+grid" on, and names the limit a menu breaks. What a game decides to fit it:
 
-- **A menu is held to `MENU_LINES`**: a game with several rulesets offers
-  one board of each, and a game with many kinds of board one of each
-  family. The Custom dialog reaches the rest.
-- **A section is held to `MENU_SECTION_LINES`**: trade sizes against
-  tiers.
-- **A board that stops short of the hard tiers or starts above the easy
-  ones says so with `tiers`**, for a deal that takes seconds, a tier
-  that means nothing at that size, or the section's limit. Write which at
-  the menu.
-- **A ruleset's tiers are its own.** Rulesets can be very different puzzles,
-  so one may offer tiers another does not, and a board's run is of the tiers
-  its ruleset's lines offer. A board that leaves out a tier between its first
-  and last says so with `skips`, and writes why at the menu. Exemplar:
-  Rectangles, whose sizes skip the Normal that Patches offers.
-- **A tier left off the whole menu, for a reason other than every board
-  refusing it, goes in the test's `TIERS_NOT_OFFERED`** with the reason.
-- **A rule modifier, or a second kind of board, has one line after the
-  grid.** A second kind of board may instead have a short run of tiers.
-- **The smallest board at the easiest tier goes first.** `puzzle-screen.ts`
-  deals the first preset to a player who has never chosen.
-- **A game whose rules take a rectangle offers half its sizes as
-  rectangles** (`engine-params`, "A game that takes rectangles offers them on
-  its menu"), counted once whatever tiers they come at and rounded down.
-  Make them upright, of about the area of the square they replace: a tall
-  board fits a phone held upright. The check asks the game's own
-  `validateParams` whether it takes one, so a game that needs a square is
-  not asked.
-
-Also:
-
-- **A preset encodes full params, difficulty included.** The midend builds
-  the game ID, and the type-menu label read from it, from
-  `encodeParams(_, true)`. When a new game's header shows the default
-  difficulty over a board that generated correctly, check that first.
+- **Trade sizes against tiers**, and offer one board of each ruleset or
+  family; the Custom dialog reaches the rest.
+- **A board that stops short of a tier, or skips one, says why at the
+  menu.** A tier left off the whole menu, for a reason other than every
+  board refusing it, goes in the test's `TIERS_NOT_OFFERED`.
+- **A game whose rules take a rectangle offers half its sizes as upright
+  rectangles** of about the area of the square they replace.
+- **A preset encodes full params, difficulty included.** When a new game's
+  header shows the default difficulty over a board that generated
+  correctly, check `encodeParams(_, true)` first.
 - **Time a deal before offering it.** Time three deals of each new cell, on
   the machine as it is, and cut the row where the tail leaves a second.
 - **Then ask whether the board needs its tier**: a small board dealt at a
@@ -436,15 +380,9 @@ Also:
 
 ## The Custom dialog
 
-`Game.paramConfig` is the "Custom type…" form: an ordered
-`ParamConfigItem<Params>[]`. The midend builds the form from it, parses a
-submission onto a copy of the params and validates with `paramsError`, so
-the dialog rejects exactly what a game ID would. Every registered game
-declares a non-empty one
-([`custom-params.test.ts`](../src/guards/custom-params.test.ts)).
-Exemplars: [`pattern/state.ts`](../src/games/pattern/state.ts) (width and
-height), [`towers/state.ts`](../src/games/towers/state.ts) (size and
-difficulty), [`solo/index.ts`](../src/games/solo/index.ts) (a fold).
+`Game.paramConfig` is the "Custom type…" form, and the dialog rejects
+exactly what a game ID would. Exemplars: the skeleton's `state.ts`,
+[`solo/index.ts`](../src/games/solo/index.ts) (a fold).
 
 - **A key matches the C config slug.** `get` returns an index for a choice
   and a string for a text field, and `set` is its inverse.
@@ -461,11 +399,9 @@ difficulty), [`solo/index.ts`](../src/games/solo/index.ts) (a fold).
 - **A cross-field fold comes after the items it reads.** The midend applies
   each `set` in array order.
 - **Check labels and choice lists by eye, and assert a field map in the
-  game's own test.** `custom-params.test.ts` drives every preset through
-  `get` and `set` and asserts identity. That catches a wrong inverse and
-  cannot see a wrong label, a wrong choice list or a swapped field map,
-  since `get` and `set` name the same field either way. Exemplar: the
-  "drives w2/h2" test in
+  game's own test.** `custom-params.test.ts` round-trips every preset
+  through `get` and `set`, which cannot see a wrong label or a swapped field
+  map. Exemplar: the "drives w2/h2" test in
   [`unruly.test.ts`](../src/games/unruly/unruly.test.ts).
 
 ## Difficulty is a declared contract
@@ -614,13 +550,9 @@ place: redraw, no history entry). Devices, drags and keys are
 [`input.md`](./input.md); read it before writing this hook.
 
 **Return a move when the input asks for one, and leave "did it change
-anything?" to the engine.** The midend compares the board the move leaves
-with the board before it ([`same-value.ts`](../src/engine/midend/same-value.ts)) and
-keeps a move that changed nothing out of the history: no step of Undo, the
-input answered as a UI-only change, `changedState` still run (`ts-engine`,
-"A move that leaves the board as it was is no step of the history"). It
-also claims the key such a move came from, so a letter typed where it
-already stands is not handed to a shortcut.
+anything?" to the engine**, which keeps a move that changed nothing out of
+the history and still claims its key (`ts-engine`, "A move that leaves the
+board as it was is no step of the history").
 
 - **Do not port upstream's no-op tests.** An erase key on an empty square,
   an entry of what the square holds and a drag out and back need none.
@@ -633,11 +565,9 @@ already stands is not handed to a shortcut.
   board".
 
 **An input that changed what the `Ui` shows is claimed, whatever you
-answered.** The midend compares the `Ui` before and after, and a `null` over
-a change is a UI-only change all the same: claimed, announced, painted
-(`ts-engine`, "An input that changes what the `Ui` shows is a UI-only
-change"). So a press that hides the cursor and then finds nothing to do, or
-a key that puts down what was held, may return `null`.
+answered** (`ts-engine`, "An input that changes what the `Ui` shows is a
+UI-only change"), so a press that hides the cursor and then finds nothing to
+do may return `null`.
 
 - **Return `UI_UPDATE` to claim an input that changed nothing shown**: a
   drag over squares that take nothing, a key that is yours on a square it
@@ -651,13 +581,8 @@ a key that puts down what was held, may return `null`.
 [`input-answers.test.ts`](../src/guards/input-answers.test.ts) sweeps every
 registered game for an unclaimed input that changed the frame.
 
-**Read `ds.tileSize` directly.** `ds` is non-null and built at the tile size
-on screen: the midend builds it with `newDrawState(state, tileSize)`,
-rebuilds it when the tile size changes and declines input before a board
-exists. Do not write `ds?.tileSize ?? PREFERRED_TILE_SIZE`: the fallback
-cannot fire, and if it did it would map the click at the wrong tile size. A
-test that calls `interpretMove` or `redraw` directly builds the draw state
-with `game.newDrawState(state, tileSize)` or
+**Read `ds.tileSize` directly** (`rendering.md` § "Sizing"). A test that
+calls `interpretMove` or `redraw` directly builds the draw state with
 [`preferredDrawState`](../src/engine/testing/preferred-draw-state.ts), and
 never passes `null`.
 
@@ -688,16 +613,13 @@ file, or the game supplies a `moveCodec` to write and read it. Exemplar:
 End `executeMove`'s dispatch with
 [`assertNever`](../src/engine/contract/assert-never.ts), as
 `assertNever(move, "abcd: executeMove")` in the last `default` or `else`. A
-save is untrusted: `SaveEnvelope.moves` is `unknown[]` and is cast to
-`Move` on replay, never parsed, so a move another build wrote arrives
-looking well typed ([`ts-engine`](../openspec/specs/ts-engine/spec.md), "A
-game rejects a move it cannot play, rather than guessing"). Exemplar: the
-skeleton's `executeMove`, an `if / else if / else` chain.
+save is untrusted, and a move another build wrote arrives looking well
+typed ([`ts-engine`](../openspec/specs/ts-engine/spec.md), "A game rejects
+a move it cannot play, rather than guessing"). Exemplar: the skeleton's
+`executeMove`.
 
-- **Bind the value to `never`; do not write `default: throw`.** A bare
-  `default` makes the function total for the type checker whatever the
-  union says, so a new move type with a forgotten arm compiles and fails at
-  runtime. `assertNever` keeps the compile-time check and the runtime one.
+- **Bind the value to `never`; do not write `default: throw`**, which
+  compiles a new move type with a forgotten arm.
 - **Where the discriminant is a field of one interface** and not a union of
   shapes (`op.kind: "light" | "impossible"`), assert on the field and put
   the op in the context string: `assertNever(op.kind, …)`.
@@ -708,9 +630,6 @@ skeleton's `executeMove`, an `if / else if / else` chain.
 - **Put the guard before any bounds check.** A missing coordinate makes
   `x < 0` and `x >= w` both false, so range tests pass a foreign move
   through.
-
-`guards/save-round-trip.test.ts` pushes a foreign move into every game's
-saved move log and requires the refusal to name the game.
 
 ## Status
 
