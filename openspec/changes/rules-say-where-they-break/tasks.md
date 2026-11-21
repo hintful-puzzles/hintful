@@ -78,7 +78,11 @@
       number no run can still read turns red in the list). Moved: undead (a
       rule a monster's total, so a broken total names its monster; a total
       turns red once too few squares are left for it, where the old check
-      waited for a full grid; its three error fields leave the State). Run
+      waited for a full grid; its three error fields leave the State).
+      Moved: mines (a flag reads as a mine and an opened square as safe; its
+      marks are unchanged, a number with more flags round it than it counts;
+      the guard lays a board out by the hint's first move, as the other
+      cross-game guards do, where Solve says it is not started). Run
       `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.

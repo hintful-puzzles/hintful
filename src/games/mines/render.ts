@@ -5,8 +5,9 @@
  * and the mine are the color on the board. Geometry uses upstream's
  * `NARROW_BORDERS` variant (see {@link borderFor}).
  *
- * The two ui-derived overlays — the mouse-down highlight radius and the "too
- * many flags" wrong-number tint — are folded into each tile's cache value `v`
+ * The two overlays — the mouse-down highlight radius and the wrong-number
+ * tint on a number more flags surround than it counts, where its rule breaks
+ * (`Game.rules`) — are folded into each tile's cache value `v`
  * (exactly as the C does), so they live *in* the diff key and repaint/clear on
  * their own frames (docs/rendering.md § "Prove the overlay repaints"). The
  * paint-twice test in `mines.test.ts` guards that.
@@ -56,8 +57,8 @@ import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import type { MinesHint } from "./hint.ts";
+import { brokenNumbers } from "./solver.ts";
 import {
-  around,
   COVERED,
   FLAG,
   KILLED,
@@ -374,6 +375,7 @@ export function redraw(
   // Every hint mark comes from the step's words, and from nowhere else.
   ds.hint.pack(stepMarks(hint), (x, y) => y * ds.w + x);
   const wrong = new Set((mistakes ?? []).map((p) => `${p.x},${p.y}`));
+  const broken = brokenNumbers(s);
 
   // On a death flash's lit beats every square takes the error color.
   const dead = flash.time > 0 && Math.floor(flash.time / FLASH_FRAME) % 2 === 0;
@@ -391,11 +393,8 @@ export function redraw(
     for (let x = 0; x < ds.w; x++) {
       let v = s.grid[y * ds.w + x];
 
-      if (v >= 0 && v <= 8) {
-        // Too many flags around a number: tint it.
-        const near = around(ds.w, ds.h, x, y);
-        if (near.filter((q) => s.grid[q.y * ds.w + q.x] === FLAG).length > v) v |= 32;
-      }
+      // A number its flags break: tint it.
+      if (broken.has(y * ds.w + x)) v |= 32;
 
       if (
         (v === COVERED || v === QUERY) &&

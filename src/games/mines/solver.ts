@@ -12,10 +12,12 @@
  * opening shows it; a flag is the player's claim and never a premise.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { singleFirings } from "../../engine/solve/deduction-fixpoint.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   compiledRung,
   describedLadder,
@@ -26,11 +28,44 @@ import {
 } from "../../engine/solve/ladder-runtime.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as mines from "../../generated/games/mines/mines.compiled.ts";
+import { FLAG, type MinesState } from "./state.ts";
 
 /** What the marks hold: a mine, or a safe square. */
 const MINE = 1;
 const SAFE = 2;
 const DOMAIN = (1 << MINE) | (1 << SAFE);
+
+/** Whether a square of the player's grid is opened, showing its number. */
+const isOpened = (v: number): boolean => v >= 0 && v <= 8;
+
+/** The opened numbers of `s` as the description deals them. */
+const dealtOfState = (s: MinesState): mines.Dealt =>
+  dealtOf({
+    w: s.w,
+    h: s.h,
+    n: s.n,
+    numbers: Array.from(s.grid, (v) => (isOpened(v) ? v : -1)),
+  });
+
+/** The board as its rules read it: an opened square safe, a flag a mine, and
+ * every other square undecided; the opened numbers are its clues. */
+export const rules: RulesOf<MinesState> = describedRules(mines, {
+  grid: (s) =>
+    Uint8Array.from(s.grid, (v) => (isOpened(v) ? SAFE : v === FLAG ? MINE : 0)),
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOfState(s)],
+});
+
+/** Each opened number the flags round it break, by its square: more flags
+ * than it counts. */
+export function brokenNumbers(s: MinesState): Set<number> {
+  const count: mines.RuleName = "clue.count";
+  const { at } = dealtOfState(s).count;
+  const out = new Set<number>();
+  for (const v of rules.violations(s, rules.grid(s)))
+    if (v.rule === count) out.add(at[v.clue]);
+  return out;
+}
 
 /** The unopened squares one opened number still has to account for. */
 export interface Group {

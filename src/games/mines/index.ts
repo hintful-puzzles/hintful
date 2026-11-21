@@ -58,6 +58,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
+import { rules } from "./solver.ts";
 import {
   around,
   COVERED,
@@ -453,6 +454,8 @@ export const minesGame: Game<
     if (!curr.mines) return { ok: false, error: NOT_STARTED };
     return { ok: true, move: { type: "solve" } };
   },
+
+  rules,
 
   status(s: MinesState): GameStatus {
     // Death is NOT a loss (the player will undo); only a genuine win is

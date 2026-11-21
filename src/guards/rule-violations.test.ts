@@ -11,6 +11,8 @@
  * The population is every game that declares `rules`.
  */
 import { expect, it } from "vitest";
+import { NOT_STARTED } from "../engine/contract/solve-failure.ts";
+import { Midend } from "../engine/midend/midend.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import { type AnyGame, gatePresets } from "../engine/testing/hint-games.ts";
@@ -30,14 +32,29 @@ it("drew a populated roster", () => {
   expect(RULED.length).toBeGreaterThan(0);
 });
 
+/** The state a midend holds. */
+const stateOf = (m: Midend<unknown, unknown, unknown, unknown, unknown>): unknown =>
+  (m as unknown as { state: unknown }).state;
+
+/** The board `desc` deals, laid out: a board laid out by its first move
+ * (Mines) has no answer until then, and the hint makes that move. */
+function started(game: AnyGame, params: unknown, desc: string): unknown {
+  const m = new Midend(game);
+  expect(m.newGameFromId(`${game.encodeParams(params, true)}:${desc}`)).toBeNull();
+  const start = stateOf(m);
+  const solved = game.solve(start, start);
+  if (solved.ok || solved.error !== NOT_STARTED) return start;
+  expect(m.executeHint(), "no hint to lay the board out").toBeNull();
+  return stateOf(m);
+}
+
 for (const [id, game] of RULED) {
   it(`${id}: no board on the way to an answer breaks a rule, and a changed answer does`, () => {
     const rules = game.rules as NonNullable<AnyGame["rules"]>;
     let planted = 0;
     let caught = 0;
     for (const { title, params } of gatePresets(game)) {
-      const { desc } = dealt(game, params);
-      const start = game.newState(params, desc);
+      const start = started(game, params, dealt(game, params).desc);
       const solved = game.solve(start, start);
       if (!solved.ok) throw new Error(`${id}/${title}: no solution to check against`);
       const answer = game.executeMove(start, solved.move);
@@ -90,24 +107,30 @@ for (const [id, game] of RULED) {
   // a way to the answer every game has.
   it(`${id}: each board a hint walk passes reads as the answer reads, and breaks no rule`, () => {
     const rules = game.rules as NonNullable<AnyGame["rules"]>;
-    let full: Uint8Array = new Uint8Array(0);
+    // The answer, read once the board is laid out: a board laid out by its
+    // first move (Mines) has none before the walk's first step.
+    let full: Uint8Array | null = null;
     let checked = 0;
-    const stateOf = (b: WalkBoard): unknown =>
-      (b.midend as unknown as { state: unknown }).state;
+    const answerOf = (b: WalkBoard): Uint8Array => {
+      if (full !== null) return full;
+      const start = stateOf(b.midend);
+      const solved = game.solve(start, start);
+      if (!solved.ok) throw new Error(`${id}/${b.title}: no solution`);
+      full = rules.grid(game.executeMove(start, solved.move));
+      return full;
+    };
     walkHints(
       game,
       { steps: WALK_STEPS },
       {
-        board(b) {
-          const start = stateOf(b);
-          const solved = game.solve(start, start);
-          if (!solved.ok) throw new Error(`${id}/${b.title}: no solution`);
-          full = rules.grid(game.executeMove(start, solved.move));
+        board() {
+          full = null;
         },
         played(_step, i, b) {
-          const state = stateOf(b);
+          const state = stateOf(b.midend);
+          const answer = answerOf(b);
           const g = rules.grid(state);
-          const wrong = [...g.keys()].filter((x) => g[x] !== 0 && g[x] !== full[x]);
+          const wrong = [...g.keys()].filter((x) => g[x] !== 0 && g[x] !== answer[x]);
           expect(
             wrong,
             `${id}/${b.title}: step ${i} reads these unlike the answer`,
