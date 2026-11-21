@@ -16,8 +16,9 @@
 import { DIRECTIONS, dirX, dirY, opposite } from "../../engine/board/square-edges.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
-  clueList,
+  cluesWhere,
   type GridSpace,
+  perBoard,
   rangeMask,
   tilingSpace,
 } from "../../engine/solve/describe-runtime.ts";
@@ -65,20 +66,7 @@ export const sideEdge = (g: PearlGeometry, sq: number, d: number): number =>
 /** The board as the description deals it: a pearl on each square that has
  * one, numbered as the game stores it (1 black, 2 white). */
 function dealtOf(clues: Uint8Array): pearl.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  clues.forEach((c, i) => {
-    if (c !== NOCLUE) {
-      at.push(i);
-      v.push(c);
-    }
-  });
-  return { pearl: clueList(at, v, clues.length) };
-}
-
-/** The ladder over the dealt pearls. */
-function pearlLadder(dl: pearl.Dealt): Ladder {
-  return describedLadder(pearl, dl);
+  return { pearl: cluesWhere(clues, (c) => c !== NOCLUE) };
 }
 
 /** A board's ladder and what it reads the board as. */
@@ -89,29 +77,24 @@ export interface Kept {
   readonly ladder: Ladder;
 }
 
-const ladders = new WeakMap<Uint8Array, Kept>();
-
 /** The ladder of a board, kept per clue array while its pearls are the
  * same: the generator removes pearls from one array between solves. */
-export function ladderOf(w: number, h: number, clues: Uint8Array): Kept {
-  const kept = ladders.get(clues);
-  if (
-    kept !== undefined &&
-    kept.g.w === w &&
-    kept.g.h === h &&
-    kept.clues.every((c, i) => c === clues[i])
-  )
-    return kept;
-  const dl = dealtOf(clues);
-  const made: Kept = {
-    clues: clues.slice(),
-    g: geometryOf(w, h),
-    dl,
-    ladder: pearlLadder(dl),
-  };
-  ladders.set(clues, made);
-  return made;
-}
+const laddersOf = perBoard(
+  (clues: Uint8Array, w: number, h: number): Kept => {
+    const dl = dealtOf(clues);
+    return {
+      clues: clues.slice(),
+      g: geometryOf(w, h),
+      dl,
+      ladder: describedLadder(pearl, dl),
+    };
+  },
+  (kept, clues, w, h) =>
+    kept.g.w === w && kept.g.h === h && kept.clues.every((c, i) => c === clues[i]),
+);
+
+export const ladderOf = (w: number, h: number, clues: Uint8Array): Kept =>
+  laddersOf(clues, w, h);
 
 /** Fresh marks on `g`, each edge as `known` has it (0 open, {@link LINE},
  * {@link NONE}). */

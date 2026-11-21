@@ -34,7 +34,7 @@ import {
 } from "../../engine/solve/answer-search.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
-  clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
   rangeMask,
@@ -60,19 +60,10 @@ export type SeparateSays = separate.SaysById;
 
 // --- the board as the description reads it -----------------------------------
 
-/** The last board size's space, which every move's `status` reads again. */
-let lastSpace: GridSpace | null = null;
-function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(separate.units, w, h);
-  return lastSpace;
-}
-
 /** The board as the description deals it: a letter on every square, and the
  * region size. */
 function dealtOf(p: SeparateShape, letters: Uint8Array): separate.Dealt {
-  const at = Array.from(letters, (_, c) => c);
-  return { letter: clueList(at, Array.from(letters), letters.length), k: p.k };
+  return { letter: cluesWhere(letters, () => true), k: p.k };
 }
 
 /** The side of square `a` that edge `e` is, and the square across it. */
@@ -107,14 +98,9 @@ export function isSolved(
   letters: Uint8Array,
   borders: Uint8Array,
 ): boolean {
-  const sp = spaceOf(w, h);
+  const sp = describedSpace(separate.units, w, h);
   const g = valuesOf(sp, borders).map((v) => (v === WALL ? WALL : OPEN));
   return separate.isAnswer(g, sp, dealtOf({ w, h, k }, letters));
-}
-
-/** The ladder over the dealt board. */
-function separateLadder(dl: separate.Dealt): Ladder {
-  return describedLadder(separate, dl);
 }
 
 /** The working state of a deduction: the marks on the edges, and the ladder
@@ -132,13 +118,13 @@ export function deduction(
   letters: Uint8Array,
   borders: Uint8Array | null = null,
 ): Deduction {
-  const sp = spaceOf(p.w, p.h);
+  const sp = describedSpace(separate.units, p.w, p.h);
   const dl = dealtOf(p, letters);
   const grid =
     borders === null ? new Uint8Array(sp.edges.length) : valuesOf(sp, borders);
   const m = new CellMarks(sp, rangeMask(WALL, OPEN), grid, null, "edge");
   m.seed(grid);
-  return { m, ladder: separateLadder(dl), dl };
+  return { m, ladder: describedLadder(separate, dl), dl };
 }
 
 /** `d`'s marks, kept, over the board `letters` deals: for a generator that
@@ -149,7 +135,7 @@ export function redealt(
   letters: Uint8Array,
 ): Deduction {
   const dl = dealtOf(p, letters);
-  return { m: d.m, ladder: separateLadder(dl), dl };
+  return { m: d.m, ladder: describedLadder(separate, dl), dl };
 }
 
 /** A copy of `d` that shares no marks with it, for a search to assume on. */

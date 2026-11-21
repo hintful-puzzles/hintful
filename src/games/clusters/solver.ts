@@ -15,11 +15,10 @@
  */
 
 import { type Answer, searchAnswers } from "../../engine/solve/answer-search.ts";
-import { clueList, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
-  type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
@@ -144,19 +143,13 @@ export type ClustersRung = (typeof CLUSTERS_RUNGS)[number];
 /** The board's dots as the description reads them: where each is and its
  * color. */
 function dealtOf(grid: Uint8Array): clusters.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  grid.forEach((tile, i) => {
-    if (!(tile & F_SINGLE)) return;
-    at.push(i);
-    v.push(tile & COLMASK);
-  });
-  return { dot: clueList(at, v, grid.length) };
-}
-
-/** The ladder over the dots `dealt` deals. */
-function clustersLadder(dealt: clusters.Dealt): Ladder {
-  return describedLadder(clusters, dealt);
+  return {
+    dot: cluesWhere(
+      grid,
+      (tile) => (tile & F_SINGLE) !== 0,
+      (tile) => tile & COLMASK,
+    ),
+  };
 }
 
 /** The values a square may hold: either color. */
@@ -205,7 +198,7 @@ export function solveGame(
 ): ClustersStatus {
   const colors = grid.map((tile) => tile & COLMASK);
   const m = marksOf(colors, w, h);
-  const { entries } = clustersLadder(dealtOf(grid));
+  const { entries } = describedLadder(clusters, dealtOf(grid));
   const impossible = runLadder(
     m,
     ladderTechniques(m, entries, { [SCALE]: maxdiff }, {}),
@@ -268,6 +261,6 @@ export function hintWalk(state: { grid: Uint8Array; w: number; h: number }): {
   const colors = state.grid.map((tile) => tile & COLMASK);
   return {
     marks: marksOf(colors, state.w, state.h),
-    entries: clustersLadder(dealtOf(state.grid)).entries,
+    entries: describedLadder(clusters, dealtOf(state.grid)).entries,
   };
 }

@@ -20,7 +20,9 @@ import {
 } from "../../engine/solve/answer-search.ts";
 import {
   clueList,
+  cluesWhere,
   type GridSpace,
+  perBoard,
   rangeMask,
   tilingSpace,
 } from "../../engine/solve/describe-runtime.ts";
@@ -80,23 +82,15 @@ function pieceOf(wires: number): number {
  * on each side a barrier crosses. A side across the grid's edge of a board
  * that does not wrap is no edge at all. */
 function dealtOf(board: NetBoard, g: NetGeometry): net.Dealt {
-  const n = board.w * board.h;
-  const at: number[] = [];
-  const v: number[] = [];
   const walls: number[] = [];
-  for (let i = 0; i < n; i++) {
-    const piece = pieceOf(board.tiles[i] & 0xf);
-    if (piece > 0) {
-      at.push(i);
-      v.push(piece);
-    }
+  for (let i = 0; i < board.w * board.h; i++)
     for (const d of [R, D]) {
       const e = g.sideEdge[i * 16 + d];
       if (e >= 0 && board.barriers[i] & d) walls.push(e);
     }
-  }
+  const piece = (t: number): number => pieceOf(t & 0xf);
   return {
-    piece: clueList(at, v, n),
+    piece: cluesWhere(board.tiles, (t) => piece(t) > 0, piece),
     wall: clueList(
       walls,
       walls.map(() => 1),
@@ -163,36 +157,32 @@ const QUICK: ReadonlySet<net.LadderId> = new Set<net.LadderId>([
   "loopNote",
 ]);
 
-const ladders = new WeakMap<Uint8Array, Kept>();
-
 /** The ladder of `board`, kept per tile array while its wires and walls are
  * the same: the generator rewires one array between solves. */
-export function ladderOf(board: NetBoard): Kept {
-  const kept = ladders.get(board.tiles);
-  if (
-    kept !== undefined &&
+const laddersOf = perBoard(
+  (_tiles: Uint8Array, board: NetBoard): Kept => {
+    const g = geometryOf(board.w, board.h, board.wrapping);
+    const dl = dealtOf(board, g);
+    const ladder = netLadder(dl);
+    return {
+      tiles: board.tiles.slice(),
+      barriers: board.barriers.slice(),
+      g,
+      dl,
+      ladder,
+      quick: {
+        ...ladder,
+        entries: ladder.entries.filter((e) => QUICK.has(e.id as net.LadderId)),
+      },
+    };
+  },
+  (kept, _tiles, board) =>
     kept.g === geometryOf(board.w, board.h, board.wrapping) &&
     kept.barriers.every((b, i) => b === board.barriers[i]) &&
-    kept.tiles.every((t, i) => pieceOf(t & 0xf) === pieceOf(board.tiles[i] & 0xf))
-  )
-    return kept;
-  const g = geometryOf(board.w, board.h, board.wrapping);
-  const dl = dealtOf(board, g);
-  const ladder = netLadder(dl);
-  const made: Kept = {
-    tiles: board.tiles.slice(),
-    barriers: board.barriers.slice(),
-    g,
-    dl,
-    ladder,
-    quick: {
-      ...ladder,
-      entries: ladder.entries.filter((e) => QUICK.has(e.id as net.LadderId)),
-    },
-  };
-  ladders.set(board.tiles, made);
-  return made;
-}
+    kept.tiles.every((t, i) => pieceOf(t & 0xf) === pieceOf(board.tiles[i] & 0xf)),
+);
+
+export const ladderOf = (board: NetBoard): Kept => laddersOf(board.tiles, board);
 
 /** Fresh marks on `g`, each side as `known` has it (0 open, {@link WIRE},
  * {@link NONE}). */

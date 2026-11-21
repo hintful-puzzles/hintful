@@ -23,6 +23,7 @@ import {
   clueList,
   describedSpace,
   type GridSpace,
+  perBoard,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
@@ -61,19 +62,6 @@ const EITHER = rangeMask(TRACK, NONE);
 /** The side an end leaves the board by, numbered as `step` numbers it. */
 const STEP_OF: Readonly<Record<number, number>> = { [U]: 1, [D]: 2, [L]: 3, [R]: 4 };
 
-const spaces = new Map<string, GridSpace>();
-
-/** The space of a `w × h` board, built once a shape. */
-function spaceOf(w: number, h: number): GridSpace {
-  const key = `${w}x${h}`;
-  let sp = spaces.get(key);
-  if (sp === undefined) {
-    sp = describedSpace(tracks.units, w, h);
-    spaces.set(key, sp);
-  }
-  return sp;
-}
-
 /** The game's clue index of the space's line `L`: the space lists the rows
  * first, the game the columns. */
 export const clueLine = (w: number, h: number, L: number): number =>
@@ -106,11 +94,6 @@ function dealtOf(b: Board): tracks.Dealt {
   };
 }
 
-/** The ladder over the dealt clues. */
-function tracksLadder(dl: tracks.Dealt): Ladder {
-  return describedLadder(tracks, dl);
-}
-
 /** The techniques a hint asks before any other, and the one it asks only
  * where nothing else fires: a square's own sides are read before a clue is
  * counted, and the loose end's argument is a last resort, as upstream's
@@ -127,19 +110,28 @@ export interface Kept {
   readonly ladder: Ladder;
 }
 
-const ladders = new WeakMap<Int32Array, { key: string; kept: Kept }>();
+/** What a board's ladder is kept by: its shape, its ends and its numbers. */
+const keyOf = (b: Board): string =>
+  `${b.w}x${b.h} ${b.rowS} ${b.colS} ${b.numbers.join(",")}`;
 
 /** The ladder of a board, kept per clue array while its numbers and ends are
  * the same: the generator solves many boards sharing one. */
-export function ladderOf(b: Board): Kept {
-  const key = `${b.w}x${b.h} ${b.rowS} ${b.colS} ${b.numbers.join(",")}`;
-  const kept = ladders.get(b.numbers);
-  if (kept !== undefined && kept.key === key) return kept.kept;
-  const dl = dealtOf(b);
-  const made: Kept = { sp: spaceOf(b.w, b.h), dl, ladder: tracksLadder(dl) };
-  ladders.set(b.numbers, { key, kept: made });
-  return made;
-}
+const laddersOf = perBoard(
+  (_numbers: Int32Array, b: Board): { key: string; kept: Kept } => {
+    const dl = dealtOf(b);
+    return {
+      key: keyOf(b),
+      kept: {
+        sp: describedSpace(tracks.units, b.w, b.h),
+        dl,
+        ladder: describedLadder(tracks, dl),
+      },
+    };
+  },
+  (made, _numbers, b) => made.key === keyOf(b),
+);
+
+export const ladderOf = (b: Board): Kept => laddersOf(b.numbers, b).kept;
 
 /** Fresh marks holding what the board's flags say: each edge crossed or not,
  * and each square marked track or none. */

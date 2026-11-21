@@ -78,12 +78,13 @@ import {
 } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
+  describedLadder,
   type Firing as LadderFiring,
   type Said,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
 import * as rome from "../../generated/games/rome/rome.compiled.ts";
-import { dealtOf, romeLadder } from "./solver.ts";
+import { dealtOf } from "./solver.ts";
 import {
   DIFFCOUNT,
   DIR_COUNT,
@@ -367,7 +368,7 @@ export function buildSteps(
   const dl = dealtOf(state);
   const sp = describedSpace(rome.units, w, h);
   const on: NotesLadder = {
-    ladder: romeLadder(dl),
+    ladder: describedLadder(rome, dl),
     marks: () => new CellMarks(sp, rangeMask(1, DIR_COUNT + 1), grid),
     enc,
     // A board does not keep the tier it was dealt at, so its hint may teach

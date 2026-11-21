@@ -23,11 +23,10 @@ import {
   dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
-import { clueList, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
-  type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
@@ -61,19 +60,7 @@ export type MosaicRung = (typeof MOSAIC_RUNGS)[number];
 
 /** The board's numbers as the description reads them. */
 function dealtOf(board: MosaicBoard): mosaic.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  board.clues.forEach((n, pos) => {
-    if (n < 0) return;
-    at.push(pos);
-    v.push(n);
-  });
-  return { count: clueList(at, v, board.clues.length) };
-}
-
-/** The ladder over the numbers `dealt` deals. */
-function mosaicLadder(dealt: mosaic.Dealt): Ladder {
-  return describedLadder(mosaic, dealt);
+  return { count: cluesWhere(board.clues, (n) => n >= 0) };
 }
 
 /** The values a square may hold: shaded or clear. */
@@ -136,7 +123,7 @@ function deduceAt(
     m.wholePasses = true;
   }
   const grades = { [SCALE]: -1 };
-  const { entries } = mosaicLadder(dealtOf(board));
+  const { entries } = describedLadder(mosaic, dealtOf(board));
   const impossible = runLadder(
     m,
     ladderTechniques(m, entries, { [SCALE]: cap }, grades),
@@ -184,7 +171,7 @@ export function hintWalk(state: MosaicState): {
   const grid = state.cells.map((v) => v & STATE_MARK_MASK);
   return {
     marks: marksOf(state.board, grid),
-    entries: mosaicLadder(dealtOf(state.board)).entries,
+    entries: describedLadder(mosaic, dealtOf(state.board)).entries,
   };
 }
 

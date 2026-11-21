@@ -14,12 +14,13 @@ import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { dominoLayout } from "../../engine/generate/laydomino.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import { describedLadder } from "../../engine/solve/ladder-runtime.ts";
+import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 import {
   cellValue,
   dealtOf,
   deduce,
   givenValues,
-  magnetsLadder,
   magnetsMarks,
   magnetsSpace,
   solveMagnets,
@@ -67,7 +68,7 @@ function layDominoes(
     colcount: new Int32Array(3 * w).fill(-1),
   };
   const dl = dealtOf(w, h, common);
-  const ladder = magnetsLadder(dl);
+  const ladder = describedLadder(magnets, dl);
   const m = magnetsMarks(magnetsSpace(w, h), dl, ladder, givenValues(w, h, common));
   if (m === null) throw new Error("magnets: a tiling with no clues clashes");
   const order = Array.from({ length: wh }, (_, i) => i);

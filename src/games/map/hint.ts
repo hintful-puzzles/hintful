@@ -64,11 +64,14 @@ import type {
   Said,
   Taken,
 } from "../../engine/solve/ladder-runtime.ts";
-import { techniqueFirings } from "../../engine/solve/ladder-runtime.ts";
+import {
+  describedLadder,
+  techniqueFirings,
+} from "../../engine/solve/ladder-runtime.ts";
 import { voice as latinVoice } from "../../generated/engine/solve/latin.compiled.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import { REGION, type RegionMark } from "./hint-marks.ts";
-import { dealtOf, gridOf, mapLadder, mapMarks } from "./solver.ts";
+import { dealtOf, gridOf, mapMarks } from "./solver.ts";
 import type { MapMove, MapOp, MapState } from "./state.ts";
 
 const ALL = 0xf;
@@ -597,7 +600,7 @@ const { plan: deduction, judgeMove } = describedEdgeHint<
   name: "map hint plan",
   walk: (state) => {
     const w = workOf(state);
-    const ladder = mapLadder(dealtOf(state.map.graph, state.map.n));
+    const ladder = describedLadder(map, dealtOf(state.map.graph, state.map.n));
     return {
       marks: marksOf(w),
       entries: ladder.entries.filter((e) =>

@@ -26,11 +26,7 @@ import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/game-id/obfuscat
 import { unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
-import {
-  describedSpace,
-  type GridSpace,
-  traceBeam,
-} from "../../engine/solve/describe-runtime.ts";
+import { describedSpace, traceBeam } from "../../engine/solve/describe-runtime.ts";
 import { units } from "../../generated/games/blackbox/blackbox.compiled.ts";
 
 // --- flag constants (upstream BALL_* / LASER_*) -----------------------
@@ -343,16 +339,6 @@ export type Holds = boolean | null;
  * {@link traceLaser} was not told. */
 export type Traced = number | { readonly unknown: Point };
 
-/** The space of the last size traced, kept: a deal traces thousands of
- * lasers on one size of box. */
-let space: GridSpace | null = null;
-
-/** The description's space for a `w` × `h` box. */
-export function spaceOf(w: number, h: number): GridSpace {
-  if (space?.w !== w || space.h !== h) space = describedSpace(units, w, h);
-  return space;
-}
-
 /**
  * Where a laser fired from range cell `entryno` goes, given what each square of
  * the box holds (`ballAt`, on the 1-based grid): `LASER_HIT`, `LASER_REFLECT`
@@ -368,7 +354,7 @@ export function traceLaser(
   entryno: number,
   ballAt: (x: number, y: number) => Holds,
 ): Traced {
-  const sp = spaceOf(w, h);
+  const sp = describedSpace(units, w, h);
   const s = slotOf(w, h, entryno);
   const r = traceBeam(sp, s, (c) => ballAt((c % w) + 1, ((c / w) | 0) + 1));
   if (r < 0) return { unknown: { x: (~r % w) + 1, y: ((~r / w) | 0) + 1 } };

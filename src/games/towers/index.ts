@@ -96,8 +96,8 @@ import type {
   Firing as LadderFiring,
   Said,
 } from "../../engine/solve/ladder-runtime.ts";
-import { latinVerdict, setCells } from "../../engine/solve/latin.ts";
-import type * as towers from "../../generated/games/towers/towers.compiled.ts";
+import { latinLadder, latinVerdict, setCells } from "../../engine/solve/latin.ts";
+import * as towers from "../../generated/games/towers/towers.compiled.ts";
 import { NAMES, WORDS } from "../../generated/games/towers/towers.compiled.ts";
 import { newTowersDesc } from "./generator.ts";
 import {
@@ -119,7 +119,6 @@ import {
   facingReason,
   type HintReason,
   solveTowers,
-  towersLadder,
 } from "./solver.ts";
 import { type ClueSight, say, TOWERS_VOCAB } from "./speak.ts";
 import {
@@ -577,10 +576,10 @@ function buildSteps(
   const w = state.w;
   const steps: HintStep<TowersMove, TowersHint, PlanRung<HintReason>>[] = [];
   const wGrid = Uint8Array.from(state.grid);
-  const cl = dealtOf(w, state.clues);
+  const cl = dealtOf(state.clues);
   const sp = latinSpace(w);
   const on = latinNotesLadder(
-    towersLadder(cl),
+    latinLadder(towers, cl),
     w,
     wGrid,
     Math.min(diffToLevel(state.diff), DIFF_EXTREME),

@@ -15,11 +15,16 @@ import {
   nakedSingles,
 } from "../../engine/hint/candidate-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import type { CellMarks, Firing } from "../../engine/solve/ladder-runtime.ts";
+import {
+  type CellMarks,
+  describedLadder,
+  type Firing,
+} from "../../engine/solve/ladder-runtime.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
+import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 import { placeNumber, regionsViable } from "./generator.ts";
 import {
   hintKeepTrack,
@@ -31,7 +36,7 @@ import {
 } from "./hint.ts";
 import { seismicGame } from "./index.ts";
 import { COL_NUM_PENCIL } from "./render.ts";
-import { dealtOf, marksOf, seismicLadder } from "./solver.ts";
+import { dealtOf, marksOf } from "./solver.ts";
 import {
   areaBits,
   DIFF_EASY,
@@ -250,7 +255,7 @@ function rungRejects(state: SeismicState): string[] {
 function firingsOn(state: SeismicState, id: string): readonly Firing[] {
   const b = workingBoard(state);
   const dl = dealtOf(b);
-  const ladder = seismicLadder(dl);
+  const ladder = describedLadder(seismic, dl);
   const m = marksOf(b, b.grid.slice(), dl, ladder) as CellMarks;
   for (let c = 0; c < b.grid.length; c++)
     if (b.grid[c] === 0) m.cands[c] = b.pencil[c] << 1;

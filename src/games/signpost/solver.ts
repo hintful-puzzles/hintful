@@ -21,7 +21,6 @@ import {
   clueList,
   compass,
   describedSpace,
-  type GridSpace,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
@@ -68,14 +67,6 @@ export interface SignpostFiring {
 
 // --- the board as the description reads it -----------------------------------
 
-/** The last board size's space, which every solve reads again. */
-let lastSpace: GridSpace | null = null;
-function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(signpost.units, w, h);
-  return lastSpace;
-}
-
 /** The board as the description deals it: every square's arrow, numbered
  * from 1, and the given numbers. */
 function dealtOf(s: SignpostState): signpost.Dealt {
@@ -120,7 +111,7 @@ function valuesOf(s: SignpostState): Uint8Array {
 
 /** The square `i`'s value `d` links it to, -1 for none. */
 export const linkOf = (s: SignpostState, i: number, d: number): number =>
-  compass(spaceOf(s.w, s.h), i, s.dirs[i] + 1, d - 1);
+  compass(describedSpace(signpost.units, s.w, s.h), i, s.dirs[i] + 1, d - 1);
 
 /** The squares `i`'s arrow points at, nearest first. */
 function arrowLine(s: SignpostState, i: number): number[] {
@@ -185,27 +176,26 @@ export function firingOf(
   };
 }
 
-/** The ladder over the dealt board. */
-function signpostLadder(dl: signpost.Dealt): Ladder {
-  return describedLadder(signpost, dl);
-}
-
 /** The marks over a board's links and the ladder over its arrows and
  * numbers, or `null` where a link is one no square may hold. */
 export function deduction(
   s: SignpostState,
 ): { m: CellMarks; ladder: Ladder; dl: signpost.Dealt } | null {
-  const sp = spaceOf(s.w, s.h);
+  const sp = describedSpace(signpost.units, s.w, s.h);
   const dl = dealtOf(s);
   // A link is at most the longer side less one, and the last square's 1.
   const m = new CellMarks(sp, rangeMask(1, Math.max(s.w, s.h)), valuesOf(s));
   if (!m.seed(m.grid, (c) => signpost.domainOf(sp, dl, c))) return null;
-  return { m, ladder: signpostLadder(dl), dl };
+  return { m, ladder: describedLadder(signpost, dl), dl };
 }
 
 /** Whether a board's links are its answer, by the description's rules. */
 export function isAnswer(s: SignpostState): boolean {
-  return signpost.isAnswer(valuesOf(s), spaceOf(s.w, s.h), dealtOf(s));
+  return signpost.isAnswer(
+    valuesOf(s),
+    describedSpace(signpost.units, s.w, s.h),
+    dealtOf(s),
+  );
 }
 
 /**

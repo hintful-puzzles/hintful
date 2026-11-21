@@ -68,20 +68,28 @@ itself is § "The file". A game whose techniques are stated:
    rung only where it supplies something: a reason the description cannot
    state, through `compiledRung` (or `uncluedRung` for a technique that
    reads no clue), or a `keptRung`; § "A firing's reason is built from its
-   binding".
+   binding". A game that supplies nothing calls `describedLadder` where it
+   needs the ladder, with no wrapper of its own.
 5. **Deals its board as the description reads it**, the compiled module's
    `Dealt`: one `ClueList` a kind, in the order the techniques should meet
    them; one `Partition` a dealt partition; and each size a technique reads
    that the grid is not measured in (Salad's `nums`, Seismic's `mode`).
-   [`towers/solver.ts`](../src/games/towers/solver.ts) deals clues and
-   [`keen/solver.ts`](../src/games/keen/solver.ts) cages. The board goes on
+   A kind given on the squares where the board's array says so is
+   `cluesWhere(array, given, value?)`;
+   [`towers/state.ts`](../src/games/towers/state.ts) deals clues so and
+   [`keen/state.ts`](../src/games/keen/state.ts) cages. The board goes on
    the space the module's `units` declare, `describedSpace(units, w, h,
-   parts)` (`latinSpace(o)` is a Latin square's), and where its domain is a
-   cell's, each cell holds what the module's `domainOf` gives it
-   (§ "The runtime a ladder runs on"). Keep what it deals no longer than the
-   structure it reads stays as it was: Solo's generator merges cages in
-   place between solves, so a partition kept for the cage structure's life
-   reads stale cages.
+   parts)` (`latinSpace(o)` is a Latin square's), asked for where it is
+   needed: the runtime keeps every space it builds, so a game keeps none
+   of its own. Where its domain is a cell's, each cell holds what the
+   module's `domainOf` gives it (§ "The runtime a ladder runs on"). A deal
+   that costs enough to keep is kept with `perBoard`, by the object it is
+   read from, which keeps what a compiled technique keeps for the board
+   too, since that is kept by the deal. Keep it no longer than the
+   structure it reads stays as it was: where a generator changes that
+   object in place between solves, `perBoard`'s `still` checks it (Pearl's
+   clues), and Solo's generator merges cages in place, so a partition kept
+   for the cage structure's life reads stale cages.
 6. **Checks its answers by its rules**: its `status`, and every solver
    that asks whether a filled grid is right, call the module's `isAnswer`
    over the board as one `dealtOf` deals it, which the ladder reads too

@@ -64,20 +64,6 @@ const CLEAR = 2;
 
 // --- the board as the description reads it --------------------------------
 
-const spaces = new Map<string, GridSpace>();
-
-/** The space of a `w × h` board, built once a shape: its lines are its rows,
- * top first, then its columns, left first. */
-function spaceOf(w: number, h: number): GridSpace {
-  const key = `${w}x${h}`;
-  let sp = spaces.get(key);
-  if (sp === undefined) {
-    sp = describedSpace(pattern.units, w, h);
-    spaces.set(key, sp);
-  }
-  return sp;
-}
-
 /** The game's index of a line, columns `0..w-1` then rows, from the space's,
  * rows then columns. */
 const gameLine = (L: number, w: number, h: number): number => (L < h ? w + L : L - h);
@@ -107,7 +93,7 @@ export function isComplete(state: PatternState): boolean {
   const { w, h, clues } = state.common;
   return pattern.isAnswer(
     Uint8Array.from(state.grid, described),
-    spaceOf(w, h),
+    describedSpace(pattern.units, w, h),
     dealtOf(w, h, clues),
   );
 }
@@ -296,7 +282,10 @@ function solvePuzzle(
   immutable?: Uint8Array,
 ): boolean {
   const dl = dealtOf(w, h, clues);
-  const m = marksOf(spaceOf(w, h), startOf(w, h, seedGrid, immutable));
+  const m = marksOf(
+    describedSpace(pattern.units, w, h),
+    startOf(w, h, seedGrid, immutable),
+  );
   return deduce(m, patternLadder(dl), dl) === "solved";
 }
 
@@ -342,7 +331,10 @@ export function searchAnswers(
   const dl = dealtOf(w, h, clues);
   const ladder = patternLadder(dl);
   return searchBoard<CellMarks, Uint8Array>({
-    start: marksOf(spaceOf(w, h), startOf(w, h, seedGrid, immutable)),
+    start: marksOf(
+      describedSpace(pattern.units, w, h),
+      startOf(w, h, seedGrid, immutable),
+    ),
     deduce: (m) => deduce(m, ladder, dl),
     assume(m) {
       const at = branchSquare(m.grid, w, h);
@@ -549,7 +541,10 @@ export function deduceHintPlan(
  * facts are the difference of. */
 export function boardMarks(state: PatternState): CellMarks {
   const { w, h } = state.common;
-  return marksOf(spaceOf(w, h), Uint8Array.from(state.grid, described));
+  return marksOf(
+    describedSpace(pattern.units, w, h),
+    Uint8Array.from(state.grid, described),
+  );
 }
 
 /** The square's value a described one is. */

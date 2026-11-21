@@ -14,11 +14,7 @@
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { singleFirings } from "../../engine/solve/deduction-fixpoint.ts";
-import {
-  clueList,
-  describedSpace,
-  type GridSpace,
-} from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -101,34 +97,17 @@ export interface Shown {
 /** The opened numbers as the description reads them, written into `into`
  * where given, so a ladder built on it reads the board as it is now. */
 function dealtOf(s: Shown, into?: mines.Dealt): mines.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  for (let i = 0; i < s.w * s.h; i++) {
-    if (s.numbers[i] < 0) continue;
-    at.push(i);
-    v.push(s.numbers[i]);
-  }
-  const count = clueList(at, v, s.w * s.h);
+  const count = cluesWhere(s.numbers, (n) => n >= 0);
   if (into === undefined) return { count, mines: s.n };
   into.count = count;
   return into;
-}
-
-/** The last space built, kept: the generator builds marks again after each
- * perturbation, hundreds of times a deal, on one size of board. */
-let space: GridSpace | null = null;
-
-function spaceOf(s: Shown): GridSpace {
-  if (space?.w !== s.w || space.h !== s.h)
-    space = describedSpace(mines.units, s.w, s.h);
-  return space;
 }
 
 /** The marks the ladder reads: each opened square safe, and `known` placed. */
 function marksOf(s: Shown, known: Uint8Array): CellMarks {
   const grid = known.slice();
   for (let i = 0; i < grid.length; i++) if (s.numbers[i] >= 0) grid[i] = SAFE;
-  const m = new CellMarks(spaceOf(s), DOMAIN, grid);
+  const m = new CellMarks(describedSpace(mines.units, s.w, s.h), DOMAIN, grid);
   m.seed(grid);
   return m;
 }

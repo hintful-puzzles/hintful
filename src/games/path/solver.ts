@@ -37,6 +37,7 @@ import {
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
   rangeMask,
@@ -125,19 +126,12 @@ function geometryOf(w: number, h: number): Geometry {
 /** The board as the description deals it: the numbers, the walls, and how
  * far apart two numbers a line joins are. */
 function dealtOf(puzzle: PathPuzzle, geo: Geometry): path.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  puzzle.ends.forEach((n, c) => {
-    if (n === NO_END) return;
-    at.push(c);
-    v.push(n);
-  });
   const walls: number[] = [];
   puzzle.walls.forEach((wall, e) => {
     if (wall) walls.push(geo.toSp[e]);
   });
   return {
-    number: clueList(at, v, puzzle.ends.length),
+    number: cluesWhere(puzzle.ends, (n) => n !== NO_END),
     wall: clueList(
       walls,
       walls.map(() => 1),
@@ -166,7 +160,7 @@ function deduction(puzzle: PathPuzzle, edges: ArrayLike<number>): Deduction {
     if (edges[e] !== OPEN) grid[geo.toSp[e]] = edges[e] === LINE ? LINED : NONE;
   const m = new CellMarks(geo.sp, rangeMask(LINED, NONE), grid, null, "edge");
   m.seed(grid);
-  return { puzzle, geo, dl, m, ladder: pathLadder(dl) };
+  return { puzzle, geo, dl, m, ladder: describedLadder(path, dl) };
 }
 
 /** A copy of `d` that shares no marks with it, for a search to assume on. */
@@ -222,11 +216,6 @@ function deduce(d: Deduction, cap: number, firings?: FiringTally): Deduced {
     },
   );
   return impossible ? "contradiction" : verdictOf(d);
-}
-
-/** The ladder over the dealt board. */
-function pathLadder(dl: path.Dealt): Ladder {
-  return describedLadder(path, dl);
 }
 
 // --- solving -----------------------------------------------------------------

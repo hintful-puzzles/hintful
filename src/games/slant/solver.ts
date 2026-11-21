@@ -13,7 +13,7 @@
 
 import type { Judging } from "../../engine/hint/move-judge.ts";
 import {
-  clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
   type Reads,
@@ -62,15 +62,7 @@ const slashOf = (v: number): Slash => (v === BACK ? -1 : v === FORWARD ? 1 : 0);
 /** The board as the description deals it: a number at each point that has
  * one. */
 function dealtOf(clues: Int8Array): slant.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  clues.forEach((c, k) => {
-    if (c >= 0) {
-      at.push(k);
-      v.push(c);
-    }
-  });
-  return { n: clueList(at, v, clues.length) };
+  return { n: cluesWhere(clues, (c) => c >= 0) };
 }
 
 /**

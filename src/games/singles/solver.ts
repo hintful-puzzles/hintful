@@ -9,11 +9,7 @@
  * squares the uncovered ones would fall apart without.
  */
 
-import {
-  clueList,
-  describedSpace,
-  type GridSpace,
-} from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -40,24 +36,9 @@ export const CLEAR = 2;
 /** The highest tier the ladder grades: Normal. */
 const NORMAL = 1;
 
-/** The last board size's space, which every move's `status` reads again. */
-let lastSpace: GridSpace | null = null;
-function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(singles.units, w, h);
-  return lastSpace;
-}
-
 /** The board as the description deals it: every square's number. */
-function dealtOf({ n, nums }: SinglesState): singles.Dealt {
-  const at = Array.from({ length: n }, (_, c) => c);
-  return { number: clueList(at, Array.from(nums), n) };
-}
-
-/** The ladder over the dealt board. A technique that says builds its own steps
- * (`singles.description.yaml`'s `says`), so no rung builds a reason. */
-function singlesLadder(dl: singles.Dealt): Ladder {
-  return describedLadder(singles, dl);
+function dealtOf({ nums }: SinglesState): singles.Dealt {
+  return { number: cluesWhere(nums, () => true) };
 }
 
 /** The values the description reads off a state's marks: covered, clear, or
@@ -85,12 +66,12 @@ function deduction(state: SinglesState): {
 } {
   const dl = dealtOf(state);
   const m = new CellMarks(
-    spaceOf(state.w, state.h),
+    describedSpace(singles.units, state.w, state.h),
     (1 << COVERED) | (1 << CLEAR),
     valuesOf(state),
   );
   m.seed(m.grid);
-  return { m, ladder: singlesLadder(dl), dl };
+  return { m, ladder: describedLadder(singles, dl), dl };
 }
 
 /** What a hint walks: the marks over a state's numbers and marks, and the
@@ -141,7 +122,9 @@ export function layCovered(state: SinglesState, order: readonly number[]): boole
  * (as upstream completes it). */
 export function status(s: SinglesState): "solved" | "ongoing" {
   const g = Uint8Array.from(s.flags, (f) => (f & F_BLACK ? COVERED : CLEAR));
-  return singles.isAnswer(g, spaceOf(s.w, s.h), dealtOf(s)) ? "solved" : "ongoing";
+  return singles.isAnswer(g, describedSpace(singles.units, s.w, s.h), dealtOf(s))
+    ? "solved"
+    : "ongoing";
 }
 
 // --- the error overlay ------------------------------------------------------

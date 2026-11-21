@@ -1281,7 +1281,9 @@ its reason, and runs a described game's own on its clues
 ([`descriptions.md`](./descriptions.md); exemplar `unequal/solver.ts`).
 `describe-runtime.ts` is what compiled code reads, and the modules under
 `describe-runtime/` hold it: the marks' interface, the numbered grid
-(`describedSpace`, `latinSpace`) and a game's `ClueList`s and `ListClues`. `marks-made.ts` numbers the kinds of fact `Marks.made` counts,
+(`describedSpace`, `latinSpace`), kept by shape, and a game's `ClueList`s
+(`cluesWhere` deals one off a board's array) and `ListClues`; `perBoard`
+keeps a deal for the life of the object it is read from. `marks-made.ts` numbers the kinds of fact `Marks.made` counts,
 which the compiler reads to check a binding again before it fires.
 
 ### `ladder-runtime.ts` — what a compiled ladder runs on

@@ -5,7 +5,7 @@
  */
 
 import { rejectMove } from "../../engine/contract/assert-never.ts";
-import { describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedSpace, perBoard } from "../../engine/solve/describe-runtime.ts";
 import * as cube from "../../generated/games/cube/cube.compiled.ts";
 import { Direction, type GridSquare } from "./grid.ts";
 import {
@@ -124,27 +124,26 @@ function rollGeometry(
   return { dest, skey, pkey, angle, source };
 }
 
-const dealtByArena = new WeakMap<readonly GridSquare[], cube.Dealt>();
-
 /** The arena's roll table, as the description reads it: each square's
  * destination toward each of the four directions, and each face's source,
  * read off the geometry once an arena. */
-export function dealtOf(state: CubeState): cube.Dealt {
-  const known = dealtByArena.get(state.grid);
-  if (known) return known;
-  const solid = SOLIDS[state.solidIndex];
-  const rolls = state.grid.map((_, sq) =>
-    DIR_CHARS.map((_, r) => rollGeometry(state.solidIndex, state.grid, sq, r)),
-  );
-  const dealt: cube.Dealt = {
-    nfaces: solid.nfaces,
-    dest: rolls.map((rs) => rs.map((g) => g?.dest ?? -1)),
-    source: rolls.map((rs) => rs.map((g) => g?.source ?? [])),
-    down: lowestFace(solid),
-  };
-  dealtByArena.set(state.grid, dealt);
-  return dealt;
-}
+const dealtOfArena = perBoard(
+  (grid: readonly GridSquare[], solidIndex: number): cube.Dealt => {
+    const solid = SOLIDS[solidIndex];
+    const rolls = grid.map((_, sq) =>
+      DIR_CHARS.map((_, r) => rollGeometry(solidIndex, grid, sq, r)),
+    );
+    return {
+      nfaces: solid.nfaces,
+      dest: rolls.map((rs) => rs.map((g) => g?.dest ?? -1)),
+      source: rolls.map((rs) => rs.map((g) => g?.source ?? [])),
+      down: lowestFace(solid),
+    };
+  },
+);
+
+export const dealtOf = (state: CubeState): cube.Dealt =>
+  dealtOfArena(state.grid, state.solidIndex);
 
 /** The square rolling toward `r` (an orthogonal `Direction`) from where the
  * solid stands lands on, by the roll table; -1 off the arena. */

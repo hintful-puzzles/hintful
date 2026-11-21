@@ -19,7 +19,6 @@ import { describedSpace, partition } from "../../engine/solve/describe-runtime.t
 import {
   CellMarks,
   describedLadder,
-  type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
@@ -54,11 +53,6 @@ export function areasOf(regions: Int32Array): number[][] {
 /** The board's regions as the description reads them. */
 function dealtOf(board: NorinoriBoard): norinori.Dealt {
   return { region: partition(areasOf(board.regions), board.grid.length) };
-}
-
-/** The ladder over the regions `dealt` deals. */
-function norinoriLadder(dealt: norinori.Dealt): Ladder {
-  return describedLadder(norinori, dealt);
 }
 
 /** The values a square may hold: shaded or clear. */
@@ -96,7 +90,7 @@ export function solveNorinori(
   firings?: FiringTally,
 ): DifficultyVerdict {
   const m = marksOf(board);
-  const { entries } = norinoriLadder(dealtOf(board));
+  const { entries } = describedLadder(norinori, dealtOf(board));
   const impossible = runLadder(m, ladderTechniques(m, entries, { [SCALE]: cap }, {}), {
     firings,
   });
@@ -129,5 +123,8 @@ export function hintWalk(state: NorinoriBoard): {
   entries: readonly LadderEntry[];
 } {
   const board: NorinoriBoard = { ...state, grid: state.grid.slice() };
-  return { marks: marksOf(board), entries: norinoriLadder(dealtOf(board)).entries };
+  return {
+    marks: marksOf(board),
+    entries: describedLadder(norinori, dealtOf(board)).entries,
+  };
 }

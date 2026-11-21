@@ -20,9 +20,10 @@ import {
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
-  clueList,
+  cluesWhere,
   describedSpace,
   partition,
+  perBoard,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
@@ -222,41 +223,21 @@ export function parseDesc(p: RomeParams, desc: string): DescParse<RomeState> {
 
 // --- the board as the description reads it ---------------------------------
 
-const areasByDsf = new WeakMap<Dsf, ReturnType<typeof partition>>();
+/** A board's areas, kept for the life of the board's areas, which every
+ * solve of it shares. */
+const areasOf = perBoard((dsf: Dsf, n: number) => partition(dsf.classes(), n));
 
 /** The board as the description deals it: its areas, in the order of their
- * first square, each in reading order, and its goals. The partition is kept
- * for the life of the board's areas, which every solve of it shares. */
+ * first square, each in reading order, and its goals. */
 export function dealtOf(board: RomeBoard): rome.Dealt {
-  let area = areasByDsf.get(board.regions);
-  if (area === undefined) {
-    const byRoot = new Map<number, number[]>();
-    for (let i = 0; i < board.grid.length; i++) {
-      const root = board.regions.canonify(i);
-      const cells = byRoot.get(root);
-      if (cells) cells.push(i);
-      else byRoot.set(root, [i]);
-    }
-    area = partition([...byRoot.values()], board.grid.length);
-    areasByDsf.set(board.regions, area);
-  }
-  const goals: number[] = [];
-  for (let i = 0; i < board.grid.length; i++)
-    if (board.grid[i] & FM_GOAL) goals.push(i);
   return {
-    area,
-    goal: clueList(
-      goals,
-      goals.map(() => 0),
-      board.grid.length,
+    area: areasOf(board.regions, board.grid.length),
+    goal: cluesWhere(
+      board.grid,
+      (v) => (v & FM_GOAL) !== 0,
+      () => 0,
     ),
   };
-}
-
-/** The ladder over the dealt areas and goals. A strike's firing says what its
- * sentence names (`says` in the description). */
-export function romeLadder(dl: rome.Dealt): Ladder {
-  return describedLadder(rome, dl);
 }
 
 /**
@@ -305,7 +286,7 @@ export function romeSolve(
 ): number {
   const { w, h, grid, pencil } = board;
   const dl = dealtOf(board);
-  const ladder = romeLadder(dl);
+  const ladder = describedLadder(rome, dl);
   const values = placedValues(board);
   const m = marksOf(board, values, dl, ladder);
   if (m === null) {

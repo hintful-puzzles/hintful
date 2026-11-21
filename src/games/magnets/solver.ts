@@ -122,12 +122,6 @@ export function dealtOf(w: number, h: number, common: MagnetsCommon): magnets.De
   };
 }
 
-/** The ladder over the dealt board, each technique with the hint's reason
- * for it. */
-export function magnetsLadder(dl: magnets.Dealt): Ladder {
-  return describedLadder(magnets, dl);
-}
-
 /** The premise a firing acted on, from what its technique said. */
 export function reasonOf(
   sp: GridSpace,
@@ -206,7 +200,7 @@ export function solveMagnets(
   firings?: FiringTally,
 ): { verdict: Verdict; grid: Int32Array } {
   const dl = dealtOf(w, h, common);
-  const ladder = magnetsLadder(dl);
+  const ladder = describedLadder(magnets, dl);
   const m = magnetsMarks(magnetsSpace(w, h), dl, ladder, givenValues(w, h, common));
   if (m === null) return { verdict: -1, grid: new Int32Array(w * h) };
   const verdict = deduce(m, ladder, dl, cap, firings);

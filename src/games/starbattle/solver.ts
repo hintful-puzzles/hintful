@@ -20,7 +20,6 @@ import { describedSpace, partition } from "../../engine/solve/describe-runtime.t
 import {
   CellMarks,
   describedLadder,
-  type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
@@ -169,11 +168,6 @@ export function isComplete(board: StarbattleBoard): boolean {
   );
 }
 
-/** The ladder over the board `dealt` deals. */
-function starbattleLadder(dealt: starbattle.Dealt): Ladder {
-  return describedLadder(starbattle, dealt);
-}
-
 /** The values a square may hold: a star, or none. */
 const DOMAIN = (1 << STAR) | (1 << CROSSED);
 
@@ -201,7 +195,7 @@ export function solveStarbattle(
   firings?: FiringTally,
 ): DifficultyVerdict {
   const m = marksOf(board);
-  const { entries } = starbattleLadder(dealtOf(board));
+  const { entries } = describedLadder(starbattle, dealtOf(board));
   const impossible = runLadder(m, ladderTechniques(m, entries, { [SCALE]: cap }, {}), {
     firings,
   });
@@ -241,5 +235,8 @@ export function hintWalk(state: {
     state.regions,
     state.grid.slice(),
   );
-  return { marks: marksOf(board), entries: starbattleLadder(dealtOf(board)).entries };
+  return {
+    marks: marksOf(board),
+    entries: describedLadder(starbattle, dealtOf(board)).entries,
+  };
 }

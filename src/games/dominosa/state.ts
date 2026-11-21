@@ -232,13 +232,10 @@ export function status(s: DominosaState): "solved" | "ongoing" {
 
 // --- the board as the description reads it ----------------------------------
 
-/** The last board size's space, which every move's `status` reads again. */
-let lastSpace: GridSpace | null = null;
+/** The space of a board of `shape`. */
 export function spaceOf(shape: DominosaShape): GridSpace {
   const { w, h } = boardSize(shape);
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(dominosa.units, w, h);
-  return lastSpace;
+  return describedSpace(dominosa.units, w, h);
 }
 
 /** The board as the description deals it: a number on every square, and

@@ -30,7 +30,7 @@ import {
   offset,
   parseWireDesc,
 } from "../../engine/mechanics/wires.ts";
-import { describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedSpace, perBoard } from "../../engine/solve/describe-runtime.ts";
 import * as netslide from "../../generated/games/netslide/netslide.compiled.ts";
 
 /* ----------------------------------------------------------------------
@@ -328,27 +328,19 @@ export function computeActive(
 
 /** Each game's board as the description reads it, and its rules and views,
  * by its barriers, which every state of the game shares. */
-const boards = new WeakMap<
-  Uint8Array,
-  {
-    rules: ReturnType<typeof netslide.rules>;
-    views: ReturnType<typeof netslide.views>;
-  }
->();
-
-function boardOf(s: Pick<NetslideState, "w" | "h" | "barriers">) {
-  let board = boards.get(s.barriers);
-  if (board === undefined) {
+const boardsOf = perBoard(
+  (_barriers: Uint8Array, s: Pick<NetslideState, "w" | "h" | "barriers">) => {
     const sp = describedSpace(netslide.units, s.w, s.h);
     const dealt = dealtOf(s);
-    board = {
+    return {
       rules: netslide.rules(sp, dealt, []),
       views: netslide.views(sp, dealt, []),
     };
-    boards.set(s.barriers, board);
-  }
-  return board;
-}
+  },
+);
+
+const boardOf = (s: Pick<NetslideState, "w" | "h" | "barriers">) =>
+  boardsOf(s.barriers, s);
 
 /** What the description reads of the board: the square across each side of
  * each tile, round the edge, and none (`-1`) where a barrier stands, the

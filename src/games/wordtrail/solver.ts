@@ -28,9 +28,10 @@ import {
 } from "../../engine/mechanics/line-drawing.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
-  clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
+  perBoard,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
@@ -114,53 +115,38 @@ function geometryOf(w: number, h: number): Geometry {
 
 /** The board as the description deals it. The trails are the board's for
  * its life, so each board's dealing is kept. */
-const dealtCache = new WeakMap<readonly Trail[], wordtrail.Dealt>();
-function dealtOf(board: WordtrailBoard): wordtrail.Dealt {
-  const kept = dealtCache.get(board.trails);
-  if (kept !== undefined) return kept;
-  const cells = board.w * board.h;
-  const dark: number[] = [];
-  const open: number[] = [];
-  const letters: number[] = [];
-  board.letters.forEach((letter, i) => {
-    if (letter === 0) dark.push(i);
-    else {
-      open.push(i);
-      letters.push(letter);
-    }
-  });
-  const lens = [...new Set(board.lengths)];
-  const dealt: wordtrail.Dealt = {
-    block: clueList(
-      dark,
-      dark.map(() => 0),
-      cells,
-    ),
-    letter: clueList(open, letters, cells),
-    words: {
-      n: lens.length,
-      len: lens,
-      num: lens.map((n) => board.lengths.filter((m) => m === n).length),
-    },
-    trail: {
-      n: board.trails.length,
-      pos: board.trails.map((t) => {
-        const pos = new Array<number>(cells).fill(0);
-        t.forEach((i, k) => {
-          pos[i] = k + 1;
-        });
-        return pos;
-      }),
-    },
-  };
-  dealtCache.set(board.trails, dealt);
-  return dealt;
-}
+const dealtOfTrails = perBoard(
+  (_trails: readonly Trail[], board: WordtrailBoard): wordtrail.Dealt => {
+    const cells = board.w * board.h;
+    const lens = [...new Set(board.lengths)];
+    return {
+      block: cluesWhere(
+        board.letters,
+        (letter) => letter === 0,
+        () => 0,
+      ),
+      letter: cluesWhere(board.letters, (letter) => letter !== 0),
+      words: {
+        n: lens.length,
+        len: lens,
+        num: lens.map((n) => board.lengths.filter((m) => m === n).length),
+      },
+      trail: {
+        n: board.trails.length,
+        pos: board.trails.map((t) => {
+          const pos = new Array<number>(cells).fill(0);
+          t.forEach((i, k) => {
+            pos[i] = k + 1;
+          });
+          return pos;
+        }),
+      },
+    };
+  },
+);
 
-/** The ladder. */
-function wordtrailLadder(board: WordtrailBoard): Ladder {
-  return describedLadder(wordtrail, dealtOf(board));
-}
+const dealtOf = (board: WordtrailBoard): wordtrail.Dealt =>
+  dealtOfTrails(board.trails, board);
 
 /** The ladder's marks over `board`, and what it reads them by. */
 interface Deduction {
@@ -185,7 +171,7 @@ function deduction(board: WordtrailBoard): Deduction {
       : spaceValue(geo, e, board.edges[e]);
   const m = new CellMarks(geo.sp, rangeMask(FORTH, BACK), grid, null, "edge");
   m.seed(grid);
-  return { geo, m, ladder: wordtrailLadder(board) };
+  return { geo, m, ladder: describedLadder(wordtrail, dealtOf(board)) };
 }
 
 /** Write the marks back onto `board`: a line the way it runs, a cross where

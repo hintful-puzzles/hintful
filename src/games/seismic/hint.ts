@@ -54,9 +54,14 @@ import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import { digitKeyCode } from "../../engine/input/key-labels.ts";
 import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
 import { describedSpace, rangeMask } from "../../engine/solve/describe-runtime.ts";
-import { CellMarks, type Said, TIERS } from "../../engine/solve/ladder-runtime.ts";
+import {
+  CellMarks,
+  describedLadder,
+  type Said,
+  TIERS,
+} from "../../engine/solve/ladder-runtime.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
-import { dealtOf, seismicLadder } from "./solver.ts";
+import { dealtOf } from "./solver.ts";
 import {
   areaBits,
   MODE_TECTONIC,
@@ -285,7 +290,7 @@ export function buildSteps(
   } satisfies NoteEncoding;
   const sp = describedSpace(seismic.units, state.w, state.h);
   const on: NotesLadder = {
-    ladder: seismicLadder(dl),
+    ladder: describedLadder(seismic, dl),
     marks: () => new CellMarks(sp, rangeMask(1, 9), grid),
     enc,
     caps: { [TIERS]: state.params.diff },

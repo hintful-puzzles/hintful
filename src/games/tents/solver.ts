@@ -18,6 +18,7 @@ import { spokenOf, techniqueOf } from "../../engine/hint/described-hint.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
   MARK,
@@ -100,19 +101,6 @@ export type TentsReason =
 
 // --- the board as the description reads it --------------------------------
 
-const spaces = new Map<string, GridSpace>();
-
-/** The space of a `w × h` board, built once a shape. */
-function spaceOf(w: number, h: number): GridSpace {
-  const key = `${w}x${h}`;
-  let sp = spaces.get(key);
-  if (sp === undefined) {
-    sp = describedSpace(tents.units, w, h);
-    spaces.set(key, sp);
-  }
-  return sp;
-}
-
 /** The game's clue index of the space's line `L`: the space lists the rows
  * first, the game the columns. */
 const clueLine = (w: number, h: number, L: number): number => (L < h ? w + L : L - h);
@@ -125,16 +113,12 @@ function dealtOf(
   grid: Int8Array,
   numbers: Int32Array,
 ): tents.Dealt {
-  const trees: number[] = [];
-  grid.forEach((v, i) => {
-    if (v === TREE) trees.push(i);
-  });
   const lines = Array.from({ length: w + h }, (_, L) => L);
   return {
-    tree: clueList(
-      trees,
-      trees.map(() => 0),
-      w * h,
+    tree: cluesWhere(
+      grid,
+      (v) => v === TREE,
+      () => 0,
     ),
     count: clueList(
       lines,
@@ -190,12 +174,6 @@ export function reasonOf(
   }
 }
 
-/** The ladder over the dealt board: each technique as the description states
- * it, a firing recording what it says. */
-function tentsLadder(dl: tents.Dealt): Ladder {
-  return describedLadder(tents, dl);
-}
-
 /** A board's space, deal and ladder. */
 export interface Board {
   readonly w: number;
@@ -207,7 +185,13 @@ export interface Board {
 
 function boardOf(w: number, h: number, grid: Int8Array, numbers: Int32Array): Board {
   const dl = dealtOf(w, h, grid, numbers);
-  return { w, h, sp: spaceOf(w, h), dl, ladder: tentsLadder(dl) };
+  return {
+    w,
+    h,
+    sp: describedSpace(tents.units, w, h),
+    dl,
+    ladder: describedLadder(tents, dl),
+  };
 }
 
 /** Fresh marks holding the game's squares `grid` and, on each tent, the tree

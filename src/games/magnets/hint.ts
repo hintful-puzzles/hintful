@@ -20,6 +20,7 @@ import {
 import { spokenOf } from "../../engine/hint/described-hint.ts";
 import {
   type CellMarks,
+  describedLadder,
   type Ladder,
   ladderWalk,
   type Taken,
@@ -41,7 +42,6 @@ import {
   dealtOf,
   type MagnetsLine,
   type MagnetsReason,
-  magnetsLadder,
   magnetsMarks,
   magnetsSpace,
   placedValues,
@@ -102,7 +102,7 @@ interface HintBoard {
 function seedMarks(state: MagnetsState): HintBoard | null {
   const { w, h, wh, flags, common } = state;
   const dl = dealtOf(w, h, common);
-  const ladder = magnetsLadder(dl);
+  const ladder = describedLadder(magnets, dl);
   const m = magnetsMarks(magnetsSpace(w, h), dl, ladder, placedValues(state));
   if (m === null) return null;
   const neutral = cellValue(NEUTRAL);

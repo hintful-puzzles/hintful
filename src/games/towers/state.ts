@@ -17,7 +17,7 @@ import {
 } from "../../engine/hint/candidate-hint.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { clueList, latinSpace } from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere, latinSpace } from "../../engine/solve/describe-runtime.ts";
 import * as towers from "../../generated/games/towers/towers.compiled.ts";
 
 /**
@@ -373,23 +373,15 @@ export function markErrors(state: TowersState, errors: Uint8Array): void {
 // --- status / text ---------------------------------------------------------
 
 export function status(s: TowersState): "solved" | "ongoing" {
-  return towers.isAnswer(s.grid, latinSpace(s.w), dealtOf(s.w, s.clues))
+  return towers.isAnswer(s.grid, latinSpace(s.w), dealtOf(s.clues))
     ? "solved"
     : "ongoing";
 }
 
 /** The board as its description deals it: each clue at its slot, which is
  * its index in `clues`, in that order. */
-export function dealtOf(w: number, clues: Int32Array): towers.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  clues.forEach((n, s) => {
-    if (n) {
-      at.push(s);
-      v.push(n);
-    }
-  });
-  return { sees: clueList(at, v, 4 * w) };
+export function dealtOf(clues: Int32Array): towers.Dealt {
+  return { sees: cluesWhere(clues, (n) => n !== 0) };
 }
 
 /** ASCII grid with the four clue rims, matching `game_text_format`. */

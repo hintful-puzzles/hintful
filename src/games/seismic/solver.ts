@@ -19,6 +19,7 @@ import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   describedSpace,
   partition,
+  perBoard,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
@@ -42,31 +43,14 @@ import {
 /** `solveGame` could not drive the board to a complete, valid solution. */
 export const SOLVE_FAILED = -1;
 
-const areasByDsf = new WeakMap<Dsf, ReturnType<typeof partition>>();
+/** A board's areas, kept for the life of the board's areas, which every
+ * solve of it shares. */
+const areasOf = perBoard((dsf: Dsf, n: number) => partition(dsf.classes(), n));
 
 /** The board as the description deals it: its areas, in the order of their
- * first square, and its keep-apart rule. The partition is kept for the life
- * of the board's areas, which every solve of it shares. */
+ * first square, and its keep-apart rule. */
 export function dealtOf(board: SeismicBoard): seismic.Dealt {
-  let area = areasByDsf.get(board.dsf);
-  if (area === undefined) {
-    const byRoot = new Map<number, number[]>();
-    for (let i = 0; i < board.grid.length; i++) {
-      const root = board.dsf.canonify(i);
-      const cells = byRoot.get(root);
-      if (cells) cells.push(i);
-      else byRoot.set(root, [i]);
-    }
-    area = partition([...byRoot.values()], board.grid.length);
-    areasByDsf.set(board.dsf, area);
-  }
-  return { area, mode: board.mode };
-}
-
-/** The ladder over the dealt areas. A starved area's firing says the area and
- * its number (`says` in the description). */
-export function seismicLadder(dl: seismic.Dealt): Ladder {
-  return describedLadder(seismic, dl);
+  return { area: areasOf(board.dsf, board.grid.length), mode: board.mode };
 }
 
 /**
@@ -105,7 +89,7 @@ export function solveGame(
   firings?: FiringTally,
 ): number {
   const dl = dealtOf(board);
-  const ladder = seismicLadder(dl);
+  const ladder = describedLadder(seismic, dl);
   const m = marksOf(board, board.grid, dl, ladder);
   if (m === null) return SOLVE_FAILED;
   const grades = { [TIERS]: DIFF_EASY };

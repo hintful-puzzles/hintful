@@ -26,9 +26,10 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
 import {
-  clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
+  perBoard,
   popcount,
   rangeMask,
   STRIKE,
@@ -70,43 +71,25 @@ const VALUES = rangeMask(1, BLANK);
 
 // --- the board as the description reads it -----------------------------------
 
-/** The last board size's space, which every solve reads again. */
-let lastSpace: GridSpace | null = null;
-function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(crossing.units, w, h);
-  return lastSpace;
-}
-
 /** Whether square `i` holds no digit: a wall, or an open square in no run. */
 const isBlank = (p: CrossingPuzzle, i: number): boolean =>
   p.walls[i] !== 0 || (p.acrossRun[i] < 0 && p.downRun[i] < 0);
 
-/** Each puzzle's deal, made once: what the compiled ladder keeps for a
- * board, it keeps by this object. */
-const dealt = new WeakMap<CrossingPuzzle, crossing.Dealt>();
-
 /** The board as the description deals it: the squares that hold no digit,
  * and the listed numbers' digits. */
-function dealtOf(p: CrossingPuzzle): crossing.Dealt {
-  const kept = dealt.get(p);
-  if (kept !== undefined) return kept;
-  const at: number[] = [];
-  for (let i = 0; i < p.w * p.h; i++) if (isBlank(p, i)) at.push(i);
-  const made: crossing.Dealt = {
-    blank: clueList(
-      at,
-      at.map(() => 0),
-      p.w * p.h,
+const dealtOf = perBoard(
+  (p: CrossingPuzzle): crossing.Dealt => ({
+    blank: cluesWhere(
+      p.walls,
+      (_, i) => isBlank(p, i),
+      () => 0,
     ),
     numbers: {
       n: p.numbers.length,
       digits: p.numbers.map((num) => Int32Array.from(num)),
     },
-  };
-  dealt.set(p, made);
-  return made;
-}
+  }),
+);
 
 /** The values the description reads in each square: the digit placed, and
  * {@link BLANK} where none goes. */
@@ -144,7 +127,7 @@ type CrossingWhy =
 /** What a firing of technique `id` says, read as the runs and numbers it
  * names. */
 function whyOf(p: CrossingPuzzle, id: string, f: Firing): CrossingWhy {
-  const sp = spaceOf(p.w, p.h);
+  const sp = describedSpace(crossing.units, p.w, p.h);
   const said = <T extends keyof crossing.SaysById>(
     _: T,
   ): crossing.SaysById[T]["terms"] =>
@@ -178,23 +161,15 @@ function whyOf(p: CrossingPuzzle, id: string, f: Firing): CrossingWhy {
   }
 }
 
-/** Each puzzle's ladder, made once. */
-const ladders = new WeakMap<CrossingPuzzle, Ladder>();
-
-/** The ladder over a puzzle's runs and numbers. */
-function crossingLadder(p: CrossingPuzzle): Ladder {
-  const kept = ladders.get(p);
-  if (kept !== undefined) return kept;
-  const dl = dealtOf(p);
-  const made = describedLadder(crossing, dl);
-  ladders.set(p, made);
-  return made;
-}
+/** The ladder over a puzzle's runs and numbers, made once a puzzle. */
+const ladderOf = perBoard(
+  (p: CrossingPuzzle): Ladder => describedLadder(crossing, dealtOf(p)),
+);
 
 /** Marks over `grid`'s digits, every other square open to every digit, or
  * `null` where a digit sits where none can go. */
 function marksOf(p: CrossingPuzzle, grid: Uint8Array): CellMarks | null {
-  const sp = spaceOf(p.w, p.h);
+  const sp = describedSpace(crossing.units, p.w, p.h);
   const dl = dealtOf(p);
   const m = new CellMarks(sp, VALUES, valuesOf(p, grid));
   return m.seed(m.grid, (c) => crossing.domainOf(sp, dl, c)) ? m : null;
@@ -203,7 +178,7 @@ function marksOf(p: CrossingPuzzle, grid: Uint8Array): CellMarks | null {
 /** Run the ladder on `m` to its fixpoint and say where that leaves it:
  * solved where every square is filled and the rules hold. */
 function settle(p: CrossingPuzzle, m: CellMarks): Deduced {
-  const techniques = ladderTechniques(m, crossingLadder(p).entries, { [TIERS]: 0 }, {});
+  const techniques = ladderTechniques(m, ladderOf(p).entries, { [TIERS]: 0 }, {});
   if (runLadder(m, techniques)) return "contradiction";
   if (m.grid.includes(0)) return "stuck";
   return crossing.isAnswer(m.grid, m.sp, dealtOf(p)) ? "solved" : "contradiction";
@@ -791,7 +766,7 @@ export function deduceCrossingPlan(
   const firings: CrossingFiring[] = [];
   const m = boardMarks(board);
   if (m === null) return { status: "invalid", firings };
-  const { entries } = crossingLadder(puzzle);
+  const { entries } = ladderOf(puzzle);
   if (judging) {
     judgedWalk(board, m, entries, firings, judging);
     return { status: validateBoard(puzzle, board.grid).status, firings };

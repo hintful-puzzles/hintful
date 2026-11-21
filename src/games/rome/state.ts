@@ -170,13 +170,9 @@ export function placedValues(board: RomeBoard): Uint8Array {
  */
 export function romeRegions(board: RomeBoard): (x: number, y: number) => CellRegion[] {
   const { w, regions } = board;
-  const byRoot = new Map<number, number[]>();
-  for (let i = 0; i < board.grid.length; i++) {
-    const c = regions.canonify(i);
-    const list = byRoot.get(c);
-    if (list) list.push(i);
-    else byRoot.set(c, [i]);
-  }
+  const byRoot = new Map(
+    regions.classes().map((cells) => [regions.canonify(cells[0]), cells]),
+  );
   const cache = new Map<number, CellRegion[]>();
   return (x, y) => {
     const c = regions.canonify(y * w + x);

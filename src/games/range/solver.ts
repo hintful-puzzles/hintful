@@ -34,11 +34,7 @@ import {
   dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
-import {
-  clueList,
-  describedSpace,
-  type GridSpace,
-} from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -79,25 +75,9 @@ const CLEAR = 2;
 
 // --- the board as the description reads it -----------------------------------
 
-/** The last board size's space, which every move's `status` reads again. */
-let lastSpace: GridSpace | null = null;
-function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(range.units, w, h);
-  return lastSpace;
-}
-
 /** The board as the description deals it: the numbers. */
 function dealtOf(grid: Int8Array): range.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  grid.forEach((n, c) => {
-    if (n > 0) {
-      at.push(c);
-      v.push(n);
-    }
-  });
-  return { number: clueList(at, v, grid.length) };
+  return { number: cluesWhere(grid, (n) => n > 0) };
 }
 
 /** The value the description reads in each square of a grid: a numbered
@@ -115,11 +95,6 @@ function writeBack(grid: Int8Array, values: ArrayLike<number>): void {
       grid[c] = values[c] === SHADED ? BLACK : WHITE;
 }
 
-/** The ladder over the dealt board. */
-function rangeLadder(dl: range.Dealt): Ladder {
-  return describedLadder(range, dl);
-}
-
 /** The marks over a grid and the ladder over its numbers, or `null` where
  * the grid holds a value a square cannot. */
 function deduction(
@@ -127,11 +102,11 @@ function deduction(
   w: number,
   h: number,
 ): { m: CellMarks; ladder: Ladder; dl: range.Dealt } | null {
-  const sp = spaceOf(w, h);
+  const sp = describedSpace(range.units, w, h);
   const dl = dealtOf(grid);
   const m = new CellMarks(sp, (1 << SHADED) | (1 << CLEAR), valuesOf(grid));
   if (!m.seed(m.grid, (c) => range.domainOf(sp, dl, c))) return null;
-  return { m, ladder: rangeLadder(dl), dl };
+  return { m, ladder: describedLadder(range, dl), dl };
 }
 
 /** Run the ladder on `m` to a fixpoint and say what it reached. */
@@ -165,7 +140,7 @@ export function deductionFinishes(grid: Int8Array, w: number, h: number): boolea
  * as clear. */
 export function isSolved(grid: Int8Array, w: number, h: number): boolean {
   const g = Uint8Array.from(grid, (v) => (v === BLACK ? SHADED : CLEAR));
-  return range.isAnswer(g, spaceOf(w, h), dealtOf(grid));
+  return range.isAnswer(g, describedSpace(range.units, w, h), dealtOf(grid));
 }
 
 // --- the hint's walk ---------------------------------------------------------

@@ -21,12 +21,10 @@ import {
   type GridSpace,
   latinSpace,
 } from "../../engine/solve/describe-runtime.ts";
-import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   type LatinReason,
-  type LatinSolver,
   latinLadder,
   latinSolver,
 } from "../../engine/solve/latin.ts";
@@ -77,11 +75,6 @@ export function facingReason(
   };
 }
 
-/** The ladder `towers.description.yaml` states, over the dealt clues. */
-export function towersLadder(cl: towers.Dealt): Ladder<LatinSolver> {
-  return latinLadder(towers, cl);
-}
-
 // --- driver ----------------------------------------------------------------
 
 /**
@@ -96,11 +89,11 @@ export function solveTowers(
   soln: Uint8Array,
   maxdiff: number,
 ): number {
-  const cl = dealtOf(w, clues);
+  const cl = dealtOf(clues);
   return latinSolver(soln, w, {
     maxdiff,
     diffRecursive: DIFF_UNREASONABLE,
     isAnswer: (grid) => towers.isAnswer(grid, latinSpace(w), cl),
-    ladder: towersLadder(cl),
+    ladder: latinLadder(towers, cl),
   });
 }

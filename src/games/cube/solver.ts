@@ -27,6 +27,7 @@
 
 import { hashWords, PositionStore } from "../../engine/hint/position-store.ts";
 import type { SearchOutcome } from "../../engine/hint/search-outcome.ts";
+import { perBoard } from "../../engine/solve/describe-runtime.ts";
 import type { GridSquare } from "./grid.ts";
 import { dealtOf } from "./roll.ts";
 import type { CubeState } from "./state.ts";
@@ -49,29 +50,27 @@ interface Rolls {
   readonly perm: Int8Array;
 }
 
-const rollsByArena = new WeakMap<readonly GridSquare[], Rolls>();
-
 /** The arena's rolls, packed from the roll table the description reads. */
-export function rollsOf(state: CubeState): Rolls {
-  const known = rollsByArena.get(state.grid);
-  if (known) return known;
-  const table = dealtOf(state);
-  const nfaces = table.nfaces;
-  const nsquares = state.grid.length;
-  const dest = new Int32Array(nsquares * 4).fill(-1);
-  const perm = new Int8Array(nsquares * 4 * nfaces);
-  for (let sq = 0; sq < nsquares; sq++) {
-    for (const r of ROLLS) {
-      dest[sq * 4 + r] = table.dest[sq][r];
-      table.source[sq][r].forEach((j, i) => {
-        perm[(sq * 4 + r) * nfaces + i] = j;
-      });
+const rollsOfArena = perBoard(
+  (_grid: readonly GridSquare[], state: CubeState): Rolls => {
+    const table = dealtOf(state);
+    const nfaces = table.nfaces;
+    const nsquares = state.grid.length;
+    const dest = new Int32Array(nsquares * 4).fill(-1);
+    const perm = new Int8Array(nsquares * 4 * nfaces);
+    for (let sq = 0; sq < nsquares; sq++) {
+      for (const r of ROLLS) {
+        dest[sq * 4 + r] = table.dest[sq][r];
+        table.source[sq][r].forEach((j, i) => {
+          perm[(sq * 4 + r) * nfaces + i] = j;
+        });
+      }
     }
-  }
-  const rolls = { nfaces, nsquares, bottom: table.down, dest, perm };
-  rollsByArena.set(state.grid, rolls);
-  return rolls;
-}
+    return { nfaces, nsquares, bottom: table.down, dest, perm };
+  },
+);
+
+export const rollsOf = (state: CubeState): Rolls => rollsOfArena(state.grid, state);
 
 // --- positions --------------------------------------------------------
 

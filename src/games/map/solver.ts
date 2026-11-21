@@ -20,6 +20,7 @@
 import { type Deduced, searchAnswers } from "../../engine/solve/answer-search.ts";
 import {
   describedSpace,
+  perBoard,
   popcount,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
@@ -43,23 +44,11 @@ const SOLVER_STUCK = 2;
 /** The four colors, as the marks hold them: color `i` is value `i + 1`. */
 const COLORS = rangeMask(1, 4);
 
-const dealt = new WeakMap<Int32Array, map.Dealt>();
-
 /** The board as the description deals it: which region borders which, from
  * the map's edge list, kept for the life of the graph. */
-export function dealtOf(graph: Int32Array, n: number): map.Dealt {
-  let dl = dealt.get(graph);
-  if (dl === undefined) {
-    dl = { borders: graphNeighbors(graph, n) };
-    dealt.set(graph, dl);
-  }
-  return dl;
-}
-
-/** The ladder over the dealt borders, each technique with its reason. */
-export function mapLadder(dl: map.Dealt): Ladder {
-  return describedLadder(map, dl);
-}
+export const dealtOf = perBoard(
+  (graph: Int32Array, n: number): map.Dealt => ({ borders: graphNeighbors(graph, n) }),
+);
 
 /** The marks over `n` regions, each able to be any color. */
 export function mapMarks(n: number, grid: Uint8Array): CellMarks {
@@ -125,7 +114,7 @@ export function mapSolver(
   difficulty: number,
 ): number {
   const dl = dealtOf(graph, n);
-  const ladder = mapLadder(dl);
+  const ladder = describedLadder(map, dl);
   const m = mapMarks(n, new Uint8Array(n));
   m.placing = ladder.placing;
   if (!m.seed(gridOf(coloring))) return SOLVER_IMPOSSIBLE;

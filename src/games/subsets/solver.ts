@@ -18,7 +18,6 @@ import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
-  type GridSpace,
   PLACE,
   rangeMask,
   STRIKE,
@@ -140,14 +139,6 @@ export function subsetsValidate(
  * hold no value 0. */
 const SETS = rangeMask(1, 16);
 
-/** The last board size's space, which every solve reads again. */
-let lastSpace: GridSpace | null = null;
-function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(subsets.units, w, h);
-  return lastSpace;
-}
-
 /** Whether the horseshoe between squares `a` and `b`, side by side, opens
  * toward `b`: `a`'s set holds `b`'s. */
 function opensToward(s: SubsetsState, a: number, b: number): boolean {
@@ -160,7 +151,7 @@ function opensToward(s: SubsetsState, a: number, b: number): boolean {
 /** The board as the description deals it: every edge's horseshoe, 1 where its
  * first square's set holds the second's, 2 the other way, 0 for none. */
 function dealtOf(s: SubsetsState): subsets.Dealt {
-  const sp = spaceOf(s.w, s.h);
+  const sp = describedSpace(subsets.units, s.w, s.h);
   const v = sp.edges.map((e) => {
     const a = sp.edgeEnds[2 * e];
     const b = sp.edgeEnds[2 * e + 1];
@@ -180,7 +171,11 @@ function decidedGrid(s: SubsetsState): Uint8Array {
 
 /** Whether a board's letters are its answer, by the description's rules. */
 function isAnswer(s: SubsetsState): boolean {
-  return subsets.isAnswer(decidedGrid(s), spaceOf(s.w, s.h), dealtOf(s));
+  return subsets.isAnswer(
+    decidedGrid(s),
+    describedSpace(subsets.units, s.w, s.h),
+    dealtOf(s),
+  );
 }
 
 /** Why a technique struck or placed a set, as the hint reads it: the
@@ -269,7 +264,7 @@ export function subsetsSolveGame(
     state.known[i] = 0;
     state.mask[i] = ALL_BITS(state.n);
   }
-  const sp = spaceOf(state.w, state.h);
+  const sp = describedSpace(subsets.units, state.w, state.h);
   const dl = dealtOf(state);
   const ladder = subsetsLadder(dl);
   const m = new CellMarks(sp, SETS, decidedGrid(state));
@@ -827,7 +822,11 @@ export function boardMarks(
   board: SubsetsState,
   ladder: Ladder<CellMarks> = subsetsLadder(dealtOf(board)),
 ): CellMarks | null {
-  const m = new CellMarks(spaceOf(board.w, board.h), SETS, decidedGrid(board));
+  const m = new CellMarks(
+    describedSpace(subsets.units, board.w, board.h),
+    SETS,
+    decidedGrid(board),
+  );
   m.placing = ladder.placing;
   if (!m.seed(m.grid)) return null;
   for (let i = 0; i < m.cands.length; i++)

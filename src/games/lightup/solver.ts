@@ -23,7 +23,7 @@ import {
 } from "../../engine/solve/answer-search.ts";
 import {
   clueAt,
-  clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
   stretch,
@@ -69,20 +69,20 @@ function valuesOf(state: LightupState, marks: boolean): Uint8Array {
 }
 
 /** The board as the description deals it: its walls, and its numbers. */
-function dealtOf({ w, h, flags, lights }: LightupState): lightup.Dealt {
-  const walls: number[] = [];
-  const at: number[] = [];
-  const values: number[] = [];
-  for (let c = 0; c < w * h; c++) {
-    if (!(flags[c] & F_BLACK)) continue;
-    if (flags[c] & F_NUMBERED) {
-      at.push(c);
-      values.push(lights[c]);
-    } else walls.push(c);
-  }
+function dealtOf({ flags, lights }: LightupState): lightup.Dealt {
+  const black = (f: number): boolean => (f & F_BLACK) !== 0;
+  const numbered = (f: number): boolean => (f & F_NUMBERED) !== 0;
   return {
-    wall: clueList(walls, new Array<number>(walls.length).fill(0), w * h),
-    number: clueList(at, values, w * h),
+    wall: cluesWhere(
+      flags,
+      (f) => black(f) && !numbered(f),
+      () => 0,
+    ),
+    number: cluesWhere(
+      flags,
+      (f) => black(f) && numbered(f),
+      (_, c) => lights[c],
+    ),
   };
 }
 
@@ -101,12 +101,6 @@ function lightsOf(sp: GridSpace, dl: lightup.Dealt, c: number): number[] {
     ...stretch(row, c, floors(row)),
     ...stretch(col, c, floors(col)).filter((p) => p !== c),
   ];
-}
-
-/** The ladder over the dealt board. A technique that says builds its own steps
- * (`lightup.description.yaml`'s `says`), so no rung builds a reason. */
-function lightupLadder(dl: lightup.Dealt): Ladder {
-  return describedLadder(lightup, dl);
 }
 
 /** The marks over `values`, every free square either way, the walls and
@@ -143,7 +137,7 @@ export function deductionFinishes(
   used?: (clue: number) => void,
 ): boolean {
   const dl = dealtOf(state);
-  const ladder = lightupLadder(dl);
+  const ladder = describedLadder(lightup, dl);
   const sp = lightupSpace(state.w, state.h);
   const m = lightupMarks(sp, dl, ladder, valuesOf(state, false));
   if (m === null) return false;
@@ -195,7 +189,7 @@ export function searchAnswers(
   budget: number = SEARCH_BUDGET,
 ): LightupAnswer {
   const dl = dealtOf(state);
-  const ladder = lightupLadder(dl);
+  const ladder = describedLadder(lightup, dl);
   const sp = lightupSpace(state.w, state.h);
   const start = lightupMarks(sp, dl, ladder, valuesOf(state, false));
   if (start === null) return { kind: "none" };
@@ -255,7 +249,7 @@ export function hintWalk(state: LightupState): {
   entries: readonly LadderEntry[];
 } | null {
   const dl = dealtOf(state);
-  const ladder = lightupLadder(dl);
+  const ladder = describedLadder(lightup, dl);
   const m = lightupMarks(
     lightupSpace(state.w, state.h),
     dl,

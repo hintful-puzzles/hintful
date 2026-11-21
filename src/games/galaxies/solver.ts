@@ -79,14 +79,6 @@ const SEARCH_BUDGET = 2_000;
 
 // --- the board as the description reads it -----------------------------------
 
-/** The last board size's space, which every hint and grade reads again. */
-let lastSpace: GridSpace | null = null;
-function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(galaxies.units, w, h);
-  return lastSpace;
-}
-
 /** The center the description numbers `p`, on the state's half grid. */
 function centerPoint(sp: GridSpace, p: number): Point {
   const cx = 2 * sp.w - 1;
@@ -283,7 +275,7 @@ interface Deduction {
 /** The marks `s` holds as the description reads them: each line inside the
  * grid, and each square's arrow to a dot. */
 function deduction(s: GalaxiesState): Deduction {
-  const sp = spaceOf(s.w, s.h);
+  const sp = describedSpace(galaxies.units, s.w, s.h);
   const dl = dealtOf(s, sp);
   const g = new Uint8Array(sp.edges.length);
   for (const e of sp.edges) {

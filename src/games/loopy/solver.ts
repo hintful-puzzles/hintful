@@ -20,9 +20,10 @@
 import type { Grid } from "../../engine/board/grid/index.ts";
 import type { Judging } from "../../engine/hint/move-judge.ts";
 import {
-  clueList,
+  cluesWhere,
   type GridSpace,
   PLACE,
+  perBoard,
   RELATE,
   type Reads,
   rangeMask,
@@ -71,16 +72,8 @@ const lineOf = (v: number): LineState =>
 
 /** The board as the description deals it: a number on each face that has
  * one. */
-function dealtOf(state: LoopyState): loopy.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  state.clues.forEach((c, f) => {
-    if (c >= 0) {
-      at.push(f);
-      v.push(c);
-    }
-  });
-  return { number: clueList(at, v, state.clues.length) };
+function dealtOf(clues: Int8Array): loopy.Dealt {
+  return { number: cluesWhere(clues, (c) => c >= 0) };
 }
 
 /**
@@ -226,19 +219,16 @@ function loopyLadder(dl: loopy.Dealt): Ladder {
 /** The ladder of a board, kept with the clues it was built for: every solve
  * of one board shares it. Checked against the clues themselves, since the
  * generator adds and removes clues in one array. */
-const ladders = new WeakMap<
-  Int8Array,
-  { clues: Int8Array; dl: loopy.Dealt; ladder: Ladder }
->();
+const laddersOf = perBoard(
+  (clues: Int8Array) => {
+    const dl = dealtOf(clues);
+    return { clues: clues.slice(), dl, ladder: loopyLadder(dl) };
+  },
+  (kept, clues) => kept.clues.every((c, i) => c === clues[i]),
+);
 
-function ladderOf(state: LoopyState): { dl: loopy.Dealt; ladder: Ladder } {
-  const kept = ladders.get(state.clues);
-  if (kept?.clues.every((c, i) => c === state.clues[i])) return kept;
-  const dl = dealtOf(state);
-  const made = { clues: state.clues.slice(), dl, ladder: loopyLadder(dl) };
-  ladders.set(state.clues, made);
-  return made;
-}
+const ladderOf = (state: LoopyState): { dl: loopy.Dealt; ladder: Ladder } =>
+  laddersOf(state.clues);
 
 /** The marks of `state`'s lines, and, where `notes`, its corner and pair
  * notes. */

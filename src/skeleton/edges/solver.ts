@@ -101,11 +101,6 @@ function dealtOf(board: SkeletonBoard, geo: Geometry): skeleton.Dealt {
   };
 }
 
-/** The ladder. It reads the walls as the marks hold them, crossed out. */
-function skeletonLadder(): Ladder {
-  return describedLadder(skeleton, null);
-}
-
 /** The ladder's marks over `board`, and what it reads them by. */
 interface Deduction {
   geo: Geometry;
@@ -124,7 +119,9 @@ function deduction(board: SkeletonBoard): Deduction {
   }
   const m = new CellMarks(geo.sp, rangeMask(LINED, NONE), grid, null, "edge");
   m.seed(grid);
-  return { geo, m, ladder: skeletonLadder() };
+  // The ladder reads no clue: it reads the walls as the marks hold them,
+  // crossed out.
+  return { geo, m, ladder: describedLadder(skeleton, null) };
 }
 
 /** Write the marks back onto `board`: a line, a cross where the marks say

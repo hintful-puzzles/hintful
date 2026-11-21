@@ -22,6 +22,7 @@ import {
   type Fired,
 } from "../../engine/hint/described-edge-hint.ts";
 import { spokenOf } from "../../engine/hint/described-hint.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import type { CellMarks, Ladder, Taken } from "../../engine/solve/ladder-runtime.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 import { LINE, RECTANGLE, type RectEdge } from "./hint-marks.ts";
@@ -34,7 +35,6 @@ import {
   type RectRung,
   readsOf,
   reasonOf,
-  spaceOf,
   WALL,
 } from "./solver.ts";
 import { HIDDEN, type RectMove, type RectState } from "./state.ts";
@@ -48,7 +48,7 @@ export type RectHint = null;
 /** What the player's marks say of each edge, as the description reads it: a
  * line, none inside a rectangle drawn round a clue, or 0 where neither. */
 function marksOf(s: RectState): Uint8Array {
-  const sp = spaceOf(s.w, s.h);
+  const sp = describedSpace(rect.units, s.w, s.h);
   const claims = readClaims(s);
   const g = new Uint8Array(sp.edges.length);
   for (const e of sp.edges) {

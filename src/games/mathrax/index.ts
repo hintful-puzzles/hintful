@@ -91,7 +91,7 @@ import {
 } from "../../engine/mechanics/note-taking-cell.ts";
 import { registerGame } from "../../engine/midend/registry.ts";
 import type { Said } from "../../engine/solve/ladder-runtime.ts";
-import type { LatinSolver } from "../../engine/solve/latin.ts";
+import { type LatinSolver, latinLadder } from "../../engine/solve/latin.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { newMathraxDesc } from "./generator.ts";
 import {
@@ -107,7 +107,6 @@ import {
 } from "./render.ts";
 import {
   type HintReason,
-  mathraxLadder,
   mathraxSolve,
   SOLVE_AMBIGUOUS,
   SOLVE_IMPOSSIBLE,
@@ -428,7 +427,7 @@ function buildSteps(
   // Deductive only: a guess is not a teachable note strike, so the techniques
   // are capped below the recursive tier whatever the board's own tier is.
   const on = latinNotesLadder(
-    mathraxLadder(dealtOf(state.clues)),
+    latinLadder(mathrax, dealtOf(state.clues)),
     o,
     wGrid,
     Math.min(diffToLevel(state.params.diff), DIFF_TRICKY),

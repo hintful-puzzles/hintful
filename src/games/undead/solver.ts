@@ -91,19 +91,6 @@ export function nextList(
 
 // --- the board as the description reads it --------------------------------
 
-const spaces = new Map<string, GridSpace>();
-
-/** The space of a `w × h` board, built once a shape. */
-function spaceOf(w: number, h: number): GridSpace {
-  const key = `${w}x${h}`;
-  let sp = spaces.get(key);
-  if (sp === undefined) {
-    sp = describedSpace(undead.units, w, h);
-    spaces.set(key, sp);
-  }
-  return sp;
-}
-
 /** A board as the ladder reads it, and how its squares number the game's
  * monsters. */
 interface Board {
@@ -121,7 +108,7 @@ interface Board {
 function boardOf(common: UndeadCommon): Board {
   const { w, h, grid, xinfo } = common;
   const stride = w + 2;
-  const sp = spaceOf(w, h);
+  const sp = describedSpace(undead.units, w, h);
   const mirrorAt: number[] = [];
   const mirrorV: number[] = [];
   const squareOf = new Int32Array(common.numTotal);

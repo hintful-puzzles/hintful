@@ -15,11 +15,10 @@
 
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
-import { clueList, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
-  type Ladder,
   type LadderEntry,
   ladderTechniques,
   runLadder,
@@ -50,19 +49,7 @@ export interface SkeletonBoard {
 
 /** The board's numbers as the description reads them. */
 function dealtOf({ clues }: SkeletonBoard): skeleton.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  clues.forEach((n, i) => {
-    if (n === NO_CLUE) return;
-    at.push(i);
-    v.push(n);
-  });
-  return { count: clueList(at, v, clues.length) };
-}
-
-/** The ladder over the numbers `dealt` deals. */
-function skeletonLadder(dealt: skeleton.Dealt): Ladder {
-  return describedLadder(skeleton, dealt);
+  return { count: cluesWhere(clues, (n) => n !== NO_CLUE) };
 }
 
 /** The values a square may hold: shaded or clear. */
@@ -101,7 +88,7 @@ export function solveSkeleton(
   firings?: FiringTally,
 ): DifficultyVerdict {
   const m = marksOf(board);
-  const { entries } = skeletonLadder(dealtOf(board));
+  const { entries } = describedLadder(skeleton, dealtOf(board));
   const impossible = runLadder(m, ladderTechniques(m, entries, { [SCALE]: cap }, {}), {
     firings,
   });
@@ -135,5 +122,8 @@ export function hintWalk(
   _cap: number,
 ): { marks: CellMarks; entries: readonly LadderEntry[] } {
   const board: SkeletonBoard = { ...state, grid: state.grid.slice() };
-  return { marks: marksOf(board), entries: skeletonLadder(dealtOf(board)).entries };
+  return {
+    marks: marksOf(board),
+    entries: describedLadder(skeleton, dealtOf(board)).entries,
+  };
 }

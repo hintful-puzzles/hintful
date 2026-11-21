@@ -28,7 +28,7 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
 import {
-  clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
@@ -92,28 +92,22 @@ const givenOf = (grid: Uint16Array): Uint8Array =>
 
 /** The board as the description deals it: its holes and its numbers. A
  * number upstream leaves unknown is a hole. */
-function dealtOf({ w, h, grid }: Board): bricks.Dealt {
-  const holes: number[] = [];
-  const at: number[] = [];
-  const values: number[] = [];
-  for (let c = 0; c < w * h; c++) {
-    const cell = grid[c];
-    if (cell & COL_MASK) continue;
-    if (cell & F_BOUND || (cell & NUM_MASK) === UNKNOWN_NUMBER) holes.push(c);
-    else {
-      at.push(c);
-      values.push(cell & NUM_MASK);
-    }
-  }
+function dealtOf({ grid }: Board): bricks.Dealt {
+  const isHole = (cell: number): boolean =>
+    (cell & F_BOUND) !== 0 || (cell & NUM_MASK) === UNKNOWN_NUMBER;
+  const given = (cell: number): boolean => (cell & COL_MASK) === 0;
   return {
-    hole: clueList(holes, new Array<number>(holes.length).fill(0), w * h),
-    number: clueList(at, values, w * h),
+    hole: cluesWhere(
+      grid,
+      (cell) => given(cell) && isHole(cell),
+      () => 0,
+    ),
+    number: cluesWhere(
+      grid,
+      (cell) => given(cell) && !isHole(cell),
+      (cell) => cell & NUM_MASK,
+    ),
   };
-}
-
-/** The space a board's ladder runs on. */
-function bricksSpace(w: number, h: number): GridSpace {
-  return describedSpace(bricks.units, w, h);
 }
 
 /** The marks over `values`, every open square either color. */
@@ -122,11 +116,6 @@ function bricksMarks(sp: GridSpace, dl: bricks.Dealt, values: Uint8Array): CellM
   // A number or a hole is placed clear, which its domain allows.
   m.seed(values, (c) => bricks.domainOf(sp, dl, c));
   return m;
-}
-
-/** The ladder over the dealt board. */
-function bricksLadder(dl: bricks.Dealt): Ladder {
-  return describedLadder(bricks, dl);
 }
 
 /** Run the ladder on `m` to a fixpoint and say what it reached. */
@@ -142,8 +131,8 @@ function deduce(m: CellMarks, ladder: Ladder, dl: bricks.Dealt): Deduced {
 function deduceBoard(board: Board): { deduced: Deduced; values: Uint8Array } {
   const dl = dealtOf(board);
   const values = givenOf(board.grid);
-  const m = bricksMarks(bricksSpace(board.w, board.h), dl, values);
-  return { deduced: deduce(m, bricksLadder(dl), dl), values };
+  const m = bricksMarks(describedSpace(bricks.units, board.w, board.h), dl, values);
+  return { deduced: deduce(m, describedLadder(bricks, dl), dl), values };
 }
 
 /** Whether the ladder alone finishes the board from its numbers. The colors
@@ -162,7 +151,11 @@ export function deducedBricks(board: Board): boolean[] {
  * description compiles to. A square left empty is not shaded. */
 export function isSolved(state: BricksState): boolean {
   const values = valuesOf(state.grid).map((v) => v || CLEAR);
-  return bricks.isAnswer(values, bricksSpace(state.w, state.h), dealtOf(state));
+  return bricks.isAnswer(
+    values,
+    describedSpace(bricks.units, state.w, state.h),
+    dealtOf(state),
+  );
 }
 
 // --- the search for a board's answers ---------------------------------------
@@ -194,8 +187,8 @@ export function searchAnswers(
   budget: number = SEARCH_BUDGET,
 ): BricksAnswer {
   const dl = dealtOf(board);
-  const ladder = bricksLadder(dl);
-  const sp = bricksSpace(board.w, board.h);
+  const ladder = describedLadder(bricks, dl);
+  const sp = describedSpace(bricks.units, board.w, board.h);
   const branch = (m: CellMarks, at: number, d: number): CellMarks => {
     const sub = new CellMarks(sp, m.domain, m.grid.slice());
     sub.cands.set(m.cands);
@@ -253,8 +246,12 @@ export function hintWalk(state: BricksState): {
 } {
   const dl = dealtOf(state);
   return {
-    marks: bricksMarks(bricksSpace(state.w, state.h), dl, valuesOf(state.grid)),
-    entries: bricksLadder(dl).entries,
+    marks: bricksMarks(
+      describedSpace(bricks.units, state.w, state.h),
+      dl,
+      valuesOf(state.grid),
+    ),
+    entries: describedLadder(bricks, dl).entries,
   };
 }
 

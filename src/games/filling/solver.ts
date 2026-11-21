@@ -25,7 +25,11 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
 import type { DeductionRecord } from "../../engine/solve/deduction-record.ts";
-import { popcount, rangeMask } from "../../engine/solve/describe-runtime.ts";
+import {
+  describedSpace,
+  popcount,
+  rangeMask,
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -39,7 +43,7 @@ import {
 } from "../../engine/solve/ladder-runtime.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
-import { dealtOf, spaceOf } from "./state.ts";
+import { dealtOf } from "./state.ts";
 
 /** The rungs a hint step can be: the kinds of step the description says. */
 export const FILLING_RUNGS = filling.SAYS_KINDS;
@@ -118,7 +122,7 @@ function deduction(
   w: number,
   h: number,
 ): Deduction {
-  const sp = spaceOf(w, h);
+  const sp = describedSpace(filling.units, w, h);
   const dl = dealtOf(clues, w, h);
   const grid = Uint8Array.from(board);
   const m = new CellMarks(sp, rangeMask(1, dl.largest), grid);

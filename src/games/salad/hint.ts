@@ -87,11 +87,11 @@ import {
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import { noteEntryGesture } from "../../engine/mechanics/note-taking-cell.ts";
 import type { Said } from "../../engine/solve/ladder-runtime.ts";
-import { type LatinSolver, setCells } from "../../engine/solve/latin.ts";
-import type * as salad from "../../generated/games/salad/salad.compiled.ts";
+import { type LatinSolver, latinLadder, setCells } from "../../engine/solve/latin.ts";
+import * as salad from "../../generated/games/salad/salad.compiled.ts";
 import { NAMES } from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";
-import { holeSymbol, repeatsFor, saladLadder } from "./solver.ts";
+import { holeSymbol, repeatsFor } from "./solver.ts";
 import { saladVocab, say } from "./speak.ts";
 import {
   borderScanFor,
@@ -499,7 +499,7 @@ function notesLadder(state: SaladState, w: Working): NotesLadder<LatinSolver> {
   const hole = holeSymbol(nums);
   const allMarks = (1 << hole) - 1;
   const symbolMarks = (1 << nums) - 1;
-  const ladder = saladLadder(dealtOf({ ...state, ...w }));
+  const ladder = latinLadder(salad, dealtOf({ ...state, ...w }));
   const on = latinNotesLadder(ladder, o, w.grid, state.diff, {
     repeats: repeatsFor(state),
     enc: {

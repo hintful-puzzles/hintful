@@ -28,6 +28,45 @@ export function clueList(
   return { at: Int32Array.from(at), v: Int32Array.from(v), byAt, valueAt };
 }
 
+/** The clue list of the elements of `values` where `given` holds, in order,
+ * each with `value` its value (by default the value it holds). */
+export function cluesWhere(
+  values: ArrayLike<number>,
+  given: (v: number, e: number) => boolean,
+  value: (v: number, e: number) => number = (v) => v,
+): ClueList {
+  const at: number[] = [];
+  const v: number[] = [];
+  for (let e = 0; e < values.length; e++) {
+    if (!given(values[e], e)) continue;
+    at.push(e);
+    v.push(value(values[e], e));
+  }
+  return clueList(at, v, values.length);
+}
+
+/**
+ * `make` once a board: what it made for an object is kept for the object's
+ * life, so a board's deal is one object across its solves, and what a
+ * compiled technique keeps for a board (by its deal) is kept with it. Where
+ * the object is changed in place between solves (a generator's working
+ * array), `still` says whether what was made for it holds yet, given what
+ * else `make` reads (`more`).
+ */
+export function perBoard<K extends object, V, A extends unknown[] = []>(
+  make: (k: K, ...more: A) => V,
+  still: (made: V, k: K, ...more: A) => boolean = () => true,
+): (k: K, ...more: A) => V {
+  const kept = new WeakMap<K, V>();
+  return (k, ...more) => {
+    const had = kept.get(k);
+    if (had !== undefined && still(had, k, ...more)) return had;
+    const made = make(k, ...more);
+    kept.set(k, made);
+    return made;
+  };
+}
+
 /** Each clue list's elements by the value of the clue there, built at the
  * first read: a list is never changed once made. */
 const byValue = new WeakMap<ClueList, Map<number, number[]>>();

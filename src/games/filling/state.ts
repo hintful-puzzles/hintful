@@ -34,11 +34,7 @@ import {
   searchTierItem,
   searchTierSegment,
 } from "../../engine/solve/answer-search.ts";
-import {
-  clueList,
-  describedSpace,
-  type GridSpace,
-} from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
 
 const EMPTY = 0;
@@ -155,25 +151,10 @@ export function largestNumber(w: number, h: number): number {
 
 // --- the board as the description reads it -----------------------------------
 
-/** The last board size's space, which every move's `status` reads again. */
-let lastSpace: GridSpace | null = null;
-export function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(filling.units, w, h);
-  return lastSpace;
-}
-
 /** The board as the description deals it: the numbers given, and the largest
  * number a square may hold. */
 export function dealtOf(clues: ArrayLike<number>, w: number, h: number): filling.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  for (let c = 0; c < clues.length; c++) {
-    if (clues[c] === 0) continue;
-    at.push(c);
-    v.push(clues[c]);
-  }
-  return { number: clueList(at, v, clues.length), largest: largestNumber(w, h) };
+  return { number: cluesWhere(clues, (n) => n !== 0), largest: largestNumber(w, h) };
 }
 
 /** Whether `board`, every square filled, is an answer to `clues`: every group
@@ -185,7 +166,11 @@ export function isSolved(
   w: number,
   h: number,
 ): boolean {
-  return filling.isAnswer(board, spaceOf(w, h), dealtOf(clues, w, h));
+  return filling.isAnswer(
+    board,
+    describedSpace(filling.units, w, h),
+    dealtOf(clues, w, h),
+  );
 }
 
 // --- desc codec ----------------------------------------------------------

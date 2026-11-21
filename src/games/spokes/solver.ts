@@ -25,6 +25,7 @@ import {
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
@@ -139,16 +140,9 @@ function blocksOf(board: SpokesBoard, geo: Geometry): number[] {
  * holes no diagonal runs past. */
 function dealtOf(board: SpokesBoard, geo: Geometry): spokes.Dealt {
   const n = board.numbers.length;
-  const at: number[] = [];
-  const v: number[] = [];
-  board.numbers.forEach((k, c) => {
-    if (k <= 0) return;
-    at.push(c);
-    v.push(k);
-  });
   const blocks = blocksOf(board, geo);
   return {
-    number: clueList(at, v, n),
+    number: cluesWhere(board.numbers, (k) => k > 0),
     block: clueList(
       blocks,
       blocks.map(() => 1),
@@ -178,7 +172,7 @@ function deduction(board: SpokesBoard): Deduction {
   }
   const m = new CellMarks(geo.sp, (1 << LINED) | (1 << NONE), grid, null, "edge");
   m.seed(grid);
-  return { board, geo, dl, m, ladder: spokesLadder(dl) };
+  return { board, geo, dl, m, ladder: describedLadder(spokes, dl) };
 }
 
 /** A copy of `d` that shares no marks with it, for a search to assume on. */
@@ -224,11 +218,6 @@ function deduce(d: Deduction, cap: number, firings?: FiringTally): Deduced {
     { firings },
   );
   return impossible ? "contradiction" : verdictOf(d);
-}
-
-/** The ladder over the dealt board. */
-function spokesLadder(dl: spokes.Dealt): Ladder {
-  return describedLadder(spokes, dl);
 }
 
 // --- solving -----------------------------------------------------------------

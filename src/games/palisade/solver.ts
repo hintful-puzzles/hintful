@@ -33,7 +33,7 @@ import {
 } from "../../engine/solve/answer-search.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
-  clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
   rangeMask,
@@ -66,25 +66,10 @@ export type PalisadeSays = palisade.SaysById;
 
 // --- the board as the description reads it -----------------------------------
 
-/** The last board size's space, which every move's `status` reads again. */
-let lastSpace: GridSpace | null = null;
-function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(palisade.units, w, h);
-  return lastSpace;
-}
-
 /** The board as the description deals it: the numbers showing, each square's
  * from 0 to 4 and below 0 where it shows none, and the region size. */
 function dealtOf(p: PalisadeShape, clues: Int8Array): palisade.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  clues.forEach((n, c) => {
-    if (n < 0) return;
-    at.push(c);
-    v.push(n);
-  });
-  return { number: clueList(at, v, clues.length), k: p.k };
+  return { number: cluesWhere(clues, (n) => n >= 0), k: p.k };
 }
 
 /** The side of square `a` that edge `e` is, and the square across it. */
@@ -127,13 +112,8 @@ export function isSolved(
   clues: Int8Array,
   borders: Uint8Array,
 ): boolean {
-  const sp = spaceOf(p.w, p.h);
+  const sp = describedSpace(palisade.units, p.w, p.h);
   return wallsAnswer(valuesOf(sp, borders), sp, dealtOf(p, clues));
-}
-
-/** The ladder over the dealt board. */
-function palisadeLadder(dl: palisade.Dealt): Ladder {
-  return describedLadder(palisade, dl);
 }
 
 /** The working state of a deduction: the marks on the edges, and the ladder
@@ -151,13 +131,13 @@ export function deduction(
   clues: Int8Array,
   borders: Uint8Array | null = null,
 ): Deduction {
-  const sp = spaceOf(p.w, p.h);
+  const sp = describedSpace(palisade.units, p.w, p.h);
   const dl = dealtOf(p, clues);
   const grid =
     borders === null ? new Uint8Array(sp.edges.length) : valuesOf(sp, borders);
   const m = new CellMarks(sp, rangeMask(WALL, OPEN), grid, null, "edge");
   m.seed(grid);
-  return { m, ladder: palisadeLadder(dl), dl };
+  return { m, ladder: describedLadder(palisade, dl), dl };
 }
 
 /** A copy of `d` that shares no marks with it, for a search to assume on. */

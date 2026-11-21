@@ -22,13 +22,11 @@ import type { Point } from "../../engine/contract/types.ts";
 import type { SingleReason } from "../../engine/hint/latin-hint.ts";
 import type { Clauses } from "../../engine/hint/stated.ts";
 import { latinSpace } from "../../engine/solve/describe-runtime.ts";
-import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,
   type LatinReason,
-  type LatinSolver,
   latinLadder,
   latinSolver,
 } from "../../engine/solve/latin.ts";
@@ -66,11 +64,6 @@ export type HintReason = MathraxReason | LatinReason;
 /** The terms a stated clause reads. */
 export type StatedTerms = Readonly<Record<string, unknown>>;
 
-/** The ladder `mathrax.description.yaml` states, over the dealt clues. */
-export function mathraxLadder(dl: mathrax.Dealt): Ladder<LatinSolver> {
-  return latinLadder(mathrax, dl);
-}
-
 /**
  * Solve `grid` (0 = blank, **written back in place** with the first solution
  * found, exactly as upstream) under `clues`, up to difficulty `maxdiff`.
@@ -91,7 +84,7 @@ export function mathraxSolve(
     maxdiff,
     diffRecursive: DIFF_RECURSIVE,
     isAnswer: (g) => mathrax.isAnswer(g, latinSpace(o), dl),
-    ladder: mathraxLadder(dl),
+    ladder: latinLadder(mathrax, dl),
   });
   if (diff === DIFF_IMPOSSIBLE) return SOLVE_IMPOSSIBLE;
   if (diff === DIFF_UNFINISHED) return SOLVE_STUCK;

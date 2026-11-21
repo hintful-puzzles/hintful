@@ -31,7 +31,6 @@
 
 import { type EntryBoard, entryMistake } from "../../engine/hint/entry-mistakes.ts";
 import { latinSpace } from "../../engine/solve/describe-runtime.ts";
-import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
   DIFF_IMPOSSIBLE,
   type LatinRepeats,
@@ -102,13 +101,6 @@ function markersFromCube(b: SaladBoard, grid: Uint8Array, cube: Uint8Array): voi
   }
 }
 
-/** The ladder over the dealt board: the ABC End View border deduction, then
- * the library's. No technique reads the balls, since a ball is seeded as a
- * strike. */
-export function saladLadder(cl: salad.Dealt): Ladder<LatinSolver> {
-  return latinLadder(salad, cl);
-}
-
 // --- the driver ------------------------------------------------------------
 
 /** Seed the cube with the fixed grid clues — a symbol placement, or the
@@ -137,7 +129,8 @@ function configFor(
   return {
     repeats: repeatsFor(b),
     maxdiff,
-    ladder: saladLadder(cl),
+    // No technique reads the balls: a ball is seeded as a strike.
+    ladder: latinLadder(salad, cl),
     // Never search, by forcing chain or recursion: both tiers are pure
     // deduction (the guess-free policy).
     diffRecursive: DIFF_IMPOSSIBLE,

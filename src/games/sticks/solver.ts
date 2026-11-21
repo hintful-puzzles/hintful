@@ -110,11 +110,6 @@ function sticksMarks(sp: GridSpace, dl: sticks.Dealt, values: Uint8Array): CellM
   return m;
 }
 
-/** The ladder over the dealt board. */
-function sticksLadder(dl: sticks.Dealt): Ladder {
-  return describedLadder(sticks, dl);
-}
-
 /** Run the ladder on `m` to a fixpoint and say what it reached. */
 function deduce(m: CellMarks, ladder: Ladder, dl: sticks.Dealt): Deduced {
   const techniques = ladderTechniques(m, ladder.entries, { [TIERS]: 0 }, {});
@@ -129,7 +124,7 @@ export function deductionFinishes(board: Board): boolean {
   const dl = dealtOf(board);
   const blocks = valuesOf(board.grid.map((cell) => cell & F_BLOCK));
   const m = sticksMarks(sticksSpace(board.w, board.h), dl, blocks);
-  return deduce(m, sticksLadder(dl), dl) === "solved";
+  return deduce(m, describedLadder(sticks, dl), dl) === "solved";
 }
 
 /** Whether a state's lines are an answer to its board, by the rules the
@@ -168,7 +163,7 @@ export function searchAnswers(
   budget: number = SEARCH_BUDGET,
 ): SticksAnswer {
   const dl = dealtOf(board);
-  const ladder = sticksLadder(dl);
+  const ladder = describedLadder(sticks, dl);
   const sp = sticksSpace(board.w, board.h);
   return searchBoard<CellMarks, Uint8Array>({
     start: sticksMarks(sp, dl, valuesOf(board.grid.map((cell) => cell & F_BLOCK))),
@@ -215,7 +210,7 @@ export function hintWalk(state: SticksState): {
   const dl = dealtOf(state);
   return {
     marks: sticksMarks(sticksSpace(state.w, state.h), dl, valuesOf(state.grid)),
-    entries: sticksLadder(dl).entries,
+    entries: describedLadder(sticks, dl).entries,
   };
 }
 

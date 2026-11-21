@@ -21,6 +21,19 @@ export class Dsf {
     }
   }
 
+  /** Every class's elements, ascending, the classes in the order of their
+   * first element. */
+  classes(): number[][] {
+    const byRoot = new Map<number, number[]>();
+    for (let i = 0; i < this.parent.length; i++) {
+      const root = this.canonify(i);
+      const cells = byRoot.get(root);
+      if (cells) cells.push(i);
+      else byRoot.set(root, [i]);
+    }
+    return [...byRoot.values()];
+  }
+
   /** Canonical root of `i`'s equivalence class. */
   canonify(i: number): number {
     let root = i;

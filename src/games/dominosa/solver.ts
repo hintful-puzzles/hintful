@@ -50,11 +50,6 @@ export function endsOf(sp: GridSpace, e: number): [number, number] {
   return [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
 }
 
-/** The ladder over the dealt numbers. */
-function dominosaLadder(dl: dominosa.Dealt): Ladder {
-  return describedLadder(dominosa, dl);
-}
-
 /** The working state of a deduction: the marks on the spots, and the ladder
  * over the board's numbers. */
 interface Deduction {
@@ -72,7 +67,7 @@ function deduction(
 ): Deduction | null {
   const sp = spaceOf(shape);
   const dl = dealtOf(shape, numbers);
-  const ladder = dominosaLadder(dl);
+  const ladder = describedLadder(dominosa, dl);
   const grid = new Uint8Array(sp.edges.length);
   if (partner)
     for (const e of sp.edges) {

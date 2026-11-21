@@ -274,6 +274,14 @@ const COMPASS = [
 
 const plain = new Map<string, GridSpace>();
 const parted = new WeakMap<readonly (readonly number[])[], Map<string, GridSpace>>();
+let last: {
+  units: readonly string[];
+  w: number;
+  h: number;
+  parts: readonly (readonly number[])[];
+  edges: EdgeGeometry;
+  sp: GridSpace;
+} | null = null;
 
 /**
  * The `w × h` grid whose units are `units`, a compiled module's: `rows`,
@@ -289,6 +297,18 @@ export function describedSpace(
   parts: readonly (readonly number[])[] = [],
   edges: EdgeGeometry = "square",
 ): GridSpace {
+  // A game asks again for its board's space on every move it checks, so the
+  // last one asked for is looked at before a key is built.
+  const l = last;
+  if (
+    l !== null &&
+    l.units === units &&
+    l.w === w &&
+    l.h === h &&
+    l.parts === parts &&
+    l.edges === edges
+  )
+    return l.sp;
   const key = `${units.join(",")} ${w} ${h} ${edges}`;
   let cache = plain;
   if (parts.length > 0) {
@@ -304,6 +324,7 @@ export function describedSpace(
     sp = gridSpace(units, w, h, parts, edges === "king");
     cache.set(key, sp);
   }
+  last = { units, w, h, parts, edges, sp };
   return sp;
 }
 

@@ -198,7 +198,7 @@ describe("towers solver", () => {
     clues[4] = 4;
     clues[8] = 1;
     clues[12] = 4;
-    expect(facingReason([0, 8], 0, dealtOf(4, clues), latinSpace(4))).toEqual({
+    expect(facingReason([0, 8], 0, dealtOf(clues), latinSpace(4))).toEqual({
       kind: "facing",
       clue: 0,
       clue2: 4,

@@ -28,7 +28,7 @@ import {
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueAt,
-  clueList,
+  cluesWhere,
   describedSpace,
   type GridSpace,
   rangeMask,
@@ -59,34 +59,18 @@ const TOP = rect.ladder.reduce((top, e) => Math.max(top, e.tier), 0);
 
 // --- the board as the description reads it -----------------------------------
 
-/** The last board size's space, which every move's `status` reads again. */
-let lastSpace: GridSpace | null = null;
-export function spaceOf(w: number, h: number): GridSpace {
-  if (lastSpace?.w !== w || lastSpace.h !== h)
-    lastSpace = describedSpace(rect.units, w, h);
-  return lastSpace;
-}
-
 /** The board as the description deals it: each clue's size, 0 where it shows
  * none, and the shape of each that names one. Made afresh on each call: the
  * generator strips and moves clues in place, so nothing keyed on the arrays
  * can be trusted to match what they hold. */
 function dealtOf({ grid, shapes }: RectClues): rect.Dealt {
-  const at: number[] = [];
-  const v: number[] = [];
-  const shapedAt: number[] = [];
-  const shape: number[] = [];
-  grid.forEach((n, c) => {
-    if (!n) return;
-    at.push(c);
-    v.push(n === HIDDEN ? 0 : n);
-    if (!shapes[c]) return;
-    shapedAt.push(c);
-    shape.push(shapes[c]);
-  });
   return {
-    number: clueList(at, v, grid.length),
-    shape: clueList(shapedAt, shape, grid.length),
+    number: cluesWhere(
+      grid,
+      (n) => n !== 0,
+      (n) => (n === HIDDEN ? 0 : n),
+    ),
+    shape: cluesWhere(shapes, (s, c) => s !== 0 && grid[c] !== 0),
   };
 }
 
@@ -110,7 +94,7 @@ export function linesAnswer(
   hedge: Uint8Array,
   vedge: Uint8Array,
 ): boolean {
-  const sp = spaceOf(w, h);
+  const sp = describedSpace(rect.units, w, h);
   const g = new Uint8Array(sp.edges.length);
   for (const e of sp.edges) {
     const { edge, x, y } = lineOf(sp, e);
@@ -294,11 +278,6 @@ export function reasonOf(
   }
 }
 
-/** The ladder over the dealt board: the description's techniques, compiled. */
-function rectLadder(dl: rect.Dealt): Ladder {
-  return describedLadder(rect, dl);
-}
-
 // --- deduction ---------------------------------------------------------------
 
 /** The working state of a deduction: the marks on the edges, and the ladder
@@ -317,12 +296,12 @@ export function deduction(
   clues: RectClues,
   grid: Uint8Array | null = null,
 ): Deduction {
-  const sp = spaceOf(w, h);
+  const sp = describedSpace(rect.units, w, h);
   const dl = dealtOf(clues);
   const g = grid ?? new Uint8Array(sp.edges.length);
   const m = new CellMarks(sp, rangeMask(WALL, OPEN), g, null, "edge");
   m.seed(g);
-  return { m, ladder: rectLadder(dl), dl };
+  return { m, ladder: describedLadder(rect, dl), dl };
 }
 
 /** A copy of `d` that shares no marks with it, for a search to assume on. */

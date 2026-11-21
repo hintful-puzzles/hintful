@@ -5,7 +5,7 @@
 
 import type { DescReader } from "../../engine/game-id/desc-reader.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
-import { describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedSpace, perBoard } from "../../engine/solve/describe-runtime.ts";
 import * as flip from "../../generated/games/flip/flip.compiled.ts";
 
 // --- types ----------------------------------------------------------
@@ -30,21 +30,23 @@ export interface FlipState {
   readonly moves: number;
 }
 
-const dealtOfMatrix = new WeakMap<Uint8Array, flip.Dealt>();
-
-/** The description's rules on `s`'s board: its matrix's rows as the squares
+/** The board as the description deals it: its matrix's rows as the squares
  * each press flips, kept for the matrix's life. */
+const dealtOf = perBoard(
+  (matrix: Uint8Array, wh: number): flip.Dealt => ({
+    flips: Array.from({ length: wh }, (_, i) =>
+      Array.from({ length: wh }, (_, j) => j).filter((j) => matrix[i * wh + j] === 1),
+    ),
+  }),
+);
+
+/** The description's rules on `s`'s board. */
 export function rulesOf(s: FlipState) {
-  let cl = dealtOfMatrix.get(s.matrix);
-  if (cl === undefined) {
-    const wh = s.w * s.h;
-    const flips = Array.from({ length: wh }, (_, i) =>
-      Array.from({ length: wh }, (_, j) => j).filter((j) => s.matrix[i * wh + j] === 1),
-    );
-    cl = { flips };
-    dealtOfMatrix.set(s.matrix, cl);
-  }
-  return flip.rules(describedSpace(flip.units, s.w, s.h), cl, []);
+  return flip.rules(
+    describedSpace(flip.units, s.w, s.h),
+    dealtOf(s.matrix, s.w * s.h),
+    [],
+  );
 }
 
 export type FlipMove =

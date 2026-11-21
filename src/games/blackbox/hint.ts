@@ -41,7 +41,11 @@ import {
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { claimRelation, judgeRivals } from "../../engine/hint/rival-judging.ts";
-import { clueList, traceBeam } from "../../engine/solve/describe-runtime.ts";
+import {
+  clueList,
+  describedSpace,
+  traceBeam,
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -67,7 +71,6 @@ import {
   range2grid,
   rangeOf,
   slotOf,
-  spaceOf,
 } from "./state.ts";
 
 /** How a fired laser came out, as the board shows it: a pair of numbers at its
@@ -242,7 +245,7 @@ export class Knowledge {
     readonly dealt: blackbox.Dealt,
   ) {
     this.m = new CellMarks(
-      spaceOf(state.w, state.h),
+      describedSpace(blackbox.units, state.w, state.h),
       DOMAIN,
       new Uint8Array(state.w * state.h),
     );
