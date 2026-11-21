@@ -79,6 +79,7 @@ import {
   abcdObviousMarks,
   answerOf,
   isCompleted,
+  rules,
   solveAbcd,
   status,
 } from "./solver.ts";
@@ -361,6 +362,7 @@ export const abcdGame: Game<
   status,
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes: (_state, mistakes) => clearEntries(abcdEntryMoves, mistakes),

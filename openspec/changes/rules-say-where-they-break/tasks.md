@@ -31,7 +31,8 @@
       diamonds unchanged). A game builds `rules` with `describedRules`,
       which gives `isAnswer` too, and the guard checks a changed answer
       breaks a rule exactly where it is no answer (Map's four-coloring leaves
-      some changes answers). Run `src/guards` before a
+      some changes answers). Moved: abcd (its "no diagonal" variation is a
+      module argument `deals` passes). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

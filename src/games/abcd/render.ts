@@ -62,6 +62,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -79,6 +80,7 @@ import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
 import type { AbcdHint } from "./hint.ts";
 import { CLUE } from "./hint-marks.ts";
+import { rules } from "./solver.ts";
 import {
   type AbcdMove,
   type AbcdState,
@@ -200,67 +202,23 @@ export function newDrawState(state: AbcdState, tileSize: number): AbcdDrawState 
   };
 }
 
-// --- error computation (base render, not findMistakes) ---------------------
+// --- live errors -------------------------------------------------------------
 
-/** Per-clue flag for a count its line exceeds or can no longer reach (upstream
- * `abcd_count_clues`). */
-function computeClueErrors(state: AbcdState): Uint8Array {
-  const { w, h, n } = state.params;
-  const { grid, numbers } = state;
-  const err = new Uint8Array((w + h) * n);
-  for (const horizontal of [true, false]) {
-    const amx = horizontal ? h : w;
-    const bmx = horizontal ? w : h;
-    for (let a = 0; a < amx; a++) {
-      for (let i = 0; i < n; i++) {
-        const pos = horizontal ? horClue(a, i, n) : verClue(a, i, n, h);
-        const clue = numbers[pos];
-        if (clue === NO_NUMBER) continue;
-        let found = 0;
-        let empty = 0;
-        for (let b = 0; b < bmx; b++) {
-          const g = grid[horizontal ? a * w + b : b * w + a];
-          if (g === i + 1) found++;
-          else if (g === EMPTY) empty++;
-        }
-        if (found > clue || found + empty < clue) err[pos] = 1;
-      }
-    }
-  }
-  return err;
-}
-
-/** Per-cell "shares its letter with an identical neighbor" flag
- * (upstream `abcd_set_errors_adjacent`, all directions OR-ed). */
-function computeAdjacencyErrors(state: AbcdState): Uint8Array {
-  const { w, h, diag } = state.params;
-  const g = state.grid;
-  const err = new Uint8Array(w * h);
-  const scan = (
-    sx: number,
-    sy: number,
-    ex: number,
-    ey: number,
-    dx: number,
-    dy: number,
-  ): void => {
-    for (let x = sx; x < ex; x++) {
-      for (let y = sy; y < ey; y++) {
-        const c = g[y * w + x];
-        if (c !== EMPTY && c === g[(y + dy) * w + (x + dx)]) {
-          err[y * w + x] = 1;
-          err[(y + dy) * w + (x + dx)] = 1;
-        }
-      }
-    }
-  };
-  scan(0, 0, w - 1, h, 1, 0); // horizontal
-  scan(0, 0, w, h - 1, 0, 1); // vertical
-  if (diag) {
-    scan(0, 0, w - 1, h - 1, 1, 1); // topleft-bottomright
-    scan(0, 1, w - 1, h, 1, -1); // bottomleft-topright
-  }
-  return err;
+/** Where the board breaks a rule: each square beside one with its letter,
+ * and each number, by its place in `numbers`, its line already holds too many
+ * of or can no longer hold enough. */
+function errorsOf(state: AbcdState): { cells: Uint8Array; clues: Uint8Array } {
+  const live = liveErrors(rules, state);
+  const cells = live.at;
+  for (const [a, b] of live.pairs) cells[a] = cells[b] = 1;
+  // A number's index among the shown ones is its place in the rules' list.
+  const shown: number[] = [];
+  state.numbers.forEach((v, pos) => {
+    if (v !== NO_NUMBER) shown.push(pos);
+  });
+  const clues = new Uint8Array(state.numbers.length);
+  for (const k of live.clues.get("count") ?? []) clues[shown[k]] = 1;
+  return { cells, clues };
 }
 
 // --- drawing helpers -------------------------------------------------------
@@ -519,7 +477,8 @@ export function redraw(
 
   // Clues (redraw only those whose look changed). The hint hatches the named
   // line on through its clue slots, and recolors the count it reads.
-  const clueErr = computeClueErrors(state);
+  const errors = errorsOf(state);
+  const clueErr = errors.clues;
   const read = marks.of("outline", CLUE)[0] ?? -1;
   // The striped line, numbered as `numbers` holds its clues: the rows, then
   // the columns. A line of one square is a row.
@@ -564,7 +523,7 @@ export function redraw(
   }
 
   // Grid tiles.
-  const adjErr = computeAdjacencyErrors(state);
+  const adjErr = errors.cells;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {

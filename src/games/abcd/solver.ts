@@ -17,6 +17,7 @@
  * the answer from at either tier. The hint never runs it.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import {
   type Answer,
   answerCache,
@@ -33,6 +34,7 @@ import {
   popcount,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -209,6 +211,17 @@ export function isCompleted(state: {
     variationsOf(p),
   );
 }
+
+/** The board as its rules read it: a letter is its value, a blank square
+ * undecided. */
+export const rules: RulesOf<AbcdState> = describedRules(abcd, {
+  grid: (s) => Uint8Array.from(s.grid),
+  size: (s) => [s.params.w, s.params.h],
+  deals: (s): [abcd.Dealt, readonly string[]] => [
+    dealtOf(s.params, s.numbers),
+    variationsOf(s.params),
+  ],
+});
 
 export function status(state: AbcdState): "solved" | "ongoing" {
   return isCompleted(state) ? "solved" : "ongoing";
