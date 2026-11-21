@@ -6,6 +6,7 @@
 import { describe, expect, test } from "vitest";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { deepBudget } from "../../engine/testing/slow.ts";
 import { newDesc } from "./generator.ts";
 import type { SlantHint } from "./hint.ts";
 import { slantGame } from "./index.ts";
@@ -100,7 +101,7 @@ describe("slant hint", () => {
       [8, 8, DIFF_HARD],
       [12, 10, DIFF_HARD],
     ] as const) {
-      for (let seed = 0; seed < 8; seed++) {
+      for (let seed = 0; seed < deepBudget(2, 8); seed++) {
         const s = freshState(w, h, diff, `plan-${w}.${h}.${diff}.${seed}`);
         const solved = applyPlan(s);
         expect(slantGame.status(solved)).toBe("solved");
@@ -147,12 +148,13 @@ describe("slant hint", () => {
     // rests on, and said of the square it was about to draw that it was drawn
     // (7 `equiv` firings in 150 boards, in the walk this replaced).
     let cited = 0;
+    const seeds = deepBudget(8, 25);
     for (const [w, h] of [
       [5, 5],
       [7, 7],
       [10, 8],
     ]) {
-      for (let seed = 0; seed < 25; seed++) {
+      for (let seed = 0; seed < seeds; seed++) {
         const s = freshState(w, h, DIFF_HARD, `drawn-${w}.${h}.${seed}`);
         const plan = deduceHintPlan(w, h, s.clues, s.soln, s.alike);
         for (const [firing, { path }] of plan.cites)
@@ -165,7 +167,7 @@ describe("slant hint", () => {
       }
     }
     // Hundreds of cited pairs over 75 boards.
-    expect(cited).toBeGreaterThan(100);
+    expect(cited).toBeGreaterThan(seeds * 4);
   });
 
   test("clue firings lead with the indication and group as one journey", () => {
