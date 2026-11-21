@@ -13,7 +13,7 @@ import { newMagnetsDesc } from "./generator.ts";
 import { solveMagnets } from "./solver.ts";
 import {
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   type MagnetsCommon,
   type MagnetsParams,
   newState,
@@ -24,13 +24,13 @@ import {
  * techniques work for their living. */
 const SHAPES: MagnetsParams[] = [
   { w: 6, h: 5, diff: DIFF_EASY, stripclues: false },
-  { w: 6, h: 5, diff: DIFF_TRICKY, stripclues: false },
-  { w: 6, h: 5, diff: DIFF_TRICKY, stripclues: true },
+  { w: 6, h: 5, diff: DIFF_NORMAL, stripclues: false },
+  { w: 6, h: 5, diff: DIFF_NORMAL, stripclues: true },
   { w: 8, h: 7, diff: DIFF_EASY, stripclues: true },
-  { w: 8, h: 7, diff: DIFF_TRICKY, stripclues: false },
-  { w: 8, h: 7, diff: DIFF_TRICKY, stripclues: true },
-  { w: 10, h: 9, diff: DIFF_TRICKY, stripclues: false },
-  { w: 10, h: 9, diff: DIFF_TRICKY, stripclues: true },
+  { w: 8, h: 7, diff: DIFF_NORMAL, stripclues: false },
+  { w: 8, h: 7, diff: DIFF_NORMAL, stripclues: true },
+  { w: 10, h: 9, diff: DIFF_NORMAL, stripclues: false },
+  { w: 10, h: 9, diff: DIFF_NORMAL, stripclues: true },
 ];
 
 /** Eight seeds, not three: a mis-tiered Normal technique shows only on a
@@ -62,7 +62,7 @@ describeLadderCensus<Board>({
   game: "magnets",
   rungs: ["single", "count", "oddGap", "marked", "oneNeutral", "everyTile", "onlyEnd"],
   unreached: {},
-  caps: [DIFF_EASY, DIFF_TRICKY],
+  caps: [DIFF_EASY, DIFF_NORMAL],
   cases,
   solve: ({ w, h, common }, cap, firings) =>
     solveMagnets(w, h, common, cap, firings).verdict,

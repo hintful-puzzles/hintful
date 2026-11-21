@@ -66,14 +66,13 @@ help:
     number that has few edges left to decide, as a wall or as no wall: if it is
     wrong, before long a number has too many walls or a region cannot reach its
     size. The hint carries on from whatever you decide.
-name: Palisade
-family: regions
+produces: regions
 sizes:
-  # Wider than the 10,000 squares a board may hold.
-  w: { min: 1, max: 2147483647 }
-  h: { min: 1, max: 2147483647 }
+  # The rules set no bound; a board holds at most 10,000 squares.
+  w: { min: 1 }
+  h: { min: 1 }
   # How many squares each region holds.
-  k: { min: 1, max: 2147483647 }
+  k: { min: 1 }
 space:
   grid: { w: "w", h: "h" }
   edges: true

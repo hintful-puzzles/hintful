@@ -659,8 +659,6 @@ export const boatsGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(boatsGame);

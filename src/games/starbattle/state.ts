@@ -29,12 +29,12 @@ import * as starbattle from "../../generated/games/starbattle/starbattle.compile
 
 /** Every step reads one star, one row, column or region, or one row or
  * column against the regions in it. */
-export const DIFF_EASY = 0;
+export const DIFF_EASY = starbattle.TIER.easy;
 /** Needs several rows or columns counted against the regions in them. */
-export const DIFF_NORMAL = 1;
+export const DIFF_NORMAL = starbattle.TIER.normal;
 /** Needs a star tried in a square where it would complete a row, column or
  * region and leave another without room. */
-export const DIFF_TRICKY = 2;
+export const DIFF_TRICKY = starbattle.TIER.tricky;
 
 const DIFF_NAMES: readonly string[] = starbattle.tiers;
 

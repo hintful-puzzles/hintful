@@ -785,8 +785,6 @@ export const romeGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(romeGame);

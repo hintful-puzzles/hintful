@@ -18,7 +18,7 @@ import { validateDesc } from "../../engine/contract/desc-error.ts";
 import cReference from "./__fixtures__/clusters-c-reference.json" with { type: "json" };
 import { clustersGame } from "./index.ts";
 import { answerSearch } from "./solver.ts";
-import { type ClustersParams, DIFF_TRICKY, encodeDesc, newState } from "./state.ts";
+import { type ClustersParams, DIFF_NORMAL, encodeDesc, newState } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -39,7 +39,7 @@ describe("Clusters frozen C boards", () => {
   // proves, and not to the ladder finishing it.
   for (const f of data.fixtures) {
     it(`${f.w}x${f.h} seed=${f.seed}: decodes, round-trips and has one answer`, () => {
-      const p: ClustersParams = { w: f.w, h: f.h, diff: DIFF_TRICKY };
+      const p: ClustersParams = { w: f.w, h: f.h, diff: DIFF_NORMAL };
       expect(validateDesc(clustersGame, p, f.desc)).toBeNull();
       expect(encodeDesc(newState(p, f.desc).grid, f.w, f.h)).toBe(f.desc);
       expect(answerSearch(newState(p, f.desc).grid, f.w, f.h).kind).toBe("one");

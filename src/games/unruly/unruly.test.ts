@@ -18,7 +18,7 @@ import {
   type Cell,
   DIFF_EASY,
   DIFF_NORMAL,
-  DIFF_TRIVIAL,
+  DIFF_TRICKY,
   EMPTY,
   ONE,
   ZERO,
@@ -43,7 +43,7 @@ function params(w2: number, h2: number, diff: number, unique = false): UnrulyPar
 
 describe("params", () => {
   it("round-trips through encode/decode", () => {
-    const p = params(10, 8, DIFF_NORMAL, true);
+    const p = params(10, 8, DIFF_TRICKY, true);
     const enc = encodeParams(p, true);
     expect(enc).toBe("10x8udn");
     expect(decodeParams(enc)).toEqual(p);
@@ -60,10 +60,10 @@ describe("params", () => {
     if (width?.type !== "string" || height?.type !== "string")
       throw new Error("Unruly must expose Width and Height as text fields");
 
-    const p = params(8, 8, DIFF_EASY);
+    const p = params(8, 8, DIFF_NORMAL);
     width.set(p, "14");
     height.set(p, "10");
-    expect(p).toEqual(params(14, 10, DIFF_EASY));
+    expect(p).toEqual(params(14, 10, DIFF_NORMAL));
     expect(width.get(p)).toBe("14");
     expect(height.get(p)).toBe("10");
     // The mapping is load-bearing all the way to the game id.
@@ -71,17 +71,17 @@ describe("params", () => {
   });
 
   it("decodes a bare square size", () => {
-    expect(decodeParams("8x8")).toEqual(params(8, 8, DIFF_TRIVIAL, false));
-    expect(decodeParams("12")).toEqual(params(12, 12, DIFF_TRIVIAL, false));
+    expect(decodeParams("8x8")).toEqual(params(8, 8, DIFF_EASY, false));
+    expect(decodeParams("12")).toEqual(params(12, 12, DIFF_EASY, false));
   });
 
   it("rejects invalid params", () => {
     const error = (p: UnrulyParams) => paramsError(unrulyGame, p, true);
-    expect(error(params(7, 8, DIFF_EASY))).toMatch(/even/);
-    expect(error(params(4, 8, DIFF_EASY))).toBe("Width must be at least 6.");
+    expect(error(params(7, 8, DIFF_NORMAL))).toMatch(/even/);
+    expect(error(params(4, 8, DIFF_NORMAL))).toBe("Width must be at least 6.");
     expect(error(params(8, 8, 99))).toMatch(/^Difficulty must be one of/);
     // 6-wide unique: at most A177790[3] = 14 distinct rows, so h2 = 16 is too tall.
-    expect(error(params(6, 16, DIFF_EASY, true))).toMatch(/too tall/);
+    expect(error(params(6, 16, DIFF_NORMAL, true))).toMatch(/too tall/);
   });
 
   it("accepts the offered presets", () => {
@@ -94,7 +94,7 @@ describe("params", () => {
   });
 
   it("labels a unique-rows game as such", () => {
-    expect(describeParams(unrulyGame, params(8, 8, DIFF_EASY, true))).toMatch(
+    expect(describeParams(unrulyGame, params(8, 8, DIFF_NORMAL, true))).toMatch(
       /^8x8 \S+, unique$/,
     );
   });
@@ -103,7 +103,7 @@ describe("params", () => {
 describe("desc codec", () => {
   it("round-trips a generated board", () => {
     const rng = randomNew("unruly-desc-seed");
-    const p = params(8, 8, DIFF_EASY);
+    const p = params(8, 8, DIFF_NORMAL);
     const { desc } = newDesc(p, rng);
     expect(validateDesc(unrulyGame, p, desc)).toBeNull();
     const state = newState(p, desc);
@@ -112,14 +112,14 @@ describe("desc codec", () => {
   });
 
   it("rejects malformed descs", () => {
-    const p = params(8, 8, DIFF_EASY);
+    const p = params(8, 8, DIFF_NORMAL);
     expect(validateDesc(unrulyGame, p, "!!!")).toBe(descBadCharacter("!"));
     expect(validateDesc(unrulyGame, p, "a")).toBe(DESC_TOO_SHORT);
   });
 
   it("reads only the run letters its encoder writes", () => {
     // A 6x6 board with no clues: 36 empties, written as a 25-run and 11 more.
-    const p = params(6, 6, DIFF_TRIVIAL);
+    const p = params(6, 6, DIFF_EASY);
     expect(encodeGrid(new Uint8Array(36), 36)).toBe("zl");
     expect(validateDesc(unrulyGame, p, "zl")).toBeNull();
     // A `z` run takes the case of the clue that ends it.
@@ -135,7 +135,7 @@ describe("desc codec", () => {
 
   it("parses clues as immutable cells of the right color", () => {
     // Hand-place a ONE at index 0 and a ZERO at index 1, then round-trip.
-    const p = params(6, 6, DIFF_TRIVIAL);
+    const p = params(6, 6, DIFF_EASY);
     const s = p.w2 * p.h2;
     const grid = new Uint8Array(s);
     grid[0] = ONE;
@@ -154,11 +154,11 @@ describe("desc codec", () => {
 
 describe("generator + solver", () => {
   const cases: [string, UnrulyParams][] = [
-    ["8x8 trivial", params(8, 8, DIFF_TRIVIAL)],
-    ["8x8 easy", params(8, 8, DIFF_EASY)],
-    ["8x8 normal", params(8, 8, DIFF_NORMAL)],
-    ["10x10 normal", params(10, 10, DIFF_NORMAL)],
-    ["8x8 easy unique", params(8, 8, DIFF_EASY, true)],
+    ["8x8 trivial", params(8, 8, DIFF_EASY)],
+    ["8x8 easy", params(8, 8, DIFF_NORMAL)],
+    ["8x8 normal", params(8, 8, DIFF_TRICKY)],
+    ["10x10 normal", params(10, 10, DIFF_TRICKY)],
+    ["8x8 easy unique", params(8, 8, DIFF_NORMAL, true)],
   ];
 
   it.each(cases)("generates a board the solver solves: %s", (_name, p) => {
@@ -176,7 +176,7 @@ describe("generator + solver", () => {
 
   it("solveToString returns a fully solved grid for a generated board", () => {
     const rng = randomNew("unruly-solve-seed");
-    const p = params(8, 8, DIFF_NORMAL);
+    const p = params(8, 8, DIFF_TRICKY);
     const { desc } = newDesc(p, rng);
     const state = newState(p, desc);
     const sol = solveToString(state);
@@ -187,19 +187,19 @@ describe("generator + solver", () => {
 
   it("the too-easy gate keeps NORMAL boards from being solved one level easier", () => {
     const rng = randomNew("unruly-gate-seed");
-    const p = params(8, 8, DIFF_NORMAL);
+    const p = params(8, 8, DIFF_TRICKY);
     const { desc } = newDesc(p, rng);
     const state = newState(p, desc);
     const grid = Uint8Array.from(state.grid);
     const work = { w2: p.w2, h2: p.h2, unique: p.unique, grid };
-    solveGame(work, DIFF_EASY);
+    solveGame(work, DIFF_NORMAL);
     // EASY solver must NOT complete a NORMAL board (else it was too easy).
     expect(isComplete(work)).toBe(false);
   });
 });
 
 describe("moves", () => {
-  const p = params(6, 6, DIFF_TRIVIAL);
+  const p = params(6, 6, DIFF_EASY);
   const s = p.w2 * p.h2;
 
   function blank(): UnrulyState {
@@ -267,7 +267,7 @@ describe("moves", () => {
   });
 
   it("findMistakes flags a mark contradicting the solution, none when correct", () => {
-    const big = params(8, 8, DIFF_EASY);
+    const big = params(8, 8, DIFF_NORMAL);
     const rng = randomNew("unruly-mistake-seed");
     const { desc } = newDesc(big, rng);
     const state = newState(big, desc);

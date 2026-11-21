@@ -1,19 +1,18 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: ascent
-name: Ascent
-family: numbers
+produces: numbers
 sizes:
   # The board as stored: a hexagonal one sheared, padded with walls, and an
   # Edges one ringed by its arrows. Unbounded but by the time a board takes
   # to deal.
-  w: { min: 1, max: 99999 }
-  h: { min: 1, max: 99999 }
+  w: { min: 1 }
+  h: { min: 1 }
   # Which squares are neighbors: 0 the four beside, 1 the six of a
   # hexagonal board, 2 the eight around.
   moves: { min: 0, max: 2 }
   # The last number of the path, as many as the squares on it.
-  top: { min: 1, max: 99999 }
+  top: { min: 1 }
 space:
   grid: { w: "w", h: "h" }
   units: []

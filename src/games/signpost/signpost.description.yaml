@@ -51,8 +51,7 @@ help:
     wrong, before long some square has nothing that can lead into it, or a
     chain cannot fit between two numbers. The hint carries on from whatever
     you decide.
-name: Signpost
-family: lines
+produces: lines
 sizes:
   # A square's link is a value of the candidate mask, at most 31, so a side
   # is at most 31 squares.

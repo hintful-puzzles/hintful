@@ -6,9 +6,10 @@
  *
  *   Easy (`DIFF_EASY`)         → the facing pairs, each clue's bounds, and
  *                                the library's singles.
- *   Hard (`DIFF_HARD`)         → each clue's arrangements, then the library's
- *                                set elimination.
- *   Extreme (`DIFF_EXTREME`)   → the library's fish and wing.
+ *   Normal (`DIFF_NORMAL`)     → each clue's arrangements, then the library's
+ *                                set elimination (upstream's Hard).
+ *   Tricky (`DIFF_TRICKY`)     → the library's fish and wing (upstream's
+ *                                Extreme).
  *   Unreasonable               → the engine's forcing chains and recursion.
  *
  * A clue sits at its slot, its index in `clues`: above each column, below

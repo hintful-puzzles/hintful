@@ -184,8 +184,6 @@ export const wordtrailGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(wordtrailGame);

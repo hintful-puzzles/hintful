@@ -8,7 +8,7 @@
  *  2. The same call reproduces the C aux solution byte-for-byte (the
  *     filled-grid generator path, checked directly).
  *  3. The TS solver solves the C-generated board uniquely at the recorded
- *     difficulty, and a `DIFF_HARD` board is NOT solvable one level down.
+ *     difficulty, and a `DIFF_NORMAL` board is NOT solvable one level down.
  *
  * The fixture is **frozen and cannot be regenerated** — see
  * `engine/testing/differential.ts`.
@@ -21,7 +21,7 @@ import cReference from "./__fixtures__/slant-c-reference.json" with { type: "jso
 import { newDesc } from "./generator.ts";
 import { slantGame } from "./index.ts";
 import { SOLVE_NOT_CONVERGED, SOLVE_UNIQUE, slantSolve } from "./solver.ts";
-import { DIFF_HARD, decodeClues, type SlantParams } from "./state.ts";
+import { DIFF_NORMAL, decodeClues, type SlantParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -65,8 +65,8 @@ describe("Slant C-vs-TS differential — aux + solver agreement (gated)", () => 
       let got = "";
       for (let i = 0; i < f.w * f.h; i++) got += soln[i] < 0 ? "\\" : "/";
       expect(got).toBe(f.aux);
-      // A `DIFF_HARD` board must genuinely need its techniques.
-      if (f.diff === DIFF_HARD) {
+      // A `DIFF_NORMAL` board must genuinely need its techniques.
+      if (f.diff === DIFF_NORMAL) {
         expect(slantSolve(f.w, f.h, clues, soln, f.diff - 1)).toBe(SOLVE_NOT_CONVERGED);
       }
     });

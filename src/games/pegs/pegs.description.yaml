@@ -67,8 +67,7 @@ help:
     ask you to undo from, and outlines any cut-off pegs. A position too far
     from a finish for the search to settle is saved, and the check says it
     couldn't tell.
-name: Pegs
-family: position
+produces: position
 sizes:
   # The game deals sides above three, and loads a board of any size; 99
   # stands for no bound.

@@ -41,7 +41,7 @@ import {
   type ClustersMove,
   type ClustersState,
   COLMASK,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   F_COLOR_0,
   F_COLOR_1,
   F_SINGLE,
@@ -50,7 +50,7 @@ import {
   pairIndex,
 } from "./state.ts";
 
-const P = { w: 7, h: 7, diff: DIFF_TRICKY };
+const P = { w: 7, h: 7, diff: DIFF_NORMAL };
 /** The **full** params string, difficulty included. A hand-written id must
  * carry the tier: `encodeParams(p, false)` omits it, so "7x7" decodes as Easy
  * and a scenario built from it would generate a different board from the one

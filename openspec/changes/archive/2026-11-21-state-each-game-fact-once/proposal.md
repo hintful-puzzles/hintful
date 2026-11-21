@@ -33,8 +33,15 @@ have drifted. Measured at `717626277` (queries in the review's design.md,
 
 ### Modified Capabilities
 
-`engine-params`, and the game specs that state a size bound, if `sizes`
-becomes what bounds a field.
+- `engine-difficulty`: code names a tier by its description's name.
+- `engine-input`: a game whose verbs are all its input writes no
+  `interpretMove`.
+- `described-ladder`: a description states what the catalog does not, and
+  what its `sizes` are.
+- `dominosa`: a scenario named a tier constant by upstream's name.
+
+`sizes` did not become what bounds a field (tasks.md 1.2), so no game spec
+that states a size bound moves.
 
 ## Impact
 

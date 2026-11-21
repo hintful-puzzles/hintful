@@ -15,10 +15,10 @@ import { SPOT } from "./kinds.ts";
 import { border, PREFERRED_TILE_SIZE } from "./render.ts";
 import { solveNumbers } from "./solver.ts";
 import {
-  DIFF_BASIC,
-  DIFF_EXTREME,
-  DIFF_HARD,
-  DIFF_TRIVIAL,
+  DIFF_EASY,
+  DIFF_NORMAL,
+  DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   DIFFCOUNT,
   type DominosaState,
   newState,
@@ -29,7 +29,7 @@ function freshState(n: number, diff: number, seed: string): DominosaState {
   return newState({ n, diff, tall: false }, desc);
 }
 
-const P = { n: 4, diff: DIFF_TRIVIAL, tall: false };
+const P = { n: 4, diff: DIFF_EASY, tall: false };
 
 /** The placements the narration and frame tests below are asserted on. */
 const pinned = describeHintPins({
@@ -37,9 +37,9 @@ const pinned = describeHintPins({
   // Every tier, since each adds techniques.
   params: [
     P,
-    { n: 6, diff: DIFF_BASIC, tall: false },
-    { n: 6, diff: DIFF_HARD, tall: false },
-    { n: 6, diff: DIFF_EXTREME, tall: false },
+    { n: 6, diff: DIFF_NORMAL, tall: false },
+    { n: 6, diff: DIFF_TRICKY, tall: false },
+    { n: 6, diff: DIFF_UNREASONABLE, tall: false },
   ],
   kinds: {
     placement: (step) => step.move.type === "domino",
@@ -102,7 +102,7 @@ function hintFrame(kind: Parameters<typeof pinned>[0]) {
 
 describe("dominosa hint — refusal", () => {
   it("counts a solved board as finished, so the midend refuses it", () => {
-    const state = freshState(4, DIFF_TRIVIAL, "hint-solved");
+    const state = freshState(4, DIFF_EASY, "hint-solved");
     const { pairs } = solveNumbers(state.params, state.numbers, DIFFCOUNT);
     let s = state;
     for (const [a, b] of pairs)
@@ -114,7 +114,7 @@ describe("dominosa hint — refusal", () => {
     // The board upstream dealt at Ambiguous for the seed `dominosa-a6`. It
     // does not load (`dominosa.test.ts`), so it is built directly.
     const state = newState(
-      { n: 6, diff: DIFF_TRIVIAL, tall: false },
+      { n: 6, diff: DIFF_EASY, tall: false },
       "25655326346361502346651410062120443426101135023020554413",
     );
     expect(solveNumbers(state.params, state.numbers, DIFFCOUNT).result).not.toBe(1);
@@ -123,7 +123,7 @@ describe("dominosa hint — refusal", () => {
   });
 
   it("flags a domino the solution lacks, so the midend refuses it", () => {
-    const state = freshState(4, DIFF_TRIVIAL, "hint-mistake");
+    const state = freshState(4, DIFF_EASY, "hint-mistake");
     const { pairs } = solveNumbers(state.params, state.numbers, DIFFCOUNT);
     const solutionSet = new Set(pairs.map(([a, b]) => a * 1000 + b));
     const w = state.w;
@@ -153,7 +153,7 @@ describe("dominosa hint — narration + plan", () => {
     let barrierSeen = false;
     const { state: end } = walkHint(
       dominosaGame,
-      freshState(6, DIFF_HARD, "hint-hard-plan"),
+      freshState(6, DIFF_TRICKY, "hint-hard-plan"),
       {
         asks: 800,
         first: true,

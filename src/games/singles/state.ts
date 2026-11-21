@@ -24,20 +24,21 @@ import * as singles from "../../generated/games/singles/singles.compiled.ts";
 /** Difficulty: upstream DIFF_EASY / DIFF_TRICKY. */
 export type Difficulty = "easy" | "tricky";
 
-/** Numeric difficulty levels, as upstream's `enum`. `ANY` is the "whatever
- * the solver reaches" level Solve and findMistakes use. */
-export const DIFF_EASY = 0;
-export const DIFF_TRICKY = 1;
-export const DIFF_ANY = 3;
+/** Numeric difficulty levels, as upstream's `enum` (its Easy and Tricky). */
+export const DIFF_EASY = singles.TIER.easy;
+export const DIFF_NORMAL = singles.TIER.normal;
+/** The "whatever the solver reaches" level Solve and findMistakes use. Not a
+ * tier: upstream's enum puts `DIFF_MAX` between the tiers and it. */
+export const DIFF_ANY = singles.tiers.length + 1;
 
 const DIFF_CHARS = "ek"; // singles_diffchars, indexed by level
 const DIFF_NAMES = singles.tiers;
 
 export function diffToLevel(d: Difficulty): number {
-  return d === "tricky" ? DIFF_TRICKY : DIFF_EASY;
+  return d === "tricky" ? DIFF_NORMAL : DIFF_EASY;
 }
 export function diffFromLevel(level: number): Difficulty {
-  return level === DIFF_TRICKY ? "tricky" : "easy";
+  return level === DIFF_NORMAL ? "tricky" : "easy";
 }
 
 // Cell flag bits (upstream F_*).
@@ -116,7 +117,7 @@ export function validateParams(p: SinglesParams, full: boolean): string | null {
   // and 3x3. A board 4 long either way deals Normal at once, which upstream's
   // rule (under 4 in either direction is Easy) had hidden.
   if (full && p.w < 4 && p.h < 4 && p.diff === "tricky")
-    return noSuchTier(`${p.w}x${p.h} puzzle`, DIFF_NAMES[DIFF_TRICKY]);
+    return noSuchTier(`${p.w}x${p.h} puzzle`, DIFF_NAMES[DIFF_NORMAL]);
   return null;
 }
 

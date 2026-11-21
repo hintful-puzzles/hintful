@@ -4,13 +4,13 @@
  * (`engine/solve/latin.ts`), whose forcing chains and recursion are the search above
  * the ladder. The tiers:
  *
- *   Easy (`DIFF_EASY`)         → each cage's values amalgamated, only at a cap
- *                                of Easy, and the library's singles.
- *   Normal (`DIFF_NORMAL`)     → each cage's values cell by cell.
- *   Hard (`DIFF_HARD`)         → a value every layout of a cage puts in a
- *                                line, then the library's set elimination.
- *   Extreme (`DIFF_EXTREME`)   → the library's fish and wing.
- *   Unreasonable               → the engine's forcing chains and recursion.
+ *   Easy          → each cage's values amalgamated, only at a cap of Easy, and
+ *                   the library's singles.
+ *   Normal        → each cage's values cell by cell.
+ *   Tricky        → a value every layout of a cage puts in a line, then the
+ *                   library's set elimination.
+ *   Hard          → the library's fish and wing.
+ *   Unreasonable  → the engine's forcing chains and recursion.
  *
  * A cage is its index among the cages in the order of their least cells, its
  * cells in reading order; its clue is of the kind its sign names.

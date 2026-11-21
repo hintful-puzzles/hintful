@@ -63,10 +63,10 @@ export const FLAG_USER = 1 << (MAXIMUM_DIRS + 3);
 
 // --- difficulty & mode enums ---------------------------------------
 
-export const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_TRICKY = 2;
-export const DIFF_HARD = 3;
+export const DIFF_EASY = ascent.TIER.easy;
+export const DIFF_NORMAL = ascent.TIER.normal;
+export const DIFF_TRICKY = ascent.TIER.tricky;
+export const DIFF_HARD = ascent.TIER.hard;
 export const DIFFCOUNT = 4;
 export const ASCENT_DIFFNAMES = ascent.tiers;
 export const ASCENT_DIFFCHARS = "enth";

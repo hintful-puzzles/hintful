@@ -33,7 +33,7 @@ import {
   CELL_MIRROR_R,
   DIFF_EASY,
   DIFF_NORMAL,
-  DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   diffToLevel,
   MON_GHOST,
   MON_NONE,
@@ -68,7 +68,7 @@ function gradeMatchesTier(grade: DeductiveResult, diff: number): boolean {
         (grade.rung === RUNG_ARC && grade.arcPasses > EASY_MAX_ARC_PASSES) ||
         grade.rung === RUNG_COUNTING
       );
-    case DIFF_TRICKY:
+    case DIFF_UNREASONABLE:
       return grade.rung === RUNG_FORCING;
     default:
       return false;
@@ -225,7 +225,7 @@ export function newUndeadDesc(
     )
       continue;
     if (
-      diff === DIFF_TRICKY &&
+      diff === DIFF_UNREASONABLE &&
       (totals.ghosts <= 1 || totals.vampires <= 1 || totals.zombies <= 1)
     )
       continue;

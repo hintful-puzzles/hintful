@@ -37,7 +37,7 @@ import {
 import {
   BLANK,
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   DX,
   DY,
   executeMove,
@@ -56,16 +56,16 @@ type Step = HintStep<TentsMove, unknown, TentsRung>;
 
 const SHAPES: TentsParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY },
-  { w: 8, h: 8, diff: DIFF_TRICKY },
+  { w: 8, h: 8, diff: DIFF_NORMAL },
   { w: 10, h: 10, diff: DIFF_EASY },
-  { w: 10, h: 10, diff: DIFF_TRICKY },
-  { w: 15, h: 15, diff: DIFF_TRICKY },
+  { w: 10, h: 10, diff: DIFF_NORMAL },
+  { w: 15, h: 15, diff: DIFF_NORMAL },
 ];
 const SEEDS = ["th-a", "th-b", "th-c", "th-d", "th-e", "th-f"];
 const CORPUS = SHAPES.flatMap((p) => SEEDS.map((seed) => ({ p, seed })));
 
 const label = (p: TentsParams, seed: string) =>
-  `${p.w}x${p.h} ${p.diff === DIFF_EASY ? "Easy" : "Tricky"} / ${seed}`;
+  `${p.w}x${p.h} ${p.diff === DIFF_EASY ? "Easy" : "Normal"} / ${seed}`;
 
 function deal(p: TentsParams, seed: string): TentsState {
   return newState(p, tentsGame.newDesc(p, randomNew(label(p, seed))).desc);
@@ -348,7 +348,7 @@ describe("the player's links", () => {
     for (const { p, seed } of CORPUS) {
       const state = deal(p, seed);
       const puzzle = Int8Array.from(state.grid, (v) => (v === TREE ? TREE : 0));
-      const { soln, links } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_TRICKY);
+      const { soln, links } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_NORMAL);
       for (let i = 0; i < soln.length; i++) {
         if (soln[i] !== TENT) continue;
         const trees: number[] = [];
@@ -393,7 +393,7 @@ describe("the player's links", () => {
     for (const { p, seed } of CORPUS.slice(0, 12)) {
       const state = deal(p, seed);
       const puzzle = Int8Array.from(state.grid, (v) => (v === TREE ? TREE : 0));
-      const { soln, links } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_TRICKY);
+      const { soln, links } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_NORMAL);
       const tents = [...soln.keys()].filter((i) => soln[i] === TENT);
       const all = executeMove(state, {
         type: "cells",

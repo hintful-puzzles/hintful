@@ -27,12 +27,12 @@ import * as norinori from "../../generated/games/norinori/norinori.compiled.ts";
 // --- difficulty -------------------------------------------------------------
 
 /** Every step reads one domino, one square or one region. */
-export const DIFF_EASY = 0;
+export const DIFF_EASY = norinori.TIER.easy;
 /** Needs a region whose open squares cannot take its shaded squares without
  * one of them. */
-export const DIFF_NORMAL = 1;
+export const DIFF_NORMAL = norinori.TIER.normal;
 /** Needs a square tried shaded, and the squares that would leave clear. */
-export const DIFF_TRICKY = 2;
+export const DIFF_TRICKY = norinori.TIER.tricky;
 
 const DIFF_NAMES: readonly string[] = norinori.tiers;
 

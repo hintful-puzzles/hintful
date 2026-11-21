@@ -39,10 +39,10 @@ export const clickTent = (v: number): number => (v === BLANK ? TENT : BLANK);
  * one, and empty of anything else. */
 export const clickGrass = (v: number): number => (v === BLANK ? NONTENT : BLANK);
 
-// --- difficulty (constants named for upstream's tiers; players see DIFF_NAMES)
-export const DIFF_EASY = 0;
-export const DIFF_TRICKY = 1;
-export const DIFF_COUNT = 2;
+// --- difficulty (upstream's Easy and Tricky; named by the description) ------
+export const DIFF_EASY = tents.TIER.easy;
+export const DIFF_NORMAL = tents.TIER.normal;
+export const DIFF_COUNT = tents.tiers.length;
 const DIFF_NAMES: readonly string[] = tents.tiers;
 const DIFF_CHARS = "et"; // ENCODE chars, indexed by difficulty
 

@@ -2,14 +2,14 @@
  * Group solver: the ladder `group.description.yaml` states, compiled, and the
  * answer check its rules compile to, on the shared `LatinSolver`
  * (`engine/solve/latin.ts`), whose forcing chains and recursion are the search above
- * the ladder. The tiers, by display name and constant:
+ * the ladder. The tiers:
  *
- *   Easy (`DIFF_TRIVIAL`)   → the library's singles.
- *   Normal (`DIFF_NORMAL`)  → associativity, and the identity's row and column.
- *   Tricky (`DIFF_HARD`)    → ruling elements out as the identity, then the
- *                             library's set elimination.
- *   Hard (`DIFF_EXTREME`)   → the library's fish and wing.
- *   Unreasonable            → the engine's forcing chains and recursion.
+ *   Easy          → the library's singles.
+ *   Normal        → associativity, and the identity's row and column.
+ *   Tricky        → ruling elements out as the identity, then the library's set
+ *                   elimination.
+ *   Hard          → the library's fish and wing.
+ *   Unreasonable  → the engine's forcing chains and recursion.
  *
  * Cells are numbered `y·o + x`; row `a`, column `b` holds the product `a·b`.
  */

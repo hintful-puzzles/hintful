@@ -25,8 +25,8 @@ import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
 import {
-  DIFF_EXTREME,
-  DIFF_RECURSIVE,
+  DIFF_HARD,
+  DIFF_UNREASONABLE,
   diffFromLevel,
   type EdgeClueParams,
   newState,
@@ -52,7 +52,7 @@ function fixtureParams(f: Fixture): EdgeClueParams {
 
 describeDescDifferential<Fixture, EdgeClueParams>({
   title: "unequal differential (byte-match)",
-  fixtures: FIXTURES.filter((f) => f.diff < DIFF_EXTREME),
+  fixtures: FIXTURES.filter((f) => f.diff < DIFF_HARD),
   label: (f) => `${f.order} d${f.diff} (seed ${f.seed})`,
   params: fixtureParams,
   newDesc: (p, rng) => newEdgeClueDesc(SIGNS, p, rng),
@@ -61,8 +61,8 @@ describeDescDifferential<Fixture, EdgeClueParams>({
 
 describe("unequal differential (solver agreement)", () => {
   it("re-founds some fixtures and keeps others byte-matched", () => {
-    expect(FIXTURES.some((f) => f.diff >= DIFF_EXTREME)).toBe(true);
-    expect(FIXTURES.some((f) => f.diff < DIFF_EXTREME)).toBe(true);
+    expect(FIXTURES.some((f) => f.diff >= DIFF_HARD)).toBe(true);
+    expect(FIXTURES.some((f) => f.diff < DIFF_HARD)).toBe(true);
   });
 
   for (const f of FIXTURES) {
@@ -78,8 +78,8 @@ describe("unequal differential (solver agreement)", () => {
           cap,
         );
       const ret = grade(f.solverDiff);
-      if (f.solverDiff === DIFF_EXTREME && ret !== DIFF_EXTREME)
-        expect(grade(DIFF_RECURSIVE)).toBe(DIFF_RECURSIVE);
+      if (f.solverDiff === DIFF_HARD && ret !== DIFF_HARD)
+        expect(grade(DIFF_UNREASONABLE)).toBe(DIFF_UNREASONABLE);
       else expect(ret).toBe(f.solverDiff);
     });
   }

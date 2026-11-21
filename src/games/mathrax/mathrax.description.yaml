@@ -34,8 +34,7 @@ help:
 
     If you've turned on the preference that removes a number from pencil marks in its row and column when you place it, the hint leaves that tidying to the placement rather than spelling it out as a step of its own. On an Unreasonable board, deduction can run out before the grid is full; the hint says so rather than guessing.
 
-name: Mathrax
-family: latin
+produces: latin
 words:
   cell: cell
 sizes:

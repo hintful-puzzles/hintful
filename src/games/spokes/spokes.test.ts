@@ -66,9 +66,9 @@ import {
   cloneBoard,
   cloneState,
   DIFF_EASY,
-  DIFF_HARD,
   DIFF_NAMES,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
+  DIFF_UNREASONABLE,
   DIR_BOTLEFT,
   DIR_BOTRIGHT,
   DIR_RIGHT,
@@ -262,8 +262,8 @@ describe("spokes solver", () => {
 
   it("solves every generated board at its own difficulty, and not below", () => {
     for (const [diff, level] of [
-      ["tricky", DIFF_TRICKY],
-      ["hard", DIFF_HARD],
+      ["tricky", DIFF_NORMAL],
+      ["hard", DIFF_UNREASONABLE],
     ] as const) {
       for (const k of [0, 1, 2]) {
         const p: SpokesParams = { w: 4, h: 4, diff };
@@ -324,7 +324,7 @@ describe("spokes generator", () => {
     ] as SpokesParams[]) {
       const { desc } = newSpokesDesc(p, randomNew(`shape-${p.w}x${p.h}-${p.diff}`));
       expect(validateDesc(spokesGame, p, desc)).toBeNull();
-      expect(spokesSolve(newState(p, desc), DIFF_HARD)).toBe("solved");
+      expect(spokesSolve(newState(p, desc), DIFF_UNREASONABLE)).toBe("solved");
       // Every hub keeps at least one line, so no hub is stranded by the clues.
       for (let i = 0; i < p.w * p.h; i++)
         expect(desc.charCodeAt(i) - 48).toBeGreaterThan(0);

@@ -4,7 +4,10 @@ import { pathWalk } from "../../games/path/solver.ts";
 import { DIFF_NORMAL, MODE_PATH, newState } from "../../games/path/state.ts";
 import { newDesc as newSlantDesc } from "../../games/slant/generator.ts";
 import { deduceHintPlan } from "../../games/slant/solver.ts";
-import { DIFF_HARD, newState as slantNewState } from "../../games/slant/state.ts";
+import {
+  DIFF_NORMAL as SLANT_NORMAL,
+  newState as slantNewState,
+} from "../../games/slant/state.ts";
 import { randomNew } from "../random/index.ts";
 import {
   MARK,
@@ -24,7 +27,7 @@ describe("a placing hook's facts", () => {
   it("are a firing of their own, resting on the placed cell, with the value struck", () => {
     let hooks = 0;
     for (const seed of ["a", "b", "c", "d", "e", "f"]) {
-      const p = { w: 7, h: 7, diff: DIFF_HARD };
+      const p = { w: 7, h: 7, diff: SLANT_NORMAL };
       const state = slantNewState(p, newSlantDesc(p, randomNew(`h${seed}`)).desc);
       const { graph } = deduceHintPlan(
         state.w,

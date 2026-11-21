@@ -22,7 +22,7 @@ import { newMapDesc } from "./generator.ts";
 import { mapGame } from "./index.ts";
 import { newMapData } from "./map-data.ts";
 import { gradeMap } from "./solver.ts";
-import { DIFF_HARD, type MapParams } from "./state.ts";
+import { DIFF_TRICKY, type MapParams } from "./state.ts";
 
 interface Fixture {
   w: number;
@@ -48,7 +48,7 @@ const label = (f: Fixture) => `${f.w}x${f.h}n${f.n}d${f.diff} seed=${f.seed}`;
 // having one answer, which Unreasonable proves.
 describeDescDifferential<Fixture, MapParams>({
   title: "map differential (frozen C reference, desc + aux)",
-  fixtures: data.fixtures.filter((f) => f.diff < DIFF_HARD && f.solverDiff >= f.diff),
+  fixtures: data.fixtures.filter((f) => f.diff < DIFF_TRICKY && f.solverDiff >= f.diff),
   label,
   params: paramsOf,
   newDesc: newMapDesc,
@@ -63,8 +63,8 @@ describe("map differential (frozen C reference, solver)", () => {
       const clues = new Int32Array(f.n).fill(-1);
       for (let i = 0; i < f.n; i++) if (map.immutable[i]) clues[i] = coloring[i];
       const grade = gradeMap(map.graph, f.n, clues);
-      if (f.solverDiff < DIFF_HARD) expect(grade).toBe(f.solverDiff);
-      else expect(grade).toBeGreaterThanOrEqual(DIFF_HARD);
+      if (f.solverDiff < DIFF_TRICKY) expect(grade).toBe(f.solverDiff);
+      else expect(grade).toBeGreaterThanOrEqual(DIFF_TRICKY);
     });
   }
 });

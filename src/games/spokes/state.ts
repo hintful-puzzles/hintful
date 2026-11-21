@@ -97,12 +97,13 @@ export function canonicalEdge(
 
 export type SpokesDiff = "easy" | "tricky" | "hard";
 
-/** Difficulty levels as the solver sees them (upstream's `DIFF_*` enum). The
- * solver compares and decrements these, so they stay numeric there even though
- * the params carry the readable string form. */
-export const DIFF_EASY = 0;
-export const DIFF_TRICKY = 1;
-export const DIFF_HARD = 2;
+/** Difficulty levels as the solver sees them (upstream's `DIFF_EASY`,
+ * `DIFF_TRICKY` and `DIFF_HARD`). The solver compares and decrements these, so
+ * they stay numeric there even though the params carry the readable string
+ * form. */
+export const DIFF_EASY = spokes.TIER.easy;
+export const DIFF_NORMAL = spokes.TIER.normal;
+export const DIFF_UNREASONABLE = spokes.TIER.unreasonable;
 
 const DIFFS: readonly SpokesDiff[] = ["easy", "tricky", "hard"];
 // The top tier is `Unreasonable` where upstream says `Hard`: its look-ahead has
@@ -163,7 +164,7 @@ export function validateParams(p: SpokesParams, full: boolean): string | null {
   // measured 2026-10-21, twelve deals a size, a 2x5 gave up on all twelve,
   // from 2x6 to 2x20 a board took 15 to 65 s, and a 2x25 gave up on seven.
   if (!full || p.diff !== "hard") return null;
-  const tier = DIFF_NAMES[DIFF_HARD] ?? "";
+  const tier = DIFF_NAMES[DIFF_UNREASONABLE] ?? "";
   if (p.w * p.h <= 8) return noSuchTier(`${p.w}x${p.h} puzzle`, tier);
   return null;
 }

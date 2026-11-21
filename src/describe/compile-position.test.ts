@@ -9,8 +9,7 @@ const game = (
   finish = "forall c in cells: value(c) = 0",
 ): PlanningJson => ({
   game: "toy",
-  name: "Toy",
-  family: "test",
+  produces: "test",
   sizes: { w: { min: 2, max: 4 }, h: { min: 2, max: 4 } },
   space: { grid: { w: "w", h: "h" }, units: [] },
   position: { value: { domain: "range(0, 1)" } },

@@ -84,14 +84,15 @@ export function sourceOf(file: DescriptionFile): Source | null {
 
 /** The sources a candidate is reported against by default: each library its
  * family's games place, and every other game of its family that states
- * techniques of its own. */
+ * techniques of its own. A family here is the games whose descriptions say
+ * they produce the same thing (`produces`). */
 export function familySources(
   candidate: DescriptionJson,
   files: readonly DescriptionFile[],
 ): Source[] {
   const family = files.filter(
     (f): f is DescriptionJson =>
-      isFormal(f) && f.family === candidate.family && f.game !== candidate.game,
+      isFormal(f) && f.produces === candidate.produces && f.game !== candidate.game,
   );
   const placed = new Set(
     [candidate, ...family].flatMap((f) =>

@@ -250,8 +250,6 @@ export const starbattleGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(starbattleGame);

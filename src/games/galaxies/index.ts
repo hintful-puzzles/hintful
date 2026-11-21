@@ -867,7 +867,7 @@ function solveFrom(start: GalaxiesState, clear: boolean): GalaxiesState | null {
   const b = cloneState(start);
   if (clear) clearForSolve(b);
   const diff = solverState(b, GalaxiesDiff.Unreasonable);
-  return diff === GalaxiesDiff.Normal || diff === GalaxiesDiff.Unreasonable ? b : null;
+  return diff === GalaxiesDiff.Easy || diff === GalaxiesDiff.Unreasonable ? b : null;
 }
 
 function solveGalaxies(
@@ -919,7 +919,7 @@ function findMistakes(s: GalaxiesState): readonly GalaxiesMistake[] {
   clearForSolve(sol);
   sol.dots = rebuildDots(sol);
   const diff = solverState(sol, GalaxiesDiff.Unreasonable);
-  if (diff !== GalaxiesDiff.Normal && diff !== GalaxiesDiff.Unreasonable) {
+  if (diff !== GalaxiesDiff.Easy && diff !== GalaxiesDiff.Unreasonable) {
     return [];
   }
   const mistakes: GalaxiesMistake[] = [];
@@ -1064,7 +1064,7 @@ const DIFF_NAMES = [...GALAXIES_TIERS, "Impossible", "Ambiguous", "Unfinished"];
 // --- params ---------------------------------------------------------
 
 function defaultParams(): GalaxiesParams {
-  return { w: 7, h: 7, diff: GalaxiesDiff.Normal };
+  return { w: 7, h: 7, diff: GalaxiesDiff.Easy };
 }
 
 const paramConfig: ParamConfigItem<GalaxiesParams>[] = [
@@ -1140,10 +1140,10 @@ export const galaxiesGame: Game<
 
   menu: {
     boards: [
-      { w: 7, h: 7, diff: GalaxiesDiff.Normal },
-      { w: 10, h: 10, diff: GalaxiesDiff.Normal },
+      { w: 7, h: 7, diff: GalaxiesDiff.Easy },
+      { w: 10, h: 10, diff: GalaxiesDiff.Easy },
       // Upstream's 15x15, made an upright board of about its area.
-      { w: 13, h: 17, diff: GalaxiesDiff.Normal },
+      { w: 13, h: 17, diff: GalaxiesDiff.Easy },
     ],
   },
 

@@ -34,8 +34,8 @@ import type { GridCursor } from "../../engine/input/pointer.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 
 // --- difficulty (upstream's DIFFLIST: Easy, Hard; named by the description) ---
-export const DIFF_EASY = 0;
-export const DIFF_HARD = 1;
+export const DIFF_EASY = slant.TIER.easy;
+export const DIFF_NORMAL = slant.TIER.normal;
 const DIFF_NAMES: readonly string[] = slant.tiers;
 const DIFF_CHARS = "eh"; // ENCODE chars, indexed by difficulty
 
@@ -125,7 +125,7 @@ export const menu: PresetBoards<SlantParams> = { boards: BOARDS };
 export const paramConfig: ParamConfigItem<SlantParams>[] = [
   ...dimensionParamConfig<SlantParams>({
     doc: "Size of the grid in squares.",
-    // A grid of width or height 1 can't reach `DIFF_HARD`, so upstream forbids it.
+    // A grid of width or height 1 can't reach `DIFF_NORMAL`, so upstream forbids it.
     bounds: { min: 2 },
   }),
   difficultyItem(DIFF_NAMES, "diff"),

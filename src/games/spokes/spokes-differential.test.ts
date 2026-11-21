@@ -23,7 +23,7 @@ import { spokesGame } from "./index.ts";
 import { spokesSolve } from "./solver.ts";
 import {
   DIFF_EASY,
-  DIFF_HARD,
+  DIFF_UNREASONABLE,
   diffFromLevel,
   newState,
   type SpokesParams,
@@ -57,7 +57,7 @@ describe("spokes frozen boards", () => {
   // is held to having one answer, which the top tier proves; an Easy board,
   // whose rungs are upstream's, to solving at Easy.
   for (const f of data.fixtures) {
-    const tier = f.diff === DIFF_EASY ? DIFF_EASY : DIFF_HARD;
+    const tier = f.diff === DIFF_EASY ? DIFF_EASY : DIFF_UNREASONABLE;
     it(`${label(f)} loads and solves`, () => {
       const p = params(f);
       expect(validateDesc(spokesGame, p, f.desc)).toBeNull();

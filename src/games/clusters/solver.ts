@@ -25,7 +25,7 @@ import {
   TIERS as SCALE,
 } from "../../engine/solve/ladder-runtime.ts";
 import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
-import { COLMASK, DIFF_TRICKY, F_COLOR_0, F_COLOR_1, F_SINGLE } from "./state.ts";
+import { COLMASK, DIFF_NORMAL, F_COLOR_0, F_COLOR_1, F_SINGLE } from "./state.ts";
 
 export const COMPLETE = 0;
 export const UNFINISHED = 1;
@@ -228,7 +228,7 @@ export function answerSearch(
   return searchAnswers<Uint8Array, Uint8Array>({
     start: givens.slice(),
     deduce: (grid) => {
-      const status = solveGame(grid, w, h, DIFF_TRICKY);
+      const status = solveGame(grid, w, h, DIFF_NORMAL);
       if (status === COMPLETE) return "solved";
       return status === INVALID ? "contradiction" : "stuck";
     },

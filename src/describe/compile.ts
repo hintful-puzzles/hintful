@@ -544,12 +544,20 @@ export function compileGame(
         ]),
     `/** The description's tiers, by name. */`,
     `export const tiers: readonly string[] = ${JSON.stringify(d.tiers)};`,
+    "",
+    "/** Each tier's index, by its name in lower case: the one way code names a",
+    " * tier, so a tier the description does not have is a type error. */",
+    `export const TIER: ${indexType(d.tiers)} = ${JSON.stringify(tierIndices(d.tiers, "tiers"))};`,
     ...(scales.length === 0
       ? []
       : [
           "",
           "/** Its other scales' tiers, by scale. */",
           `export const scales: Readonly<Record<string, readonly string[]>> = ${JSON.stringify(Object.fromEntries(scales))};`,
+          "",
+          "/** Each of its other scales' tiers' index, by scale and then by the",
+          " * tier's name in lower case, as {@link TIER} has the tiers'. */",
+          `export const SCALE: { ${scales.map(([n, ts]) => `readonly ${n}: ${indexType(ts)}`).join("; ")} } = ${JSON.stringify(Object.fromEntries(scales.map(([n, ts]) => [n, tierIndices(ts, n)])))};`,
         ]),
   ];
   const body = [
@@ -580,6 +588,27 @@ export function compileGame(
     "",
     body,
   ].join("\n")}\n`;
+}
+
+/** The type of {@link tierIndices}' record: its names fixed and its indices
+ * `number`, since a literal `0` would type a parameter defaulted to the
+ * easiest tier as accepting no other. */
+function indexType(names: readonly string[]): string {
+  return `{ ${names.map((n) => `readonly ${n.toLowerCase()}: number`).join("; ")} }`;
+}
+
+/** Each tier's index on `scale`, by its name in lower case, which is how code
+ * reads it. */
+function tierIndices(names: readonly string[], scale: string): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [i, name] of names.entries()) {
+    const key = name.toLowerCase();
+    if (!/^[a-z]+$/.test(key))
+      throw new CompileError(`${scale}: tier "${name}" is not one word of letters`);
+    if (key in out) throw new CompileError(`${scale}: two tiers are named "${name}"`);
+    out[key] = i;
+  }
+  return out;
 }
 
 /**

@@ -52,10 +52,10 @@ import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 // --- difficulty ------------------------------------------------------------
 
 /** Naked singles + hidden-single-in-region only. */
-export const DIFF_EASY = 0;
+export const DIFF_EASY = seismic.TIER.easy;
 /** Adds the trial-placement deduction. */
-export const DIFF_NORMAL = 1;
-export const DIFFCOUNT = 2;
+export const DIFF_NORMAL = seismic.TIER.normal;
+export const DIFFCOUNT = seismic.tiers.length;
 
 export const DIFF_NAMES: readonly string[] = seismic.tiers;
 /** The difficulty letters `encodeParams` writes and `decodeParams` reads. */

@@ -208,10 +208,10 @@ export function legalDirs(x: number, y: number, w: number, h: number): number {
 
 // --- difficulty -------------------------------------------------------------
 
-export const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_TRICKY = 2;
-export const DIFFCOUNT = 3;
+export const DIFF_EASY = rome.TIER.easy;
+export const DIFF_NORMAL = rome.TIER.normal;
+export const DIFF_TRICKY = rome.TIER.tricky;
+export const DIFFCOUNT = rome.tiers.length;
 
 /** Difficulty encode chars (upstream `rome_diffchars`), index = tier. */
 const DIFF_CHARS = "ent";

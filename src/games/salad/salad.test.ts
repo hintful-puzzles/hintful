@@ -47,7 +47,7 @@ import {
   CIRCLE,
   CROSS,
   DIFF_EASY,
-  DIFF_HARD,
+  DIFF_NORMAL,
   decodeParams,
   encodeParams,
   GAMEMODE_LETTERS,
@@ -104,7 +104,7 @@ function play(id: string): SaladMidend {
 describe("salad params codec", () => {
   it("round-trips every preset's shape at both difficulties", () => {
     for (const p of SHAPES) {
-      for (const diff of [DIFF_EASY, DIFF_HARD]) {
+      for (const diff of [DIFF_EASY, DIFF_NORMAL]) {
         const full = { ...p, diff };
         expect(decodeParams(encodeParams(full, true))).toEqual(full);
       }
@@ -116,7 +116,7 @@ describe("salad params codec", () => {
     expect(encodeParams(LETTERS.p, false)).toBe("4n3L");
     expect(
       encodeParams(
-        { order: 8, nums: 5, mode: GAMEMODE_NUMBERS, diff: DIFF_HARD },
+        { order: 8, nums: 5, mode: GAMEMODE_NUMBERS, diff: DIFF_NORMAL },
         true,
       ),
     ).toBe("8n5Bdx");
@@ -152,7 +152,7 @@ describe("salad params codec", () => {
     // A cross-game guard deals one preset per value of every field the presets
     // vary. A tier no preset holds is a tier none of them deals.
     const sliced = axisSlice(saladGame, leafPresets(saladGame));
-    expect(sliced.some((e) => e.params.diff === DIFF_HARD)).toBe(true);
+    expect(sliced.some((e) => e.params.diff === DIFF_NORMAL)).toBe(true);
     expect(sliced.some((e) => e.params.diff === DIFF_EASY)).toBe(true);
   });
 
@@ -281,7 +281,7 @@ describe("salad solver", () => {
       mode: GAMEMODE_NUMBERS,
       diff: DIFF_EASY,
     };
-    expect(saladSolve(scratchBoard(newState(p, "y")), DIFF_HARD)).toBe(false);
+    expect(saladSolve(scratchBoard(newState(p, "y")), DIFF_NORMAL)).toBe(false);
   });
 });
 
@@ -343,7 +343,7 @@ describe("salad generator", () => {
   const dealt = (p: SaladParams): boolean => paramsError(saladGame, p, true) === null;
 
   for (const preset of SHAPES) {
-    for (const diff of [DIFF_EASY, DIFF_HARD]) {
+    for (const diff of [DIFF_EASY, DIFF_NORMAL]) {
       const p = { ...preset, diff };
       if (!dealt(p)) continue;
       it(`generates a solvable ${describeParams(saladGame, p)}`, () => {
@@ -362,7 +362,7 @@ describe("salad generator", () => {
   // Normal (our Easy): 12 of its 13 frozen Extreme fixtures, and 71 of 80
   // freshly generated boards, fall to the Easy solver.
   for (const preset of SHAPES) {
-    const p = { ...preset, diff: DIFF_HARD };
+    const p = { ...preset, diff: DIFF_NORMAL };
     if (!dealt(p)) continue;
     it(`generates a ${describeParams(saladGame, p)} that Easy cannot solve`, () => {
       const { desc } = newSaladDesc(
@@ -370,7 +370,7 @@ describe("salad generator", () => {
         randomNew(`salad-tier-${p.order}-${p.nums}-${p.mode}`),
       );
       const s = newState(p, desc);
-      expect(saladSolve(scratchBoard(s), DIFF_HARD)).toBe(true);
+      expect(saladSolve(scratchBoard(s), DIFF_NORMAL)).toBe(true);
       expect(saladSolve(scratchBoard(s), DIFF_EASY)).toBe(false);
     });
   }
@@ -867,7 +867,7 @@ describe("salad presentation hooks", () => {
   });
 
   it("labels a custom game's params", () => {
-    expect(describeParams(saladGame, { ...NUMBERS.p, diff: DIFF_HARD })).toBe(
+    expect(describeParams(saladGame, { ...NUMBERS.p, diff: DIFF_NORMAL })).toBe(
       "Numbers: 5x5 1~3 Normal",
     );
   });

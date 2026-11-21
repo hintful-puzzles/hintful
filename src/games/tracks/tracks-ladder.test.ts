@@ -11,7 +11,7 @@ import { newDesc } from "./generator.ts";
 import { tracksSolve } from "./solver.ts";
 import {
   DIFF_EASY,
-  DIFF_HARD,
+  DIFF_NORMAL,
   DIFF_TRICKY,
   newState,
   stateToBoard,
@@ -22,9 +22,9 @@ import {
  * quickly. One params set per tier, since the tier is what gates the ladder. */
 const SHAPES: TracksParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY, singleOnes: true },
-  { w: 8, h: 8, diff: DIFF_TRICKY, singleOnes: true },
-  { w: 10, h: 8, diff: DIFF_TRICKY, singleOnes: true },
-  { w: 10, h: 10, diff: DIFF_HARD, singleOnes: true },
+  { w: 8, h: 8, diff: DIFF_NORMAL, singleOnes: true },
+  { w: 10, h: 8, diff: DIFF_NORMAL, singleOnes: true },
+  { w: 10, h: 10, diff: DIFF_TRICKY, singleOnes: true },
 ];
 
 const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e"];
@@ -36,7 +36,7 @@ const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d", "lad-e"];
 const FINISHES_EARLY: TracksParams = {
   w: 5,
   h: 4,
-  diff: DIFF_TRICKY,
+  diff: DIFF_NORMAL,
   singleOnes: true,
 };
 const FINISHES_EARLY_DESC = "j5d9d,S2,3,3,3,3,3,3,S4,4";
@@ -66,7 +66,7 @@ describeLadderCensus({
   game: "tracks",
   rungs: [...tracks.ladder.map((e) => e.id)],
   unreached: {},
-  caps: [DIFF_EASY, DIFF_TRICKY, DIFF_HARD],
+  caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
   cases,
   solve: ({ params, desc }, cap, firings) =>
     tracksSolve(stateToBoard(newState(params, desc)), cap, firings),

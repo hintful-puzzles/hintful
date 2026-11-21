@@ -120,7 +120,7 @@ import {
   type Cages,
   cagesOf,
   cloneState,
-  DIFF_EXTREME,
+  DIFF_HARD,
   DIFF_UNREASONABLE,
   decodeParams,
   defaultParams,
@@ -427,7 +427,7 @@ function buildSteps(
     keenLadder(cages),
     w,
     wGrid,
-    Math.min(diffToLevel(state.params.diff), DIFF_EXTREME),
+    Math.min(diffToLevel(state.params.diff), DIFF_HARD),
   );
   type Rung = CandidateRung<KeenMove, KeenHint, HintReason>;
   const cageRung = (id: "cageEasy" | "cage" | "cageLine"): Rung =>
@@ -555,8 +555,6 @@ export const keenGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(keenGame);

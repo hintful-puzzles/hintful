@@ -3,7 +3,7 @@
  * corpus reaches. The harness and the argument for it are
  * `engine/testing/ladder-census.ts`; this file is the declaration.
  *
- * **The census solves at `Normal`, so it stops at the ladder.** The search
+ * **The census solves at `Easy`, so it stops at the ladder.** The search
  * beneath it, at `Unreasonable`, takes no tally.
  */
 import { randomNew } from "../../engine/random/index.ts";
@@ -25,13 +25,13 @@ interface Shape {
 }
 
 const SHAPES: Shape[] = [
-  { w: 5, h: 5, diff: GalaxiesDiff.Normal },
-  { w: 7, h: 7, diff: GalaxiesDiff.Normal },
+  { w: 5, h: 5, diff: GalaxiesDiff.Easy },
+  { w: 7, h: 7, diff: GalaxiesDiff.Easy },
   { w: 7, h: 7, diff: GalaxiesDiff.Unreasonable },
-  { w: 9, h: 9, diff: GalaxiesDiff.Normal },
+  { w: 9, h: 9, diff: GalaxiesDiff.Easy },
   // A square walled in with one galaxy is rare in the ladder's order: the
   // seeds of the shapes above meet none (2026-11-07).
-  { w: 10, h: 10, diff: GalaxiesDiff.Normal },
+  { w: 10, h: 10, diff: GalaxiesDiff.Easy },
 ];
 
 const SEEDS = ["lad-a", "lad-b", "lad-c"];
@@ -59,9 +59,9 @@ describeLadderCensus<GalaxiesState>({
   game: "galaxies",
   rungs: [...GALAXIES_RUNGS],
   unreached: UNREACHED,
-  // Every rung is `GalaxiesDiff.Normal`, so there is a single cap to walk. The
+  // Every rung is `GalaxiesDiff.Easy`, so there is a single cap to walk. The
   // enum's other values are verdicts, not harder tiers.
-  caps: [GalaxiesDiff.Normal],
+  caps: [GalaxiesDiff.Easy],
   cases,
   solve: (base, cap, firings) => {
     // Clear the player-side associations so the ladder starts from the dots

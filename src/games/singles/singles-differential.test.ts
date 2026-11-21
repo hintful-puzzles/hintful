@@ -17,7 +17,7 @@ import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/singles-c-reference.json" with { type: "json" };
 import { newSinglesDesc } from "./generator.ts";
 import { solveSpecific } from "./solver.ts";
-import { DIFF_TRICKY, diffFromLevel, newState, type SinglesParams } from "./state.ts";
+import { DIFF_NORMAL, diffFromLevel, newState, type SinglesParams } from "./state.ts";
 
 interface Fixture {
   seed: string;
@@ -53,7 +53,7 @@ describe("Singles C-vs-TS differential — solver agreement (gated)", () => {
     it(`${label(f)}: TS solver solves the C board at the recorded difficulty`, () => {
       const s = newState(p, f.desc);
       expect(solveSpecific(s, f.solverDiff)).toBe(1);
-      if (f.solverDiff >= DIFF_TRICKY) {
+      if (f.solverDiff >= DIFF_NORMAL) {
         const s2 = newState(p, f.desc);
         // One level below (Easy), it should NOT solve.
         expect(solveSpecific(s2, f.solverDiff - 1)).not.toBe(1);

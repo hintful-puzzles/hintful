@@ -24,11 +24,11 @@ import type { MapData } from "./map-data.ts";
 
 // --- difficulty ------------------------------------------------------
 
-const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_HARD = 2;
-export const DIFF_RECURSE = 3;
-export const DIFFCOUNT = 4;
+const DIFF_EASY = map.TIER.easy;
+export const DIFF_NORMAL = map.TIER.normal;
+export const DIFF_TRICKY = map.TIER.tricky; // upstream's DIFF_HARD
+export const DIFF_UNREASONABLE = map.TIER.unreasonable; // upstream's DIFF_RECURSE
+export const DIFFCOUNT = map.tiers.length;
 
 export const DIFF_NAMES: readonly string[] = map.tiers;
 /** Upstream `map_diffchars`. */

@@ -31,8 +31,7 @@ help:
 
     Follow it or go your own way: when you make a different slide, the next
     hint plans again from there.
-name: Fifteen
-family: tiles in order
+produces: tiles in order
 sizes:
   # The game bounds neither side above; 99 stands for no bound.
   w: { min: 2, max: 99 }

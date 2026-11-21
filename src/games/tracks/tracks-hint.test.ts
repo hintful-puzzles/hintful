@@ -38,7 +38,7 @@ import { tracksSolve } from "./solver.ts";
 import {
   type Board,
   DIFF_EASY,
-  DIFF_HARD,
+  DIFF_NORMAL,
   DIFF_TRICKY,
   E_TRACK,
   inGrid,
@@ -54,8 +54,8 @@ import {
 
 const SHAPES: TracksParams[] = [
   { w: 8, h: 8, diff: DIFF_EASY, singleOnes: true },
-  { w: 8, h: 8, diff: DIFF_TRICKY, singleOnes: true },
-  { w: 10, h: 10, diff: DIFF_HARD, singleOnes: true },
+  { w: 8, h: 8, diff: DIFF_NORMAL, singleOnes: true },
+  { w: 10, h: 10, diff: DIFF_TRICKY, singleOnes: true },
 ];
 const SEEDS = ["hint-a", "hint-b", "hint-c"];
 
@@ -176,7 +176,7 @@ describe("what the plan hides is exactly what the board already says", () => {
       const { desc } = tracksGame.newDesc(params, randomNew(`reported-${s}`));
       const fresh = tracksGame.newState(params, desc);
       const solution = stateToBoard(fresh);
-      if (tracksSolve(solution, DIFF_HARD).ret !== 1) continue;
+      if (tracksSolve(solution, DIFF_TRICKY).ret !== 1) continue;
       const b = stateToBoard(fresh);
       const ax = 0;
       const ay = b.rowS;

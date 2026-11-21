@@ -20,7 +20,7 @@ import { solveMagnets } from "./solver.ts";
 import {
   DIFF_COUNT,
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   decodeParams,
   encodeParams,
   GS_SET,
@@ -34,7 +34,7 @@ import {
 const P = (
   w: number,
   h: number,
-  diff = DIFF_TRICKY,
+  diff = DIFF_NORMAL,
   stripclues = false,
 ): MagnetsParams => ({ w, h, diff, stripclues });
 
@@ -46,21 +46,21 @@ describeDealtTiers(magnetsGame, ["3x5dt", "3x7dt", "7x3dt"]);
 
 describe("magnets params", () => {
   it("round-trips full encode/decode", () => {
-    for (const p of [P(6, 5, DIFF_EASY), P(10, 9, DIFF_TRICKY, true), P(8, 7)]) {
+    for (const p of [P(6, 5, DIFF_EASY), P(10, 9, DIFF_NORMAL, true), P(8, 7)]) {
       const enc = encodeParams(p, true);
       expect(decodeParams(enc)).toEqual(p);
     }
   });
 
   it("encodes 10x9 Normal strip-clues as 10x9dtS", () => {
-    expect(encodeParams(P(10, 9, DIFF_TRICKY, true), true)).toBe("10x9dtS");
+    expect(encodeParams(P(10, 9, DIFF_NORMAL, true), true)).toBe("10x9dtS");
   });
 
   it("rejects a 4x4 Normal board (needs a side >= 5)", () => {
-    expect(paramsError(magnetsGame, P(4, 4, DIFF_TRICKY), true)).not.toBeNull();
-    expect(paramsError(magnetsGame, P(5, 4, DIFF_TRICKY), true)).toBeNull();
+    expect(paramsError(magnetsGame, P(4, 4, DIFF_NORMAL), true)).not.toBeNull();
+    expect(paramsError(magnetsGame, P(5, 4, DIFF_NORMAL), true)).toBeNull();
     // Generation only: a 4x4 board that arrives written is graded as it loads.
-    expect(paramsError(magnetsGame, P(4, 4, DIFF_TRICKY), false)).toBeNull();
+    expect(paramsError(magnetsGame, P(4, 4, DIFF_NORMAL), false)).toBeNull();
   });
 
   it("bounds each side by what one clue character can count", () => {
@@ -128,7 +128,7 @@ describe("magnets desc codec", () => {
 
 describe("magnets generator + solver", () => {
   it("generates uniquely solvable boards at the requested difficulty", () => {
-    for (const p of [P(6, 5, DIFF_EASY), P(6, 5, DIFF_TRICKY), P(8, 7, DIFF_TRICKY)]) {
+    for (const p of [P(6, 5, DIFF_EASY), P(6, 5, DIFF_NORMAL), P(8, 7, DIFF_NORMAL)]) {
       const { desc, aux } = newMagnetsDesc(p, randomNew(`gen-${p.w}x${p.h}-${p.diff}`));
       const s = newState(p, desc);
       const solver = solveMagnets(s.w, s.h, s.common, DIFF_COUNT);
@@ -143,7 +143,7 @@ describe("magnets generator + solver", () => {
   });
 
   it("a Normal board is not solvable at Easy", () => {
-    const p = P(8, 7, DIFF_TRICKY);
+    const p = P(8, 7, DIFF_NORMAL);
     const { desc } = newMagnetsDesc(p, randomNew("tricky-not-easy"));
     const s = newState(p, desc);
     const easy = solveMagnets(s.w, s.h, s.common, DIFF_EASY);

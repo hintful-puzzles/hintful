@@ -43,7 +43,7 @@ import {
   redraw,
 } from "../../engine/edge-clue-latin/render.ts";
 import {
-  DIFF_EXTREME,
+  DIFF_HARD,
   diffToLevel,
   displayChar,
   type EdgeClueMove,
@@ -152,7 +152,7 @@ function buildSteps(
     BARS.ladder(o, state.clueFlags),
     o,
     wGrid,
-    Math.min(diffToLevel(state.diff), DIFF_EXTREME),
+    Math.min(diffToLevel(state.diff), DIFF_HARD),
   );
   /** A bar firing strikes in one cell, toward one neighbor: one leg, its
    * premise the wording the description states for the firing. */
@@ -320,8 +320,6 @@ export const adjacentGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(adjacentGame);

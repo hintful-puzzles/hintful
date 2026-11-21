@@ -10,11 +10,10 @@
  * mark) with a half-grid keyboard cursor.
  */
 
-import type { Game, UiUpdate } from "../../engine/contract/game.ts";
-import type { Point } from "../../engine/contract/types.ts";
+import type { Game } from "../../engine/contract/game.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { interpretTargetVerbs } from "../../engine/input/target-verb.ts";
+import { playedByTargetVerbs } from "../../engine/input/target-verb.ts";
 import {
   BORDER,
   BORDER_MASK,
@@ -82,16 +81,6 @@ const targetVerbs = borderGridVerbs<
   SeparateMove
 >((edits) => ({ type: "edges", edits }));
 
-function interpretMove(
-  state: SeparateState,
-  ui: SeparateUi,
-  ds: SeparateDrawState,
-  p: Point,
-  rawButton: number,
-): SeparateMove | null | UiUpdate {
-  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
-}
-
 // --- mistakes --------------------------------------------------------------
 
 /** Every edge the player has decided against the board's one answer, which
@@ -143,8 +132,7 @@ export const separateGame: Game<
   newState,
   newUi,
 
-  targetVerbs,
-  interpretMove,
+  ...playedByTargetVerbs(targetVerbs),
   executeMove,
   status,
 
@@ -199,8 +187,6 @@ export const separateGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(separateGame);

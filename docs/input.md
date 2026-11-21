@@ -24,7 +24,10 @@ already; a copy changes the verbs and keeps the shape.
 3. Declare the input as `targetVerbs`: a geometry (`squareGrid`), a `primary`
    and a `secondary` verb, each key-only verb with its `pointer` route, and a
    `sweep` where a mark is wanted on several squares (§ "Targets and verbs").
-4. Set `Game.targetVerbs` and end `interpretMove` with
+4. Where the verbs are all the input, spread
+   `...playedByTargetVerbs(targetVerbs)` into the `Game` literal, which sets
+   `targetVerbs` and an `interpretMove` together. Otherwise set
+   `Game.targetVerbs` and end `interpretMove` with
    `interpretTargetVerbs(targetVerbs, …)`. Input beyond the verbs is an arm
    above that line, which tests that the button is a pointer button before it
    reads a position, and answers `null` for a button it did not act on

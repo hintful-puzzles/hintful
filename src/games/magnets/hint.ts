@@ -50,7 +50,7 @@ import {
 import { type Axis, type Cause, type LineMarks, type RuleOut, say } from "./speak.ts";
 import {
   clueIndex,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   executeMove,
   GS_NOTNEUTRAL,
   GS_SET,
@@ -233,7 +233,7 @@ export function walkFirings(
   if (walked === null) throw new Error("magnets hint: the board's marks clash");
   const { marks: m, entries, ctx } = walked;
   m.budget = budget;
-  const walk = ladderWalk(m, entries, { [TIERS]: DIFF_TRICKY }, (taken) => [
+  const walk = ladderWalk(m, entries, { [TIERS]: DIFF_NORMAL }, (taken) => [
     ...spokenOf<{ marks: { reads: readonly number[] } }>(taken).says.marks.reads,
   ]);
   return () => {
@@ -865,7 +865,7 @@ export const { plan: magnetsHint, judgeMove: magnetsJudgeMove } = describedEdgeH
   name: "magnets hint",
   walk: magnetsWalk,
   settle: noteBoard,
-  tiers: { lowest: () => DIFF_TRICKY, count: DIFF_TRICKY + 1 },
+  tiers: { lowest: () => DIFF_NORMAL, count: DIFF_NORMAL + 1 },
   done: (m) => !m.grid.includes(0),
   step: stepOf,
   say: sentence,

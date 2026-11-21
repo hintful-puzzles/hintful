@@ -63,8 +63,7 @@ help:
     numbers settles no square either, and the hint says that nothing further
     follows by deduction instead of choosing for you. Save your position and try a square beside a number with few
     squares left. The hint carries on from whatever you mark.
-name: Mosaic
-family: shading
+produces: shading
 sizes:
   # At most 10,000 squares.
   w: { min: 3, max: 3333 }

@@ -69,11 +69,10 @@ help:
     * On harder boards: **wherever a row's tents go**, some squares in the
       rows beside it are always touched by one of them, so they must be
       grass.
-name: Tents
-family: shading
+produces: shading
 sizes:
-  w: { min: 4, max: 99999 }
-  h: { min: 4, max: 99999 }
+  w: { min: 4 }
+  h: { min: 4 }
 space:
   grid: { w: "w", h: "h" }
   units: []

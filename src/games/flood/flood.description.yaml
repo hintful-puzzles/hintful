@@ -20,8 +20,7 @@ help:
     the same planner playing from the start, plus the extra moves the game
     allows, so following the hint from the first move finishes in time.
 
-name: Flood
-family: position
+produces: position
 sizes:
   # A board of any size its desc gives; 99 stands for no bound.
   w: { min: 1, max: 99 }

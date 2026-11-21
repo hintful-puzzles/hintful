@@ -409,8 +409,6 @@ export const abcdGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(abcdGame);

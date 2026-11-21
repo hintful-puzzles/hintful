@@ -51,8 +51,7 @@ help:
 
     **Check & save** asks the hint the same thing, and won't save a position
     it would ask you to undo from.
-name: Inertia
-family: position
+produces: position
 sizes:
   # The game deals six squares at the least; 99 stands for no bound.
   w: { min: 2, max: 99 }

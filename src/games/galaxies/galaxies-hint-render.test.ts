@@ -34,7 +34,7 @@ const lit = (step: HintStep<GalaxiesMove, GalaxiesHint>): GalaxiesHint => {
  * position whose hint opens with one. */
 const pinned = describeHintKindPins({
   game: galaxiesGame,
-  params: [{ w: 7, h: 7, diff: GalaxiesDiff.Normal }],
+  params: [{ w: 7, h: 7, diff: GalaxiesDiff.Easy }],
   kinds: {
     // A `focus` is what marks a deduction about *one* cell, whose dot is
     // therefore somewhere else and gets a ring.

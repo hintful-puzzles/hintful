@@ -42,7 +42,7 @@ import {
   redraw,
 } from "../../engine/edge-clue-latin/render.ts";
 import {
-  DIFF_EXTREME,
+  DIFF_HARD,
   diffToLevel,
   displayChar,
   type EdgeClueMove,
@@ -186,7 +186,7 @@ function buildSteps(
     SIGNS.ladder(o, state.clueFlags),
     o,
     wGrid,
-    Math.min(diffToLevel(state.diff), DIFF_EXTREME),
+    Math.min(diffToLevel(state.diff), DIFF_HARD),
   );
   type Rung = CandidateRung<EdgeClueMove, EdgeClueHint, HintReason>;
   const sign: Rung = techniqueRung(on, "sign", (f) => signLegs(f, o));
@@ -331,8 +331,6 @@ export const unequalGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(unequalGame);

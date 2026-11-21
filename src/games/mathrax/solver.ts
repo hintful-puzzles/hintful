@@ -31,7 +31,7 @@ import {
   latinSolver,
 } from "../../engine/solve/latin.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
-import { DIFF_RECURSIVE, dealtOf } from "./state.ts";
+import { DIFF_UNREASONABLE, dealtOf } from "./state.ts";
 
 /** Solver verdicts, upstream `mathrax_solve`'s return codes. */
 export const SOLVE_IMPOSSIBLE = -1;
@@ -82,7 +82,7 @@ export function mathraxSolve(
   const dl = dealtOf(clues);
   const diff = latinSolver(grid, o, {
     maxdiff,
-    diffRecursive: DIFF_RECURSIVE,
+    diffRecursive: DIFF_UNREASONABLE,
     isAnswer: (g) => mathrax.isAnswer(g, latinSpace(o), dl),
     ladder: latinLadder(mathrax, dl),
   });

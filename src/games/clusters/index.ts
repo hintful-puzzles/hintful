@@ -391,8 +391,6 @@ export const clustersGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(clustersGame);

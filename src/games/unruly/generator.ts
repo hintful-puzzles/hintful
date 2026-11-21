@@ -9,7 +9,7 @@
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { type Cell, DIFF_TRIVIAL, EMPTY, ONE, ZERO } from "./constants.ts";
+import { type Cell, DIFF_EASY, EMPTY, ONE, ZERO } from "./constants.ts";
 import { type GridView, isComplete, solveCopy, solveGame } from "./solver.ts";
 import { encodeGrid, type UnrulyParams } from "./state.ts";
 
@@ -68,7 +68,7 @@ export function newDesc(p: UnrulyParams, rng: RandomState): { desc: string } {
 
     // Too-easy gate: reject a board the next tier down already finishes, so
     // the target technique is genuinely needed. The first tier has none below.
-    if (p.diff > DIFF_TRIVIAL && solvableAt(view, grid, p.diff - 1)) continue;
+    if (p.diff > DIFF_EASY && solvableAt(view, grid, p.diff - 1)) continue;
 
     return { desc: encodeGrid(grid, s) };
   }

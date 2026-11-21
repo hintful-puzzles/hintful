@@ -443,8 +443,6 @@ export const bricksGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(bricksGame);

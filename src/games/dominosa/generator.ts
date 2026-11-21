@@ -16,7 +16,7 @@ import { dealsAt } from "./solver.ts";
 import {
   boardSize,
   DCOUNT,
-  DIFF_HARD,
+  DIFF_TRICKY,
   DINDEX,
   type DominosaParams,
   type DominosaShape,
@@ -293,7 +293,7 @@ export function newDominosaDesc(
     as.makeLayout(rng);
 
     // Tricky and up are numbered to leave no easy toehold.
-    if (!(diff < DIFF_HARD ? as.tryUnique(rng) : as.tryHard(rng))) continue;
+    if (!(diff < DIFF_TRICKY ? as.tryUnique(rng) : as.tryHard(rng))) continue;
     // Unreasonable's search is held to the budget a deal affords.
     if (dealsAt(p, as.numbers, diff, DEALING_BUDGET)) break;
   }

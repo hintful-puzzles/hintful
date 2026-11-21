@@ -4,7 +4,6 @@ import type {
   HintResult,
   HintStep,
   HintTrackVerdict,
-  UiUpdate,
 } from "../../engine/contract/game.ts";
 import { GAME_OVER, NO_MOVE_WORTH_MAKING } from "../../engine/contract/hint-refusal.ts";
 import { CELL } from "../../engine/contract/hint-words.ts";
@@ -17,7 +16,7 @@ import {
 } from "../../engine/game-id/params.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
-  interpretTargetVerbs,
+  playedByTargetVerbs,
   squareGrid,
   type TargetVerbs,
   verbGesture,
@@ -105,16 +104,6 @@ const targetVerbs: TargetVerbs<FloodState, FloodUi, FloodDrawState, Point, Flood
       apply: fillWith,
     },
   };
-
-function interpretMove(
-  state: FloodState,
-  ui: FloodUi,
-  ds: FloodDrawState,
-  p: Point,
-  button: number,
-): FloodMove | null | UiUpdate {
-  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, button);
-}
 
 // --- status bar -------------------------------------------------------
 
@@ -245,8 +234,7 @@ export const floodGame: Game<
   newState,
   newUi,
 
-  targetVerbs,
-  interpretMove,
+  ...playedByTargetVerbs(targetVerbs),
   executeMove,
   finishesByDeduction: nothingToDeduce,
   status,
@@ -296,7 +284,6 @@ export const floodGame: Game<
   newDrawState,
   redraw,
 
-  animLength: () => 0,
   flashLength,
 };
 

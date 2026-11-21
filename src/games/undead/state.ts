@@ -34,9 +34,10 @@ import * as undead from "../../generated/games/undead/undead.compiled.ts";
 
 export type Difficulty = "easy" | "normal" | "tricky";
 
-export const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_TRICKY = 2;
+/** Upstream's Easy, Normal and Tricky, named by the description. */
+export const DIFF_EASY = undead.TIER.easy;
+export const DIFF_NORMAL = undead.TIER.normal;
+export const DIFF_UNREASONABLE = undead.TIER.unreasonable;
 
 // Upstream's `undead_diffchars`, indexed by level: game IDs and saves carry
 // these letters.

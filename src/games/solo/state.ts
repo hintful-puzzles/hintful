@@ -44,14 +44,14 @@ import * as solo from "../../generated/games/solo/solo.compiled.ts";
 // --- difficulty (standard axis) --------------------------------------------
 // DIFF_AMBIGUOUS and DIFF_IMPOSSIBLE are solver verdicts, not params.
 
-export const DIFF_BLOCK = 0; // "Easy"
-export const DIFF_SIMPLE = 1; // "Normal"
-export const DIFF_INTERSECT = 2; // "Tricky"
-export const DIFF_SET = 3; // "Hard"
-export const DIFF_EXTREME = 4; // "Extreme"
-export const DIFF_RECURSIVE = 5; // "Unreasonable"
-export const DIFF_AMBIGUOUS = 6;
-export const DIFF_IMPOSSIBLE = 7;
+export const DIFF_EASY = solo.TIER.easy; // upstream's DIFF_BLOCK
+export const DIFF_NORMAL = solo.TIER.normal; // upstream's DIFF_SIMPLE
+export const DIFF_TRICKY = solo.TIER.tricky; // upstream's DIFF_INTERSECT
+export const DIFF_HARD = solo.TIER.hard; // upstream's DIFF_SET
+export const DIFF_EXTREME = solo.TIER.extreme;
+export const DIFF_UNREASONABLE = solo.TIER.unreasonable; // upstream's DIFF_RECURSIVE
+export const DIFF_AMBIGUOUS = solo.tiers.length;
+export const DIFF_IMPOSSIBLE = solo.tiers.length + 1;
 export const DIFF_NAMES = solo.tiers;
 
 /** `solo_diffchars`: the public encoding writes a tier as `d<char>`. */
@@ -61,9 +61,9 @@ const DIFF_CHARS = "tbiaeu";
 // kdiff is fixed per preset, so it has neither a param encoding nor display
 // names. The values are the tiers of the description's `killer` scale.
 
-export const DIFF_KSINGLE = 0;
-export const DIFF_KMINMAX = 1;
-export const DIFF_KINTERSECT = 3;
+export const DIFF_KSINGLE = solo.SCALE.killer.single;
+export const DIFF_KMINMAX = solo.SCALE.killer.minmax;
+export const DIFF_KREGION = solo.SCALE.killer.region; // upstream's DIFF_KINTERSECT
 
 // --- symmetry --------------------------------------------------------------
 
@@ -168,8 +168,8 @@ export function defaultParams(): SoloParams {
     c: 3,
     r: 3,
     symm: SYMM_ROT2,
-    diff: DIFF_BLOCK,
-    kdiff: DIFF_KINTERSECT,
+    diff: DIFF_EASY,
+    kdiff: DIFF_KREGION,
     xtype: false,
     killer: false,
   };
@@ -194,7 +194,7 @@ export function encodeParams(p: SoloParams, full: boolean): string {
   if (full) {
     str += SYMM_CODES[p.symm] ?? "";
     // The default tier, `dt`, is omitted.
-    if (p.diff !== DIFF_BLOCK && DIFF_CHARS[p.diff]) str += `d${DIFF_CHARS[p.diff]}`;
+    if (p.diff !== DIFF_EASY && DIFF_CHARS[p.diff]) str += `d${DIFF_CHARS[p.diff]}`;
   }
   return str;
 }
@@ -270,14 +270,14 @@ export function validateParams(p: SoloParams, full: boolean): string | null {
   // Measured 2026-10-05 with no other rule on: none in 250,000 boards built at
   // Normal, at Tricky and at Unreasonable, on each of the three grids.
   const tiny = (p.c === 2 && p.r === 2) || (p.r === 1 && p.c < 4);
-  if (full && tiny && p.diff > DIFF_BLOCK) {
+  if (full && tiny && p.diff > DIFF_EASY) {
     const size = p.r === 1 ? `${p.c} Jigsaw` : `${p.c}x${p.r}`;
     return noSuchTier(`${size} puzzle`, DIFF_NAMES[p.diff]);
   }
   // Measured 2026-10-06, with the diagonals and without: none in 220,000 to
   // 370,000 boards built at each tier above Tricky, which is found once in
   // 950. A 5 Jigsaw has every tier. Killer cages were not counted.
-  if (full && p.r === 1 && p.c === 4 && !p.killer && p.diff > DIFF_INTERSECT)
+  if (full && p.r === 1 && p.c === 4 && !p.killer && p.diff > DIFF_TRICKY)
     return noSuchTier("4 Jigsaw puzzle", DIFF_NAMES[p.diff]);
   // Measured 2026-10-06: none in 4,850,000 boards built. A 3 Jigsaw and a 2x2
   // with Killer cages deal at once.

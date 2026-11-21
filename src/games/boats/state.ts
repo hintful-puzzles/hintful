@@ -32,10 +32,10 @@ import * as boats from "../../generated/games/boats/boats.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 
-export const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_TRICKY = 2;
-export const DIFF_HARD = 3;
+export const DIFF_EASY = boats.TIER.easy;
+export const DIFF_NORMAL = boats.TIER.normal;
+export const DIFF_TRICKY = boats.TIER.tricky;
+export const DIFF_HARD = boats.TIER.hard;
 export const DIFFCOUNT = 4;
 
 export const DIFF_NAMES: readonly string[] = boats.tiers;

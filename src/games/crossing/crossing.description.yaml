@@ -52,12 +52,11 @@ help:
     another square, and the hint says that nothing further follows by deduction
     instead of choosing for you. Save your position and try a digit in a square
     with few left. The hint carries on from whatever you enter.
-name: Crossing
-family: numbers
+produces: numbers
 sizes:
   # One side at least 4; unbounded but by the time a board takes to deal.
-  w: { min: 1, max: 99999 }
-  h: { min: 1, max: 99999 }
+  w: { min: 1 }
+  h: { min: 1 }
 space:
   grid: { w: "w", h: "h" }
   # A digit may repeat anywhere: the numbers say what a run holds.

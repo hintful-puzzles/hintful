@@ -51,10 +51,10 @@ import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 
 // --- difficulty (upstream's Easy, Tricky, Hard; named by the description) ---
-export const DIFF_EASY = 0;
-export const DIFF_TRICKY = 1;
-export const DIFF_HARD = 2;
-export const DIFF_COUNT = 3;
+export const DIFF_EASY = tracks.TIER.easy;
+export const DIFF_NORMAL = tracks.TIER.normal;
+export const DIFF_TRICKY = tracks.TIER.tricky;
+export const DIFF_COUNT = tracks.tiers.length;
 const DIFF_NAMES: readonly string[] = tracks.tiers;
 const DIFF_CHARS = "eth"; // ENCODE chars, indexed by difficulty
 
@@ -249,11 +249,11 @@ export const menu: PresetBoards<TracksParams> = {
     [10, 15],
     [15, 15],
   ].map(([w, h]) => ({ w, h, diff: DIFF_EASY, singleOnes: true })),
-  tiers: ({ w, h }) => (w === h && w >= 10 ? null : [DIFF_EASY, DIFF_TRICKY]),
+  tiers: ({ w, h }) => (w === h && w >= 10 ? null : [DIFF_EASY, DIFF_NORMAL]),
 };
 
 export function defaultParams(): TracksParams {
-  return { w: 8, h: 8, diff: DIFF_TRICKY, singleOnes: true };
+  return { w: 8, h: 8, diff: DIFF_NORMAL, singleOnes: true };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */

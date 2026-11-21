@@ -1005,8 +1005,6 @@ export const undeadGame: Game<
   computeSize: (p: UndeadParams, ts: number): Size => computeSize(p, ts),
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(undeadGame);

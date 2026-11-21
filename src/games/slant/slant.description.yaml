@@ -50,8 +50,7 @@ help:
     same way, it puts the mark down first, as a step of its own that says why.
 
     {{hint-marks}}
-name: Slant
-family: lines
+produces: lines
 sizes:
   # Nothing in the game bounds a side but the time a deal takes. A board one
   # square wide reaches no Normal board, so upstream refuses it.

@@ -87,6 +87,10 @@ export const NAMES = {"dup":"a placed number's row and column","single":"the onl
 /** The description's tiers, by name. */
 export const tiers: readonly string[] = ["Easy","Normal","Tricky","Hard","Unreasonable"];
 
+/** Each tier's index, by its name in lower case: the one way code names a
+ * tier, so a tier the description does not have is a type error. */
+export const TIER: { readonly easy: number; readonly normal: number; readonly tricky: number; readonly hard: number; readonly unreasonable: number } = {"easy":0,"normal":1,"tricky":2,"hard":3,"unreasonable":4};
+
 /** Whether `g`, a value a cell and 0 where it has none, is an answer to the
  * board: every cell a value of its domain, and every rule and dealt clue
  * true of it, a variation's rules where `variations` has it on. */

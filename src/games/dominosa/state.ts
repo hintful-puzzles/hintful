@@ -55,11 +55,11 @@ export const EDGE_B = 0x800;
 
 // --- difficulty -------------------------------------------------------------
 
-export const DIFF_TRIVIAL = 0;
-export const DIFF_BASIC = 1;
-export const DIFF_HARD = 2;
-export const DIFF_EXTREME = 3;
-export const DIFFCOUNT = 4;
+export const DIFF_EASY = dominosa.TIER.easy; // upstream's DIFF_TRIVIAL
+export const DIFF_NORMAL = dominosa.TIER.normal; // upstream's DIFF_BASIC
+export const DIFF_TRICKY = dominosa.TIER.tricky; // upstream's DIFF_HARD
+export const DIFF_UNREASONABLE = dominosa.TIER.unreasonable; // upstream's DIFF_EXTREME
+export const DIFFCOUNT = dominosa.tiers.length;
 
 /**
  * Tier names in enum order.
@@ -99,16 +99,16 @@ export function boardSize({ n, tall }: DominosaShape): { w: number; h: number } 
 }
 
 export function defaultParams(): DominosaParams {
-  return { n: 6, diff: DIFF_BASIC, tall: true };
+  return { n: 6, diff: DIFF_NORMAL, tall: true };
 }
 
 /** Upstream's twelve. Order 6 is the one size at every tier. */
 export const menu: PresetBoards<DominosaParams> = {
-  boards: [3, 4, 5, 6, 7, 8, 9].map((n) => ({ n, diff: DIFF_TRIVIAL, tall: true })),
+  boards: [3, 4, 5, 6, 7, 8, 9].map((n) => ({ n, diff: DIFF_EASY, tall: true })),
   tiers: ({ n }) => {
     if (n === 6) return null;
-    if (n === 3) return [DIFF_TRIVIAL, DIFF_TRIVIAL];
-    return n < 6 ? [DIFF_TRIVIAL, DIFF_BASIC] : [DIFF_BASIC, DIFF_BASIC];
+    if (n === 3) return [DIFF_EASY, DIFF_EASY];
+    return n < 6 ? [DIFF_EASY, DIFF_NORMAL] : [DIFF_NORMAL, DIFF_NORMAL];
   },
 };
 
@@ -122,7 +122,7 @@ export function decodeParams(str: string): DominosaParams {
   const { value, next } = parseLeadingInt(str, 0);
   const n = next > 0 ? value : 6;
   let i = next;
-  let diff = DIFF_BASIC;
+  let diff = DIFF_NORMAL;
   let tall = false;
   while (i < str.length) {
     const c = str[i++];
@@ -144,7 +144,7 @@ export function decodeParams(str: string): DominosaParams {
 export function validateParams(p: DominosaParams, full: boolean): string | null {
   // Measured 2026-10-05: none in a million boards built at each tier above
   // these two sets' highest.
-  const highest = p.n === 1 ? DIFF_TRIVIAL : p.n === 2 ? DIFF_BASIC : p.diff;
+  const highest = p.n === 1 ? DIFF_EASY : p.n === 2 ? DIFF_NORMAL : p.diff;
   if (full && p.diff > highest)
     return noSuchTier(`Order ${p.n} puzzle`, DIFF_NAMES[p.diff]);
   return null;

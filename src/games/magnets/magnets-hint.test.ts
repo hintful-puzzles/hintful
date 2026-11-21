@@ -33,7 +33,7 @@ import {
 } from "./speak.ts";
 import {
   COLUMN,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   executeMove,
   GS_NOTNEUTRAL,
   GS_SET,
@@ -768,7 +768,7 @@ describe("magnets hint sentences", () => {
     let steps = 0;
     const lineSteps: number[] = [];
     for (const { label, state: start } of CORPUS.filter((b) =>
-      b.label.includes(`d${DIFF_TRICKY}`),
+      b.label.includes(`d${DIFF_NORMAL}`),
     )) {
       const walked = walkHint(magnetsGame, start, {
         asks: 200,

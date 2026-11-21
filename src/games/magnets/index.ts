@@ -6,7 +6,7 @@
 
 import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
@@ -14,7 +14,7 @@ import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { gridCursorMove, newCursor } from "../../engine/input/pointer.ts";
 import {
   dragMarkVerbs,
-  interpretTargetVerbs,
+  playedByTargetVerbs,
   type TargetGeometry,
   type TargetVerbs,
   verbGesture,
@@ -204,16 +204,6 @@ const targetVerbs: TargetVerbs<
   },
 };
 
-function interpretMove(
-  state: MagnetsState,
-  ui: MagnetsUi,
-  ds: MagnetsDrawState,
-  p: Point,
-  rawButton: number,
-): MagnetsMove | null | UiUpdate {
-  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, rawButton);
-}
-
 const CHAR2GRID = (c: string): number =>
   c === "+" ? POSITIVE : c === "-" ? NEGATIVE : NEUTRAL;
 
@@ -307,9 +297,8 @@ export const magnetsGame: Game<
   newUi,
   changedState,
 
-  targetVerbs,
+  ...playedByTargetVerbs(targetVerbs),
   doneClues,
-  interpretMove,
   executeMove,
   status,
 

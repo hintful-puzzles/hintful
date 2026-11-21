@@ -104,8 +104,7 @@ help:
     break the board, the fourth takes a line; and an edge whose line would break
     the board beside any of the square's other edges is crossed out. Each way is
     looked at on the board as it stands, so nothing needs following further.
-name: Path
-family: lines
+produces: lines
 sizes:
   w: { min: 3, max: 133 }
   h: { min: 3, max: 133 }

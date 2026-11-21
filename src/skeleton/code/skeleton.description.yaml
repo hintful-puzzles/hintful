@@ -54,8 +54,7 @@ help:
     code, and the hint tells you how many codes still fit and the most that
     could be left after it. That part is a suggestion rather than a
     deduction, and the hint says so by counting rather than arguing.
-name: Skeleton
-family: code
+produces: code
 sizes:
   len: { min: 3, max: 6 }
   nsymbols: { min: 3, max: 9 }

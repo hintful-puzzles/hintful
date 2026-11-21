@@ -32,7 +32,7 @@ import {
   endsOf,
 } from "./solver.ts";
 import {
-  DIFF_EXTREME,
+  DIFF_UNREASONABLE,
   DIFFCOUNT,
   DOMINO,
   type DominosaMove,
@@ -124,7 +124,7 @@ const { plan: dominosaPlan, judgeMove: judgePlan } = describedEdgeHint<
     return walked;
   },
   // No tier is held back: the walk takes whatever the ladder offers.
-  tiers: { lowest: () => DIFF_EXTREME, count: DIFFCOUNT },
+  tiers: { lowest: () => DIFF_UNREASONABLE, count: DIFFCOUNT },
   // A firing continues from the squares its own spots join as well as the
   // ones its reason names.
   reads: ({ facts }, { sp }) => {

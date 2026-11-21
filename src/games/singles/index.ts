@@ -363,8 +363,6 @@ export const singlesGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(singlesGame);

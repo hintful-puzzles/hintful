@@ -6,7 +6,7 @@
  *
  * The answer is on the edges between squares side by side, each a line or
  * none, and the player's arrows are a mark on each square naming a dot: the
- * dot at the center of its galaxy. Every technique is Normal. Beneath the
+ * dot at the center of its galaxy. Every technique is Easy. Beneath the
  * ladder, a search by trial and error ({@link solverState}) counts a board's
  * answers to two: it deals the Unreasonable tier, and serves Solve and the
  * mistake check.
@@ -50,19 +50,21 @@ import {
   idx,
 } from "./state.ts";
 
-export enum GalaxiesDiff {
-  /** Finished by the ladder. */
-  Normal = 0,
+/** The description's tiers, then the solver's verdicts past them. */
+export const GalaxiesDiff = {
+  /** Finished by the ladder (upstream's DIFF_NORMAL). */
+  Easy: galaxies.TIER.easy,
   /** One answer, which the search proves and the ladder does not reach. */
-  Unreasonable = 1,
+  Unreasonable: galaxies.TIER.unreasonable,
   /** No consistent solution exists. */
-  Impossible = 2,
+  Impossible: galaxies.tiers.length,
   /** More than one solution exists. */
-  Ambiguous = 3,
+  Ambiguous: galaxies.tiers.length + 1,
   /** The ladder stopped short where the search was not asked for, or the
    * search ran out of positions. */
-  Unfinished = 4,
-}
+  Unfinished: galaxies.tiers.length + 2,
+} as const;
+export type GalaxiesDiff = (typeof GalaxiesDiff)[keyof typeof GalaxiesDiff];
 
 /** What the description reads an edge as holding. */
 const WALL = 1;
@@ -396,7 +398,7 @@ function writeAnswer(s: GalaxiesState, m: CellMarks, dots: readonly Point[]): vo
 
 /**
  * Grade `s` from the marks it holds, writing the answer into it where one is
- * found: `Normal` where the ladder finishes it, and at `maxDiff`
+ * found: `Easy` where the ladder finishes it, and at `maxDiff`
  * `Unreasonable`, `Unreasonable` where the search proves it has one answer.
  * Otherwise `Impossible`, `Ambiguous`, or `Unfinished` where the ladder
  * stopped short below `Unreasonable` or the search ran out of positions.
@@ -411,7 +413,7 @@ export function solverState(
   if (ladder === "contradiction") return GalaxiesDiff.Impossible;
   if (ladder === "solved") {
     writeAnswer(s, d.m, s.dots);
-    return GalaxiesDiff.Normal;
+    return GalaxiesDiff.Easy;
   }
   if (maxDiff < GalaxiesDiff.Unreasonable) return GalaxiesDiff.Unfinished;
   const search: AnswerSearch<Deduction, CellMarks> = {

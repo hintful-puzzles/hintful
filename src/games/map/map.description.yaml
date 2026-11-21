@@ -89,12 +89,11 @@ help:
     A hint is refused while a color or a set of dots on the board
     contradicts the solution; those regions light up instead, exactly as
     they do for **Check & save**.
-name: Map
-family: coloring
+produces: coloring
 sizes:
   # The regions, which are the board's cells: the squares the map is drawn
   # on only deal which region borders which.
-  n: { min: 5, max: 99999 }
+  n: { min: 5 }
 space:
   # A region's neighbors are the regions it shares a border with, which the
   # map deals: no rectangle says them.

@@ -97,8 +97,7 @@ help:
     and the most that could be left after it. That part is a suggestion
     rather than a deduction, and the hint says so by counting rather than
     arguing.
-name: Guess
-family: code
+produces: code
 sizes:
   npegs: { min: 2, max: 30 }
   ncolors: { min: 2, max: 10 }

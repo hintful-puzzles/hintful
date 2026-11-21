@@ -443,8 +443,6 @@ export const saladGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(saladGame);

@@ -32,7 +32,7 @@ import {
 
 type Step = HintStep<GalaxiesMove, GalaxiesHint, GalaxiesRung>;
 
-const NORMAL_7 = { w: 7, h: 7, diff: GalaxiesDiff.Normal };
+const NORMAL_7 = { w: 7, h: 7, diff: GalaxiesDiff.Easy };
 const UNREASONABLE_7 = { w: 7, h: 7, diff: GalaxiesDiff.Unreasonable };
 
 function board(params: typeof NORMAL_7, seed: string): GalaxiesState {
@@ -71,7 +71,7 @@ const pinned = describeHintPins({
   game: galaxiesGame,
   params: [
     NORMAL_7,
-    { w: 15, h: 15, diff: GalaxiesDiff.Normal },
+    { w: 15, h: 15, diff: GalaxiesDiff.Easy },
     UNREASONABLE_7,
     { w: 15, h: 15, diff: GalaxiesDiff.Unreasonable },
   ],
@@ -159,7 +159,7 @@ function solution(s: GalaxiesState): GalaxiesState {
   clearForSolve(sol);
   sol.dots = rebuildDots(sol);
   const diff = solverState(sol, GalaxiesDiff.Unreasonable);
-  expect([GalaxiesDiff.Normal, GalaxiesDiff.Unreasonable]).toContain(diff);
+  expect([GalaxiesDiff.Easy, GalaxiesDiff.Unreasonable]).toContain(diff);
   return sol;
 }
 
@@ -204,7 +204,7 @@ describe("the plan is sound: every step agrees with the unique solution", () => 
             }
           },
         });
-        if (params.diff === GalaxiesDiff.Normal) {
+        if (params.diff === GalaxiesDiff.Easy) {
           expect(
             galaxiesGame.status(s),
             `${seed}: hints did not finish the board`,
@@ -224,7 +224,7 @@ describe("a square settled for its one owner is the one a drag rings", () => {
     for (const params of [
       NORMAL_7,
       UNREASONABLE_7,
-      { w: 10, h: 10, diff: GalaxiesDiff.Normal },
+      { w: 10, h: 10, diff: GalaxiesDiff.Easy },
     ]) {
       for (const seed of ["ring-a", "ring-b", "ring-c"]) {
         walkHint(galaxiesGame, board(params, seed), {
@@ -316,7 +316,7 @@ describe("the hint never guesses, and says so when that is the end of the road",
     // reach the refusal below on an Easy board.
     for (const size of [7, 10]) {
       for (const seed of ["gf-a", "gf-b", "gf-c"]) {
-        const params = { w: size, h: size, diff: GalaxiesDiff.Normal };
+        const params = { w: size, h: size, diff: GalaxiesDiff.Easy };
         // A refusal is the Easy board stalling, and fails the walk.
         const { state } = walkHint(galaxiesGame, board(params, `${seed}-${size}`), {
           asks: 40,

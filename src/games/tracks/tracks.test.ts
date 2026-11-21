@@ -51,7 +51,7 @@ import {
 import { copyAndStrip, tracksSolve } from "./solver.ts";
 import {
   DIFF_COUNT,
-  DIFF_HARD,
+  DIFF_NORMAL,
   DIFF_TRICKY,
   decodeParams,
   encodeParams,
@@ -150,8 +150,8 @@ describe("tracks solver", () => {
 
   it("grades the HARD fixture Tricky, and the Normal solver cannot finish it", () => {
     const strip = () => copyAndStrip(stateToBoard(newState(HARD.p, HARD.desc)), -1);
-    expect(tracksSolve(strip(), DIFF_COUNT).maxDiff).toBe(DIFF_HARD);
-    expect(tracksSolve(strip(), DIFF_TRICKY).ret).toBeLessThan(1);
+    expect(tracksSolve(strip(), DIFF_COUNT).maxDiff).toBe(DIFF_TRICKY);
+    expect(tracksSolve(strip(), DIFF_NORMAL).ret).toBeLessThan(1);
   });
 
   it("generates a solvable Easy board (fixed seed)", () => {

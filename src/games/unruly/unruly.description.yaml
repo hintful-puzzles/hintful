@@ -48,8 +48,7 @@ help:
 
     When one idea settles several squares at once, the hint walks through
     them one at a time as a single step.
-name: Unruly
-family: shading
+produces: shading
 words:
   cell: cell
 sizes:

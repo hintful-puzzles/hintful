@@ -58,9 +58,9 @@ export const notFlag = (which: number): number =>
         : 0;
 
 // --- difficulty (upstream's Easy and Tricky, named by the collection) ------
-export const DIFF_EASY = 0;
-export const DIFF_TRICKY = 1;
-export const DIFF_COUNT = 2;
+export const DIFF_EASY = magnets.TIER.easy;
+export const DIFF_NORMAL = magnets.TIER.normal;
+export const DIFF_COUNT = magnets.tiers.length;
 const DIFF_NAMES: readonly string[] = magnets.tiers;
 const DIFF_CHARS = "et"; // ENCODE chars, indexed by difficulty
 
@@ -138,12 +138,12 @@ export const menu: PresetBoards<MagnetsParams> = {
   ].flatMap(([w, h]) =>
     [false, true].map((stripclues) => ({ w, h, diff: DIFF_EASY, stripclues })),
   ),
-  tiers: (p) => (p.stripclues ? [DIFF_TRICKY, DIFF_TRICKY] : null),
+  tiers: (p) => (p.stripclues ? [DIFF_NORMAL, DIFF_NORMAL] : null),
 };
 
 /** Upstream's default: 5x6 Tricky, clues stripped. */
 export function defaultParams(): MagnetsParams {
-  return { w: 5, h: 6, diff: DIFF_TRICKY, stripclues: true };
+  return { w: 5, h: 6, diff: DIFF_NORMAL, stripclues: true };
 }
 
 /** The "Custom type…" form, and the field list the codec below encodes. */
@@ -177,15 +177,15 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: MagnetsParams, full: boolean): string | null {
-  if (p.diff >= DIFF_TRICKY) {
+  if (p.diff >= DIFF_NORMAL) {
     // Generation only, as the tier below it: a board that arrives with its
     // description is graded as it loads, whatever tier its params name.
     if (full && p.w < 5 && p.h < 5)
-      return `Either width or height must be at least five for ${DIFF_NAMES[DIFF_TRICKY]}.`;
+      return `Either width or height must be at least five for ${DIFF_NAMES[DIFF_NORMAL]}.`;
     // Measured 2026-10-06: none in 900,000 boards built, with the clues
     // stripped or not. A 3x5 is found once in 1,000 and a 3x7 once in 400.
     if (full && Math.min(p.w, p.h) === 3 && Math.max(p.w, p.h) === 6)
-      return noSuchTier(`${p.w}x${p.h} puzzle`, DIFF_NAMES[DIFF_TRICKY]);
+      return noSuchTier(`${p.w}x${p.h} puzzle`, DIFF_NAMES[DIFF_NORMAL]);
   } else {
     if (p.w < 3 && p.h < 3) return "Either width or height must be at least three.";
   }

@@ -88,9 +88,9 @@ import {
   cloneState,
   clueOp,
   DIFF_EASY,
-  DIFF_EXTREME,
   DIFF_HARD,
   DIFF_NORMAL,
+  DIFF_TRICKY,
   DIFF_UNREASONABLE,
   decodeParams,
   diffToLevel,
@@ -258,8 +258,8 @@ describe("keen solver", () => {
     expect([
       ladderTiers[DIFF_EASY],
       ladderTiers[DIFF_NORMAL],
+      ladderTiers[DIFF_TRICKY],
       ladderTiers[DIFF_HARD],
-      ladderTiers[DIFF_EXTREME],
       ladderTiers[DIFF_UNREASONABLE],
     ]).toEqual(["Easy", "Normal", "Tricky", "Hard", "Unreasonable"]);
   });

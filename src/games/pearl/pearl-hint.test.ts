@@ -36,7 +36,7 @@ import {
   CORNER,
   DIFF_COUNT,
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   newState,
   type PearlMove,
   type PearlParams,
@@ -46,9 +46,9 @@ import {
 
 const SHAPES: PearlParams[] = [
   { w: 6, h: 6, difficulty: DIFF_EASY },
-  { w: 6, h: 6, difficulty: DIFF_TRICKY },
+  { w: 6, h: 6, difficulty: DIFF_NORMAL },
   { w: 8, h: 8, difficulty: DIFF_EASY },
-  { w: 8, h: 8, difficulty: DIFF_TRICKY },
+  { w: 8, h: 8, difficulty: DIFF_NORMAL },
 ];
 const SEEDS = ["ph-a", "ph-b", "ph-c"];
 

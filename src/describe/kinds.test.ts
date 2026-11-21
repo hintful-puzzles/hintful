@@ -273,8 +273,7 @@ describe("a kind of rule expands to the technique it stands for", () => {
     const text = `
 game: probe
 help: { rules: r, controls: c, origins: o, hints: h }
-name: Probe
-family: shading
+produces: shading
 sizes: { w: { min: 4, max: 8 } }
 space: { grid: { w: w, h: w }, regions: { region: dealt }, units: [] }
 answer: { value: { sort: cell, domain: "range(1, 2)" } }

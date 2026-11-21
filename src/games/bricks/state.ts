@@ -64,9 +64,12 @@ export const BRICKS_STEPS: ReadonlyArray<readonly [number, number]> = [
 
 // --- difficulty -------------------------------------------------------------
 
-export const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_TRICKY = 2;
+export const DIFF_EASY = bricks.TIER.easy;
+/** Upstream's DIFF_NORMAL. */
+export const DIFF_UNREASONABLE = bricks.TIER.unreasonable;
+/** Upstream's DIFF_TRICKY: a retired level past the tiers, with no boards
+ * (see `MAX_GENERABLE_DIFF`), kept so its game-ID letter still decodes. */
+export const DIFF_RETIRED = bricks.tiers.length;
 
 /** Difficulty encode chars (upstream `bricks_diffchars`), index = tier. */
 const DIFF_CHARS = "ent";
@@ -77,7 +80,7 @@ export interface BricksParams {
   /** User-friendly width and height (the hexagon, not the backing array). */
   w: number;
   h: number;
-  /** One of `DIFF_EASY`/`DIFF_NORMAL`/`DIFF_TRICKY`. */
+  /** One of `DIFF_EASY`/`DIFF_UNREASONABLE`/`DIFF_RETIRED`. */
   diff: number;
 }
 
@@ -190,7 +193,7 @@ export function applyBounds(w: number, h: number, grid: Uint16Array): void {
  * Normal, since Bricks' rules are local enough that a contradiction surfaces
  * at once or not at all. So it is not offered.
  */
-export const MAX_GENERABLE_DIFF = DIFF_NORMAL;
+export const MAX_GENERABLE_DIFF = DIFF_UNREASONABLE;
 
 const BOARDS: BricksParams[] = [
   { w: 6, h: 7, diff: DIFF_EASY },
@@ -246,7 +249,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 export function validateParams(p: BricksParams, full: boolean): string | null {
   // Every 2x2 board with one answer the ladder stops short of holds one brick,
   // under the deal's 40% (enumerated 2026-11-02). A 2x3 and a 3x2 deal.
-  if (full && p.w === 2 && p.h === 2 && p.diff === DIFF_NORMAL)
+  if (full && p.w === 2 && p.h === 2 && p.diff === DIFF_UNREASONABLE)
     return noSuchTier("2x2 puzzle", DIFF_NAMES[p.diff]);
   return null;
 }

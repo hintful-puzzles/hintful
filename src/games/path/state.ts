@@ -55,11 +55,11 @@ import * as path from "../../generated/games/path/path.compiled.ts";
 export const TIERS = searchTiers(path.tiers);
 
 /** Every line follows from one square, or from the numbers a line would join. */
-export const DIFF_EASY = 0;
+export const DIFF_EASY = path.TIER.easy;
 /** Needs a line, or a square's two lines, seen to break the board at once. */
-export const DIFF_NORMAL = 1;
+export const DIFF_NORMAL = path.TIER.normal;
 /** Needs every way a square could take its two lines weighed. */
-export const DIFF_TRICKY = 2;
+export const DIFF_TRICKY = path.TIER.tricky;
 /** Has one answer the ladder does not reach. */
 export const DIFF_UNREASONABLE = TIERS.unreasonable;
 

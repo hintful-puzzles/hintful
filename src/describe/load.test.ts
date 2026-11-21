@@ -4,8 +4,7 @@ import { loadDescriptionFile } from "./load.ts";
 
 const rules = (conclude: string, given = "value") => `
 game: test
-name: Test
-family: latin
+produces: latin
 sizes:
   order: { min: 3, max: 4 }
 space:

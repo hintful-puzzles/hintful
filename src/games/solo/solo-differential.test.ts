@@ -28,8 +28,8 @@ import { soloGame } from "./index.ts";
 import { solveSolo } from "./solver.ts";
 import {
   DIFF_EXTREME,
-  DIFF_KINTERSECT,
-  DIFF_RECURSIVE,
+  DIFF_KREGION,
+  DIFF_UNREASONABLE,
   newState,
   type SoloParams,
 } from "./state.ts";
@@ -86,9 +86,9 @@ describe("solo differential (frozen C reference)", () => {
     it(`${label(f)}: TS solver grades the published board as C did`, () => {
       const p = paramsOf(f);
       const s = newState(p, f.desc);
-      const { diff, kdiff } = solveSolo(s, DIFF_RECURSIVE, DIFF_KINTERSECT);
+      const { diff, kdiff } = solveSolo(s, DIFF_UNREASONABLE, DIFF_KREGION);
       if (f.solverDiff === DIFF_EXTREME)
-        expect([DIFF_EXTREME, DIFF_RECURSIVE]).toContain(diff);
+        expect([DIFF_EXTREME, DIFF_UNREASONABLE]).toContain(diff);
       else expect(diff).toBe(f.solverDiff);
       expect(kdiff).toBe(f.solverKdiff);
     });

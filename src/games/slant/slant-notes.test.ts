@@ -35,7 +35,7 @@ import {
   ALIKE_RIGHT,
   alikeBit,
   DIFF_EASY,
-  DIFF_HARD,
+  DIFF_NORMAL,
   executeMove,
   newState,
   type SlantMove,
@@ -393,8 +393,8 @@ describe("slant hint places the marks it uses", () => {
   it("every mark is true, placed once before any step citing it, and named rightly", () => {
     let marks = 0;
     for (const [w, h, diff] of [
-      [8, 8, DIFF_HARD],
-      [12, 10, DIFF_HARD],
+      [8, 8, DIFF_NORMAL],
+      [12, 10, DIFF_NORMAL],
       [12, 10, DIFF_EASY],
     ] as const) {
       for (let seed = 0; seed < 6; seed++) {
@@ -406,7 +406,7 @@ describe("slant hint places the marks it uses", () => {
   });
 
   it("a plan resumed from the player's own marks cites them and places none twice", () => {
-    const s = fresh(12, 10, DIFF_HARD, "notes-resume");
+    const s = fresh(12, 10, DIFF_NORMAL, "notes-resume");
     const first = slantGame.hint.plan(s);
     if (!first?.ok) throw new Error("expected a plan");
     // The player makes only the plan's marks, none of its diagonals.
@@ -431,7 +431,7 @@ describe("slant hint places the marks it uses", () => {
   });
 
   it("keep-track completes a mark step only on that mark", () => {
-    const s = fresh(12, 10, DIFF_HARD, "notes-track");
+    const s = fresh(12, 10, DIFF_NORMAL, "notes-track");
     const res = slantGame.hint.plan(s);
     if (!res?.ok) throw new Error("expected a plan");
     const step = res.steps.find((st) => st.move.type === "alike");

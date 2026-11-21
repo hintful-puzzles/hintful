@@ -55,8 +55,7 @@ help:
     thin. A square with no line and three open edges left takes lines on two of
     them, and takes the third if lines on the other two would break the board:
     leave a square a dead end or cut off, or close a loop too soon.
-name: Skeleton
-family: lines
+produces: lines
 sizes:
   # Each side even.
   w: { min: 4, max: 100 }

@@ -50,9 +50,9 @@ export interface WordtrailParams {
 // --- difficulty -------------------------------------------------------------
 
 /** Every line follows from one letter's trails at a time. */
-export const DIFF_EASY = 0;
+export const DIFF_EASY = wordtrail.TIER.easy;
 /** Needs the only trails of a length found over the whole board. */
-export const DIFF_NORMAL = 1;
+export const DIFF_NORMAL = wordtrail.TIER.normal;
 
 const DIFF_NAMES: readonly string[] = wordtrail.tiers;
 

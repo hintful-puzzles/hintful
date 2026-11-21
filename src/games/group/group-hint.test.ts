@@ -176,7 +176,7 @@ describe("group hint — identity elimination", () => {
 
 describe("group hint — plan solves boards", () => {
   it("solves an identity-hidden Tricky board, teaching an identity-mark elimination", () => {
-    // The identity-hidden `DIFF_HARD` (Tricky) tier is the one that exercises
+    // The identity-hidden Tricky tier is the one that exercises
     // `notIdentity`, which the shared first-leaf resume never reaches.
     const { state: start } = pinned("identityElim");
     expect(start.id, "the elimination is an identity-hidden board's").toBe(false);

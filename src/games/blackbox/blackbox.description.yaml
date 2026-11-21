@@ -60,8 +60,7 @@ help:
     one run of moves. A square no laser ever reaches is settled by the count
     alone: when the box must hold more balls than the lasers account for,
     every such square holds one, and the hint asks you to put them on.
-name: Black Box
-family: shading
+produces: shading
 sizes:
   w: { min: 2, max: 255 }
   h: { min: 2, max: 255 }

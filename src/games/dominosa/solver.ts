@@ -33,9 +33,9 @@ import {
 } from "../../engine/solve/ladder-runtime.ts";
 import * as dominosa from "../../generated/games/dominosa/dominosa.compiled.ts";
 import {
-  DIFF_BASIC,
-  DIFF_EXTREME,
-  DIFF_HARD,
+  DIFF_NORMAL,
+  DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   DOMINO,
   type DominosaShape,
   dealtOf,
@@ -208,7 +208,7 @@ function searchAnswers(
   if (start === null) return { kind: "none" };
   return searchBoard<Deduction, Array<[number, number]>>({
     start,
-    deduce: (d) => deduce(d, DIFF_EXTREME),
+    deduce: (d) => deduce(d, DIFF_UNREASONABLE),
     assume: assumeDomino,
     solution: (d) => pairsOf(d.m),
     budget,
@@ -244,16 +244,17 @@ export function solveNumbers(
   const d = deduction(shape, numbers);
   if (d === null) return { result: 0, maxDiffUsed: 0, pairs: [] };
   const grades: Record<string, number> = {};
-  const got = deduce(d, Math.min(maxDiff, DIFF_HARD), grades);
+  const got = deduce(d, Math.min(maxDiff, DIFF_TRICKY), grades);
   const used = grades[TIERS] ?? 0;
   if (got === "solved") return { result: 1, maxDiffUsed: used, pairs: pairsOf(d.m) };
-  if (got === "contradiction" || maxDiff < DIFF_EXTREME)
+  if (got === "contradiction" || maxDiff < DIFF_UNREASONABLE)
     return { result: got === "contradiction" ? 0 : 2, maxDiffUsed: used, pairs: [] };
   const answer = searchAnswers(shape, numbers, budget);
   if (answer.kind === "none")
-    return { result: 0, maxDiffUsed: DIFF_EXTREME, pairs: [] };
-  if (answer.kind !== "one") return { result: 2, maxDiffUsed: DIFF_EXTREME, pairs: [] };
-  return { result: 1, maxDiffUsed: DIFF_EXTREME, pairs: answer.solution };
+    return { result: 0, maxDiffUsed: DIFF_UNREASONABLE, pairs: [] };
+  if (answer.kind !== "one")
+    return { result: 2, maxDiffUsed: DIFF_UNREASONABLE, pairs: [] };
+  return { result: 1, maxDiffUsed: DIFF_UNREASONABLE, pairs: answer.solution };
 }
 
 /** Whether some domino has one spot left or none: a toehold the tiers above
@@ -286,13 +287,13 @@ export function dealsAt(
 ): boolean {
   const d = deduction(shape, numbers);
   if (d === null) return false;
-  if (diff < DIFF_HARD) {
+  if (diff < DIFF_TRICKY) {
     const grades: Record<string, number> = {};
     return deduce(d, diff, grades) === "solved" && (grades[TIERS] ?? 0) === diff;
   }
-  if (deduce(d, DIFF_BASIC) !== "stuck" || leavesToehold(d)) return false;
-  const got = deduce(d, DIFF_HARD);
-  if (diff === DIFF_HARD) return got === "solved";
+  if (deduce(d, DIFF_NORMAL) !== "stuck" || leavesToehold(d)) return false;
+  const got = deduce(d, DIFF_TRICKY);
+  if (diff === DIFF_TRICKY) return got === "solved";
   return got === "stuck" && searchAnswers(shape, numbers, budget).kind === "one";
 }
 

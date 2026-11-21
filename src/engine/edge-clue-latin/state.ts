@@ -82,10 +82,12 @@ function breaksClue(kind: ClueKind, flagged: boolean, a: number, b: number): boo
 
 export type Difficulty = "trivial" | "easy" | "tricky" | "extreme" | "recursive";
 
-const DIFF_EASY = 1;
-export const DIFF_SET = 2;
-export const DIFF_EXTREME = 3;
-export const DIFF_RECURSIVE = 4;
+// Levels by the tier each game's description names at that index; the
+// comments give upstream's names, which `Difficulty` still spells.
+const DIFF_NORMAL = 1; // upstream's DIFF_EASY
+export const DIFF_TRICKY = 2; // upstream's DIFF_SET
+export const DIFF_HARD = 3; // upstream's DIFF_EXTREME
+export const DIFF_UNREASONABLE = 4; // upstream's DIFF_RECURSIVE
 
 // unequal_diffchars, indexed by level. The top tier is named Unreasonable, as
 // the tier that may require guessing, and its character stays upstream's `r`.
@@ -94,7 +96,7 @@ const DIFFS: Difficulty[] = ["trivial", "easy", "tricky", "extreme", "recursive"
 
 export function diffToLevel(d: Difficulty): number {
   const i = DIFFS.indexOf(d);
-  return i < 0 ? DIFF_EASY : i;
+  return i < 0 ? DIFF_NORMAL : i;
 }
 export function diffFromLevel(level: number): Difficulty {
   return DIFFS[level] ?? "easy";

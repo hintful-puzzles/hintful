@@ -13,7 +13,7 @@
  * `npm run game` names them all on its first run. The entry describes the
  * skeleton's puzzle, as the copy's help page does, until the author replaces
  * both. `family` is the catalog's (`puzzleFamilies` in `src/engine/contract/catalog.ts`),
- * which the skeleton's kind names: a description's `family` is another
+ * which the skeleton's kind names: a description's `produces` is another
  * vocabulary, and a code game's is `code` where the catalog's is `hidden`.
  *
  * **A change scaffolded without a delta says so with `skip_specs`**, which

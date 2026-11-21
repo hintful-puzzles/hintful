@@ -37,8 +37,7 @@ help:
     If no way to clear the board is left, the hint says so, and the thing to do
     is undo. **Show solution** clears the board for you.
 
-name: Same Game
-family: position
+produces: position
 sizes:
   # A board of any size its desc gives; 99 stands for no bound.
   w: { min: 1, max: 99 }

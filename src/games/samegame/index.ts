@@ -9,7 +9,7 @@ import type { Point } from "../../engine/contract/types.ts";
 import { solveBySearch } from "../../engine/hint/search-outcome.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
-  interpretTargetVerbs,
+  playedByTargetVerbs,
   squareGrid,
   type TargetVerbs,
   verbGesture,
@@ -146,16 +146,6 @@ const targetVerbs: TargetVerbs<
   },
 };
 
-function interpretMove(
-  state: SamegameState,
-  ui: SamegameUi,
-  ds: SamegameDrawState,
-  p: Point,
-  button: number,
-): SamegameMove | null | UiUpdate {
-  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, button);
-}
-
 // --- move execution ---------------------------------------------------
 
 export function executeMove(state: SamegameState, move: SamegameMove): SamegameState {
@@ -242,8 +232,7 @@ export const samegameGame: Game<
   newUi,
   changedState,
 
-  targetVerbs,
-  interpretMove,
+  ...playedByTargetVerbs(targetVerbs),
   executeMove,
   finishesByDeduction: nothingToDeduce,
   status,
@@ -279,7 +268,6 @@ export const samegameGame: Game<
   newDrawState,
   redraw,
 
-  animLength: () => 0,
   flashLength,
   // A stuck board is not a loss (the player undoes and plays on), yet nobody
   // is playing it, so the timer holds on it.

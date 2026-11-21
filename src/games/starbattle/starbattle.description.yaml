@@ -30,8 +30,7 @@ help:
     - On Tricky boards, a star is tried in a square where it would complete its own row, column or region. If the squares that rules out leave another row, column or region without room for its stars, the square is empty.
 
     If a square you marked is wrong, the hint asks you to fix the highlighted mistakes first.
-name: Star Battle
-family: shading
+produces: shading
 sizes:
   w: { min: 4, max: 26 }
   # The stars every row, column and region holds.

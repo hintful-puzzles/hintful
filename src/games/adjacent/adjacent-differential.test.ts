@@ -18,7 +18,7 @@ import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { newEdgeClueDesc } from "../../engine/edge-clue-latin/generator.ts";
 import { solveEdgeClues } from "../../engine/edge-clue-latin/solver.ts";
 import {
-  DIFF_EXTREME,
+  DIFF_HARD,
   diffFromLevel,
   type EdgeClueParams,
   newState,
@@ -47,7 +47,7 @@ const label = (f: Fixture) => `${f.order} d${f.diff} (seed ${f.seed})`;
 describe("adjacent differential's fixtures", () => {
   it("are there, all below Hard, where the generators still agree", () => {
     expect(FIXTURES.length).toBeGreaterThan(0);
-    expect(FIXTURES.every((f) => f.diff < DIFF_EXTREME)).toBe(true);
+    expect(FIXTURES.every((f) => f.diff < DIFF_HARD)).toBe(true);
   });
 });
 

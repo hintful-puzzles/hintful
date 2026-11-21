@@ -13,7 +13,7 @@ import { slantGame } from "./index.ts";
 import { deduceHintPlan, solveFromClues } from "./solver.ts";
 import {
   DIFF_EASY,
-  DIFF_HARD,
+  DIFF_NORMAL,
   executeMove,
   newState,
   type SlantMove,
@@ -37,7 +37,7 @@ function applyPlan(state: SlantState): SlantState {
 
 const pinned = describeHintPins({
   game: slantGame,
-  params: [{ w: 8, h: 8, diff: DIFF_HARD }],
+  params: [{ w: 8, h: 8, diff: DIFF_NORMAL }],
   kinds: {
     // A plan whose second step is a square continuing its first square's
     // firing. A firing's first leg continues the marks placed for it, so only
@@ -86,7 +86,7 @@ describe("slant hint", () => {
   });
 
   test("flags a wrong slash, so the midend refuses it", () => {
-    const s = freshState(8, 8, DIFF_HARD, "mistake-1");
+    const s = freshState(8, 8, DIFF_NORMAL, "mistake-1");
     const sol = solveFromClues(s.w, s.h, s.clues);
     if ("error" in sol) throw new Error("unsolvable");
     // Place a wrong slash: first square, opposite of the solution.
@@ -98,8 +98,8 @@ describe("slant hint", () => {
   test("plan solves every generated board, from empty and mid-solve", () => {
     for (const [w, h, diff] of [
       [5, 5, DIFF_EASY],
-      [8, 8, DIFF_HARD],
-      [12, 10, DIFF_HARD],
+      [8, 8, DIFF_NORMAL],
+      [12, 10, DIFF_NORMAL],
     ] as const) {
       for (let seed = 0; seed < deepBudget(2, 8); seed++) {
         const s = freshState(w, h, diff, `plan-${w}.${h}.${diff}.${seed}`);
@@ -120,7 +120,7 @@ describe("slant hint", () => {
 
   test("every step is narrated in the necessity voice with visible evidence", () => {
     for (let seed = 0; seed < 12; seed++) {
-      const s = freshState(8, 8, DIFF_HARD, `voice-${seed}`);
+      const s = freshState(8, 8, DIFF_NORMAL, `voice-${seed}`);
       const res = slantGame.hint.plan(s);
       if (!res?.ok) throw new Error("expected plan");
       for (const step of res.steps) {
@@ -155,7 +155,7 @@ describe("slant hint", () => {
       [10, 8],
     ]) {
       for (let seed = 0; seed < seeds; seed++) {
-        const s = freshState(w, h, DIFF_HARD, `drawn-${w}.${h}.${seed}`);
+        const s = freshState(w, h, DIFF_NORMAL, `drawn-${w}.${h}.${seed}`);
         const plan = deduceHintPlan(w, h, s.clues, s.soln, s.alike);
         for (const [firing, { path }] of plan.cites)
           for (const e of path)
@@ -201,7 +201,7 @@ describe("slant hint", () => {
     // and both marks narrated in the course of a plan, beside the pins.
     const seen = new Set<string>();
     const s = newState(
-      { w: 12, h: 10, diff: DIFF_HARD },
+      { w: 12, h: 10, diff: DIFF_NORMAL },
       "g1f133b1a11a1113c1213b2b112d2b11c1a3a12d13c12b2a2b3b11a1a1a1c32c3a12a1b3a13c212b321d1a13e1111e",
     );
     const res = slantGame.hint.plan(s);
@@ -220,7 +220,7 @@ describe("slant hint", () => {
   });
 
   test("hintKeepTrack: the hinted move completes, a wrong move drops the plan", () => {
-    const s = freshState(8, 8, DIFF_HARD, "track-1");
+    const s = freshState(8, 8, DIFF_NORMAL, "track-1");
     const res = slantGame.hint.plan(s);
     if (!res?.ok) throw new Error("expected plan");
     const step = res.steps[0];

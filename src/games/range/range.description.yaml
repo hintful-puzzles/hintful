@@ -60,8 +60,7 @@ help:
     wrong, a few forced squares later some number can no longer see enough, or
     sees too much, and shows in red. The hint carries on from whatever you
     decide.
-name: Range
-family: shading
+produces: shading
 sizes:
   # A number is at most the width and the height less one, which the desc
   # keeps below 128.

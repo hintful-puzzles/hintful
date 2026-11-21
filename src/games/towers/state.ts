@@ -38,10 +38,11 @@ import * as towers from "../../generated/games/towers/towers.compiled.ts";
 const DIFFS = ["easy", "hard", "extreme", "unreasonable"] as const;
 export type Difficulty = (typeof DIFFS)[number];
 
-export const DIFF_EASY = 0;
-export const DIFF_HARD = 1;
-export const DIFF_EXTREME = 2;
-export const DIFF_UNREASONABLE = 3;
+/** Upstream's Easy, Hard, Extreme and Unreasonable, named by the description. */
+export const DIFF_EASY = towers.TIER.easy;
+export const DIFF_NORMAL = towers.TIER.normal;
+export const DIFF_TRICKY = towers.TIER.tricky;
+export const DIFF_UNREASONABLE = towers.TIER.unreasonable;
 
 const DIFF_CHARS = "ehxu"; // towers_diffchars, indexed by level
 const DIFF_NAMES = towers.tiers;
@@ -83,7 +84,7 @@ export const paramConfig: ParamConfigItem<TowersParams>[] = [
 export function validateParams(p: TowersParams, full: boolean): string | null {
   const level = diffToLevel(p.diff);
   // Measured 2026-10-05: none in 50,000 boards built at each tier above Normal.
-  if (full && p.w === 3 && level > DIFF_HARD)
+  if (full && p.w === 3 && level > DIFF_NORMAL)
     return noSuchTier("3x3 puzzle", DIFF_NAMES[level]);
   return null;
 }

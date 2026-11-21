@@ -58,8 +58,8 @@ import {
   clueType,
   DIFF_EASY,
   DIFF_NORMAL,
-  DIFF_RECURSIVE,
   DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   decodeParams,
   diffFromLevel,
   encodeDesc,
@@ -142,7 +142,7 @@ function solutionOf(state: MathraxState): Uint8Array {
   const grid = new Uint8Array(o * o);
   for (let i = 0; i < o * o; i++)
     if (state.flags[i] & F_IMMUTABLE) grid[i] = state.grid[i];
-  expect(mathraxSolve(o, grid, state.clues, DIFF_RECURSIVE)).toBe(SOLVE_UNIQUE);
+  expect(mathraxSolve(o, grid, state.clues, DIFF_UNREASONABLE)).toBe(SOLVE_UNIQUE);
   return grid;
 }
 
@@ -300,7 +300,7 @@ describe("mathrax clue semantics", () => {
       ladderTiers[DIFF_EASY],
       ladderTiers[DIFF_NORMAL],
       ladderTiers[DIFF_TRICKY],
-      ladderTiers[DIFF_RECURSIVE],
+      ladderTiers[DIFF_UNREASONABLE],
     ]).toEqual(["Easy", "Normal", "Tricky", "Unreasonable"]);
     expect(ladder.filter((t) => t.id.startsWith("clue")).map((t) => t.tier)).toEqual([
       DIFF_EASY,
@@ -346,11 +346,11 @@ describe("mathrax solver", () => {
     // The Recursive fixtures are excluded: upstream strips those boards past
     // uniqueness (they are literally blank), which is the defect the generator's
     // divergence fixes — `mathrax-differential.test.ts` pins them by verdict.
-    for (const f of fixtures.filter((x) => x.diff < DIFF_RECURSIVE)) {
+    for (const f of fixtures.filter((x) => x.diff < DIFF_UNREASONABLE)) {
       const p = paramsOf(f);
       const st = newState(p, f.desc);
       const grid = Uint8Array.from(st.grid);
-      expect(mathraxSolve(p.o, grid, st.clues, DIFF_RECURSIVE)).toBe(SOLVE_UNIQUE);
+      expect(mathraxSolve(p.o, grid, st.clues, DIFF_UNREASONABLE)).toBe(SOLVE_UNIQUE);
       // The filled grid really is an answer.
       expect(mathraxGame.status({ ...st, grid })).toBe("solved");
       // And the board's own tier suffices (the generator gated on exactly
@@ -409,9 +409,9 @@ describe("mathrax generator", () => {
       const p: MathraxParams = { o: 5, diff: "recursive", options: OPTIONSMASK };
       const { desc } = newMathraxDesc(p, randomNew(`recursive-${i}`));
       const st = newState(p, desc);
-      expect(mathraxSolve(5, Uint8Array.from(st.grid), st.clues, DIFF_RECURSIVE)).toBe(
-        SOLVE_UNIQUE,
-      );
+      expect(
+        mathraxSolve(5, Uint8Array.from(st.grid), st.clues, DIFF_UNREASONABLE),
+      ).toBe(SOLVE_UNIQUE);
       // And it genuinely needs the recursion — Tricky alone can't finish it.
       expect(mathraxSolve(5, Uint8Array.from(st.grid), st.clues, DIFF_TRICKY)).toBe(
         SOLVE_STUCK,

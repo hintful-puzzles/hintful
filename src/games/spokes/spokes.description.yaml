@@ -52,8 +52,7 @@ help:
     that is what [the difficulty name means](features#difficulty). The hint
     says so rather than guessing for you: save your position, try it, and
     undo if it breaks.
-name: Spokes
-family: lines
+produces: lines
 sizes:
   w: { min: 2, max: 100 }
   h: { min: 2, max: 100 }

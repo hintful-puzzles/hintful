@@ -496,8 +496,6 @@ export const spokesGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(spokesGame);

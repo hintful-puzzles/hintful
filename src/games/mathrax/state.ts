@@ -39,10 +39,10 @@ import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 
 export type MathraxDiff = "easy" | "normal" | "tricky" | "recursive";
 
-export const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_TRICKY = 2;
-export const DIFF_RECURSIVE = 3;
+export const DIFF_EASY = mathrax.TIER.easy;
+export const DIFF_NORMAL = mathrax.TIER.normal;
+export const DIFF_TRICKY = mathrax.TIER.tricky;
+export const DIFF_UNREASONABLE = mathrax.TIER.unreasonable; // upstream's DIFF_RECURSIVE
 
 /** Upstream `mathrax_diffchars`, indexed by level. */
 const DIFF_CHARS = "entr";
@@ -216,7 +216,7 @@ export function validateParams(p: MathraxParams, full: boolean): string | null {
   // silently yields another; a saved game or game ID still loads, because `full`
   // is false there. The message uses the menu's tier names.
   if (full && p.o === 3 && (p.diff === "normal" || p.diff === "recursive")) {
-    return `Size 3 has no ${DIFF_NAMES[DIFF_NORMAL]} or ${DIFF_NAMES[DIFF_RECURSIVE]} puzzles; use ${DIFF_NAMES[DIFF_EASY]} or ${DIFF_NAMES[DIFF_TRICKY]}.`;
+    return `Size 3 has no ${DIFF_NAMES[DIFF_NORMAL]} or ${DIFF_NAMES[DIFF_UNREASONABLE]} puzzles; use ${DIFF_NAMES[DIFF_EASY]} or ${DIFF_NAMES[DIFF_TRICKY]}.`;
   }
   return null;
 }

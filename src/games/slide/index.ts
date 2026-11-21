@@ -359,11 +359,6 @@ export const slideGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  // Blocks jump straight to where they were dragged: upstream's
-  // `game_anim_length` is 0, and the live feedback is the block following the
-  // pointer.
-  animLength: () => 0,
 };
 
 registerGame(slideGame);

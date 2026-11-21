@@ -56,8 +56,8 @@ the board its desc was laid out for.
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ n: 6, diff: DIFF_HARD, tall: false }` (the Tricky tier)
-  are encoded in full
+- **WHEN** params `{ n: 6, diff: DIFF_TRICKY, tall: false }` are encoded in
+  full
 - **THEN** the result is `"6dh"` and decoding it round-trips the params
 
 #### Scenario: An id without the tall flag loads as the wide board

@@ -16,7 +16,7 @@
 import {
   adjectiveDefect,
   IS_OUT,
-  KEEPS_IS_OUT_FAMILY,
+  KEEPS_IS_OUT_PRODUCES,
   NARRATION_LIMIT,
   RETIRED_PHRASE,
   unboundDefect,
@@ -474,7 +474,7 @@ function wordingsIn(
 function wordingFindings(file: DescriptionFile): Finding[] {
   const out: Finding[] = [];
   const needed = new Map<string, boolean>();
-  const keepsIsOut = "family" in file && file.family === KEEPS_IS_OUT_FAMILY;
+  const keepsIsOut = "produces" in file && file.produces === KEEPS_IS_OUT_PRODUCES;
   for (const { where: id, w, moveRing, spoken } of wordingsIn(file)) {
     const where = id === "" ? w.label : `${id} ${w.label}`;
     for (const message of wordDefects(w.clauses, moveRing === true, keepsIsOut))

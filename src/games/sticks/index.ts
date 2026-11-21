@@ -416,8 +416,6 @@ export const sticksGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(sticksGame);

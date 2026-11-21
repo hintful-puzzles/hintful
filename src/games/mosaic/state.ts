@@ -50,7 +50,7 @@ const DEFAULT_AGGRESSIVENESS = true;
  * search's above them. */
 export const TIERS = searchTiers(mosaic.tiers);
 /** A board two numbers compared finish and one number at a time does not. */
-export const DIFF_NORMAL = 1;
+export const DIFF_NORMAL = mosaic.TIER.normal;
 /** A board with a single answer that the deduction does not reach. */
 export const DIFF_UNREASONABLE = TIERS.unreasonable;
 

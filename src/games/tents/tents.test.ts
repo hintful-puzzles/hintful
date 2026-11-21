@@ -52,7 +52,7 @@ import { isSolved, tentsSolve } from "./solver.ts";
 import {
   BLANK,
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   encodeDesc,
   encodeParams,
   executeMove,
@@ -73,7 +73,7 @@ function genBoard(
   const { desc, aux } = newTentsDesc(p, randomNew(seed));
   const state = newState(p, desc);
   const puzzle = Int8Array.from(state.grid, (v) => (v === TREE ? TREE : 0));
-  const { soln } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_TRICKY);
+  const { soln } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_NORMAL);
   return { state, soln, aux };
 }
 
@@ -81,8 +81,8 @@ describe("tents params", () => {
   it("round-trips through encode/decode", () => {
     for (const p of [
       { w: 8, h: 8, diff: DIFF_EASY },
-      { w: 15, h: 15, diff: DIFF_TRICKY },
-      { w: 6, h: 9, diff: DIFF_TRICKY },
+      { w: 15, h: 15, diff: DIFF_NORMAL },
+      { w: 6, h: 9, diff: DIFF_NORMAL },
     ]) {
       expect(tentsGame.decodeParams(encodeParams(p, true))).toEqual(p);
     }
@@ -133,8 +133,8 @@ describe("tents generator", () => {
   it("produces uniquely-solvable boards at exactly their difficulty", () => {
     for (const [p, seed] of [
       [{ w: 8, h: 8, diff: DIFF_EASY }, "gen-e"],
-      [{ w: 8, h: 8, diff: DIFF_TRICKY }, "gen-t"],
-      [{ w: 10, h: 10, diff: DIFF_TRICKY }, "gen-t2"],
+      [{ w: 8, h: 8, diff: DIFF_NORMAL }, "gen-t"],
+      [{ w: 10, h: 10, diff: DIFF_NORMAL }, "gen-t2"],
     ] as const) {
       const { state } = genBoard(p, seed);
       const puzzle = Int8Array.from(state.grid, (v) => (v === TREE ? TREE : 0));
@@ -206,7 +206,7 @@ describe("tents solve()", () => {
   });
 
   it("recovers without aux (re-solve path)", () => {
-    const p = { w: 8, h: 8, diff: DIFF_TRICKY };
+    const p = { w: 8, h: 8, diff: DIFF_NORMAL };
     const { state } = genBoard(p, "solve-1");
     const res = tentsGame.solve(state, state);
     expect(res?.ok).toBe(true);

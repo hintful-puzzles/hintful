@@ -44,8 +44,7 @@ help:
     * **The odd gap.** When a line's empty squares must all hold poles, they
       alternate. If the line needs one more + than −, the extra + comes from
       its one odd-length gap, which must start with +.
-name: Magnets
-family: numbers
+produces: numbers
 sizes:
   # A line's count is one character of the game ID's alphabet.
   w: { min: 2, max: 61 }

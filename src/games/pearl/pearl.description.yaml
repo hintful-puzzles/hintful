@@ -66,8 +66,7 @@ help:
     A square that already has its two lines needs no crosses on its other edges,
     so the hint never asks you to draw them, and it counts such an edge as
     closed when it reasons.
-name: Pearl
-family: lines
+produces: lines
 sizes:
   w: { min: 5, max: 100 }
   h: { min: 5, max: 100 }

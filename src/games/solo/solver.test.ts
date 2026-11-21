@@ -7,11 +7,11 @@ import { describe, expect, it } from "vitest";
 import { runSolver, solveSolo } from "./solver.ts";
 import {
   DIFF_AMBIGUOUS,
-  DIFF_BLOCK,
+  DIFF_EASY,
   DIFF_IMPOSSIBLE,
-  DIFF_KINTERSECT,
-  DIFF_RECURSIVE,
-  DIFF_SIMPLE,
+  DIFF_KREGION,
+  DIFF_NORMAL,
+  DIFF_UNREASONABLE,
   decodeParams,
   defaultParams,
   encodeBlockStructureDesc,
@@ -52,9 +52,9 @@ describe("solo solver — standard 3×3", () => {
     const s = stateFromGivens(PUZZLE);
     // This classic example is solvable by repeated blockwise positional
     // elimination (the "scanning" technique), which the driver exhausts before
-    // ever reaching row/col elimination — so it grades at DIFF_BLOCK.
-    const { diff } = solveSolo(s, DIFF_SIMPLE, 0);
-    expect(diff).toBe(DIFF_BLOCK);
+    // ever reaching row/col elimination — so it grades at DIFF_EASY.
+    const { diff } = solveSolo(s, DIFF_NORMAL, 0);
+    expect(diff).toBe(DIFF_EASY);
   });
 
   it("reports AMBIGUOUS for an under-constrained grid (exercises recursion)", () => {
@@ -88,11 +88,8 @@ describe("solo solver — variant paths (codec → solve round-trips)", () => {
     const kgrid = new Array(81).fill(0);
     for (const cell of cages.blocks) kgrid[cell[0]] = 45; // 1+…+9 per block
     const desc = `${gridDesc},${blockDesc},${encodeGrid(kgrid, 81)}`;
-    const s = newState(
-      { ...defaultParams(), killer: true, kdiff: DIFF_KINTERSECT },
-      desc,
-    );
-    const { diff, grid } = solveSolo(s, DIFF_RECURSIVE, DIFF_KINTERSECT);
+    const s = newState({ ...defaultParams(), killer: true, kdiff: DIFF_KREGION }, desc);
+    const { diff, grid } = solveSolo(s, DIFF_UNREASONABLE, DIFF_KREGION);
     expect(diff).toBeLessThan(DIFF_AMBIGUOUS);
     expect([...grid]).toEqual(SOLUTION);
   });
@@ -112,7 +109,7 @@ describe("solo solver — variant paths (codec → solve round-trips)", () => {
       "000000000800000000000000000000000900000000000000900000000000000000006000080000000",
       Number,
     );
-    const { diff } = solveSolo({ ...s, grid }, DIFF_RECURSIVE, DIFF_KINTERSECT);
+    const { diff } = solveSolo({ ...s, grid }, DIFF_UNREASONABLE, DIFF_KREGION);
     expect(diff).toBe(DIFF_IMPOSSIBLE);
   });
 
@@ -131,7 +128,7 @@ describe("solo solver — low level", () => {
   it("runSolver mutates the grid in place to the solution", () => {
     const grid = Int8Array.from(PUZZLE);
     const dlev = {
-      maxdiff: DIFF_RECURSIVE,
+      maxdiff: DIFF_UNREASONABLE,
       maxkdiff: 0,
       diff: DIFF_IMPOSSIBLE,
       kdiff: 0,

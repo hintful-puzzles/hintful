@@ -59,10 +59,9 @@ help:
     that is what [the difficulty name means](features#difficulty). The hint
     says so rather than guessing for you: save your position, try it, and
     undo if it breaks.
-name: Undead
 words:
   cell: square
-family: numbers
+produces: numbers
 sizes:
   # Each side at most 18, narrower than the 10,000 squares a board may hold.
   w: { min: 3, max: 18 }

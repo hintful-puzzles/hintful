@@ -99,10 +99,10 @@ export const LOOPY_GRIDS = [
 const LOOPY_DIFF_CHARS = "enth";
 export const LOOPY_DIFFS: readonly string[] = loopy.tiers;
 
-export const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_TRICKY = 2;
-export const DIFF_HARD = 3;
+export const DIFF_EASY = loopy.TIER.easy;
+export const DIFF_NORMAL = loopy.TIER.normal;
+export const DIFF_TRICKY = loopy.TIER.tricky;
+export const DIFF_HARD = loopy.TIER.hard;
 
 export interface LoopyParams {
   w: number;

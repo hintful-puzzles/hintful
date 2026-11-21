@@ -41,7 +41,7 @@ interface Fixture {
 const data = cReference as { fixtures: Fixture[] };
 
 function diffChar(d: GalaxiesDiff): string {
-  if (d === GalaxiesDiff.Normal) return "n";
+  if (d === GalaxiesDiff.Easy) return "n";
   if (d === GalaxiesDiff.Unreasonable) return "u";
   if (d === GalaxiesDiff.Impossible) return "I";
   if (d === GalaxiesDiff.Ambiguous) return "A";

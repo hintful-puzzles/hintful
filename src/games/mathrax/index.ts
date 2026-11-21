@@ -115,8 +115,8 @@ import {
 import {
   cloneState,
   DIFF_NAMES,
-  DIFF_RECURSIVE,
   DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   dealtOf,
   decodeParams,
   defaultParams,
@@ -319,7 +319,7 @@ function solveFromGivens(
   requireUnique: boolean,
 ): Uint8Array | null {
   const grid = givens(state);
-  const verdict = mathraxSolve(state.params.o, grid, state.clues, DIFF_RECURSIVE);
+  const verdict = mathraxSolve(state.params.o, grid, state.clues, DIFF_UNREASONABLE);
   const ok = requireUnique
     ? verdict === SOLVE_UNIQUE
     : verdict === SOLVE_UNIQUE || verdict === SOLVE_AMBIGUOUS;
@@ -694,8 +694,6 @@ export const mathraxGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(mathraxGame);

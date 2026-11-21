@@ -48,7 +48,7 @@ const RULESETS: readonly Ruleset[] = [
 export const TIERS = searchTiers(rect.tiers);
 /** A board the hint finishes once it may leave out a placement for what that
  * does to another clue, or draw a line. */
-export const DIFF_NORMAL = 1;
+export const DIFF_NORMAL = rect.TIER.normal;
 /** A board with a single answer that the ladder does not reach. */
 export const DIFF_UNREASONABLE = TIERS.unreasonable;
 

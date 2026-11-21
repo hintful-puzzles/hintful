@@ -33,8 +33,7 @@ help:
 
     {{wing}}
 
-name: Salad
-family: latin
+produces: latin
 words:
   cell: square
 sizes:

@@ -27,7 +27,7 @@ import { COL_GRID, COL_LINK, COL_TREELEAF } from "./render.ts";
 import { tentsSolve } from "./solver.ts";
 import {
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   encodeParams,
   newState,
   R,
@@ -41,7 +41,7 @@ function board(p: TentsParams, seed: string) {
   const { desc } = tentsGame.newDesc(p, randomNew(seed));
   const state = newState(p, desc);
   const puzzle = Int8Array.from(state.grid, (v) => (v === TREE ? TREE : 0));
-  const { soln, links } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_TRICKY);
+  const { soln, links } = tentsSolve(p.w, p.h, puzzle, state.numbers, DIFF_NORMAL);
   return { id: `${encodeParams(p, true)}:${desc}`, state, soln, links };
 }
 
@@ -50,7 +50,7 @@ function board(p: TentsParams, seed: string) {
  * shows. */
 const pinned = describeHintKindPins({
   game: tentsGame,
-  params: [{ w: 10, h: 10, diff: DIFF_TRICKY }],
+  params: [{ w: 10, h: 10, diff: DIFF_NORMAL }],
   kinds: {
     lineCount: (step) => step.rung === "lineCount",
     lineNeighbors: (step) => step.rung === "lineNeighbors",

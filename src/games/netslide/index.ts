@@ -13,7 +13,7 @@
 
 import { fromCoord } from "../../engine/board/geometry.ts";
 import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import { SOLUTION_UNKNOWN } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import {
@@ -25,7 +25,7 @@ import {
 } from "../../engine/game-id/params.ts";
 import { wrappingRulesetItem } from "../../engine/game-id/ruleset.ts";
 import {
-  interpretTargetVerbs,
+  playedByTargetVerbs,
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
@@ -225,16 +225,6 @@ const targetVerbs: TargetVerbs<
   },
 };
 
-function interpretMove(
-  s: NetslideState,
-  ui: NetslideUi,
-  ds: NetslideDrawState,
-  p: Point,
-  button: number,
-): NetslideMove | null | UiUpdate {
-  return interpretTargetVerbs(targetVerbs, s, ui, ds, p, button);
-}
-
 /* ----------------------------------------------------------------------
  * The Game.
  */
@@ -302,8 +292,7 @@ export const netslideGame: Game<
   newState,
   newUi,
 
-  targetVerbs,
-  interpretMove,
+  ...playedByTargetVerbs(targetVerbs),
   executeMove,
 
   finishesByDeduction: nothingToDeduce,

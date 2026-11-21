@@ -23,14 +23,20 @@ export interface HelpOnlyJson {
   help: HelpJson;
 }
 
+/** A size the rules are stated over, as `description.schema.json` says it:
+ * no `max` where the rules set none. */
+export interface SizeRange {
+  min: number;
+  max?: number;
+}
+
 /** A description with its formal rules, as `description.schema.json` states
  * it, and the help page of a cataloged game. */
 export interface DescriptionJson {
   game: string;
   help?: HelpJson;
-  name: string;
-  family: string;
-  sizes: Record<string, { min: number; max: number }>;
+  produces: string;
+  sizes: Record<string, SizeRange>;
   space: {
     /** The board as a rectangle, or, in its place, a count of cells with no
      * geometry, whose neighbors are a relation the board deals. */
@@ -479,9 +485,8 @@ export interface PlanningVariationJson {
 export interface PlanningJson {
   game: string;
   help?: HelpJson;
-  name: string;
-  family: string;
-  sizes: Record<string, { min: number; max: number }>;
+  produces: string;
+  sizes: Record<string, SizeRange>;
   space: {
     /** The board as a rectangle, or, in its place, a count of cells with no
      * geometry. */

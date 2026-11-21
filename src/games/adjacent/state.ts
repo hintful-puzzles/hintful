@@ -8,7 +8,7 @@
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import {
   type ClueKind,
-  DIFF_SET,
+  DIFF_TRICKY,
   type Difficulty,
   diffToLevel,
   type EdgeClueParams,
@@ -72,7 +72,7 @@ export const { paramConfig, encodeParams, decodeParams } = edgeClueParams({
 });
 
 export function validateParams(p: EdgeClueParams, _full: boolean): string | null {
-  if (p.order < 5 && diffToLevel(p.diff) >= DIFF_SET)
+  if (p.order < 5 && diffToLevel(p.diff) >= DIFF_TRICKY)
     return "Size must be at least 5 for puzzles of this difficulty.";
   return null;
 }

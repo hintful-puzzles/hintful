@@ -42,8 +42,7 @@ help:
     presses lights the board at all, it says so instead. And the last press
     says that it is the last: *"Press this square: that lights the outlined
     squares and finishes the board."*
-name: Flip
-family: position
+produces: position
 sizes:
   # The game bounds neither side above; 99 stands for no bound.
   w: { min: 1, max: 99 }

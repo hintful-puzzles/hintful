@@ -76,8 +76,7 @@ help:
     deduction, and says so by counting rather than arguing. On every
     preset, followed from the first guess, the suggestions find every
     common word within the six rows.
-name: Wordguess
-family: code
+produces: code
 sizes:
   len: { min: 3, max: 8 }
 space:

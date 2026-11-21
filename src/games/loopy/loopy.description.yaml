@@ -113,8 +113,7 @@ help:
     a step reasons from is already on the board. Two pairs that share an edge
     relate their other two edges, so a longer chain of pairs is written down one
     link at a time.
-name: Loopy
-family: lines
+produces: lines
 sizes:
   w: { min: 3, max: 100 }
   h: { min: 3, max: 100 }

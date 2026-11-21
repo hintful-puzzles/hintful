@@ -34,14 +34,13 @@ help:
     another cell, and the hint says that nothing further follows by deduction
     instead of choosing for you. On some boards that is the very first step.
     Save your position, try a letter, and it carries on from whatever you enter.
-name: ABCD
-family: numbers
+produces: numbers
 words:
   cell: cell
 sizes:
   # Unbounded but by the time a board takes to deal.
-  w: { min: 2, max: 99999 }
-  h: { min: 2, max: 99999 }
+  w: { min: 2 }
+  h: { min: 2 }
   # The letters, A to the n-th.
   n: { min: 3, max: 9 }
 space:

@@ -539,7 +539,7 @@
         "oneOf": [{ "required": ["answer"] }, { "required": ["position"] }]
       },
       "dependentRequired": {
-        "space": ["name", "family", "sizes", "freedom"],
+        "space": ["produces", "sizes", "freedom"],
         "position": ["space", "moves", "finish"],
         "moves": ["position"],
         "techniques": ["space", "answer"]
@@ -552,17 +552,16 @@
           "description": "The id, as the app's registry has it, or a family's other game."
         },
         "help": { "$ref": "#/$defs/help" },
-        "name": { "type": "string" },
-        "family": {
+        "produces": {
           "type": "string",
-          "description": "What the player produces (theory.md): latin, shading, loop, ..."
+          "description": "What the player produces: latin, shading, lines, ... The technique check's `inherit` reads it for the games whose techniques a candidate may share. Not the catalog's family, which is what a player browses by and is the game's `catalog.ts`'s, as is its name."
         },
         "sizes": {
           "type": "object",
-          "description": "The numbers that scale an instance, each a range.",
+          "description": "The numbers the rules are stated over, each a range: the worlds the soundness check builds. Not the Custom dialog's bounds, which the game's `paramConfig` states for the boards it deals. `max` is left out where the rules set none.",
           "additionalProperties": {
             "type": "object",
-            "required": ["min", "max"],
+            "required": ["min"],
             "additionalProperties": false,
             "properties": { "min": { "type": "integer" }, "max": { "type": "integer" } }
           }

@@ -12,7 +12,7 @@ import { solveDeductive, TIER_RUNG } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
-  DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   MON_NONE,
   newState,
   type UndeadParams,
@@ -44,7 +44,7 @@ describeLadderCensus({
   game: "undead",
   rungs: [...undead.ladder.map((e) => e.id)],
   unreached: {},
-  caps: [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY],
+  caps: [DIFF_EASY, DIFF_NORMAL, DIFF_UNREASONABLE],
   cases,
   solve: ({ params, desc }, cap, firings) => {
     const { common } = newState(params, desc);

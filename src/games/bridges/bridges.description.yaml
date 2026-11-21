@@ -49,8 +49,7 @@ help:
     **Check & save**. An island marked completed before it really is counts as a
     mistake too, because the mark locks bridges the island still needs: the island
     lights up, and taking the mark off clears it.
-name: Bridges
-family: lines
+produces: lines
 sizes:
   w: { min: 3, max: 100 }
   h: { min: 3, max: 100 }

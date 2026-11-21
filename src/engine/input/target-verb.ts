@@ -650,6 +650,24 @@ export function interpretTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
 }
 
 /**
+ * The input of a game whose verbs are all of it: its `targetVerbs` and the
+ * `interpretMove` that hands every button to them, for the `Game` literal to
+ * spread. A game with arms of its own writes its `interpretMove` instead.
+ */
+export function playedByTargetVerbs<S, U extends TargetVerbUi, D, T, M>(
+  verbs: Verbs<S, U, D, T, M>,
+): {
+  readonly targetVerbs: Verbs<S, U, D, T, M>;
+  interpretMove(state: S, ui: U, ds: D, p: Point, button: number): M | UiUpdate | null;
+} {
+  return {
+    targetVerbs: verbs,
+    interpretMove: (state, ui, ds, p, button) =>
+      interpretTargetVerbs(verbs, state, ui, ds, p, button),
+  };
+}
+
+/**
  * The gesture that applies a button's verb at each of `targets`, `times`
  * presses apiece: what a hint step of a target-verb game asks the pointer for
  * (`Game.hint.gesture`). A key-only verb's step asks for its route instead

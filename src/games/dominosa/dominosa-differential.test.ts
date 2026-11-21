@@ -16,7 +16,7 @@ import { validateDesc } from "../../engine/contract/desc-error.ts";
 import reference from "./__fixtures__/dominosa-c-reference.json" with { type: "json" };
 import { dominosaGame } from "./index.ts";
 import { solveNumbers } from "./solver.ts";
-import { DIFF_EXTREME, newState } from "./state.ts";
+import { DIFF_UNREASONABLE, newState } from "./state.ts";
 
 interface Fixture {
   name: string;
@@ -32,7 +32,7 @@ describe("dominosa's ladder on upstream's boards (frozen C reference)", () => {
     const p = { n: f.n, diff: f.diff, tall: false };
     expect(validateDesc(dominosaGame, p, f.desc)).toBeNull();
     const state = newState(p, f.desc);
-    expect(solveNumbers(p, state.numbers, DIFF_EXTREME).result).toBe(1);
+    expect(solveNumbers(p, state.numbers, DIFF_UNREASONABLE).result).toBe(1);
     const graded = solveNumbers(p, state.numbers, f.diff);
     expect(graded.result).toBe(1);
     expect(graded.maxDiffUsed).toBe(f.diff);

@@ -490,7 +490,6 @@ export const signpostGame: Game<
   computeSize,
   newDrawState,
   redraw: redrawSignpost,
-  animLength: () => 0,
 };
 
 registerGame(signpostGame);

@@ -27,8 +27,7 @@ help:
     - On Tricky boards, a square is tried shaded: where it would complete a domino or its region, the squares beside it, or the rest of its region, would be clear. If that would leave a region without room for the shaded squares it needs, the square is clear.
 
     If a square you marked is wrong, the hint asks you to fix the highlighted mistakes first.
-name: Norinori
-family: shading
+produces: shading
 sizes:
   w: { min: 4, max: 20 }
   h: { min: 4, max: 20 }

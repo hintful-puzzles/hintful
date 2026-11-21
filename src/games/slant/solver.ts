@@ -34,7 +34,7 @@ import {
 import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
-import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_HARD, type Slash } from "./state.ts";
+import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_NORMAL, type Slash } from "./state.ts";
 
 /** Solver verdicts (upstream's 0 / 1 / 2 return codes). */
 export const SOLVE_IMPOSSIBLE = 0;
@@ -216,7 +216,7 @@ export function solveFromClues(
   clues: Int8Array,
 ): { soln: Int8Array } | { error: "impossible" | "ambiguous" } {
   const soln = new Int8Array(w * h);
-  const ret = slantSolve(w, h, clues, soln, DIFF_HARD);
+  const ret = slantSolve(w, h, clues, soln, DIFF_NORMAL);
   if (ret === SOLVE_UNIQUE) return { soln };
   return { error: ret === SOLVE_IMPOSSIBLE ? "impossible" : "ambiguous" };
 }
@@ -344,7 +344,7 @@ function roundOf(sp: GridSpace, k: number): number[] {
 }
 
 /** The highest tier the ladder grades: Normal. */
-const NORMAL = DIFF_HARD;
+const NORMAL = DIFF_NORMAL;
 
 /**
  * The edges joining `from` to the nearest square `goal` accepts, through the

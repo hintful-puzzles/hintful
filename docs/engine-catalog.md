@@ -543,7 +543,8 @@ on, the click half of a drag game included. The game declares a geometry
 and a verb per button, each returning the game's own `Move`.
 `interpretTargetVerbs` owns the parking, the reveal-first select, Enter and
 Space, and `controlsMarkdown` writes the help's Controls paragraph from the
-same declaration. `squareGrid` is the common geometry; `letterKey`,
+same declaration. A game with no input beyond its verbs spreads
+`playedByTargetVerbs(targetVerbs)` and writes no `interpretMove`. `squareGrid` is the common geometry; `letterKey`,
 `digitKey` and `ERASE_KEYS` the common keys; `rulingOut` declares a right
 button that marks a target as holding nothing. A drag game's own arms call
 `pressTarget` and `buttonVerb`; a hint's click steps come from `verbClicks`

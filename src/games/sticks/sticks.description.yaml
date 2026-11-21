@@ -50,12 +50,11 @@ help:
     position and try a line in a square beside a number: if it is wrong, a
     few forced squares later some number has no way left to be met. The hint
     carries on from whatever you decide.
-name: Sticks
-family: links
+produces: links
 sizes:
   # Unbounded but by the time a board takes to deal.
-  w: { min: 2, max: 99999 }
-  h: { min: 2, max: 99999 }
+  w: { min: 2 }
+  h: { min: 2 }
 space:
   grid: { w: "w", h: "h" }
   units: []

@@ -31,8 +31,7 @@ help:
     * **One of each.** Once an area has an arrow, no other square in it can point that way. An area of four squares must hold all four arrows, so an arrow with only one square left to go in goes there.
     * **No loops.** An arrow pointing at a square whose arrows lead back here would go round in a circle and never reach a goal, so it is ruled out. The shortest loop is two neighbors pointing at each other. If the square to the left, in the same area, can only point left or right, this square can't point left into it: the area can't hold two left arrows, so that square would have to point right, straight back.
     * **A pair.** Two squares of an area that must take the same two arrows between them leave those arrows to no other square of the area.
-name: Rome
-family: lines
+produces: lines
 sizes:
   # Nothing in the game bounds a side but the time a deal takes.
   w: { min: 3, max: 100 }

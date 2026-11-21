@@ -31,13 +31,12 @@ help:
     Each step is one of the rules at work on a single cell: shading it would make three in a row, leave it with nothing shaded beneath it to rest on, or give a number too many shaded neighbors; or clearing it would leave a shaded brick above with nothing to rest on, or leave a number unable to reach its count.
 
     If a brick or a cross is wrong, the hint asks you to fix the highlighted mistakes first, and the wrong one turns red, as it does for **Check & save**, whether or not it breaks a rule yet. A broken rule is marked as well: a bar over three in a row, a diamond under a brick with nothing to rest on, a number in red. On an Unreasonable board it may stop and say that nothing further follows by deduction.
-name: Bricks
-family: shading
+produces: shading
 sizes:
   # The hexagon is stored as a parallelogram half its height wider, its two
   # corners holes. Unbounded but by the time a board takes to deal.
-  w: { min: 2, max: 99999 }
-  h: { min: 2, max: 99999 }
+  w: { min: 2 }
+  h: { min: 2 }
 space:
   grid: { w: "w", h: "h" }
   units: []

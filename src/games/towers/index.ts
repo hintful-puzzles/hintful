@@ -125,7 +125,7 @@ import {
   cloneState,
   clueIndex,
   cluePos,
-  DIFF_EXTREME,
+  DIFF_TRICKY,
   DIFF_UNREASONABLE,
   dealtOf,
   decodeParams,
@@ -582,7 +582,7 @@ function buildSteps(
     latinLadder(towers, cl),
     w,
     wGrid,
-    Math.min(diffToLevel(state.diff), DIFF_EXTREME),
+    Math.min(diffToLevel(state.diff), DIFF_TRICKY),
   );
   type Legs = Firing<TowersMove, TowersHint, HintReason>;
   const rung = (
@@ -760,8 +760,6 @@ export const towersGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(towersGame);

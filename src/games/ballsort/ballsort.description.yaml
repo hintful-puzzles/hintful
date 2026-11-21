@@ -39,8 +39,7 @@ help:
     If you are already in a dead end, the hint says so; apply it to go back
     to the last position that can still be sorted. **Check & save** asks the
     same question: it won't save a dead end.
-name: Ball Sort
-family: position
+produces: position
 sizes:
   # Tubes across, slots up; a desc loads any count, and 99 stands for no
   # bound.

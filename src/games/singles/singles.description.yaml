@@ -52,8 +52,7 @@ help:
     * **Keeping the clear squares joined.** A square that would cut the
       clear squares in two if shaded, or seal a clear square off, must
       be clear.
-name: Singles
-family: shading
+produces: shading
 sizes:
   # A number is one character of the desc alphabet.
   w: { min: 2, max: 61 }

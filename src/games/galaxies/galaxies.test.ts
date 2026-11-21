@@ -62,9 +62,9 @@ import {
 } from "./state.ts";
 
 const SMOKE_PARAMS: GalaxiesParams[] = [
-  { w: 3, h: 3, diff: GalaxiesDiff.Normal },
-  { w: 5, h: 5, diff: GalaxiesDiff.Normal },
-  { w: 7, h: 7, diff: GalaxiesDiff.Normal },
+  { w: 3, h: 3, diff: GalaxiesDiff.Easy },
+  { w: 5, h: 5, diff: GalaxiesDiff.Easy },
+  { w: 7, h: 7, diff: GalaxiesDiff.Easy },
 ];
 
 describe("Galaxies generator integration", () => {
@@ -79,7 +79,7 @@ describe("Galaxies generator integration", () => {
       // Solver run from clean state must complete at exactly the Easy tier.
       clearForSolve(fresh);
       const diff = solverState(fresh, GalaxiesDiff.Unreasonable);
-      expect(diff).toBe(GalaxiesDiff.Normal);
+      expect(diff).toBe(GalaxiesDiff.Easy);
       expect(checkComplete(fresh, false).complete).toBe(true);
     });
   }
@@ -108,7 +108,7 @@ describeDealtTiers(galaxiesGame, ["3x4du", "4x4du", "5x5du"], { deals: 6 });
 
 describe("Galaxies game flow", () => {
   it("newDesc → newState → solve → executeMove(solve) completes the puzzle", () => {
-    const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Easy };
     const rng = randomNew("flow-5x5");
     const { desc } = galaxiesGame.newDesc(p, rng);
     const init = galaxiesGame.newState(p, desc);
@@ -123,7 +123,7 @@ describe("Galaxies game flow", () => {
   // The verdict was once cached by writing it into the state the status bar was
   // handed; a status bar must not change the board it describes.
   it("names the difficulty without writing into the state", () => {
-    const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Easy };
     const s = galaxiesGame.newState(p, galaxiesGame.newDesc(p, randomNew("sb")).desc);
     const before = JSON.stringify({ ...s, flags: [...s.flags] });
     const text = galaxiesGame.statusbarText?.(s, galaxiesGame.newUi(s));
@@ -132,7 +132,7 @@ describe("Galaxies game flow", () => {
   });
 
   it("validateDesc rejects an unparseable desc", () => {
-    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Easy };
     expect(validateDesc(galaxiesGame, p, "1")).toBe(descBadCharacter("1"));
   });
 
@@ -140,17 +140,17 @@ describe("Galaxies game flow", () => {
     expect(galaxiesGame.decodeParams("7")).toEqual({
       w: 7,
       h: 7,
-      diff: GalaxiesDiff.Normal,
+      diff: GalaxiesDiff.Easy,
     });
     expect(galaxiesGame.decodeParams("7x10")).toEqual({
       w: 7,
       h: 10,
-      diff: GalaxiesDiff.Normal,
+      diff: GalaxiesDiff.Easy,
     });
     expect(galaxiesGame.decodeParams("7x7dn")).toEqual({
       w: 7,
       h: 7,
-      diff: GalaxiesDiff.Normal,
+      diff: GalaxiesDiff.Easy,
     });
     expect(galaxiesGame.decodeParams("7x7du")).toEqual({
       w: 7,
@@ -168,7 +168,7 @@ describe("Galaxies game flow", () => {
 
   it("refuses too-small boards", () => {
     expect(
-      paramsError(galaxiesGame, { w: 2, h: 2, diff: GalaxiesDiff.Normal }, true),
+      paramsError(galaxiesGame, { w: 2, h: 2, diff: GalaxiesDiff.Easy }, true),
     ).toBe("Width must be at least 3.");
   });
 
@@ -177,7 +177,7 @@ describe("Galaxies game flow", () => {
     // kept upstream's "Normal" after the menu had moved to "Easy".
     const tiers = difficultyTiers(galaxiesGame) ?? [];
     expect(tiers).toHaveLength(2);
-    const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Easy };
     const { desc } = galaxiesGame.newDesc(p, randomNew("statusbar-tier"));
     const s = galaxiesGame.newState(p, desc);
     expect(galaxiesGame.statusbarText?.(s, galaxiesGame.newUi(s))).toBe(
@@ -189,7 +189,7 @@ describe("Galaxies game flow", () => {
   });
 
   it("an edge toggle move flips F_EDGE_SET", () => {
-    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Easy };
     const rng = randomNew("edge-test");
     const { desc } = galaxiesGame.newDesc(p, rng);
     const s0 = galaxiesGame.newState(p, desc);
@@ -218,7 +218,7 @@ describe("Galaxies game flow", () => {
   });
 
   it("save round-trip via the Game's serializeMove/deserializeMove defaults", () => {
-    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Easy };
     const rng = randomNew("save-rt");
     const { desc } = galaxiesGame.newDesc(p, rng);
     const s0 = galaxiesGame.newState(p, desc);
@@ -250,7 +250,7 @@ const galaxiesRedraw = galaxiesGame.redraw as NonNullable<typeof galaxiesGame.re
 
 describe("Galaxies rendering", () => {
   it("first redraw paints every tile once", () => {
-    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Easy };
     const rng = randomNew("render-first-draw");
     const { desc } = galaxiesGame.newDesc(p, rng);
     const s = galaxiesGame.newState(p, desc);
@@ -271,7 +271,7 @@ describe("Galaxies rendering", () => {
   });
 
   it("a second redraw with no state change emits no per-tile clips", () => {
-    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Easy };
     const rng = randomNew("render-cache");
     const { desc } = galaxiesGame.newDesc(p, rng);
     const s = galaxiesGame.newState(p, desc);
@@ -300,7 +300,7 @@ describe("Galaxies rendering", () => {
   });
 
   it("the win flash sweeps the cells from the bottom left to the top right", () => {
-    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Easy };
     const { desc } = galaxiesGame.newDesc(p, randomNew("render-win-flash"));
     const init = galaxiesGame.newState(p, desc);
     const result = galaxiesGame.solve(init, init);
@@ -354,7 +354,7 @@ describe("Galaxies button code stability", () => {
 
 describe("Galaxies interpretMove", () => {
   it("CURSOR_UP shows the cursor on first press (UI_UPDATE, no move)", () => {
-    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Easy };
     const rng = randomNew("interp-cursor");
     const { desc } = galaxiesGame.newDesc(p, rng);
     const s = galaxiesGame.newState(p, desc);
@@ -380,7 +380,7 @@ describe("Galaxies solver: hand-crafted small positions", () => {
     s.dots = rebuildDots(s);
     clearForSolve(s);
     const diff = solverState(s, GalaxiesDiff.Unreasonable);
-    expect(diff).toBe(GalaxiesDiff.Normal);
+    expect(diff).toBe(GalaxiesDiff.Easy);
     expect(checkComplete(s, false).complete).toBe(true);
   });
 
@@ -404,11 +404,11 @@ describe("Galaxies findMistakes", () => {
     clearForSolve(sol);
     sol.dots = rebuildDots(sol);
     const diff = solverState(sol, GalaxiesDiff.Unreasonable);
-    expect([GalaxiesDiff.Normal, GalaxiesDiff.Unreasonable]).toContain(diff);
+    expect([GalaxiesDiff.Easy, GalaxiesDiff.Unreasonable]).toContain(diff);
     return sol;
   }
 
-  const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Normal };
+  const p: GalaxiesParams = { w: 5, h: 5, diff: GalaxiesDiff.Easy };
   const rng = randomNew("mistakes-5x5");
   const { desc } = galaxiesGame.newDesc(p, rng);
   const init = galaxiesGame.newState(p, desc);
@@ -601,8 +601,8 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
   // either scheme (2026-08-08). Asserting the *drag* color is what
   // keeps a transient affordance out of a color that, being a tint of
   // the board, cannot be prominent.
-  const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Normal };
-  const p43: GalaxiesParams = { w: 4, h: 3, diff: GalaxiesDiff.Normal };
+  const p: GalaxiesParams = { w: 3, h: 3, diff: GalaxiesDiff.Easy };
+  const p43: GalaxiesParams = { w: 4, h: 3, diff: GalaxiesDiff.Easy };
   const TILE = 32;
   const BORDER = TILE;
 
@@ -945,7 +945,7 @@ describe("Galaxies association gestures (left button, and cell→dot)", () => {
   // Two widenings of one gesture, from owner acceptance 2026-08-08: the
   // association drag was reachable only from the right button (which touch
   // reaches only through a 350 ms long-press) and only *from* a dot.
-  const p43: GalaxiesParams = { w: 4, h: 3, diff: GalaxiesDiff.Normal };
+  const p43: GalaxiesParams = { w: 4, h: 3, diff: GalaxiesDiff.Easy };
 
   /** 4×3 board, dots at doubled (3,3) and (7,1). Tile (c,r)'s center pixel
    * is (48 + 32c, 48 + 32r), so the (3,3) dot sits at (80, 80). */
@@ -1182,7 +1182,7 @@ describe("Galaxies association gestures (left button, and cell→dot)", () => {
 });
 
 describe("Galaxies candidate rings", () => {
-  const p43: GalaxiesParams = { w: 4, h: 3, diff: GalaxiesDiff.Normal };
+  const p43: GalaxiesParams = { w: 4, h: 3, diff: GalaxiesDiff.Easy };
 
   function board() {
     const s = galaxiesGame.newState(p43, "gj");
@@ -1330,9 +1330,9 @@ describe("Galaxies association legality is sound", () => {
   // else about `reachableFromDot` is a judgment call, but this is not.
   it("never rejects an association the unique solution contains", () => {
     const params: GalaxiesParams[] = [
-      { w: 7, h: 7, diff: GalaxiesDiff.Normal },
+      { w: 7, h: 7, diff: GalaxiesDiff.Easy },
       { w: 7, h: 7, diff: GalaxiesDiff.Unreasonable },
-      { w: 10, h: 10, diff: GalaxiesDiff.Normal },
+      { w: 10, h: 10, diff: GalaxiesDiff.Easy },
     ];
     let checked = 0;
     for (const p of params) {
@@ -1395,7 +1395,7 @@ describe("Galaxies association legality is sound", () => {
     };
     let accepted = 0;
     for (const p of [
-      { w: 10, h: 10, diff: GalaxiesDiff.Normal },
+      { w: 10, h: 10, diff: GalaxiesDiff.Easy },
       { w: 7, h: 7, diff: GalaxiesDiff.Unreasonable },
     ] as GalaxiesParams[]) {
       for (let seed = 0; seed < 2; seed++) {
@@ -1476,7 +1476,7 @@ describe("Galaxies association legality is sound", () => {
     // denies it (7,1), the tile on the *open* side. Upstream's local
     // precheck accepts both: each is in-grid, dot-free, and has an in-grid
     // dot-free mirror.
-    const p: GalaxiesParams = { w: 5, h: 1, diff: GalaxiesDiff.Normal };
+    const p: GalaxiesParams = { w: 5, h: 1, diff: GalaxiesDiff.Easy };
     const s = blankGame(p.w, p.h);
     s.flags[idx(s, 5, 1)] |= 1 /* F_DOT */;
     s.flags[idx(s, 2, 1)] |= 1 /* F_DOT */;

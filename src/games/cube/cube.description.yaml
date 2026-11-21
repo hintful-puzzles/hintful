@@ -56,8 +56,7 @@ help:
       dealt whichever way round [fits your screen](features#board-shape). A
       grid of triangles is always dealt the way you chose it: its two numbers
       swapped give the same patch upside down, not on its side.
-name: Cube
-family: position
+produces: position
 sizes:
   # The arena's squares, or triangles, and the solid's faces: 4, 6, 8 or 20.
   squares: { min: 1, max: 9999 }

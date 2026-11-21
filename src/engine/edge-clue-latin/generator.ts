@@ -25,7 +25,7 @@ import { solveEdgeClues } from "./solver.ts";
 import {
   ADJTHAN,
   type ClueKind,
-  DIFF_RECURSIVE,
+  DIFF_UNREASONABLE,
   diffToLevel,
   displayChar,
   type EdgeClueParams,
@@ -161,7 +161,7 @@ function gameAssemble(
 ): void {
   // Never use a guessing solver during assembly: a wrong guess that "solves"
   // would confuse gg_place_clue. We always trim toward harder in game_strip.
-  if (difficulty >= DIFF_RECURSIVE) difficulty = DIFF_RECURSIVE - 1;
+  if (difficulty >= DIFF_UNREASONABLE) difficulty = DIFF_UNREASONABLE - 1;
 
   // `copy` accumulates the solver's deductions (upstream aliases state->nums).
   const copy = cloneGen(g);

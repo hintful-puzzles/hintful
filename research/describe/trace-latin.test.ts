@@ -20,7 +20,7 @@ import { mosaicGame } from "../../src/games/mosaic/index.ts";
 import { saladGame } from "../../src/games/salad/index.ts";
 import { seismicGame } from "../../src/games/seismic/index.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
-import { DIFF_INTERSECT, DIFF_SET, SYMM_NONE } from "../../src/games/solo/state.ts";
+import { DIFF_HARD, DIFF_TRICKY, SYMM_NONE } from "../../src/games/solo/state.ts";
 import { starbattleGame } from "../../src/games/starbattle/index.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
@@ -50,10 +50,10 @@ const GAMES: [string, AnyGame][] = [
 const EXTRA: Record<string, unknown[]> = {
   group: [2, 3, 4].map((diff) => ({ w: 8, diff, id: false })),
   solo: [
-    { c: 2, r: 3, diff: DIFF_INTERSECT },
-    { c: 3, r: 3, diff: DIFF_INTERSECT },
-    { c: 3, r: 3, diff: DIFF_SET },
-    { c: 6, r: 1, diff: DIFF_INTERSECT },
+    { c: 2, r: 3, diff: DIFF_TRICKY },
+    { c: 3, r: 3, diff: DIFF_TRICKY },
+    { c: 3, r: 3, diff: DIFF_HARD },
+    { c: 6, r: 1, diff: DIFF_TRICKY },
     { c: 3, r: 3, xtype: true },
     { c: 3, r: 3, xtype: true, killer: true },
   ].map((p) => ({ ...soloGame.defaultParams(), symm: SYMM_NONE, killer: true, ...p })),

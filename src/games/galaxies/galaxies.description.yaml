@@ -66,8 +66,7 @@ help:
     A hint is refused while anything on the board contradicts the solution.
     The offending squares and lines light up instead, exactly as they do
     for **Check & save**.
-name: Galaxies
-family: regions
+produces: regions
 sizes:
   w: { min: 3, max: 100 }
   h: { min: 3, max: 100 }

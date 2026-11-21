@@ -64,8 +64,8 @@ import {
   type BricksState,
   type BricksUi,
   COL_MASK,
-  DIFF_NORMAL,
-  DIFF_TRICKY,
+  DIFF_RETIRED,
+  DIFF_UNREASONABLE,
   decodeParams,
   encodeDesc,
   encodeParams,
@@ -499,7 +499,7 @@ describe("bricks generator", () => {
       [10, 8],
     ]) {
       it(`${w}x${h} Unreasonable needs the search, not the ladder`, () => {
-        const p: BricksParams = { w, h, diff: DIFF_NORMAL };
+        const p: BricksParams = { w, h, diff: DIFF_UNREASONABLE };
         const { desc } = newBricksDesc(p, randomNew(`bricks-tier-${w}x${h}`));
         const st = newState(p, desc);
         expect(answerOf(st).kind).toBe("one");
@@ -508,7 +508,7 @@ describe("bricks generator", () => {
     }
 
     it("refuses to generate Tricky, for which no board exists", () => {
-      const p: BricksParams = { w: 7, h: 6, diff: DIFF_TRICKY };
+      const p: BricksParams = { w: 7, h: 6, diff: DIFF_RETIRED };
       expect(paramsError(bricksGame, p, true)).toBe(
         "Difficulty must be one of Easy, Unreasonable.",
       );
@@ -537,7 +537,7 @@ describe("bricks generator", () => {
     // no game ID or saved game changes meaning.
     it("still round-trips the unnamed third tier through a game ID", () => {
       const p = decodeParams("10x8dt");
-      expect(p.diff).toBe(DIFF_TRICKY);
+      expect(p.diff).toBe(DIFF_RETIRED);
       expect(encodeParams(p, true)).toBe("10x8dt");
     });
   });

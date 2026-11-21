@@ -221,8 +221,6 @@ export const norinoriGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(norinoriGame);

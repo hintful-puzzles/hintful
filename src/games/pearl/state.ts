@@ -49,9 +49,9 @@ export const bRD = 1 << (R | D);
 export const ERROR_CLUE = 16;
 
 // --- difficulty ------------------------------------------------------------
-export const DIFF_EASY = 0;
-export const DIFF_TRICKY = 1;
-export const DIFF_COUNT = 2;
+export const DIFF_EASY = pearl.TIER.easy;
+export const DIFF_NORMAL = pearl.TIER.normal;
+export const DIFF_COUNT = pearl.tiers.length;
 export const DIFF_NAMES: readonly string[] = pearl.tiers;
 /** Encoding chars for the `d<char>` param suffix (upstream `pearl_diffchars`). */
 const DIFF_CHARS = "et";
@@ -80,7 +80,7 @@ const BOARDS: readonly PearlParams[] = [
 
 /** 8x8 Normal (upstream's Tricky), upstream's default. */
 export function defaultParams(): PearlParams {
-  return { w: 8, h: 8, difficulty: DIFF_TRICKY };
+  return { w: 8, h: 8, difficulty: DIFF_NORMAL };
 }
 
 export const menu: PresetBoards<PearlParams> = { boards: BOARDS };
@@ -108,8 +108,8 @@ export const { encodeParams, decodeParams } = paramsCodec(
 );
 
 export function validateParams(p: PearlParams, _full: boolean): string | null {
-  if (p.difficulty >= DIFF_TRICKY && p.w + p.h < 11)
-    return `Width plus height must be at least 11 for ${DIFF_NAMES[DIFF_TRICKY]}.`;
+  if (p.difficulty >= DIFF_NORMAL && p.w + p.h < 11)
+    return `Width plus height must be at least 11 for ${DIFF_NAMES[DIFF_NORMAL]}.`;
   return null;
 }
 

@@ -28,8 +28,7 @@ help:
   parameters:
     after: |-
       Normal needs a board with room for the deeper reasoning, so it is not offered on very small grids.
-name: Clusters
-family: shading
+produces: shading
 sizes:
   # At most 10,000 squares, every board's bound, and at least two.
   w: { min: 1, max: 9999 }

@@ -429,10 +429,15 @@ contract". Exemplar: the skeleton's
   once, in its description", "Tier names come from one collection-wide
   scale" and "Unreasonable is declared and never issued by position"). A
   menu passed any other list fails `difficulty-contract.test.ts`.
-- **A `DIFF_*` constant names a solver rung, not a tier.** A `DIFF_TRIVIAL`
-  that is the first tier is shown as "Easy". At runtime the names come from
-  `difficultyTiers(game)`, never from the constants or the technique ladder
-  (`engine-difficulty`, "A game's tiers are read from its difficulty item").
+- **Code names a tier by its description's name**: `<game>.TIER.normal`
+  from the compiled module, or a `DIFF_NORMAL` constant defined from it,
+  never an index written as a number (`engine-difficulty`, "Code names a
+  tier by its description's name"; `tier-constants.test.ts`). A tier the
+  description lacks is then a type error. A value past the tiers, a solver's
+  verdict, is written from `<game>.tiers.length`. At runtime the names come
+  from `difficultyTiers(game)`, never from the constants or the technique
+  ladder (`engine-difficulty`, "A game's tiers are read from its difficulty
+  item").
   What a tier means is
   [`solver-and-generator.md`](./solver-and-generator.md) § "A tier means
   exactly its rung".

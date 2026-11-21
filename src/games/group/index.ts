@@ -122,7 +122,7 @@ import {
 import { groupLadder, type HintReason, solveGroup } from "./solver.ts";
 import {
   cloneState,
-  DIFF_EXTREME,
+  DIFF_HARD,
   DIFF_NAMES,
   DIFF_UNREASONABLE,
   decodeParams,
@@ -609,12 +609,7 @@ function buildSteps(
   const steps: HintStep<GroupMove, GroupHint, PlanRung<NarratableReason>>[] = [];
   const wGrid = Uint8Array.from(state.grid);
   const wPen = Int32Array.from(state.pencil);
-  const on = latinNotesLadder(
-    groupLadder,
-    w,
-    wGrid,
-    Math.min(state.diff, DIFF_EXTREME),
-  );
+  const on = latinNotesLadder(groupLadder, w, wGrid, Math.min(state.diff, DIFF_HARD));
   type Legs = Firing<GroupMove, GroupHint, NarratableReason>;
   const places = (
     f: LadderFiring,
@@ -902,8 +897,6 @@ export const groupGame: Game<
   computeSize: (p: GroupParams, ts: number): Size => computeSize(p.w, ts),
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(groupGame);

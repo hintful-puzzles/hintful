@@ -12,8 +12,8 @@ import * as solo from "../../generated/games/solo/solo.compiled.ts";
 import { solveSolo } from "./solver.ts";
 import {
   DIFF_EXTREME,
-  DIFF_KINTERSECT,
-  DIFF_RECURSIVE,
+  DIFF_KREGION,
+  DIFF_UNREASONABLE,
   decodeParams,
   newState,
   type SoloState,
@@ -129,9 +129,9 @@ const cases = [
 // Every pair of deduction caps, and search at the top one only: a search
 // branch is a fresh solve through the ladder, and searching a killer board
 // with its killer rungs capped away takes minutes.
-const caps: number[] = [DIFF_RECURSIVE * 10 + DIFF_KINTERSECT];
+const caps: number[] = [DIFF_UNREASONABLE * 10 + DIFF_KREGION];
 for (let maxdiff = 0; maxdiff <= DIFF_EXTREME; maxdiff++)
-  for (let maxkdiff = 0; maxkdiff <= DIFF_KINTERSECT; maxkdiff++)
+  for (let maxkdiff = 0; maxkdiff <= DIFF_KREGION; maxkdiff++)
     caps.push(maxdiff * 10 + maxkdiff);
 
 describeLadderCensus<SoloState>({

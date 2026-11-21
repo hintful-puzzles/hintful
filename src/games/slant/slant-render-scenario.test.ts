@@ -14,7 +14,7 @@ import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { SlantHint } from "./hint.ts";
 import { slantGame } from "./index.ts";
 import { COL_GRID } from "./render.ts";
-import { DIFF_EASY, DIFF_HARD } from "./state.ts";
+import { DIFF_EASY, DIFF_NORMAL } from "./state.ts";
 
 const lit = (step: HintStep<unknown>): SlantHint => {
   if (!step.highlights) throw new Error("a Slant step always has highlights");
@@ -25,7 +25,7 @@ const pinned = describeHintKindPins({
   game: slantGame,
   params: [
     { w: 5, h: 5, diff: DIFF_EASY },
-    { w: 8, h: 8, diff: DIFF_HARD },
+    { w: 8, h: 8, diff: DIFF_NORMAL },
   ],
   kinds: {
     // A clue firing: it carries a driving clue.

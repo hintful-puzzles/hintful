@@ -484,7 +484,10 @@ function spaceOf(
   const range = (name: string): number[] => {
     const s = d.json.sizes[name];
     if (s === undefined) throw new Error(`blocks: no size ${name}`);
-    return Array.from({ length: s.max - s.min + 1 }, (_, i) => s.min + i);
+    const { min } = s;
+    // A block's side is at most the order, whatever the rules allow.
+    const max = Math.min(s.max ?? order, order);
+    return Array.from({ length: max - min + 1 }, (_, i) => min + i);
   };
   const fits = range(m[1])
     .flatMap((a) => range(m[2]).map((b) => [a, b] as const))
@@ -724,7 +727,7 @@ function openSizes(d: Description, order: number): string[] {
         name !== grid?.h &&
         name !== bound &&
         !sizes.has(name) &&
-        max > sp.cells.length,
+        (max === undefined || max > sp.cells.length),
     )
     .map(([name]) => name);
 }
@@ -3198,7 +3201,9 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
   for (const [name, { min, max: most }] of free) {
     // A domain past the order reaches one value further than the cells
     // (Guess at one more color than slots): further adds nothing new.
-    const max = name === bound ? Math.min(most, order + 1) : most;
+    const max = name === bound ? Math.min(most ?? order + 1, order + 1) : most;
+    if (max === undefined)
+      throw new Error(`size ${name}: no max to build worlds up to`);
     out = out.flatMap((m) =>
       Array.from({ length: max - min + 1 }, (_, i) => new Map([...m, [name, min + i]])),
     );
@@ -3723,8 +3728,7 @@ export function libraryDescription(
 } {
   const json: DescriptionJson = {
     game: lib.library,
-    name: lib.library,
-    family: lib.library,
+    produces: lib.library,
     sizes: { order: { min: 3, max: 16 } },
     space: { grid: { w: "order", h: "order" }, edges: true, units: ["rows", "cols"] },
     answer: {

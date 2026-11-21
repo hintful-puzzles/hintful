@@ -606,7 +606,6 @@ export const bridgesGame: Game<
   },
 
   redraw: redrawBridges,
-  animLength: () => 0,
 };
 
 registerGame(bridgesGame);

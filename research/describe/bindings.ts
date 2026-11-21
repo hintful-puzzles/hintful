@@ -49,17 +49,17 @@ import {
   GAMEMODE_LETTERS,
   GAMEMODE_NUMBERS,
   DIFF_EASY as SALAD_EASY,
-  DIFF_HARD as SALAD_NORMAL,
+  DIFF_NORMAL as SALAD_NORMAL,
   type SaladParams,
   type SaladState,
 } from "../../src/games/salad/state.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import {
-  DIFF_BLOCK,
-  DIFF_INTERSECT,
-  DIFF_KINTERSECT,
-  DIFF_SET,
-  DIFF_SIMPLE,
+  DIFF_EASY,
+  DIFF_HARD,
+  DIFF_KREGION,
+  DIFF_NORMAL,
+  DIFF_TRICKY,
   type SoloParams,
   type SoloState,
   SYMM_NONE,
@@ -234,24 +234,24 @@ export const soloBinding: Binding<SoloParams, SoloState> = {
   game: soloGame,
   description: describedGame("src/games/solo/solo.description.yaml"),
   params: [
-    ...[DIFF_BLOCK, DIFF_SIMPLE, DIFF_INTERSECT].map((diff) => ({
+    ...[DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY].map((diff) => ({
       ...soloGame.defaultParams(),
       c: 2,
       r: 3,
       diff,
     })),
-    ...[DIFF_SIMPLE, DIFF_INTERSECT, DIFF_SET].map((diff) => ({
+    ...[DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD].map((diff) => ({
       ...soloGame.defaultParams(),
       c: 3,
       r: 3,
       diff,
     })),
-    { ...soloGame.defaultParams(), diff: DIFF_SIMPLE, xtype: true },
-    { ...soloGame.defaultParams(), c: 9, r: 1, diff: DIFF_SIMPLE },
+    { ...soloGame.defaultParams(), diff: DIFF_NORMAL, xtype: true },
+    { ...soloGame.defaultParams(), c: 9, r: 1, diff: DIFF_NORMAL },
     {
       ...soloGame.defaultParams(),
       symm: SYMM_NONE,
-      kdiff: DIFF_KINTERSECT,
+      kdiff: DIFF_KREGION,
       killer: true,
     },
   ],

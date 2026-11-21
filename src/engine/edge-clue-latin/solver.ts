@@ -6,7 +6,7 @@
  */
 
 import { latinSolver } from "../solve/latin.ts";
-import { type ClueKind, DIFF_RECURSIVE } from "./state.ts";
+import { type ClueKind, DIFF_UNREASONABLE } from "./state.ts";
 
 /**
  * Solve the `o × o` board (with clue `flags`) into `soln` (0 = blank), up to
@@ -26,7 +26,7 @@ export function solveEdgeClues(
 ): number {
   return latinSolver(soln, o, {
     maxdiff,
-    diffRecursive: DIFF_RECURSIVE,
+    diffRecursive: DIFF_UNREASONABLE,
     isAnswer: (grid) => kind.isAnswer(grid, o, flags),
     cubeOut,
     ladder: kind.ladder(o, flags),

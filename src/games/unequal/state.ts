@@ -8,8 +8,8 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import {
   type ClueKind,
-  DIFF_RECURSIVE,
-  DIFF_SET,
+  DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   type Difficulty,
   diffToLevel,
   type EdgeClueParams,
@@ -79,7 +79,7 @@ export function validateParams(p: EdgeClueParams, full: boolean): string | null 
   // Measured 2026-10-05: of 400,000 boards the generator built at Tricky, the
   // tier below solved every one. A 3x3 at Hard needs a wing, and of 400,000
   // built at Unreasonable the wing solved every one (2026-10-28).
-  if (full && p.order === 3 && (level === DIFF_SET || level === DIFF_RECURSIVE))
+  if (full && p.order === 3 && (level === DIFF_TRICKY || level === DIFF_UNREASONABLE))
     return noSuchTier("3x3 puzzle", unequal.tiers[level]);
   return null;
 }

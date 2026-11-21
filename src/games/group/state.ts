@@ -41,14 +41,14 @@ import * as group from "../../generated/games/group/group.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 // Upstream DIFFLIST order: Trivial, Normal, Hard, Extreme, Unreasonable. The
-// player sees the collection's tier names instead, so `DIFF_HARD` reads
-// "Tricky" and `DIFF_EXTREME` "Hard".
+// collection's tier names stand in for upstream's, which run one behind from
+// its Hard.
 
-export const DIFF_TRIVIAL = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_HARD = 2;
-export const DIFF_EXTREME = 3;
-export const DIFF_UNREASONABLE = 4;
+export const DIFF_EASY = group.TIER.easy; // upstream's DIFF_TRIVIAL
+export const DIFF_NORMAL = group.TIER.normal;
+export const DIFF_TRICKY = group.TIER.tricky; // upstream's DIFF_HARD
+export const DIFF_HARD = group.TIER.hard; // upstream's DIFF_EXTREME
+export const DIFF_UNREASONABLE = group.TIER.unreasonable;
 
 /** `group_diffchars` — the per-level encode character. */
 const DIFF_CHARS = "tnhxu";
@@ -60,7 +60,7 @@ export const DIFF_NAMES = group.tiers;
  * apart, so an Easy (Latin-only) puzzle can't hide its identity. */
 export const HIDDEN_IDENTITY_TIERS: readonly number[] = DIFF_NAMES.map(
   (_, diff) => diff,
-).filter((diff) => diff !== DIFF_TRIVIAL);
+).filter((diff) => diff !== DIFF_EASY);
 
 // --- element numbering / character mapping (E_TO_FRONT / E_FROM_FRONT) ------
 // In identity mode the elements read e,a,b,c,d,f,g,... (the identity pulled to
@@ -113,15 +113,15 @@ export interface GroupParams {
  */
 export const menu: PresetBoards<GroupParams> = {
   boards: [
-    { w: 6, diff: DIFF_TRIVIAL, id: true },
-    { w: 8, diff: DIFF_TRIVIAL, id: true },
-    { w: 12, diff: DIFF_TRIVIAL, id: true },
+    { w: 6, diff: DIFF_EASY, id: true },
+    { w: 8, diff: DIFF_EASY, id: true },
+    { w: 12, diff: DIFF_EASY, id: true },
   ],
   tiers: ({ w }) => {
-    if (w === 6) return [DIFF_TRIVIAL, DIFF_NORMAL];
-    return w === 8 ? [DIFF_TRIVIAL, DIFF_UNREASONABLE] : [DIFF_NORMAL, DIFF_NORMAL];
+    if (w === 6) return [DIFF_EASY, DIFF_NORMAL];
+    return w === 8 ? [DIFF_EASY, DIFF_UNREASONABLE] : [DIFF_NORMAL, DIFF_NORMAL];
   },
-  skips: () => [DIFF_EXTREME],
+  skips: () => [DIFF_HARD],
   variants: [{ w: 8, diff: DIFF_NORMAL, id: false }],
 };
 
@@ -194,8 +194,8 @@ export function validateParams(p: GroupParams, full: boolean): string | null {
  */
 function sizeLacksTier({ w, diff, id }: GroupParams): boolean {
   if (diff === DIFF_UNREASONABLE) return w < 5;
-  if (diff === DIFF_EXTREME) return w < 6;
-  if (diff === DIFF_HARD) return w < 4 || (w < 6 && id);
+  if (diff === DIFF_HARD) return w < 6;
+  if (diff === DIFF_TRICKY) return w < 4 || (w < 6 && id);
   if (diff === DIFF_NORMAL) return w < 4 || (w === 4 && id);
   return false;
 }

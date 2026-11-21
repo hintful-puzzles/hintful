@@ -52,8 +52,8 @@ import {
 } from "./render.ts";
 import {
   cloneState,
-  DIFF_HARD,
   DIFF_NORMAL,
+  DIFF_TRICKY,
   decodeParams,
   defaultParams,
   encodeParams,
@@ -148,7 +148,7 @@ describe("map params codec", () => {
       w: 20,
       h: 15,
       n: 30,
-      diff: DIFF_HARD,
+      diff: DIFF_TRICKY,
     });
     expect(decodeParams("10x10n5.5").n).toBe(5);
   });

@@ -53,7 +53,7 @@ import {
   type ClueKind,
   charValue,
   cloneState,
-  DIFF_RECURSIVE,
+  DIFF_UNREASONABLE,
   type EdgeClueMove,
   type EdgeClueParams,
   type EdgeClueState,
@@ -335,7 +335,7 @@ export function solve(
     return { ok: true, move: { type: "solve", grid } };
   }
   const soln = Uint8Array.from(orig.immutable);
-  const ret = solveEdgeClues(o, orig.kind, orig.clueFlags, soln, DIFF_RECURSIVE);
+  const ret = solveEdgeClues(o, orig.kind, orig.clueFlags, soln, DIFF_UNREASONABLE);
   if (ret === DIFF_IMPOSSIBLE) return { ok: false, error: NO_SOLUTION };
   if (ret === DIFF_AMBIGUOUS) return { ok: false, error: MULTIPLE_SOLUTIONS };
   return { ok: true, move: { type: "solve", grid: Array.from(soln) } };
@@ -345,7 +345,7 @@ export function findMistakes(state: EdgeClueState): readonly EdgeClueMistake[] {
   const o = state.order;
   // The solution is derived from the placed givens only — never from the notes.
   const soln = Uint8Array.from(state.immutable);
-  const ret = solveEdgeClues(o, state.kind, state.clueFlags, soln, DIFF_RECURSIVE);
+  const ret = solveEdgeClues(o, state.kind, state.clueFlags, soln, DIFF_UNREASONABLE);
   if (ret === DIFF_IMPOSSIBLE || ret === DIFF_AMBIGUOUS) return [];
   return entryMistakes(
     {

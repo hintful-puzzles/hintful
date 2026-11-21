@@ -32,7 +32,7 @@ import {
 } from "../../engine/solve/ladder-runtime.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import { graphNeighbors } from "./graph.ts";
-import { DIFF_RECURSE, DIFFCOUNT } from "./state.ts";
+import { DIFF_UNREASONABLE, DIFFCOUNT } from "./state.ts";
 
 export const SOLVER_IMPOSSIBLE = 0;
 export const SOLVER_UNIQUE = 1;
@@ -71,7 +71,7 @@ function deduce(m: CellMarks, ladder: Ladder, cap: number, dl: map.Dealt): Deduc
   const techniques = ladderTechniques(
     m,
     ladder.entries,
-    { [TIERS]: Math.min(cap, DIFF_RECURSE - 1) },
+    { [TIERS]: Math.min(cap, DIFF_UNREASONABLE - 1) },
     {},
   );
   if (runLadder(m, techniques)) return "contradiction";
@@ -117,7 +117,7 @@ export function mapSolver(
   m.placing = ladder.placing;
   if (!m.seed(gridOf(coloring))) return SOLVER_IMPOSSIBLE;
   let solved: CellMarks;
-  if (difficulty < DIFF_RECURSE) {
+  if (difficulty < DIFF_UNREASONABLE) {
     const got = deduce(m, ladder, difficulty, dl);
     if (got !== "solved")
       return got === "contradiction" ? SOLVER_IMPOSSIBLE : SOLVER_STUCK;

@@ -26,12 +26,11 @@ help:
     * On harder boards: **a bulb that would spoil every option**. When some square has to be lit, or some clue has to get a bulb, from one of a few outlined squares, a square whose bulb would leave each of them lit or beside a full clue can't hold a bulb.
 
     On an Unreasonable board the hint may stop and say that nothing further follows by deduction.
-name: Light Up
-family: shading
+produces: shading
 sizes:
   # Unbounded but by the time a board takes to deal.
-  w: { min: 2, max: 99999 }
-  h: { min: 2, max: 99999 }
+  w: { min: 2 }
+  h: { min: 2 }
 space:
   grid: { w: "w", h: "h" }
   units: []

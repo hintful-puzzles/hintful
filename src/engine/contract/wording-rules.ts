@@ -90,5 +90,6 @@ export const RETIRED_PHRASE =
  * hidden answer, and no mark of the player's is. */
 export const IS_OUT = /\b(?:is|are) out\b/i;
 
-/** The catalog family whose games keep "is out" as their own closing. */
-export const KEEPS_IS_OUT_FAMILY = "code";
+/** What a description's game `produces` where it keeps "is out" as its own
+ * closing. */
+export const KEEPS_IS_OUT_PRODUCES = "code";

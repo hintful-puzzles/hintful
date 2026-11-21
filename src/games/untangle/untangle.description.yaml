@@ -28,8 +28,7 @@ help:
     on the marked spot, and with **Snap points to a grid** on, only grid
     points.
 
-name: Untangle
-family: position
+produces: position
 sizes:
   # The points on the board.
   n: { min: 4, max: 2000 }

@@ -102,8 +102,7 @@ help:
     follow the elements to wherever you've dragged them. On an Unreasonable
     board, deduction can run out before the grid is full; the hint says so
     rather than guessing.
-name: Group
-family: latin
+produces: latin
 words:
   cell: cell
 sizes:

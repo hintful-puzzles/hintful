@@ -20,7 +20,7 @@ import cReference from "./__fixtures__/mathrax-c-reference.json" with { type: "j
 import { mathraxGame } from "./index.ts";
 import { mathraxSolve } from "./solver.ts";
 import {
-  DIFF_RECURSIVE,
+  DIFF_UNREASONABLE,
   diffFromLevel,
   encodeParams,
   type MathraxParams,
@@ -60,13 +60,13 @@ describe("mathrax frozen upstream boards (solver verdicts, every tier)", () => {
       expect(validateDesc(mathraxGame, p, f.desc)).toBeNull();
       const st = newState(p, f.desc);
       expect(
-        mathraxSolve(p.o, Uint8Array.from(st.grid), st.clues, DIFF_RECURSIVE),
+        mathraxSolve(p.o, Uint8Array.from(st.grid), st.clues, DIFF_UNREASONABLE),
       ).toBe(f.verdict);
     });
   }
 
   it("records upstream's Recursive tier as ambiguous — the divergence's premise", () => {
-    const recursive = fixtures.filter((f) => f.diff === DIFF_RECURSIVE);
+    const recursive = fixtures.filter((f) => f.diff === DIFF_UNREASONABLE);
     expect(recursive).not.toHaveLength(0);
     // Every upstream Recursive board has more than one solution (indeed these
     // three are stripped to a completely blank grid).

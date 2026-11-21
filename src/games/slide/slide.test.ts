@@ -1013,11 +1013,9 @@ describe("slide capabilities", () => {
   });
 
   it("does not animate a slide", () => {
-    const ongoing = fixtureState();
-    let done = executeMove(ongoing, { kind: "move", from: idx(3, 1), to: idx(4, 1) });
-    done = executeMove(done, { kind: "move", from: idx(1, 1), to: idx(2, 1) });
-    expect(slideGame.status(done)).toBe("solved");
-    const ui = newUi(ongoing);
-    expect(slideGame.animLength?.(ongoing, done, 1, ui)).toBe(0);
+    // Blocks jump to where they were dragged, as upstream's do: the live
+    // feedback is the block following the pointer, so the game declares no
+    // animation and the midend plays none.
+    expect(slideGame.animLength).toBeUndefined();
   });
 });

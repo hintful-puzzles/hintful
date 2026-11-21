@@ -36,11 +36,11 @@ import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 
 /** Upstream's shipped deductive strength, exactly: the tail half of
  * `applyArrowsAdvanced` and the four rules below it. */
-export const DIFF_EASY = 0;
+export const DIFF_EASY = subsets.TIER.easy;
 /** Adds the *head* half of `applyArrowsAdvanced` — the mirror elimination
  * upstream wrote, commented out under `// TODO repair this`, and never
  * compiled. */
-export const DIFF_NORMAL = 1;
+export const DIFF_NORMAL = subsets.TIER.normal;
 
 /** The collection's two-tier names; upstream offers no difficulty here. */
 export const DIFF_NAMES: readonly string[] = subsets.tiers;

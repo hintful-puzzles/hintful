@@ -11,13 +11,13 @@ import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { newDesc } from "./generator.ts";
 import { pearlMarks } from "./solver.ts";
-import { DIFF_EASY, DIFF_TRICKY, newState, type PearlParams } from "./state.ts";
+import { DIFF_EASY, DIFF_NORMAL, newState, type PearlParams } from "./state.ts";
 
 const SHAPES: PearlParams[] = [
   { w: 6, h: 6, difficulty: DIFF_EASY },
-  { w: 6, h: 6, difficulty: DIFF_TRICKY },
-  { w: 7, h: 7, difficulty: DIFF_TRICKY },
-  { w: 8, h: 6, difficulty: DIFF_TRICKY },
+  { w: 6, h: 6, difficulty: DIFF_NORMAL },
+  { w: 7, h: 7, difficulty: DIFF_NORMAL },
+  { w: 8, h: 6, difficulty: DIFF_NORMAL },
 ];
 
 const SEEDS = ["lad-a", "lad-b", "lad-c"];
@@ -57,7 +57,7 @@ describeLadderCensus<Board>({
   game: "pearl",
   rungs: [...pearl.ladder.map((e) => e.id)],
   unreached: {},
-  caps: [DIFF_EASY, DIFF_TRICKY],
+  caps: [DIFF_EASY, DIFF_NORMAL],
   cases,
   solve: ({ p, clues }, cap, firings) => pearlMarks(p.w, p.h, clues, cap, firings),
 });

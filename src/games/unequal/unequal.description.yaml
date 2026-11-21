@@ -57,8 +57,7 @@ help:
     own. On an Unreasonable board, deduction can run out before the grid is
     full; the hint says so rather than guessing.
 
-name: Unequal
-family: latin
+produces: latin
 words:
   cell: cell
 sizes:

@@ -41,8 +41,8 @@ import {
 import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as spokes from "../../generated/games/spokes/spokes.compiled.ts";
 import {
-  DIFF_HARD,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
+  DIFF_UNREASONABLE,
   getSpoke,
   SPOKE_DIRS,
   SPOKE_EMPTY,
@@ -271,7 +271,7 @@ function assumeLink(d: Deduction): Deduction[] {
 function searchAnswer(board: SpokesBoard, budget = ANSWER_BUDGET): Answer<Uint8Array> {
   return searchAnswers<Deduction, Uint8Array>({
     start: deduction(cleared(board)),
-    deduce: (d) => deduce(d, DIFF_TRICKY),
+    deduce: (d) => deduce(d, DIFF_NORMAL),
     assume: assumeLink,
     solution: (d) => Uint8Array.from(d.m.grid, (v) => (v === LINED ? LINED : NONE)),
     budget,
@@ -327,7 +327,7 @@ export function spokesSolve(
   cap: number,
   opts: { budget?: number; firings?: FiringTally } = {},
 ): DifficultyVerdict {
-  if (cap >= DIFF_HARD) {
+  if (cap >= DIFF_UNREASONABLE) {
     const answer = searchAnswer(board, opts.budget);
     return answer.kind === "one"
       ? "solved"

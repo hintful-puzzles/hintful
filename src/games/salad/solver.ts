@@ -44,8 +44,8 @@ import * as salad from "../../generated/games/salad/salad.compiled.ts";
 import {
   CIRCLE,
   CROSS,
-  DIFF_HARD,
   DIFF_HOLESONLY,
+  DIFF_NORMAL,
   dealtOf,
   type SaladBoard,
   type SaladState,
@@ -240,7 +240,7 @@ export interface SaladMistake {
  */
 export function saladSolution(s: SaladState): number[] | null {
   const board = scratchBoard(s);
-  if (!saladSolve(board, DIFF_HARD)) return null;
+  if (!saladSolve(board, DIFF_NORMAL)) return null;
   const cells: number[] = [];
   for (let i = 0; i < s.order * s.order; i++) {
     cells.push(board.grid[i] <= s.nums ? board.grid[i] : 0);

@@ -33,11 +33,11 @@ import { colors, coord, newDrawState, PREFERRED_TILE_SIZE, redraw } from "./rend
 import { solveGroup } from "./solver.ts";
 import {
   cloneState,
-  DIFF_EXTREME,
+  DIFF_EASY,
   DIFF_HARD,
   DIFF_NAMES,
   DIFF_NORMAL,
-  DIFF_TRIVIAL,
+  DIFF_TRICKY,
   DIFF_UNREASONABLE,
   encodeGrid,
   encodeParams,
@@ -97,7 +97,7 @@ function isValidGroupTable(grid: Uint8Array, w: number): boolean {
 
 describe("params codec", () => {
   it("encodes identity-hidden and difficulty faithfully", () => {
-    expect(encodeParams(P(8, DIFF_HARD, false), true)).toBe("8dhi");
+    expect(encodeParams(P(8, DIFF_TRICKY, false), true)).toBe("8dhi");
     expect(encodeParams(P(6, DIFF_NORMAL, true), true)).toBe("6dn");
     expect(encodeParams(P(6, DIFF_NORMAL, true), false)).toBe("6");
   });
@@ -119,10 +119,10 @@ describe("the description's tiers", () => {
   it("are the difficulty levels, in order", () => {
     expect(ladderTiers).toHaveLength(DIFF_NAMES.length);
     expect([
-      ladderTiers[DIFF_TRIVIAL],
+      ladderTiers[DIFF_EASY],
       ladderTiers[DIFF_NORMAL],
+      ladderTiers[DIFF_TRICKY],
       ladderTiers[DIFF_HARD],
-      ladderTiers[DIFF_EXTREME],
       ladderTiers[DIFF_UNREASONABLE],
     ]).toEqual(["Easy", "Normal", "Tricky", "Hard", "Unreasonable"]);
   });
@@ -147,10 +147,10 @@ describe("a size with no board at a tier", () => {
   const labels = (cells: GroupParams[]) => cells.map((p) => encodeParams(p, true));
 
   it("is refused, naming the size and the tier", () => {
-    expect(refusal(P(5, DIFF_HARD, true))).toBe(
+    expect(refusal(P(5, DIFF_TRICKY, true))).toBe(
       "No 5x5 puzzle that shows its identity is Tricky.",
     );
-    expect(refusal(P(5, DIFF_EXTREME, false))).toBe("No 5x5 puzzle is Hard.");
+    expect(refusal(P(5, DIFF_HARD, false))).toBe("No 5x5 puzzle is Hard.");
     expect(refusal(P(4, DIFF_UNREASONABLE, true))).toBe(
       "No 4x4 puzzle is Unreasonable.",
     );
@@ -160,7 +160,7 @@ describe("a size with no board at a tier", () => {
   });
 
   it("is not refused where its boards are rare", () => {
-    expect(refusal(P(6, DIFF_EXTREME, true))).toBeNull();
+    expect(refusal(P(6, DIFF_HARD, true))).toBeNull();
   });
 
   // A rare cell is not held to the run-out: a 6x6 at Hard with its identity
@@ -170,7 +170,7 @@ describe("a size with no board at a tier", () => {
 });
 
 describe("a tier found seldom", () => {
-  const SELDOM = [P(6, DIFF_HARD, true), P(8, DIFF_EXTREME, true)];
+  const SELDOM = [P(6, DIFF_TRICKY, true), P(8, DIFF_HARD, true)];
 
   // Ten seconds a board on average, so the slow tier's: from these seeds the
   // 6x6 came in a fifth of a second and the 8x8 in thirteen (2026-10-06, six
@@ -188,18 +188,18 @@ describe("generation", () => {
   // and every cell that stands beside one `validateParams` refuses.
   const cases: GroupParams[] = [
     P(4, DIFF_NORMAL, false),
-    P(4, DIFF_HARD, false),
-    P(5, DIFF_HARD, false),
+    P(4, DIFF_TRICKY, false),
+    P(5, DIFF_TRICKY, false),
     P(5, DIFF_NORMAL, true),
     P(5, DIFF_UNREASONABLE, true),
     P(6, DIFF_NORMAL, true),
     P(6, DIFF_NORMAL, false),
+    P(6, DIFF_TRICKY, false),
     P(6, DIFF_HARD, false),
-    P(6, DIFF_EXTREME, false),
     P(6, DIFF_UNREASONABLE, true),
-    P(7, DIFF_HARD, true),
-    P(8, DIFF_HARD, true),
-    P(8, DIFF_HARD, false),
+    P(7, DIFF_TRICKY, true),
+    P(8, DIFF_TRICKY, true),
+    P(8, DIFF_TRICKY, false),
   ];
 
   for (const p of cases) {

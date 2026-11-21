@@ -44,13 +44,12 @@ help:
     * **Counting the mines left.** Near the end, numbers whose squares do not overlap may account for every mine still to find, so every other unopened square is safe.
 
     The first step of a new board opens a square in the middle: no mine is ever laid in the first square you open or beside it.
-name: Mines
-family: shading
+produces: shading
 sizes:
   w: { min: 3, max: 9999 }
   h: { min: 3, max: 9999 }
   # The mines the board holds.
-  mines: { min: 0, max: 99999 }
+  mines: { min: 0 }
 space:
   grid: { w: "w", h: "h" }
   units: []

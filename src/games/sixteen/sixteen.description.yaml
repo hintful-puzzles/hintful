@@ -38,8 +38,7 @@ help:
     The search looks only so far ahead. When it cannot find a way to finish
     from your position, the hint says so rather than guessing: play a few
     moves of your own and ask again, or use *Show solution…*.
-name: Sixteen
-family: tiles in order
+produces: tiles in order
 sizes:
   # The game bounds neither side above; 99 stands for no bound.
   w: { min: 2, max: 99 }

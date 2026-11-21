@@ -283,8 +283,6 @@ export const rangeGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(rangeGame);

@@ -43,11 +43,10 @@ help:
     never guesses. It is refused while anything you have marked contradicts the
     solution; the offending squares are marked in red instead, exactly as they are for
     **Check & save**.
-name: Tracks
-family: lines
+produces: lines
 sizes:
-  w: { min: 4, max: 99999 }
-  h: { min: 4, max: 99999 }
+  w: { min: 4 }
+  h: { min: 4 }
 space:
   grid: { w: "w", h: "h" }
   edges: true

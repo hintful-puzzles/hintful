@@ -14,8 +14,8 @@
  * trace harness that captured it no longer exist — see
  * `engine/testing/differential.ts`.
  *
- * **From Tricky up the fixtures are re-founded.** Upstream's Tricky
- * (`DIFF_EXTREME`) has forcing chains, which here are a search and sit at
+ * **From Tricky up the fixtures are re-founded.** Tricky
+ * (upstream's `DIFF_EXTREME`) has forcing chains, which here are a search and sit at
  * Unreasonable, so a board the C graded Tricky by a chain grades Unreasonable,
  * and the generator from Tricky up keeps different boards. Those fixtures keep
  * the grade, Tricky or the Unreasonable the chain moved to, and drop the
@@ -27,7 +27,7 @@ import cReference from "./__fixtures__/towers-c-reference.json" with { type: "js
 import { newTowersDesc } from "./generator.ts";
 import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, solveTowers } from "./solver.ts";
 import {
-  DIFF_EXTREME,
+  DIFF_TRICKY,
   DIFF_UNREASONABLE,
   diffFromLevel,
   newState,
@@ -50,7 +50,7 @@ const label = (f: Fixture) => `${f.w}d${f.diff} seed=${f.seed}`;
 // 1. Byte-for-byte desc match — the shared faithful-generator bar.
 describeDescDifferential<Fixture, TowersParams>({
   title: "Towers C-vs-TS differential — desc byte-match (gated)",
-  fixtures: data.fixtures.filter((f) => f.diff < DIFF_EXTREME),
+  fixtures: data.fixtures.filter((f) => f.diff < DIFF_TRICKY),
   label,
   params,
   newDesc: (p, rng) => newTowersDesc(p, rng),
@@ -66,7 +66,7 @@ describe("Towers C-vs-TS differential — solver agreement (gated)", () => {
       // Unreasonable.
       const soln = Uint8Array.from(s.immutable);
       const ret = solveTowers(f.w, s.clues, soln, f.solverDiff);
-      if (f.solverDiff === DIFF_EXTREME && ret !== DIFF_EXTREME) {
+      if (f.solverDiff === DIFF_TRICKY && ret !== DIFF_TRICKY) {
         const searched = Uint8Array.from(s.immutable);
         expect(solveTowers(f.w, s.clues, searched, DIFF_UNREASONABLE)).toBe(
           DIFF_UNREASONABLE,

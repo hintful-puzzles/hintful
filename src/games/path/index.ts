@@ -153,8 +153,6 @@ export const pathGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(pathGame);

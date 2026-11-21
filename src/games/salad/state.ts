@@ -53,10 +53,10 @@ import * as salad from "../../generated/games/salad/salad.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
 
-/** Upstream `DIFF_EASY`, shown as **Easy**. */
-export const DIFF_EASY = 0;
-/** Upstream `DIFF_HARD`, shown as **Normal**. */
-export const DIFF_HARD = 1;
+/** Upstream `DIFF_EASY`. */
+export const DIFF_EASY = salad.TIER.easy;
+/** Upstream `DIFF_HARD`. */
+export const DIFF_NORMAL = salad.TIER.normal;
 
 const DIFF_NAMES: readonly string[] = salad.tiers;
 /** The difficulty letters `encodeParams` writes and `decodeParams` reads. */
@@ -107,7 +107,7 @@ export interface SaladParams {
   nums: number;
   /** {@link GAMEMODE_LETTERS} or {@link GAMEMODE_NUMBERS}. */
   mode: number;
-  /** {@link DIFF_EASY} or {@link DIFF_HARD}. */
+  /** {@link DIFF_EASY} or {@link DIFF_NORMAL}. */
   diff: number;
 }
 
@@ -146,7 +146,9 @@ export const menu: PresetBoards<SaladParams> = {
   tiers: ({ order, nums, mode }) => {
     if (mode === GAMEMODE_LETTERS)
       return order === 5 || order === 6 ? null : [DIFF_EASY, DIFF_EASY];
-    return order === 5 && nums === 4 ? [DIFF_HARD, DIFF_HARD] : [DIFF_EASY, DIFF_EASY];
+    return order === 5 && nums === 4
+      ? [DIFF_NORMAL, DIFF_NORMAL]
+      : [DIFF_EASY, DIFF_EASY];
   },
 };
 
@@ -205,7 +207,7 @@ export const LETTERS_GRID_CLUES_FROM = 8;
  *   an 8x8 24 s, and at 9x9 and 10x10 about half the deals give up.
  */
 function normalRefusal(p: SaladParams): string | null {
-  if (p.diff !== DIFF_HARD) return null;
+  if (p.diff !== DIFF_NORMAL) return null;
   const tier = DIFF_NAMES[p.diff] ?? "";
   const what = `${p.order}x${p.order} ${RULESETS[p.mode]?.name} puzzle with ${p.nums} symbols`;
   if (p.nums !== 2) return null;

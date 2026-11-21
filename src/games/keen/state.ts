@@ -44,11 +44,11 @@ import * as keen from "../../generated/games/keen/keen.compiled.ts";
 
 export type Difficulty = "easy" | "normal" | "hard" | "extreme" | "unreasonable";
 
-export const DIFF_EASY = 0;
-export const DIFF_NORMAL = 1;
-export const DIFF_HARD = 2;
-export const DIFF_EXTREME = 3;
-export const DIFF_UNREASONABLE = 4;
+export const DIFF_EASY = keen.TIER.easy;
+export const DIFF_NORMAL = keen.TIER.normal;
+export const DIFF_TRICKY = keen.TIER.tricky; // upstream's DIFF_HARD
+export const DIFF_HARD = keen.TIER.hard; // upstream's DIFF_EXTREME
+export const DIFF_UNREASONABLE = keen.TIER.unreasonable;
 
 // Upstream's keen_diffchars, indexed by level.
 const DIFF_CHARS = "enhxu";

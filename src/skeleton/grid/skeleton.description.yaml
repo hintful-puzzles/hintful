@@ -18,8 +18,7 @@ help:
     A step reads one number at a time where that is enough: a number that already has its shaded squares leaves the rest beside it clear, and one that needs every open square beside it has them all shaded. On Normal boards a step sometimes reads two numbers together, where every open square beside one of them is also beside the other.
 
     If a square you marked is wrong, the hint asks you to fix the highlighted mistakes first.
-name: Skeleton
-family: shading
+produces: shading
 sizes:
   w: { min: 3, max: 133 }
   h: { min: 3, max: 133 }

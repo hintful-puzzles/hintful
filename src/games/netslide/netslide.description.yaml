@@ -46,8 +46,7 @@ help:
     from your position, the hint says so rather than guessing: play a few
     slides of your own and ask again, or use *Show solution…*.
 
-name: Netslide
-family: position
+produces: position
 sizes:
   # A board of any size its desc gives; 99 stands for no bound.
   w: { min: 1, max: 99 }

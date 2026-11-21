@@ -25,9 +25,10 @@ import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 // --- difficulty -------------------------------------------------------------
 
 /** Solvable by the single-cell proof by contradiction alone. */
-export const DIFF_EASY = 0;
-/** Needs two tiles' counts read over the squares both touch. */
-export const DIFF_TRICKY = 1;
+export const DIFF_EASY = clusters.TIER.easy;
+/** Needs two tiles' counts read over the squares both touch (upstream's
+ * DIFF_TRICKY). */
+export const DIFF_NORMAL = clusters.TIER.normal;
 
 /** The tiers: two the ladder finishes, then Unreasonable, which a search
  * proves has one answer. Unreasonable came with Normal's count (2026-10-28),
@@ -69,7 +70,7 @@ export const opposite = (fill: ClustersFill): ClustersFill =>
 export interface ClustersParams {
   w: number;
   h: number;
-  /** {@link DIFF_EASY} or {@link DIFF_TRICKY}. */
+  /** {@link DIFF_EASY} or {@link DIFF_NORMAL}. */
   diff: number;
 }
 
@@ -168,7 +169,7 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
  * back an Easy board is the same defect as a tier that does not bind, and an
  * honest gate with nothing to find would spin until its retry guard gave up.
  */
-const MIN_TRICKY_AREA = 12;
+const MIN_NORMAL_AREA = 12;
 
 export function validateParams(p: ClustersParams, full: boolean): string | null {
   if (p.w * p.h < 2) return "Width times height must be at least 2.";
@@ -183,10 +184,10 @@ export function validateParams(p: ClustersParams, full: boolean): string | null 
   // still loads at any size, because `full` is false there.
   if (
     full &&
-    p.diff === DIFF_TRICKY &&
-    (Math.min(p.w, p.h) < 2 || p.w * p.h < MIN_TRICKY_AREA)
+    p.diff === DIFF_NORMAL &&
+    (Math.min(p.w, p.h) < 2 || p.w * p.h < MIN_NORMAL_AREA)
   ) {
-    return `${DIFF_NAMES[DIFF_TRICKY]} needs a board of at least 12 squares, at least two wide.`;
+    return `${DIFF_NAMES[DIFF_NORMAL]} needs a board of at least 12 squares, at least two wide.`;
   }
   return null;
 }

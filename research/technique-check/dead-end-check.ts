@@ -293,7 +293,8 @@ export async function worlds(
       const { min, max } = d.sizes[n];
       const next: Record<string, number>[] = [];
       for (const c of combos)
-        for (let v = min; v <= Math.min(max, min + 3); v++) next.push({ ...c, [n]: v });
+        for (let v = min; v <= Math.min(max ?? min + 3, min + 3); v++)
+          next.push({ ...c, [n]: v });
       combos.splice(0, combos.length, ...next);
     }
     boards.push(...combos.map((sizes) => ({ sizes, board: null })));

@@ -790,8 +790,10 @@ export interface Game<
     button: number,
   ): Move | null | UiUpdate;
   /** The game's input as targets and verbs, for a game that plays that way
-   * (`target-verb.ts`). Its `interpretMove` hands the verbs to
-   * `interpretTargetVerbs`, and the help renders its Controls paragraph from
+   * (`target-verb.ts`). A game whose verbs are all its input spreads
+   * `playedByTargetVerbs`, which declares this and the `interpretMove`
+   * together; one with arms of its own hands the rest to
+   * `interpretTargetVerbs`. The help renders its Controls paragraph from
    * this; `target-verb.test.ts` holds the two to each other. */
   readonly targetVerbs?: TargetVerbs<State, Ui, DrawState, unknown, Move>;
   /** The mark a player puts on a clue they are done with, declared with

@@ -104,13 +104,13 @@ import { solveSolo } from "./solver.ts";
 import {
   cloneState,
   DIFF_AMBIGUOUS,
-  DIFF_BLOCK,
+  DIFF_EASY,
   DIFF_IMPOSSIBLE,
-  DIFF_INTERSECT,
-  DIFF_KINTERSECT,
+  DIFF_KREGION,
   DIFF_NAMES,
-  DIFF_RECURSIVE,
-  DIFF_SIMPLE,
+  DIFF_NORMAL,
+  DIFF_TRICKY,
+  DIFF_UNREASONABLE,
   decodeParams,
   defaultParams,
   diag0,
@@ -138,14 +138,14 @@ import {
  * what a menu holds, so the 4x4, 12x12 and 16x16 boards upstream listed and
  * the 6x6 Jigsaw are a Custom away.
  */
-const plainBoard = (c: number, r: number, diff = DIFF_BLOCK): SoloParams => ({
+const plainBoard = (c: number, r: number, diff = DIFF_EASY): SoloParams => ({
   c,
   r,
   symm: SYMM_ROT2,
   diff,
   // Only Killer cages are graded on `kdiff`, and the codec does not write it,
   // so a plain board carries what its game ID decodes to.
-  kdiff: DIFF_KINTERSECT,
+  kdiff: DIFF_KREGION,
   xtype: false,
   killer: false,
 });
@@ -155,10 +155,10 @@ const menu: PresetBoards<SoloParams> = {
   // A 6×6 has fewer places to hide a `set` deduction than a 9×9, so Hard
   // costs its generator roughly fifty times what 3x3 Hard does, and the
   // small board stops at Tricky.
-  tiers: (p) => (p.c === 2 ? [DIFF_BLOCK, DIFF_INTERSECT] : null),
+  tiers: (p) => (p.c === 2 ? [DIFF_EASY, DIFF_TRICKY] : null),
   variants: [
-    { ...plainBoard(3, 3, DIFF_SIMPLE), xtype: true },
-    { ...plainBoard(3, 3), symm: SYMM_NONE, kdiff: DIFF_KINTERSECT, killer: true },
+    { ...plainBoard(3, 3, DIFF_NORMAL), xtype: true },
+    { ...plainBoard(3, 3), symm: SYMM_NONE, kdiff: DIFF_KREGION, killer: true },
   ],
 };
 
@@ -331,7 +331,7 @@ function solve(orig: SoloState, _curr: SoloState, aux?: string): SolveResult<Sol
     )
       return { ok: true, move: { type: "solve", grid } };
   }
-  const { diff, grid } = solveSolo(givensOnly(orig), DIFF_RECURSIVE, DIFF_KINTERSECT);
+  const { diff, grid } = solveSolo(givensOnly(orig), DIFF_UNREASONABLE, DIFF_KREGION);
   if (diff === DIFF_IMPOSSIBLE) return { ok: false, error: NO_SOLUTION };
   if (diff === DIFF_AMBIGUOUS) return { ok: false, error: MULTIPLE_SOLUTIONS };
   return { ok: true, move: { type: "solve", grid: Array.from(grid) } };
@@ -354,8 +354,8 @@ function findMistakes(state: SoloState): readonly SoloMistake[] {
   // player's notes (a note can be wrong; that is what we are checking).
   const { diff, grid: soln } = solveSolo(
     givensOnly(state),
-    DIFF_RECURSIVE,
-    DIFF_KINTERSECT,
+    DIFF_UNREASONABLE,
+    DIFF_KREGION,
   );
   if (diff === DIFF_IMPOSSIBLE || diff === DIFF_AMBIGUOUS) return [];
   return entryMistakes(
@@ -670,13 +670,13 @@ function refreshHintStep(
 const difficulty: DifficultyContract<SoloParams> = {
   solveAtCap: (p, desc, cap) => {
     const givens = givensOnly(newState(p, desc));
-    const { diff } = solveSolo(givens, cap, DIFF_KINTERSECT);
+    const { diff } = solveSolo(givens, cap, DIFF_KREGION);
     if (diff === DIFF_IMPOSSIBLE) {
       // Below the recursive tier the solver says impossible where it is
       // merely stuck, as upstream's does; only a solve that may search can
       // tell that from a board with no answer.
-      if (cap >= DIFF_RECURSIVE) return "impossible";
-      const full = solveSolo(givens, DIFF_RECURSIVE, DIFF_KINTERSECT).diff;
+      if (cap >= DIFF_UNREASONABLE) return "impossible";
+      const full = solveSolo(givens, DIFF_UNREASONABLE, DIFF_KREGION).diff;
       return full === DIFF_IMPOSSIBLE ? "impossible" : "unsolved";
     }
     return diff === DIFF_AMBIGUOUS ? "unsolved" : "solved";
@@ -845,8 +845,6 @@ export const soloGame: Game<
   computeSize: (p: SoloParams, ts: number): Size => computeSize(p.c * p.r, ts),
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(soloGame);

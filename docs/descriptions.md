@@ -1883,7 +1883,8 @@ fails on a compiled claim with none.
 
 ## What a candidate inherits
 
-A new game in a family costs what its family's ladders do not already
+A new game in a family, the games whose descriptions say they produce the
+same thing (`produces`), costs what its family's ladders do not already
 give it. [`research/technique-check/inherit.ts`](../research/technique-check/inherit.ts)
 computes that from the candidate's description, its rules stated and its
 techniques not yet: each technique of each library its family places and of

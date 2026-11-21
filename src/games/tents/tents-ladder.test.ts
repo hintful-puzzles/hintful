@@ -13,12 +13,12 @@ import { leafPresets } from "../../engine/testing/presets.ts";
 import { newTentsDesc } from "./generator.ts";
 import { tentsGame } from "./index.ts";
 import { tentsSolve } from "./solver.ts";
-import { DIFF_EASY, DIFF_TRICKY, newState, type TentsParams, TREE } from "./state.ts";
+import { DIFF_EASY, DIFF_NORMAL, newState, type TentsParams, TREE } from "./state.ts";
 
 /** Every preset, plus a board that is not square. */
 const SHAPES: TentsParams[] = [
   ...leafPresets(tentsGame).map((l) => l.params),
-  { w: 12, h: 5, diff: DIFF_TRICKY },
+  { w: 12, h: 5, diff: DIFF_NORMAL },
 ];
 
 const SEEDS = ["lad-a", "lad-b", "lad-c", "lad-d"];
@@ -58,7 +58,7 @@ describeLadderCensus<Board>({
     "lineNeighbors",
   ],
   unreached: {},
-  caps: [DIFF_EASY - 1, DIFF_EASY, DIFF_TRICKY],
+  caps: [DIFF_EASY - 1, DIFF_EASY, DIFF_NORMAL],
   cases,
   solve: ({ p, puzzle, numbers }, cap, firings) =>
     tentsSolve(p.w, p.h, puzzle, numbers, cap, firings),

@@ -28,7 +28,7 @@ import {
   type ClustersParams,
   COLMASK,
   DIFF_EASY,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   DIFF_UNREASONABLE,
   encodeDesc,
   F_COLOR_0,
@@ -202,7 +202,7 @@ function graded(
   // A contradiction is an ordinary rejection at either tier.
   if (easy === INVALID) return INVALID;
 
-  return solveGame(grid, w, h, DIFF_TRICKY);
+  return solveGame(grid, w, h, DIFF_NORMAL);
 }
 
 /**
@@ -224,12 +224,12 @@ export function newClustersDesc(p: ClustersParams, rng: RandomState): { desc: st
       draw: () => {
         climbed++;
         drawClues(grid, w, h, rng, climbed % FORCE_EVERY === 0);
-        const status = solveGame(grid, w, h, DIFF_TRICKY);
+        const status = solveGame(grid, w, h, DIFF_NORMAL);
         if (status === COMPLETE) grid[randomUpto(rng, w * h)] ^= COLMASK;
         if (status !== UNFINISHED) return null;
         return grid.map((tile) => (tile & F_SINGLE ? tile : 0));
       },
-      deduced: (givens) => solveGame(givens.slice(), w, h, DIFF_TRICKY) === COMPLETE,
+      deduced: (givens) => solveGame(givens.slice(), w, h, DIFF_NORMAL) === COMPLETE,
       answer: (givens, budget) => answerSearch(givens, w, h, budget ?? DEALING_SEARCH),
     });
     return { desc: encodeDesc(dealt, w, h) };

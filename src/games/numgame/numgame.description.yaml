@@ -23,8 +23,7 @@ help:
 
     If the numbers you have left can no longer make the target, the hint says so, and Undo takes you back to where they could.
 
-name: Numgame
-family: position
+produces: position
 sizes:
   # The places the board deals a number on.
   places: { min: 6, max: 6 }

@@ -26,7 +26,7 @@ import {
 } from "./solver.ts";
 import {
   canonicalEdge,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   type SpokesMove,
   type SpokesSpokeRef,
   type SpokesState,
@@ -85,7 +85,7 @@ const { plan: spokesPlan, judgeMove: judgePlan } = describedEdgeHint<
   name: "spokes hint",
   walk: (state) => spokesWalk(state),
   // Up to Normal: the search beneath is not a deduction.
-  tiers: { lowest: () => DIFF_TRICKY, count: DIFF_TRICKY + 1 },
+  tiers: { lowest: () => DIFF_NORMAL, count: DIFF_NORMAL + 1 },
   done: (_marks, ctx) => ctx.complete(),
   holds: (marks, ctx, f) =>
     f.kind === PLACE && f.value === UNUSED && unusedDecided(marks, ctx, f.at),

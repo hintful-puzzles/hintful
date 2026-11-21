@@ -52,7 +52,7 @@ import {
   COLMASK,
   DIFF_EASY,
   DIFF_NAMES,
-  DIFF_TRICKY,
+  DIFF_NORMAL,
   decodeParams,
   encodeDesc,
   encodeParams,
@@ -116,11 +116,11 @@ function click(
 
 describe("params", () => {
   it("round-trips presets and the bare-width form", () => {
-    expect(encodeParams({ w: 9, h: 7, diff: DIFF_TRICKY }, true)).toBe("9x7dt");
+    expect(encodeParams({ w: 9, h: 7, diff: DIFF_NORMAL }, true)).toBe("9x7dt");
     expect(encodeParams({ w: 9, h: 7, diff: DIFF_EASY }, true)).toBe("9x7de");
     // The non-full form is the size alone (the preset-menu label's params).
-    expect(encodeParams({ w: 9, h: 7, diff: DIFF_TRICKY }, false)).toBe("9x7");
-    expect(decodeParams("9x7dt")).toEqual({ w: 9, h: 7, diff: DIFF_TRICKY });
+    expect(encodeParams({ w: 9, h: 7, diff: DIFF_NORMAL }, false)).toBe("9x7");
+    expect(decodeParams("9x7dt")).toEqual({ w: 9, h: 7, diff: DIFF_NORMAL });
     expect(decodeParams("8de")).toEqual({ w: 8, h: 8, diff: DIFF_EASY });
   });
 
@@ -153,17 +153,17 @@ describe("params", () => {
 
   it("refuses Normal below the size where it binds — for generation only", () => {
     const refusal = "Normal needs a board of at least 12 squares, at least two wide.";
-    const tricky = (w: number, h: number) => ({ w, h, diff: DIFF_TRICKY });
-    expect(check(tricky(2, 5), true)).toBe(refusal); // 10 squares
-    expect(check(tricky(3, 3), true)).toBe(refusal); // 9 squares
+    const normal = (w: number, h: number) => ({ w, h, diff: DIFF_NORMAL });
+    expect(check(normal(2, 5), true)).toBe(refusal); // 10 squares
+    expect(check(normal(3, 3), true)).toBe(refusal); // 9 squares
     // A one-wide strip never binds however long it is: a cell there has at most
     // two neighbors, so there is no second tile for a count to read.
-    expect(check(tricky(1, 20), true)).toBe(refusal);
+    expect(check(normal(1, 20), true)).toBe(refusal);
     // A saved game or a game ID carrying its own description still loads.
-    expect(check(tricky(3, 3), false)).toBeNull();
+    expect(check(normal(3, 3), false)).toBeNull();
     // The measured boundary, in both of its shapes.
-    expect(check(tricky(2, 6), true)).toBeNull();
-    expect(check(tricky(3, 4), true)).toBeNull();
+    expect(check(normal(2, 6), true)).toBeNull();
+    expect(check(normal(3, 4), true)).toBeNull();
     // …and a refused size is fine at Easy.
     expect(check({ w: 3, h: 3, diff: DIFF_EASY }, true)).toBeNull();
   });
@@ -187,7 +187,7 @@ describe("difficulty tiers", () => {
 
   it("a Normal board needs the count: unsolvable at level 0, solved at 1", () => {
     for (const [w, h] of SIZES) {
-      const p = { w, h, diff: DIFF_TRICKY };
+      const p = { w, h, diff: DIFF_NORMAL };
       const { desc } = newClustersDesc(p, randomNew(`clusters-tricky-${w}`));
       expect(solveGame(newState(p, desc).grid, w, h, 0)).not.toBe(COMPLETE);
       expect(solveGame(newState(p, desc).grid, w, h, 1)).toBe(COMPLETE);
@@ -282,10 +282,10 @@ describe("solver classification", () => {
       [10, 10],
     ] as const) {
       const { desc } = newClustersDesc(
-        { w, h, diff: DIFF_TRICKY },
+        { w, h, diff: DIFF_NORMAL },
         randomNew(`clusters-solve-${w}`),
       );
-      const grid = newState({ w, h, diff: DIFF_TRICKY }, desc).grid.slice();
+      const grid = newState({ w, h, diff: DIFF_NORMAL }, desc).grid.slice();
       expect(solveGame(grid, w, h, 1)).toBe(COMPLETE);
     }
   });

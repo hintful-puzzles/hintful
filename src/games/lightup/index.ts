@@ -16,7 +16,7 @@ import {
   type DifficultyContract,
   difficultyItem,
 } from "../../engine/contract/difficulty.ts";
-import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
+import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import {
   dimensionParamConfig,
@@ -32,8 +32,8 @@ import {
 import { describedFiringHint } from "../../engine/hint/described-firing-hint.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
-  interpretTargetVerbs,
   letterKey,
+  playedByTargetVerbs,
   rulingOut,
   squareGrid,
   type TargetVerbs,
@@ -142,16 +142,6 @@ const targetVerbs: TargetVerbs<
     buttons: ["secondary"],
   },
 };
-
-function interpretMove(
-  state: LightupState,
-  ui: LightupUi,
-  ds: LightupDrawState,
-  p: Point,
-  button: number,
-): LightupMove | null | UiUpdate {
-  return interpretTargetVerbs(targetVerbs, state, ui, ds, p, button);
-}
 
 function executeMove(state: LightupState, move: LightupMove): LightupState {
   // A move is an op list, not a union, so there is no discriminant to narrow to
@@ -414,8 +404,7 @@ export const lightupGame: Game<
   newUi,
   changedState,
 
-  interpretMove,
-  targetVerbs,
+  ...playedByTargetVerbs(targetVerbs),
   executeMove,
   status: (s) => (isSolved(s) ? "solved" : "ongoing"),
 
@@ -465,8 +454,6 @@ export const lightupGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(lightupGame);

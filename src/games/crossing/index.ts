@@ -817,8 +817,6 @@ export const crossingGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(crossingGame);

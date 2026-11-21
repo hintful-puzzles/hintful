@@ -352,8 +352,6 @@ export const seismicGame: Game<
   computeSize,
   newDrawState,
   redraw,
-
-  animLength: () => 0,
 };
 
 registerGame(seismicGame);

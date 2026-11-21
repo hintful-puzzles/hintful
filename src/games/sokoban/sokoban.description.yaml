@@ -83,8 +83,7 @@ help:
     **Check & save** asks the same question, since Sokoban has no single
     answer to check your pushes against: it won't save a position the hint
     would ask you to undo from, and outlines the stuck barrel.
-name: Sokoban
-family: position
+produces: position
 sizes:
   # The game deals sides of four at the least, and loads a board of any size
   # with its desc; 99 stands for no bound.

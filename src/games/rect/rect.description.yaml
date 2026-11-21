@@ -102,12 +102,11 @@ help:
   origins: |-
     {{choice:ruleset:0}} is Nikoli's *Shikaku*. {{choice:ruleset:1}} is the
     puzzle LinkedIn publishes daily under that name.
-name: Rectangles
-family: regions
+produces: regions
 sizes:
-  # Wider than the 10,000 squares a board may hold.
-  w: { min: 1, max: 2147483647 }
-  h: { min: 1, max: 2147483647 }
+  # The rules set no bound; a board holds at most 10,000 squares.
+  w: { min: 1 }
+  h: { min: 1 }
 space:
   grid: { w: "w", h: "h" }
   edges: true

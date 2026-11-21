@@ -26,12 +26,12 @@ import { noRepeatRegionNames, regionsOf, soloGame } from "./index.ts";
 import { COL_PENCIL, digitChar } from "./render.ts";
 import { solveSolo } from "./solver.ts";
 import {
-  DIFF_BLOCK,
+  DIFF_EASY,
   DIFF_EXTREME,
-  DIFF_INTERSECT,
-  DIFF_KINTERSECT,
-  DIFF_SET,
-  DIFF_SIMPLE,
+  DIFF_HARD,
+  DIFF_KREGION,
+  DIFF_NORMAL,
+  DIFF_TRICKY,
   defaultParams,
   newState,
   newUi,
@@ -56,17 +56,17 @@ function gen(p: SoloParams, seed: string) {
 // biome-ignore lint/suspicious/noExplicitAny: structural access to hint highlights/move in tests.
 type AnyStep = any;
 
-const BASIC: SoloParams = { ...defaultParams(), diff: DIFF_SIMPLE };
-const INTER: SoloParams = { ...defaultParams(), diff: DIFF_INTERSECT };
-const ADV: SoloParams = { ...defaultParams(), diff: DIFF_SET };
-const XADV: SoloParams = { ...defaultParams(), diff: DIFF_SET, xtype: true };
+const BASIC: SoloParams = { ...defaultParams(), diff: DIFF_NORMAL };
+const INTER: SoloParams = { ...defaultParams(), diff: DIFF_TRICKY };
+const ADV: SoloParams = { ...defaultParams(), diff: DIFF_HARD };
+const XADV: SoloParams = { ...defaultParams(), diff: DIFF_HARD, xtype: true };
 const EXTREME: SoloParams = { ...defaultParams(), diff: DIFF_EXTREME };
 const KILLER: SoloParams = {
   c: 3,
   r: 3,
   symm: SYMM_NONE,
-  diff: DIFF_BLOCK,
-  kdiff: DIFF_KINTERSECT,
+  diff: DIFF_EASY,
+  kdiff: DIFF_KREGION,
   xtype: false,
   killer: true,
 };
@@ -443,7 +443,7 @@ describe("solo hint", () => {
   it("solves an easy board from singles alone on its default reading", () => {
     // The reason Solo overrides the populate convention: a board this easy never
     // needs a note written, where penciling in first writes some 450.
-    const easy: SoloParams = { ...defaultParams(), diff: DIFF_BLOCK };
+    const easy: SoloParams = { ...defaultParams(), diff: DIFF_EASY };
     for (const p of [easy, BASIC]) {
       for (const seed of ["singles-1", "singles-2", "singles-3"]) {
         const { st } = gen(p, seed);

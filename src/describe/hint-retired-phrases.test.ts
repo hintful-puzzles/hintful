@@ -11,7 +11,7 @@
 import { describe, expect, it } from "vitest";
 import {
   IS_OUT,
-  KEEPS_IS_OUT_FAMILY,
+  KEEPS_IS_OUT_PRODUCES,
   RETIRED_PHRASE as RETIRED,
 } from "../engine/contract/wording-rules.ts";
 import {
@@ -35,12 +35,14 @@ const descriptions = import.meta.glob<string>("../games/*/*.description.yaml", {
   import: "default",
 });
 
-/** The games whose description's family keeps "is out", as the compiler's
- * lint reads it. */
+/** The games whose description's `produces` keeps "is out", as the
+ * compiler's lint reads it. */
 const KEEPS_IS_OUT = new Set(
   Object.entries(descriptions).flatMap(([path, text]) => {
     const file = loadDescriptionFile(text, path);
-    return "family" in file && file.family === KEEPS_IS_OUT_FAMILY ? [file.game] : [];
+    return "produces" in file && file.produces === KEEPS_IS_OUT_PRODUCES
+      ? [file.game]
+      : [];
   }),
 );
 

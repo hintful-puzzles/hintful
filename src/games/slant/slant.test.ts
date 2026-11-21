@@ -41,7 +41,7 @@ import { SOLVE_UNIQUE, slantSolve } from "./solver.ts";
 import {
   computeErrors,
   DIFF_EASY,
-  DIFF_HARD,
+  DIFF_NORMAL,
   decodeClues,
   decodeParams,
   encodeClues,
@@ -105,12 +105,12 @@ describe("slant params", () => {
   it("round-trips through encode/decode", () => {
     for (const p of [
       { w: 5, h: 5, diff: DIFF_EASY },
-      { w: 12, h: 10, diff: DIFF_HARD },
+      { w: 12, h: 10, diff: DIFF_NORMAL },
     ]) {
       expect(decodeParams(encodeParams(p, true))).toEqual(p);
     }
-    expect(encodeParams({ w: 12, h: 10, diff: DIFF_HARD }, true)).toBe("12x10dh");
-    expect(encodeParams({ w: 12, h: 10, diff: DIFF_HARD }, false)).toBe("12x10");
+    expect(encodeParams({ w: 12, h: 10, diff: DIFF_NORMAL }, true)).toBe("12x10dh");
+    expect(encodeParams({ w: 12, h: 10, diff: DIFF_NORMAL }, false)).toBe("12x10");
   });
 
   it("decodes a bare size as an Easy square", () => {
@@ -323,7 +323,7 @@ describe("slant solve + findMistakes", () => {
 describe("slant generator (behavioral)", () => {
   it("generates uniquely-solvable boards at the target difficulty", () => {
     const rng = randomNew("slant-behavioral");
-    for (const diff of [DIFF_EASY, DIFF_HARD]) {
+    for (const diff of [DIFF_EASY, DIFF_NORMAL]) {
       const p = { w: 6, h: 6, diff };
       const { desc } = newDesc(p, rng);
       expect(validateDesc(slantGame, p, desc)).toBeNull();

@@ -34,12 +34,12 @@ import * as solo from "../../generated/games/solo/solo.compiled.ts";
 import type { BlockStructure, SoloState } from "./state.ts";
 import {
   DIFF_AMBIGUOUS,
-  DIFF_BLOCK,
+  DIFF_EASY,
   DIFF_EXTREME,
   DIFF_IMPOSSIBLE,
-  DIFF_KINTERSECT,
+  DIFF_KREGION,
   DIFF_KSINGLE,
-  DIFF_RECURSIVE,
+  DIFF_UNREASONABLE,
   dealtOf,
   diag0,
   diag1,
@@ -298,13 +298,14 @@ class SolverUsage extends CellMarks {
     const rungs = ladderTechniques(this, this.rungs.entries, caps, grades, (entry) =>
       killer !== null && entry.scale === "killer" ? this.reduceCages(killer) : 0,
     );
-    if (dlev.maxdiff < DIFF_RECURSIVE) return rungs;
+    if (dlev.maxdiff < DIFF_UNREASONABLE) return rungs;
     return withSearch(rungs, {
       id: "forcing-chain",
-      tier: DIFF_RECURSIVE,
+      tier: DIFF_UNREASONABLE,
       run: () => {
         const ret = this.forcing();
-        if (ret > 0 && DIFF_RECURSIVE > grades[TIERS]) grades[TIERS] = DIFF_RECURSIVE;
+        if (ret > 0 && DIFF_UNREASONABLE > grades[TIERS])
+          grades[TIERS] = DIFF_UNREASONABLE;
         return ret;
       },
     });
@@ -324,7 +325,7 @@ class SolverUsage extends CellMarks {
   run(dlev: Difficulty, firings?: FiringTally): void {
     const cr = this.cr;
     const grid = this.grid;
-    const grades = { [TIERS]: DIFF_BLOCK, killer: DIFF_KSINGLE };
+    const grades = { [TIERS]: DIFF_EASY, killer: DIFF_KSINGLE };
     const finish = (d: number): void => {
       dlev.diff = d;
       dlev.kdiff = grades.killer;
@@ -342,7 +343,7 @@ class SolverUsage extends CellMarks {
     let diff = grades[TIERS];
 
     // Recursion, if permitted and the grid is not yet full.
-    if (dlev.maxdiff >= DIFF_RECURSIVE) {
+    if (dlev.maxdiff >= DIFF_UNREASONABLE) {
       let best = -1;
       let bestcount = cr + 1;
       for (let y = 0; y < cr; y++)
@@ -379,7 +380,7 @@ class SolverUsage extends CellMarks {
           // leaves the verdict as it was.
           if (dlev.diff === DIFF_AMBIGUOUS) diff = DIFF_AMBIGUOUS;
           else if (dlev.diff !== DIFF_IMPOSSIBLE)
-            diff = diff === DIFF_IMPOSSIBLE ? DIFF_RECURSIVE : DIFF_AMBIGUOUS;
+            diff = diff === DIFF_IMPOSSIBLE ? DIFF_UNREASONABLE : DIFF_AMBIGUOUS;
 
           if (diff === DIFF_AMBIGUOUS) break;
         }
@@ -416,8 +417,8 @@ export function runSolver(
  */
 export function solveSolo(
   s: SoloState,
-  maxdiff = DIFF_RECURSIVE,
-  maxkdiff = DIFF_KINTERSECT,
+  maxdiff = DIFF_UNREASONABLE,
+  maxkdiff = DIFF_KREGION,
   firings?: FiringTally,
 ): { diff: number; kdiff: number; grid: Int8Array } {
   const grid = s.grid.slice();
