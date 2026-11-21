@@ -533,13 +533,13 @@ generator cannot be pinned. Exemplar:
 
 ## Quirks are load-bearing — capped, not cleaned
 
-Do not tidy an upstream quirk in a fixture-pinned generator: it is part of
-which boards exist, and a hygiene fix diverges the fixture. Where the quirk's
-safety rests on an unproven invariant, port it faithfully and wrap the loop
-in a generous cap that throws when exceeded, so an accidental divergence
-fails loudly and does not hang. The shared form is
-[`retry-limit.ts`](../src/engine/contract/retry-limit.ts), and every
-generate-until-success loop takes it, quirk or not.
+An upstream quirk in a fixture-pinned generator is part of which boards
+exist, so a hygiene fix diverges the fixture; a fix for the player is
+priced as [`solver-and-generator.md`](./solver-and-generator.md) §
+"Divergence and what it costs" says. Where the quirk's safety rests on an
+unproven invariant, port it faithfully inside the loop's `retryLimit`
+(`solver-and-generator.md` § "Every retry loop is bounded"), so an
+accidental divergence fails loudly and does not hang.
 
 ## When a fixture goes red
 
@@ -584,10 +584,8 @@ load".
   Use [`step-budget.ts`](../src/engine/solve/step-budget.ts) for solver and hint
   fixpoints and [`retry-limit.ts`](../src/engine/contract/retry-limit.ts) for
   retries.
-- **Do not judge a generator's cost from a vitest run.** The module runner
-  and suite contention have shown about a 7× gap against a plain `node`
-  process on the same seeds. Measure outside the runner before designing a
-  fix (§ "Timing anything under vitest").
+- **Do not judge a generator's cost from a vitest run.** Measure outside the
+  runner before designing a fix (§ "Timing anything under vitest").
 
 A heavy generation or exhaustive solve takes 1 to 3 s alone and 5 to 10 times
 that in a saturated full run. "Contention on work that terminates" is a
@@ -790,9 +788,10 @@ it by reading the test. Four shapes to look for:
 
 Flip the line a new test is for, watch it go red, and put it back. Do it
 again for a test you just made cheaper, since what an optimization breaks is
-a test that still passes and catches nothing. A chosen case can be caught by
-another guard and pass with the checked code deleted. The systematic form is
-the mutation probe ([`test-strength.md`](./test-strength.md)).
+a test that still passes and catches nothing. The principle is
+[`method.md`](./method.md) § "See a guard fail before trusting it"; the
+shapes of a test that passed at once and caught nothing, and the mutation
+probe that is the systematic form, are [`test-strength.md`](./test-strength.md).
 
 ## A shared module needs its own tests
 
@@ -1155,6 +1154,12 @@ ratcheted ([`test-strength.md`](./test-strength.md)).
 
 Time a cost on an idle machine, say which machine, and trust ratios taken
 under comparable conditions over absolute seconds.
+
+- **Time a generator as the browser runs it, never under vitest.** Idle,
+  vitest ran Star Battle's generator about twice as slow as Chrome, and
+  node on the code bundled by `rolldown` came within a third of Chrome
+  (2026-10-15); with suite contention the gap against a plain `node`
+  process on the same seeds has been about 7×.
 
 - **Record free memory and swap beside the load average.** Under paging,
   `sys` time is page-fault time, so a figure taken then is an upper bound.

@@ -1175,11 +1175,8 @@ a row. Exemplars: [`bricks/render.ts`](../src/games/bricks/render.ts) and
   undo the origin, floor to a row, then subtract that row's shear before
   flooring to a column. Share the offset helper between `render.ts` and
   `index.ts` (`offsets(h, ts)`).
-- **Force the tile size even in both `computeSize` and `newDrawState`**, so
-  the half tile is exact.
-- **Check the shear in an SVG dump before opening a browser.** A wrong
-  offset shows as a staircase ([`testing.md`](./testing.md) § "Render
-  scenarios").
+- **The tile size and checking the shear are the draw side's**
+  ([`rendering.md`](./rendering.md) § "Bespoke board geometry, draw side").
 
 ### One function, both callers
 

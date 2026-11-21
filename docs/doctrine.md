@@ -130,12 +130,13 @@ run, so a new question about upstream behavior is answered behaviorally.
 
 - **Matching the C is not a reason to leave a game unimproved.** "It would
   change every board" is a cost to weigh. A divergence needs a stated
-  player-visible benefit, and where it drops an assurance the change says
-  what replaces it. The rules for a solver or generator divergence are
+  player-visible benefit, and tidiness is not one; where it drops an
+  assurance the change says what replaces it. Reading a solver or generator
+  quirk before diverging is
   [`solver-and-generator.md`](./solver-and-generator.md) § "Divergence and
   what it costs".
-- **Display code is not held to upstream**: rendering, layout, animation and
-  colors aim at neat visuals and clean code.
+- **Display code is not held to upstream**: rendering, layout, geometry,
+  animation and colors aim at neat visuals and clean code.
 - **Game IDs from upstream keep loading where that is easy.** A desc
   upstream's generator writes is accepted (`src/guards/upstream-descs.test.ts`
   holds it); a spelling upstream merely tolerated is not kept. A change that

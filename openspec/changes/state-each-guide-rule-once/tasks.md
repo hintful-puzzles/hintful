@@ -62,41 +62,39 @@ copies point.
 - [ ] `keepTrack` shrinking: hints-marks, hints.md, catalog.
 - [ ] `NoteEncoding.all(i)`: hints-candidates and catalog.
 - [ ] The hint-resume slicing: hints-search, hints.md, testing.md (home).
-- [ ] Render asks, move code decides; bespoke geometry draw side:
-      rendering and mechanics § "Bespoke geometry".
-- [ ] `changedState` and a dangling drag: rendering and input § "A board
-      change under a gesture is the engine's" (home).
-- [ ] `ds.tileSize`: mechanics and rendering (home).
-- [ ] Upstream divergence: solver-and-generator § "Divergence and what it
-      costs" restates doctrine § "Upstream" (home).
-- [ ] Quirks: testing § "Quirks are load-bearing" and solver-and-generator
-      § "Solver-gated generation"; say once what "tidy" means.
-- [ ] Timing under vitest: testing says ~7× vs node, solver-and-generator
-      ~2× vs Chrome; one figure, with date and baseline, in testing §
-      "Timing anything under vitest".
-- [ ] See a test fail: method, testing § "Break the code under a new
-      test", test-strength § 3; extracted logic's tests: testing and
-      test-strength § 4; self-derived assertions: test-strength § 3 and
-      method.
-- [ ] Hint pins: hints.md § "Verifying a hint in-process" restates testing
-      § "Pinning a hint's positions".
-- [ ] When to push: work-management § "Pushing and deploying" restates
-      testing § "What runs when".
-- [ ] Focus after a press: testing and input.
-- [ ] Color in the words: hints.md and hints-marks § "The engine colors the
-      marks" (complementary; check).
-- [ ] AGENTS.md: the four heads restated from work-management § "What a
-      session files"; "cosmetic" in new-game § "The acceptance gate" and
-      work-management.
+- [x] Bespoke geometry's draw bullets: mechanics points at rendering;
+      "render asks, move code decides": rendering points at mechanics §
+      "One function, both callers".
+- [x] `changedState` and a dangling drag: rendering keeps the preview
+      fallback and the keyboard arm, and points at input.
+- [x] `ds.tileSize`: rendering's copy is already a line with a pointer.
+- [x] Upstream divergence: doctrine § "Upstream" home (it gains "tidiness
+      is not one" and "geometry"); solver-and-generator keeps the oracle and
+      the quirk-reading list.
+- [x] Quirks: testing keeps the fixture angle and points at the divergence
+      list and the retry bound.
+- [x] Timing under vitest: both figures, each with its baseline, in testing
+      § "Timing anything under vitest"; the other two point.
+- [x] See a test fail, extracted logic's tests, self-derived assertions:
+      testing and test-strength point at one another and at method.
+- [x] Hint pins: hints.md keeps the rung key and grouping, and points.
+- [x] When to push: work-management points at testing.
+- [x] Focus after a press: input points at testing.
+- [x] Color in the words: hints.md (the words) and hints-marks (the inks)
+      give complementary reasons; kept.
+- [x] AGENTS.md's four heads and "cosmetic": kept. AGENTS.md is the brief
+      read every session, and each is its one-line form with a pointer; a
+      guide is the long form. work-management's "never call a shortfall
+      cosmetic" is a clause, kept.
 
-### Contradictions to settle, not fold
+### Contradictions settled
 
-- [ ] Player-visible work: doctrine § and AGENTS.md "ask before changing
-      how a control behaves" vs work-management § "What the owner accepts"
-      "player-visible does not by itself mean stop and ask". AGENTS.md is
-      the owner's; align the guides to it.
-- [ ] Naming by color: help-pages "never its color", rendering
-      `SHADED_NAME`, vs rendering § "Black pieces stay black".
+- [x] Player-visible work: work-management § "What the owner accepts"
+      left "how a control behaves" and shared links out of its third head,
+      which AGENTS.md and doctrine ask before; aligned to AGENTS.md.
+- [x] Naming by color: not a contradiction. A help page names a piece by
+      its shape; rendering § "Black pieces stay black" now says so before
+      what a remaining color word owes the paint.
 
 ### Stale names (verify with grep, then fix or delete)
 

@@ -1501,20 +1501,11 @@ marks show the count").
 
 ## Verifying a hint in-process
 
-Test a hint's frame with the render-scenario harness
-([`render-scenario.ts`](../src/engine/testing/render-scenario.ts)):
-`renderPinnedHint(game, pinned(rung))` drives a real `Midend` to the frame of
-a pinned position's step, whichever leg of its plan that is. Assert targeted
-ops (the hint color present, clues still drawn) and `toMatchSnapshot`.
-Exemplars: `src/skeleton/grid/skeleton-hint.test.ts`,
-`palisade-render-scenario.test.ts`. The tiers are in
-[`testing.md`](./testing.md).
+A hint is tested at pinned positions, one for every rung, and its frame is
+drawn from a pin by `renderPinnedHint` ([`testing.md`](./testing.md) §
+"Pinning a hint's positions" and `testing.md` § "Render scenarios"). What
+is the hint's own:
 
-- **Pin a position for every rung through `describeHintPins`**
-  ([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts)).
-  It requires a pin for each of the game's `hint.rungs`, and `npm run hint-scan
-  -- <the test file>` finds and writes them. Do not write a scan of your own
-  ([`testing.md`](./testing.md) § "Pinning a hint's positions").
 - **A hint frame is a pin's, never a walk down a plan on a board kept by
   hand**, and a pin is keyed on a rung, never on a phrase: a phrase matches
   more than one deduction and goes blind when the sentence is reworded.

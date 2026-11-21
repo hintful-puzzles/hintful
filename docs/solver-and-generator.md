@@ -945,19 +945,14 @@ never declared").
 
 ## Divergence and what it costs
 
-**Matching upstream's C is not a reason to leave a game worse: diverge
-wherever it is worth it to the player, and say what replaces the assurance
-the byte-match gave.** "It would change every board" is a cost to weigh. The
-doctrine is [`doctrine.md`](./doctrine.md) § "Upstream" and the
-[`ts-migration`](../openspec/specs/ts-migration/spec.md) spec.
+When a solver or generator diverges from upstream, and why, is
+[`doctrine.md`](./doctrine.md) § "Upstream" and the
+[`ts-migration`](../openspec/specs/ts-migration/spec.md) spec. What this
+guide adds:
 
-- **A divergence needs a stated player-visible benefit.** Tidiness is not
-  one.
 - **Say what replaces the oracle**, in the change: normally a property test
   that every generated board is uniquely solvable at exactly its stated
   difficulty.
-- **Display code was never held to upstream**: rendering, layout, geometry,
-  animation and colors target neat visuals and clean code.
 
 Reading an upstream quirk before paying for it or refusing it:
 
@@ -1172,9 +1167,8 @@ Rules for any of them:
   [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).
 - **Try a neighboring game's mend, and say when it does not carry.**
 - **Measure and say which boards the change deals.**
-- **Time a generator as the browser runs it, not under vitest**, which ran
-  Star Battle's about twice as slow as Chrome (2026-10-15). Node on the code
-  bundled by `rolldown` came within a third of Chrome, a little slower.
+- **Time a generator as the browser runs it, not under vitest**
+  ([`testing.md`](./testing.md) § "Timing anything under vitest").
 
 ### A division into regions is the engine's
 

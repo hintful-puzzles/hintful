@@ -35,9 +35,9 @@ Three things, and no others:
   run the app yourself. Never call a shortfall cosmetic.
 - **Anything the owner asked for by name.** They described the outcome, so
   they decide whether you hit it.
-- **Anything that breaks compatibility with data a player already has**:
-  save formats, preference keys, shared game IDs. Ask before, with the cost
-  stated. The promise runs one way (owner, 2026-10-07): what a player holds
+- **Anything that breaks what a player already has**: save formats,
+  preference keys, shared game IDs and links, and how a control they know
+  behaves. Ask before, with the cost stated. The promise runs one way (owner, 2026-10-07): what a player holds
   today opens in every later version of the app. That an older copy cannot
   read what a newer one writes is not a cost and is never asked about; the
   app is served, and there is one current version.
@@ -214,14 +214,10 @@ deploys, and the deployment is how the owner looks at player-visible work, so
 work the owner is waiting to look at is a reason to end the session's commits
 there and push.
 
-- **The push costs seconds, and the whole suite is CI's.** A commit tests the
-  games it stages; the push hook runs the fast checks and no test, and
-  `GATE_PUSH_TESTS=1 git push` adds the tests the commits left out
-  ([`testing.md`](./testing.md) § "What runs when"). Before pushing a change to
-  shared code run `npm run test:hint-sweeps`, the cross-game hint sweeps CI's
-  gate most often failed on. `.github/workflows/ci.yml` defines what a push
-  publishes, and `gate.yml` beside it runs the whole gate; the next hook
-  prints its red verdict, which is fixed before other work.
+- **The push costs seconds, and the whole suite is CI's.** What a commit, a
+  push and CI each run, and what to run first before pushing shared code, is
+  [`testing.md`](./testing.md) § "What runs when". CI's red verdict, which
+  the next hook prints, is fixed before other work.
 - **Verify a deploy against the deployed origin, never against `dist/`.**
   Headers, clean URLs and service-worker scope are host behavior, and each
   fails invisibly. A browser tab registers no service worker by design, so an

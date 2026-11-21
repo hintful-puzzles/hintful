@@ -173,12 +173,8 @@ allocated with length `order`: halving every degree in the builder passed the
 whole file. The non-vacuous form is one the code under test has to get right,
 here a degree counted independently from the edges that name the dot.
 
-Shapes to search for (the general list is [`method.md`](./method.md) § "A
-guard measures the thing it claims to guard"):
-
-- `x.length` compared with the thing that sized `x`.
-- A getter compared with the field it returns.
-- A derived total compared with the sum it was computed from.
+The shapes to search for are [`method.md`](./method.md) § "A guard
+measures the thing it claims to guard": the first three are this one.
 
 **When a real invariant has an exception, bound the exception; do not drop
 the assertion.** A boundary dot's face ring is legally broken once by the
@@ -283,10 +279,8 @@ asserts what is order-independent, such as a matching's maximality against
 brute force; a test pinning a particular matching would break on any
 deliberate generator change while proving nothing new.
 
-**Extracted logic arrives with its tests.** Extraction into `src/engine/`
-moves the code but not its tests, so the game's differential still catches
-defects, nothing turns red, and the module arrives with no local assertions
-(`testing.md` § "A shared module needs its own tests").
+**Extracted logic arrives with its tests** (`testing.md` § "A shared module
+needs its own tests").
 
 ### 4a. A frozen capture used as a *quality bar* is on the wrong side of the line
 

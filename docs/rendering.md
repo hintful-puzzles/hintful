@@ -392,13 +392,10 @@ them recolors pieces the finger is not on. Exemplar:
 
 ### `changedState` cancels a dangling drag
 
-**Where a key can move the board under a drag held in fields of the game's
-own, cancel the drag in `changedState`, and make the preview fall back to
-the plain board when the simulated move is refused.** An undo from the Bar
-or the keyboard, a hint and Solve are the engine's: it ends the gesture and
-puts the `Ui` back ([`input.md`](./input.md) § "A board change under a
-gesture is the engine's"). A bare `UI_UPDATE` never reaches `changedState`,
-so the live gesture is unharmed.
+**Make a drag's preview fall back to the plain board when the simulated
+move is refused.** When `changedState` cancels a drag, and when the engine
+does, is [`input.md`](./input.md) § "A board change under a gesture is the
+engine's".
 
 - **Tell:** a `redraw` that calls the game's own move helper on `ui` state
   and cannot handle "no".
@@ -571,13 +568,8 @@ Exemplar: [`bricks/render.ts`](../src/games/bricks/render.ts) and
 
 ## A rule that input and display both need
 
-**Render asks; move code decides.** Any rule the input and the display both
-need is one function, called by both. Coordinates are only the obvious case.
-Two copies agree until the rule gains a tie-break.
-
-**Tell:** a predicate in `redraw` that answers what a move would do.
-Exemplar: [`crossing/state.ts`](../src/games/crossing/state.ts)
-(`runForNumber`).
+**Render asks; move code decides**: one function, called by both
+([`mechanics.md`](./mechanics.md) § "One function, both callers").
 
 ## Special paint shapes
 
@@ -958,9 +950,11 @@ from `colors.ts`, not `INK` or `PAPER`.** They look the same in the light
 scheme, but `INK`, `PAPER` and a bevel's highlight invert in the dark
 scheme, and a piece's color is its identity and is pinned.
 
-- **A color your words name is a piece's color.** If the help page, a hint
-  or a parameter label calls something black, white, shaded or lit, paint it
-  in a pinned color. Where the thing really is ink, fix the word.
+- **A color your words name is a piece's color.** A help page names a piece
+  by the rules or its shape first ([`help-pages.md`](./help-pages.md) §
+  "A game's page"); where the help page, a hint or a parameter label still
+  calls something black, white, shaded or lit, paint it in a pinned color.
+  Where the thing really is ink, fix the word.
 - **A digit on a pinned cell is pinned with it**, and a grid between
   pinned-white cells is `GRID_DARK`.
 - [`help-lightness-words.test.ts`](../src/guards/help-lightness-words.test.ts)

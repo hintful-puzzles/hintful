@@ -941,10 +941,9 @@ Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `keen/index.ts`,
   representative params: the `digitKeys` rollover and any quirk.
 - **Write nothing to keep focus on the board.** The panel prevents the
   `mousedown` default (`keepFocusOnTheBoard` in
-  [`components/keys.ts`](../src/puzzle/components/keys.ts)). No behavioral
-  test sees focus, since each calls `processInput` directly, so a change to
-  the panel is checked in the app: press a key, then type on the physical
-  keyboard.
+  [`components/keys.ts`](../src/puzzle/components/keys.ts)). How a change
+  to the panel is checked: [`testing.md`](./testing.md) § "Focus after a
+  pointer press".
 
 ### Elements on the panel of a drag or click game
 
