@@ -1,32 +1,10 @@
-ok  singles    besideCovered                  3  sound    (want sound   )     9 queries    0.0s
-ok  singles    besideCovered (planted)        3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    besideCovered                  4  sound    (want sound   )    16 queries    0.1s
-ok  singles    besideCovered (planted)        4  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    sameLine                       3  sound    (want sound   )     9 queries    0.0s
-ok  singles    sameLine (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    sameLine                       4  sound    (want sound   )    16 queries    0.1s
-ok  singles    sameLine (planted)             4  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    sandwich                       3  sound    (want sound   )     6 queries    0.0s
-ok  singles    sandwich (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 0
-ok  singles    sandwich                       4  sound    (want sound   )     8 queries    0.1s
-ok  singles    sandwich (planted)             4  unsound  (want unsound )     1 queries    0.0s   at line 0
-ok  singles    pair                           3  sound    (want sound   )     6 queries    0.0s
-ok  singles    pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
-ok  singles    pair                           4  sound    (want sound   )     8 queries    0.1s
-ok  singles    pair (planted)                 4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  singles    besideCovered                  current: recorded src/games/singles/singles.description.yaml#besideCovered 32518325d62e435f
+ok  singles    sameLine                       current: recorded src/games/singles/singles.description.yaml#sameLine eb59194415ca27a0
+ok  singles    sandwich                       current: recorded src/games/singles/singles.description.yaml#sandwich c927d1485547a188
+ok  singles    pair                           current: recorded src/games/singles/singles.description.yaml#pair 06a67a8b3cf35edf
 ok  singles    corner                         3  sound    (want sound   )     4 queries    0.0s
 ok  singles    corner (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    corner                         4  sound    (want sound   )     4 queries    0.0s
-ok  singles    corner (planted)               4  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    boxedIn                        3  sound    (want sound   )     9 queries    0.0s
-ok  singles    boxedIn (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    boxedIn                        4  sound    (want sound   )    16 queries    0.2s
-ok  singles    boxedIn (planted)              4  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    offset                         3  sound    (want sound   )     9 queries    0.0s
-ok  singles    offset (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    offset                         4  sound    (want sound   )    16 queries    0.1s
-ok  singles    offset (planted)               4  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  singles    split                          3  sound    (want sound   )     1 queries    0.0s
-ok  singles    split (planted)                3  unsound  (want unsound )     1 queries    0.0s   at eset
-ok  singles    split                          4  sound    (want sound   )     1 queries    0.3s
-ok  singles    split (planted)                4  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  src/games/singles/singles.description.yaml#corner: recorded sound, proved whole on all 1 boards
+ok  singles    boxedIn                        current: recorded src/games/singles/singles.description.yaml#boxedIn 315eadbd291bda3f
+ok  singles    offset                         current: recorded src/games/singles/singles.description.yaml#offset ca4f3cce6b52deb6
+ok  singles    split                          current: recorded src/games/singles/singles.description.yaml#split 046803069f7da796

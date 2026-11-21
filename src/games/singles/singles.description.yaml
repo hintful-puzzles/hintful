@@ -183,8 +183,8 @@ techniques:
       (ns != n or nt != n or place(c, 1))
       and (ns != nt or ni != nt or place(i, 1))
       and ((ns = n and nt = n) or (ns = nt and ni = nt)
-      or ((ns != n and ns != ni) or place(t, 2))
-      and (ns = n or ns = ni or (nt != n and nt != ni) or place(s, 2)))
+      or ((ns != n and ns != ni) or value(s) = 1 or place(t, 2))
+      and (ns = n or ns = ni or (nt != n and nt != ni) or value(t) = 1 or place(s, 2)))
     says:
       arms:
         # All four match: the corner and the square across from it are covered.
@@ -221,28 +221,39 @@ techniques:
         # One of the squares beside the corner is shaded, and the pair beside
         # the other would box the corner in: the pair is the corner and the
         # other square where they match, else that square and the one across.
+        # A side already shaded leaves the corner one neighbor to stay clear,
+        # which `boxedIn` says without the pair, so these hold back.
+        # Where the corner is one of the pair, the side and the corner name
+        # both its squares, so the words name it by those two, and a third
+        # reference would show no mark of its own.
         pairAtS:
           when: "ns = n or ns = ni"
           terms:
             side: s
             number: ns
-            pair: "{x in {c, s, i} where x = s or (ns = n and x = c) or (ns != n and x = i)}"
+            pair: "{x in {s, i} where x = s or ns != n}"
           marks:
-            outline: "{x in {c, s, i} where x = s or (ns = n and x = c) or (ns != n and x = i)}"
+            outline: "{x in {s, i} where x = s or ns != n}"
             strand: "{c}"
           # The pattern first, then the move ruled out and what it would force.
-          look: &pairLook "{outline pair: the corner's {number}s} need one {shaded}; shading {ring: this {each}} forces {outline side: the side {number}}, boxing {strand: the corner} in"
+          wordings:
+            - when: "ns = n"
+              look: &cornerPairLook "{outline side: the side {number}} and {strand: the corner} need one {shaded}; shading {ring: this {each}} forces the side, boxing the corner in"
+            - look: &pairLook "{outline pair: the corner's {number}s} need one {shaded}; shading {ring: this {each}} forces {outline side: the side {number}}, boxing {strand: the corner} in"
           move: &pairMove "it must stay {unshaded}"
         pairAtT:
           when: "ns != n and ns != ni"
           terms:
             side: t
             number: nt
-            pair: "{x in {c, t, i} where x = t or (nt = n and x = c) or (nt != n and x = i)}"
+            pair: "{x in {t, i} where x = t or nt != n}"
           marks:
-            outline: "{x in {c, t, i} where x = t or (nt = n and x = c) or (nt != n and x = i)}"
+            outline: "{x in {t, i} where x = t or nt != n}"
             strand: "{c}"
-          look: *pairLook
+          wordings:
+            - when: "nt = n"
+              look: *cornerPairLook
+            - look: *pairLook
           move: *pairMove
   # A square with one neighbor not covered has that neighbor clear: covered
   # or clear, it needs one.

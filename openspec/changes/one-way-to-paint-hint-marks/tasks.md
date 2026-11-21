@@ -82,13 +82,19 @@
       pinned frames outline single squares, whose contour is all four sides.
 - [x] 2.3 The skeletons write the engine's form (grid in 1.3, edges with the
       contour batch).
-- [ ] 2.4 Singles' corner step ("The corner's 4s need one shaded; … the
-      side 4, boxing the corner in"): both cells "the corner's 4s" names
-      are also named by "the side 4" and "the corner", whose colors cover
-      it, so that reference shows no mark of its own. As before this
-      change. Raise it with the owner, recommending the words name the
-      pair by the two other references (`hints.md` § the deictic rules)
-      rather than a third.
+- [x] 2.4 Singles' corner step: where the corner is one of the matching
+      pair (`ns = n`, 91 of 153 `pairAt` firings over 300 boards), "the
+      corner's 3s" named only the squares "the side 3" and "the corner"
+      name, and showed no mark of its own. That case now says "The side 3
+      and the corner need one shaded; shading this 1 forces the side,
+      boxing the corner in" (a wording of each `pairAt` arm). The pinned
+      "corner's 4s" step was not this case: its pair is the side and the
+      square across, which shows. Hint wording is the agent's to change.
+      Seen in the app, which showed a second defect: 61 of those 153
+      steps argued "need one shaded; shading this forces the side" with the
+      side already shaded. The `pairAt` conclusions now hold back there and
+      `boxedIn` says it (the corner's one neighbor left); none of 96 after
+      it does, and the technique check holds it sound.
 
 - [x] 2.5 Every hint frame draws. `warm-repaint` paints each mark kind once,
       so Signpost's centered ring passed it while throwing on every ringed
@@ -109,22 +115,23 @@
       beside the moves it bounds) is now that bound, and the frame sweep
       asserts `ringCrossings` on every plan step's frame (failed at step 308
       with the old bound planted; 65 games pass).
-- [ ] 2.6 The app's repaint edges an outline or ring *outside* the mark
-      (`mark-flash.ts` `repainted`), and the edge lands on content the game
-      drew over the mark: on Mathrax, the evidence outline's edge replaces
-      the black rim of the clue disc it passes under with a speckled arc
-      (seen 2026-11-21, `7de#sweep0`, the 12× step). The frame pair cannot
-      tell an occluder from the background beside a mark, since neither
-      changes when the mark is hidden. Recommendation: measure the occluders
-      once more, with the hint inks drawn opaque in black and in white
-      *without* the rest of the frame's change; a pixel whose ink coverage
-      is zero but which lies inside the mark's own drawn footprint is
-      covered, and takes no edge.
+- [x] 2.6 Measured in the app (2026-11-21, Mathrax 7x7, the 3− step):
+      the pale "speckled arc" on a clue disc's rim had three causes. (a) The edge did lie on content over
+      a mark: the ring's white edge broke the rim of the disc it passes
+      under. `coveredMarks` now measures that from the inks drawn alone,
+      black on white (`Drawing.showOnly`), and the outside edge fades by it.
+      (b) The pale arc was not an edge: the repaint measured `shown` on the
+      incremental canvas, where what a game paints over its marks every
+      frame lies on itself, against fresh frames; it is a full repaint now.
+      (c) Mathrax drew a marked cell's quarters of its clue discs in the
+      tile and again over the marks, so the rim darkened only where a cell
+      was marked; a marked tile now leaves them to the pass over the marks.
+      Each seen in the app against HEAD: the rims stay black, narrated and
+      with a pill pressed.
 
 ## 3. Finish
 
 - [ ] 3.1 The guides describe one way a variant (`hints-marks.md`
       § "Outline the evidence" and § "Where the band goes, and who rubs it
       out", `rendering.md` § "A mark that crosses tiles"): done. Run
-      `npm run test:hint-sweeps`; commit, push, archive once 2.4, 2.5a and
-      2.6 are settled.
+      `npm run test:hint-sweeps`; commit, push, archive.

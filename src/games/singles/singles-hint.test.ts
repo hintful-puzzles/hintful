@@ -366,6 +366,30 @@ describe("hint", () => {
     expect(cornerStep?.explanation).not.toContain("two corner squares");
   });
 
+  it("names a corner's pair by the side and the corner where the corner is one of it", () => {
+    // Top-left 2×2 = [[3,3],[1,2]]: the corner 3 and the side 3 match. A
+    // reference to "the corner's 3s" would name only squares the side and the
+    // corner already name, and show no mark of its own.
+    const res = singlesGame.hint.plan(craft(2, 2, [3, 3, 1, 2]));
+    if (!res?.ok) throw new Error("expected a plan");
+    const step = res.steps[0];
+    expect(step.rung).toBe("corner.pairAtS");
+    expect(step.explanation).toMatch(/^The side 3 and the corner need one shaded/);
+    const refs = step.words?.refs ?? [];
+    expect(refs.length).toBe(3);
+    for (const [i, r] of refs.entries()) {
+      const others = new Set(
+        refs.flatMap((o, j) =>
+          j === i ? [] : o.elements.map((e) => JSON.stringify(e)),
+        ),
+      );
+      expect(
+        r.elements.some((e) => !others.has(JSON.stringify(e))),
+        `reference ${i} (${r.role}) names a square no other reference does`,
+      ).toBe(true);
+    }
+  });
+
   it("counts the board its plan finishes as solved, so the midend refuses it", () => {
     const s = fromSeed({ w: 6, h: 6, diff: "tricky" }, "hint-solved");
     const res0 = singlesGame.hint.plan(s);
