@@ -76,7 +76,7 @@ import {
   redraw,
   type SeismicDrawState,
 } from "./render.ts";
-import { isComplete, markErrors, SOLVE_FAILED, solveGame } from "./solver.ts";
+import { isComplete, rules, SOLVE_FAILED, solveGame } from "./solver.ts";
 import {
   areaBits,
   cloneState,
@@ -192,9 +192,6 @@ function executeMove(state: SeismicState, move: SeismicMove): SeismicState {
       } else {
         next.grid[i] = move.n;
       }
-      // Refresh the live error flags, which upstream does after a pencil
-      // change too.
-      markErrors(next);
       return next;
     }
     case "pencilAll": {
@@ -226,7 +223,6 @@ function executeMove(state: SeismicState, move: SeismicMove): SeismicState {
       for (let i = 0; i < w * h; i++) {
         if (!(next.flags[i] & FM_FIXED)) next.grid[i] = move.grid[i];
       }
-      markErrors(next);
       return next;
     }
     default:
@@ -309,6 +305,7 @@ export const seismicGame: Game<
   status: (state) => (isComplete(state) ? "solved" : "ongoing"),
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),

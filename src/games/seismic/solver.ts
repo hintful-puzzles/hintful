@@ -15,6 +15,7 @@
  */
 
 import type { Dsf } from "../../engine/board/dsf.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
@@ -23,6 +24,7 @@ import {
   perBoard,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -31,14 +33,7 @@ import {
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
-import {
-  DIFF_EASY,
-  FM_ERRORDIST,
-  FM_ERRORDUP,
-  MODE_SEISMIC,
-  numBit,
-  type SeismicBoard,
-} from "./state.ts";
+import { DIFF_EASY, type SeismicBoard } from "./state.ts";
 
 /** `solveGame` could not drive the board to a complete, valid solution. */
 export const SOLVE_FAILED = -1;
@@ -100,70 +95,15 @@ export function solveGame(
   return isComplete(board) ? grades[TIERS] : SOLVE_FAILED;
 }
 
+/** The board as its rules read it: a number is its value, a blank square
+ * undecided. */
+export const rules: RulesOf<SeismicBoard> = describedRules(seismic, {
+  grid: (b) => b.grid,
+  size: (b) => [b.w, b.h],
+  deals: (b) => [dealtOf(b)],
+});
+
 /** Whether the board is an answer, by the rules its description compiles to. */
 export function isComplete(board: SeismicBoard): boolean {
-  return seismic.isAnswer(
-    board.grid,
-    describedSpace(seismic.units, board.w, board.h),
-    dealtOf(board),
-  );
-}
-
-/**
- * Refresh the board's live error flags: a number duplicated inside its region
- * gets `FM_ERRORDUP`, one sitting within an equal number's keep-apart range
- * gets `FM_ERRORDIST`. Both are *local* consistency checks on a board still
- * being filled, which no rule of the answer says — weaker than `findMistakes`,
- * which asks whether the board contradicts the unique solution.
- */
-export function markErrors(board: SeismicBoard): void {
-  const { w, h, grid, flags, dsf } = board;
-  const s = w * h;
-  /** Numbers placed at least once in the region rooted here. */
-  const singles = new Int32Array(s);
-  /** Numbers placed at least twice. */
-  const doubles = new Int32Array(s);
-  /** Numbers whose keep-apart range covers this cell. */
-  const ranges = new Int32Array(s);
-
-  for (let i = 0; i < s; i++) {
-    if (grid[i] === 0) continue;
-    const x = i % w;
-    const y = (i / w) | 0;
-    const n = numBit(grid[i]);
-
-    const c = dsf.canonify(i);
-    doubles[c] |= n & singles[c];
-    singles[c] |= n;
-
-    if (board.mode === MODE_SEISMIC) {
-      for (let j = 1; j <= grid[i]; j++) {
-        if (x + j < w) ranges[i + j] |= n;
-        if (x - j >= 0) ranges[i - j] |= n;
-        if (y - j >= 0) ranges[i - j * w] |= n;
-        if (y + j < h) ranges[i + j * w] |= n;
-      }
-    } else {
-      for (let dx = -1; dx <= 1; dx++) {
-        for (let dy = -1; dy <= 1; dy++) {
-          if (!dx && !dy) continue;
-          if (x + dx >= 0 && x + dx < w && y + dy >= 0 && y + dy < h)
-            ranges[i + dx + dy * w] |= n;
-        }
-      }
-    }
-  }
-
-  for (let i = 0; i < s; i++) {
-    // An empty cell keeps whatever flags it had; upstream does the same, and it
-    // is invisible either way (only a placed number is drawn in an error hue).
-    if (grid[i] === 0) continue;
-    const c = dsf.canonify(i);
-
-    if (doubles[c] & numBit(grid[i])) flags[i] |= FM_ERRORDUP;
-    else flags[i] &= ~FM_ERRORDUP;
-
-    if (ranges[i] & numBit(grid[i])) flags[i] |= FM_ERRORDIST;
-    else flags[i] &= ~FM_ERRORDIST;
-  }
+  return rules.isAnswer(board, board.grid);
 }

@@ -70,6 +70,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -86,8 +87,8 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/r
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
 import type { SeismicHint } from "./hint.ts";
+import { rules } from "./solver.ts";
 import {
-  FM_ERRORMASK,
   FM_FIXED,
   type SeismicMove,
   type SeismicParams,
@@ -311,17 +312,26 @@ function cellText(state: SeismicState, ts: number, x: number, y: number): RingCl
   return { enclose: notes, avoid: [] };
 }
 
+/** 1 on each number that breaks a rule: two alike in an area, or within an
+ * equal number's keep-apart range, or too large for its area. */
+function brokenAt(state: SeismicState): Uint8Array {
+  const live = liveErrors(rules, state);
+  const out = live.at.slice();
+  for (const [a, b] of live.pairs) out[a] = out[b] = 1;
+  return out;
+}
+
 function drawTile(
   dr: GameDrawing,
   ds: SeismicDrawState,
   state: SeismicState,
   x: number,
   y: number,
-  color: number,
-  highlight: CellHighlight,
+  look: { color: number; highlight: CellHighlight; broken: boolean },
   wrong: boolean,
   struck: number,
 ): void {
+  const { color, highlight, broken } = look;
   const ts = ds.tileSize;
   const { w, h, dsf, grid, pencil, flags } = state;
   const i = y * w + x;
@@ -377,11 +387,7 @@ function drawTile(
     });
   } else {
     const ink =
-      flags[i] & FM_FIXED
-        ? COL_NUM_FIXED
-        : flags[i] & FM_ERRORMASK
-          ? COL_ERROR
-          : COL_NUM_GUESS;
+      flags[i] & FM_FIXED ? COL_NUM_FIXED : broken ? COL_ERROR : COL_NUM_GUESS;
     const { origin: at, options } = digitText(ts, x, y);
     dr.drawText(at, options, ink, String(grid[i]));
   }
@@ -448,6 +454,7 @@ export function redraw(
   const index = (x: number, y: number): number => y * w + x;
   ds.wrong.packCells(mistakes ?? null, index);
   ds.hint.pack(stepMarks(hint), index, (m) => valueBit(m.n));
+  const broken = brokenAt(state);
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -462,11 +469,13 @@ export function redraw(
         state.grid[i] |
         (state.pencil[i] << 4) |
         (state.flags[i] << 13) |
+        (broken[i] << 15) |
         (highlight << 18);
 
       if (ds.tiles.changed(i, tile)) {
         const struck = ds.hint.struck[i];
-        drawTile(dr, ds, state, x, y, color, highlight, ds.wrong.at(i), struck);
+        const look = { color, highlight, broken: broken[i] === 1 };
+        drawTile(dr, ds, state, x, y, look, ds.wrong.at(i), struck);
       }
     }
   }

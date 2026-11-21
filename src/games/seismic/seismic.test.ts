@@ -30,6 +30,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -40,6 +41,7 @@ import {
 } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
+import type { RuleName } from "../../generated/games/seismic/seismic.compiled.ts";
 import { maxGeneratedRegionSize, maxRegionSize, newSeismicDesc } from "./generator.ts";
 import { seismicGame } from "./index.ts";
 import {
@@ -57,7 +59,7 @@ import {
   origin,
   redraw,
 } from "./render.ts";
-import { isComplete, markErrors, SOLVE_FAILED, solveGame } from "./solver.ts";
+import { isComplete, rules, SOLVE_FAILED, solveGame } from "./solver.ts";
 import {
   areaBits,
   CLUE_TOO_LARGE,
@@ -68,8 +70,6 @@ import {
   decodeParams,
   encodeDesc,
   encodeParams,
-  FM_ERRORDIST,
-  FM_ERRORDUP,
   FM_FIXED,
   MAX_PRESET_CELLS,
   MODE_NAMES,
@@ -326,6 +326,10 @@ describe("seismic solver", () => {
     }
   });
 
+  /** The squares `state` breaks rule `rule` at. */
+  const brokenBy = (state: SeismicState, rule: RuleName): Set<number> =>
+    new Set((liveErrors(rules, state).byRule.get(rule) ?? []).flat());
+
   it("finds an untouched board no answer", () => {
     expect(isComplete(stateOf(SMALL))).toBe(false);
   });
@@ -348,47 +352,38 @@ describe("seismic solver", () => {
     expect(b).toBeGreaterThan(-1);
     state.grid[a] = 1;
     state.grid[b] = 1;
-    markErrors(state);
-    expect(state.flags[a] & FM_ERRORDUP).toBeTruthy();
-    expect(state.flags[b] & FM_ERRORDUP).toBeTruthy();
+    // A given 1 in the region is marked with them.
+    expect([...brokenBy(state, "shape.0")]).toEqual(expect.arrayContaining([a, b]));
   });
 
   it("keeps equal numbers apart by their own value in Seismic mode", () => {
     const state = stateOf(SMALL);
     state.grid.fill(0);
-    state.flags.fill(0);
     // Two 2s three cells apart on a row have two cells between them, so they
     // are legal; two apart (one cell between) is not.
     state.grid[0] = 2;
     state.grid[3] = 2;
-    markErrors(state);
-    expect(state.flags[0] & FM_ERRORDIST).toBeFalsy();
+    expect(brokenBy(state, "shape.1")).toEqual(new Set());
 
     state.grid[3] = 0;
     state.grid[2] = 2;
-    markErrors(state);
-    expect(state.flags[0] & FM_ERRORDIST).toBeTruthy();
-    expect(state.flags[2] & FM_ERRORDIST).toBeTruthy();
+    expect(brokenBy(state, "shape.1")).toEqual(new Set([0, 2]));
   });
 
   it("bars only touching cells in Tectonic mode, whatever the number", () => {
     const state = stateOf(SMALL_TECTONIC);
     state.grid.fill(0);
-    state.flags.fill(0);
     const w = state.w;
     // Diagonally adjacent: illegal in Tectonic (and legal in Seismic, whose
     // rule looks only along rows and columns).
     state.grid[0] = 5;
     state.grid[w + 1] = 5;
-    markErrors(state);
-    expect(state.flags[0] & FM_ERRORDIST).toBeTruthy();
+    expect(brokenBy(state, "shape.1")).toEqual(new Set([0, w + 1]));
 
     // Two cells apart on a row: legal, even for a 5.
-    state.flags.fill(0);
     state.grid[w + 1] = 0;
     state.grid[2] = 5;
-    markErrors(state);
-    expect(state.flags[0] & FM_ERRORDIST).toBeFalsy();
+    expect(brokenBy(state, "shape.1")).toEqual(new Set());
   });
 });
 

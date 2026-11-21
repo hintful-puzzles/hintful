@@ -84,11 +84,6 @@ export const MODE_NAMES: readonly string[] = RULESETS.map((r) => r.name);
 
 /** A given: the player may not edit it. */
 export const FM_FIXED = 0x01;
-/** Live error: this number appears twice in its region. */
-export const FM_ERRORDUP = 0x02;
-/** Live error: an equal number sits within this number's keep-apart range. */
-export const FM_ERRORDIST = 0x04;
-export const FM_ERRORMASK = FM_ERRORDUP | FM_ERRORDIST;
 
 // --- candidate bit helpers -------------------------------------------------
 
@@ -183,7 +178,7 @@ export interface SeismicBoard {
   readonly dsf: Dsf;
   /** Placed numbers, `0` = empty. */
   readonly grid: Uint8Array;
-  /** `FM_*` bits. */
+  /** {@link FM_FIXED} on a given. */
   readonly flags: Uint8Array;
   /** Candidate bitmask per cell — the player's pencil marks during play, the
    * solver's live candidate set while solving. */
