@@ -322,6 +322,11 @@ function cellText(state: MathraxState, ts: number, x: number, y: number): RingCl
 
 // --- tile drawing ----------------------------------------------------------
 
+/** Whether the hint rings or outlines cell `i` this frame, so that its
+ * quarters of the clues on its corners are drawn over the marks. */
+const marked = (ds: MathraxDrawState, i: number): boolean =>
+  (ds.hint.packed[i] & (HINT_TARGET | HINT_AREA)) !== 0;
+
 function drawTile(
   dr: GameDrawing,
   ds: MathraxDrawState,
@@ -377,7 +382,10 @@ function drawTile(
     drawPencilMarks(dr, state, ts, x, y, struck);
   }
 
-  drawCornerClues(dr, ts, state, x, y, fs);
+  // A marked cell's quarters are drawn once, over the marks (`redraw`): drawn
+  // here too, a disc's rim is stroked twice and darkens, and the frame without
+  // the mark reads that as the mark's own.
+  if (!marked(ds, i)) drawCornerClues(dr, ts, state, x, y, fs);
 
   // Check & Save mistake overlay (fork addition): an inset red outline.
   if (wrong) {
@@ -493,10 +501,12 @@ export function redraw(
   // reasons would otherwise clip a side off.
   const targets: MarkCell[] = [];
   const evidence: MarkCell[] = [];
+  const onTop: MarkCell[] = [];
   for (let i = 0; i < o * o; i++) {
     const c = { x: i % o, y: (i / o) | 0 };
     if (ds.hint.packed[i] & HINT_TARGET) targets.push(c);
     if (ds.hint.packed[i] & HINT_AREA) evidence.push(c);
+    if (marked(ds, i)) onTop.push(c);
   }
   ds.marks.paint(dr, targets, evidence, {
     band: (x, y) => markBand(ts, x, y),
@@ -505,8 +515,8 @@ export function redraw(
     evidenceColor: COL_HINT_OUTLINE,
   });
   // A mark passes behind the clues on its cell's corners, never over their
-  // labels: each marked cell draws its quarters of them again, on top.
-  for (const c of [...targets, ...evidence]) {
+  // labels: each marked cell draws its quarters of them on top.
+  for (const c of onTop) {
     const box = markBand(ts, c.x, c.y).box;
     dr.clip(box);
     drawCornerClues(dr, ts, state, c.x, c.y, state.flags[c.y * o + c.x]);

@@ -657,6 +657,12 @@ engine colors every hint mark".
 - **A mark that restyles the content keeps the content's color**, as a
   struck candidate stays `COL_PENCIL`; the repaint finds it by what it
   changes. A strike is such a mark.
+- **Content laid over a mark is drawn once, mark or none.** The repaint
+  finds a mark by what changes without it, so a clue disc a marked cell
+  draws again over its tile's copy is stroked twice, darker, and reads as
+  the mark's own (Mathrax's tiles leave a marked cell's quarters to the pass
+  over the marks). The edge stays off what covers a mark: the app measures
+  that from the inks drawn alone.
 - **Pick no hint color, and add no keyline.** The app finds an ink's marks by
   drawing the inks in black and then white, so a mark is found whole on
   content of any color, and it keeps the ink's own coverage: stripes stay as
