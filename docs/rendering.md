@@ -853,7 +853,7 @@ names the one it applies.
   ("The palette holds one set of fills for regions"): one of `REGION_FILLS`,
   the region palette, eight faint fills of which a board takes the first
   four, six or eight, with `regionFills`
-  ([`engine/region-fill.ts`](../src/engine/region-fill.ts)) choosing so
+  ([`engine/generate/region-fill.ts`](../src/engine/generate/region-fill.ts)) choosing so
   that regions sharing a side differ. It says only "these cells are one
   region": the heavy border still tells two regions apart, and everything
   else is drawn over the fill as over the plain surface. A mistake's wash

@@ -27,7 +27,7 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Rect, Size } from "../../engine/contract/types.ts";
-import { regionFills } from "../../engine/region-fill.ts";
+import { regionFills } from "../../engine/generate/region-fill.ts";
 import { drawRectCorners } from "../../engine/render/draw.ts";
 import {
   HintMarks,

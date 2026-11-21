@@ -14,8 +14,8 @@ import {
   solvableAtExactlyTier,
 } from "../../engine/contract/difficulty.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import { drawAnswer, isCommon } from "../../engine/generate/word-list/index.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { drawAnswer, isCommon } from "../../engine/word-list/index.ts";
 import { solveWordtrail } from "./solver.ts";
 import {
   encodeDesc,

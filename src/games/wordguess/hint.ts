@@ -15,8 +15,8 @@ import type {
 } from "../../engine/contract/game.ts";
 import { GAME_OVER } from "../../engine/contract/hint-refusal.ts";
 import type { Relation, Sentence } from "../../engine/contract/hint-words.ts";
+import { answerWords, guessWords } from "../../engine/generate/word-list/index.ts";
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
-import { answerWords, guessWords } from "../../engine/word-list/index.ts";
 import * as wordguess from "../../generated/games/wordguess/wordguess.compiled.ts";
 import { SQUARE } from "./hint-marks.ts";
 import {

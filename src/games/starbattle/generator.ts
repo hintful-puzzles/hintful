@@ -20,8 +20,8 @@ import {
   mergeToCount,
   regionForest,
   regionNumbers,
-} from "../../engine/divide.ts";
-import { type MendJudge, mendDivision } from "../../engine/mend-division.ts";
+} from "../../engine/generate/divide.ts";
+import { type MendJudge, mendDivision } from "../../engine/generate/mend-division.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { StarbattleBoard, solveStarbattle } from "./solver.ts";
 import { BLANK, CROSSED, encodeDesc, STAR, type StarbattleParams } from "./state.ts";
@@ -177,7 +177,7 @@ function otherAnswers(
 const smallestRegion = (p: StarbattleParams): number => 2 * p.stars;
 
 /**
- * The mend's judge (`engine/mend-division.ts`): the ladder capped at `cap`
+ * The mend's judge (`engine/generate/mend-division.ts`): the ladder capped at `cap`
  * on the regions as they stand, a second answer's stars, and the ladder a
  * tier lower. A star of a second answer moved to another region leaves that
  * region a star too many in it.

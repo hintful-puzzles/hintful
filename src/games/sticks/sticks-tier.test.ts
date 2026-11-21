@@ -17,9 +17,9 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
+import { SYMM_NONE, SYMM_ROT2 } from "../../engine/generate/symmetric-blacks.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
-import { SYMM_NONE, SYMM_ROT2 } from "../../engine/symmetric-blacks.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,

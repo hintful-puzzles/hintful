@@ -600,7 +600,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/divvy.ts",
+    module: "src/engine/generate/divvy.ts",
     cases: [
       {
         within: "divvyRectangle",
@@ -620,7 +620,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/symmetric-blacks.ts",
+    module: "src/engine/generate/symmetric-blacks.ts",
     cases: [
       {
         within: "placeSymmetricBlacks",
@@ -1165,7 +1165,7 @@ export const MODULES = [
     // `pearl-differential.test.ts` goes from 14 passed / 1 skipped to 7 failed,
     // one per desc byte-match fixture. `loopgen.test.ts`'s header records the
     // same split for a reader who arrives from the other direction.
-    module: "src/engine/loopgen.ts",
+    module: "src/engine/generate/loopgen.ts",
     cases: [
       {
         within: "faceColor",

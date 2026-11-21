@@ -1,5 +1,5 @@
 /**
- * `node scripts/word-list.ts`: build `src/engine/word-list/data.ts`, the
+ * `node scripts/word-list.ts`: build `src/engine/generate/word-list/data.ts`, the
  * word games' answers and accepted guesses, from pinned releases of SCOWL,
  * 12dicts and LDNOOBW. The output is committed; run this only to change the
  * lists, and commit what it writes with it.
@@ -298,7 +298,7 @@ export const COMMON: Readonly<Record<number, string>> = ${literal(commonLists)};
 
 export const GUESSES: Readonly<Record<number, string>> = ${literal(guessLists)};
 `;
-  writeFileSync(join(root, "src/engine/word-list/data.ts"), out);
+  writeFileSync(join(root, "src/engine/generate/word-list/data.ts"), out);
   for (let length = MIN_LENGTH; length <= MAX_LENGTH; length++) {
     const a = (answerLists.get(length) ?? "").length / length;
     const c = (commonLists.get(length) ?? "").length / length;

@@ -19,9 +19,13 @@ import { modifierItem } from "../../engine/game-id/modifier.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/game-id/obfuscate.ts";
 import { numberItem } from "../../engine/game-id/params.ts";
 import { flag, num, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
+import {
+  drawAnswer,
+  isGuess,
+  WORD_LENGTHS,
+} from "../../engine/generate/word-list/index.ts";
 import type { WorkingRow } from "../../engine/mechanics/code-rows.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { drawAnswer, isGuess, WORD_LENGTHS } from "../../engine/word-list/index.ts";
 
 // --- letters ----------------------------------------------------------------
 

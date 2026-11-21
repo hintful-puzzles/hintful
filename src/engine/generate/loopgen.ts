@@ -17,11 +17,11 @@
  * is 31 bits the index tie-break is essentially never reached.
  */
 
-import type { Grid, GridFace } from "./board/grid/index.ts";
-import { shuffle } from "./board/shuffle.ts";
-import { SortedMultiset } from "./board/sorted-multiset.ts";
-import { retryLimit } from "./contract/retry-limit.ts";
-import { type RandomState, randomBits, randomUpto } from "./random/index.ts";
+import type { Grid, GridFace } from "../board/grid/index.ts";
+import { shuffle } from "../board/shuffle.ts";
+import { SortedMultiset } from "../board/sorted-multiset.ts";
+import { retryLimit } from "../contract/retry-limit.ts";
+import { type RandomState, randomBits, randomUpto } from "../random/index.ts";
 
 /** Face colors (mirrors upstream `enum face_colour`). */
 export const FACE_WHITE = 0;

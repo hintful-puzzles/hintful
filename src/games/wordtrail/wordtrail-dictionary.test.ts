@@ -6,12 +6,12 @@
 import { describe, expect, it } from "vitest";
 import { edgeBetween, squareEdges } from "../../engine/board/square-edges.ts";
 import type { ReferenceItem } from "../../engine/contract/types.ts";
+import { commonWords } from "../../engine/generate/word-list/index.ts";
 import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
 import { CROSS } from "../../engine/mechanics/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { commonWords } from "../../engine/word-list/index.ts";
 import { dictionary } from "./dictionary.ts";
 import { wordtrailGame } from "./index.ts";
 import { COL_SPOTLIGHT, layout } from "./render.ts";

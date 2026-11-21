@@ -6,13 +6,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { GAME_OVER } from "../../engine/contract/hint-refusal.ts";
+import { answerWords, guessWords } from "../../engine/generate/word-list/index.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
-import { answerWords, guessWords } from "../../engine/word-list/index.ts";
 import { dictionaryWords, wordguessHint, wordguessHintKeepTrack } from "./hint.ts";
 import { wordguessGame } from "./index.ts";
 import {

@@ -17,7 +17,7 @@ import {
   FACE_WHITE,
   generateLoop,
   type LoopgenBias,
-} from "../../engine/loopgen.ts";
+} from "../../engine/generate/loopgen.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { pearlSolve } from "./solver.ts";
 import {

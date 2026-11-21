@@ -17,10 +17,10 @@
  * fixtures pin them.
  */
 
-import { Dsf } from "./board/dsf.ts";
-import { shuffle } from "./board/shuffle.ts";
-import { drawRejected } from "./contract/deal-census.ts";
-import { type RandomState, randomUpto } from "./random/index.ts";
+import { Dsf } from "../board/dsf.ts";
+import { shuffle } from "../board/shuffle.ts";
+import { drawRejected } from "../contract/deal-census.ts";
+import { type RandomState, randomUpto } from "../random/index.ts";
 import { adjacentCells } from "./redivide.ts";
 
 /** The rectangle to divide. */

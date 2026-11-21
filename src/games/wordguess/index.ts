@@ -16,6 +16,7 @@ import type {
   Point,
   ReferenceModel,
 } from "../../engine/contract/types.ts";
+import { answerWords } from "../../engine/generate/word-list/index.ts";
 import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { clearKey, letterKeyboard } from "../../engine/input/key-labels.ts";
@@ -31,7 +32,6 @@ import {
 } from "../../engine/input/pointer.ts";
 import { enterValue, restCursor, rubOut } from "../../engine/mechanics/code-rows.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { answerWords } from "../../engine/word-list/index.ts";
 import {
   dictionaryWords,
   WORDGUESS_RUNGS,

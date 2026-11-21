@@ -26,13 +26,13 @@ import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { AREA_TOO_LARGE, endParams } from "../../engine/game-id/params.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
-import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
   SYMM_NONE,
   SYMM_REF4,
   SYMM_ROT2,
   SYMM_ROT4,
-} from "../../engine/symmetric-blacks.ts";
+} from "../../engine/generate/symmetric-blacks.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import * as lightup from "../../generated/games/lightup/lightup.compiled.ts";
 
 // --- cell flags (upstream values) -------------------------------------------

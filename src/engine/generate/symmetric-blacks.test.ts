@@ -20,7 +20,7 @@
  * else; if you add a case here, check which side of that line it falls on.
  */
 import { describe, expect, it } from "vitest";
-import { randomNew } from "./random/index.ts";
+import { randomNew } from "../random/index.ts";
 import {
   placeSymmetricBlacks,
   SYMM_MAX,

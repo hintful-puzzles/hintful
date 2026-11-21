@@ -49,6 +49,7 @@ import {
   type Marks,
   PLACE,
 } from "./describe-runtime.ts";
+import { SYMM_ROT4 } from "./generate/symmetric-blacks.ts";
 import {
   CellMarks,
   compiledRung,
@@ -65,7 +66,6 @@ import {
   verdictOf,
 } from "./move-judge.ts";
 import { randomNew } from "./random/index.ts";
-import { SYMM_ROT4 } from "./symmetric-blacks.ts";
 import { dealt } from "./testing/dealt.ts";
 
 const EASY: LightupParams = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };

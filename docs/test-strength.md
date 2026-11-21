@@ -278,7 +278,7 @@ Restating those locally cannot be done better and is pointless done worse.
 mutation rather than reasoning about it, and record the division in the
 module's own test file, so a later reader can place a new case on the right
 side of the line. `src/engine/latin.test.ts` and
-`src/engine/symmetric-blacks.test.ts` are the worked examples. A local test
+`src/engine/generate/symmetric-blacks.test.ts` are the worked examples. A local test
 asserts what is order-independent, such as a matching's maximality against
 brute force; a test pinning a particular matching would break on any
 deliberate generator change while proving nothing new.

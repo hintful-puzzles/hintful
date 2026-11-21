@@ -10,8 +10,8 @@
  * singleton fixup — so a seed lays out the same dominoes as the C reference.
  */
 
-import { shuffle } from "./board/shuffle.ts";
-import type { RandomState } from "./random/index.ts";
+import { shuffle } from "../board/shuffle.ts";
+import type { RandomState } from "../random/index.ts";
 
 export function dominoLayout(w: number, h: number, rs: RandomState): Int32Array {
   const wh = w * h;

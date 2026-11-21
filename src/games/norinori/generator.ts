@@ -21,8 +21,8 @@ import {
   mergeToCount,
   regionForest,
   regionNumbers,
-} from "../../engine/divide.ts";
-import { type MendJudge, mendDivision } from "../../engine/mend-division.ts";
+} from "../../engine/generate/divide.ts";
+import { type MendJudge, mendDivision } from "../../engine/generate/mend-division.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { areasOf, type NorinoriBoard, solveNorinori } from "./solver.ts";
 import {
@@ -245,7 +245,7 @@ function otherAnswers(
 const SMALLEST_REGION = 3;
 
 /**
- * The mend's judge (`engine/mend-division.ts`): the ladder capped at `cap`
+ * The mend's judge (`engine/generate/mend-division.ts`): the ladder capped at `cap`
  * on the regions as they stand, a second answer's shaded squares, and the
  * ladder a tier lower.
  */

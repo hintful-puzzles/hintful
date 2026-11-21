@@ -591,7 +591,7 @@ tile's position from it.
 
 ### Requirement: The engine divides a grid into regions of unequal size
 
-`src/engine/divide.ts` SHALL divide a rectangular grid into connected regions
+`src/engine/generate/divide.ts` SHALL divide a rectangular grid into connected regions
 whose sizes differ, the game supplying only its rule: what two neighboring
 regions hold as one or that they may not join, where the regions start, or
 the size a region grows to. A game whose regions differ in size SHALL take
@@ -629,7 +629,7 @@ which the engine's walks cannot.
 
 ### Requirement: The engine colors the regions of a division with one walk
 
-`src/engine/region-fill.ts` SHALL give each region a fill number below the
+`src/engine/generate/region-fill.ts` SHALL give each region a fill number below the
 count asked for, such that two regions sharing a side never take the same
 one, or report that there is none. The walk SHALL ask its caller which of
 the regions tied for fewest fills left goes next and in what order its fills
@@ -665,7 +665,7 @@ spread the fills over the regions.
 
 ### Requirement: The engine mends a division until a game's deductions finish it
 
-`src/engine/mend-division.ts` SHALL move single cells between neighboring
+`src/engine/generate/mend-division.ts` SHALL move single cells between neighboring
 regions until a game's deductions finish the board and its easier tier does
 not, each region staying connected and no smaller than the game's least
 size, and a cell the game fixes never moving. The game SHALL supply only its

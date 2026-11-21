@@ -8,9 +8,13 @@ import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import type { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { divvyRectangle } from "../../engine/divvy.ts";
+import { divvyRectangle } from "../../engine/generate/divvy.ts";
+import {
+  adjacentCells,
+  redivide,
+  regionsBeside,
+} from "../../engine/generate/redivide.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { adjacentCells, redivide, regionsBeside } from "../../engine/redivide.ts";
 import {
   type Deduction,
   deduce,

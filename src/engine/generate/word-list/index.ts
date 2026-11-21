@@ -8,7 +8,7 @@
  * over fixed-width slices, and nothing is parsed or allocated at load.
  */
 
-import { type RandomState, randomUpto } from "../random/index.ts";
+import { type RandomState, randomUpto } from "../../random/index.ts";
 import { ANSWERS, COMMON, GUESSES } from "./data.ts";
 
 /** The word lengths the lists hold, shortest first. */

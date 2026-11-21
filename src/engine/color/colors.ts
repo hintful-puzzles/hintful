@@ -462,7 +462,7 @@ const darkWordOf = (name: RegionName): string => {
 /**
  * **The fills of the regions on any board**: see {@link REGION_DESIGN}. A
  * board takes the first four, six or eight, and `regionFills`
- * (`engine/region-fill.ts`) says which region takes which.
+ * (`engine/generate/region-fill.ts`) says which region takes which.
  */
 export const REGION_FILLS: readonly Color[] = REGION_ORDER.map((name) =>
   named(

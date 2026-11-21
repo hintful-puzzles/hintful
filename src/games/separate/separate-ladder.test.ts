@@ -8,7 +8,7 @@
  */
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
-import { divvyRectangle } from "../../engine/divvy.ts";
+import { divvyRectangle } from "../../engine/generate/divvy.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newSeparateDesc } from "./generator.ts";

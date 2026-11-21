@@ -42,7 +42,7 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { regionFills } from "../../engine/region-fill.ts";
+import { regionFills } from "../../engine/generate/region-fill.ts";
 import {
   drawRectCorners,
   drawRectOutline,

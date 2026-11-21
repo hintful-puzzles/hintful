@@ -16,12 +16,12 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { regionNumbers } from "../../engine/divide.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { numberItem, squareSize } from "../../engine/game-id/params.ts";
 import { choice, num, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
 import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import { encodeRegionWalls, readRegionWalls } from "../../engine/game-id/wall-runs.ts";
+import { regionNumbers } from "../../engine/generate/divide.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import * as starbattle from "../../generated/games/starbattle/starbattle.compiled.ts";
 

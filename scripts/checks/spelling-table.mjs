@@ -398,9 +398,9 @@ export const QUOTATIONS = {
   nc_colour: ["openspec/specs/guess/spec.md"],
   has_incentre: ["src/engine/board/grid/grid-core.ts"],
   grid_find_incentre: ["src/engine/board/grid/grid-geometry.ts"],
-  face_colour: ["src/engine/loopgen.ts"],
+  face_colour: ["src/engine/generate/loopgen.ts"],
   colour_mix: ["src/engine/color/color-mkhighlight.ts"],
-  can_colour_face: ["src/engine/loopgen.ts"],
+  can_colour_face: ["src/engine/generate/loopgen.ts"],
   bridges_neighbour: ["src/games/bridges/solver.ts"],
   alloc_find_neighbour: ["src/games/dominosa/generator.ts"],
 };

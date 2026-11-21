@@ -55,7 +55,7 @@ shell it ships.
 
 ## Word lists
 
-The word games' answers and accepted guesses (`src/engine/word-list/data.ts`,
+The word games' answers and accepted guesses (`src/engine/generate/word-list/data.ts`,
 built by `scripts/word-list.ts`) come from three lists:
 
 - **SCOWL** by Kevin Atkinson, the accepted words and how common each is.

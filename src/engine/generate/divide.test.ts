@@ -9,7 +9,8 @@
  * Seismic's property tests run on `growToSize`.
  */
 import { describe, expect, it } from "vitest";
-import { Dsf } from "./board/dsf.ts";
+import { Dsf } from "../board/dsf.ts";
+import { randomNew } from "../random/index.ts";
 import {
   type DividedGrid,
   growFromSeeds,
@@ -19,7 +20,6 @@ import {
   regionNumbers,
   scatterSeeds,
 } from "./divide.ts";
-import { randomNew } from "./random/index.ts";
 import { adjacentCells } from "./redivide.ts";
 
 const SHAPES: DividedGrid[] = [

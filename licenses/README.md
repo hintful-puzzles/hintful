@@ -35,7 +35,7 @@ than a guarantee.
 
 SCOWL (Spell Checker Oriented Word Lists), by Kevin Atkinson: its `Copyright`
 file from release `rel-2026.02.25`, whole. The word games' lists in
-`../src/engine/word-list/data.ts` are generated from it by
+`../src/engine/generate/word-list/data.ts` are generated from it by
 `../scripts/word-list.ts`, which says which sizes; they stop at size 80, so
 the notice before its first `===` is the one that applies, and the rest is
 kept because the file is kept whole.

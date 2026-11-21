@@ -18,7 +18,7 @@ import type {
   ReferenceModel,
   ReferenceSection,
 } from "../../engine/contract/types.ts";
-import { commonWords } from "../../engine/word-list/index.ts";
+import { commonWords } from "../../engine/generate/word-list/index.ts";
 import { wordsDrawn } from "./render.ts";
 import { fittingTrails } from "./solver.ts";
 import type { WordtrailState, WordtrailUi } from "./state.ts";

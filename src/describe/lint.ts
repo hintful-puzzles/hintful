@@ -21,6 +21,7 @@ import {
   RETIRED_PHRASE,
   unboundDefect,
 } from "../engine/contract/wording-rules.ts";
+import { WORD_LENGTHS } from "../engine/generate/word-list/index.ts";
 import { PAIR_NAMES, SHADED_NAME, UNSHADED_NAME } from "../engine/render/piece.ts";
 import {
   DEFAULT_FORMS,
@@ -29,7 +30,6 @@ import {
   parseClause,
 } from "../engine/stated-clauses.ts";
 import { judge } from "../engine/testing/hint-reference.ts";
-import { WORD_LENGTHS } from "../engine/word-list/index.ts";
 import {
   type DescriptionFile,
   isFormal,

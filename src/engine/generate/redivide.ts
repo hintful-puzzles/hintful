@@ -6,8 +6,8 @@
  * share one, and every region holds `k` cells.
  */
 
-import { DX, DY, outOfBounds } from "./mechanics/border-grid.ts";
-import { type RandomState, randomUpto } from "./random/index.ts";
+import { DX, DY, outOfBounds } from "../mechanics/border-grid.ts";
+import { type RandomState, randomUpto } from "../random/index.ts";
 
 /** A grid divided into regions of `k`. */
 export interface DivisionShape {

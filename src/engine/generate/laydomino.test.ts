@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { randomNew } from "../random/index.ts";
 import { dominoLayout } from "./laydomino.ts";
-import { randomNew } from "./random/index.ts";
 
 /** Every cell is either a lone singleton (its own partner) or paired with an
  * orthogonally-adjacent cell that points back at it. */

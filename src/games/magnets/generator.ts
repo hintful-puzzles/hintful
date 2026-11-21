@@ -12,7 +12,7 @@
 
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { dominoLayout } from "../../engine/laydomino.ts";
+import { dominoLayout } from "../../engine/generate/laydomino.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import {
   cellValue,

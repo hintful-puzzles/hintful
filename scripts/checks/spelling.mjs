@@ -45,7 +45,7 @@ const EXCLUDED = [
   /^openspec\/changes\/archive\//,
   /^openspec\/postmortems\//,
   /^licenses\/(sgt-puzzles|puzzles-unreleased|scowl)-LICENSE$/,
-  /^src\/engine\/word-list\/data\.ts$/,
+  /^src\/engine\/generate\/word-list\/data\.ts$/,
   /^metrics\//,
   /^package-lock\.json$/,
   /\.snap$/,

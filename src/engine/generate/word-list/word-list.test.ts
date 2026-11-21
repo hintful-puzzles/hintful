@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { randomNew } from "../random/index.ts";
+import { randomNew } from "../../random/index.ts";
 import { ANSWERS, COMMON, GUESSES } from "./data.ts";
 import {
   answerCount,

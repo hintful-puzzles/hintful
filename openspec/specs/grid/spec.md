@@ -334,7 +334,7 @@ when no landlocked component exists.
 
 ### Requirement: Seeded random loop generation
 
-The engine SHALL provide `src/engine/loopgen.ts` exposing
+The engine SHALL provide `src/engine/generate/loopgen.ts` exposing
 `generateLoop(grid, board, rng, bias?)`, which colors every face of `grid`
 inside (white) or outside (black) so that the white/black boundary is a single
 closed loop, writing the coloring into `board`. Given a fixed seed, the

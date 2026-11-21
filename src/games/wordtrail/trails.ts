@@ -4,7 +4,7 @@
  * read, and the generator's test of a board's uniqueness.
  *
  * A trail is squares side by side, none twice, whose letters read from its
- * first square spell a common word (`engine/word-list`) as long as one of
+ * first square spell a common word (`engine/generate/word-list`) as long as one of
  * the listed lengths. A word reads one way, so squares that spell a word
  * both ways round (TUB and BUT) are two trails, one each way.
  */
@@ -13,7 +13,7 @@ import {
   commonSpan,
   narrowCommon,
   type WordSpan,
-} from "../../engine/word-list/index.ts";
+} from "../../engine/generate/word-list/index.ts";
 
 /** A trail, its squares in reading order. */
 export type Trail = readonly number[];

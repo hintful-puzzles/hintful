@@ -42,7 +42,7 @@
 import type { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { growToSize } from "../../engine/divide.ts";
+import { growToSize } from "../../engine/generate/divide.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { SOLVE_FAILED, solveGame } from "./solver.ts";
 import {

@@ -1179,7 +1179,7 @@ Rules for any of them:
 **A generator that divides its grid into regions takes the division from
 `src/engine/` and supplies only its rule.** Regions of one size come from
 `divvyRectangle`. Regions of unequal size come from
-[`divide.ts`](../src/engine/divide.ts), which has a walk for each way a game
+[`divide.ts`](../src/engine/generate/divide.ts), which has a walk for each way a game
 states what it wants:
 
 | The game knows | The walk | Exemplar |
@@ -1203,7 +1203,7 @@ states what it wants:
   under a largest size deals regions at that size) do.
 - **Where the regions are the board's only clue, a division dealt at random
   seldom has one answer, and the engine mends it** with `mendDivision`
-  ([`mend-division.ts`](../src/engine/mend-division.ts)), whose doc says what
+  ([`mend-division.ts`](../src/engine/generate/mend-division.ts)), whose doc says what
   it moves and keeps. The game supplies the judge, with its ladder
   capped at the tier asked for. Exemplar: `judgeOf` in
   [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).

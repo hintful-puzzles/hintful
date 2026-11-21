@@ -4,6 +4,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { answerWords, isAnswer } from "../../engine/generate/word-list/index.ts";
 import { CLEAR_BUTTON } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_RIGHT,
@@ -13,7 +14,6 @@ import {
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { answerWords, isAnswer } from "../../engine/word-list/index.ts";
 import { wordguessGame } from "./index.ts";
 import { centerOf, tileRect } from "./render.ts";
 import {

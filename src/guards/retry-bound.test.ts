@@ -69,13 +69,15 @@ function sources(): Record<string, string> {
  * free square in 1,600 is refused 10,000 times running about once in 500.
  */
 const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
-  "engine/divide.ts › growFromSeeds": ["a region takes a free cell each pass"],
-  "engine/divide.ts › growToSize": [
+  "engine/generate/divide.ts › growFromSeeds": ["a region takes a free cell each pass"],
+  "engine/generate/divide.ts › growToSize": [
     "claims a free cell each pass",
     "pops a frontier entry each pass",
   ],
-  "engine/divide.ts › mergeToCount": ["joins two regions each pass or returns null"],
-  "engine/divvy.ts › divvyRectangleAttempt": [
+  "engine/generate/divide.ts › mergeToCount": [
+    "joins two regions each pass or returns null",
+  ],
+  "engine/generate/divvy.ts › divvyRectangleAttempt": [
     "each pass grows an omino by a square or returns null, and divvyRectangle counts the attempts",
   ],
   "engine/board/grid/tilings/hat.ts › extendCoords": [
@@ -95,11 +97,11 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
     "Hopcroft–Karp: each phase enlarges the matching, which neither side can exceed",
     "a depth-first walk of the phase's layered graph, each edge tried once",
   ],
-  "engine/laydomino.ts › dominoLayout": [
+  "engine/generate/laydomino.ts › dominoLayout": [
     "each pass pairs off two singletons",
     "a breadth-first search: each square is queued once",
   ],
-  "engine/loopgen.ts › generateLoop": [
+  "engine/generate/loopgen.ts › generateLoop": [
     "each pass colors a gray face, and none is uncolored",
   ],
   "engine/random/index.ts › randomUpto": [

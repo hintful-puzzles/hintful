@@ -25,6 +25,12 @@ import {
   numberItem,
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
+import {
+  SYMM_NONE,
+  SYMM_ROT2,
+  SYMM_ROT4,
+  SYMMETRY_CHOICES,
+} from "../../engine/generate/symmetric-blacks.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
@@ -35,12 +41,6 @@ import {
   verbGesture,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
-import {
-  SYMM_NONE,
-  SYMM_ROT2,
-  SYMM_ROT4,
-  SYMMETRY_CHOICES,
-} from "../../engine/symmetric-blacks.ts";
 import {
   RULES_OUT,
   SAYS_EACH,

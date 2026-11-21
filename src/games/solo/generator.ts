@@ -29,7 +29,7 @@
 
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { divvyRectangle } from "../../engine/divvy.ts";
+import { divvyRectangle } from "../../engine/generate/divvy.ts";
 import { type RandomState, randomBits, randomUpto } from "../../engine/random/index.ts";
 import { type Difficulty, runSolver } from "./solver.ts";
 import {

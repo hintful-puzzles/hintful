@@ -10,8 +10,8 @@
  * own shape is pinned here on a graph small enough to read.
  */
 import { describe, expect, it } from "vitest";
+import { randomNew } from "../random/index.ts";
 import { growFromSeeds, regionNumbers, scatterSeeds } from "./divide.ts";
-import { randomNew } from "./random/index.ts";
 import { colorRegions, regionFills } from "./region-fill.ts";
 
 /** A division of a `w` by `h` grid into `count` regions, drawn from `seed`. */

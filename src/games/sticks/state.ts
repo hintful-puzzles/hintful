@@ -30,13 +30,13 @@ import { isDigit } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
 import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
-import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
   SYMM_NONE,
   SYMM_ROT2,
   SYMM_ROT4,
   SYMMETRY_CHOICES,
-} from "../../engine/symmetric-blacks.ts";
+} from "../../engine/generate/symmetric-blacks.ts";
+import type { GridCursor } from "../../engine/input/pointer.ts";
 import * as sticks from "../../generated/games/sticks/sticks.compiled.ts";
 
 // --- cell flag bits (upstream values) ---------------------------------------
@@ -52,7 +52,7 @@ export interface SticksParams {
   h: number;
   /** Percentage of squares that are blocks (5..100). */
   blackpc: number;
-  /** One of the shared `SYMM_*` constants (engine/symmetric-blacks.ts). */
+  /** One of the shared `SYMM_*` constants (engine/generate/symmetric-blacks.ts). */
   symm: number;
   /** `DIFF_EASY`, a board the described ladder finishes, or
    * `DIFF_UNREASONABLE`, one with a single answer that it does not reach.

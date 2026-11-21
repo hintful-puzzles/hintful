@@ -8,9 +8,9 @@
  * breaks. Star Battle's generation tests run it with a real ladder.
  */
 import { describe, expect, it } from "vitest";
-import { MENDED, newDealCensus, takingCensus } from "./contract/deal-census.ts";
+import { MENDED, newDealCensus, takingCensus } from "../contract/deal-census.ts";
+import { randomNew } from "../random/index.ts";
 import { type MendJudge, mendDivision } from "./mend-division.ts";
-import { randomNew } from "./random/index.ts";
 import { adjacentCells } from "./redivide.ts";
 
 const SEEDS = 12;

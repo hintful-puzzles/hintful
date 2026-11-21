@@ -16,7 +16,7 @@ import {
   RetryLimitExceeded,
   retryLimit,
 } from "../../engine/contract/retry-limit.ts";
-import { FACE_BLACK, FACE_GRAY, generateLoop } from "../../engine/loopgen.ts";
+import { FACE_BLACK, FACE_GRAY, generateLoop } from "../../engine/generate/loopgen.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { buildLoopyGrid } from "./grid-build.ts";
 import { gridTypeOf, type LoopyParams } from "./params.ts";
