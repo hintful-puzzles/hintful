@@ -173,7 +173,7 @@ role.
 clue reach the corners a round ring passes through, so a cell lays its text
 out inside `ringTextBox(band)`, the box a ring centered on the cell goes
 round: notes through `noteGrid`
-([`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts)), a clue
+([`engine/mechanics/note-taking-cell.ts`](../src/engine/mechanics/note-taking-cell.ts)), a clue
 in the same box's corner. A cell with a clue takes its notes on the rows and
 at the size of one without (the owner, 2026-10-28: "make them all the
 same"), as Keen and Killer do; `noteGrid`'s `sizedBy` gives one size to cells
@@ -216,19 +216,19 @@ hint color"). A box longer than it is wide is ringed by a pill.
 
 | The element | The ring, and what goes inside it | Exemplar |
 | --- | --- | --- |
-| A side between two squares | a pill across the side, with the game's own line or cross, through `engine/edge-hint.ts` | `tracks/render.ts`, `skeleton/edges/render.ts` |
-| A side on the border grid | a pill along the side, with the wall or the cross | `engine/border-grid-render.ts` |
+| A side between two squares | a pill across the side, with the game's own line or cross, through `engine/mechanics/edge-hint.ts` | `tracks/render.ts`, `skeleton/edges/render.ts` |
+| A side on the border grid | a pill along the side, with the wall or the cross | `engine/mechanics/border-grid-render.ts` |
 | A span between two elements | a pill round the span, with the part the move adds | `bridges/render.ts` |
 | A dot, a peg, a vertex | a circle round it | `pegs/render.ts`, `untangle/render.ts` |
 | A straight piece | one pill round the piece | `dominosa/render.ts` |
 
 **A side of a square is the engine's `EDGE` mark**, and
-[`engine/edge-hint.ts`](../src/engine/edge-hint.ts) packs it into both
+[`engine/mechanics/edge-hint.ts`](../src/engine/mechanics/edge-hint.ts) packs it into both
 squares' tile keys. A game declares how its line and cross look and where a
 side's ring goes (`EdgeShapes.ring`); both squares draw that one ring, each
 in its own clip, with the asked shape inside.
 
-On the border grid ([`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts),
+On the border grid ([`engine/mechanics/border-grid-render.ts`](../src/engine/mechanics/border-grid-render.ts),
 `hintTileBits`) a wall and a not-wall share one shape, the edge: a wall ask
 is the edge in the ring's ink, and a not-wall ask a cross on the edge,
 because the edge in that ink would read as a wall. **A mark drawn in a hint
@@ -618,7 +618,7 @@ what it holds. Two regions that cross at the target, and are named by their
 direction, may both be striped, since the crossing tells them apart
 (`crossRuns` in [`crossing.description.yaml`](../src/games/crossing/crossing.description.yaml)).
 The border grid's hint layer
-([`engine/border-grid-hint.ts`](../src/engine/border-grid-hint.ts)) carries
+([`engine/mechanics/border-grid-hint.ts`](../src/engine/mechanics/border-grid-hint.ts)) carries
 both marks. Exemplar:
 [`separate.description.yaml`](../src/games/separate/separate.description.yaml).
 

@@ -27,8 +27,8 @@ import {
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
 import type { SuppliedHooks } from "../../engine/described-hint.ts";
-import { EDGE } from "../../engine/edge-hint.ts";
 import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
+import { EDGE } from "../../engine/mechanics/edge-hint.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { STATED } from "../../generated/games/pearl/pearl.compiled.ts";
 import { SQUARE } from "./kinds.ts";

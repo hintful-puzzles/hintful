@@ -34,7 +34,7 @@
 # compiler; `npm run typecheck` is the gate's verdict.
 set -u
 
-FILE=src/engine/line-drawing.ts
+FILE=src/engine/mechanics/line-drawing.ts
 PLANT_LINE='  let n = 0;'
 EXPECTED='214:7 217:38 219:3'
 

@@ -22,15 +22,6 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
-import {
-  BORDER,
-  BORDER_D,
-  BORDER_L,
-  BORDER_R,
-  BORDER_U,
-  DISABLED,
-  initBorders,
-} from "../../engine/border-grid.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -46,6 +37,15 @@ import {
   runLadder,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
+import {
+  BORDER,
+  BORDER_D,
+  BORDER_L,
+  BORDER_R,
+  BORDER_U,
+  DISABLED,
+  initBorders,
+} from "../../engine/mechanics/border-grid.ts";
 import * as palisade from "../../generated/games/palisade/palisade.compiled.ts";
 import type { PalisadeShape } from "./state.ts";
 

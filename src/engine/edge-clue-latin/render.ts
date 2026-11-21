@@ -41,7 +41,7 @@ import {
   drawCellBackground,
   noteGrid,
   winHighlight,
-} from "../note-taking-cell.ts";
+} from "../mechanics/note-taking-cell.ts";
 import { drawStrike, glyphFont } from "../render/draw.ts";
 import { hatchPeriod } from "../render/hatch.ts";
 import {

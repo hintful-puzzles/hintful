@@ -8,12 +8,6 @@
  */
 
 import {
-  type RuleOut,
-  type RuleOutMistake,
-  ruleOutMistakes,
-  type WorkingRow,
-} from "../../engine/code-rows.ts";
-import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   type DescParse,
@@ -25,6 +19,12 @@ import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/game-id/obfuscate.ts";
 import { numberItem } from "../../engine/game-id/params.ts";
 import { num, paramsCodec, size } from "../../engine/game-id/params-codec.ts";
+import {
+  type RuleOut,
+  type RuleOutMistake,
+  ruleOutMistakes,
+  type WorkingRow,
+} from "../../engine/mechanics/code-rows.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 
 // --- score ------------------------------------------------------------------

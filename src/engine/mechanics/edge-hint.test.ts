@@ -6,7 +6,9 @@
  * happen to make.
  */
 import { describe, expect, it } from "vitest";
-import { DOWN, LEFT, RIGHT, squareEdges, UP } from "./board/square-edges.ts";
+import { DOWN, LEFT, RIGHT, squareEdges, UP } from "../board/square-edges.ts";
+import { NOTHING_TO_CLEAR } from "../render/ring.ts";
+import { RecordingDrawing } from "../testing/recording-drawing.ts";
 import {
   drawEdgeHints,
   EDGE,
@@ -15,8 +17,6 @@ import {
   edgeHintWords,
   hintedSides,
 } from "./edge-hint.ts";
-import { NOTHING_TO_CLEAR } from "./render/ring.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 const g = squareEdges(3, 2);
 /** The edge between squares 1 and 2, and the one below square 1. */

@@ -6,6 +6,9 @@
  * edge it sets, on the border grid's shared step.
  */
 
+import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
+import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import { edgeContinuation } from "../../engine/hint-text.ts";
 import {
   type BorderHint,
   borderEdgeEdits,
@@ -13,10 +16,7 @@ import {
   EDGE,
   type ForcedBorderEdge,
   forcedEdgesOf,
-} from "../../engine/border-grid-hint.ts";
-import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
-import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
-import { edgeContinuation } from "../../engine/hint-text.ts";
+} from "../../engine/mechanics/border-grid-hint.ts";
 import {
   SAYS_KINDS,
   STATED,

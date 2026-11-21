@@ -5,9 +5,12 @@
  * the compiled module's clauses, as the engine renders it.
  */
 import { describe, expect, it } from "vitest";
-import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
 import { CELL } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import {
+  EDGE,
+  type ForcedBorderEdge,
+} from "../../engine/mechanics/border-grid-hint.ts";
 import { type Clauses, statedParts, statedSentence } from "../../engine/stated.ts";
 import { STATED } from "../../generated/games/palisade/palisade.compiled.ts";
 

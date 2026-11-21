@@ -18,7 +18,7 @@
  * hard-coding one.
  */
 
-import { SortedMultiset } from "./board/sorted-multiset.ts";
+import { SortedMultiset } from "../board/sorted-multiset.ts";
 import {
   D,
   DIRECTIONS,
@@ -29,11 +29,11 @@ import {
   opposite,
   R,
   U,
-} from "./board/square-edges.ts";
-import type { DescParse } from "./contract/desc-error.ts";
-import { readDesc } from "./game-id/desc-reader.ts";
-import type { RandomState } from "./random/index.ts";
-import { randomUpto } from "./random/index.ts";
+} from "../board/square-edges.ts";
+import type { DescParse } from "../contract/desc-error.ts";
+import { readDesc } from "../game-id/desc-reader.ts";
+import type { RandomState } from "../random/index.ts";
+import { randomUpto } from "../random/index.ts";
 
 /* ----------------------------------------------------------------------
  * A step across the torus (upstream's `OFFSET`). The direction algebra under

@@ -16,7 +16,7 @@
  *   or the last one typed.
  */
 
-import type { GridCursor } from "./input/pointer.ts";
+import type { GridCursor } from "../input/pointer.ts";
 
 // --- the answer row -----------------------------------------------------
 

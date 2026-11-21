@@ -43,7 +43,6 @@ import {
   U,
 } from "../../engine/board/square-edges.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import {
   collectBarrierCandidates,
   encodeWireDesc,
@@ -51,7 +50,8 @@ import {
   offset,
   placeBarriers,
   type Xyd,
-} from "../../engine/wires.ts";
+} from "../../engine/mechanics/wires.ts";
+import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { computeLoops } from "./loops.ts";
 import { finishes, searchAnswers, settle } from "./solver.ts";
 import { LOCKED, type NetParams, newState } from "./state.ts";

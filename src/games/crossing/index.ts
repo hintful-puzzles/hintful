@@ -53,13 +53,13 @@ import {
   PENCIL_MODE_BUTTON,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import {
   highlightIsOn,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
-} from "../../engine/note-taking-cell.ts";
+} from "../../engine/mechanics/note-taking-cell.ts";
+import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import {
   pencilKeepHighlightPref,
   stickyPencilPref,

@@ -17,8 +17,12 @@ import type { MarkKind } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { describedEdgeHint } from "../../engine/described-edge-hint.ts";
 import type { SuppliedHooks } from "../../engine/described-hint.ts";
-import { EDGE, type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
-import { LINE } from "../../engine/line-drawing.ts";
+import {
+  EDGE,
+  type ShapedEdge,
+  trackEdgeStep,
+} from "../../engine/mechanics/edge-hint.ts";
+import { LINE } from "../../engine/mechanics/line-drawing.ts";
 import {
   STATED,
   type SuppliedById,

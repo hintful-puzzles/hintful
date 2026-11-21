@@ -27,7 +27,7 @@ import {
   type EdgeMark,
   LINE,
   type LineDrawingUi,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import { WORD_LENGTHS } from "../../engine/word-list/index.ts";
 import * as wordtrail from "../../generated/games/wordtrail/wordtrail.compiled.ts";
 import { letterChar, type Trail, trailsOf } from "./trails.ts";

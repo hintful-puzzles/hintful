@@ -24,14 +24,14 @@ import {
   computeActive as computeActiveWires,
   offset,
   parseWireDesc,
-} from "../../engine/wires.ts";
+} from "../../engine/mechanics/wires.ts";
 import * as net from "../../generated/games/net/net.compiled.ts";
 
 /* ----------------------------------------------------------------------
  * Bit vocabulary.
  *
  * A tile's low four bits are its wires (`R U L D`); the same four bits name a
- * neighbor direction (all in `engine/wires.ts`). Net owns the two high bits:
+ * neighbor direction (all in `engine/mechanics/wires.ts`). Net owns the two high bits:
  * `LOCKED` (the player has pinned this tile) and `ACTIVE` (computed by the
  * power flood, never stored in the desc).
  */

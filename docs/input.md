@@ -442,7 +442,7 @@ belong to the geometry. A cursor position that rests on no target makes Enter
 do nothing there, and the guard walks through it without pressing.
 
 Exemplars: `borderGridGeometry` in
-[`engine/border-grid.ts`](../src/engine/border-grid.ts) (an edge between two
+[`engine/mechanics/border-grid.ts`](../src/engine/mechanics/border-grid.ts) (an edge between two
 cells); [`magnets/index.ts`](../src/games/magnets/index.ts) (tiles and the
 clues round them); `net/index.ts` (a scrolled origin);
 [`numgame/index.ts`](../src/games/numgame/index.ts) (a board that is no grid);
@@ -536,7 +536,7 @@ lands on it and what it holds, and drives the drag with `beginSweep`,
   wrong array typechecks and drags nothing.
 
 Exemplars: `clueDrag` in [`towers/index.ts`](../src/games/towers/index.ts);
-`crossDrag` in [`engine/line-drawing.ts`](../src/engine/line-drawing.ts).
+`crossDrag` in [`engine/mechanics/line-drawing.ts`](../src/engine/mechanics/line-drawing.ts).
 
 ## Keyboard cursors
 
@@ -548,7 +548,7 @@ anywhere else. The cursor helpers' docs say what each returns. For a
 traversal that is not a bounded grid step (a half-grid cursor, corner
 skipping, lock modes), build on `cursorDelta`, `isCursorMove` and
 `gridCursorMove`; a half-grid cursor between cells is `moveBorderCursor` in
-`engine/border-grid.ts`.
+`engine/mechanics/border-grid.ts`.
 
 - **Answer `null` when `moveCursor` reports no change** (a non-cursor button,
   or a clamped press at the edge on a visible cursor), not `UI_UPDATE`. A
@@ -658,7 +658,7 @@ never on the exact press code (§ "A touch hold arrives as the right button").
 ### The line drag
 
 **Where the player draws lines along the edges between squares by dragging
-through them, declare `LineRules` and write no input.** `engine/line-drawing.ts`
+through them, declare `LineRules` and write no input.** `engine/mechanics/line-drawing.ts`
 is the whole input: the drag, the click on an edge, the right button's cross
 sweep and the keys. Its header says what each does, and `LineRules`' doc
 comments say what a game declares: three facts, and two more where it needs
@@ -912,7 +912,7 @@ Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `keen/index.ts`,
   `toggleNoteTakingMode` handles it for a note-taking cell game.
   `pencil-mode-key.test.ts` asserts both.
 - **A board with a `pencil` array offers a keypad, and so does a game with
-  a working row (`engine/code-rows.ts`); no other game does without a ledger
+  a working row (`engine/mechanics/code-rows.ts`); no other game does without a ledger
   entry.** `input-parity.test.ts` holds the biconditional (`hasPencilArray`,
   `workingRowGames`); any other keypad is named in `KEYPAD_WITHOUT_PENCIL`
   with the reason touch play needs it.

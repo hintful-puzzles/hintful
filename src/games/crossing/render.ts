@@ -63,7 +63,7 @@ import {
   highlightIsOn,
   noteGrid,
   winHighlight,
-} from "../../engine/note-taking-cell.ts";
+} from "../../engine/mechanics/note-taking-cell.ts";
 import {
   drawRectCorners,
   drawRectOutline,

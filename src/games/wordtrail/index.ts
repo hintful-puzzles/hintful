@@ -23,7 +23,7 @@ import {
   type EdgeMistake,
   edgeMistakes,
   lineDrawing,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { dictionary } from "./dictionary.ts";
 import { newWordtrailDesc } from "./generator.ts";

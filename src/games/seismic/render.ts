@@ -62,7 +62,7 @@ import {
   HIGHLIGHT_NONE,
   noteGrid,
   winHighlight,
-} from "../../engine/note-taking-cell.ts";
+} from "../../engine/mechanics/note-taking-cell.ts";
 import { drawStrike, glyphFont } from "../../engine/render/draw.ts";
 import {
   HintMarks,

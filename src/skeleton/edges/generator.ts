@@ -13,7 +13,7 @@ import {
   solvableAtExactlyTier,
 } from "../../engine/contract/difficulty.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { LINE } from "../../engine/line-drawing.ts";
+import { LINE } from "../../engine/mechanics/line-drawing.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { solveSkeleton } from "./solver.ts";
 import { encodeDesc, type SkeletonParams } from "./state.ts";

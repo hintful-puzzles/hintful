@@ -16,11 +16,6 @@
  * Nothing here reads `state.code`. The hint knows what the player knows.
  */
 
-import {
-  pendingRuleOuts,
-  type RuleOut,
-  ruleOutProgress,
-} from "../../engine/code-rows.ts";
 import type {
   HintResult,
   HintStep,
@@ -38,6 +33,11 @@ import {
   runLadder,
   TIERS as SCALE,
 } from "../../engine/ladder-runtime.ts";
+import {
+  pendingRuleOuts,
+  type RuleOut,
+  ruleOutProgress,
+} from "../../engine/mechanics/code-rows.ts";
 import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import * as skeleton from "../../generated/skeleton/code/skeleton.compiled.ts";

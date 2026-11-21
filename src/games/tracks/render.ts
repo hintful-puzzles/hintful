@@ -54,7 +54,7 @@ import {
   EDGE_HINT_BITS,
   type EdgeHint,
   edgeHintWords,
-} from "../../engine/edge-hint.ts";
+} from "../../engine/mechanics/edge-hint.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
 import {

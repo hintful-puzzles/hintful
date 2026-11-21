@@ -105,7 +105,7 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   "engine/random/index.ts › randomUpto": [
     "rejection sampling: a draw is accepted more often than not",
   ],
-  "engine/wires.ts › growSpanningTree": [
+  "engine/mechanics/wires.ts › growSpanningTree": [
     "removes a possibility each pass, and a tile adds its arms once",
   ],
   "games/ascent/generator.ts › ascentAddEdges": ["counts `attempts` to MAX_ATTEMPTS"],

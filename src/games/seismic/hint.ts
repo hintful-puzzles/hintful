@@ -54,7 +54,7 @@ import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import { digitKeyCode } from "../../engine/input/key-labels.ts";
 import { CellMarks, type Said, TIERS } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
-import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
+import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 import { dealtOf, seismicLadder } from "./solver.ts";
 import {

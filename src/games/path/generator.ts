@@ -27,7 +27,7 @@ import {
   solvableAtExactlyTier,
 } from "../../engine/contract/difficulty.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { OPEN } from "../../engine/line-drawing.ts";
+import { OPEN } from "../../engine/mechanics/line-drawing.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { newOnePathDesc } from "./one-path-generator.ts";
 import { type PathSolve, searchAnswer, solvePath } from "./solver.ts";

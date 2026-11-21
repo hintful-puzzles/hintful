@@ -13,15 +13,15 @@
  * particular values a refactor would have to chase.
  */
 import { describe, expect, it } from "vitest";
-import { D, DIRECTIONS, dirCount, L, opposite, R, U } from "./board/square-edges.ts";
+import { D, DIRECTIONS, dirCount, L, opposite, R, U } from "../board/square-edges.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
   descBadCharacter,
   descValue,
   descVerdict,
-} from "./contract/desc-error.ts";
-import { randomNew } from "./random/index.ts";
+} from "../contract/desc-error.ts";
+import { randomNew } from "../random/index.ts";
 import {
   addBorderBarriers,
   computeActive,

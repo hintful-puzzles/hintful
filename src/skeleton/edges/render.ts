@@ -42,13 +42,17 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
-import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
+import {
+  drawEdgeHints,
+  edgeHintWords,
+  stepEdgeHints,
+} from "../../engine/mechanics/edge-hint.ts";
 import {
   CROSS,
   dragPreview,
   type EdgeMistake,
   LINE,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import { drawRectCorners } from "../../engine/render/draw.ts";
 import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";

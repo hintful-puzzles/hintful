@@ -53,8 +53,8 @@ import {
   type EdgeHint,
   edgeHintWords,
   hintedSides,
-} from "../../engine/edge-hint.ts";
-import { dragPreview } from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/edge-hint.ts";
+import { dragPreview } from "../../engine/mechanics/line-drawing.ts";
 import { drawRectCorners } from "../../engine/render/draw.ts";
 import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";

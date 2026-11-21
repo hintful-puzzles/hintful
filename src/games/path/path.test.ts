@@ -30,7 +30,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
-import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
+import { CROSS, LINE, OPEN } from "../../engine/mechanics/line-drawing.ts";
 import { type Flash, WIN_NONE } from "../../engine/render/win-wave.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import {

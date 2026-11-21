@@ -1,20 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
-  BORDER,
-  BORDER_MASK,
-  buildDsf,
-  DISABLED,
-  DX,
-  DY,
-  FLIP,
-} from "../../engine/border-grid.ts";
-import {
-  EDGE,
-  type ForcedBorderEdge,
-  forcedEdgesOf,
-} from "../../engine/border-grid-hint.ts";
-import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
   descBadCharacter,
@@ -26,6 +12,20 @@ import { spokenOf } from "../../engine/described-hint.ts";
 import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
+import {
+  BORDER,
+  BORDER_MASK,
+  buildDsf,
+  DISABLED,
+  DX,
+  DY,
+  FLIP,
+} from "../../engine/mechanics/border-grid.ts";
+import {
+  EDGE,
+  type ForcedBorderEdge,
+  forcedEdgesOf,
+} from "../../engine/mechanics/border-grid-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

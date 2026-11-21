@@ -18,6 +18,7 @@ import {
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
+import { encodeWireDesc, growSpanningTree } from "../../engine/mechanics/wires.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,
@@ -25,7 +26,6 @@ import {
 } from "../../engine/testing/absent-tiers.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
-import { encodeWireDesc, growSpanningTree } from "../../engine/wires.ts";
 import { netGame } from "./index.ts";
 import { answerOf, finishes, searchAnswers } from "./solver.ts";
 import {

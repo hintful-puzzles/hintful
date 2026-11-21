@@ -10,7 +10,7 @@ import {
   usesOf,
 } from "./syntax.ts";
 
-const REF = { module: "src/engine/border-grid.ts", name: "borderGridVerbs" };
+const REF = { module: "src/engine/mechanics/border-grid.ts", name: "borderGridVerbs" };
 
 let planted = 0;
 /** The kinds of every use of {@link REF} in `text`, written at a game's path. */
@@ -21,12 +21,12 @@ describe("a use of an export is bound through its import", () => {
   it("counts a renamed import and a namespace import", () => {
     expect(
       kinds(
-        'import { borderGridVerbs as v } from "../../engine/border-grid.ts"; v(); v;',
+        'import { borderGridVerbs as v } from "../../engine/mechanics/border-grid.ts"; v(); v;',
       ),
     ).toEqual(["call", "reference"]);
     expect(
       kinds(
-        'import * as bg from "../../engine/border-grid.ts"; new bg.borderGridVerbs();',
+        'import * as bg from "../../engine/mechanics/border-grid.ts"; new bg.borderGridVerbs();',
       ),
     ).toEqual(["new"]);
   });

@@ -37,6 +37,7 @@ import {
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
+import { offset } from "../../engine/mechanics/wires.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import type { Flash } from "../../engine/render/win-wave.ts";
 import { slidePieces } from "../../engine/slide-planner.ts";
@@ -47,7 +48,6 @@ import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { offset } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import { netslideGame } from "./index.ts";
 import {

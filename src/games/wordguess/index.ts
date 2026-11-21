@@ -8,7 +8,6 @@
  * dictionary; the board and the score are [`state.ts`](./state.ts).
  */
 
-import { enterValue, restCursor, rubOut } from "../../engine/code-rows.ts";
 import { rejectMove } from "../../engine/contract/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type {
@@ -30,6 +29,7 @@ import {
   moveCursor,
   newCursor,
 } from "../../engine/input/pointer.ts";
+import { enterValue, restCursor, rubOut } from "../../engine/mechanics/code-rows.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { answerWords } from "../../engine/word-list/index.ts";
 import {

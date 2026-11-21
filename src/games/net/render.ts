@@ -46,6 +46,7 @@ import {
 import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
+import { offset, wireDistance } from "../../engine/mechanics/wires.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
 import {
   type PencilIndicatorCache,
@@ -58,7 +59,6 @@ import {
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { type Flash, WIN_LEAD } from "../../engine/render/win-wave.ts";
-import { offset, wireDistance } from "../../engine/wires.ts";
 import type { NetHint } from "./hint.ts";
 import { SIDE } from "./hint-marks.ts";
 import { computeLoops, ERR_SHIFT } from "./loops.ts";

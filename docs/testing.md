@@ -801,7 +801,7 @@ module's tests in the same change, stating the rules its doc comment claims
 and not pinning values. The game's differential still catches a defect in the
 module, but as a differing desc after a full generate-and-compare and not as
 a named rule in 100 ms. Exemplar:
-[`wires.test.ts`](../src/engine/wires.test.ts).
+[`wires.test.ts`](../src/engine/mechanics/wires.test.ts).
 
 ## What a game owes the cross-game guards
 

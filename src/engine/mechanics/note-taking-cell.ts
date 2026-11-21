@@ -36,10 +36,10 @@
  * data, which is where the line is.
  */
 
-import { COL_FLASH, COL_FLASH_LEAD } from "./color/roles.ts";
-import { type GameDrawing, UI_UPDATE, type UiUpdate } from "./contract/game.ts";
-import type { DrawTextOptions, Point, Rect } from "./contract/types.ts";
-import { click, key, type PointerAction } from "./input/hint-gesture.ts";
+import { COL_FLASH, COL_FLASH_LEAD } from "../color/roles.ts";
+import { type GameDrawing, UI_UPDATE, type UiUpdate } from "../contract/game.ts";
+import type { DrawTextOptions, Point, Rect } from "../contract/types.ts";
+import { click, key, type PointerAction } from "../input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
   type GridCursor,
@@ -48,10 +48,10 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
-} from "./input/pointer.ts";
-import { glyphFont } from "./render/draw.ts";
-import { textBox } from "./render/ring.ts";
-import { WIN_LEAD, WIN_NONE, type WinTone } from "./render/win-wave.ts";
+} from "../input/pointer.ts";
+import { glyphFont } from "../render/draw.ts";
+import { textBox } from "../render/ring.ts";
+import { WIN_LEAD, WIN_NONE, type WinTone } from "../render/win-wave.ts";
 
 /**
  * The three `Ui` fields the mechanic owns. A game's `Ui` structurally satisfies

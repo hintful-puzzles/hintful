@@ -5,7 +5,7 @@
  * (turning immediately before or after).
  *
  * The loop is drawn through the engine's line drawing
- * (`engine/line-drawing.ts`), saved as Pearl's own op pairs. `H` is not the
+ * (`engine/mechanics/line-drawing.ts`), saved as Pearl's own op pairs. `H` is not the
  * game's: the app reads it as Next hint.
  */
 
@@ -28,7 +28,11 @@ import { c2nUpper } from "../../engine/game-id/desc-alphabet.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { type EdgeChange, LINE, lineDrawing } from "../../engine/line-drawing.ts";
+import {
+  type EdgeChange,
+  LINE,
+  lineDrawing,
+} from "../../engine/mechanics/line-drawing.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newDesc } from "./generator.ts";
 import {

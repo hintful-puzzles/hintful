@@ -84,7 +84,7 @@ import {
   latinNotesLadder,
   latinStrikeRungs,
 } from "../../engine/latin-notes.ts";
-import { noteEntryGesture } from "../../engine/note-taking-cell.ts";
+import { noteEntryGesture } from "../../engine/mechanics/note-taking-cell.ts";
 import type * as salad from "../../generated/games/salad/salad.compiled.ts";
 import { NAMES } from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";

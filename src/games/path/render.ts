@@ -54,13 +54,17 @@ import type {
   Rect,
   Size,
 } from "../../engine/contract/types.ts";
-import { drawEdgeHints, edgeHintWords, stepEdgeHints } from "../../engine/edge-hint.ts";
+import {
+  drawEdgeHints,
+  edgeHintWords,
+  stepEdgeHints,
+} from "../../engine/mechanics/edge-hint.ts";
 import {
   CROSS,
   dragPreview,
   type EdgeMistake,
   LINE,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
 import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
 import { textBox } from "../../engine/render/ring.ts";

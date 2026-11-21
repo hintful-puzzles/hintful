@@ -420,7 +420,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/border-grid.ts",
+    module: "src/engine/mechanics/border-grid.ts",
     cases: [
       {
         within: "outOfBounds",
@@ -582,7 +582,7 @@ export const MODULES = [
   // do not, the instrument is wrong before any conclusion drawn from it is.
 
   {
-    module: "src/engine/wires.ts",
+    module: "src/engine/mechanics/wires.ts",
     cases: [
       {
         within: "growSpanningTree",

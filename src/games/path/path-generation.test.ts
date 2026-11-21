@@ -7,7 +7,7 @@
  */
 import { describe, expect, it } from "vitest";
 import { squareEdges } from "../../engine/board/square-edges.ts";
-import { LINE } from "../../engine/line-drawing.ts";
+import { LINE } from "../../engine/mechanics/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

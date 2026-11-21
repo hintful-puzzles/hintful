@@ -9,15 +9,6 @@
  * rule-out marks live in the state, and the hint (`hint.ts`) places them.
  */
 
-import {
-  enterValue,
-  isRuledOut,
-  restCursor,
-  rubOut,
-  ruledOutAt,
-  selectedSlot,
-  withRuleOuts,
-} from "../../engine/code-rows.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { KeyLabel, Point } from "../../engine/contract/types.ts";
@@ -39,6 +30,15 @@ import {
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
+import {
+  enterValue,
+  isRuledOut,
+  restCursor,
+  rubOut,
+  ruledOutAt,
+  selectedSlot,
+  withRuleOuts,
+} from "../../engine/mechanics/code-rows.ts";
 import { registerGame } from "../../engine/registry.ts";
 import {
   GUESS_RUNGS,

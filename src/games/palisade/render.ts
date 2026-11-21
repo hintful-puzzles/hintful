@@ -4,13 +4,25 @@
  * The mechanic's own look — the three-valued border edges, the error model over
  * the two DSFs, the half-grid cursor, the tile skeleton, the hint's marks and
  * the geometry — is
- * [`engine/border-grid-render.ts`](../../engine/border-grid-render.ts), shared
+ * [`engine/mechanics/border-grid-render.ts`](../../engine/border-grid-render.ts), shared
  * with Separate. What is Palisade's and stays here: a cell carries a **clue**
  * counting its walls and sits on the lifted surface of a given, a clue the board already contradicts reddens, and a region
  * counts as finished when it is size `k` with every clue in it satisfied.
  */
 
-import { BORDER_MASK, buildDsf } from "../../engine/border-grid.ts";
+import {
+  cellSurface,
+  givenSurface,
+  INK,
+  lineMaybeColor,
+  lineNoColor,
+  REGION_DONE,
+} from "../../engine/color/palette.ts";
+import { COL_ERROR, FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
+import type { Color, Size } from "../../engine/contract/types.ts";
+import { BORDER_MASK, buildDsf } from "../../engine/mechanics/border-grid.ts";
 import {
   type BorderGridColors,
   type BorderGridDrawState,
@@ -29,19 +41,7 @@ import {
   invalidateDanglingRegions,
   mistakeEdgeBits,
   newBorderGridDrawState,
-} from "../../engine/border-grid-render.ts";
-import {
-  cellSurface,
-  givenSurface,
-  INK,
-  lineMaybeColor,
-  lineNoColor,
-  REGION_DONE,
-} from "../../engine/color/palette.ts";
-import { COL_ERROR, FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
-import { stepMarks } from "../../engine/contract/hint-words.ts";
-import type { Color, Size } from "../../engine/contract/types.ts";
+} from "../../engine/mechanics/border-grid-render.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import {

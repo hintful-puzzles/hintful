@@ -36,7 +36,12 @@ import {
   TIERS as SCALE,
   type Taken,
 } from "../../engine/ladder-runtime.ts";
-import { CROSS, type EdgeChange, LINE, OPEN } from "../../engine/line-drawing.ts";
+import {
+  CROSS,
+  type EdgeChange,
+  LINE,
+  OPEN,
+} from "../../engine/mechanics/line-drawing.ts";
 import * as wordtrail from "../../generated/games/wordtrail/wordtrail.compiled.ts";
 import { DIFF_NORMAL, type EdgeCode, LINE_BACK } from "./state.ts";
 import type { Trail } from "./trails.ts";

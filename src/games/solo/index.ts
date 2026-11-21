@@ -77,7 +77,7 @@ import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
-} from "../../engine/note-taking-cell.ts";
+} from "../../engine/mechanics/note-taking-cell.ts";
 import {
   autoPencilPref,
   candidateReadingPref,

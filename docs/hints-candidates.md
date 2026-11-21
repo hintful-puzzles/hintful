@@ -1,7 +1,7 @@
 # Hints for a game with candidate notes
 
 This guide is for a game that imports
-[`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts): its player
+[`engine/mechanics/note-taking-cell.ts`](../src/engine/mechanics/note-taking-cell.ts): its player
 pencils candidates into a cell, and its hint teaches by setting and striking
 those notes, a placement being the moment a cell's notes come down to one.
 Every other game skips it. It holds the candidate walk and what a game owes

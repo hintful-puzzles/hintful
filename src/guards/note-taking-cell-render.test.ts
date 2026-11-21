@@ -44,7 +44,7 @@ import {
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 
 const DRAW_CELL_BACKGROUND = {
-  module: "src/engine/note-taking-cell.ts",
+  module: "src/engine/mechanics/note-taking-cell.ts",
   name: "drawCellBackground",
 };
 

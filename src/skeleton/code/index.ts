@@ -8,15 +8,6 @@
  * the score are [`state.ts`](./state.ts).
  */
 
-import {
-  enterValue,
-  isRuledOut,
-  restCursor,
-  rubOut,
-  ruledOutAt,
-  selectedSlot,
-  withRuleOuts,
-} from "../../engine/code-rows.ts";
 import { rejectMove } from "../../engine/contract/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { KeyLabel, Point, ReferenceModel } from "../../engine/contract/types.ts";
@@ -35,6 +26,15 @@ import {
   newCursor,
   PENCIL_MODE_BUTTON,
 } from "../../engine/input/pointer.ts";
+import {
+  enterValue,
+  isRuledOut,
+  restCursor,
+  rubOut,
+  ruledOutAt,
+  selectedSlot,
+  withRuleOuts,
+} from "../../engine/mechanics/code-rows.ts";
 import {
   codesFitting,
   SKELETON_RUNGS,

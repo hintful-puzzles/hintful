@@ -22,7 +22,12 @@ import {
 } from "../../engine/board/square-edges.ts";
 import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { CROSS, LINE, type LineRules, OPEN } from "../../engine/line-drawing.ts";
+import {
+  CROSS,
+  LINE,
+  type LineRules,
+  OPEN,
+} from "../../engine/mechanics/line-drawing.ts";
 import { isSolved, pearlSolve } from "./solver.ts";
 import {
   BLANK,

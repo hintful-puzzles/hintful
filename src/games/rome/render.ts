@@ -65,7 +65,7 @@ import {
   HIGHLIGHT_NONE,
   HIGHLIGHT_NOTES,
   winHighlight,
-} from "../../engine/note-taking-cell.ts";
+} from "../../engine/mechanics/note-taking-cell.ts";
 import { drawRectOutline, drawStrike } from "../../engine/render/draw.ts";
 import {
   HintMarks,

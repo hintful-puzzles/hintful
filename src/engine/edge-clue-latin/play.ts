@@ -44,7 +44,7 @@ import {
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
-} from "../note-taking-cell.ts";
+} from "../mechanics/note-taking-cell.ts";
 import { coord, type EdgeClueDrawState, fromCoord } from "./render.ts";
 import { solveEdgeClues } from "./solver.ts";
 import {

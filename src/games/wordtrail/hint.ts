@@ -12,7 +12,7 @@
 import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { describedEdgeHint } from "../../engine/described-edge-hint.ts";
-import { EDGE, trackEdgeStep } from "../../engine/edge-hint.ts";
+import { EDGE, trackEdgeStep } from "../../engine/mechanics/edge-hint.ts";
 import {
   STATED,
   type SuppliedById,

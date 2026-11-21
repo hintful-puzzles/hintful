@@ -31,7 +31,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
-import { CROSS, LINE, OPEN } from "../../engine/line-drawing.ts";
+import { CROSS, LINE, OPEN } from "../../engine/mechanics/line-drawing.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";

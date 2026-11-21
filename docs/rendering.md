@@ -480,7 +480,7 @@ preview shows only where the release will chord.
 
 **A renderer is shared when what it draws is a shared mechanic, not when it
 merely resembles another renderer**, which is true of almost any grid game.
-Exemplar: [`engine/border-grid-render.ts`](../src/engine/border-grid-render.ts),
+Exemplar: [`engine/mechanics/border-grid-render.ts`](../src/engine/mechanics/border-grid-render.ts),
 which Palisade and Separate both draw through; its header says what it owns
 and what each game supplies, and it never asks which game it is drawing.
 
@@ -498,7 +498,7 @@ and what each game supplies, and it never asks which game it is drawing.
 ### The note-taking cell's picture
 
 **Paint a cell's background through `drawCellBackground`**
-([`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts)), handing
+([`engine/mechanics/note-taking-cell.ts`](../src/engine/mechanics/note-taking-cell.ts)), handing
 it the rect the game paints. The selected cell then looks the same in every
 note-taking game, whether the mouse or the keyboard put it there: the whole
 cell washed when typing enters a value, a triangle in its top-left corner

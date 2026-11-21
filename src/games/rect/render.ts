@@ -706,7 +706,7 @@ export function redraw(
 
   // Wrong-edge overlay from findMistakes, and the sides of a drawn rectangle
   // beyond mending, a broken rule shown live in the same red, as the
-  // border-grid games show theirs (`engine/border-grid-render.ts`).
+  // border-grid games show theirs (`engine/mechanics/border-grid-render.ts`).
   const wrongH = new Uint8Array(w * h);
   const wrongV = new Uint8Array(w * h);
   if (mistakes) {

@@ -16,14 +16,14 @@
  * ones they had already worked out.
  */
 
-import type { RandomState } from "../../engine/random/index.ts";
-import { randomUpto } from "../../engine/random/index.ts";
 import {
   collectBarrierCandidates,
   encodeWireDesc,
   growSpanningTree,
   placeBarriers,
-} from "../../engine/wires.ts";
+} from "../../engine/mechanics/wires.ts";
+import type { RandomState } from "../../engine/random/index.ts";
+import { randomUpto } from "../../engine/random/index.ts";
 import { type NetslideParams, slideCol, slideRow } from "./state.ts";
 
 export function newDesc(

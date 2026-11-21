@@ -1039,7 +1039,7 @@ does".
   the regions the game clears. `pencil-prefs.test.ts` fails a divergent copy
   of a shared label.
 - **Do not write the pointer arm by hand.** Call `pressNoteTakingCell`
-  ([`engine/note-taking-cell.ts`](../src/engine/note-taking-cell.ts)) with
+  ([`engine/mechanics/note-taking-cell.ts`](../src/engine/mechanics/note-taking-cell.ts)) with
   two predicates about the cell (`canEnter`, `canMark`) and your
   coordinates. It resolves the press and reports what the selection did, so
   a game that layers something on the selection hangs it off the result.

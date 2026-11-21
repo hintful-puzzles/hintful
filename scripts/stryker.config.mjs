@@ -68,7 +68,7 @@ export default {
     "src/engine/save.ts",
     "src/engine/latin.ts",
     "src/engine/deduction-fixpoint.ts",
-    "src/engine/border-grid.ts",
+    "src/engine/mechanics/border-grid.ts",
     "src/engine/board/dsf.ts",
     "src/engine/board/grid/index.ts",
   ],

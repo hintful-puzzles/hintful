@@ -32,8 +32,12 @@ import {
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
 import type { SuppliedHooks } from "../../engine/described-hint.ts";
-import { EDGE, type ShapedEdge, trackEdgeStep } from "../../engine/edge-hint.ts";
-import { LINE, OPEN } from "../../engine/line-drawing.ts";
+import {
+  EDGE,
+  type ShapedEdge,
+  trackEdgeStep,
+} from "../../engine/mechanics/edge-hint.ts";
+import { LINE, OPEN } from "../../engine/mechanics/line-drawing.ts";
 import { STATED, type SuppliedById } from "../../generated/games/path/path.compiled.ts";
 import {
   type PathFiring,

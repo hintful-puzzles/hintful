@@ -19,6 +19,9 @@
  * the board cannot mark what the sentence does not name.
  */
 
+import type { HintStep, HintTrackVerdict } from "../contract/game.ts";
+import type { MarkKind } from "../contract/hint-words.ts";
+import type { GridSpace } from "../describe-runtime.ts";
 import {
   BORDER,
   BORDER_MASK,
@@ -28,9 +31,6 @@ import {
   DY,
   FLIP,
 } from "./border-grid.ts";
-import type { HintStep, HintTrackVerdict } from "./contract/game.ts";
-import type { MarkKind } from "./contract/hint-words.ts";
-import type { GridSpace } from "./describe-runtime.ts";
 
 /** An edge, named on the square `(x, y)`'s `dir` side. */
 export interface BorderEdge {

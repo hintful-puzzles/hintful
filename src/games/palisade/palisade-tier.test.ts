@@ -10,7 +10,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
-import { BORDER, DISABLED } from "../../engine/border-grid.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_NOT_UNIQUE,
@@ -18,6 +17,7 @@ import {
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
+import { BORDER, DISABLED } from "../../engine/mechanics/border-grid.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

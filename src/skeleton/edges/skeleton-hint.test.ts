@@ -8,8 +8,8 @@
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
-import { EDGE } from "../../engine/edge-hint.ts";
-import { CROSS, LINE } from "../../engine/line-drawing.ts";
+import { EDGE } from "../../engine/mechanics/edge-hint.ts";
+import { CROSS, LINE } from "../../engine/mechanics/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";

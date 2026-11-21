@@ -25,7 +25,7 @@ import {
   unusedLetter,
 } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
-import type { LineDrawingUi } from "../../engine/line-drawing.ts";
+import type { LineDrawingUi } from "../../engine/mechanics/line-drawing.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 
 // --- clue kinds (upstream NOCLUE / CORNER=black / STRAIGHT=white) ----------

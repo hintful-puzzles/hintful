@@ -5,8 +5,8 @@
  * paints them and the steps `skeleton.description.yaml` declares name them.
  */
 
-import type { RuleOut } from "../../engine/code-rows.ts";
 import type { MarkKind } from "../../engine/contract/hint-words.ts";
+import type { RuleOut } from "../../engine/mechanics/code-rows.ts";
 
 /** A scored row, by index, taken as a whole. */
 export const ROW: MarkKind<number> = {

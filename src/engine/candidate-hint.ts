@@ -23,8 +23,8 @@ import type { Point } from "./contract/types.ts";
 import { markAllPress, type PointerAction } from "./input/hint-gesture.ts";
 import type { CellMarks } from "./ladder-runtime.ts";
 import type { CellRegion } from "./latin-hint.ts";
+import { type NoteTakingUi, noteEntryGesture } from "./mechanics/note-taking-cell.ts";
 import type { Judging } from "./move-judge.ts";
-import { type NoteTakingUi, noteEntryGesture } from "./note-taking-cell.ts";
 
 /** A board cell. */
 export type Cell = Point;

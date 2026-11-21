@@ -61,7 +61,7 @@ import {
   TIERS,
 } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
-import type { NoteTakingUi } from "../../engine/note-taking-cell.ts";
+import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
 import {
   type SaysById,
   voice,

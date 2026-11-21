@@ -22,7 +22,7 @@ import {
   type EdgeMark,
   LINE,
   type LineDrawingUi,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import * as skeleton from "../../generated/skeleton/edges/skeleton.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------

@@ -43,7 +43,7 @@ import {
   type EdgeMark,
   LINE,
   type LineDrawingUi,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import * as path from "../../generated/games/path/path.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------

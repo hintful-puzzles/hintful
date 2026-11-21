@@ -8,11 +8,6 @@
  */
 
 import {
-  type RuleOutMistake,
-  ruleOutMistakes,
-  type WorkingRow,
-} from "../../engine/code-rows.ts";
-import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
   type DescParse,
@@ -24,6 +19,11 @@ import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/game-id/obfuscate.ts";
 import { unreadParams } from "../../engine/game-id/params.ts";
+import {
+  type RuleOutMistake,
+  ruleOutMistakes,
+  type WorkingRow,
+} from "../../engine/mechanics/code-rows.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 
 // --- feedback codes (upstream FEEDBACK_*) -----------------------------

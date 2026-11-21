@@ -11,6 +11,12 @@
  */
 
 import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
+import type { Game, UiUpdate } from "../../engine/contract/game.ts";
+import type { Point } from "../../engine/contract/types.ts";
+import { transposeDimensions } from "../../engine/game-id/params.ts";
+import { hintFinishes } from "../../engine/hint-finishes.ts";
+import { newCursor } from "../../engine/input/pointer.ts";
+import { interpretTargetVerbs } from "../../engine/input/target-verb.ts";
 import {
   BORDER,
   BORDER_MASK,
@@ -18,18 +24,12 @@ import {
   clearBorderEdges,
   DISABLED,
   revealBorderEdge,
-} from "../../engine/border-grid.ts";
+} from "../../engine/mechanics/border-grid.ts";
 import {
   BORDER_RING_LEGEND,
   type BorderHint,
   borderStepEdge,
-} from "../../engine/border-grid-hint.ts";
-import type { Game, UiUpdate } from "../../engine/contract/game.ts";
-import type { Point } from "../../engine/contract/types.ts";
-import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
-import { newCursor } from "../../engine/input/pointer.ts";
-import { interpretTargetVerbs } from "../../engine/input/target-verb.ts";
+} from "../../engine/mechanics/border-grid-hint.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { newSeparateDesc } from "./generator.ts";
 import {

@@ -17,7 +17,7 @@ import {
   type EdgeMistake,
   edgeMistakes,
   lineDrawing,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import { newSkeletonDesc } from "./generator.ts";
 import {
   type SkeletonHighlights,

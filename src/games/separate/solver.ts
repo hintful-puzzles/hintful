@@ -23,15 +23,6 @@ import {
   searchAnswers as searchBoard,
 } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
-import {
-  BORDER,
-  BORDER_D,
-  BORDER_L,
-  BORDER_R,
-  BORDER_U,
-  DISABLED,
-  initBorders,
-} from "../../engine/border-grid.ts";
 import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
 import {
   clueList,
@@ -48,6 +39,15 @@ import {
   type Said,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
+import {
+  BORDER,
+  BORDER_D,
+  BORDER_L,
+  BORDER_R,
+  BORDER_U,
+  DISABLED,
+  initBorders,
+} from "../../engine/mechanics/border-grid.ts";
 import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import type { SeparateShape } from "./state.ts";
 

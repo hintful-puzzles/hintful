@@ -44,7 +44,7 @@ import {
   opposite,
   R,
 } from "../../engine/board/square-edges.ts";
-import { offset } from "../../engine/wires.ts";
+import { offset } from "../../engine/mechanics/wires.ts";
 import type { NetslideState } from "./state.ts";
 
 /** How many distinct finished grids to look for before giving up counting. The

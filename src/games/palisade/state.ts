@@ -16,7 +16,6 @@ import {
   searchTierSegment,
 } from "../../engine/answer-search.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
-import type { BorderHint } from "../../engine/border-grid-hint.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -38,9 +37,10 @@ import {
 import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
+import type { BorderHint } from "../../engine/mechanics/border-grid-hint.ts";
 
 // The edge encoding, direction tables and bounds test are shared with Separate
-// in `engine/border-grid.ts`. Import them from there, never through this file:
+// in `engine/mechanics/border-grid.ts`. Import them from there, never through this file:
 // a pass-through re-export is a second name for one thing.
 
 import {
@@ -54,7 +54,7 @@ import {
   DY,
   initBorders,
   outOfBounds,
-} from "../../engine/border-grid.ts";
+} from "../../engine/mechanics/border-grid.ts";
 import * as palisade from "../../generated/games/palisade/palisade.compiled.ts";
 import { isSolved } from "./solver.ts";
 

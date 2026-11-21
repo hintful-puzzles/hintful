@@ -53,7 +53,7 @@ import {
   highlightFill,
   noteGrid,
   winHighlight,
-} from "../../engine/note-taking-cell.ts";
+} from "../../engine/mechanics/note-taking-cell.ts";
 import { drawRectOutline, drawStrike, glyphFont } from "../../engine/render/draw.ts";
 import {
   HintMarks,

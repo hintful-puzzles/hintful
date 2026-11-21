@@ -13,7 +13,7 @@ import {
   type EdgeMark,
   LINE,
   type LineRules,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import {
   codeOf,
   isDarkEdge,

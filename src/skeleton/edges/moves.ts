@@ -12,7 +12,7 @@ import {
   type EdgeChange,
   type EdgeMark,
   type LineRules,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import { LINES_PER_SQUARE, type SkeletonState } from "./state.ts";
 
 /** Two lines through every square, one loop, and no line through a wall,

@@ -1522,7 +1522,7 @@ Exemplars: [`rect/index.ts`](../src/games/rect/index.ts),
 [`galaxies/index.ts`](../src/games/galaxies/index.ts), which also flags an
 interior wall set inside a single region. A game that stores a mark per
 `square-edges.ts` edge passes its marks and its answer's lines to
-`edgeMistakes` in [`engine/line-drawing.ts`](../src/engine/line-drawing.ts),
+`edgeMistakes` in [`engine/mechanics/line-drawing.ts`](../src/engine/mechanics/line-drawing.ts),
 which says this rule once: `skeleton/edges/index.ts`.
 
 ### Live rule errors and the re-solve are both

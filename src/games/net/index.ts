@@ -4,7 +4,7 @@
  * A `w × h` grid of wire tiles whose solved form is a spanning tree rooted at a
  * movable source; the player rotates each tile until every tile is powered. The
  * model (desc codec, spanning-tree generator, power flood) lives in
- * `engine/wires.ts`, shared with Netslide, over `engine/board/square-edges.ts`'s
+ * `engine/mechanics/wires.ts`, shared with Netslide, over `engine/board/square-edges.ts`'s
  * direction bits; this file is the glue —
  * input, moves, solve, preferences, and the game object.
  */
@@ -68,9 +68,9 @@ import {
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
+import { offset } from "../../engine/mechanics/wires.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { offset } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import {
   NET_RUNGS,

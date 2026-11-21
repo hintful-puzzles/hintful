@@ -16,17 +16,6 @@ import {
   searchTierSegment,
 } from "../../engine/answer-search.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
-import {
-  BORDER,
-  BORDER_L,
-  BORDER_U,
-  type BorderEdit,
-  DISABLED,
-  DX,
-  DY,
-  initBorders,
-  outOfBounds,
-} from "../../engine/border-grid.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
@@ -40,6 +29,17 @@ import {
 } from "../../engine/game-id/params.ts";
 import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
+import {
+  BORDER,
+  BORDER_L,
+  BORDER_U,
+  type BorderEdit,
+  DISABLED,
+  DX,
+  DY,
+  initBorders,
+  outOfBounds,
+} from "../../engine/mechanics/border-grid.ts";
 import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import { isSolved } from "./solver.ts";
 

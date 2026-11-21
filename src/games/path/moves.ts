@@ -13,7 +13,7 @@ import {
   type EdgeMark,
   LINE,
   type LineRules,
-} from "../../engine/line-drawing.ts";
+} from "../../engine/mechanics/line-drawing.ts";
 import { MODE_PATH, NO_END, type PathState } from "./state.ts";
 
 /** The lines each square takes, no loops, walls no input changes, and a

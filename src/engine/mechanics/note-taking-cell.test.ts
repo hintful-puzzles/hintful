@@ -31,10 +31,23 @@
  */
 
 import { describe, expect, it } from "vitest";
-import "../games/index.ts";
-import { UI_UPDATE } from "./contract/game.ts";
-import type { Rect } from "./contract/types.ts";
-import { LEFT_BUTTON, LEFT_RELEASE, newCursor, RIGHT_BUTTON } from "./input/pointer.ts";
+import "../../games/index.ts";
+import { UI_UPDATE } from "../contract/game.ts";
+import type { Rect } from "../contract/types.ts";
+import {
+  LEFT_BUTTON,
+  LEFT_RELEASE,
+  newCursor,
+  RIGHT_BUTTON,
+} from "../input/pointer.ts";
+import { WIN_BODY, WIN_LEAD, WIN_NONE } from "../render/win-wave.ts";
+import {
+  builtGames,
+  enrolledIn,
+  gamesNotUsing,
+  SCANNED_SOURCE_FILES,
+} from "../testing/enrollment.ts";
+import { RecordingDrawing } from "../testing/recording-drawing.ts";
 import {
   type CellEntry,
   type CellHighlight,
@@ -52,14 +65,6 @@ import {
   releaseHighlightAfterEntry,
   winHighlight,
 } from "./note-taking-cell.ts";
-import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./render/win-wave.ts";
-import {
-  builtGames,
-  enrolledIn,
-  gamesNotUsing,
-  SCANNED_SOURCE_FILES,
-} from "./testing/enrollment.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 const OPEN: CellEntry = { canEnter: true, canMark: true };
 const GIVEN: CellEntry = { canEnter: false, canMark: false };
@@ -417,7 +422,7 @@ describe("the enrolled population is derived, not listed", () => {
     const missing = gamesNotUsing(
       noteTaking.ids,
       ["pressNoteTakingCell", "tapNoteTakingCell"].map((name) => ({
-        module: "src/engine/note-taking-cell.ts",
+        module: "src/engine/mechanics/note-taking-cell.ts",
         name,
       })),
       "call",

@@ -24,8 +24,25 @@
  * validity — the shared code never asks which game it is drawing.
  */
 
-import type { Dsf } from "./board/dsf.ts";
-import { squareEdges } from "./board/square-edges.ts";
+import type { Dsf } from "../board/dsf.ts";
+import { squareEdges } from "../board/square-edges.ts";
+import {
+  COL_CURSOR,
+  COL_ERROR,
+  COL_FLASH,
+  COL_FLASH_LEAD,
+  COL_HINT_OUTLINE,
+} from "../color/roles.ts";
+import type { GameDrawing } from "../contract/game.ts";
+import { CELL, type StepMarks } from "../contract/hint-words.ts";
+import type { Rect, Size } from "../contract/types.ts";
+import type { GridCursor } from "../input/pointer.ts";
+import { glyphFont } from "../render/draw.ts";
+import { hatchPeriod } from "../render/hatch.ts";
+import { drawMarkSides, MARK_ALL } from "../render/hint-mark.ts";
+import { textBox } from "../render/ring.ts";
+import { TileCache } from "../render/tile-cache.ts";
+import { WIN_BODY, WIN_LEAD, type WinTone } from "../render/win-wave.ts";
 import {
   BORDER,
   DISABLED,
@@ -37,24 +54,7 @@ import {
   squareSide,
 } from "./border-grid.ts";
 import { EDGE } from "./border-grid-hint.ts";
-import {
-  COL_CURSOR,
-  COL_ERROR,
-  COL_FLASH,
-  COL_FLASH_LEAD,
-  COL_HINT_OUTLINE,
-} from "./color/roles.ts";
-import type { GameDrawing } from "./contract/game.ts";
-import { CELL, type StepMarks } from "./contract/hint-words.ts";
-import type { Rect, Size } from "./contract/types.ts";
 import { drawEdgeHints, type EdgeHint, edgeHintWords } from "./edge-hint.ts";
-import type { GridCursor } from "./input/pointer.ts";
-import { glyphFont } from "./render/draw.ts";
-import { hatchPeriod } from "./render/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "./render/hint-mark.ts";
-import { textBox } from "./render/ring.ts";
-import { TileCache } from "./render/tile-cache.ts";
-import { WIN_BODY, WIN_LEAD, type WinTone } from "./render/win-wave.ts";
 
 // --- geometry ---------------------------------------------------------------
 

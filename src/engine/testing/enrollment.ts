@@ -23,8 +23,8 @@
 
 import ts from "typescript";
 import "../../games/index.ts";
-import type { WorkingRow } from "../code-rows.ts";
 import { type Game, hasHint } from "../contract/game.ts";
+import type { WorkingRow } from "../mechanics/code-rows.ts";
 import { randomNew } from "../random/index.ts";
 import { getTsGame, registeredGameIds } from "../registry.ts";
 import { linesMatching, stripComments } from "./code-lines.ts";
@@ -256,7 +256,7 @@ export function workingRowExemption(
 ): KindExemption {
   const rows = workingRowGames();
   return {
-    kind: "a working row (engine/code-rows.ts)",
+    kind: "a working row (engine/mechanics/code-rows.ts)",
     ids: population.filter((id) => rows.includes(id)),
     reason,
   };

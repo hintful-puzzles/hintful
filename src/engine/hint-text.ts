@@ -15,7 +15,6 @@ import {
   STATED as LATIN_STATED,
   voice as latinVoice,
 } from "../generated/engine/latin.compiled.ts";
-import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
 import {
   CELL,
   indefinite,
@@ -36,6 +35,7 @@ import {
 import type { Point } from "./contract/types.ts";
 import type { LatinWingReason } from "./latin.ts";
 import { type GenericLatinReason, hiddenSingleLine } from "./latin-hint.ts";
+import { EDGE, type ForcedBorderEdge } from "./mechanics/border-grid-hint.ts";
 import { statedParts } from "./stated.ts";
 import { lineUnit } from "./step-voice.ts";
 

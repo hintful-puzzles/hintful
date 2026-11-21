@@ -491,7 +491,7 @@ skipped such firings would hide them where nothing counts them.
 
 ### Requirement: A wire tile is four bits, one for each side its wire leaves by
 
-`src/engine/wires.ts` SHALL give the games played on a grid of wire tiles one
+`src/engine/mechanics/wires.ts` SHALL give the games played on a grid of wire tiles one
 tile: four bits, `R` 1, `U` 2, `L` 4 and `D` 8, each set where a wire leaves
 the tile by that side, the same four naming a direction. It SHALL define no
 higher bit: each game keeps those for flags of its own. A step off an edge

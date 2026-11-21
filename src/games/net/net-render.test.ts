@@ -11,6 +11,7 @@ import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { DIRECTIONS, opposite } from "../../engine/board/square-edges.ts";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
+import { offset } from "../../engine/mechanics/wires.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
@@ -20,7 +21,6 @@ import {
   renderScenario,
 } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { offset } from "../../engine/wires.ts";
 import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";
 import {

@@ -44,7 +44,12 @@ import {
   type Taken,
   TIERS,
 } from "../../engine/ladder-runtime.ts";
-import { CROSS, type EdgeMark, LINE, OPEN } from "../../engine/line-drawing.ts";
+import {
+  CROSS,
+  type EdgeMark,
+  LINE,
+  OPEN,
+} from "../../engine/mechanics/line-drawing.ts";
 import * as path from "../../generated/games/path/path.compiled.ts";
 import {
   DIFF_TRICKY,

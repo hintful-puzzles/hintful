@@ -383,7 +383,7 @@ describe("every on-screen key a game offers reaches that game", () => {
               id in KEYPAD_WITHOUT_PENCIL
                 ? "KEYPAD_WITHOUT_PENCIL says its entry is typed"
                 : TYPED_ROW.has(id)
-                  ? "its guess is a working row (engine/code-rows.ts), typed a value at a time"
+                  ? "its guess is a working row (engine/mechanics/code-rows.ts), typed a value at a time"
                   : "its notes are a pencil array, written by typing a symbol"
             } — and on touch the keypad is the only way to type.`
           : `${id} offers a keypad without a pencil array. Add it to ` +

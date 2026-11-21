@@ -12,12 +12,12 @@
  */
 import { describe, expect, it } from "vitest";
 import { DIFF_EASY } from "../../engine/answer-search.ts";
-import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/border-grid.ts";
-import { type BorderHint, EDGE } from "../../engine/border-grid-hint.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
+import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/mechanics/border-grid.ts";
+import { type BorderHint, EDGE } from "../../engine/mechanics/border-grid-hint.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";

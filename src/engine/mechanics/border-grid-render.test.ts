@@ -14,6 +14,16 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { mark, phrase, stepMarks } from "../contract/hint-words.ts";
+import { newCursor } from "../input/pointer.ts";
+import { WIN_BODY, WIN_LEAD, WIN_NONE } from "../render/win-wave.ts";
+import {
+  enrolledIn,
+  gamesNotUsing,
+  gamesUsing,
+  SCANNED_SOURCE_FILES,
+} from "../testing/enrollment.ts";
+import { RecordingDrawing } from "../testing/recording-drawing.ts";
 import { BORDER, margin, moveBorderCursor } from "./border-grid.ts";
 import { EDGE, type ForcedBorderEdge } from "./border-grid-hint.ts";
 import * as render from "./border-grid-render.ts";
@@ -36,16 +46,6 @@ import {
   mistakeEdgeBits,
   tileWidth,
 } from "./border-grid-render.ts";
-import { mark, phrase, stepMarks } from "./contract/hint-words.ts";
-import { newCursor } from "./input/pointer.ts";
-import { WIN_BODY, WIN_LEAD, WIN_NONE } from "./render/win-wave.ts";
-import {
-  enrolledIn,
-  gamesNotUsing,
-  gamesUsing,
-  SCANNED_SOURCE_FILES,
-} from "./testing/enrollment.ts";
-import { RecordingDrawing } from "./testing/recording-drawing.ts";
 
 describe("geometry", () => {
   it("leaves room for the outer walls and a margin either side", () => {
@@ -202,7 +202,7 @@ describe("both border-grid games use the shared renderer", () => {
   const borderGrid = enrolledIn(
     (g) =>
       gamesUsing([g.id], {
-        module: "src/engine/border-grid.ts",
+        module: "src/engine/mechanics/border-grid.ts",
         name: "borderGridVerbs",
       }).length > 0,
   );
@@ -221,13 +221,13 @@ describe("both border-grid games use the shared renderer", () => {
     // the tile by hand beside it is exactly the state this guards against.
     const missing = gamesNotUsing(
       borderGrid.ids,
-      { module: "src/engine/border-grid-render.ts", name: "drawBorderTile" },
+      { module: "src/engine/mechanics/border-grid-render.ts", name: "drawBorderTile" },
       "call",
     );
     expect(
       missing,
       "use the border-grid input mechanic but draw the board themselves — " +
-        "the look is shared too (engine/border-grid-render.ts).",
+        "the look is shared too (engine/mechanics/border-grid-render.ts).",
     ).toEqual([]);
   });
 });

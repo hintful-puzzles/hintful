@@ -30,7 +30,7 @@ import {
   computeActive as computeActiveWires,
   offset,
   parseWireDesc,
-} from "../../engine/wires.ts";
+} from "../../engine/mechanics/wires.ts";
 import * as netslide from "../../generated/games/netslide/netslide.compiled.ts";
 
 /* ----------------------------------------------------------------------
@@ -293,7 +293,7 @@ function addBarrierCorners(barriers: Uint8Array, w: number, h: number): void {
  */
 
 /**
- * Which tiles are powered: `engine/wires.ts`'s flood from the source, marked
+ * Which tiles are powered: `engine/mechanics/wires.ts`'s flood from the source, marked
  * with Netslide's `ACTIVE` bit. It is both the visual aid and the win condition.
  *
  * `movingRow` / `movingCol` blank out a line that is mid-slide, so the powered
@@ -387,7 +387,7 @@ export function describedSlide(
     : { move: "slide", L: m.index, t: m.index * s.w + k, k };
 }
 
-/** Wires as the description's layer, which `engine/wires.ts`'s `Uint8Array`
+/** Wires as the description's layer, which `engine/mechanics/wires.ts`'s `Uint8Array`
  * (Net's too) is copied into. */
 export const positionOf = (tiles: ArrayLike<number>): netslide.Position => ({
   tile: Int32Array.from(tiles),

@@ -6,6 +6,18 @@
 // fixture in the games that use it.
 import { describe, expect, it } from "vitest";
 import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_SELECT,
+  CURSOR_SELECT2,
+  CURSOR_UP,
+  LEFT_BUTTON,
+  newCursor,
+  RIGHT_BUTTON,
+} from "../input/pointer.ts";
+import { interpretTargetVerbs } from "../input/target-verb.ts";
+import {
   BORDER,
   type BorderEdit,
   type BorderGridState,
@@ -19,18 +31,6 @@ import {
   initBorders,
   pointerEdge,
 } from "./border-grid.ts";
-import {
-  CURSOR_DOWN,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  CURSOR_UP,
-  LEFT_BUTTON,
-  newCursor,
-  RIGHT_BUTTON,
-} from "./input/pointer.ts";
-import { interpretTargetVerbs } from "./input/target-verb.ts";
 
 const TS = 32;
 const grid = (w: number, h: number, borders?: Uint8Array): BorderGridState => ({

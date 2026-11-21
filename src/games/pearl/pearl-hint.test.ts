@@ -21,7 +21,7 @@
 import { describe, expect, it } from "vitest";
 import { dirX, dirY, opposite } from "../../engine/board/square-edges.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
-import { EDGE } from "../../engine/edge-hint.ts";
+import { EDGE } from "../../engine/mechanics/edge-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

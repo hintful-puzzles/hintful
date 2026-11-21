@@ -3,8 +3,6 @@
 // live error reddening for a wrong-sized region, the findMistakes
 // overlay edge, the clue text, and the cursor outline.
 import { describe, expect, it } from "vitest";
-import { BORDER } from "../../engine/border-grid.ts";
-import { EDGE, type ForcedBorderEdge } from "../../engine/border-grid-hint.ts";
 import {
   COL_CURSOR,
   COL_ERROR,
@@ -15,6 +13,11 @@ import {
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, mark, phrase, so } from "../../engine/contract/hint-words.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
+import { BORDER } from "../../engine/mechanics/border-grid.ts";
+import {
+  EDGE,
+  type ForcedBorderEdge,
+} from "../../engine/mechanics/border-grid-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
