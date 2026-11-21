@@ -10,6 +10,7 @@ import { answerWords, guessWords } from "../../engine/generate/word-list/index.t
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
@@ -112,12 +113,15 @@ function followEvery(stride: number): void {
   for (const p of menu.boards) {
     const words = answerWords(p.len).filter((_, i) => i % stride === 0);
     for (const word of words) {
-      let state = withAnswer(p, word);
-      while (outcome(state) === 0) {
-        for (const step of plan(state))
-          state = wordguessGame.executeMove(state, step.move);
-      }
-      expect(outcome(state), `${encodeParams(p, true)} ${word}`).toBe(1);
+      const label = `${encodeParams(p, true)} ${word}`;
+      const { state } = walkHint(wordguessGame, withAnswer(p, word), {
+        // A plan plays a row at least.
+        asks: p.nguesses,
+        limit: "throw",
+        done: (s) => outcome(s) !== 0,
+        label,
+      });
+      expect(outcome(state), label).toBe(1);
     }
   }
 }

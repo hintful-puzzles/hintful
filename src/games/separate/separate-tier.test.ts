@@ -23,6 +23,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { separateGame } from "./index.ts";
 import { answerOf, searchAnswers, solveToBorders } from "./solver.ts";
@@ -367,18 +368,16 @@ describe("the hint on an Unreasonable Separate board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = separateGame.hint.plan(state);
-        plan?.ok;
-        plan = separateGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = separateGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(separateGame, state, {
+        // As many plans as the 4x4 board has edges; reaching it is a plan that
+        // stalls.
+        asks: 2 * 16,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

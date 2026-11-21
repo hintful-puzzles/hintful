@@ -22,6 +22,7 @@ import {
   markSides,
   ringsOf,
 } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -30,14 +31,7 @@ import {
 import { newKeenDesc } from "./generator.ts";
 import { keenGame } from "./index.ts";
 import { COL_PENCIL, computeSize, coord, gridExtra } from "./render.ts";
-import {
-  type KeenMove,
-  type KeenParams,
-  type KeenState,
-  newState,
-  newUi,
-  status,
-} from "./state.ts";
+import { type KeenMove, type KeenParams, newState, newUi } from "./state.ts";
 
 function gen(p: KeenParams, seed: string) {
   const { desc, aux } = newKeenDesc(p, randomNew(seed));
@@ -426,15 +420,8 @@ describe("keen hintKeepTrack", () => {
 describe("keen hint resumes to solved", () => {
   it("completes a fresh board one recomputed hint at a time", () => {
     const { st: start, aux } = gen(NORMAL, "resume");
-    let state: KeenState = start;
-    for (let moves = 0; moves < 2000; moves++) {
-      if (status(state) === "solved") return;
-      const res = keenGame.hint.plan(state, aux);
-      expect(res?.ok).toBe(true);
-      if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
-      state = keenGame.executeMove(state, res.steps[0].move);
-    }
-    throw new Error("did not converge");
+    // A refusal or the limit fails the walk.
+    walkHint(keenGame, start, { asks: 2000, limit: "throw", first: true, aux });
   });
 });
 

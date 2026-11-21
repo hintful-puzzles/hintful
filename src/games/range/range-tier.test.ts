@@ -23,6 +23,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { rangeGame } from "./index.ts";
 import { answerOf, deductionFinishes, searchAnswers } from "./solver.ts";
@@ -399,18 +400,15 @@ describe("the hint on an Unreasonable Range board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = rangeGame.hint.plan(state);
-        plan?.ok;
-        plan = rangeGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = rangeGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(rangeGame, state, {
+        // A plan decides a square at least.
+        asks: state.grid.length,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     followHint();

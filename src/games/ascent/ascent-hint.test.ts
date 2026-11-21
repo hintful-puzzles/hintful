@@ -24,6 +24,7 @@ import { describe, expect, it } from "vitest";
 import { type Narration, stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkPlan } from "../../engine/testing/plan-walk.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import {
   type AscentFiring,
@@ -222,20 +223,20 @@ function walk(): NonNullable<typeof WALK> {
   const finished: string[] = [];
   const unfinished: string[] = [];
   for (const board of boards()) {
-    let state = board.state;
-    for (let asks = 0; asks < 300 && ascentGame.status(state) !== "solved"; asks++) {
-      const plan = ascentPlan(state);
-      if (plan.length === 0) break;
-      for (const firing of plan) {
+    const { state } = walkPlan(board.state, {
+      asks: 300,
+      done: (s) => ascentGame.status(s) === "solved",
+      plan: (s) => ascentPlan(s),
+      apply: (s, firing) => executeAscentMove(s, moveOf(firing)),
+      step(firing, _before, after) {
         seen.push({ board, firing });
-        state = executeAscentMove(state, moveOf(firing));
-        const mistakes = ascentGame.findMistakes?.(state) ?? [];
+        const mistakes = ascentGame.findMistakes?.(after) ?? [];
         if (mistakes.length > 0)
           throw new Error(
             `${board.label}: ${firing.reason.kind} placed a wrong number`,
           );
-      }
-    }
+      },
+    });
     (ascentGame.status(state) === "solved" ? finished : unfinished).push(board.label);
   }
   WALK = { seen, finished, unfinished };

@@ -26,6 +26,7 @@ import {
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import {
   type DrawOp,
   opsOfKind,
@@ -288,15 +289,13 @@ describe("boats hint — convergence", () => {
     TIERS,
   )("solves a %s board one freshly-recomputed hint at a time", (preset) => {
     for (let s = 0; s < 3; s++) {
-      let state = board(preset, `converge-${preset}-${s}`);
-      for (let guard = 0; guard < 500 && !isSolved(state); guard++) {
-        const r = hintOf(state);
-        expect(r.ok, `stuck at step ${guard}: ${r.ok ? "" : r.error}`).toBe(true);
-        if (!r.ok) break;
-        // Only the first step, exactly as the app does when the player then
-        // goes their own way — the plan must be recomputable from anywhere.
-        state = play(state, r.steps[0].move);
-      }
+      // Only each plan's first step: the plan must be recomputable from
+      // anywhere, as when the player then goes their own way.
+      const { state } = walkHint(boatsGame, board(preset, `converge-${preset}-${s}`), {
+        asks: 500,
+        done: isSolved,
+        first: true,
+      });
       expect(isSolved(state)).toBe(true);
     }
   });
@@ -499,29 +498,29 @@ describe("boats hint — one deduction is one hint", () => {
     // narration never mentioned — and, worse, decide them wrongly.
     let decided = 0;
     for (const [preset] of TIERS) {
-      let state = board(preset, `span-${preset}`);
-      for (let guard = 0; guard < 40 && !isSolved(state); guard++) {
-        const r = hintOf(state);
-        if (!r.ok) break;
-        const step = r.steps[0];
-        const hl = step.highlights as BoatsHint;
-        const after = play(state, step.move);
-        const { w, h } = state.params;
-        for (let i = 0; i < w * h; i++) {
-          // Compare *decidedness*, not raw bytes: `executeMove` runs
-          // `adjustShips`, which rewrites an existing SHIP_VAGUE into its
-          // resolved shape — a change in the byte, not a decision.
-          if (fillOf(after.grid[i]) === fillOf(state.grid[i])) continue;
-          const t = hl.targets.find((c) => c.y * w + c.x === i);
-          expect(
-            t,
-            `${preset}: changed ${i % w},${Math.floor(i / w)} un-asked`,
-          ).toBeDefined();
-          expect(isShip(after.grid[i])).toBe(t?.ship);
-          decided++;
-        }
-        state = after;
-      }
+      walkHint(boatsGame, board(preset, `span-${preset}`), {
+        asks: 40,
+        done: isSolved,
+        first: true,
+        refuse: "stop",
+        step(step, state, after) {
+          const hl = step.highlights as BoatsHint;
+          const { w, h } = state.params;
+          for (let i = 0; i < w * h; i++) {
+            // Compare *decidedness*, not raw bytes: `executeMove` runs
+            // `adjustShips`, which rewrites an existing SHIP_VAGUE into its
+            // resolved shape — a change in the byte, not a decision.
+            if (fillOf(after.grid[i]) === fillOf(state.grid[i])) continue;
+            const t = hl.targets.find((c) => c.y * w + c.x === i);
+            expect(
+              t,
+              `${preset}: changed ${i % w},${Math.floor(i / w)} un-asked`,
+            ).toBeDefined();
+            expect(isShip(after.grid[i])).toBe(t?.ship);
+            decided++;
+          }
+        },
+      });
     }
     // A plan whose moves decided nothing would walk every tier and assert
     // nothing — the comparison is on decidedness, so it is easy to empty.

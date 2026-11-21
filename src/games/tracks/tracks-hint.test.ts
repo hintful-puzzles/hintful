@@ -28,6 +28,7 @@ import type { Clauses } from "../../engine/hint/stated.ts";
 import { statedSentence } from "../../engine/hint/stated.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { STATED } from "../../generated/games/tracks/tracks.compiled.ts";
 import type { TracksRung } from "./hint.ts";
 import { tracksGame } from "./index.ts";
@@ -73,27 +74,24 @@ function outlinedBy(step: { words?: Narration }) {
  * step it ever showed. One walk covers far more firings than one plan does. */
 function walk(params: TracksParams, seed: string) {
   const { desc } = tracksGame.newDesc(params, randomNew(seed));
-  return walkDesc(params, desc, seed);
+  return walkDesc(params, desc);
 }
 
 /** {@link walk} on a board given by its description. */
-function walkDesc(params: TracksParams, desc: string, seed: string) {
-  let state = tracksGame.newState(params, desc);
-  const steps: { step: (typeof out)[number]; before: TracksState }[] = [];
-  const out: HintStep<TracksMove, unknown, TracksRung>[] = [];
+function walkDesc(params: TracksParams, desc: string) {
+  type Step = HintStep<TracksMove, unknown, TracksRung>;
+  const steps: { step: Step; before: TracksState }[] = [];
   /** The rung of every step of every plan asked for, not only the first. */
   const planned = new Set<string>();
-  for (let i = 0; i < 900; i++) {
-    if (tracksGame.status(state) === "solved") break;
-    const res = tracksGame.hint.plan(state);
-    if (!res?.ok) throw new Error(`${seed}: refused after ${i}: ${res?.error}`);
-    for (const s of res.steps) planned.add(s.rung);
-    const step = res.steps[0];
-    out.push(step);
-    steps.push({ step, before: state });
-    state = tracksGame.executeMove(state, step.move);
-  }
-  return { steps, planned, solved: tracksGame.status(state) === "solved" };
+  const { solved } = walkHint(tracksGame, tracksGame.newState(params, desc), {
+    asks: 900,
+    first: true,
+    planned(plan) {
+      for (const step of plan) planned.add(step.rung);
+    },
+    step: (step, before) => steps.push({ step, before }),
+  });
+  return { steps, planned, solved };
 }
 
 describe("every move a Tracks hint asks for is one the player may make", () => {
@@ -358,7 +356,7 @@ describe("every narratable premise is reached", () => {
       { params: tracksGame.decodeParams(small), desc: smallDesc },
     ];
     for (const { params, desc } of boards) {
-      const walked = walkDesc(params, desc, desc);
+      const walked = walkDesc(params, desc);
       firings += walked.steps.length;
       for (const rung of walked.planned) seen.add(rung);
     }

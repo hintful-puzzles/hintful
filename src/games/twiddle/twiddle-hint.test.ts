@@ -9,6 +9,7 @@ import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { inDeepTier, seedBudget } from "../../engine/testing/slow.ts";
@@ -48,18 +49,16 @@ const customParams: TwiddleParams[] = [
  * covers, where elsewhere a plan may stop for the next hint to learn on.
  * Returns the turns the walk took. */
 function walk(state: TwiddleState, whole: boolean): number {
-  let s = state;
-  for (let turns = 0; turns < 2000; turns++) {
-    if (status(s) === "solved") return turns;
-    const res = hint(s);
-    if (!res.ok) throw new Error(`refused after ${turns} turns: ${res.error}`);
-    if (whole && turns === 0) {
-      const end = res.steps.reduce((t, step) => executeMove(t, step.move), s);
+  return walkHint(G, state, {
+    asks: 2000,
+    limit: "throw",
+    first: true,
+    planned(steps, s, ask) {
+      if (!whole || ask > 0) return;
+      const end = steps.reduce((t, step) => executeMove(t, step.move), s);
       expect(status(end), "the first plan, followed whole").toBe("solved");
-    }
-    s = executeMove(s, res.steps[0].move);
-  }
-  throw new Error("did not arrive within 2000 turns");
+    },
+  }).steps;
 }
 
 /**

@@ -24,6 +24,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { sticksGame } from "./index.ts";
 import { answerOf, deductionFinishes, searchAnswers } from "./solver.ts";
@@ -407,18 +408,14 @@ describe("the hint on an Unreasonable Sticks board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = sticksGame.hint.plan(state);
-        plan?.ok;
-        plan = sticksGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = sticksGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walk = walkHint(sticksGame, state, {
+        // Until the hint refuses: the ladder runs out, or the board is solved.
+        asks: Number.POSITIVE_INFINITY,
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walk.state;
+      return walk.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

@@ -18,6 +18,7 @@ import { raisedBevelWidth } from "../../engine/render/draw.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { BoxRaster } from "../../engine/testing/repaint-differential.ts";
@@ -519,17 +520,11 @@ describe("Sixteen hint", () => {
     // leaves the plan on every executed hint: on this board auto-play then
     // loops through the same four states for ever. Planning in full slides is
     // what prevents it.
-    let s: SixteenState = {
+    const s: SixteenState = {
       ...solvedState(4, 4),
       tiles: new Int32Array([3, 4, 1, 8, 5, 6, 2, 7, 9, 10, 11, 12, 13, 14, 15, 16]),
     };
-    for (let round = 0; round < 10 && !isCompleted(s); round++) {
-      const result = sixteenGame.hint.plan(s);
-      expect(result?.ok).toBe(true);
-      if (!result?.ok) return;
-      for (const step of result.steps) s = executeMove(s, step.move);
-    }
-    expect(isCompleted(s)).toBe(true);
+    expect(walkHint(sixteenGame, s, { asks: 10 }).solved).toBe(true);
   });
 
   it("prioritizes the lowest-numbered out-of-place tile", () => {
@@ -568,13 +563,12 @@ describe("Sixteen hint", () => {
       for (const seed of seeds) {
         const p = { w, h, movetarget: 0 };
         const { desc } = newDesc(p, randomNew(seed));
-        let s = newState(p, desc);
-        for (let round = 0; round < 150 && !isCompleted(s); round++) {
-          const result = sixteenGame.hint.plan(s);
-          if (!result?.ok) break;
-          for (const step of result.steps) {
+        const { solved } = walkHint(sixteenGame, newState(p, desc), {
+          asks: 150,
+          refuse: "stop",
+          step(step, before, after) {
             const hl = step.highlights as SixteenHintHighlights;
-            const cur = s.tiles.indexOf(hl.tile);
+            const cur = before.tiles.indexOf(hl.tile);
             expect(cur).toBeGreaterThanOrEqual(0);
             if (step.move.type === "slide") {
               const onLine =
@@ -585,13 +579,12 @@ describe("Sixteen hint", () => {
             }
             expect(hl.targetPos).not.toBe(cur);
             if (hl.ultimatePos !== null) expect(hl.ultimatePos).not.toBe(cur);
-            s = executeMove(s, step.move);
             // The step's move is the full slide its narration describes:
             // applying it lands the tile exactly on the highlighted target.
-            expect(s.tiles.indexOf(hl.tile)).toBe(hl.targetPos);
-          }
-        }
-        expect(isCompleted(s)).toBe(true);
+            expect(after.tiles.indexOf(hl.tile)).toBe(hl.targetPos);
+          },
+        });
+        expect(solved).toBe(true);
       }
     }
   });
@@ -751,17 +744,16 @@ describe("Sixteen hint", () => {
     ];
 
     for (const { label, desc, maxMoves } of cases) {
-      let state = newState({ w: 5, h: 5, movetarget: 0 }, desc);
-      let moves = 0;
-      for (; moves < maxMoves; moves++) {
-        if (isCompleted(state)) break;
-        const res = sixteenGame.hint.plan(state);
-        expect(res?.ok, `${label}: the hint gave up after ${moves} moves`).toBe(true);
-        if (!res?.ok) return;
-        state = executeMove(state, res.steps[0].move);
-      }
+      const walk = walkHint(
+        sixteenGame,
+        newState({ w: 5, h: 5, movetarget: 0 }, desc),
+        {
+          asks: maxMoves,
+          first: true,
+        },
+      );
       expect(
-        isCompleted(state),
+        walk.solved,
         `${label}: following recomputed hints did not finish in ${maxMoves} moves`,
       ).toBe(true);
     }
@@ -775,7 +767,7 @@ describe("Sixteen hint", () => {
     // and the plan length falls by exactly one, every time, until it is gone.
     // The same endgame, walked rather than replayed: the failure this guards is
     // a period-4 cycle here instead of a descent.
-    let s: SixteenState = {
+    const start: SixteenState = {
       ...solvedState(5, 5),
       tiles: new Int32Array([
         6, 2, 3, 4, 5, 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 17, 18, 19, 16, 21, 22,
@@ -784,20 +776,23 @@ describe("Sixteen hint", () => {
     };
     let previous: number | null = null;
     let first = 0;
-    let steps = 0;
-    while (!isCompleted(s)) {
-      const result = sixteenGame.hint.plan(s);
-      expect(result?.ok, `stalled after ${steps} moves`).toBe(true);
-      if (!result?.ok) return;
-      if (previous === null) first = result.steps.length;
-      else expect(result.steps.length, `at move ${steps}`).toBe(previous - 1);
-      previous = result.steps.length;
-      s = executeMove(s, result.steps[0].move);
-      steps++;
-      // Vacuity: a walk that never entered the loop, or one that wandered, both
-      // report health without this.
-      expect(steps).toBeLessThanOrEqual(first);
-    }
+    const { steps } = walkHint(sixteenGame, start, {
+      // Bounded by the descent below: no walk takes more moves than its first
+      // plan has steps.
+      asks: Number.POSITIVE_INFINITY,
+      done: isCompleted,
+      first: true,
+      planned(plan) {
+        if (previous === null) first = plan.length;
+        else expect(plan.length, `at move ${first - previous + 1}`).toBe(previous - 1);
+        previous = plan.length;
+      },
+      step(_step, _before, _after, index) {
+        // Vacuity: a walk that never entered the loop, or one that wandered,
+        // both report health without this.
+        expect(index + 1).toBeLessThanOrEqual(first);
+      },
+    });
     expect(steps).toBe(first);
     expect(first).toBeGreaterThan(1);
   });
@@ -941,35 +936,16 @@ describe("Sixteen hint", () => {
     const p = { w: 3, h: 3, movetarget: 3 };
     const rng = randomNew("hint-solve-test");
     const { desc } = newDesc(p, rng);
-    let s = newState(p, desc);
-
-    let rounds = 0;
-    const maxRounds = 50;
-    while (!isCompleted(s) && rounds < maxRounds) {
-      const result = sixteenGame.hint.plan(s);
-      if (!result?.ok) break;
-      for (const step of result.steps) s = executeMove(s, step.move);
-      rounds++;
-    }
-    expect(isCompleted(s)).toBe(true);
+    const walk = walkHint(sixteenGame, newState(p, desc), { asks: 50, refuse: "stop" });
+    expect(walk.solved).toBe(true);
   });
 
   it("can solve a 4x4 puzzle using sequential hints", () => {
     const p = { w: 4, h: 4, movetarget: 0 };
     const rng = randomNew("hint-solve-test-4x4");
     const { desc } = newDesc(p, rng);
-    let s = newState(p, desc);
-
-    let rounds = 0;
-    const maxRounds = 100;
-    while (!isCompleted(s) && rounds < maxRounds) {
-      const result = sixteenGame.hint.plan(s);
-      expect(result?.ok, `round ${rounds}, board ${s.tiles.join(",")}`).toBe(true);
-      if (!result?.ok) break;
-      for (const step of result.steps) s = executeMove(s, step.move);
-      rounds++;
-    }
-    expect(isCompleted(s)).toBe(true);
+    const walk = walkHint(sixteenGame, newState(p, desc), { asks: 100 });
+    expect(walk.solved).toBe(true);
   });
 
   describe("backtracking and oscillation prevention", () => {

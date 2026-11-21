@@ -21,6 +21,7 @@ import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { mosaicGame } from "./index.ts";
 import {
@@ -377,18 +378,15 @@ describe("the hint on an Unreasonable Mosaic board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = mosaicGame.hint.plan(state);
-        plan?.ok;
-        plan = mosaicGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = mosaicGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(mosaicGame, state, {
+        // A plan decides a square at least, so the squares bound the asks.
+        asks: state.cells.length,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

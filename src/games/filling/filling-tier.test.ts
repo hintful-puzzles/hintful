@@ -23,6 +23,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { fillingGame } from "./index.ts";
 import { answerOf, searchAnswers, solveFilling } from "./solver.ts";
@@ -328,18 +329,15 @@ describe("the hint on an Unreasonable Filling board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = fillingGame.hint.plan(state);
-        plan?.ok;
-        plan = fillingGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = fillingGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(fillingGame, state, {
+        // Far more plans than a 5x5 board takes; reaching it is a plan that stalls.
+        asks: 100,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

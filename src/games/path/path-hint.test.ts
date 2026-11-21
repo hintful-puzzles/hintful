@@ -15,6 +15,7 @@ import { CROSS, LINE } from "../../engine/mechanics/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import type { PathHighlights } from "./hint.ts";
@@ -24,7 +25,6 @@ import {
   DIFF_EASY,
   DIFF_NORMAL,
   DIFF_TRICKY,
-  executeMove,
   MODE_PAIRS,
   MODE_PATH,
   NO_END,
@@ -199,23 +199,21 @@ function deal(p: PathParams, seed: string): PathState {
 describe("path hint plans", () => {
   it.each(BOARDS)("lead a $w x $h board at tier $diff to its answer", (p) => {
     for (const seed of ["plan a", "plan b", "plan c"]) {
-      let state = deal(p, seed);
-      const found = answerOf(state);
+      const start = deal(p, seed);
+      const found = answerOf(start);
       const answer = found.kind === "one" ? found.solution : null;
       // The plan is capped, so it is asked again until the board is done.
-      for (let asked = 0; pathGame.status(state) !== "solved"; asked++) {
-        expect(asked).toBeLessThan(state.edges.length);
-        const result = pathGame.hint.plan(state);
-        if (!result?.ok) throw new Error(`refused on ${seed}`);
-        for (const step of result.steps) {
+      const { solved } = walkHint(pathGame, start, {
+        asks: start.edges.length,
+        step(step) {
           if (step.move.kind !== "edges") throw new Error("a step marks edges");
           // The line `hint-quality.test.ts` draws for every game's sentences.
           expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
           for (const { edge, mark } of step.move.changes)
             expect(mark === LINE, step.explanation).toBe(answer?.[edge] === LINE);
-          state = executeMove(state, step.move);
-        }
-      }
+        },
+      });
+      expect(solved, seed).toBe(true);
     }
   });
 

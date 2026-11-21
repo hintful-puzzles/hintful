@@ -16,6 +16,7 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { groupGame } from "./index.ts";
 import {
   type GroupMove,
@@ -33,23 +34,19 @@ function board(p: GroupParams, seed: string): GroupState {
   return newState(p, desc);
 }
 
-/** Walk hints from `state`, applying each plan's first step, collecting the
- * narrations seen and whether the board reached solved. */
-function walk(
-  p: GroupParams,
-  seed: string,
-): { texts: string[]; solved: boolean; states: GroupState[] } {
-  let state = board(p, seed);
-  const texts: string[] = [];
-  const states: GroupState[] = [state];
-  for (let i = 0; i < 500 && groupGame.status(state) === "ongoing"; i++) {
-    const res = groupGame.hint.plan(state, undefined);
-    if (!res?.ok) break;
-    for (const s of res.steps) texts.push(s.explanation);
-    state = groupGame.executeMove(state, res.steps[0].move);
-    states.push(state);
-  }
-  return { texts, solved: groupGame.status(state) === "solved", states };
+/** Walk the hint from `state` replanning after every step, until the board is
+ * over or 500 plans are asked. */
+function walkFirstSteps(
+  state: GroupState,
+  walk: { refuse?: "stop"; step?(after: GroupState): void } = {},
+) {
+  return walkHint(groupGame, state, {
+    asks: 500,
+    first: true,
+    done: (s) => groupGame.status(s) !== "ongoing",
+    refuse: walk.refuse,
+    step: (_, __, after) => walk.step?.(after),
+  });
 }
 
 /**
@@ -181,31 +178,22 @@ describe("group hint — plan solves boards", () => {
   it("solves an identity-hidden Tricky board, teaching an identity-mark elimination", () => {
     // The identity-hidden `DIFF_HARD` (Tricky) tier is the one that exercises
     // `notIdentity`, which the shared first-leaf resume never reaches.
-    let { state } = pinned("identityElim");
-    expect(state.id, "the elimination is an identity-hidden board's").toBe(false);
-    for (let i = 0; i < 500 && groupGame.status(state) === "ongoing"; i++) {
-      const res = groupGame.hint.plan(state, undefined);
-      if (!res?.ok) break;
-      state = groupGame.executeMove(state, res.steps[0].move);
-    }
+    const { state: start } = pinned("identityElim");
+    expect(start.id, "the elimination is an identity-hidden board's").toBe(false);
+    const { state } = walkFirstSteps(start, { refuse: "stop" });
     expect(groupGame.status(state)).toBe("solved");
   });
 
   it("a hint resumes from a self-played mid-game position (identity-hidden)", () => {
     // Reach a mid-game position by following ~1/3 of a solve, then confirm a
     // fresh hint still makes progress and drives to solved.
-    const { states } = walk(HARD_HIDDEN, "h2");
+    const first = board(HARD_HIDDEN, "h2");
+    const states: GroupState[] = [first];
+    walkFirstSteps(first, { refuse: "stop", step: (after) => states.push(after) });
     const mid = states[Math.floor(states.length / 3)];
-    let state = mid;
-    let progressed = false;
-    for (let i = 0; i < 500 && groupGame.status(state) === "ongoing"; i++) {
-      const res = groupGame.hint.plan(state, undefined);
-      expect(res?.ok, `refused mid-game after ${i} moves`).toBe(true);
-      if (!res?.ok) break;
-      state = groupGame.executeMove(state, res.steps[0].move);
-      progressed = true;
-    }
-    expect(progressed).toBe(true);
+    // A refusal mid-game fails the walk.
+    const { state, steps } = walkFirstSteps(mid);
+    expect(steps).toBeGreaterThan(0);
     expect(groupGame.status(state)).toBe("solved");
   });
 });

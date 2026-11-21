@@ -19,6 +19,7 @@ import { evidenceOf } from "../../engine/hint/candidate-plan.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { confinedLines } from "../../engine/solve/latin.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { narrate, premise, type SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";
 import { saladSolution } from "./solver.ts";
@@ -55,6 +56,24 @@ function board(p: SaladParams, seed: string): SaladState {
   return newState(p, desc);
 }
 
+type Step = HintStep<SaladMove, SaladHint>;
+
+/** Follow the first step of each fresh plan from `start` while the game is on,
+ * asking at most `cap` plans; `whole` sees each plan as it was asked. */
+function followFirsts(
+  start: SaladState,
+  cap: number,
+  whole: (steps: readonly Step[]) => void = () => {},
+): SaladState {
+  return walkHint(saladGame, start, {
+    asks: cap,
+    refuse: "stop",
+    done: (s) => saladGame.status(s) !== "ongoing",
+    first: true,
+    planned: whole,
+  }).state;
+}
+
 /** Walk hints from a fresh board, applying each plan's first step, collecting
  * every narration seen along the way. */
 function walk(
@@ -62,22 +81,16 @@ function walk(
   seed: string,
   cap = 400,
 ): { texts: string[]; steps: HintStep<unknown, SaladHint>[]; solved: boolean } {
-  let state = board(p, seed);
   const texts: string[] = [];
   const steps: HintStep<unknown, SaladHint>[] = [];
-  for (let i = 0; i < cap && saladGame.status(state) === "ongoing"; i++) {
-    const res = saladGame.hint.plan(state);
-    if (!res?.ok) break;
-    for (const s of res.steps) {
+  const end = followFirsts(board(p, seed), cap, (plan) => {
+    for (const s of plan) {
       texts.push(s.explanation);
-      steps.push(s as HintStep<unknown, SaladHint>);
+      steps.push(s);
     }
-    state = saladGame.executeMove(state, res.steps[0].move);
-  }
-  return { texts, steps, solved: saladGame.status(state) === "solved" };
+  });
+  return { texts, steps, solved: saladGame.status(end) === "solved" };
 }
-
-type Step = HintStep<SaladMove, SaladHint>;
 
 const isMarker = (step: Step): boolean =>
   step.move.type === "set" && typeof step.move.value === "string";
@@ -210,13 +223,10 @@ describe("salad hint — journeys and highlights", () => {
     // its own firing's line as its basis.
     let journeys = 0;
     for (const seed of ["j1", "j2", "j3", "j4"]) {
-      let state = board(NUMBERS, seed);
-      for (let i = 0; i < 60 && saladGame.status(state) === "ongoing"; i++) {
-        const res = saladGame.hint.plan(state);
-        if (!res?.ok) break;
-        for (let k = 1; k < res.steps.length; k++) {
-          const prev = res.steps[k - 1];
-          const cur = res.steps[k];
+      followFirsts(board(NUMBERS, seed), 60, (steps) => {
+        for (let k = 1; k < steps.length; k++) {
+          const prev = steps[k - 1];
+          const cur = steps[k];
           const isMarker =
             (cur.move as { type: string; value?: unknown }).type === "set" &&
             typeof (cur.move as { value?: unknown }).value === "string";
@@ -231,8 +241,7 @@ describe("salad hint — journeys and highlights", () => {
           );
           journeys++;
         }
-        state = saladGame.executeMove(state, res.steps[0].move);
-      }
+      });
     }
     expect(journeys, "no multi-square marker journey was seen").toBeGreaterThan(0);
   });
@@ -516,16 +525,11 @@ function descWalk(
   let state = newState(saladGame.decodeParams(params), desc);
   for (const m of setup) state = saladGame.executeMove(state, m);
   const texts: string[] = [];
-  for (let i = 0; i < 400 && saladGame.status(state) === "ongoing"; i++) {
-    const res = saladGame.hint.plan(state);
-    if (!res?.ok) break;
-    texts.push(res.steps[0].explanation);
-    state = saladGame.executeMove(state, res.steps[0].move);
-  }
+  const end = followFirsts(state, 400, (steps) => texts.push(steps[0].explanation));
   return {
     texts,
     first: texts[0] ?? null,
-    solved: saladGame.status(state) === "solved",
+    solved: saladGame.status(end) === "solved",
   };
 }
 

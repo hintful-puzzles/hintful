@@ -11,6 +11,7 @@ import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { itDeep } from "../../engine/testing/slow.ts";
@@ -21,7 +22,6 @@ import {
   DIFF_NORMAL,
   DIFF_TRICKY,
   decodeParams,
-  executeMove,
   type NorinoriParams,
   type NorinoriState,
   newState,
@@ -121,19 +121,16 @@ const WRITTEN = ["6x6dn:a1c4b1a1aaa1ib1b3adb1b1", "6x6dt:f2aa3a4a2ada1aaadb1e1a"
 /** Hint plans, asked again whenever one runs out, finish `state` with the
  * answer's marks. */
 function expectPlansFinish(start: NorinoriState, label: string): void {
-  let state = start;
-  const answer = answerOf(state.w, state.h, state.regions);
+  const answer = answerOf(start.w, start.h, start.regions);
   // The plan is capped, so it is asked again until the board is done.
-  for (let asked = 0; norinoriGame.status(state) !== "solved"; asked++) {
-    expect(asked).toBeLessThan(state.grid.length);
-    const result = norinoriGame.hint.plan(state);
-    if (!result?.ok) throw new Error(`refused on ${label}`);
-    for (const step of result.steps) {
+  const { solved } = walkHint(norinoriGame, start, {
+    asks: start.grid.length,
+    step(step) {
       if (step.move.kind !== "mark") throw new Error("a step marks squares");
       for (const { index, mark } of step.move.cells) expect(mark).toBe(answer?.[index]);
-      state = executeMove(state, step.move);
-    }
-  }
+    },
+  });
+  expect(solved, label).toBe(true);
 }
 
 describe("norinori hint plans", () => {

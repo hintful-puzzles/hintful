@@ -17,12 +17,14 @@ import {
   COL_FLASH_LEAD,
   COL_HINT_OUTLINE,
 } from "../../engine/color/roles.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import type { Flash } from "../../engine/render/win-wave.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkPlan } from "../../engine/testing/plan-walk.ts";
 import {
   type DrawOp,
   RecordingDrawing,
@@ -43,7 +45,12 @@ import {
   COL_OUTLINE,
   COL_POINT,
 } from "./render.ts";
-import { coordLimit, makeCircle } from "./state.ts";
+import {
+  coordLimit,
+  makeCircle,
+  type UntangleMove,
+  type UntangleState,
+} from "./state.ts";
 
 /** A fixed descriptive board → a stable frame for snapshotting. */
 function fixedBoard(n: number, seed: string): string {
@@ -173,18 +180,26 @@ describe("Untangle render scenarios", () => {
     // does not carry.
     const seed = "343769d2db4f418cccd3b79e00c975d0";
     const { desc, aux } = untangleGame.newDesc({ n: 20 }, randomNew(seed));
-    let s = untangleGame.newState({ n: 20 }, desc);
-    const moves = [];
-    for (;;) {
-      const res = deduceUntangleHintPlan(s, aux);
-      if (!res.ok) throw new Error(res.error);
-      if (stepMarks(res.steps[0]).of("ring", VERTEX).length > 1) break;
-      for (const st of res.steps) {
-        moves.push(st.move);
-        s = untangleGame.executeMove(s, st.move);
-      }
-      if (moves.length > 40) throw new Error("no journey on the owner's board");
-    }
+    const moves: UntangleMove[] = [];
+    // The walk ends on the first journey, by calling it an empty plan.
+    const { end, state: s } = walkPlan<UntangleState, HintStep<UntangleMove>>(
+      untangleGame.newState({ n: 20 }, desc),
+      {
+        asks: 40,
+        done: () => false,
+        plan(s) {
+          const res = deduceUntangleHintPlan(s, aux);
+          if (!res.ok) return { refused: res.error };
+          return stepMarks(res.steps[0]).of("ring", VERTEX).length > 1 ? [] : res.steps;
+        },
+        apply: (s, st) => untangleGame.executeMove(s, st.move),
+        planned: () => {
+          if (moves.length > 40) throw new Error("no journey on the owner's board");
+        },
+        step: (st) => moves.push(st.move),
+      },
+    );
+    expect(end, "no journey on the owner's board").toBe("empty");
 
     const { recording, hint } = renderScenario({
       game: untangleGame,

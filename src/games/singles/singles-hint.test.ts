@@ -20,6 +20,7 @@ import { techniqueFirings } from "../../engine/solve/ladder-runtime.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { STATED } from "../../generated/games/singles/singles.compiled.ts";
@@ -293,16 +294,17 @@ describe("hint", () => {
     // the walk runs from many partial positions; it must never give up
     // before solved.
     for (const seed of ["sh-1", "sh-2", "sh-3", "hint-plan"]) {
-      let s = fromSeed({ w: 6, h: 6, diff: "tricky" }, seed);
-      let guard = 0;
-      while (singlesGame.status(s) !== "solved") {
-        expect(guard++).toBeLessThan(200);
-        const res = singlesGame.hint.plan(s);
-        expect(res?.ok).toBe(true); // never "no further move" on a solvable board
-        if (!res?.ok) break;
-        s = singlesGame.executeMove(s, res.steps[0].move);
-      }
-      expect(singlesGame.status(s)).toBe("solved");
+      // A refusal fails the walk: never "no further move" on a solvable board.
+      const walk = walkHint(
+        singlesGame,
+        fromSeed({ w: 6, h: 6, diff: "tricky" }, seed),
+        {
+          asks: 200,
+          limit: "throw",
+          first: true,
+        },
+      );
+      expect(walk.solved).toBe(true);
     }
   });
 

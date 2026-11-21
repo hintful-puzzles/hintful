@@ -13,6 +13,7 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -578,19 +579,20 @@ describe("solo hint", () => {
     let checked = 0;
     for (const seed of ["nk0", "nk1", "nk2", "nk3"]) {
       const { st, aux } = gen(ADV, seed);
-      let state: SoloState = st;
       const cr = st.cr;
-      for (let ask = 0; ask < 200 && soloStatus(state) === "ongoing"; ask++) {
-        const res = soloGame.hint.plan(state, aux);
-        if (!res?.ok) break;
-        for (const step of res.steps) {
+      const { state } = walkHint(soloGame, st, {
+        asks: 200,
+        aux,
+        refuse: "stop",
+        done: (s) => soloStatus(s) !== "ongoing",
+        step(step, before) {
           const m = step.move as AnyStep;
           if (
             m.type === "set" &&
             !m.pencil &&
             /ruled out in this cell/.test(step.explanation)
           ) {
-            const pen = state.pencil[m.y * cr + m.x];
+            const pen = before.pencil[m.y * cr + m.x];
             const ncand = Array.from({ length: cr }, (_, k) => k + 1).filter(
               (n) => pen & (1 << n),
             ).length;
@@ -599,9 +601,8 @@ describe("solo hint", () => {
             );
             checked++;
           }
-          state = soloGame.executeMove(state, step.move);
-        }
-      }
+        },
+      });
       expect(soloStatus(state), seed).toBe("solved");
     }
     expect(checked).toBeGreaterThan(0);

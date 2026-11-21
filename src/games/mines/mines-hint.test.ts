@@ -16,6 +16,7 @@ import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { firstOpen } from "./generator.ts";
 import { DEAD_BOARD, type MinesHint, type MinesRung } from "./hint.ts";
@@ -159,16 +160,12 @@ function plan(s: MinesState): Step[] {
  * shown on; stops at a solve or a refusal. */
 function walk(s0: MinesState): { steps: [MinesState, Step][]; end: MinesState } {
   const steps: [MinesState, Step][] = [];
-  let s = s0;
-  for (let round = 0; round < 60 && minesGame.status(s) !== "solved"; round++) {
-    const r = minesGame.hint.plan(s);
-    if (!r?.ok) break;
-    for (const step of r.steps) {
-      steps.push([s, step]);
-      s = minesGame.executeMove(s, step.move);
-    }
-  }
-  return { steps, end: s };
+  const { state: end } = walkHint(minesGame, s0, {
+    asks: 60,
+    refuse: "stop",
+    step: (step, s) => steps.push([s, step]),
+  });
+  return { steps, end };
 }
 
 describe("Mines hint: the start of a board", () => {

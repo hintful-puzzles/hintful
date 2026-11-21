@@ -10,16 +10,12 @@ import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { numgameGame } from "./index.ts";
 import { SIGN, TILE } from "./kinds.ts";
 import { combine, OPS, reachOf } from "./solver.ts";
-import {
-  executeMove,
-  type NumgameParams,
-  type NumgameState,
-  newState,
-} from "./state.ts";
+import { type NumgameParams, type NumgameState, newState } from "./state.ts";
 
 const pinned = describeHintPins({
   game: numgameGame,
@@ -53,20 +49,23 @@ describe("numgame hint plans", () => {
     BOARDS,
   )("give one operation a request, each a shortest line's, $large large at tier $diff", (p) => {
     for (const seed of ["plan a", "plan b"]) {
-      let state = deal(p, seed);
-      let fewest = reachOf(state.slots).fewestOps(state.target) ?? -1;
-      while (numgameGame.status(state) !== "solved") {
-        const result = numgameGame.hint.plan(state);
-        if (!result?.ok) throw new Error(`refused on ${seed}`);
-        expect(result.steps).toHaveLength(1);
-        const [step] = result.steps;
-        expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
-        state = executeMove(state, step.move);
-        // One operation fewer still needed, so asking again never cycles.
-        const left = reachOf(state.slots).fewestOps(state.target);
-        expect(left).toBe(fewest - 1);
-        fewest = left ?? -1;
-      }
+      const start = deal(p, seed);
+      let fewest = reachOf(start.slots).fewestOps(start.target) ?? -1;
+      const { solved } = walkHint(numgameGame, start, {
+        // An operation joins two numbers into one, so a board takes fewer
+        // operations than it has numbers.
+        asks: start.slots.length,
+        limit: "throw",
+        planned: (steps) => expect(steps).toHaveLength(1),
+        step(step, _before, after) {
+          expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
+          // One operation fewer still needed, so asking again never cycles.
+          const left = reachOf(after.slots).fewestOps(after.target);
+          expect(left).toBe(fewest - 1);
+          fewest = left ?? -1;
+        },
+      });
+      expect(solved, seed).toBe(true);
     }
   });
 

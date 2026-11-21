@@ -11,6 +11,7 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkPlan } from "../../engine/testing/plan-walk.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { answerCount } from "./answer.ts";
@@ -43,15 +44,24 @@ function next(s: BlackboxState) {
   return res.steps[0];
 }
 
-/** Follow the hint's first step until the board is won. */
-function follow(s: BlackboxState): { state: BlackboxState; said: string[] } {
+/** Follow the hint's first step until the board is won, showing `asked` each
+ * position the hint is asked at. */
+function follow(
+  start: BlackboxState,
+  asked?: (s: BlackboxState) => void,
+): { state: BlackboxState; said: string[] } {
   const said: string[] = [];
-  for (let i = 0; i < 500 && game.status(s) !== "solved"; i++) {
-    const step = next(s);
-    said.push(step.explanation);
-    s = game.executeMove(s, step.move);
-  }
-  return { state: s, said };
+  const { state } = walkPlan(start, {
+    asks: 500,
+    done: (s) => game.status(s) === "solved",
+    plan: (s) => [next(s)],
+    apply: (s, step) => game.executeMove(s, step.move),
+    asked,
+    step: (step) => {
+      said.push(step.explanation);
+    },
+  });
+  return { state, said };
 }
 
 /** The firing the step settles its square by. */
@@ -172,17 +182,15 @@ describe("Black Box's hint", () => {
     let settled = 0;
     for (const { params } of leafPresets(game))
       for (const seed of ["a", "b", "c", "d"]) {
-        let s = deal(params, `bbh-${seed}`).state;
-        for (let i = 0; i < 500 && game.status(s) !== "solved"; i++) {
+        const { state } = follow(deal(params, `bbh-${seed}`).state, (s) => {
           for (const f of deduce(s).firings) {
             settled++;
             const truth =
               (gridGet(s, f.settled.at.x, f.settled.at.y) & BALL_CORRECT) !== 0;
             expect(f.settled.ball, JSON.stringify(f)).toBe(truth);
           }
-          s = game.executeMove(s, next(s).move);
-        }
-        expect(game.status(s)).toBe("solved");
+        });
+        expect(game.status(state)).toBe("solved");
       }
     expect(settled).toBeGreaterThan(1000);
   });
@@ -195,8 +203,7 @@ describe("Black Box's hint", () => {
     let compared = 0;
     let atFire = 0;
     for (const seed of ["a", "b", "c"]) {
-      let s = deal(P8, `bbh-hidden-${seed}`).state;
-      for (let i = 0; i < 500 && game.status(s) !== "solved"; i++) {
+      follow(deal(P8, `bbh-hidden-${seed}`).state, (s) => {
         const plan = game.hint.plan(s);
         const fired = [...s.exits.keys()].filter((l) => s.exits[l] !== LASER_EMPTY);
         let here = 0;
@@ -220,8 +227,7 @@ describe("Black Box's hint", () => {
             );
           }
         }
-        s = game.executeMove(s, next(s).move);
-      }
+      });
     }
     expect(compared).toBeGreaterThan(100);
     expect(atFire).toBeGreaterThan(10);

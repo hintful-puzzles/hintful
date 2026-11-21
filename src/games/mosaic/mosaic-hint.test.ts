@@ -11,6 +11,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import type { DrawOp } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";
@@ -20,7 +21,6 @@ import { answerOf, newDesc, solveGameActual } from "./solver.ts";
 import {
   DIFF_NORMAL,
   DIFF_UNREASONABLE,
-  executeMove,
   type MosaicMove,
   type MosaicState,
   newState,
@@ -61,11 +61,13 @@ const pinned = describeHintPins({
  * the hint asked again, until it gives none. */
 function followed(state: MosaicState): HintStep<MosaicMove, unknown, string>[] {
   const steps: HintStep<MosaicMove, unknown, string>[] = [];
-  for (let res = mosaicHint.plan(state); res.ok; res = mosaicHint.plan(state))
-    for (const step of res.steps) {
-      steps.push(step);
-      state = executeMove(state, step.move);
-    }
+  walkHint(mosaicGame, state, {
+    // A plan decides a square at least, so a board's squares bound the asks.
+    asks: state.cells.length,
+    limit: "throw",
+    refuse: "stop",
+    step: (step) => steps.push(step),
+  });
   return steps;
 }
 

@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { walkHint, walkPlan } from "../../engine/testing/plan-walk.ts";
 import { parseAux } from "./hint.ts";
 import { netslideGame } from "./index.ts";
 import { findSolutions, isReachable, reconstructSolution } from "./reconstruct.ts";
@@ -161,16 +162,15 @@ describe("recovering the finished grid", () => {
 
 describe("a board with no `aux` at all (the reported bug)", () => {
   it("hints, and following the hint finishes the reported board", () => {
-    let at = newState(REPORTED_PARAMS, REPORTED.desc);
-    expect(isComplete(at)).toBe(false);
+    const start = newState(REPORTED_PARAMS, REPORTED.desc);
+    expect(isComplete(start)).toBe(false);
 
-    for (let move = 0; move < 60 && !isComplete(at); move++) {
-      const res = netslideGame.hint.plan(at, undefined);
-      expect(res?.ok, `hint refused after ${move} moves`).toBe(true);
-      if (!res?.ok) return;
-      expect(res.steps[0].explanation.length).toBeGreaterThan(0);
-      at = netslideGame.executeMove(at, res.steps[0].move);
-    }
+    const { state: at } = walkHint(netslideGame, start, {
+      asks: 60,
+      first: true,
+      done: isComplete,
+      step: (step) => expect(step.explanation.length).toBeGreaterThan(0),
+    });
     expect(isComplete(at)).toBe(true);
   });
 
@@ -198,18 +198,17 @@ describe("a board with no `aux` at all (the reported bug)", () => {
       const label = `${params.w}x${params.h}${params.wrapping ? "w" : ""}`;
       for (const seed of ["walk-a", "walk-b"]) {
         const { desc } = netslideGame.newDesc(params, randomNew(`${label}-${seed}`));
-        let at = netslideGame.newState(params, desc);
-
-        for (let ask = 0; ask < 40 && !isComplete(at); ask++) {
-          const res = netslideGame.hint.plan(at, undefined);
-          expect(res?.ok, `${label}/${seed}: hint gave up`).toBe(true);
-          if (!res?.ok) break;
-
-          for (const step of res.steps) {
-            at = netslideGame.executeMove(at, step.move);
-            if (isComplete(at)) break;
-          }
-        }
+        const { state: at } = walkPlan(netslideGame.newState(params, desc), {
+          asks: 40,
+          done: isComplete,
+          plan(s) {
+            const res = netslideGame.hint.plan(s, undefined);
+            return res.ok ? res.steps : { refused: `${label}/${seed}: ${res.error}` };
+          },
+          // The rest of a plan that finished the board is not played.
+          apply: (s, step) =>
+            isComplete(s) ? s : netslideGame.executeMove(s, step.move),
+        });
         expect(isComplete(at), `${label}/${seed}: never finished`).toBe(true);
       }
     }

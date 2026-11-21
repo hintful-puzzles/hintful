@@ -12,6 +12,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint, walkPlan } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { inDeepTier, seedBudget } from "../../engine/testing/slow.ts";
@@ -529,18 +530,17 @@ describe("netslide hint convergence", () => {
           params,
           randomNew(`${label}-true-${seed}`),
         );
-        let at = netslideGame.newState(params, desc);
-
-        for (let ask = 0; ask < 40 && !isComplete(at); ask++) {
-          const res = hintOf(at, aux);
-          expect(res.ok, `${seed}: hint gave up`).toBe(true);
-          if (!res.ok) break;
-
-          for (const step of res.steps) {
-            at = netslideGame.executeMove(at, step.move);
-            if (isComplete(at)) break;
-          }
-        }
+        const { state: at } = walkPlan(netslideGame.newState(params, desc), {
+          asks: 40,
+          done: isComplete,
+          plan(s) {
+            const res = hintOf(s, aux);
+            return res.ok ? res.steps : { refused: `${seed}: ${res.error}` };
+          },
+          // The rest of a plan that finished the board is not played.
+          apply: (s, step) =>
+            isComplete(s) ? s : netslideGame.executeMove(s, step.move),
+        });
         expect(isComplete(at), `${seed}: never finished`).toBe(true);
       }
     });
@@ -553,22 +553,23 @@ describe("netslide hint convergence", () => {
     // rather than by a move cap.
     for (const seed of ["strict-a", "strict-b", "strict-c", "strict-d"]) {
       const { desc, aux } = netslideGame.newDesc(EASY_3X3, randomNew(seed));
-      let at = netslideGame.newState(EASY_3X3, desc);
-      const seen = new Set<string>([at.tiles.join(",")]);
+      const start = netslideGame.newState(EASY_3X3, desc);
+      const seen = new Set<string>([start.tiles.join(",")]);
 
-      for (let move = 0; move < 200 && !isComplete(at); move++) {
-        const res = hintOf(at, aux);
-        expect(res.ok, `${seed}: hint gave up after ${move} moves`).toBe(true);
-        if (!res.ok) break;
-
-        at = netslideGame.executeMove(at, res.steps[0].move);
-        const key = at.tiles.join(",");
-        expect(
-          seen.has(key),
-          `${seed}: the walk revisited a board — it is looping`,
-        ).toBe(false);
-        seen.add(key);
-      }
+      const { state: at } = walkHint(netslideGame, start, {
+        asks: 200,
+        aux,
+        first: true,
+        done: isComplete,
+        step(_step, _before, after) {
+          const key = after.tiles.join(",");
+          expect(
+            seen.has(key),
+            `${seed}: the walk revisited a board — it is looping`,
+          ).toBe(false);
+          seen.add(key);
+        },
+      });
       expect(isComplete(at), `${seed}: never finished`).toBe(true);
     }
   });

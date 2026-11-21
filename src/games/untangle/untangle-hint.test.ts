@@ -13,6 +13,7 @@ import { NO_MOVE_WORTH_MAKING } from "../../engine/contract/hint-refusal.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkHint, walkPlan } from "../../engine/testing/plan-walk.ts";
 import { itDeep, SLOW_TESTS_ENABLED } from "../../engine/testing/slow.ts";
 import { deduceUntangleHintPlan, say, solvedPlaces } from "./hint.ts";
 import { CROSSING, SPOT, type UntangleMarks, VERTEX } from "./hint-marks.ts";
@@ -59,12 +60,10 @@ function lineCrossings(s: UntangleState, v: number): number {
  * were taken.
  */
 function followHints(start: UntangleState, aux?: string) {
-  let s = start;
   let clears = 0;
   let rebuilds = 0;
   let journeys = 0;
   let finishing = 0;
-  let moves = 0;
   // A rearranging step's sentence depends on the move after it, which may be
   // the head of the next request's plan; it is checked once that is known.
   let pending: {
@@ -100,16 +99,24 @@ function followHints(start: UntangleState, aux?: string) {
       marked: marks.of("ring", VERTEX).filter((v) => v !== vertex),
     };
   };
-  for (let asks = 0; asks < 60; asks++) {
-    if (isSolved(s)) {
-      settle(null);
-      return { s, clears, rebuilds, journeys, finishing, moves };
-    }
-    const res = deduceUntangleHintPlan(s, aux);
-    if (!res.ok) throw new Error(`hint gave up on an unsolved board: ${res.error}`);
-    const legs = marksOf(res.steps[0]).marked.length;
-    expect(legs > 0).toBe(res.steps[0].rung === "journey");
-    if (res.steps[0].rung === "journey") {
+  /** The journey being played: its movers, whether it finishes, the board's
+   * crossings before it and the leg reached; `null` for any other plan. */
+  let journey: {
+    movers: number[];
+    finishes: boolean;
+    crossingsBefore: number;
+    legs: number;
+    leg: number;
+  } | null = null;
+  const { state: s, steps: moves } = walkHint(untangleGame, start, {
+    aux,
+    asks: 60,
+    limit: "throw",
+    planned(steps, s) {
+      const legs = marksOf(steps[0]).marked.length;
+      expect(legs > 0).toBe(steps[0].rung === "journey");
+      journey = null;
+      if (steps[0].rung !== "journey") return;
       // A journey is the whole plan: every leg's count is the board's, the
       // marked points are the ones still to move, and it does what its first
       // leg says it does.
@@ -127,15 +134,14 @@ function followHints(start: UntangleState, aux?: string) {
         ]).toContain(explanation);
         pending = null;
       }
-      const movers = res.steps.map((st) => st.move.points[0].i);
-      expect(res.steps.length).toBe(legs + 1);
+      const movers = steps.map((st) => st.move.points[0].i);
+      expect(steps.length).toBe(legs + 1);
       // Whether the journey leaves the board solved, which its first leg says
       // (the sentence each leg is held to below is built from it).
       const finishes = isSolved(
-        res.steps.reduce((b, st) => untangleGame.executeMove(b, st.move), s),
+        steps.reduce((b, st) => untangleGame.executeMove(b, st.move), s),
       );
       if (finishes) finishing++;
-      const crossingsBefore = count(s);
       // Points on their place in the solved layout are what keep a hint
       // recomputed after any step from cycling: a journey starts elsewhere,
       // and one that leaves crossings behind moves none of them.
@@ -148,31 +154,39 @@ function followHints(start: UntangleState, aux?: string) {
         expect(placed(movers[0])).toBe(false);
         if (!finishes) expect(movers.filter(placed)).toEqual([]);
       }
-      res.steps.forEach((st, i) => {
+      journey = {
+        movers,
+        finishes,
+        crossingsBefore: count(s),
+        legs: steps.length,
+        leg: 0,
+      };
+    },
+    step(st, prev, next) {
+      if (journey !== null) {
+        const { movers, finishes, crossingsBefore, legs } = journey;
+        const i = journey.leg++;
         const v = movers[i];
         expect(stepMarks(st).of("ring", VERTEX)).toContain(v);
         expect(marksOf(st).marked).toEqual(movers.slice(i + 1));
         expect(st.continuesPrevious ?? false).toBe(i > 0);
-        const before = lineCrossings(s, v);
-        s = untangleGame.executeMove(s, st.move);
-        moves++;
-        const after = lineCrossings(s, v);
+        const before = lineCrossings(prev, v);
+        const after = lineCrossings(next, v);
         expect(st.explanation).toBe(
-          say.journey(marksOf(st), i, res.steps.length, finishes, before, after).text,
+          say.journey(marksOf(st), i, legs, finishes, before, after).text,
         );
         expect(st.explanation.length, st.explanation).toBeLessThanOrEqual(120);
         // What keeps a hint recomputed after any step from cycling.
         if (i === 0) expect(after).toBeLessThan(before);
-      });
-      for (const v of movers) expect(lineCrossings(s, v)).toBe(0);
-      expect(count(s)).toBeLessThan(crossingsBefore);
-      continue;
-    }
-    for (const st of res.steps) {
+        if (i === legs - 1) {
+          for (const m of movers) expect(lineCrossings(next, m)).toBe(0);
+          expect(count(next)).toBeLessThan(crossingsBefore);
+        }
+        return;
+      }
       const v = st.move.points[0].i;
       expect(stepMarks(st).of("ring", VERTEX)).toEqual([v]);
-      const before = lineCrossings(s, v);
-      const next = untangleGame.executeMove(s, st.move);
+      const before = lineCrossings(prev, v);
       const after = lineCrossings(next, v);
       settle(before - after);
       if (after < before) {
@@ -184,11 +198,10 @@ function followHints(start: UntangleState, aux?: string) {
         rebuilds++;
         pending = { explanation: st.explanation, marks: marksOf(st), before, after };
       }
-      s = next;
-      moves++;
-    }
-  }
-  throw new Error("following hints did not converge");
+    },
+  });
+  settle(null);
+  return { s, clears, rebuilds, journeys, finishing, moves };
 }
 
 /** Each rung pinned on a position whose plan speaks it. A pin carries no `aux`,
@@ -271,18 +284,11 @@ describe("Untangle hint", () => {
       "5-7,5-12,5-19,6-9,6-11,6-17,7-14,7-19,8-16,8-18,9-11,9-15,10-12,13-14," +
       "13-15,13-17,14-17,15-16,15-18,16-18";
     const start = untangleGame.newState({ n: 20 }, desc);
-    let steps = 0;
-    let s = start;
-    while (!isSolved(s) && steps < 200) {
-      const res = deduceUntangleHintPlan(s);
-      if (!res.ok) throw new Error(res.error);
-      for (const st of res.steps) {
-        expect(st.explanation).not.toContain("keeps its lines clear");
-        s = untangleGame.executeMove(s, st.move);
-        steps++;
-      }
-    }
-    expect(isSolved(s)).toBe(true);
+    const { solved } = walkHint(untangleGame, start, {
+      asks: 200,
+      step: (st) => expect(st.explanation).not.toContain("keeps its lines clear"),
+    });
+    expect(solved).toBe(true);
     // ...and the full checks, counts included, hold on it too. Before the
     // endgame journeys, following hints took 35 moves here.
     const out = followHints(start);
@@ -370,16 +376,21 @@ describe("Untangle hint", () => {
   it("on a graph that cannot be untangled, stops when no move helps", () => {
     // K5 typed in by hand: a hint can still reduce crossings, then says so.
     const desc = "0-1,0-2,0-3,0-4,1-2,1-3,1-4,2-3,2-4,3-4";
-    let s = untangleGame.newState({ n: 5 }, desc);
-    for (let asks = 0; asks < 20; asks++) {
-      const res = deduceUntangleHintPlan(s);
-      if (!res.ok) {
-        expect(res.error).toBe(NO_MOVE_WORTH_MAKING);
-        expect(count(s)).toBeGreaterThan(0);
-        return;
-      }
-      for (const st of res.steps) s = untangleGame.executeMove(s, st.move);
-    }
-    throw new Error("the hint never admitted K5 cannot be untangled");
+    const { state, end, refusal } = walkPlan<UntangleState, HintStep<UntangleMove>>(
+      untangleGame.newState({ n: 5 }, desc),
+      {
+        asks: 20,
+        refuse: "stop",
+        done: isSolved,
+        plan(s) {
+          const res = deduceUntangleHintPlan(s);
+          return res.ok ? res.steps : { refused: res.error };
+        },
+        apply: (s, st) => untangleGame.executeMove(s, st.move),
+      },
+    );
+    expect(end, "the hint never admitted K5 cannot be untangled").toBe("refused");
+    expect(refusal).toBe(NO_MOVE_WORTH_MAKING);
+    expect(count(state)).toBeGreaterThan(0);
   });
 });

@@ -32,9 +32,9 @@ runs, and what a commit may leave to the push and to CI).
    a new game ships".
 4. In `<game>-hint.test.ts` (`skeleton-hint.test.ts`): one
    `describeHintPins` call with a pin for every rung, written by
-   `npm run hint-scan -- <the test file>`; plans followed to the answer; and
-   a frame from a pin through `renderPinnedHint`. See "Pinning a hint's
-   positions".
+   `npm run hint-scan -- <the test file>`; plans followed to the answer
+   through `walkHint`; and a frame from a pin through `renderPinnedHint`. See
+   "Pinning a hint's positions" and "Follow a plan through `walkHint`".
 5. Deal every board from a fixed seed or write its desc down. Give no test a
    timeout or an elapsed-time assertion. See "Seed-deterministic, never
    clock-gated".
@@ -56,6 +56,7 @@ runs, and what a commit may leave to the push and to CI).
 | Pinning a hint's positions | your game gains a hint rung, or a hint test needs the board a sentence fires on |
 | – A rung the scan finds no position for | `npm run hint-scan` exits 1, or you are about to list a rung in `unreached` |
 | – A kind a rung id does not say | a test needs a case of a rung, a step's shape, a later leg, or a position off the hint's own line |
+| – Follow a plan through `walkHint` | a game's own test follows its hint, or its internal firings, from a position |
 | A game's verdict in one command | you are writing or changing a game and want everything the collection asks of it, in a minute |
 | Render scenarios | your game draws a highlight, an overlay, a cursor or an animation frame |
 | – A frame that needs the browser | a check has to be made in the running app and the frame is deep in a game |
@@ -251,6 +252,20 @@ A test file with positions of its own (a render test's frames, a second scan
 under another `ui`) takes `describeHintKindPins`. Its kinds are rung ids or
 predicates, the same command writes its pins, and a file may hold several
 blocks at any indent.
+
+### Follow a plan through `walkHint`
+
+Do not write the loop that asks a plan, plays it and asks again: hand
+`walkHint` ([`testing/plan-walk.ts`](../src/engine/testing/plan-walk.ts)) the
+game, a position, a limit on the plans asked, and a visitor for each position
+asked, each plan and each step played. It ends on a solved board, on the
+test's own `done` (`validateBoard`, a lost game), or on an empty plan, and
+says which; a refusal fails the walk unless `refuse: "stop"`, and so does the
+limit with `limit: "throw"`. `mistakes: true` is the answer check after every
+step. A walk over a game's internal firings, or one that plays a step its own
+way, is `walkPlan` with the `plan` and `apply` it needs. A walk through the
+midend, as the player meets it, is the cross-game guards'
+(§ "Walk a midend's hints through `walkHints`").
 
 ## A game's verdict in one command
 
@@ -1000,7 +1015,8 @@ board reaches) into a fresh, sized, observed midend, and fails on a board the
 midend refuses, which a hand-written walk tended to skip in silence. A guard
 whose subject is not a press-read-apply loop (a repaint after a warm frame, a
 press mid-animation) takes its boards from `walkBoards` and drives the midend
-itself. A guard on `game.hint.plan()` without a midend walks from `dealt`.
+itself. A guard on `game.hint.plan()` without a midend walks from `dealt`
+through `walkHint` (§ "Follow a plan through `walkHint`").
 
 ### One board of each kind, and the rest in the slow tier
 

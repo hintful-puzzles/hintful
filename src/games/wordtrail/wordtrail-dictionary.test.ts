@@ -10,6 +10,7 @@ import { commonWords } from "../../engine/generate/word-list/index.ts";
 import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
 import { CROSS } from "../../engine/mechanics/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { dictionary } from "./dictionary.ts";
@@ -100,16 +101,14 @@ describe("wordtrail dictionary", () => {
     let named = 0;
     let counted = 0;
     for (const seed of ["agree a", "agree b", "agree c", "agree d", "agree e"]) {
-      let state = deal(seed).state;
-      for (let asked = 0; wordtrailGame.status(state) !== "solved"; asked++) {
-        expect(asked).toBeLessThan(state.edges.length);
-        const result = wordtrailGame.hint.plan(state);
-        if (!result?.ok) throw new Error(`refused on ${seed}`);
-        for (const step of result.steps) {
+      const start = deal(seed).state;
+      const { solved } = walkHint(wordtrailGame, start, {
+        asks: start.edges.length,
+        step(step, before) {
           const keys = step.reference ?? [];
           expect(keys.length, step.explanation).toBeGreaterThan(0);
           const fitting = new Set(
-            items(state)
+            items(before)
               .filter((i) => i.status !== "ruledOut")
               .map((i) => i.key),
           );
@@ -120,9 +119,9 @@ describe("wordtrail dictionary", () => {
           if (!step.explanation.startsWith("Just "))
             for (const key of keys)
               expect(step.explanation, step.explanation).toContain(key.toUpperCase());
-          state = executeMove(state, step.move);
-        }
-      }
+        },
+      });
+      expect(solved, seed).toBe(true);
     }
     // Both forms of the sentence past two words were seen.
     expect({ named: named > 0, counted: counted > 0 }).toEqual({

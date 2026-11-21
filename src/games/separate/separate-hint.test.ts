@@ -21,6 +21,7 @@ import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { ladderWalk, TIERS } from "../../engine/solve/ladder-runtime.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSeparateDesc } from "./generator.ts";
@@ -91,14 +92,13 @@ type Step = HintStep<SeparateMove, BorderHint, SeparateRung>;
 /** Every step given, walking to solved one recomputed hint at a time. */
 function walk(start: SeparateState): { spoken: Step[]; solved: boolean } {
   const spoken: Step[] = [];
-  let st = start;
-  for (let guard = 0; guard < 400 && !isSolved(st); guard++) {
-    const r = hintOf(st);
-    if (!r.ok) return { spoken, solved: false };
-    spoken.push(...r.steps);
-    st = executeMove(st, r.steps[0].move);
-  }
-  return { spoken, solved: isSolved(st) };
+  const { solved } = walkHint(separateGame, start, {
+    asks: 400,
+    refuse: "stop",
+    first: true,
+    planned: (steps) => spoken.push(...steps),
+  });
+  return { spoken, solved };
 }
 
 /** The corpus: per preset, two boards, each walked from fresh and from four

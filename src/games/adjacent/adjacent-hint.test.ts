@@ -17,7 +17,6 @@ import {
   type EdgeClueState,
   newState,
   newUi,
-  status,
 } from "../../engine/edge-clue-latin/state.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
@@ -25,6 +24,7 @@ import {
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
 import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
@@ -109,15 +109,13 @@ describe("adjacent hint", () => {
 describe("adjacent hint resumes to solved", () => {
   it("completes a fresh board one recomputed hint at a time", () => {
     const { st: start, aux } = gen(ADJ, "resume-adjacent");
-    let state = start;
-    for (let moves = 0; moves < 600; moves++) {
-      if (status(state) === "solved") return;
-      const res = adjacentGame.hint.plan(state, aux);
-      expect(res?.ok).toBe(true);
-      if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
-      state = adjacentGame.executeMove(state, res.steps[0].move);
-    }
-    throw new Error("did not converge");
+    const { solved } = walkHint(adjacentGame, start, {
+      asks: 600,
+      limit: "throw",
+      aux,
+      first: true,
+    });
+    expect(solved).toBe(true);
   });
 });
 

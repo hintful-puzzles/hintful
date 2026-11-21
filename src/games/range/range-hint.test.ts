@@ -3,6 +3,7 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import type { RangeHint } from "./hint.ts";
 import { rangeGame } from "./index.ts";
 import { CLUE } from "./kinds.ts";
@@ -189,12 +190,10 @@ describe("hint", () => {
     const kinds = new Set<string>();
     let checked = 0;
     for (const seed of ["range-hint-plan", "range-evidence-2", "range-evidence-3"]) {
-      let cur = fromSeed("9x6", seed);
-      for (let round = 0; round < 40; round++) {
-        const res = rangeGame.hint.plan(cur);
-        if (!res?.ok) break;
-        for (let i = 0; i < res.steps.length; i++) {
-          const step = res.steps[i];
+      walkHint(rangeGame, fromSeed("9x6", seed), {
+        asks: 40,
+        refuse: "stop",
+        step(step) {
           kinds.add(step.rung);
           checked++;
           expect(
@@ -212,9 +211,8 @@ describe("hint", () => {
           } else {
             expect(clues).toEqual([]);
           }
-        }
-        for (const step of res.steps) cur = rangeGame.executeMove(cur, step.move);
-      }
+        },
+      });
     }
     // Vacuity guards: an empty sweep, or one that only ever reached the
     // adjacency rule (whose sentence was already tied), would pass the

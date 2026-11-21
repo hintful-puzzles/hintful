@@ -24,6 +24,7 @@ import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkPlan } from "../../engine/testing/plan-walk.ts";
 import { say, tentsHint, tentsKeepTrack } from "./hint.ts";
 import { tentsGame } from "./index.ts";
 import {
@@ -96,14 +97,14 @@ function walk(
   start: TentsState,
   each: (f: Firing, state: TentsState) => void,
 ): TentsState {
-  let state = start;
-  for (let asks = 0; asks < 200 && tentsGame.status(state) !== "solved"; asks++) {
-    for (const p of plan(state)) {
-      each(p, state);
-      for (const step of p.steps) state = executeMove(state, step.move);
-    }
-  }
-  return state;
+  return walkPlan(start, {
+    asks: 200,
+    done: (s) => tentsGame.status(s) === "solved",
+    plan,
+    apply: (s, firing) =>
+      firing.steps.reduce((t, step) => executeMove(t, step.move), s),
+    step: (firing, before) => each(firing, before),
+  }).state;
 }
 
 describe("following the hint finishes every board, one true step at a time", () => {

@@ -23,6 +23,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { deepBudget } from "../../engine/testing/slow.ts";
 import { palisadeGame } from "./index.ts";
 import { answerOf, searchAnswers, solveToBorders } from "./solver.ts";
@@ -332,18 +333,15 @@ describe("the hint on an Unreasonable Palisade board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = palisadeGame.hint.plan(state);
-        plan?.ok;
-        plan = palisadeGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = palisadeGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(palisadeGame, state, {
+        // A plan settles an edge at least: four a square bound the asks.
+        asks: 4 * state.borders.length,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

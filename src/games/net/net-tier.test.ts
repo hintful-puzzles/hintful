@@ -24,6 +24,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
 import { netGame } from "./index.ts";
@@ -563,18 +564,16 @@ describe("the hint on an Unreasonable Net board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = netGame.hint.plan(state);
-        plan?.ok;
-        plan = netGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = netGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(netGame, state, {
+        // A plan settles a side or locks a square at least: four sides and a
+        // lock a square bound the asks.
+        asks: 5 * state.tiles.length,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     followHint();

@@ -19,6 +19,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkPlan } from "../../engine/testing/plan-walk.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSubsetsDesc } from "./generator.ts";
@@ -372,24 +373,24 @@ describe("candidateCells (reference aid + hidden single)", () => {
   it("pickExclusion returns a competitor already placed elsewhere", () => {
     let checked = 0;
     for (let s = 0; s < 40 && checked < 5; s++) {
-      let state = gen(`px-${s}`);
-      for (let step = 0; step < 200; step++) {
-        const plan = deduceHintPlan(state);
-        const d = plan.deductions[0];
-        if (!d) break;
-        if (d.reason.kind === "collapse") {
+      // Each plan's first firing, read against the board it fires on.
+      walkPlan(gen(`px-${s}`), {
+        asks: 200,
+        done: () => false,
+        plan: (state) => deduceHintPlan(state).deductions.slice(0, 1),
+        apply: applyFiring,
+        step(d, state) {
+          if (d.reason.kind !== "collapse") return;
           const ex = pickExclusion(state, d.pos, d.reason.survivors);
-          if (ex) {
-            checked++;
-            // The competitor is not a survivor, and it is placed elsewhere.
-            expect(d.reason.survivors).not.toContain(ex.value);
-            expect(ex.cell).not.toBe(d.pos);
-            expect(state.known[ex.cell]).toBe(state.mask[ex.cell]);
-            expect(state.known[ex.cell]).toBe(ex.value);
-          }
-        }
-        state = applyFiring(state, d);
-      }
+          if (!ex) return;
+          checked++;
+          // The competitor is not a survivor, and it is placed elsewhere.
+          expect(d.reason.survivors).not.toContain(ex.value);
+          expect(ex.cell).not.toBe(d.pos);
+          expect(state.known[ex.cell]).toBe(state.mask[ex.cell]);
+          expect(state.known[ex.cell]).toBe(ex.value);
+        },
+      });
     }
     expect(checked).toBeGreaterThan(0);
   });
@@ -645,28 +646,40 @@ describe("subgoal continuation narration", () => {
   it("every continuation leg names its referent (never a bare pronoun) and the subgoal", () => {
     let checked = 0;
     for (let s = 0; s < 30 && checked < 8; s++) {
-      let state = gen(`cont-${s}`);
-      for (let step = 0; step < 200; step++) {
-        if (subsetsGame.status(state) === "solved") break;
-        const res = subsetsGame.hint.plan(state);
-        if (!res?.ok) break;
-        res.steps.forEach((st, k) => {
-          if (!st.continuesPrevious) return;
-          checked++;
-          // The referent is explicit — "the outlined cell/set(s)" — never a
-          // sentence-leading bare "It"/"They"/"None of them".
-          expect(st.explanation).toMatch(/the outlined (cell|sets?)|outlined set/);
-          expect(st.explanation).not.toMatch(/^(It|They|None of them)\b/);
-          // A letter after a letter of the same cell continues that cell's
-          // sub-goal; a firing's lead after its rule-outs states its own.
-          const prev = res.steps[k - 1].move;
-          if (st.move.kind === "set" && prev.kind === "set" && prev.pos === st.move.pos)
-            expect(st.explanation).toMatch(
-              /^…and (?:mark [A-Z] present|clear [A-Z]) in this cell too, for /,
-            );
-        });
-        state = applyFiring(state, deduceHintPlan(state).deductions[0]);
-      }
+      // Each plan's sentences are read, and the board advances by its first
+      // firing.
+      walkPlan(gen(`cont-${s}`), {
+        asks: 200,
+        refuse: "stop",
+        done: (state) => subsetsGame.status(state) === "solved",
+        plan(state) {
+          const res = subsetsGame.hint.plan(state);
+          if (!res.ok) return { refused: res.error };
+          res.steps.forEach((st, k) => {
+            if (!st.continuesPrevious) return;
+            checked++;
+            // The referent is explicit — "the outlined cell/set(s)" — never a
+            // sentence-leading bare "It"/"They"/"None of them".
+            expect(st.explanation).toMatch(/the outlined (cell|sets?)|outlined set/);
+            expect(st.explanation).not.toMatch(/^(It|They|None of them)\b/);
+            // A letter after a letter of the same cell continues that cell's
+            // sub-goal; a firing's lead after its rule-outs states its own.
+            const prev = res.steps[k - 1].move;
+            if (
+              st.move.kind === "set" &&
+              prev.kind === "set" &&
+              prev.pos === st.move.pos
+            )
+              expect(st.explanation).toMatch(
+                /^…and (?:mark [A-Z] present|clear [A-Z]) in this cell too, for /,
+              );
+          });
+          const [d] = deduceHintPlan(state).deductions;
+          if (!d) throw new Error("a plan with no firing behind it");
+          return [d];
+        },
+        apply: applyFiring,
+      });
     }
     expect(checked).toBeGreaterThan(0);
   });

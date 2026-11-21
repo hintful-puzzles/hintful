@@ -24,6 +24,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { deepBudget, itSlow } from "../../engine/testing/slow.ts";
 import { rectGame } from "./index.ts";
 import { executeMove, isSolved, newState } from "./moves.ts";
@@ -419,18 +420,15 @@ describe("the hint on an Unreasonable Rectangles board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = rectGame.hint.plan(state);
-        plan?.ok;
-        plan = rectGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = rectGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(rectGame, state, {
+        // As many plans as the board has edges; reaching it is a plan that stalls.
+        asks: 2 * p.w * p.h,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     followHint();

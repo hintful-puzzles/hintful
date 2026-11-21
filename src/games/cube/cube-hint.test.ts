@@ -11,6 +11,7 @@ import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
@@ -73,15 +74,15 @@ describe("cube hint plan", () => {
   itDeep("finishes every preset from its opening, recomputed after every roll", () => {
     for (const p of PRESETS) {
       for (const seed of ["w-a", "w-b", "w-c"]) {
-        let s = newState(p, newDesc(p, randomNew(seed)).desc);
-        for (let rolls = 0; !solved(s); rolls++) {
+        walkHint(cubeGame, newState(p, newDesc(p, randomNew(seed)).desc), {
           // A recomputed plan that cycled would never finish; the potential
           // bounds a walk well inside this.
-          expect(rolls, `${seed} on ${JSON.stringify(p)}`).toBeLessThan(400);
-          const res = hint(s);
-          if (!res.ok) throw new Error(`${seed}: ${res.error}`);
-          s = executeMove(s, res.steps[0].move);
-        }
+          asks: 400,
+          limit: "throw",
+          done: solved,
+          first: true,
+          label: `${seed} on ${JSON.stringify(p)}`,
+        });
       }
     }
   });

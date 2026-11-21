@@ -4,6 +4,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newSignpostDesc } from "./generator.ts";
@@ -57,16 +58,8 @@ describe("signpost hint from the player's own positions", () => {
         const fresh = signpostGame.newState(p, desc);
         // A plan holds the next few steps only, so the board is finished by
         // asking again.
-        const finish = (from: SignpostState): SignpostState => {
-          let s = from;
-          for (
-            let round = 0;
-            round < 20 && signpostGame.status(s) !== "solved";
-            round++
-          )
-            s = play(s, hintOf(s));
-          return s;
-        };
+        const finish = (from: SignpostState): SignpostState =>
+          walkHint(signpostGame, from, { asks: 20 }).state;
         const plan = hintOf(fresh);
         for (const step of plan)
           reached.set(arm(step), (reached.get(arm(step)) ?? 0) + 1);

@@ -22,6 +22,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { deepBudget, itDeep, itSlow } from "../../engine/testing/slow.ts";
 import { signpostGame } from "./index.ts";
 import { executeMove } from "./moves.ts";
@@ -433,18 +434,16 @@ describe("the hint on an Unreasonable Signpost board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = signpostGame.hint.plan(state);
-        plan?.ok;
-        plan = signpostGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(signpostGame, state, {
+        // Far more plans than the 4x4 board has links; reaching it is a plan
+        // that stalls.
+        asks: 4 * 16,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

@@ -21,6 +21,7 @@ import {
 } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
@@ -499,13 +500,12 @@ describe("pegs hint", () => {
   });
 
   it("rings the jumping peg and the hole it lands in, and following it solves", () => {
-    let s = load("7x7:OOPPPOOOOPPPOOPPPPPPPPPPHPPPPPPPPPPOOPPPOOOOPPPOO");
-    let requests = 0;
-    while (status(s) !== "solved") {
-      const r = hint(s);
-      if (!r.ok) throw new Error(r.error);
-      requests++;
-      for (const step of r.steps) {
+    const start = load("7x7:OOPPPOOOOPPPOOPPPPPPPPPPHPPPPPPPPPPOOPPPOOOOPPPOO");
+    const { state: end, asks } = walkHint(G, start, {
+      // A jump takes a peg, and a plan jumps once at least.
+      asks: pegCount(start),
+      limit: "throw",
+      step(step, s) {
         const m = step.move;
         if (m.type !== "jump") throw new Error("jump");
         const marks = stepMarks(step);
@@ -519,11 +519,10 @@ describe("pegs hint", () => {
           expect(marks.of("ring", HOLE)).toEqual([m.ty * s.w + m.tx]);
         }
         expect(hintKeepTrack(m, step, s)).toBe("completed");
-        s = G.executeMove(s, m);
-      }
-    }
-    expect(requests).toBeGreaterThan(1);
-    expect(pegCount(s)).toBe(1);
+      },
+    });
+    expect(asks).toBeGreaterThan(1);
+    expect(pegCount(end)).toBe(1);
   });
 
   it("drops the plan on any other jump", () => {

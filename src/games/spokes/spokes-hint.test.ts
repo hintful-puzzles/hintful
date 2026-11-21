@@ -18,6 +18,7 @@ import { NARRATION_LIMIT } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkPlan } from "../../engine/testing/plan-walk.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
@@ -329,32 +330,37 @@ describe("hints only rule out a spoke when it helps a hub still needing lines", 
 
     let ruleOuts = 0;
     for (const { at, preset, desc } of boards) {
-      const board = cloneBoard(newState(preset, desc));
-      for (let guard = 0; guard < 600; guard++) {
-        const plan = deduceSpokesPlan(board);
-        if (plan.length === 0) break;
-        const f = plan[0];
-        for (const sp of f.forced) {
-          if (sp.state === SPOKE_LINE) continue; // a connection always helps
-          const nx = (sp.index % board.w) + SPOKE_DIRS[sp.dir].dx;
-          const ny = ((sp.index / board.w) | 0) + SPOKE_DIRS[sp.dir].dy;
-          const j = ny * board.w + nx;
-          const aNeeds = linesDrawn(board, sp.index) < board.numbers[sp.index];
-          const bNeeds =
-            nx >= 0 &&
-            nx < board.w &&
-            ny >= 0 &&
-            ny < board.h &&
-            board.numbers[j] > 0 &&
-            linesDrawn(board, j) < board.numbers[j];
-          expect(
-            aNeeds || bNeeds,
-            `${at}: ${f.kind} rules out a spoke between two satisfied hubs`,
-          ).toBe(true);
-          ruleOuts++;
-        }
-        applyForced(board, f.forced);
-      }
+      // Each plan's first firing only, read against the board before it lands.
+      walkPlan(cloneBoard(newState(preset, desc)), {
+        asks: 600,
+        done: () => false,
+        plan: (board) => deduceSpokesPlan(board).slice(0, 1),
+        apply(board, f) {
+          applyForced(board, f.forced);
+          return board;
+        },
+        planned([f], board) {
+          for (const sp of f.forced) {
+            if (sp.state === SPOKE_LINE) continue; // a connection always helps
+            const nx = (sp.index % board.w) + SPOKE_DIRS[sp.dir].dx;
+            const ny = ((sp.index / board.w) | 0) + SPOKE_DIRS[sp.dir].dy;
+            const j = ny * board.w + nx;
+            const aNeeds = linesDrawn(board, sp.index) < board.numbers[sp.index];
+            const bNeeds =
+              nx >= 0 &&
+              nx < board.w &&
+              ny >= 0 &&
+              ny < board.h &&
+              board.numbers[j] > 0 &&
+              linesDrawn(board, j) < board.numbers[j];
+            expect(
+              aNeeds || bNeeds,
+              `${at}: ${f.kind} rules out a spoke between two satisfied hubs`,
+            ).toBe(true);
+            ruleOuts++;
+          }
+        },
+      });
     }
     // A deduction engine that emitted only connections would walk every board
     // and assert nothing; this test is about rule-outs.
@@ -484,13 +490,19 @@ describe("the search beneath the ladder never reaches a hint", () => {
    */
   it("walks an Unreasonable board only as far as the ladder reaches", () => {
     for (const desc of UNREASONABLE_BOARDS) {
-      const board = cloneBoard(newState(UNREASONABLE, desc));
-      let firings = 0;
-      for (let plan = deduceSpokesPlan(board); plan.length > 0; ) {
-        for (const f of plan) applyForced(board, f.forced);
-        firings += plan.length;
-        plan = deduceSpokesPlan(board);
-      }
+      const { state: board, steps: firings } = walkPlan(
+        cloneBoard(newState(UNREASONABLE, desc)),
+        {
+          // The ladder alone: walked until its plan comes back empty.
+          asks: Number.POSITIVE_INFINITY,
+          done: () => false,
+          plan: deduceSpokesPlan,
+          apply(b, f) {
+            applyForced(b, f.forced);
+            return b;
+          },
+        },
+      );
       expect(firings, `${desc}: the ladder decides nothing`).toBeGreaterThan(0);
       expect(spokesSolved(board), `${desc}: the ladder finishes it`).toBe(false);
       const refused = spokesGame.hint.plan({

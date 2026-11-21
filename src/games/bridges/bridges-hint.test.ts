@@ -15,6 +15,7 @@ import { decodeSave, encodeSave } from "../../engine/midend/save.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { observeMidend } from "../../engine/testing/drive-midend.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkHint, walkPlan } from "../../engine/testing/plan-walk.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { deepBudget, itDeep } from "../../engine/testing/slow.ts";
 import { newBridgesDesc } from "./generator.ts";
@@ -140,21 +141,26 @@ function firingsFrom(
   start: BridgesState,
 ): { firings: Firing[]; status: string } {
   const firings: Firing[] = [];
-  let player = start;
-  for (let round = 0; round < 400; round++) {
-    const res = bridgesHint(player);
-    if (!res.ok) break;
-    for (const step of res.steps) {
+  // Asked until it refuses, a solved board included.
+  const { state } = walkPlan(start, {
+    asks: 400,
+    refuse: "stop",
+    done: () => false,
+    plan(s) {
+      const res = bridgesHint(s);
+      return res.ok ? res.steps : { refused: res.error };
+    },
+    apply: (s, step) => bridgesGame.executeMove(s, step.move),
+    step(step) {
       firings.push({
         kind: step.rung,
         ops: step.move.ops,
         hl: step.highlights as BridgesHighlights,
         words: step.explanation,
       });
-      player = bridgesGame.executeMove(player, step.move);
-    }
-  }
-  return { firings, status: bridgesGame.status(player) === "solved" ? "done" : "open" };
+    },
+  });
+  return { firings, status: bridgesGame.status(state) === "solved" ? "done" : "open" };
 }
 
 /** How many bridges run along this span on `state`. */
@@ -581,15 +587,13 @@ describe("a board shared without its difficulty", () => {
     const params = decodeParams(me.getParams());
     expect(params.difficulty).toBe(1);
 
-    let state = newStateFromDesc(params, shared.slice(shared.indexOf(":") + 1));
-    const ui = bridgesGame.newUi(state);
-    let moves = 0;
-    while (bridgesGame.status(state) !== "solved" && moves < 200) {
-      const r = bridgesGame.hint.plan(state, undefined, ui);
-      if (!r?.ok) throw new Error(`move ${moves}: ${r?.error}`);
-      state = bridgesGame.executeMove(state, r.steps[0].move);
-      moves++;
-    }
+    const start = newStateFromDesc(params, shared.slice(shared.indexOf(":") + 1));
+    const ui = bridgesGame.newUi(start);
+    const { state } = walkHint(bridgesGame, start, {
+      asks: 200,
+      ui: () => ui,
+      first: true,
+    });
     expect(bridgesGame.status(state)).toBe("solved");
   });
 

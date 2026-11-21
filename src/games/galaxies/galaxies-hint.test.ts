@@ -16,6 +16,7 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { type GalaxiesHint, type GalaxiesRung, narrate } from "./hint.ts";
 import { type GalaxiesMove, galaxiesGame } from "./index.ts";
 import { legalDotsFor } from "./moves.ts";
@@ -39,11 +40,7 @@ function board(params: typeof NORMAL_7, seed: string): GalaxiesState {
   return galaxiesGame.newState(params, desc);
 }
 
-function hintOf(s: GalaxiesState): Step[] {
-  const res = galaxiesGame.hint.plan(s);
-  if (!res?.ok) throw new Error(`hint refused: ${res && !res.ok ? res.error : "?"}`);
-  return res.steps;
-}
+const over = (s: GalaxiesState) => galaxiesGame.status(s) !== "ongoing";
 
 const targets = (step: Step): number => step.highlights?.targets.length ?? 0;
 
@@ -179,33 +176,34 @@ describe("the plan is sound: every step agrees with the unique solution", () => 
       for (const seed of ["sound-a", "sound-b", "sound-c"]) {
         const start = board(params, seed);
         const sol = solution(start);
-        let s = start;
-        for (let i = 0; i < 400 && galaxiesGame.status(s) === "ongoing"; i++) {
+        const { state: s } = walkHint(galaxiesGame, start, {
+          asks: 400,
+          done: over,
+          first: true,
           // An Unreasonable board may legitimately run out of deduction; what
           // is under test is that nothing the hint *did* say was wrong.
-          const res = galaxiesGame.hint.plan(s);
-          if (!res?.ok && params.diff === GalaxiesDiff.Unreasonable) break;
-          const steps = hintOf(s);
-          for (const step of steps) {
-            const hl = step.highlights;
-            if (!hl) continue;
-            for (const t of hl.targets) {
-              const si = idx(sol, t.x, t.y);
-              expect(sol.flags[si] & F_TILE_ASSOC).toBeTruthy();
-              expect(
-                [sol.dotx[si], sol.doty[si]],
-                `${seed}: hint pointed (${t.x},${t.y}) at the wrong dot`,
-              ).toEqual([hl.targetDot?.x, hl.targetDot?.y]);
+          refuse: params.diff === GalaxiesDiff.Unreasonable ? "stop" : "throw",
+          planned: (steps) => {
+            for (const step of steps) {
+              const hl = step.highlights;
+              if (!hl) continue;
+              for (const t of hl.targets) {
+                const si = idx(sol, t.x, t.y);
+                expect(sol.flags[si] & F_TILE_ASSOC).toBeTruthy();
+                expect(
+                  [sol.dotx[si], sol.doty[si]],
+                  `${seed}: hint pointed (${t.x},${t.y}) at the wrong dot`,
+                ).toEqual([hl.targetDot?.x, hl.targetDot?.y]);
+              }
+              for (const wall of hl.targetWalls) {
+                expect(
+                  sol.flags[idx(sol, wall.x, wall.y)] & F_EDGE_SET,
+                  `${seed}: hint asked for a wall at (${wall.x},${wall.y}) the solution does not have`,
+                ).toBeTruthy();
+              }
             }
-            for (const wall of hl.targetWalls) {
-              expect(
-                sol.flags[idx(sol, wall.x, wall.y)] & F_EDGE_SET,
-                `${seed}: hint asked for a wall at (${wall.x},${wall.y}) the solution does not have`,
-              ).toBeTruthy();
-            }
-          }
-          s = galaxiesGame.executeMove(s, steps[0].move);
-        }
+          },
+        });
         if (params.diff === GalaxiesDiff.Normal) {
           expect(
             galaxiesGame.status(s),
@@ -229,15 +227,11 @@ describe("a square settled for its one owner is the one a drag rings", () => {
       { w: 10, h: 10, diff: GalaxiesDiff.Normal },
     ]) {
       for (const seed of ["ring-a", "ring-b", "ring-c"]) {
-        let s = board(params, seed);
-        for (
-          let batch = 0;
-          batch < 60 && galaxiesGame.status(s) === "ongoing";
-          batch++
-        ) {
-          const res = galaxiesGame.hint.plan(s);
-          if (!res?.ok) break;
-          for (const step of res.steps) {
+        walkHint(galaxiesGame, board(params, seed), {
+          asks: 60,
+          done: over,
+          refuse: "stop",
+          step(step, s) {
             const at = step.highlights?.focus;
             const dot = step.highlights?.targetDot;
             if (step.rung === "soleOwner" && at && dot) {
@@ -246,9 +240,8 @@ describe("a square settled for its one owner is the one a drag rings", () => {
               ]);
               checked++;
             }
-            s = galaxiesGame.executeMove(s, step.move);
-          }
-        }
+          },
+        });
       }
     }
     expect(checked).toBeGreaterThan(20);
@@ -303,22 +296,17 @@ describe("the hint never guesses, and says so when that is the end of the road",
       /\btr(y|ied|ies)\b|\bsuppose\b|\bif it were\b|\bbreak the board\b/i;
     for (const params of [NORMAL_7, UNREASONABLE_7]) {
       for (const seed of ["gf-a", "gf-b"]) {
-        let s = board(params, seed);
-        for (
-          let batch = 0;
-          batch < 40 && galaxiesGame.status(s) === "ongoing";
-          batch++
-        ) {
-          const res = galaxiesGame.hint.plan(s);
-          if (!res?.ok) break;
-          for (const step of res.steps) {
+        walkHint(galaxiesGame, board(params, seed), {
+          asks: 40,
+          done: over,
+          refuse: "stop",
+          step(step) {
             expect(
               speculative.test(step.explanation),
               `${seed}: a speculative step — "${step.explanation}"`,
             ).toBe(false);
-            s = galaxiesGame.executeMove(s, step.move);
-          }
-        }
+          },
+        });
       }
     }
   });
@@ -329,14 +317,14 @@ describe("the hint never guesses, and says so when that is the end of the road",
     for (const size of [7, 10]) {
       for (const seed of ["gf-a", "gf-b", "gf-c"]) {
         const params = { w: size, h: size, diff: GalaxiesDiff.Normal };
-        let s = board(params, `${seed}-${size}`);
-        for (let b = 0; b < 40 && galaxiesGame.status(s) === "ongoing"; b++) {
-          const res = galaxiesGame.hint.plan(s);
-          expect(res?.ok, `${seed}/${size}: Easy board stalled`).toBe(true);
-          if (!res?.ok) break;
-          for (const step of res.steps) s = galaxiesGame.executeMove(s, step.move);
-        }
-        expect(galaxiesGame.status(s), `${seed}/${size}: not solved`).toBe("solved");
+        // A refusal is the Easy board stalling, and fails the walk.
+        const { state } = walkHint(galaxiesGame, board(params, `${seed}-${size}`), {
+          asks: 40,
+          done: over,
+        });
+        expect(galaxiesGame.status(state), `${seed}/${size}: not solved`).toBe(
+          "solved",
+        );
       }
     }
   });
@@ -346,16 +334,17 @@ describe("the hint never guesses, and says so when that is the end of the road",
     // the position the tier exists for, not an error.
     let refusals = 0;
     for (const seed of ["gu-a", "gu-b", "gu-c", "gu-d"]) {
-      let s = board(UNREASONABLE_7, seed);
-      for (let b = 0; b < 40 && galaxiesGame.status(s) === "ongoing"; b++) {
-        const res = galaxiesGame.hint.plan(s);
-        if (!res?.ok) {
-          refusals++;
-          expect(res?.error).toMatch(/^Nothing further follows by deduction here\./);
-          expect(res?.error).toMatch(/save a checkpoint/);
-          break;
-        }
-        for (const step of res.steps) s = galaxiesGame.executeMove(s, step.move);
+      const walked = walkHint(galaxiesGame, board(UNREASONABLE_7, seed), {
+        asks: 40,
+        done: over,
+        refuse: "stop",
+      });
+      if (walked.end === "refused") {
+        refusals++;
+        const res = galaxiesGame.hint.plan(walked.state);
+        if (res.ok) throw new Error(`${seed}: the refusal did not repeat`);
+        expect(res.error).toMatch(/^Nothing further follows by deduction here\./);
+        expect(res.error).toMatch(/save a checkpoint/);
       }
     }
     // If this ever came out zero the tier would be indistinguishable from
@@ -375,24 +364,27 @@ describe("a deduction the player cannot act on never costs the plan a step", () 
   const params = { w: 15, h: 15, diff: GalaxiesDiff.Unreasonable };
 
   it("the reported board keeps offering hints deep into the solve", () => {
-    let s = galaxiesGame.newState(params, REPORTED);
     let sawUnshowable = false;
     let offered = 0;
     // Batch-replay whole plans rather than recomputing per move: this reaches
     // the same mid-game depth in a few calls instead of dozens, and the plan
     // machinery is what is under test, not the walk.
-    for (let batch = 0; batch < 6 && galaxiesGame.status(s) === "ongoing"; batch++) {
-      // The class is a dot inside its own cell: its cell is forced and no
-      // arrow is drawable there.
-      sawUnshowable ||= s.dots.some((d) => d.x % 2 === 1 && d.y % 2 === 1);
-      const res = galaxiesGame.hint.plan(s);
+    walkHint(galaxiesGame, galaxiesGame.newState(params, REPORTED), {
+      asks: 6,
+      done: over,
       // A refusal *deep* in an Unreasonable board is legitimate — deduction
       // can genuinely run out there. Refusing at the first ask, on a board
       // with a hundred moves left, is the bug this pins.
-      if (!res?.ok) break;
-      offered++;
-      for (const step of res.steps) s = galaxiesGame.executeMove(s, step.move);
-    }
+      refuse: "stop",
+      asked(s) {
+        // The class is a dot inside its own cell: its cell is forced and no
+        // arrow is drawable there.
+        sawUnshowable ||= s.dots.some((d) => d.x % 2 === 1 && d.y % 2 === 1);
+      },
+      planned() {
+        offered++;
+      },
+    });
     expect(offered, "the reported board refused straight away").toBeGreaterThan(3);
     // The guard is only meaningful if this board really does produce firings
     // the player can never act on — the whole point of the class.
@@ -406,40 +398,42 @@ describe("a deduction the player cannot act on never costs the plan a step", () 
 describe("the picture carries the argument", () => {
   it("every step highlights something, and the acted-on cell is never also evidence", () => {
     for (const seed of ["pic-a", "pic-b"]) {
-      let s = board(NORMAL_7, seed);
-      for (let i = 0; i < 400 && galaxiesGame.status(s) === "ongoing"; i++) {
-        const steps = hintOf(s);
-        for (const step of steps) {
-          const hl = step.highlights;
-          expect(hl, "a step with no highlights").toBeDefined();
-          if (!hl) continue;
-          const marks =
-            hl.targets.length + hl.targetWalls.length + (hl.targetDot ? 1 : 0);
-          expect(
-            marks,
-            `${step.explanation} — marks nothing to act on`,
-          ).toBeGreaterThan(0);
-          // Only the cell being acted on is kept out of its own evidence: it
-          // owns the action color and the doubled ring. The *partner* stays in
-          // the evidence — it is inside the area the sentence describes, and
-          // marking it there is what keeps it the quieter of the two.
-          const f = hl.focus;
-          if (f) {
+      walkHint(galaxiesGame, board(NORMAL_7, seed), {
+        asks: 400,
+        done: over,
+        first: true,
+        planned: (steps) => {
+          for (const step of steps) {
+            const hl = step.highlights;
+            expect(hl, "a step with no highlights").toBeDefined();
+            if (!hl) continue;
+            const marks =
+              hl.targets.length + hl.targetWalls.length + (hl.targetDot ? 1 : 0);
             expect(
-              hl.area.some((a) => a.x === f.x && a.y === f.y),
-              "the acted-on cell is also marked as evidence",
-            ).toBe(false);
-          } else {
-            for (const t of hl.targets) {
+              marks,
+              `${step.explanation} — marks nothing to act on`,
+            ).toBeGreaterThan(0);
+            // Only the cell being acted on is kept out of its own evidence: it
+            // owns the action color and the doubled ring. The *partner* stays in
+            // the evidence — it is inside the area the sentence describes, and
+            // marking it there is what keeps it the quieter of the two.
+            const f = hl.focus;
+            if (f) {
               expect(
-                hl.area.some((a) => a.x === t.x && a.y === t.y),
-                "a target cell is also marked as evidence",
+                hl.area.some((a) => a.x === f.x && a.y === f.y),
+                "the acted-on cell is also marked as evidence",
               ).toBe(false);
+            } else {
+              for (const t of hl.targets) {
+                expect(
+                  hl.area.some((a) => a.x === t.x && a.y === t.y),
+                  "a target cell is also marked as evidence",
+                ).toBe(false);
+              }
             }
           }
-        }
-        s = galaxiesGame.executeMove(s, steps[0].move);
-      }
+        },
+      });
     }
   });
 
@@ -456,21 +450,22 @@ describe("the picture carries the argument", () => {
     ];
     const checked = [0, 0];
     for (const seed of ["gh-scan-0", "gh-scan-1", "gh-scan-2", "gh-scan-3"]) {
-      let s = board(UNREASONABLE_7, seed);
-      for (let i = 0; i < 400 && galaxiesGame.status(s) === "ongoing"; i++) {
-        const res = galaxiesGame.hint.plan(s);
-        if (!res?.ok) break; // deduction ran out — legitimate on this tier
-        const step = res.steps[0];
-        said.forEach(({ word, mark }, k) => {
-          if (!word.test(step.explanation)) return;
-          expect(
-            mark(step),
-            `"${step.explanation}" names a mark it does not draw`,
-          ).toBeGreaterThan(0);
-          checked[k]++;
-        });
-        s = galaxiesGame.executeMove(s, step.move);
-      }
+      walkHint(galaxiesGame, board(UNREASONABLE_7, seed), {
+        asks: 400,
+        first: true,
+        done: over,
+        refuse: "stop", // deduction ran out — legitimate on this tier
+        step(step) {
+          said.forEach(({ word, mark }, k) => {
+            if (!word.test(step.explanation)) return;
+            expect(
+              mark(step),
+              `"${step.explanation}" names a mark it does not draw`,
+            ).toBeGreaterThan(0);
+            checked[k]++;
+          });
+        },
+      });
     }
     // The scan keys on the words, so a rewording would silently empty it.
     expect(
@@ -486,18 +481,20 @@ describe("the picture carries the argument", () => {
   it("a wall step points at a wall, an association step points at a dot", () => {
     let checked = 0;
     for (const seed of ["role-a", "role-b"]) {
-      let s = board(NORMAL_7, seed);
-      for (let i = 0; i < 400 && galaxiesGame.status(s) === "ongoing"; i++) {
-        const step = hintOf(s)[0];
-        const hl = step.highlights;
-        if (!hl) continue;
-        const isWall = hl.targetWalls.length > 0;
-        expect(isWall ? hl.targets.length : hl.targetWalls.length).toBe(0);
-        checked++;
-        // One ring role at a time, so "the ringed dot" is never ambiguous.
-        if (hl.targetDot) expect(hl.refDots.length).toBe(0);
-        s = galaxiesGame.executeMove(s, step.move);
-      }
+      walkHint(galaxiesGame, board(NORMAL_7, seed), {
+        asks: 400,
+        first: true,
+        done: over,
+        step(step) {
+          const hl = step.highlights;
+          if (!hl) return;
+          const isWall = hl.targetWalls.length > 0;
+          expect(isWall ? hl.targets.length : hl.targetWalls.length).toBe(0);
+          checked++;
+          // One ring role at a time, so "the ringed dot" is never ambiguous.
+          if (hl.targetDot) expect(hl.refDots.length).toBe(0);
+        },
+      });
     }
     // A plan that stopped carrying highlights would `continue` past everything.
     expect(checked, "no step carried highlights").toBeGreaterThan(0);

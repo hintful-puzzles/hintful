@@ -20,6 +20,7 @@ import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { crossingGame } from "./index.ts";
 import { answerOf, searchAnswers, solveCrossing } from "./solver.ts";
@@ -300,18 +301,15 @@ describe("the hint on an Unreasonable Crossing board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = crossingGame.hint.plan(state);
-        plan?.ok;
-        plan = crossingGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = crossingGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(crossingGame, state, {
+        // Far more plans than a 5x5 board takes; reaching it is a plan that stalls.
+        asks: 100,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

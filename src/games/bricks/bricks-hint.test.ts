@@ -14,6 +14,7 @@ import { statedSentence } from "../../engine/hint/stated.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkPlan } from "../../engine/testing/plan-walk.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -222,15 +223,29 @@ describe("bricks hint — where the search takes over", () => {
     // The hint never searches, but Solve does: where the ladder stalls, the
     // plan ends and the search still finds the board its one answer.
     const tricky = fixtures.find((f) => f.diff === 2) as Fixture;
-    let st = newState({ w: tricky.w, h: tricky.h, diff: tricky.diff }, tricky.desc);
-    for (let steps = plan(st); steps.length > 0; steps = plan(st))
-      st = bricksGame.executeMove(st, {
-        kind: "paint",
-        cells: steps.map((m) => decided(m)) as {
-          index: number;
-          to: "shade" | "unshade";
-        }[],
-      });
+    const start = newState(
+      { w: tricky.w, h: tricky.h, diff: tricky.diff },
+      tricky.desc,
+    );
+    // Each plan is played as one paint of every square it decides.
+    const { state: st } = walkPlan(start, {
+      // Far more plans than the fixture takes; reaching it is a plan that stalls.
+      asks: 200,
+      limit: "throw",
+      done: () => false,
+      plan(s) {
+        const steps = plan(s);
+        return steps.length > 0 ? [steps] : [];
+      },
+      apply: (s, steps) =>
+        bricksGame.executeMove(s, {
+          kind: "paint",
+          cells: steps.map((m) => decided(m)) as {
+            index: number;
+            to: "shade" | "unshade";
+          }[],
+        }),
+    });
     // The hint has nothing more to say here…
     expect(bricksGame.status(st)).toBe("ongoing");
     expect(bricksGame.hint.plan(st)).toEqual({ ok: false, error: DEDUCTION_EXHAUSTED });

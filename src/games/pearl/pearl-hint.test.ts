@@ -25,6 +25,7 @@ import { statedSentence } from "../../engine/hint/stated.ts";
 import { EDGE } from "../../engine/mechanics/edge-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { STATED } from "../../generated/games/pearl/pearl.compiled.ts";
 import { type PearlHint, type PearlRung, pearlKeepTrack } from "./hint.ts";
 import { type PearlMistake, pearlGame } from "./index.ts";
@@ -60,24 +61,17 @@ function deal(p: PearlParams, seed: string): PearlState {
   return newState(p, pearlGame.newDesc(p, randomNew(`${label(p, seed)}`)).desc);
 }
 
-function hintSteps(state: PearlState): Step[] {
-  const res = pearlGame.hint.plan(state);
-  if (!res?.ok) throw new Error(`refused: ${res?.error}`);
-  return res.steps as Step[];
-}
-
 /** Walk a board to solved by following the first step of each fresh plan. */
 function walk(start: PearlState): {
   seen: { step: Step; before: PearlState }[];
   end: PearlState;
 } {
-  let state = start;
   const seen: { step: Step; before: PearlState }[] = [];
-  for (let i = 0; i < 1000 && pearlGame.status(state) !== "solved"; i++) {
-    const step = hintSteps(state)[0];
-    seen.push({ step, before: state });
-    state = executeMove(state, step.move);
-  }
+  const { state } = walkHint(pearlGame, start, {
+    asks: 1000,
+    first: true,
+    step: (step, before) => seen.push({ step, before }),
+  });
   return { seen, end: state };
 }
 

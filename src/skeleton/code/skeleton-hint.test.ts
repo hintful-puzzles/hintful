@@ -12,6 +12,7 @@ import type { AnyGame } from "../../engine/testing/enrollment.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { codesFitting } from "./hint.ts";
 import { DIGIT, SQUARE } from "./hint-marks.ts";
@@ -52,14 +53,13 @@ function* codes(p: SkeletonParams, cur: number[] = []): Generator<number[]> {
 /** Play every step of every plan from `state` until the game ends, calling
  * `at` on each position asked. */
 function follow(state: SkeletonState, at: (s: SkeletonState) => void = () => {}) {
-  let s = state;
-  while (skeletonGame.status(s) === "ongoing") {
-    at(s);
-    const result = skeletonGame.hint.plan(s);
-    if (!result?.ok) throw new Error(`refused on ${s.code.join("")}`);
-    for (const step of result.steps) s = skeletonGame.executeMove(s, step.move);
-  }
-  return s;
+  return walkHint(skeletonGame, state, {
+    // Far more plans than any code takes; reaching it is a plan that stalls.
+    asks: 100,
+    limit: "throw",
+    done: (s) => skeletonGame.status(s) !== "ongoing",
+    asked: at,
+  }).state;
 }
 
 describe("skeleton hint plans", () => {

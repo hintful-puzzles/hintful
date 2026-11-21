@@ -24,6 +24,7 @@ import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkPlan } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,
@@ -80,20 +81,16 @@ function walk(
   state: CrossingState,
   each: (f: CrossingFiring, before: CrossingState) => void,
 ): number {
-  let cur = state;
-  let steps = 0;
-  for (let guard = 0; guard < 2000; guard++) {
-    if (validateBoard(cur.puzzle, cur.grid).status === "valid") return steps;
-    const plan = deduceCrossingPlan(cur);
-    expect(
-      plan.firings.length,
-      "the plan gave up before the board was solved",
-    ).toBeGreaterThan(0);
-    each(plan.firings[0], cur);
-    cur = afterFiring(cur, plan.firings[0]);
-    steps++;
-  }
-  throw new Error("crossing hint walk did not terminate");
+  const { end, steps } = walkPlan(state, {
+    asks: 2000,
+    limit: "throw",
+    done: (s) => validateBoard(s.puzzle, s.grid).status === "valid",
+    plan: (s) => deduceCrossingPlan(s).firings.slice(0, 1),
+    apply: afterFiring,
+    step: (f, before) => each(f, before),
+  });
+  expect(end, "the plan gave up before the board was solved").toBe("done");
+  return steps;
 }
 
 describe("crossing hint — soundness", () => {

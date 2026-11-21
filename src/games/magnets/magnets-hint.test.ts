@@ -12,6 +12,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { newMagnetsDesc } from "./generator.ts";
 import {
   changesOf,
@@ -21,7 +22,7 @@ import {
 } from "./hint.ts";
 import { magnetsGame } from "./index.ts";
 import { CLUE, LINE, SQUARE } from "./kinds.ts";
-import { isSolved, type MagnetsReason } from "./solver.ts";
+import type { MagnetsReason } from "./solver.ts";
 import {
   type Axis,
   type Cause,
@@ -158,18 +159,11 @@ describe("magnets hint", () => {
   it("follows its own plan to a finished board on every preset", () => {
     let steps = 0;
     for (const { label, state: start } of CORPUS) {
-      let state = start;
-      for (let asks = 0; !isSolved(state); asks++) {
-        expect(asks, `${label}: the plan never finished`).toBeLessThan(200);
-        const res = hint(state);
-        expect(res.ok, `${label}: ${res.ok ? "" : res.error}`).toBe(true);
-        if (!res.ok) break;
-        for (const step of res.steps) {
-          state = executeMove(state, step.move);
-          steps++;
-        }
-      }
-      expect(magnetsGame.findMistakes?.(state), label).toEqual([]);
+      // A refusal, or 200 plans without finishing, leaves it unsolved.
+      const walked = walkHint(magnetsGame, start, { asks: 200, refuse: "stop" });
+      steps += walked.steps;
+      expect(walked.solved, label).toBe(true);
+      expect(magnetsGame.findMistakes?.(walked.state), label).toEqual([]);
     }
     expect(steps).toBeGreaterThan(500);
   });
@@ -682,11 +676,10 @@ describe("magnets hint sentences", () => {
       ...pinned.map(([p, desc]) => ({ label: desc, state: newState(p, desc) })),
     ];
     for (const { label, state: start } of boards) {
-      let state = start;
-      for (let asks = 0; !isSolved(state) && asks < 200; asks++) {
-        const res = hint(state);
-        if (!res.ok) break;
-        for (const step of res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]) {
+      walkHint(magnetsGame, start, {
+        asks: 200,
+        refuse: "stop",
+        step(step, state) {
           // Its words name exactly its marks, on every board this walks.
           expect(
             bindingDefects(magnetsGame, state, magnetsGame.newUi(state), step),
@@ -758,9 +751,8 @@ describe("magnets hint sentences", () => {
             );
             expect(alone, msg).toEqual([]);
           }
-          state = executeMove(state, step.move);
-        }
-      }
+        },
+      });
     }
     // Every arm spoken, so no part of the check passed over nothing.
     expect(said.one).toBeGreaterThan(20);
@@ -778,12 +770,10 @@ describe("magnets hint sentences", () => {
     for (const { label, state: start } of CORPUS.filter((b) =>
       b.label.includes(`d${DIFF_TRICKY}`),
     )) {
-      let state = start;
-      for (let asks = 0; !isSolved(state) && asks < 200; asks++) {
-        const res = hint(state);
-        expect(res.ok, label).toBe(true);
-        if (!res.ok) break;
-        for (const step of res.steps as HintStep<MagnetsMove, MagnetsHighlights>[]) {
+      const walked = walkHint(magnetsGame, start, {
+        asks: 200,
+        refuse: "stop",
+        step(step) {
           steps++;
           const h = picture(step);
           expect(h.targets.length).toBeGreaterThan(0);
@@ -803,9 +793,9 @@ describe("magnets hint sentences", () => {
           if (/^This (row|column)/.test(step.explanation)) {
             lineSteps.push(h.clues.length);
           }
-          state = executeMove(state, step.move);
-        }
-      }
+        },
+      });
+      expect(walked.end, label).not.toBe("refused");
     }
     expect(steps).toBeGreaterThan(300);
     expect(lineSteps.length).toBeGreaterThan(50);

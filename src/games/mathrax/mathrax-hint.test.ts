@@ -20,6 +20,7 @@ import {
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
 import { markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
@@ -37,7 +38,6 @@ import {
   type MathraxState,
   newState,
   newUi,
-  status,
 } from "./state.ts";
 
 function gen(p: MathraxParams, seed: string) {
@@ -257,25 +257,26 @@ describe("mathrax hint", () => {
     let named = 0;
     let open = 0;
     for (const p of [NORMAL, TRICKY]) {
-      let st = gen(p, `across-${p.o}`).st;
-      for (let k = 0; k < 120 && status(st) !== "solved"; k++) {
-        const res = mathraxGame.hint.plan(st);
-        if (!res?.ok) break;
-        const step = res.steps[0] as AnyStep;
-        const m = /and the (\d) across it/.exec(step.explanation);
-        const area: { x: number; y: number }[] = step.highlights?.area ?? [];
-        if (m) {
-          // The evidence pair is [acted-on cell, the cell across the clue].
-          const across = area[1];
-          expect(st.grid[across.y * p.o + across.x]).toBe(Number(m[1]));
-          named++;
-        } else if (/^Nothing open across the/.test(step.explanation)) {
-          const across = area[1];
-          expect(st.grid[across.y * p.o + across.x]).toBe(0);
-          open++;
-        }
-        st = mathraxGame.executeMove(st, step.move);
-      }
+      walkHint(mathraxGame, gen(p, `across-${p.o}`).st, {
+        asks: 120,
+        first: true,
+        refuse: "stop",
+        step(shown, st) {
+          const step = shown as AnyStep;
+          const m = /and the (\d) across it/.exec(step.explanation);
+          const area: { x: number; y: number }[] = step.highlights?.area ?? [];
+          if (m) {
+            // The evidence pair is [acted-on cell, the cell across the clue].
+            const across = area[1];
+            expect(st.grid[across.y * p.o + across.x]).toBe(Number(m[1]));
+            named++;
+          } else if (/^Nothing open across the/.test(step.explanation)) {
+            const across = area[1];
+            expect(st.grid[across.y * p.o + across.x]).toBe(0);
+            open++;
+          }
+        },
+      });
     }
     expect(named).toBeGreaterThan(0);
     expect(open).toBeGreaterThan(0);
@@ -390,15 +391,12 @@ describe("mathrax hint resumes to solved", () => {
   // The gate's resume walk takes the 5x5 Normal; the 6x6 Tricky is this file's.
   for (const p of [TRICKY]) {
     it(`completes a fresh ${encodeParams(p, true)} board one recomputed hint at a time`, () => {
-      let state = gen(p, `resume-${p.o}`).st;
-      for (let moves = 0; moves < 800; moves++) {
-        if (status(state) === "solved") return;
-        const res = mathraxGame.hint.plan(state);
-        expect(res?.ok).toBe(true);
-        if (!res?.ok) throw new Error(`gave up: ${res?.error}`);
-        state = mathraxGame.executeMove(state, res.steps[0].move);
-      }
-      throw new Error("did not converge");
+      // A refusal or the limit fails the walk.
+      walkHint(mathraxGame, gen(p, `resume-${p.o}`).st, {
+        asks: 800,
+        limit: "throw",
+        first: true,
+      });
     });
   }
 });

@@ -13,6 +13,7 @@ import { statedSentence } from "../../engine/hint/stated.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { STATED } from "../../generated/games/starbattle/starbattle.compiled.ts";
@@ -134,22 +135,20 @@ describe("starbattle hint plans", () => {
     BOARDS,
   )("lead a $size x $size board of $stars at tier $diff to its answer", (p) => {
     for (const seed of ["plan a", "plan b", "plan c"]) {
-      let state = deal(p, seed);
-      const answer = answerOf(state.size, state.stars, state.regions);
+      const start = deal(p, seed);
+      const answer = answerOf(start.size, start.stars, start.regions);
       // The plan is capped, so it is asked again until the board is done.
-      for (let asked = 0; starbattleGame.status(state) !== "solved"; asked++) {
-        expect(asked).toBeLessThan(state.grid.length);
-        const result = starbattleGame.hint.plan(state);
-        if (!result?.ok) throw new Error(`refused on ${seed}`);
-        for (const step of result.steps) {
+      const { solved } = walkHint(starbattleGame, start, {
+        asks: start.grid.length,
+        step(step) {
           if (step.move.kind !== "mark") throw new Error("a step marks squares");
           // The line `hint-quality.test.ts` draws for every game's sentences.
           expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
           for (const { index, mark } of step.move.cells)
             expect(mark).toBe(answer?.[index]);
-          state = executeMove(state, step.move);
-        }
-      }
+        },
+      });
+      expect(solved, seed).toBe(true);
     }
   });
 

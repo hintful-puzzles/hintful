@@ -15,6 +15,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { type FlipRung, hint, hintKeepTrack } from "./hint.ts";
@@ -149,62 +150,67 @@ describe("Flip hint plan", () => {
     for (const params of PRESETS) {
       for (let n = 0; n < 6; n++) {
         const { desc } = G.newDesc(params, randomNew(`flip-plan-${n}`));
-        let s = G.newState(params, desc);
+        const start = G.newState(params, desc);
         // Read off the matrix here, not taken from the hint.
-        const last = Array.from({ length: s.w * s.h }, (_, j) => lastToFlip(s, j));
-        const first = hint(s);
-        if (!first.ok) throw new Error(first.error);
-        let plan = first.steps;
-        while (plan.length > 0) {
-          const [step, ...rest] = plan;
-          if (step.move.kind !== "flip") throw new Error("a hint only presses");
-          const at = step.move.y * s.w + step.move.x;
-          const width = s.w;
-          const cells = (ps: readonly { x: number; y: number }[]): number[] =>
-            ps.map((p) => p.y * width + p.x).sort((a, b) => a - b);
-          const owed = cells(outlined(step));
-          const also = cells(striped(step));
-          const others = flippedBy(s, at).filter((j) => j !== at);
-          if (rest.length === 0) {
-            finishing++;
-            // The last press: the outline is every unlit square but its own,
-            // and it flips them all.
-            expect(step.explanation).toMatch(/finishes the board\.$/);
-            const unlit = [...s.grid.keys()].filter((j) => s.grid[j] && j !== at);
-            expect(owed).toEqual(unlit);
-            for (const j of owed) expect(others).toContain(j);
-            expect(also).toEqual([]);
-          } else if (owed.length > 0) {
-            forced++;
-            // Unlit, and nothing after this square flips them.
-            for (const j of owed) {
-              expect(s.grid[j]).toBe(1);
-              expect(last[j]).toBe(at);
+        const last = Array.from({ length: start.w * start.h }, (_, j) =>
+          lastToFlip(start, j),
+        );
+        let plan: readonly Step[] = [];
+        const { solved } = walkHint(G, start, {
+          // A plan presses each square at most once, and shortens by one a press.
+          asks: start.w * start.h + 1,
+          limit: "throw",
+          first: true,
+          planned(steps, _s, ask) {
+            if (ask > 0)
+              expect(steps.map((t) => [t.move, t.explanation])).toEqual(
+                plan.slice(1).map((t) => [t.move, t.explanation]),
+              );
+            plan = steps;
+          },
+          step(step, s) {
+            const rest = plan.slice(1);
+            if (step.move.kind !== "flip") throw new Error("a hint only presses");
+            const at = step.move.y * s.w + step.move.x;
+            const width = s.w;
+            const cells = (ps: readonly { x: number; y: number }[]): number[] =>
+              ps.map((p) => p.y * width + p.x).sort((a, b) => a - b);
+            const owed = cells(outlined(step));
+            const also = cells(striped(step));
+            const others = flippedBy(s, at).filter((j) => j !== at);
+            if (rest.length === 0) {
+              finishing++;
+              // The last press: the outline is every unlit square but its own,
+              // and it flips them all.
+              expect(step.explanation).toMatch(/finishes the board\.$/);
+              const unlit = [...s.grid.keys()].filter((j) => s.grid[j] && j !== at);
+              expect(owed).toEqual(unlit);
+              for (const j of owed) expect(others).toContain(j);
+              expect(also).toEqual([]);
+            } else if (owed.length > 0) {
+              forced++;
+              // Unlit, and nothing after this square flips them.
+              for (const j of owed) {
+                expect(s.grid[j]).toBe(1);
+                expect(last[j]).toBe(at);
+              }
+              // Every square the press flips is marked: outlined, striped, or
+              // the ringed square itself.
+              if (also.length > 0) striping++;
+              expect(also).toEqual(others.filter((j) => !owed.includes(j)));
+            } else {
+              supplied++;
+              expect(step.explanation).toMatch(/One of them: press/);
+              // Every square it flips has a later square that flips it too.
+              for (const j of flippedBy(s, at)) expect(last[j]).toBeGreaterThan(at);
+              // The count it says is the presses left, which the walk's end
+              // holds to solving the board.
+              expect(step.explanation).toContain(` ${plan.length} presses`);
+              expect(also).toEqual([]);
             }
-            // Every square the press flips is marked: outlined, striped, or
-            // the ringed square itself.
-            if (also.length > 0) striping++;
-            expect(also).toEqual(others.filter((j) => !owed.includes(j)));
-          } else {
-            supplied++;
-            expect(step.explanation).toMatch(/One of them: press/);
-            // Every square it flips has a later square that flips it too.
-            for (const j of flippedBy(s, at)) expect(last[j]).toBeGreaterThan(at);
-            // The count it says is the presses left, which the walk's end
-            // holds to solving the board.
-            expect(step.explanation).toContain(` ${plan.length} presses`);
-            expect(also).toEqual([]);
-          }
-          s = G.executeMove(s, step.move);
-          if (rest.length === 0) break;
-          const again = hint(s);
-          if (!again.ok) throw new Error(again.error);
-          expect(again.steps.map((t) => [t.move, t.explanation])).toEqual(
-            rest.map((t) => [t.move, t.explanation]),
-          );
-          plan = again.steps;
-        }
-        expect(G.status(s)).toBe("solved");
+          },
+        });
+        expect(solved).toBe(true);
       }
     }
     // Vacuity: every kind of step was walked.

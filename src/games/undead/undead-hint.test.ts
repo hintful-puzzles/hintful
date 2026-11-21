@@ -20,6 +20,7 @@ import {
   markSides,
   ringsOf,
 } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
@@ -54,6 +55,12 @@ function applyPlan(st: UndeadState, steps: HintStep<UndeadMove>[]): UndeadState 
   let s = st;
   for (const step of steps) s = undeadGame.executeMove(s, step.move);
   return s;
+}
+
+/** Follow hints one move at a time, re-asking after each, for 600 moves at
+ * most: the walk a player who presses Hint after every move takes. */
+function followFirstSteps(start: UndeadState, refuse: "throw" | "stop") {
+  return walkHint(undeadGame, start, { asks: 600, first: true, refuse });
 }
 
 const pinned = describeHintPins({
@@ -316,16 +323,11 @@ describe("undead hint resume (per tier)", () => {
   // a 5x5 Normal, which needs the counting rung.
   it("5x5 normal: following hints one move at a time reaches solved", () => {
     for (const seed of ["a", "b", "c"]) {
-      let s = gen({ w: 5, h: 5, diff: "normal" }, `resume-normal-${seed}`);
-      let moves = 0;
-      for (; moves < 600; moves++) {
-        if (undeadGame.status(s) === "solved") break;
-        const r = undeadGame.hint.plan(s);
-        expect(r?.ok, `normal/${seed}: gave up at move ${moves}`).toBe(true);
-        if (!r?.ok) break;
-        s = undeadGame.executeMove(s, r.steps[0].move);
-      }
-      expect(undeadGame.status(s), `normal/${seed}`).toBe("solved");
+      const { end } = followFirstSteps(
+        gen({ w: 5, h: 5, diff: "normal" }, `resume-normal-${seed}`),
+        "throw",
+      );
+      expect(end, `normal/${seed}`).toBe("done");
     }
   });
 
@@ -336,21 +338,13 @@ describe("undead hint resume (per tier)", () => {
     // passes quietly — a walk that solved would mean the rung came back; one
     // that gave nothing would mean the hint is dead on arrival.
     for (const seed of ["a", "b", "c"]) {
-      let s = gen({ w: 5, h: 5, diff: "tricky" }, `resume-tricky-${seed}`);
-      let moves = 0;
-      let refused = false;
-      for (; moves < 600; moves++) {
-        if (undeadGame.status(s) === "solved") break;
-        const r = undeadGame.hint.plan(s);
-        if (!r?.ok) {
-          refused = true;
-          break;
-        }
-        s = undeadGame.executeMove(s, r.steps[0].move);
-      }
-      expect(refused, `tricky/${seed}: expected deduction to run out`).toBe(true);
-      expect(moves, `tricky/${seed}: no hint at all`).toBeGreaterThan(0);
-      expect(undeadGame.status(s)).not.toBe("solved");
+      const { end, steps, state } = followFirstSteps(
+        gen({ w: 5, h: 5, diff: "tricky" }, `resume-tricky-${seed}`),
+        "stop",
+      );
+      expect(end, `tricky/${seed}: expected deduction to run out`).toBe("refused");
+      expect(steps, `tricky/${seed}: no hint at all`).toBeGreaterThan(0);
+      expect(undeadGame.status(state)).not.toBe("solved");
     }
   });
 });

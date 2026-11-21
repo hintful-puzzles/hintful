@@ -21,6 +21,7 @@ import {
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
 import { dealRare } from "../../engine/testing/dealt.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { patternGame } from "./index.ts";
 import {
   findMistakes,
@@ -275,18 +276,15 @@ describe("the hint on an Unreasonable Pattern board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = patternGame.hint.plan(state);
-        plan?.ok;
-        plan = patternGame.hint.plan(state)
-      )
-        for (const step of plan.steps) {
-          state = executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(patternGame, state, {
+        // A plan settles a square at least, and the board has 25.
+        asks: 25,
+        limit: "throw",
+        refuse: "stop",
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

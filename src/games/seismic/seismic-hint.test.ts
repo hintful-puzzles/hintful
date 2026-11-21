@@ -22,6 +22,7 @@ import {
 } from "../../engine/solve/ladder-runtime.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
+import { type PlanWalkVisitor, walkHint } from "../../engine/testing/plan-walk.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
@@ -102,6 +103,27 @@ function planOf(
   });
   if (!r?.ok) throw new Error(`${label}: hint refused: ${r?.error}`);
   return r.steps as Step[];
+}
+
+/** Follow the first step of each fresh plan from `start` until the board is
+ * solved, asking at most 500 plans; `step` sees each with the board before it. */
+function followFirsts(
+  label: string,
+  start: SeismicState,
+  reading: CandidateReading,
+  step?: PlanWalkVisitor<SeismicState, Step>["step"],
+): SeismicState {
+  try {
+    return walkHint(seismicGame, start, {
+      asks: 500,
+      first: true,
+      ui: (s) => ({ ...seismicGame.newUi(s), candidateReading: reading }),
+      step,
+    }).state;
+  } catch (e) {
+    // The walk's own error does not say which board it was on.
+    throw new Error(`${label}: ${(e as Error).message}`, { cause: e });
+  }
 }
 
 function highlightsOf(step: Step): SeismicHint {
@@ -272,10 +294,12 @@ describe("the starved area", () => {
     let points = 0;
     for (const { label, params, state: start } of boards()) {
       if (params.diff === DIFF_EASY) continue;
-      let state = start;
-      for (let move = 0; move < 500 && !isSolved(state); move++) {
-        const plan = planOf(label, state, "populate");
-        if (isStarve(plan[0])) {
+      const end = followFirsts(
+        label,
+        start,
+        "populate",
+        (step, state, _after, move) => {
+          if (!isStarve(step)) return;
           points++;
           const b = workingBoard(state);
           // Where it fires, the singles are spent: that is when the trial rung
@@ -292,10 +316,9 @@ describe("the starved area", () => {
           expect([...found].sort(), `${label} move ${move}`).toEqual(
             rungRejects(state),
           );
-        }
-        state = seismicGame.executeMove(state, plan[0].move);
-      }
-      expect(isSolved(state), `${label} never finished`).toBe(true);
+        },
+      );
+      expect(isSolved(end), `${label} never finished`).toBe(true);
     }
     expect(points, "no trial point was checked").toBeGreaterThan(20);
   });
@@ -553,12 +576,9 @@ describe("the player's own board", () => {
     expect(seismicGame.findMistakes?.(state)).toEqual([]);
 
     for (const reading of READINGS) {
-      let s = state;
-      const first = planOf(label, s, reading);
+      const first = planOf(label, state, reading);
       expect(first.some((step) => step.move.type === "pencilAll")).toBe(false);
-      for (let move = 0; move < 500 && !isSolved(s); move++)
-        s = seismicGame.executeMove(s, planOf(label, s, reading)[0].move);
-      expect(isSolved(s), reading).toBe(true);
+      expect(isSolved(followFirsts(label, state, reading)), reading).toBe(true);
     }
   });
 

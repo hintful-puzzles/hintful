@@ -21,6 +21,7 @@ import {
   describeAbsentTiers,
   describeDealtTiers,
 } from "../../engine/testing/absent-tiers.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { abcdGame } from "./index.ts";
 import { answerOf, searchAnswers, solveAbcd, status } from "./solver.ts";
 import {
@@ -330,18 +331,16 @@ describe("the hint on an Unreasonable ABCD board", () => {
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {
-      let steps = 0;
-      for (
-        let plan = abcdGame.hint.plan(state, undefined, ui);
-        plan?.ok;
-        plan = abcdGame.hint.plan(state, undefined, ui)
-      )
-        for (const step of plan.steps) {
-          state = abcdGame.executeMove(state, step.move);
-          me.playMoves([step.move]);
-          steps++;
-        }
-      return steps;
+      const walked = walkHint(abcdGame, state, {
+        // Far more plans than a 4x4 board takes; reaching it is a plan that stalls.
+        asks: 100,
+        limit: "throw",
+        refuse: "stop",
+        ui: () => ui,
+        step: (step) => me.playMoves([step.move]),
+      });
+      state = walked.state;
+      return walked.steps;
     };
 
     expect(followHint()).toBeGreaterThan(0);

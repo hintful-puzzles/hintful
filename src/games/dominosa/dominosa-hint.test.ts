@@ -6,6 +6,7 @@ import { stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectPieceRing, ringsOf } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { newDominosaDesc } from "./generator.ts";
 import type { DominosaHint } from "./hint.ts";
@@ -149,18 +150,19 @@ describe("dominosa hint — narration + plan", () => {
   });
 
   it("the plan solves a Tricky board from empty, one recomputed step at a time", () => {
-    const state = freshState(6, DIFF_HARD, "hint-hard-plan");
-    let s = state;
     let barrierSeen = false;
-    for (let i = 0; i < 800; i++) {
-      if (dominosaGame.status(s) === "solved") break;
-      const res = dominosaGame.hint.plan(s);
-      expect(res?.ok, `stuck at move ${i}`).toBe(true);
-      if (!res?.ok) break;
-      if (res.steps[0].move.type === "edge") barrierSeen = true;
-      s = dominosaGame.executeMove(s, res.steps[0].move);
-    }
-    expect(dominosaGame.status(s)).toBe("solved");
+    const { state: end } = walkHint(
+      dominosaGame,
+      freshState(6, DIFF_HARD, "hint-hard-plan"),
+      {
+        asks: 800,
+        first: true,
+        step(step) {
+          if (step.move.type === "edge") barrierSeen = true;
+        },
+      },
+    );
+    expect(dominosaGame.status(end)).toBe("solved");
     // A Tricky board should require at least one teaching barrier along the way.
     expect(barrierSeen).toBe(true);
   });

@@ -14,6 +14,7 @@ import { CROSS, LINE, OPEN } from "../../engine/mechanics/line-drawing.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
+import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
 import { renderPinnedHint } from "../../engine/testing/render-scenario.ts";
 import { wordtrailGame } from "./index.ts";
@@ -22,7 +23,6 @@ import {
   codeOf,
   DIFF_EASY,
   DIFF_NORMAL,
-  executeMove,
   newState,
   type WordtrailParams,
   type WordtrailState,
@@ -56,26 +56,24 @@ function deal(p: WordtrailParams, seed: string): WordtrailState {
 describe("wordtrail hint plans", () => {
   it.each(BOARDS)("lead a $w x $h board at tier $diff to its answer", (p) => {
     for (const seed of ["plan a", "plan b", "plan c"]) {
-      let state = deal(p, seed);
-      const answer = answerOf(state);
+      const start = deal(p, seed);
+      const answer = answerOf(start);
       // The plan is capped, so it is asked again until the board is done.
-      for (let asked = 0; wordtrailGame.status(state) !== "solved"; asked++) {
-        expect(asked).toBeLessThan(state.edges.length);
-        const result = wordtrailGame.hint.plan(state);
-        if (!result?.ok) throw new Error(`refused on ${seed}`);
-        for (const step of result.steps) {
+      const { solved } = walkHint(wordtrailGame, start, {
+        asks: start.edges.length,
+        step(step, before) {
           if (step.move.kind !== "edges") throw new Error("a step marks edges");
           // The line `hint-quality.test.ts` draws for every game's sentences.
           expect(step.explanation.length, step.explanation).toBeLessThanOrEqual(120);
           // Each line the way the answer's runs, and a cross where it has none.
           for (const change of step.move.changes)
             expect(
-              change.mark === LINE ? codeOf(state, change) : OPEN,
+              change.mark === LINE ? codeOf(before, change) : OPEN,
               step.explanation,
             ).toBe(answer?.[change.edge]);
-          state = executeMove(state, step.move);
-        }
-      }
+        },
+      });
+      expect(solved, seed).toBe(true);
     }
   });
 
