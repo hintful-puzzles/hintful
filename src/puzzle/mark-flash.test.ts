@@ -4,6 +4,7 @@ import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { NARRATION_LIMIT } from "../engine/contract/hint-words.ts";
 import { LONGEST_HINT } from "../screens/longest-hint.ts";
 import {
+  coveredMarks,
   edged,
   edgeFor,
   markAlpha,
@@ -164,6 +165,27 @@ describe("a repainted mark's edge", () => {
     expect(at(edged(marks, 5, red, black, 1, "outside"), 2)).toEqual([128, 0, 0, 255]);
     // Inside, the rim is all edge, as covered as it was.
     expect(at(edged(marks, 5, red, black, 1, "inside"), 2)).toEqual([0, 0, 0, 128]);
+  });
+
+  it("lies on no content that covers the mark", () => {
+    // A 5x1 strip: the mark at 1, and the line it continues under a clue's
+    // rim at 2, which the frame pair cannot see. The inks drawn alone cover
+    // 1 and 2; on the board, in white and in black, only 1.
+    const px = (...v: number[]) =>
+      new Uint8ClampedArray(v.flatMap((c) => [c, c, c, 255]));
+    const covered = coveredMarks(
+      px(255, 0, 0, 255, 255),
+      px(40, 255, 20, 40, 40),
+      px(40, 0, 20, 40, 40),
+    );
+    expect([...covered]).toEqual([0, 0, 255, 0, 0]);
+    const alpha = new Uint8ClampedArray(5);
+    alpha[1] = 255;
+    const marks = { alpha, box: markBox(alpha, 5) };
+    const out = edged(marks, 5, red, black, 1, "outside", covered);
+    expect(at(out, 0)).toEqual([0, 0, 0, 255]);
+    expect(at(out, 1)).toEqual([255, 0, 0, 255]);
+    expect(at(out, 2)[3]).toBe(0);
   });
 
   it("draws nothing for a reference with no marks", () => {

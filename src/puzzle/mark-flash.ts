@@ -91,6 +91,29 @@ export function referenceAlpha(
   return alpha;
 }
 
+/** How much of each pixel the game's content covers of the marks (0–255):
+ * what the hint inks cover drawn alone, black on white (`bare`), less what
+ * they cover on the board, drawn in white and in black (`white`, `black`).
+ * The difference of a frame pair cannot find it, since content over a mark is
+ * drawn alike with the mark and without it. */
+export function coveredMarks(
+  bare: Uint8ClampedArray,
+  white: Uint8ClampedArray,
+  black: Uint8ClampedArray,
+): Uint8ClampedArray<ArrayBuffer> {
+  const out = new Uint8ClampedArray(bare.length / 4);
+  for (let i = 0, p = 0; i < bare.length; i += 4, p++) {
+    let footprint = 0;
+    let shown = 0;
+    for (let k = i; k < i + 3; k++) {
+      footprint = Math.max(footprint, 255 - bare[k]);
+      shown = Math.max(shown, white[k] - black[k]);
+    }
+    out[p] = footprint - shown;
+  }
+  return out;
+}
+
 /** The marks without the specks a canvas leaves between two frames. Chrome's
  * GPU canvas antialiases a line a little differently as the frame's other
  * paths change, so lines no reference touches differ in faint runs a pixel
@@ -214,7 +237,9 @@ export type EdgeSide = "outside" | "inside";
  * of the mark within its reach; inside, it takes whatever share of a pixel
  * the least of the mark within its reach leaves, so a rim keeps its
  * antialiasing either way. Only the pixels within `reach` of `box` are
- * looked at. */
+ * looked at. An outside edge fades by how much of a pixel is `covered`
+ * ({@link coveredMarks}): there it would lie over the content that covers
+ * the mark (a clue's rim the outline passes under), not beside the mark. */
 export function edged(
   { alpha, box }: ReferenceMarks,
   width: number,
@@ -222,6 +247,7 @@ export function edged(
   edge: readonly [number, number, number],
   reach: number,
   side: EdgeSide,
+  covered: Uint8ClampedArray | null = null,
 ): Uint8ClampedArray<ArrayBuffer> {
   const out = new Uint8ClampedArray(alpha.length * 4);
   if (!box) return out;
@@ -270,9 +296,11 @@ export function edged(
     for (let x = x0; x <= x1; x++) {
       const p = y * width + x;
       // The pixel's coverage, and how much of it is the mark's own color.
-      const cover = side === "outside" ? near[p] : alpha[p];
-      if (cover === 0) continue;
       const own = side === "outside" ? alpha[p] : Math.min(near[p], alpha[p]);
+      const open = side === "outside" && covered ? 1 - covered[p] / 255 : 1;
+      const cover =
+        side === "outside" ? Math.round(own + (near[p] - own) * open) : alpha[p];
+      if (cover === 0) continue;
       const i = p * 4;
       for (let k = 0; k < 3; k++)
         out[i + k] = (color[k] * own + edge[k] * (cover - own)) / cover;
@@ -284,7 +312,7 @@ export function edged(
 /** Every reference's marks repainted in its color (`#rrggbb`, `null` for one
  * that draws nothing), as RGBA over the canvas they were measured on, each
  * edged `reach` pixels wide so that it reads on whatever the game drew under
- * it (`edged`). The largest marks are laid first: a reference whose marks lie
+ * it, and not on what the game drew over it (`edged`). The largest marks are laid first: a reference whose marks lie
  * inside another's ("region 1" of "the chain") would otherwise be painted
  * over, and its pill name a color the board does not show. */
 export function repainted(
@@ -293,6 +321,7 @@ export function repainted(
     readonly height: number;
     readonly refs: readonly ReferenceMarks[];
     readonly roles: readonly string[];
+    readonly covered: Uint8ClampedArray;
   },
   colors: readonly (string | null)[],
   reach: number,
@@ -312,7 +341,7 @@ export function repainted(
     const layer =
       marks.roles[i] === "stripes"
         ? edged(r, marks.width, rgb, edgeFor(rgb), Math.max(1, reach >> 1), "inside")
-        : edged(r, marks.width, rgb, edgeFor(rgb), reach, "outside");
+        : edged(r, marks.width, rgb, edgeFor(rgb), reach, "outside", marks.covered);
     for (let p = 3; p < layer.length; p += 4)
       if (layer[p] > 0) pixels.set(layer.subarray(p - 3, p + 1), p - 3);
   }

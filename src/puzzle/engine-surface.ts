@@ -29,13 +29,15 @@ import type {
 } from "../engine/contract/types.ts";
 import type { ReferenceMarks } from "./mark-flash.ts";
 
-/** Each reference's marks on a canvas of `width` by `height` pixels, and the
- * role each reference names them in. */
+/** Each reference's marks on a canvas of `width` by `height` pixels, the
+ * role each reference names them in, and how much of each pixel the game's
+ * content covers of them (`coveredMarks`). */
 export interface HintReferenceMarks {
   readonly width: number;
   readonly height: number;
   readonly refs: readonly ReferenceMarks[];
   readonly roles: readonly MarkRole[];
+  readonly covered: Uint8ClampedArray<ArrayBuffer>;
 }
 
 /**

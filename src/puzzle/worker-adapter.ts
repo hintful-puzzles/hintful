@@ -39,6 +39,7 @@ import type { EngineCore } from "../engine/midend/midend.ts";
 import { Drawing } from "./drawing.ts";
 import type { HintReferenceMarks, PuzzleEngineSurface } from "./engine-surface.ts";
 import {
+  coveredMarks,
   markBox,
   type ReferenceMarks,
   referenceAlpha,
@@ -144,7 +145,10 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
       this.engine.hideHintReference(null);
       return { shown, hidden };
     };
-    this.engine.redraw(drawing);
+    // A full repaint, as each frame it is compared with is: a game paints its
+    // marks, and what it lays over them, every frame, on tiles it may not
+    // repaint, so the board as it stands has them drawn over themselves.
+    this.engine.forceRedraw(drawing);
     const drawn = frames();
     // A mark in an ink is measured by its coverage, from the inks drawn in
     // white and in black: by its difference it measures faint on content of
@@ -160,8 +164,13 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
     };
     const white = inInk("#fff");
     const black = inInk("#000");
+    // The inks alone, where the board's content covers none of them.
+    drawing.showOnly(inks);
+    this.engine.forceRedraw(drawing);
+    const bare = drawing.pixels().data;
     drawing.overrideColors(inks, null);
     this.engine.forceRedraw(drawing);
+    const covered = coveredMarks(bare, white.shown.data, black.shown.data);
     const { width, height } = drawn.shown;
     const refs: ReferenceMarks[] = drawn.hidden.map((hidden, i) => {
       const alpha = referenceAlpha(
@@ -173,8 +182,8 @@ export class TsWorkerPuzzle implements PuzzleEngineSurface {
       return { alpha: marks, box: markBox(marks, width) };
     });
     return transfer(
-      { width, height, refs, roles: this.engine.hintReferenceRoles() },
-      refs.map((r) => r.alpha.buffer),
+      { width, height, refs, roles: this.engine.hintReferenceRoles(), covered },
+      [...refs.map((r) => r.alpha.buffer), covered.buffer],
     );
   }
   currentAnimationMs(): number {

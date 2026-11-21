@@ -81,6 +81,23 @@ export class Drawing implements GameDrawing<Blitter> {
     this.palette = palette;
   }
 
+  /** Paint only the palette's `indices`, in black on a canvas made white,
+   * until {@link overrideColors} is called with `null`: every other color is
+   * transparent, so the frame shows what those colors would cover with
+   * nothing drawn over them. */
+  showOnly(indices: readonly number[]): void {
+    this.overridden ??= this.palette;
+    const keep = new Set(indices);
+    this.palette = this.overridden.map((_, i) =>
+      keep.has(i) ? "#000" : "rgba(0,0,0,0)",
+    );
+    this.context.save();
+    this.context.setTransform(1, 0, 0, 1, 0, 0);
+    this.context.fillStyle = "#fff";
+    this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.restore();
+  }
+
   private overridden: string[] | null = null;
 
   // The font is chosen once, at `attachCanvas`, from the host page's computed
