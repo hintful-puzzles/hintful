@@ -1,0 +1,9 @@
+ok  towers     facing                         3  sound    (want sound   )     1 queries    0.1s
+ok  towers     facing (planted)               3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  src/games/towers/towers.description.yaml#facing: recorded sound, proved whole on all 1 boards
+ok  towers     bounds                         3  sound    (want sound   )    12 queries    0.4s
+ok  towers     bounds (planted)               3  unsound  (want unsound )     1 queries    0.0s   at clue sees 0
+ok  src/games/towers/towers.description.yaml#bounds: recorded sound, proved whole on all 1 boards
+ok  towers     arrangement                    3  sound    (want sound   )    12 queries    0.2s
+ok  towers     arrangement (planted)          3  unsound  (want unsound )     1 queries    0.0s   at clue sees 0
+ok  src/games/towers/towers.description.yaml#arrangement: recorded sound, proved whole on all 1 boards

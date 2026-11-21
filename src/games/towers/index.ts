@@ -137,6 +137,7 @@ import {
   newState,
   newUi,
   paramConfig,
+  rules,
   status,
   type TowersMove,
   type TowersParams,
@@ -691,6 +692,7 @@ export const towersGame: Game<
   doneClues: clueDrag,
   executeMove,
   status,
+  rules,
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,

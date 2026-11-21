@@ -58,6 +58,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -74,7 +75,8 @@ import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
 import {
   cluePos,
-  markErrors,
+  dealtOf,
+  rules,
   type TowersMove,
   type TowersState,
   type TowersUi,
@@ -156,8 +158,6 @@ export interface TowersDrawState {
   /** What each `(w+2)²` clip shows: the four tile values it paints, the
    * upstream four-corner key. */
   drawn: TileCache;
-  /** `(w+2)²` error flags, refilled each redraw by `markErrors`. */
-  errtmp: Uint8Array;
   /** `(w+2)²` hint-overlay sidecar: bit 0 = target cell, bit 1 = evidence
    * area, and the struck candidates at `valueBit(height)` in its `struck`
    * lane. */
@@ -181,7 +181,6 @@ export function newDrawState(state: TowersState, tileSize: number): TowersDrawSt
     w,
     tiles: new Int32Array(W * W),
     drawn: new TileCache(W * W, { words: 4, overlays: [hint, wrong] }),
-    errtmp: new Uint8Array(W * W),
     hint,
     wrong,
     marks: new HintMarks(),
@@ -482,6 +481,18 @@ export type TowersHint = CandidateHighlights;
 
 // --- redraw ----------------------------------------------------------------
 
+/** Where the board breaks a rule: each cell of a height repeated in its row
+ * or column, and each clue, by its index in `clues`, whose line can no longer
+ * show its count. */
+function errorsOf(state: TowersState): { cells: Uint8Array; clues: Set<number> } {
+  const live = liveErrors(rules, state);
+  const cells = live.at;
+  for (const [a, b] of live.pairs) cells[a] = cells[b] = 1;
+  const at = dealtOf(state.clues).sees.at;
+  const clues = new Set([...(live.clues.get("sees") ?? [])].map((k) => at[k]));
+  return { cells, clues };
+}
+
 export function redraw(
   dr: GameDrawing,
   ds: TowersDrawState,
@@ -493,7 +504,7 @@ export function redraw(
   const W = w + 2;
   const threeD = ui.threeD;
 
-  markErrors(state, ds.errtmp);
+  const errors = errorsOf(state);
 
   // Pack both overlays per play cell (border-ring indexing).
   const index = (x: number, y: number) => (y + 1) * W + (x + 1);
@@ -506,7 +517,7 @@ export function redraw(
   for (let i = 0; i < 4 * w; i++) {
     let tile = state.clues[i];
     const { x, y } = cluePos(i, w);
-    if (ds.errtmp[(y + 1) * W + (x + 1)]) tile |= DF_ERROR;
+    if (errors.clues.has(i)) tile |= DF_ERROR;
     else if (state.cluesDone[i]) tile |= DF_CLUE_DONE;
     ds.tiles[(y + 1) * W + (x + 1)] = tile;
   }
@@ -521,7 +532,7 @@ export function redraw(
         (winHighlight(flash.win(sweepStep(x, y))) ?? cellHighlight(ui, x, y)) <<
         DF_HIGHLIGHT_SHIFT;
       if (state.immutable[y * w + x]) tile |= DF_IMMUTABLE;
-      if (ds.errtmp[(y + 1) * W + (x + 1)]) tile |= DF_ERROR;
+      if (errors.cells[y * w + x]) tile |= DF_ERROR;
       ds.tiles[(y + 1) * W + (x + 1)] = tile;
     }
   }

@@ -1065,7 +1065,11 @@ says how each form is read; what a description's author acts on:
   Ascent's "the next number is beside this one" as `forall c, p where
   value(p) = value(c) + 1: p in nbr(c)` breaks as a pair once both are
   placed, and its arrow's "my number is on my line" once its number is
-  placed off it.
+  placed off it. Where a fact follows only from another rule, conjoin it
+  to the statement it bounds: Towers' clue says too that the towers seen
+  before the tallest number one fewer, which the Latin rule makes the same
+  clue, so a clue already seeing its count breaks with the tallest still
+  to come.
 - **The rule's name is the violation's** (`shape.<i>` for a shape entry),
   as the answer check reports it.
 

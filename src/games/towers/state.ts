@@ -6,6 +6,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/contract/game.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { isDigit } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
@@ -17,7 +18,8 @@ import {
 } from "../../engine/hint/candidate-hint.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { cluesWhere, latinSpace } from "../../engine/solve/describe-runtime.ts";
+import { cluesWhere } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import * as towers from "../../generated/games/towers/towers.compiled.ts";
 
 /**
@@ -305,78 +307,18 @@ export function newState(p: TowersParams, desc: string): TowersState {
   };
 }
 
-// --- error checking (check_errors) -----------------------------------------
-
-/**
- * Mark every cell and clue that is currently in error into `errors` (a
- * `(w+2)²` array, the clue ring + play area): the error overlay. Whether a
- * board is solved is the compiled answer check's.
- */
-export function markErrors(state: TowersState, errors: Uint8Array): void {
-  const w = state.w;
-  const W = w + 2;
-  const clues = state.clues;
-  const grid = state.grid;
-
-  errors.fill(0);
-
-  // Row duplicates.
-  for (let y = 0; y < w; y++) {
-    let mask = 0;
-    let errmask = 0;
-    for (let x = 0; x < w; x++) {
-      const bit = 1 << grid[y * w + x];
-      errmask |= mask & bit;
-      mask |= bit;
-    }
-    errmask &= ~1;
-    for (let x = 0; x < w; x++) {
-      if (errmask & (1 << grid[y * w + x])) errors[(y + 1) * W + (x + 1)] = 1;
-    }
-  }
-
-  // Column duplicates.
-  for (let x = 0; x < w; x++) {
-    let mask = 0;
-    let errmask = 0;
-    for (let y = 0; y < w; y++) {
-      const bit = 1 << grid[y * w + x];
-      errmask |= mask & bit;
-      mask |= bit;
-    }
-    errmask &= ~1;
-    for (let y = 0; y < w; y++) {
-      if (errmask & (1 << grid[y * w + x])) errors[(y + 1) * W + (x + 1)] = 1;
-    }
-  }
-
-  // Clue visibility violations.
-  for (let i = 0; i < 4 * w; i++) {
-    if (!clues[i]) continue;
-    const cells = lineCells(i, w);
-    let best = 0;
-    let n = 0;
-    for (let j = 0; j < w; j++) {
-      const number = grid[cells[j].y * w + cells[j].x];
-      if (!number) break; // can't tell what happens next
-      if (number > best) {
-        best = number;
-        n++;
-      }
-    }
-    if (n > clues[i] || (best === w && n < clues[i]) || (best < w && n === clues[i])) {
-      const { x, y } = cluePos(i, w);
-      errors[(y + 1) * W + (x + 1)] = 1;
-    }
-  }
-}
-
 // --- status / text ---------------------------------------------------------
 
+/** The board as its rules read it: a height is its value, a blank square
+ * undecided. */
+export const rules: RulesOf<TowersState> = describedRules(towers, {
+  grid: (s) => Uint8Array.from(s.grid),
+  size: (s) => [s.w, s.w],
+  deals: (s) => [dealtOf(s.clues)],
+});
+
 export function status(s: TowersState): "solved" | "ongoing" {
-  return towers.isAnswer(s.grid, latinSpace(s.w), dealtOf(s.clues))
-    ? "solved"
-    : "ongoing";
+  return rules.isAnswer(s, s.grid) ? "solved" : "ongoing";
 }
 
 /** The board as its description deals it: each clue at its slot, which is

@@ -19,10 +19,11 @@
       Moved: unruly (rules drawn their own way through `byRule` and the
       module's `RuleName`), starbattle, norinori (a cross red where its
       unit can no longer hold its count; Norinori's boxed-in lone square).
-      Towers waits: its clue's "the tallest is still to come" (a prefix
-      showing its count with the tallest unplaced) needs a bound the
-      compiler lacks; ordering comparisons of an undecided `value` against
-      its domain's interval come first, in the compiler.
+      Moved: towers (its clue says too that the towers seen before the
+      tallest are one fewer than its count, which a line holding every height
+      once makes the same rule, so a clue already seeing its count with the
+      tallest still to come is red, as before; a clue is red past an open
+      square too, where the old check stopped at the first).
       Moved: lightup (its `rules.grid` reads a lit or crossed square as
       holding no bulb; it gains a red cross where nothing can light the
       square). A count written through a definition (`bulbs(k)`) is

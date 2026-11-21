@@ -89,6 +89,8 @@ marks:
   done: { sort: slot, notation: "bool" }
 define:
   visible(s): "count(c in sight(s) where forall c2 in before(c, sight(s)): value(c2) < value(c))"
+  # The towers a line shows from its first cell before it reaches c.
+  shownBefore(L, c): "count(c2 in before(c, L) where forall c3 in before(c2, L): value(c3) < value(c2))"
   # The towers a filling of a line shows from its first cell.
   seen(f, L): "count(c in L where forall c2 in before(c, L): f(c2) < f(c))"
   # The index along a line of the nearest of the heights R placed in it, or
@@ -102,7 +104,15 @@ define:
 shape:
   - "latin(value, lines)"
 clues:
-  sees: { at: slot, value: "range(1, w)", means: "visible(at) = v" }
+  # The second half follows from the first on a line holding every height
+  # once, and says where the tallest stands: so a clue that already sees its
+  # count with the tallest still to come is broken before its line is full.
+  sees:
+    at: slot
+    value: "range(1, w)"
+    means: >-
+      visible(at) = v and (exists c in sight(at) where value(c) = w:
+      shownBefore(sight(at), c) = v - 1)
 freedom: { kind: fill }
 deal:
   clues: which slots show
