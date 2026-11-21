@@ -17,8 +17,10 @@
       hint's ring, outline and stripes, through an auto-solve) before it
       counts. Record which moved, which keep a form of their own, and why.
   - [x] Singles (pilot).
+  - [x] Mines: onto the sidecar; ring and outline no longer exclusive on a
+        square, the mistake frame its own flag.
   - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2):
-        Mines, Lightup, Range, Slant, Signpost, Sticks, Boats, and the
+        Lightup, Range, Slant, Signpost, Sticks, Boats, and the
         border grid (Palisade, Separate). Fold Range's and Slant's doubled
         "premise" outline and Lightup's dark-square ring into the one
         outline (`hints-marks.md` § "Outline the evidence": one shape for

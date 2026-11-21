@@ -39,15 +39,19 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, DrawTextOptions, Point } from "../../engine/contract/types.ts";
 import {
   drawRectCorners,
   drawRectOutline,
   glyphFont,
 } from "../../engine/render/draw.ts";
-import { hatchPeriod } from "../../engine/render/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import {
+  drawCellRing,
+  drawMarkSides,
+  MARK_ALL,
+} from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
@@ -124,17 +128,21 @@ export interface MinesDrawState {
   w: number;
   h: number;
   tileSize: number;
-  /** What each square shows: its value `v` with its hint marks, its flash
-   * fill and the cursor packed above it ({@link packTile}). */
+  /** What each square shows: its value `v` with its mistake flag, its flash
+   * fill and the cursor packed above it ({@link packTile}), and the hint's
+   * marks in {@link hint}. */
   tiles: TileCache;
+  hint: OverlaySidecar;
 }
 
 export function newDrawState(s: MinesState, tileSize: number): MinesDrawState {
+  const hint = new OverlaySidecar(s.w * s.h);
   return {
     w: s.w,
     h: s.h,
     tileSize,
-    tiles: new TileCache(s.w * s.h),
+    tiles: new TileCache(s.w * s.h, { overlays: [hint] }),
+    hint,
   };
 }
 
@@ -178,29 +186,22 @@ function poly(flat: number[], count: number): Point[] {
   return pts;
 }
 
-/** A tile's part in the displayed hint. */
-const MARK_RING = 1;
-const MARK_OUTLINE = 2;
-const MARK_STRIPES = 4;
-/** A flag the check found on a square with no mine. */
-const MARK_MISTAKE = 8;
-
 /** The draw cache's key: the tile's value `v` (which reaches 66, and -24 when
- * pressed) with its hint marks above it, its flash fill (a palette slot) above
- * those, and the cursor at the top. */
-function packTile(v: number, marks: number, wash: number, cursor: boolean): number {
-  return (v + 128) | (marks << 8) | ((wash - NO_WASH) << 12) | (cursor ? 1 << 24 : 0);
+ * pressed) with its mistake flag above it, its flash fill (a palette slot)
+ * above that, and the cursor at the top. */
+function packTile(v: number, mistake: boolean, wash: number, cursor: boolean): number {
+  return (
+    (v + 128) |
+    (mistake ? 1 << 8 : 0) |
+    ((wash - NO_WASH) << 12) |
+    (cursor ? 1 << 24 : 0)
+  );
 }
 
-/** Stripes across the tile's face, under its glyph. */
-function drawStripes(
-  dr: GameDrawing,
-  ts: number,
-  x: number,
-  y: number,
-  marks: number,
-): void {
-  if (marks & MARK_STRIPES) dr.drawHatch(face(ts, x, y), hatchPeriod(ts));
+/** What the displayed hint marks on square `i`. */
+interface TileHint {
+  readonly hint: OverlaySidecar;
+  readonly i: number;
 }
 
 /** The glyph a square of value `v` shows at (`x`, `y`): a count's digit, or
@@ -219,26 +220,31 @@ function glyph(
   return null;
 }
 
-/** A ring, an outline or a mistake's frame at the edge of the tile's face, over
- * everything it draws. The check refuses a hint while it finds a mistake, so a
- * frame never shares a tile with a hint's mark. */
+/** The hint's outline and ring, or a mistake's frame, at the edge of the
+ * tile's face, over everything it draws. The check refuses a hint while it
+ * finds a mistake, so a frame never shares a tile with a hint's mark. */
 function drawBand(
   dr: GameDrawing,
   ts: number,
   x: number,
   y: number,
   v: number,
-  marks: number,
+  mistake: boolean,
+  { hint, i }: TileHint,
 ): void {
   const band = { box: face(ts, x, y), outer: 0, inner: Math.max(2, ts >> 3) };
-  if (marks & MARK_RING) {
+  if (mistake) drawMarkSides(dr, band, MARK_ALL, COL_ERROR);
+  drawMarkSides(dr, band, hint.outlineSides(i), COL_HINT_OUTLINE);
+  if (hint.ringed(i)) {
     const g = glyph(ts, x, y, v);
-    const clear = g
-      ? { enclose: [textBox(g.origin, g.options, g.text)], avoid: [] }
-      : NOTHING_TO_CLEAR;
-    dr.drawRing(band.box, clear, band.inner);
-  } else if (marks & MARK_OUTLINE) drawMarkSides(dr, band, MARK_ALL, COL_HINT_OUTLINE);
-  else if (marks & MARK_MISTAKE) drawMarkSides(dr, band, MARK_ALL, COL_ERROR);
+    drawCellRing(
+      dr,
+      band,
+      g
+        ? { enclose: [textBox(g.origin, g.options, g.text)], avoid: [] }
+        : NOTHING_TO_CLEAR,
+    );
+  }
 }
 
 function drawTile(
@@ -250,7 +256,8 @@ function drawTile(
   /** The flash's fill for this square this frame, or {@link NO_WASH}. */
   wash: number,
   cursor: boolean,
-  marks: number,
+  mistake: boolean,
+  marks: TileHint,
 ): void {
   // A square repaints alone, so nothing it draws may reach its neighbor: a
   // thick stroke at its edge is antialiased a pixel past it.
@@ -270,7 +277,7 @@ function drawTile(
     } else {
       fill(COL_COVERED);
     }
-    drawStripes(dr, ts, x, y, marks);
+    marks.hint.drawHatch(dr, marks.i, face(ts, x, y), ts);
 
     if (v === FLAG) {
       setcoord(coords, 0, x, y, ts, 0.6, 0.35);
@@ -296,7 +303,7 @@ function drawTile(
     v &= ~32;
     if (v === KILLED) dr.drawRect(face(ts, x, y), COL_ERROR);
     else fill(tinted ? COL_WRONGNUMBER : COL_OPEN);
-    drawStripes(dr, ts, x, y, marks);
+    marks.hint.drawHatch(dr, marks.i, face(ts, x, y), ts);
 
     const g = glyph(ts, x, y, v);
     if (g) {
@@ -347,7 +354,7 @@ function drawTile(
       COL_PINK_CURSOR,
       Math.max(2, ts >> 4),
     );
-  drawBand(dr, ts, x, y, v, marks);
+  drawBand(dr, ts, x, y, v, mistake, marks);
   dr.unclip();
   dr.drawUpdate({ x, y, w: ts, h: ts });
 }
@@ -365,12 +372,7 @@ export function redraw(
   const cx0 = (x: number) => coord(x, ts, border);
 
   // Every hint mark comes from the step's words, and from nowhere else.
-  const words = stepMarks(hint);
-  const keys = (role: "ring" | "outline" | "stripes"): Set<string> =>
-    new Set(words.of(role, CELL).map((p) => `${p.x},${p.y}`));
-  const ring = keys("ring");
-  const outline = keys("outline");
-  const stripes = keys("stripes");
+  ds.hint.pack(stepMarks(hint), (x, y) => y * ds.w + x);
   const wrong = new Set((mistakes ?? []).map((p) => `${p.x},${p.y}`));
 
   // On a death flash's lit beats every square takes the error color.
@@ -403,17 +405,16 @@ export function redraw(
         v -= 20;
       }
 
-      const key = `${x},${y}`;
-      const marks =
-        (ring.has(key) ? MARK_RING : 0) |
-        (outline.has(key) ? MARK_OUTLINE : 0) |
-        (stripes.has(key) ? MARK_STRIPES : 0) |
-        (wrong.has(key) ? MARK_MISTAKE : 0);
+      const i = y * ds.w + x;
+      const mistake = wrong.has(`${x},${y}`);
       const tone = flash.win(sweepStep(x, y));
       const wash = dead ? COL_ERROR : tone ? winSlot(tone) : NO_WASH;
       const cursor = x === cursorX && y === cursorY;
-      if (ds.tiles.changed(y * ds.w + x, packTile(v, marks, wash, cursor)))
-        drawTile(dr, ts, cx0(x), cx0(y), v, wash, cursor, marks);
+      if (ds.tiles.changed(i, packTile(v, mistake, wash, cursor)))
+        drawTile(dr, ts, cx0(x), cx0(y), v, wash, cursor, mistake, {
+          hint: ds.hint,
+          i,
+        });
     }
   }
 }
