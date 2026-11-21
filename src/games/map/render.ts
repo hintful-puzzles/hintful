@@ -35,6 +35,7 @@ import {
   CURSOR_UP,
 } from "../../engine/input/pointer.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
@@ -47,6 +48,7 @@ import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepRanks, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import { REGION } from "./hint-marks.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
+import { rules } from "./solver.ts";
 import type { MapMistake, MapMove, MapParams, MapState, MapUi } from "./state.ts";
 
 // --- palette ---------------------------------------------------------
@@ -1009,12 +1011,12 @@ export function redraw(
         hintRole[tRegion] | (hintRole[bRegion] << HINT_BOTTOM_SHIFT);
     }
 
-  // Overlay adjacency error markers.
+  // A diamond on each border the rules say is broken: two regions alike.
+  const clashes = new Set<number>();
+  for (const [a, b] of liveErrors(rules, s).pairs)
+    clashes.add(a * n + b).add(b * n + a);
   for (let i = 0; i < map.ngraph; i++) {
-    const v1 = Math.floor(map.graph[i] / n);
-    const v2 = map.graph[i] % n;
-    if (s.coloring[v1] < 0 || s.coloring[v2] < 0) continue;
-    if (s.coloring[v1] !== s.coloring[v2]) continue;
+    if (!clashes.has(map.graph[i])) continue;
 
     let ex = map.edgex[i];
     let ey = map.edgey[i];

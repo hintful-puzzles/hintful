@@ -26,6 +26,7 @@ import {
 } from "../../engine/solve/answer-search.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type LadderEntry,
@@ -64,15 +65,11 @@ export function dealtOf(board: MosaicBoard): mosaic.Dealt {
 }
 
 /** The board as its rules read it: a square's mark is its value. */
-export const rules: RulesOf<MosaicState> = {
+export const rules: RulesOf<MosaicState> = describedRules(mosaic, {
   grid: (s) => s.cells,
-  violations: (s, g) =>
-    mosaic.violations(
-      g,
-      describedSpace(mosaic.units, s.width, s.height),
-      dealtOf(s.board),
-    ),
-};
+  size: (s) => [s.width, s.height],
+  deals: (s) => [dealtOf(s.board)],
+});
 
 /** The values a square may hold: shaded or clear. */
 const DOMAIN = (1 << STATE_MARKED) | (1 << STATE_BLANK);

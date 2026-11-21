@@ -26,6 +26,7 @@ import {
   PLACE,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Firing,
@@ -307,15 +308,11 @@ export function isSolved(
 
 /** The squares as the rules read them: an open square is undecided, since a
  * tent may still go there. Links are notes and play no part. */
-export const rules: RulesOf<TentsState> = {
+export const rules: RulesOf<TentsState> = describedRules(tents, {
   grid: (s) => Uint8Array.from(s.grid, (v) => DESC_VALUE[v]),
-  violations: (s, g) =>
-    tents.violations(
-      g,
-      describedSpace(tents.units, s.w, s.h),
-      dealtOf(s.w, s.h, s.grid, s.numbers),
-    ),
-};
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s.w, s.h, s.grid, s.numbers)],
+});
 
 /** Solved where the player's squares are an answer. */
 export function status(state: TentsState): GameStatus {

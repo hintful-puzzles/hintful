@@ -18,6 +18,7 @@ import type { RulesOf } from "../../engine/contract/rules.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import { describedSpace, partition } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type LadderEntry,
@@ -57,11 +58,11 @@ function dealtOf(board: NorinoriBoard): norinori.Dealt {
 }
 
 /** The board as its rules read it: a blank square is undecided. */
-export const rules: RulesOf<NorinoriBoard> = {
+export const rules: RulesOf<NorinoriBoard> = describedRules(norinori, {
   grid: (s) => s.grid,
-  violations: (s, g) =>
-    norinori.violations(g, describedSpace(norinori.units, s.w, s.h), dealtOf(s)),
-};
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s)],
+});
 
 /** The values a square may hold: shaded or clear. */
 const DOMAIN = (1 << SHADED) | (1 << CROSSED);

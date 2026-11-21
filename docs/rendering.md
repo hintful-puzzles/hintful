@@ -574,8 +574,9 @@ Exemplar: [`bricks/render.ts`](../src/games/bricks/render.ts) and
 
 ## Live errors are the rules'
 
-**A described game writes no error checker.** Its `Game.rules` gives the
-board as its description reads it, 0 where undecided, and the module's
+**A described game writes no error checker.** Its `Game.rules`, built by
+[`describedRules`](../src/engine/solve/described-rules.ts), gives the board
+as its description reads it, 0 where undecided, and the module's
 `violations` over it ([`descriptions.md`](./descriptions.md) § "Where a rule
 breaks"); its redraw takes the marks from
 [`liveErrors`](../src/engine/render/live-errors.ts), passing the previewed

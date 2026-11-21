@@ -5,8 +5,8 @@
  * are the rules'"). The check is sound where no board on the way to an
  * answer is said to break one: so every board made by undeciding some of an
  * answer's elements has no violation. And it sees what it claims to: an
- * answer with one value changed breaks a rule, as the answer check says, on
- * most such boards, and the guard counts that it does.
+ * answer with one value changed breaks a rule exactly where the answer check
+ * says it is no answer.
  *
  * The population is every game that declares `rules`.
  */
@@ -58,6 +58,7 @@ for (const [id, game] of RULED) {
           `${id}/${title}: partial ${i} of the answer, ${[...g].join("")}`,
         ).toEqual([]);
       }
+      expect(rules.isAnswer(answer, full), `${id}/${title}: the answer`).toBe(true);
       const top = Math.max(...full);
       for (let x = 0; x < full.length; x++) {
         if (full[x] === 0) continue;
@@ -65,18 +66,22 @@ for (const [id, game] of RULED) {
           if (v === full[x]) continue;
           const g = Uint8Array.from(full);
           g[x] = v;
+          // A whole board breaks a rule exactly where it is no answer; one
+          // value changed may leave an answer where the rules alone do not
+          // pin that element (a Map region whose neighbors use two colors).
+          const broken = rules.violations(answer, g).length > 0;
+          expect(broken, `${id}/${title}: element ${x} changed to ${v}`).toBe(
+            !rules.isAnswer(answer, g),
+          );
+          if (broken) caught++;
           planted++;
-          if (rules.violations(answer, g).length > 0) caught++;
         }
       }
     }
-    // A board with one value changed may still be an answer where the board
-    // is not unique in that element; most are not.
+    // Most such boards are no answer, so a check that reports nothing on a
+    // whole board fails here.
     expect(planted, `${id}: no changed answers`).toBeGreaterThan(0);
-    expect(
-      caught / planted,
-      `${id}: ${caught} of ${planted} changed answers caught`,
-    ).toBeGreaterThan(0.9);
+    expect(caught, `${id}: no changed answer broke a rule`).toBeGreaterThan(0);
   });
 
   // The test above undecides the answer as the rules read it; this one reads

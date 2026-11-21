@@ -375,7 +375,7 @@ describe("the hint on an Unreasonable Mosaic board", () => {
     let state = newState(p, NEEDS_SEARCH);
     const answer = answerOf(state);
     if (answer.kind !== "one") throw new Error("no answer found");
-    const firstEmpty = () => state.cells.findIndex((c) => c === STATE_UNMARKED);
+    const firstEmpty = () => state.cells.indexOf(STATE_UNMARKED);
 
     /** Follow the hint, on the board and in the midend, as far as it goes. */
     const followHint = (): number => {

@@ -95,7 +95,13 @@ import {
   regionFromCoords,
   regionFromUiCursor,
 } from "./render.ts";
-import { isColored, mapSolver, SOLVER_IMPOSSIBLE, SOLVER_UNIQUE } from "./solver.ts";
+import {
+  isColored,
+  mapSolver,
+  rules,
+  SOLVER_IMPOSSIBLE,
+  SOLVER_UNIQUE,
+} from "./solver.ts";
 import {
   cloneState,
   DIFF_NAMES,
@@ -544,6 +550,7 @@ export const mapGame: Game<
   status,
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes,

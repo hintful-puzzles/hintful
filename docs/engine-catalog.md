@@ -119,6 +119,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `ladder-runtime.ts` — what a compiled ladder runs on |
 | – `ladder-walk.ts` — a hint's walk over a compiled ladder |
 | – `position-runtime.ts` — what a planning game's compiled rules give |
+| – `described-rules.ts` — `Game.rules` from the compiled description |
 | – `deduction-fixpoint.ts` — the shared technique ladder |
 | – `step-budget.ts` — the fixpoint non-termination guard |
 | – `hint-finishes.ts` — whether deduction finishes a board |
@@ -1341,6 +1342,15 @@ moves pieces the same way on every board as the `Effect`
 `permutation-planner.ts` takes. Exemplars: `fifteen/state.ts`,
 `twiddle/solver.ts`; the guide is [`descriptions.md`](./descriptions.md)
 § "A planning game's position and moves".
+
+### `described-rules.ts` — `Game.rules` from the compiled description
+
+Reach for `describedRules(module, { grid, size, deals })` when a game draws
+its live errors: the game says how its state reads as the description's
+values, and what its board deals and the variations it has on, and the
+module's `violations` and
+`isAnswer` do the rest. Exemplar: `tents/solver.ts`; the guide is
+[`rendering.md`](./rendering.md) § "Live errors are the rules'".
 
 ### `deduction-fixpoint.ts` — the shared technique ladder
 

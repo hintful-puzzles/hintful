@@ -15,6 +15,7 @@
  * (`0..3`), since the marks hold no value 0.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { type Deduced, searchAnswers } from "../../engine/solve/answer-search.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
@@ -23,6 +24,7 @@ import {
   popcount,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -32,7 +34,7 @@ import {
 } from "../../engine/solve/ladder-runtime.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import { graphNeighbors } from "./graph.ts";
-import { DIFF_UNREASONABLE } from "./state.ts";
+import { DIFF_UNREASONABLE, type MapState } from "./state.ts";
 
 export const SOLVER_IMPOSSIBLE = 0;
 export const SOLVER_UNIQUE = 1;
@@ -57,6 +59,13 @@ export function mapMarks(n: number, grid: Uint8Array): CellMarks {
 export function gridOf(coloring: ArrayLike<number>): Uint8Array {
   return Uint8Array.from(coloring, (c) => c + 1);
 }
+
+/** The board as its rules read it: a region left blank is undecided. */
+export const rules: RulesOf<MapState> = describedRules(map, {
+  grid: (s) => gridOf(s.coloring),
+  size: (s) => [s.params.n, 1],
+  deals: (s) => [dealtOf(s.map.graph, s.params.n)],
+});
 
 /**
  * The positions Unreasonable's search may try. Upstream's recursion had no

@@ -31,6 +31,7 @@ import {
   type GridSpace,
   stretch,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -91,13 +92,14 @@ export function dealtOf({ flags, lights }: LightupState): lightup.Dealt {
 /** The board as its rules read it: a bulb; a wall, and a square crossed or
  * lit without a bulb, as holding none, since a bulb on a lit square would
  * light another; any other square undecided. */
-export const rules: RulesOf<LightupState> = {
+export const rules: RulesOf<LightupState> = describedRules(lightup, {
   grid: ({ flags, lights }) =>
     Uint8Array.from(flags, (f, i) =>
       f & F_LIGHT ? BULB : f & (F_BLACK | F_IMPOSSIBLE) || lights[i] > 0 ? NONE : 0,
     ),
-  violations: (s, g) => lightup.violations(g, lightupSpace(s.w, s.h), dealtOf(s)),
-};
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s)],
+});
 
 /** The rules a square breaks, as the live errors draw them. */
 export const EVERY_SQUARE_LIT: lightup.RuleName = "shape.0";

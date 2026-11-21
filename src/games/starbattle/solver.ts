@@ -19,6 +19,7 @@ import type { RulesOf } from "../../engine/contract/rules.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import { describedSpace, partition } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type LadderEntry,
@@ -143,15 +144,11 @@ function dealtOf(board: StarbattleBoard): starbattle.Dealt {
 }
 
 /** The board as its rules read it: a blank square is undecided. */
-export const rules: RulesOf<StarbattleState> = {
+export const rules: RulesOf<StarbattleState> = describedRules(starbattle, {
   grid: (s) => s.grid,
-  violations: (s, g) =>
-    starbattle.violations(
-      g,
-      describedSpace(starbattle.units, s.size, s.size),
-      dealtOf(new StarbattleBoard(s.size, s.stars, s.regions, s.grid)),
-    ),
-};
+  size: (s) => [s.size, s.size],
+  deals: (s) => [dealtOf(new StarbattleBoard(s.size, s.stars, s.regions, s.grid))],
+});
 
 /** Whether every row, column and region holds its stars and no two stars
  * touch, by the rules the description compiles to. A blank cell counts as

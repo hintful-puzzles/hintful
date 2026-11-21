@@ -27,7 +27,11 @@
       holding no bulb; it gains a red cross where nothing can light the
       square). A count written through a definition (`bulbs(k)`) is
       bounded now, as a count written out is. Moved: mosaic (its state
-      cells hold only the mark; "done" is the renderer's). Run `src/guards` before a
+      cells hold only the mark; "done" is the renderer's), map (its
+      diamonds unchanged). A game builds `rules` with `describedRules`,
+      which gives `isAnswer` too, and the guard checks a changed answer
+      breaks a rule exactly where it is no answer (Map's four-coloring leaves
+      some changes answers). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

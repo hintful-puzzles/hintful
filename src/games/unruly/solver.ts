@@ -14,6 +14,7 @@ import type { RulesOf } from "../../engine/contract/rules.ts";
 import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -88,15 +89,11 @@ export const BALANCE: unruly.RuleName = "shape.1";
 export const ALIKE: unruly.RuleName = "unique.shape.0";
 
 /** The board as its rules read it: the grid holds the description's values. */
-export const rules: RulesOf<UnrulyState> = {
+export const rules: RulesOf<UnrulyState> = describedRules(unruly, {
   grid: (s) => s.grid,
-  violations: (s, g) =>
-    unruly.violations(
-      g,
-      describedSpace(unruly.units, s.w2, s.h2),
-      s.unique ? ["unique"] : [],
-    ),
-};
+  size: (s) => [s.w2, s.h2],
+  deals: (s): [readonly string[]] => [s.unique ? ["unique"] : []],
+});
 
 /** Whether the grid is an answer, by the rules its description compiles to. */
 export function isComplete(view: GridView): boolean {
