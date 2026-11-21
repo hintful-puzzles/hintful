@@ -131,7 +131,7 @@
 
 ## 3. Finish
 
-- [ ] 3.1 The guides describe one way a variant (`hints-marks.md`
+- [x] 3.1 The guides describe one way a variant (`hints-marks.md`
       § "Outline the evidence" and § "Where the band goes, and who rubs it
       out", `rendering.md` § "A mark that crosses tiles"): done. Run
       `npm run test:hint-sweeps`; commit, push, archive.
