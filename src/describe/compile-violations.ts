@@ -313,6 +313,40 @@ class Check {
     }
     const [first, ...rest] = binders;
     const { out, env } = this;
+    const run =
+      first.kind === "in" ? stretchOf({ k: "size", of: first.of }, scope, env) : null;
+    const sides = run === null ? null : this.sureAndMaybe(run[2], scope);
+    if (run !== null && sides !== null) {
+      // A stretch of a set still being filled ranges over the run its
+      // possible members make, surely over the run its sure ones do: Sticks'
+      // line beside an open numbered square can no longer take that square.
+      const [must, may, whole] = sides;
+      env.used.add("stretch");
+      env.used.add("decidedIf");
+      const L = compileExpr(run[0], scope, env, out).code;
+      const c = once(compileExpr(run[1], scope, env, out), out);
+      const sure = Out.fresh("_rs");
+      const v = Out.fresh(`v_${first.name}`);
+      out.emit(`decidedIf(${whole});`);
+      out.emit(`const ${sure} = stretch(sp.lineCells[${L}], ${c.code}, ${must});`);
+      out.open(`for (const ${v} of stretch(sp.lineCells[${L}], ${c.code}, ${may})) {`);
+      const sc = new Map(scope).set(first.name, { code: v, sort: c.sort });
+      const own =
+        c.sort.k === "elem" && c.sort.e === env.answerSort ? [...names, v] : names;
+      const g = Out.fresh("_gd");
+      out.emit(`const ${g}: number = ${sure}.includes(${v}) ? ${guard} : ${U};`);
+      if (first.where === null) this.binders(rest, sc, g, body, own);
+      else {
+        const w = this.verdict(first.where, sc);
+        out.open(`if (${w} !== ${F}) {`);
+        const g2 = Out.fresh("_gd");
+        out.emit(`const ${g2}: number = ${w} === ${T} ? ${g} : ${U};`);
+        this.binders(rest, sc, g2, body, own);
+        out.close();
+      }
+      out.close();
+      return;
+    }
     bindingLoops([{ ...first, where: null }], scope, env, out, (sc) => {
       const v = sc.get(first.name);
       const own =

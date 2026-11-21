@@ -49,6 +49,7 @@ import {
   drawMarkSides,
   MARK_ALL,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
@@ -59,7 +60,7 @@ import {
   winSlot,
 } from "../../engine/render/win-wave.ts";
 import type { SticksHint } from "./hint.ts";
-import { findLiveErrors } from "./solver.ts";
+import { dealtOf, rules } from "./solver.ts";
 import {
   F_BLOCK,
   F_HOR,
@@ -275,6 +276,23 @@ function drawTile(
 
 // --- redraw -----------------------------------------------------------------
 
+/** The squares whose number the board breaks: a number on a line too long,
+ * joined to another number, or walled in short of its length, and a number
+ * on a block with more lines into it than it says or too few sides left. A
+ * rule broken at a square with no number shows nowhere: a line's breach is
+ * drawn on its number. */
+export function brokenNumbers(state: SticksState): Set<number> {
+  const live = liveErrors(rules, state);
+  const out = new Set<number>();
+  live.at.forEach((e, i) => {
+    if (e && state.numbers[i] !== -1) out.add(i);
+  });
+  const dl = dealtOf(state);
+  for (const k of live.clues.get("length") ?? []) out.add(dl.length.at[k]);
+  for (const k of live.clues.get("joins") ?? []) out.add(dl.joins.at[k]);
+  return out;
+}
+
 export function redraw(
   dr: GameDrawing,
   ds: SticksDrawState,
@@ -291,10 +309,7 @@ export function redraw(
     drawRectOutline(dr, b - 1, b - 1, w * ts + 1, h * ts + 1, COL_GRID);
   }
 
-  // Live clue violations, recomputed pure from the committed grid (upstream
-  // stores the equivalent F_ERROR bits in the state; same verdicts).
-  const errorList = findLiveErrors(state);
-  const errorSet = errorList.length > 0 ? new Set(errorList) : null;
+  const errorSet = brokenNumbers(state);
 
   // In-flight drag preview: cell index → previewed tile value.
   const dragMap = ui.drag.length > 0 ? new Map<number, number>() : null;
@@ -323,7 +338,7 @@ export function redraw(
       const cursor = ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y;
       // A previewed (uncommitted) cell suppresses its error highlight — the
       // committed grid is what the error check ran on.
-      const error = preview === undefined && (errorSet?.has(i) ?? false);
+      const error = preview === undefined && errorSet.has(i);
       const hintLine = ds.hint.ringed(i) ? hintBits : 0;
 
       const packed =

@@ -70,6 +70,7 @@ import {
   deductionFinishes,
   findMistakes,
   isSolved,
+  rules,
   STICKS_RUNGS,
   type SticksRung,
 } from "./solver.ts";
@@ -376,6 +377,7 @@ export const sticksGame: Game<
   interpretMove,
   executeMove,
   status,
+  rules,
   // Easy is what the ladder finishes, and the hint, which walks the same
   // ladder from the player's lines, finishes too.
   difficulty: searchTierContract<SticksParams, SticksState>({

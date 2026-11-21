@@ -14,12 +14,10 @@
  * ({@link searchAnswers}) counts a board's answers. It is what an
  * Unreasonable board is dealt by, and what Solve and the mistake check know
  * the answer from at either tier. The hint never runs it.
- *
- * The live error overlay ({@link findLiveErrors}) stays the game's own: it
- * judges a board still being filled, which no rule of the answer says.
  */
 
-import { Dsf } from "../../engine/board/dsf.ts";
+import type { Dsf } from "../../engine/board/dsf.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { entryMistakes } from "../../engine/hint/entry-mistakes.ts";
 import {
   type Answer,
@@ -33,6 +31,7 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -77,7 +76,7 @@ function valuesOf(grid: Uint8Array): Uint8Array {
 
 /** The board as the description deals it: its blocks, the numbers on its
  * lines and the numbers on its blocks. */
-function dealtOf({ w, h, grid, numbers }: Board): sticks.Dealt {
+export function dealtOf({ w, h, grid, numbers }: Board): sticks.Dealt {
   const blocks: number[] = [];
   const lengths: number[] = [];
   const lengthValues: number[] = [];
@@ -127,14 +126,18 @@ export function deductionFinishes(board: Board): boolean {
   return deduce(m, describedLadder(sticks, dl), dl) === "solved";
 }
 
+/** The board as its rules read it: a line is its way, a block a block, an
+ * open square undecided. */
+export const rules: RulesOf<SticksState> = describedRules(sticks, {
+  grid: (s) => valuesOf(s.grid),
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s)],
+});
+
 /** Whether a state's lines are an answer to its board, by the rules the
  * description compiles to. */
 export function isSolved(state: SticksState): boolean {
-  return sticks.isAnswer(
-    valuesOf(state.grid),
-    sticksSpace(state.w, state.h),
-    dealtOf(state),
-  );
+  return rules.isAnswer(state, rules.grid(state));
 }
 
 // --- the search for a board's answers ---------------------------------------
@@ -239,22 +242,10 @@ export function findMistakes(state: SticksState): SticksMistake[] {
   );
 }
 
-// --- the live error overlay --------------------------------------------------
+// --- lines as segments -------------------------------------------------------
 
-/**
- * Merge adjacent same-orientation line cells into segments; when `lengths`
- * is given, record each segment's clue cell (`-1` none, `-2` duplicate).
- */
-export function sticksMakeDsf(
-  grid: Uint8Array,
-  numbers: Int16Array | null,
-  w: number,
-  h: number,
-  dsf: Dsf,
-  lengths: Int32Array | null,
-): void {
-  const s = w * h;
-  if (lengths) lengths.fill(-1);
+/** Merge adjacent same-orientation line cells into segments. */
+export function sticksMakeDsf(grid: Uint8Array, w: number, h: number, dsf: Dsf): void {
   dsf.reinit();
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -263,106 +254,4 @@ export function sticksMakeDsf(
       if (y < h - 1 && grid[i] & F_VER && grid[i + w] & F_VER) dsf.merge(i, i + w);
     }
   }
-  if (lengths && numbers) {
-    for (let i = 0; i < s; i++) {
-      if (numbers[i] !== -1) {
-        const c = dsf.canonify(i);
-        lengths[c] = lengths[c] !== -1 ? -2 : i;
-      }
-    }
-  }
-}
-
-/**
- * The most cells the segment through clue cell `idx` could ever span, across
- * or down: walk both ways past blanks and lines that way until a block, a
- * line the other way, a cell owned by a different clue, or a cell beside a
- * line owned by one. It is the ladder's `reach`, read on the board as it is.
- */
-function maxSize(
-  grid: Uint8Array,
-  w: number,
-  h: number,
-  dsf: Dsf,
-  lengths: Int32Array,
-  idx: number,
-  across: boolean,
-): number {
-  const along = across ? F_HOR : F_VER;
-  const other = across ? F_VER : F_HOR;
-  const pos = across ? idx % w : Math.floor(idx / w);
-  const size = across ? w : h;
-  const at = (p: number): number => (across ? idx - (idx % w) + p : (idx % w) + p * w);
-  const owner = (p: number): number => lengths[dsf.canonify(at(p))];
-  let ret = 1;
-  for (let action = -1; action < 2; action += 2) {
-    for (let p = pos + action; p >= 0 && p < size; p += action) {
-      if (grid[at(p)] & (F_BLOCK | other)) break;
-      if (owner(p) !== -1 && owner(p) !== idx) break;
-      const next = p + action;
-      if (
-        next >= 0 &&
-        next < size &&
-        grid[at(next)] & along &&
-        owner(next) !== -1 &&
-        owner(next) !== idx
-      )
-        break;
-      ret++;
-    }
-  }
-  return ret;
-}
-
-/**
- * The clue cells currently violating a constraint, the live red-number
- * highlight (upstream's `F_ERROR` bit, from `sticks_validate`, recomputed
- * pure per frame): a block with more lines than its number or fewer sides
- * left to take them, a line with two numbers, a line longer than its number,
- * or one too short that can no longer reach it.
- */
-export function findLiveErrors(state: SticksState): number[] {
-  const { grid, numbers, w, h } = state;
-  const dsf = new Dsf(w * h);
-  const lengths = new Int32Array(w * h);
-  sticksMakeDsf(grid, numbers, w, h, dsf, lengths);
-  const errors: number[] = [];
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      if (!grid[i] || numbers[i] === -1) continue;
-      if (grid[i] & F_BLOCK) {
-        // `conn` lines run into the block; `other` sides never can (an edge,
-        // a block, or a line the other way).
-        let conn = 0;
-        let other = 0;
-        if (x === 0 || grid[i - 1] & (F_VER | F_BLOCK)) other++;
-        if (x === w - 1 || grid[i + 1] & (F_VER | F_BLOCK)) other++;
-        if (y === 0 || grid[i - w] & (F_HOR | F_BLOCK)) other++;
-        if (y === h - 1 || grid[i + w] & (F_HOR | F_BLOCK)) other++;
-        if (x !== 0 && grid[i - 1] & F_HOR) conn++;
-        if (x !== w - 1 && grid[i + 1] & F_HOR) conn++;
-        if (y !== 0 && grid[i - w] & F_VER) conn++;
-        if (y !== h - 1 && grid[i + w] & F_VER) conn++;
-        if (conn > numbers[i] || other > 4 - numbers[i]) errors.push(i);
-        continue;
-      }
-      const c = dsf.canonify(i);
-      // -2: two clues on one segment. A clued cell's own segment always has
-      // a clue, so -1 is unreachable here.
-      if (lengths[c] < 0) {
-        errors.push(i);
-        continue;
-      }
-      const size = dsf.size(c);
-      const target = numbers[lengths[c]];
-      if (
-        size > target ||
-        (size < target &&
-          maxSize(grid, w, h, dsf, lengths, i, (grid[i] & F_HOR) !== 0) < target)
-      )
-        errors.push(i);
-    }
-  }
-  return errors;
 }

@@ -42,13 +42,8 @@ import {
 } from "../../engine/testing/win-flash.ts";
 import { newSticksDesc } from "./generator.ts";
 import { sticksGame } from "./index.ts";
-import { COL_CELL, COL_LINE, newDrawState, redraw } from "./render.ts";
-import {
-  deductionFinishes,
-  findLiveErrors,
-  findMistakes,
-  searchAnswers,
-} from "./solver.ts";
+import { brokenNumbers, COL_CELL, COL_LINE, newDrawState, redraw } from "./render.ts";
+import { deductionFinishes, findMistakes, searchAnswers } from "./solver.ts";
 import {
   decodeParams,
   encodeDesc,
@@ -239,7 +234,15 @@ describe("sticks solver", () => {
     // 3x1: clue 1 at cell 0, but a 2-cell horizontal segment through it.
     const grid = new Uint8Array([F_HOR, F_HOR, 0]);
     const numbers = new Int16Array([1, -1, -1]);
-    expect(findLiveErrors({ w: 3, h: 1, grid, numbers })).toEqual([0]);
+    expect([...brokenNumbers({ w: 3, h: 1, grid, numbers })]).toEqual([0]);
+  });
+
+  it("flags a line walled in short of its number by another number", () => {
+    // 3x1: clue 2 on a line across at cell 0, and the open square beside it
+    // numbered 1, which the line cannot take without joining two numbers.
+    const grid = new Uint8Array([F_HOR, 0, 0]);
+    const numbers = new Int16Array([2, 1, -1]);
+    expect([...brokenNumbers({ w: 3, h: 1, grid, numbers })]).toEqual([0]);
   });
 
   it("deduces nothing on a clueless board", () => {
@@ -282,7 +285,7 @@ describe("sticks solver", () => {
     }
   });
 
-  it("findLiveErrors flags an over-connected black clue", () => {
+  it("flags an over-connected black clue", () => {
     // 3x1: black cell with clue 0 in the middle, a horizontal line touching it.
     const grid = new Uint8Array([F_HOR, F_BLOCK, 0]);
     const numbers = new Int16Array([-1, 0, -1]);
@@ -292,7 +295,7 @@ describe("sticks solver", () => {
       grid,
       numbers,
     };
-    expect(findLiveErrors(state)).toEqual([1]);
+    expect([...brokenNumbers(state)]).toEqual([1]);
   });
 });
 

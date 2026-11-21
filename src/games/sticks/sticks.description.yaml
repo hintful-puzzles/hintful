@@ -89,6 +89,17 @@ define:
   reach(k): >-
     |stretch(row(k), k, {x in cells(row(k)) where free(x, k, row(k), 1)})|
     + |stretch(col(k), k, {x in cells(col(k)) where free(x, k, col(k), 2)})|
+  # Whether square x holds a line the way d along line L that joins no
+  # number but k's. `room(k)` is the run of such squares through k: on a
+  # whole board its line where that carries one number, and on a board being
+  # filled the most it can still take. `reach` reads the same through the
+  # marks, which the rules cannot.
+  alone(x, k, L, d): >-
+    value(x) = d and (forall y in stretch(L, x, {z in cells(L) where value(z) = d or z = x}):
+    y = k or not numbered(y))
+  room(k): >-
+    |stretch(row(k), k, {x in cells(row(k)) where alone(x, k, row(k), 1)})|
+    + |stretch(col(k), k, {x in cells(col(k)) where alone(x, k, col(k), 2)})|
   # How many of block b's sides a line could still run into it from.
   sides(b): "count(p in adj4(b) where clue(block, p) < 0 and (not known(p) or meets(p, b)))"
 shape:
@@ -100,11 +111,15 @@ clues:
     at: cell
     value: "range(0, 0)"
     means: "value(at) = 3"
-  # A number on a line: its length.
+  # A number on a line: its length. Its line is one of `horiz` and `vert`,
+  # the other empty, so their sizes add up to the line's, each bounded on a
+  # board being filled. The second half follows from the first where each
+  # line carries one number, and breaks once another number or a block has
+  # walled the line in short.
   length:
     at: cell
     value: "range(1, max(L in {row(at), col(at)} of |cells(L)|))"
-    means: "|stick(at)| = v"
+    means: "|horiz(at)| + |vert(at)| = v and room(at) >= v"
   # A number on a block: how many lines run into it.
   joins:
     at: cell

@@ -61,7 +61,7 @@ function clueFill(p: SticksParams, rng: RandomState): Dealt {
       if (!(grid[i] & F_BLOCK)) grid[i] = randomUpto(rng, 2) ? F_HOR : F_VER;
     }
 
-    sticksMakeDsf(grid, null, w, h, dsf, null);
+    sticksMakeDsf(grid, w, h, dsf);
 
     // Upstream's dsf_minimal (a class's smallest index), which the shared Dsf
     // doesn't track, so precompute it after all merges. Independent of the root

@@ -90,12 +90,12 @@
       next placed apart break as a pair and an arrow breaks once its number
       is off its line, the marks it drew; `RulesOf.grid` may be 16 bits wide
       for its numbers past 255).
-      Sticks waits: a stick too short that can no longer reach its number
-      because another number's stick is in the way breaks the length clue
-      only read together with "one number a stick", and each statement is
-      read alone; the length clue restated over the squares a stick can
-      still take (as its `reach` does), or a compiler reading of the two
-      together, comes first. Signpost waits: its numbers follow from chains
+      Moved: sticks (its length clue says too that the squares its line can
+      take past other numbers, `room`, reach its length; a quantifier over a
+      stretch ranges over the stretch's possible run, sure over its sure run,
+      in the compiler; the length is the sum of the line's two ways, since
+      the size of their union is not bounded; a line walled in turns red with
+      squares still open, which the old check waited for). Signpost waits: its numbers follow from chains
       of links, and a chain is read only once every link of it is decided;
       a bound on `chain` over the links decided so far comes first. Run
       `src/guards` before a

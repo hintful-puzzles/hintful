@@ -166,6 +166,7 @@ export {
 } from "./describe-runtime/space.ts";
 export {
   decidedAll,
+  decidedIf,
   heldIn,
   knownIn,
   overDomain,

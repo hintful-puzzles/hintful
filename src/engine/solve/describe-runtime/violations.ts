@@ -44,6 +44,14 @@ export function stoppedAt(): number {
   return stop;
 }
 
+/** Stop the term unless `known`: for a set the check could not read the
+ * members of, which a quantifier over it then cannot range over. */
+export function decidedIf(known: boolean): void {
+  if (known) return;
+  stop = -1;
+  throw UNDECIDED;
+}
+
 /**
  * The verdict on a term `f` that one undecided element `x` stopped, taken
  * over each value `mask` lets `x` hold: `0` (false) where every value makes
