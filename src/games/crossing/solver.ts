@@ -2,7 +2,8 @@
  * Crossing's solver: the ladder `crossing.description.yaml` states, compiled, on
  * the engine's marks and runner (`engine/solve/cell-marks.ts` and
  * `ladder-runtime.ts`); the search over it for a board's answers; the mistake
- * check; and the hint's plan, read off the compiled ladder's firings.
+ * check; where a board breaks its rules; and the hint's plan, read off the
+ * compiled ladder's firings.
  *
  * Upstream's solver has two deductions, a run's still-fitting numbers
  * narrowing its squares and a square down to one digit (`// TODO harder
@@ -17,6 +18,7 @@
  * exist at each tier.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import type { Judging } from "../../engine/hint/move-judge.ts";
 import {
@@ -35,6 +37,7 @@ import {
   rangeMask,
   STRIKE,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Firing,
@@ -53,7 +56,6 @@ import {
   numberAvailableTo,
   placedRuns,
   type SolveStatus,
-  validateBoard,
 } from "./state.ts";
 
 /** A pencil note's bit for digit `n` (1–9), as the player's notes hold it. */
@@ -99,6 +101,25 @@ function valuesOf(p: CrossingPuzzle, grid: Uint8Array): Uint8Array {
 /** The digits of a grid the description reads, `0` where none goes. */
 const digitsOf = (values: ArrayLike<number>): Uint8Array =>
   Uint8Array.from(values, (v) => (v === BLANK ? 0 : v));
+
+/** The board as its rules read it: each square's digit, {@link BLANK} where
+ * none goes, and 0 where none is placed yet. */
+export const rules: RulesOf<CrossingState> = describedRules(crossing, {
+  grid: (s) => valuesOf(s.puzzle, s.grid),
+  size: (s) => [s.puzzle.w, s.puzzle.h],
+  deals: (s) => [dealtOf(s.puzzle)],
+});
+
+/** The rules a run reading no number breaks, an across run's and a down
+ * run's, each at the run's first square. */
+export const ACROSS_READS: crossing.RuleName = "shape.0";
+export const DOWN_READS: crossing.RuleName = "shape.1";
+
+/** Whether every square of `s` holds its digit and the rules hold. */
+export function status(s: CrossingState): "solved" | "ongoing" {
+  const g = rules.grid(s);
+  return !g.includes(0) && rules.isAnswer(s, g) ? "solved" : "ongoing";
+}
 
 /** The run a binding names by its line and its first square. */
 function runAt(p: CrossingPuzzle, sp: GridSpace, L: number, c: number): number {
@@ -598,7 +619,6 @@ function readsOf(p: CrossingPuzzle, t: Taken): number[] {
 const HINT_PLAN_MAX = 40;
 
 export interface CrossingPlan {
-  status: SolveStatus;
   firings: CrossingFiring[];
 }
 
@@ -764,11 +784,11 @@ export function deduceCrossingPlan(
   };
   const firings: CrossingFiring[] = [];
   const m = boardMarks(board);
-  if (m === null) return { status: "invalid", firings };
+  if (m === null) return { firings };
   const { entries } = ladderOf(puzzle);
   if (judging) {
     judgedWalk(board, m, entries, firings, judging);
-    return { status: validateBoard(puzzle, board.grid).status, firings };
+    return { firings };
   }
   const walk = ladderWalk(
     m,
@@ -824,7 +844,7 @@ export function deduceCrossingPlan(
     if (strike === undefined) break;
     take(strike);
   }
-  return { status: validateBoard(puzzle, board.grid).status, firings };
+  return { firings };
 }
 
 /**

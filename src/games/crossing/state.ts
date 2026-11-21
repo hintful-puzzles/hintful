@@ -464,92 +464,9 @@ export function cloneState(s: CrossingState): CrossingState {
   };
 }
 
-export function status(s: CrossingState): "solved" | "ongoing" {
-  return validateBoard(s.puzzle, s.grid).status === "valid" ? "solved" : "ongoing";
-}
-
-// --- board validity --------------------------------------------------------
-
-/** The three-valued board verdict (upstream's `STATUS_*` ints). */
+/** What the ladder made of a board from empty: solved, stuck, or found it has
+ * no answer. */
 export type SolveStatus = "valid" | "invalid" | "progress";
-
-export interface ValidateResult {
-  status: SolveStatus;
-  /** Per **number** index: how many runs currently read as that number. */
-  done: Int32Array;
-  /** Per **run** index: the run is full but matches no listed number. */
-  runErrs: Uint8Array;
-}
-
-/**
- * Upstream `crossing_validate`. For every run, find which listed numbers of the
- * run's length it currently reads as; a *full* run matching none is a definite
- * error, and a number claimed by more than one run likewise. `"valid"` means
- * every run is full and every number used exactly once.
- *
- * **Two upstream shapes preserved deliberately.**
- *
- * 1. `full` is computed *across* the numbers of matching length rather than per
- *    number, so a run whose length matches **no** number at all keeps
- *    `full = true` with `any = false` and is flagged — which is right (no
- *    number can ever go there) but is not what the code reads like.
- * 2. The completion re-scan indexes `done` by **run** index while the
- *    accumulation above indexes it by **number** index. Those coincide only
- *    because a solved Nansuke has exactly one number per run — which every
- *    generated board does. `done` is sized to hold both so that a hand-authored
- *    description with a mismatched count cannot read out of bounds (the C reads
- *    past its allocation there).
- */
-export function validateBoard(
-  puzzle: CrossingPuzzle,
-  grid: Uint8Array,
-): ValidateResult {
-  const { numbers, runs } = puzzle;
-  const done = new Int32Array(Math.max(numbers.length, runs.length));
-  const runErrs = new Uint8Array(runs.length);
-  let status: SolveStatus = "valid";
-
-  for (let i = 0; i < runs.length; i++) {
-    const cells = runs[i].cells;
-    let any = false;
-    let full = true;
-
-    for (let l = 0; l < numbers.length; l++) {
-      const num = numbers[l];
-      if (num.length !== cells.length) continue;
-
-      let match = true;
-      for (let k = 0; k < cells.length; k++) {
-        const digit = grid[cells[k]];
-        if (digit === 0) full = false;
-        if (digit !== num[k]) match = false;
-      }
-
-      if (match) {
-        any = true;
-        done[l]++;
-      }
-    }
-
-    if (status === "valid" && !full) status = "progress";
-    if (full && !any) {
-      status = "invalid";
-      runErrs[i] = 1;
-    }
-  }
-
-  if (status !== "invalid") {
-    for (let i = 0; i < runs.length; i++) {
-      if (done[i] > 1) {
-        status = "invalid";
-        break;
-      }
-      if (done[i] === 0) status = "progress";
-    }
-  }
-
-  return { status, done, runErrs };
-}
 
 // --- placing a whole number (the fork's number-list aid) --------------------
 

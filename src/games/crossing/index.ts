@@ -90,8 +90,10 @@ import {
   type CrossingMistake,
   deduceCrossingPlan,
   findMistakes,
+  rules,
   shownMarks,
   solveCrossing,
+  status,
 } from "./solver.ts";
 import {
   atCrossing,
@@ -113,7 +115,6 @@ import {
   placedRuns,
   runForNumber,
   snapDirection,
-  status,
   textFormat,
   validateParams,
 } from "./state.ts";
@@ -738,6 +739,7 @@ export const crossingGame: Game<
   status,
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes: (_state, mistakes) => clearEntries(entryMoves, mistakes),

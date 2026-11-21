@@ -78,6 +78,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -93,7 +94,7 @@ import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/r
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
 import { LISTED } from "./hint-marks.ts";
-import type { CrossingMistake } from "./solver.ts";
+import { ACROSS_READS, type CrossingMistake, DOWN_READS, rules } from "./solver.ts";
 import {
   type CrossingMove,
   type CrossingNumber,
@@ -102,7 +103,6 @@ import {
   type CrossingUi,
   numberAvailableTo,
   placedRuns,
-  validateBoard,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 40;
@@ -793,11 +793,15 @@ export function redraw(
   // Upstream hides the selection while the win flash runs.
   const cursorShown = ui.cursor.visible && !flash.winning;
 
-  // Live errors: which runs read as no listed number, spread over their cells.
-  const { done, runErrs } = validateBoard(puzzle, state.grid);
+  // Live errors: the runs that can no longer read a listed number, framed
+  // end to end, each named by its first square.
+  const live = liveErrors(rules, state);
+  const brokenRuns = [
+    ...(live.byRule.get(ACROSS_READS) ?? []).map(([c]) => puzzle.acrossRun[c]),
+    ...(live.byRule.get(DOWN_READS) ?? []).map(([c]) => puzzle.downRun[c]),
+  ];
   const errFlags = new Uint8Array(w * h);
-  for (let r = 0; r < runs.length; r++) {
-    if (!runErrs[r]) continue;
+  for (const r of brokenRuns) {
     const cells = runs[r].cells;
     const horizontal = runs[r].horizontal;
     for (let k = 0; k < cells.length; k++) {
@@ -940,11 +944,14 @@ export function redraw(
   });
 
   // The number panel keeps the bookkeeping a paper solver does by hand: a
-  // clue written in is struck off, and one written in twice is an error.
-  // Which clues fit the selected square is a deduction, so it is the
-  // reference aid's (`numbers.ts`), behind the panel that counts as help.
-  const colorClass = (l: number): number => (done[l] > 1 ? 2 : done[l] === 1 ? 1 : 0);
-  // 0 not yet written in · 1 placed (struck) · 2 duplicated. Held is not among
+  // clue written in is struck off, and one written in twice, or with no run
+  // left that could read it, is an error. Which clues fit the selected square
+  // is a deduction, so it is the reference aid's (`numbers.ts`), behind the
+  // panel that counts as help.
+  const broken = live.clues.get("numbers");
+  const colorClass = (l: number): number =>
+    broken?.has(l) ? 2 : placed[l] >= 0 ? 1 : 0;
+  // 0 not yet written in · 1 placed (struck) · 2 broken. Held is not among
   // them: it is a box drawn round the clue, so it rides in `panelState` as its
   // own bit.
   const CLASS_COLOR = [COL_TEXT, COL_DONE, COL_ERROR];

@@ -35,6 +35,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
@@ -65,7 +66,13 @@ import {
   redraw,
   tileOrigin,
 } from "./render.ts";
-import { findMistakes, solveCrossing } from "./solver.ts";
+import {
+  ACROSS_READS,
+  DOWN_READS,
+  findMistakes,
+  rules,
+  solveCrossing,
+} from "./solver.ts";
 import {
   type CrossingMove,
   type CrossingParams,
@@ -82,7 +89,6 @@ import {
   numberFitsRun,
   placedRuns,
   textFormat,
-  validateBoard,
 } from "./state.ts";
 
 const P5 = { w: 5, h: 5, sym: false, diff: DIFF_EASY };
@@ -341,14 +347,46 @@ describe("crossing solver", () => {
     expect(Array.from(solved.grid)).toEqual([0, 4, 1, 4, 2, 6, 0, 1]);
   });
 
-  it("reports invalid when a full run matches no listed number", () => {
+  it("marks a run that reads no listed number at its first square", () => {
     const state = newState(P5, FIX_DESC);
+    const run = state.puzzle.runs[0];
+    const head = run.cells[0];
     const answer = fixtureSolution();
-    const grid = answer.slice();
-    // Corrupt one cell of a full board: its run now reads as nothing listed.
-    const firstRun = state.puzzle.runs[0];
-    grid[firstRun.cells[0]] = (grid[firstRun.cells[0]] % 9) + 1;
-    expect(validateBoard(state.puzzle, grid).status).toBe("invalid");
+    // One square of the run alone, a digit no number of its length starts
+    // with: the rest of the board still open, the run already reads nothing.
+    const lengths = state.puzzle.numbers.filter((n) => n.length === run.cells.length);
+    const digit = [1, 2, 3, 4, 5, 6, 7, 8, 9].find((d) =>
+      lengths.every((n) => n[0] !== d),
+    );
+    if (digit === undefined) throw new Error("fixture: every digit starts a number");
+    const grid = new Uint8Array(answer.length);
+    grid[head] = digit;
+    const live = liveErrors(rules, { ...state, grid });
+    expect(live.byRule.get(run.horizontal ? ACROSS_READS : DOWN_READS)).toEqual([
+      [head],
+    ]);
+    expect(live.byRule.get(run.horizontal ? DOWN_READS : ACROSS_READS)).toBeUndefined();
+    expect(liveErrors(rules, { ...state, grid: answer }).byRule.size).toBe(0);
+  });
+
+  it("marks a number written in twice in the list", () => {
+    const state = newState(P5, FIX_DESC);
+    const { runs, numbers } = state.puzzle;
+    // Two runs of one length that share no square, both written with the
+    // first number of that length.
+    const apart = (a: number, b: number): boolean =>
+      a !== b &&
+      runs[a].cells.length === runs[b].cells.length &&
+      runs[a].cells.every((c) => !runs[b].cells.includes(c));
+    const r = runs.findIndex((_, a) => runs.some((_, b) => apart(a, b)));
+    const s = runs.findIndex((_, b) => apart(r, b));
+    expect(r).toBeGreaterThanOrEqual(0);
+    const l = numbers.findIndex((n) => n.length === runs[r].cells.length);
+    const grid = new Uint8Array(state.grid.length);
+    for (const run of [runs[r], runs[s]])
+      for (const [k, c] of run.cells.entries()) grid[c] = numbers[l][k];
+    const live = liveErrors(rules, { ...state, grid });
+    expect(live.clues.get("numbers")).toContain(l);
   });
 });
 

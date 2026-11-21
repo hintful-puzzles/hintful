@@ -22,7 +22,7 @@ import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.t
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { walkHint } from "../../engine/testing/plan-walk.ts";
 import { crossingGame } from "./index.ts";
-import { answerOf, searchAnswers, solveCrossing } from "./solver.ts";
+import { answerOf, searchAnswers, solveCrossing, status } from "./solver.ts";
 import {
   type CrossingNumber,
   type CrossingParams,
@@ -30,7 +30,6 @@ import {
   compareNumbers,
   makePuzzle,
   newState,
-  status,
 } from "./state.ts";
 
 /** How many ways the numbers go into the runs, one to a run, counted as far

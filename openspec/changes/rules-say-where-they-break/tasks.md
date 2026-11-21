@@ -71,7 +71,11 @@
       laid; a given segment is red only once no completion agrees with it,
       where the old check compared the shape drawn so far; `stretch(L, c,
       {x in cells(L) where P})` tests P from c outward, in the compiler, so a
-      boat walled in by water is read whole with its row still open). Run
+      boat walled in by water is read whole with its row still open).
+      Moved: crossing (its run rule is stated for rows and for columns, so a
+      broken run is named by its first square and the rule; a run is framed
+      once a digit rules out every number of its length, full or not, and a
+      number no run can still read turns red in the list). Run
       `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.

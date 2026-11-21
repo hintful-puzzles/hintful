@@ -1,14 +1,21 @@
-ok  crossing   onlyNumber                     3  sound    (want sound   )     6 queries    1.5s
+ok  crossing   onlyNumber                     3  sound    (want sound   )     6 queries    1.7s
 ok  crossing   onlyNumber (planted)           3  unsound  (want unsound )     1 queries    0.2s   at line 0
-ok  crossing   onlyRun                        3  sound    (want sound   )     2 queries    0.9s
+ok  src/games/crossing/crossing.description.yaml#onlyNumber: recorded sound, proved whole on all 1 boards
+ok  crossing   onlyRun                        3  sound    (want sound   )     2 queries    1.0s
 ok  crossing   onlyRun (planted)              3  unsound  (want unsound )     1 queries    0.2s   at clue numbers 0
-ok  crossing   sharedDigit                    3  sound    (want sound   )     6 queries    2.5s
-ok  crossing   sharedDigit (planted)          3  unsound  (want unsound )     1 queries    0.1s   at line 0
-ok  crossing   crossRuns                      3  sound    (want sound   )     9 queries    1.9s
-ok  crossing   crossRuns (planted)            3  unsound  (want unsound )     2 queries    0.2s   at cell 1
-ok  crossing   narrow                         3  sound    (want sound   )     6 queries    2.2s
+ok  src/games/crossing/crossing.description.yaml#onlyRun: recorded sound, proved whole on all 1 boards
+ok  crossing   sharedDigit                    3  sound    (want sound   )     6 queries    3.2s
+ok  crossing   sharedDigit (planted)          3  unsound  (want unsound )     1 queries    0.2s   at line 0
+ok  src/games/crossing/crossing.description.yaml#sharedDigit: recorded sound, proved whole on all 1 boards
+ok  crossing   crossRuns                      3  sound    (want sound   )     9 queries    2.3s
+ok  crossing   crossRuns (planted)            3  unsound  (want unsound )     2 queries    0.3s   at cell 1
+ok  src/games/crossing/crossing.description.yaml#crossRuns: recorded sound, proved whole on all 1 boards
+ok  crossing   narrow                         3  sound    (want sound   )     6 queries    2.5s
 ok  crossing   narrow (planted)               3  unsound  (want unsound )     1 queries    0.2s   at line 0
-ok  crossing   misread                        3  sound    (want sound   )     6 queries    0.3s
+ok  src/games/crossing/crossing.description.yaml#narrow: recorded sound, proved whole on all 1 boards
+ok  crossing   misread                        3  sound    (want sound   )     6 queries    0.4s
 ok  crossing   misread (planted)              3  unsound  (want unsound )     1 queries    0.1s   at line 0
-ok  crossing   twice                          3  sound    (want sound   )     2 queries    0.4s
+ok  src/games/crossing/crossing.description.yaml#misread: recorded sound, proved whole on all 1 boards
+ok  crossing   twice                          3  sound    (want sound   )     2 queries    0.5s
 ok  crossing   twice (planted)                3  unsound  (want unsound )     1 queries    0.1s   at clue numbers 0
+ok  src/games/crossing/crossing.description.yaml#twice: recorded sound, proved whole on all 1 boards

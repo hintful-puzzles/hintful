@@ -1,6 +1,7 @@
 /**
- * Crossing's reference aid: the clue numbers, each marked written in, written
- * in twice, still fitting or ruled out. "Fits" is the selected square's: a
+ * Crossing's reference aid: the clue numbers, each marked written in, in
+ * conflict (written in twice, or with no run left that could read it, as the
+ * rules say), still fitting or ruled out. "Fits" is the selected square's: a
  * number a run through it can take, as a click on the list would place it
  * (`runForNumber`); with no square selected, a number some run can take. It
  * is the aid that does the scan "which numbers fit here?" for the player, so
@@ -17,6 +18,8 @@ import type {
   ReferenceModel,
   ReferenceSection,
 } from "../../engine/contract/types.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
+import { rules } from "./solver.ts";
 import {
   type CrossingMove,
   type CrossingState,
@@ -24,12 +27,11 @@ import {
   numberAvailableTo,
   placedRuns,
   runForNumber,
-  validateBoard,
 } from "./state.ts";
 
 function model(state: CrossingState, ui: CrossingUi): ReferenceModel {
   const { puzzle, grid } = state;
-  const { done } = validateBoard(puzzle, grid);
+  const broken = liveErrors(rules, state).clues.get("numbers");
   const placed = placedRuns(puzzle, grid);
   const square = ui.cursor.visible && !ui.pencilMode;
   const fits = (l: number): boolean =>
@@ -37,9 +39,9 @@ function model(state: CrossingState, ui: CrossingUi): ReferenceModel {
       ? runForNumber(puzzle, grid, placed, ui.cursor.x, ui.cursor.y, l, ui.dir) >= 0
       : puzzle.runs.some((_, r) => numberAvailableTo(puzzle, grid, placed, r, l));
   const status = (l: number): ReferenceItem["status"] =>
-    done[l] > 1
+    broken?.has(l)
       ? "conflict"
-      : done[l] === 1
+      : placed[l] >= 0
         ? "placed"
         : fits(l)
           ? "outstanding"

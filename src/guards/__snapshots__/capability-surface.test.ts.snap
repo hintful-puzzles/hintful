@@ -353,6 +353,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "reference",
       "requestKeys",
       "revealOne",
+      "rules",
       "textFormat",
       "transposeParams",
       "validateParams",

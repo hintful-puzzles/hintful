@@ -21,7 +21,7 @@ help:
 
     The number list is an input surface, not just a reference. Click a number to pick it up and every run that can still take it is previewed; click one of those runs to write the whole number in at once. If a square is already selected, clicking a number that fits one of its runs places it straight away.
 
-    Across and down runs are drawn in two different colors, on the board, for the runs through the selected square; a square selected for pencil marks colors its two runs in the same way. A number written into the grid is struck off the list, and one written in twice turns red.
+    Across and down runs are drawn in two different colors, on the board, for the runs through the selected square; a square selected for pencil marks colors its two runs in the same way. A number written into the grid is struck off the list, and one written in twice, or that no run can still take, turns red. A run that no listed number can still read is framed in red as soon as one of its digits rules them all out.
 
     ### The Numbers panel
 
@@ -87,9 +87,13 @@ define:
   # written nowhere. Fitting is read first: most numbers fail it on their
   # length, and whether one is written is read again after each placement.
   free(k, R): "fits(k, R) and not written(k)"
+  # Whether the run along L from its first square c reads a number.
+  readsOne(L, c): "exists k in clues(numbers): reads(k, run(L, c))"
 shape:
-  # Every run reads a number.
-  - "forall L in lines, c in cells(L) where head(L, c): exists k in clues(numbers): reads(k, run(L, c))"
+  # Every run reads a number: the across runs, then the down runs, so a run
+  # that breaks it is named by its first square and the rule.
+  - "forall L in rows, c in cells(L) where head(L, c): readsOne(L, c)"
+  - "forall L in cols, c in cells(L) where head(L, c): readsOne(L, c)"
   # The list names each number once.
   - "forall k in clues(numbers), j in clues(numbers) where j != k: digits(j) != digits(k)"
 clues:

@@ -47,6 +47,7 @@ import {
   type CrossingFiring,
   deduceCrossingPlan,
   solveCrossing,
+  status,
 } from "./solver.ts";
 import {
   type CrossingMove,
@@ -58,7 +59,6 @@ import {
   numberAvailableTo,
   placedRuns,
   runForNumber,
-  validateBoard,
 } from "./state.ts";
 
 type Step = HintStep<CrossingMove, CrossingHint>;
@@ -84,7 +84,7 @@ function walk(
   const { end, steps } = walkPlan(state, {
     asks: 2000,
     limit: "throw",
-    done: (s) => validateBoard(s.puzzle, s.grid).status === "valid",
+    done: (s) => status(s) === "solved",
     plan: (s) => deduceCrossingPlan(s).firings.slice(0, 1),
     apply: afterFiring,
     step: (f, before) => each(f, before),
