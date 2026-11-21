@@ -388,6 +388,11 @@
       "additionalProperties": { "$ref": "#/$defs/formula" },
       "description": "Goal predicates, by name."
     },
+    "implied": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/formula" },
+      "description": "Statements the rules imply, by name, said so a breach shows on a board still being filled: read by the live error check alone."
+    },
     "clues": {
       "type": "object",
       "description": "Clue kinds: where one sits, its values, and what it means, reading `at` and `v`.",
@@ -671,6 +676,7 @@
         },
         "shape": { "$ref": "#/$defs/shape" },
         "rules": { "$ref": "#/$defs/rules" },
+        "implied": { "$ref": "#/$defs/implied" },
         "clues": { "$ref": "#/$defs/clues" },
         "freedom": {
           "type": "object",

@@ -71,6 +71,7 @@ const GEOMETRY = new Set([
   "compass",
   "chain",
   "last",
+  "onward",
   "stretch",
   "run_lengths",
   "connected",

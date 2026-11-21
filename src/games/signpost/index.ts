@@ -61,11 +61,11 @@ import {
 } from "./hint.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
 import { BORDER, buildPalette, redrawSignpost } from "./render.ts";
-import { answerOf, isAnswer, solverFinishes } from "./solver.ts";
+import { answerOf, isAnswer, rules, solverFinishes } from "./solver.ts";
 import {
-  checkCompletion,
   FLAG_IMMUTABLE,
   isValidMove,
+  linkConsecutive,
   parseDesc,
   type SignpostDrawState,
   type SignpostMistake,
@@ -173,7 +173,7 @@ function newState(p: SignpostParams, desc: string): SignpostState {
   // Upstream `new_game` finalization: derive numbers and auto-link
   // consecutive immutable numbers.
   updateNumbers(s);
-  checkCompletion(s, true);
+  linkConsecutive(s);
   return s;
 }
 
@@ -456,6 +456,7 @@ export const signpostGame: Game<
   }),
 
   solve,
+  rules,
   findMistakes,
   clearMistakes,
   revealOne,

@@ -350,13 +350,14 @@ export function compileGame(
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const compiled = own.map((t) => ({ id: t.id, ...compileTechnique(t, env) }));
   const code = compiled.map((c) => c.code);
+  const check = Out.own("isAnswer", () => answerCheck(json, d, env));
+  const broken = Out.own("violations", () => violationsOf(json, d, env));
+  // Kept by a technique or by the rules alone (Signpost's `nextGiven`).
   const kept = env.kept?.defs ?? new Map();
   for (const fn of kept.keys())
     if (own.some((t) => t.id === fn))
       throw new CompileError(`${fn}: a kept definition and a technique share the name`);
   code.push(...[...kept.values()].map((k) => k.code));
-  const check = Out.own("isAnswer", () => answerCheck(json, d, env));
-  const broken = Out.own("violations", () => violationsOf(json, d, env));
   const scales = Object.entries(d.json.scales ?? {});
   const sizes = [...env.sizes.read].sort();
   const clueLines =
@@ -576,7 +577,7 @@ export function compileGame(
     " * way names it by a name the description has. */",
     `export type RuleName = ${quoted([
       "domain",
-      ...ruleList(json).map((r) => r.name),
+      ...[...ruleList(json), ...impliedList(json)].map((r) => r.name),
       ...[...d.clueKinds.keys()].map((k) => `clue.${k}`),
     ])};`,
     "",
@@ -773,8 +774,19 @@ function ruleList(
   ];
 }
 
+/** The statements the rules imply, said so a breach shows on a board still
+ * being filled: the violation check's alone. The answer check and the
+ * soundness checker would gain nothing from them but their cost. */
+function impliedList(json: DescriptionJson): { src: string; name: string; on: null }[] {
+  return Object.entries(json.implied ?? {}).map(([name, src]) => ({
+    src,
+    name,
+    on: null,
+  }));
+}
+
 /** The violation check (`compile-violations.ts`) over the same statements
- * as {@link answerCheck}. */
+ * as {@link answerCheck}, and those they imply. */
 function violationsOf(json: DescriptionJson, d: Description, env: Env): string[] {
   const { grid } = json.space;
   const measured = grid === undefined ? (e: Expr) => e : measuredBy(grid);
@@ -803,7 +815,11 @@ function violationsOf(json: DescriptionJson, d: Description, env: Env): string[]
       readsV: reads(c.means, "v"),
     }));
   return violationCheck(
-    ruleList(json).map((r) => ({ name: r.name, expr: parse(r.src), on: r.on })),
+    [...ruleList(json), ...impliedList(json)].map((r) => ({
+      name: r.name,
+      expr: parse(r.src),
+      on: r.on,
+    })),
     clueMeanings,
     domain,
     measured,

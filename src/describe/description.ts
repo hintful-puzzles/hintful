@@ -83,6 +83,9 @@ export interface DescriptionJson {
   breaks?: Record<string, BreakJson>;
   shape?: string[];
   rules?: Record<string, string>;
+  /** Statements the rules imply, by name, said so a breach shows on a board
+   * still being filled: read by the violation check alone. */
+  implied?: Record<string, string>;
   clues?: Record<
     string,
     {

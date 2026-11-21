@@ -1003,6 +1003,36 @@ function namedBy(ctx: Ctx, c: number): Alt[] {
   return merged(parts);
 }
 
+const onwardCache = new WeakMap<Board, Map<string, Alt[][]>>();
+
+/** The cells `onward(c, t)` may be for each `t` up to `most`, under the
+ * values naming the links; made once a board, as a rule reads it of many
+ * bindings. Under a supposition, made afresh. */
+function onwardWalk(ctx: Ctx, c: number, most: number): Alt[][] {
+  const cache =
+    ctx.supposed.length > 0
+      ? new Map<string, Alt[][]>()
+      : (onwardCache.get(ctx.board) ??
+        onwardCache.set(ctx.board, new Map()).get(ctx.board) ??
+        new Map());
+  const key = `${ctx.mode} ${c}`;
+  const walk = cache.get(key) ?? [[[c, true]] as Alt[]];
+  cache.set(key, walk);
+  while (walk.length <= most) {
+    const at: Alt[] = walk[walk.length - 1];
+    walk.push(
+      merged(
+        at.flatMap(([id, g]) =>
+          id < 0
+            ? [[-1, g] as const]
+            : namedBy(ctx, id).map(([to, h]) => [to, and(g, h)] as const),
+        ),
+      ),
+    );
+  }
+  return walk;
+}
+
 /** Each cell's chain read as reach: a cell is in it where a member holds
  * the value naming it, as many steps as the board has cells. */
 function chainReach(ctx: Ctx): (c: number) => Bx[] {
@@ -2407,6 +2437,23 @@ function call(fn: string, args: readonly Expr[], env: Env, ctx: Ctx): V {
       return lift(vs[0], fn, (c) =>
         c < 0 ? none : { k: "elem", sort: "cell", alts: namedBy(ctx, c) },
       );
+    case "onward": {
+      // The cell each count of links on reaches, under the values naming
+      // the links, as far as the count can be; none once a link names none.
+      const i = num(vs[1], fn);
+      const most = bounds(i)?.[1] ?? 2 * sp.cells.length;
+      return lift(vs[0], fn, (c) => {
+        if (c < 0) return none;
+        const walk = onwardWalk(ctx, c, most);
+        const parts: Alt[] = [];
+        for (let t = 0; t <= most; t++) {
+          const now = cmp("=", i, t);
+          for (const [id, g] of walk[t]) parts.push([id, and(now, g)]);
+        }
+        parts.push([-1, or(cmp("<", i, 0), cmp(">", i, most))]);
+        return { k: "elem", sort: "cell", alts: merged(parts) };
+      });
+    }
     case "chain": {
       const reachOf = chainReach(ctx);
       return lift(vs[0], fn, (c) => {

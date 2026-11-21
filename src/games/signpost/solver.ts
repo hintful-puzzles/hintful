@@ -13,6 +13,7 @@
  * this file proves has a single answer that the ladder stops short of.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import {
   type Answer,
   answerCache,
@@ -25,6 +26,7 @@ import {
   describedSpace,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -190,13 +192,21 @@ export function deduction(
   return { m, ladder: describedLadder(signpost, dl), dl };
 }
 
+/** The board as its rules read it: a link is its value, the last number's
+ * square the last, any other square without a link undecided. */
+export const rules: RulesOf<SignpostState> = describedRules(signpost, {
+  grid: valuesOf,
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s)],
+});
+
+/** The rules whose breach the board shows at its squares: a number held
+ * twice, a number and the next off its arrow, a square before the first. */
+export const MARKED: readonly signpost.RuleName[] = ["between", "pointing", "first"];
+
 /** Whether a board's links are its answer, by the description's rules. */
 export function isAnswer(s: SignpostState): boolean {
-  return signpost.isAnswer(
-    valuesOf(s),
-    describedSpace(signpost.units, s.w, s.h),
-    dealtOf(s),
-  );
+  return rules.isAnswer(s, rules.grid(s));
 }
 
 /**

@@ -27,7 +27,6 @@ export const dirOpposite = (d: number): number => (d + 4) % 8;
 // --- flags -----------------------------------------------------------
 
 export const FLAG_IMMUTABLE = 1;
-export const FLAG_ERROR = 2;
 
 // --- types -----------------------------------------------------------
 
@@ -53,7 +52,7 @@ export interface SignpostState {
   /** Derived sequence number per cell: a real number 1..n, or a
    * color-group-encoded placeholder `START(c) + offset` (0 = blank). */
   nums: Int32Array;
-  /** FLAG_IMMUTABLE | FLAG_ERROR bits per cell. */
+  /** FLAG_IMMUTABLE per cell: its number is given. */
   flags: Uint8Array;
   /** Chain links (cell indices, -1 = absent). */
   next: Int32Array;
@@ -447,57 +446,15 @@ export function updateNumbers(s: SignpostState): void {
   }
 }
 
-/** Upstream `check_completion`: recompute FLAG_ERROR (optionally) and
- * return whether the board is complete. When `markErrors`, also make the
- * implicit `n → n+1` links explicit (upstream convenience). */
-export function checkCompletion(s: SignpostState, markErrors: boolean): boolean {
-  let error = false;
-  let complete = true;
-
-  if (markErrors) {
-    for (let j = 0; j < s.n; j++) s.flags[j] &= ~FLAG_ERROR;
-  }
-
-  // Repeated real numbers.
-  for (let j = 0; j < s.n; j++) {
-    if (isReal(s, s.nums[j])) {
-      for (let k = j + 1; k < s.n; k++) {
-        if (s.nums[k] === s.nums[j]) {
-          if (markErrors) {
-            s.flags[j] |= FLAG_ERROR;
-            s.flags[k] |= FLAG_ERROR;
-          }
-          error = true;
-        }
-      }
-    }
-  }
-
-  // Numbers n not pointing to n+1; missing numbers ⇒ incomplete.
+/** Link each number to the next wherever its arrow points at the square
+ * holding it (upstream `check_completion`'s convenience): the board makes
+ * those links itself. */
+export function linkConsecutive(s: SignpostState): void {
   for (let n = 1; n < s.n; n++) {
-    if (s.numsi[n] === -1 || s.numsi[n + 1] === -1) {
-      complete = false;
-    } else if (!isPointingI(s, s.numsi[n], s.numsi[n + 1])) {
-      if (markErrors) {
-        s.flags[s.numsi[n]] |= FLAG_ERROR;
-        s.flags[s.numsi[n + 1]] |= FLAG_ERROR;
-      }
-      error = true;
-    } else if (markErrors) {
-      makeLink(s, s.numsi[n], s.numsi[n + 1]);
-    }
+    const from = s.numsi[n];
+    const to = s.numsi[n + 1];
+    if (from !== -1 && to !== -1 && isPointingI(s, from, to)) makeLink(s, from, to);
   }
-
-  // Cells numbered < 0, or 0 with links (from cell 1, as upstream).
-  for (let i = 1; i < s.n; i++) {
-    if (s.nums[i] < 0 || (s.nums[i] === 0 && (s.next[i] !== -1 || s.prev[i] !== -1))) {
-      error = true;
-      if (markErrors) s.flags[i] |= FLAG_ERROR;
-    }
-  }
-
-  if (error) return false;
-  return complete;
 }
 
 // --- desc codec ------------------------------------------------------

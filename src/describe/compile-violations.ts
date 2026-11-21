@@ -268,9 +268,17 @@ class Check {
       return;
     }
     if (e.k === "quant" && e.q === "forall") {
+      // A binding a filter leaves undecided breaks nothing yet, so the
+      // statement reads no further into it: Signpost's squares a given
+      // number's links have not reached.
       this.stopped(() =>
-        this.binders(e.binders, scope, guard, (sc, g, names) =>
-          this.where(rule, clue, e.body, sc, [...bound, ...names], g),
+        this.binders(
+          e.binders,
+          scope,
+          guard,
+          (sc, g, names) => this.where(rule, clue, e.body, sc, [...bound, ...names], g),
+          [],
+          true,
         ),
       );
       return;
@@ -298,7 +306,8 @@ class Check {
    * Loops over `binders`, their filters read as verdicts: a binding a
    * filter is false of is skipped, and one it is undecided of goes on with
    * `guard` undecided. `body` gets the scope, the guard, and the names of
-   * the bound elements that hold the answer's values.
+   * the bound elements that hold the answer's values. Where `sureOnly`, a
+   * binding not surely one is skipped instead.
    */
   private binders(
     binders: readonly Binder[],
@@ -306,6 +315,7 @@ class Check {
     guard: string,
     body: (sc: Scope, guard: string, names: string[]) => void,
     names: string[] = [],
+    sureOnly = false,
   ): void {
     if (binders.length === 0) {
       body(scope, guard, names);
@@ -313,6 +323,9 @@ class Check {
     }
     const [first, ...rest] = binders;
     const { out, env } = this;
+    const enter = (w: string) => (sureOnly ? `${w} === ${T}` : `${w} !== ${F}`);
+    const inner = (sc: Scope, g: string, own: string[]) =>
+      this.binders(rest, sc, g, body, own, sureOnly);
     const run =
       first.kind === "in" ? stretchOf({ k: "size", of: first.of }, scope, env) : null;
     const sides = run === null ? null : this.sureAndMaybe(run[2], scope);
@@ -335,13 +348,14 @@ class Check {
         c.sort.k === "elem" && c.sort.e === env.answerSort ? [...names, v] : names;
       const g = Out.fresh("_gd");
       out.emit(`const ${g}: number = ${sure}.includes(${v}) ? ${guard} : ${U};`);
-      if (first.where === null) this.binders(rest, sc, g, body, own);
+      if (sureOnly) out.emit(`if (${g} !== ${T}) continue;`);
+      if (first.where === null) inner(sc, g, own);
       else {
         const w = this.verdict(first.where, sc);
-        out.open(`if (${w} !== ${F}) {`);
+        out.open(`if (${enter(w)}) {`);
         const g2 = Out.fresh("_gd");
         out.emit(`const ${g2}: number = ${w} === ${T} ? ${g} : ${U};`);
-        this.binders(rest, sc, g2, body, own);
+        inner(sc, g2, own);
         out.close();
       }
       out.close();
@@ -354,14 +368,14 @@ class Check {
           ? [...names, v.code]
           : names;
       if (first.where === null) {
-        this.binders(rest, sc, guard, body, own);
+        inner(sc, guard, own);
         return;
       }
       const w = this.verdict(first.where, sc);
-      out.open(`if (${w} !== ${F}) {`);
+      out.open(`if (${enter(w)}) {`);
       const g = Out.fresh("_gd");
       out.emit(`const ${g}: number = ${w} === ${T} ? ${guard} : ${U};`);
-      this.binders(rest, sc, g, body, own);
+      inner(sc, g, own);
       out.close();
     });
   }

@@ -7,11 +7,11 @@
 
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
-  checkCompletion,
   cloneState,
   colorOf,
   inGrid,
   isValidMove,
+  linkConsecutive,
   makeLink,
   type SignpostMove,
   type SignpostState,
@@ -63,8 +63,7 @@ export function executeMove(s: SignpostState, move: SignpostMove): SignpostState
   }
 
   updateNumbers(ret);
-  // Marks the errors (and links consecutive numbers) on the new board.
-  checkCompletion(ret, true);
+  linkConsecutive(ret);
   return ret;
 }
 

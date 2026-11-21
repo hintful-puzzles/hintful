@@ -36,8 +36,8 @@ import {
   type SignpostRung,
 } from "./solver.ts";
 import {
-  checkCompletion,
   cloneState,
+  linkConsecutive,
   makeLink,
   type SignpostMove,
   type SignpostState,
@@ -104,7 +104,7 @@ function stepOf(
   const f = firingBefore(state, taken.entry.id as SignpostRung, taken.facts, before);
   makeLink(board, f.from, f.to);
   updateNumbers(board);
-  checkCompletion(board, true);
+  linkConsecutive(board);
   for (let i = 0; i < board.n; i++)
     if (board.next[i] >= 0 && m.grid[i] === 0)
       m.place(i, linkValue(board, i, board.next[i]));

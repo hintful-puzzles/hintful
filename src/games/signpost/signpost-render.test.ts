@@ -9,6 +9,7 @@
 import { describe, expect, it } from "vitest";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   type Flash,
   NO_FLASH,
@@ -26,10 +27,9 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { newSignpostDesc } from "./generator.ts";
 import { signpostGame } from "./index.ts";
 import { BORDER, COL_GRID } from "./render.ts";
-import { solveState } from "./solver.ts";
+import { rules, solveState } from "./solver.ts";
 import {
   cloneState,
-  FLAG_ERROR,
   FLAG_IMMUTABLE,
   type SignpostMove,
   type SignpostParams,
@@ -93,7 +93,7 @@ describe("Signpost render scenarios", () => {
           };
           try {
             const after = signpostGame.executeMove(s0, m);
-            if (after.impossible || after.flags[from] & FLAG_ERROR) continue;
+            if (after.impossible || liveErrors(rules, after).byRule.size > 0) continue;
             wrongMove = m;
             scenarioId = `${signpostGame.encodeParams(p, true)}:${desc}`;
             break;

@@ -3,6 +3,7 @@
 
 import type { Marks } from "./marks.ts";
 import type { GridSpace } from "./space.ts";
+import { decidedIf, undecided } from "./violations.ts";
 
 const rays = new WeakMap<GridSpace, Map<number, readonly number[]>>();
 /** The space asked last and its rays, by `c` and `n`. */
@@ -103,6 +104,52 @@ export function chain(
     out.push(at);
   }
   return out.length > 1 ? out.sort((a, b) => a - b) : out;
+}
+
+/** `next(c)`, where an undecided link stops the walk at no one cell: the
+ * walk could go on to any of them, so a term it stops is not read over the
+ * stopping cell's values. */
+function linkOn(next: (c: number) => number, c: number): number {
+  try {
+    return next(c);
+  } catch (e) {
+    undecided(e);
+    decidedIf(false);
+    return -1;
+  }
+}
+
+/**
+ * `x in chain(c)`, walking from `c` no further than `x`: on a board still
+ * being filled it is decided once the links from `c` reach `x`, whatever
+ * lies past it.
+ */
+export function chainHolds(
+  sp: GridSpace,
+  next: (c: number) => number,
+  c: number,
+  x: number,
+): boolean {
+  if (c < 0 || x < 0) return false;
+  if (reached.length < sp.cells.length) reached = new Int32Array(sp.cells.length);
+  if (++walk === 0x7fffffff) {
+    reached.fill(0);
+    walk = 1;
+  }
+  const stamp = walk;
+  for (let at = c; at >= 0 && reached[at] !== stamp; at = linkOn(next, at)) {
+    if (at === x) return true;
+    reached[at] = stamp;
+  }
+  return false;
+}
+
+/** `onward(c, i)`: the cell `i` links on from `c`, `c` itself for 0; none
+ * where a link before it names none, or for `i` below 0. */
+export function onward(next: (c: number) => number, c: number, i: number): number {
+  let at = i < 0 ? -1 : c;
+  for (let k = 0; k < i && at >= 0; k++) at = linkOn(next, at);
+  return at;
 }
 
 /**

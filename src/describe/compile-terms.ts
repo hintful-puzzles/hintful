@@ -57,6 +57,7 @@ const EARLY = new Set([
   "to",
   "chain",
   "last",
+  "onward",
   "slash",
   "linked",
   "through",
@@ -140,6 +141,7 @@ export function early(
         e.fn === "to" ||
         e.fn === "chain" ||
         e.fn === "last" ||
+        e.fn === "onward" ||
         e.fn === "linked"
       )
         marks.read = true;
@@ -787,6 +789,7 @@ const MARK_READS = new Set([
   "to",
   "chain",
   "last",
+  "onward",
   "linked",
   "place",
   "strike",

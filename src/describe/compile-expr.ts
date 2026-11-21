@@ -602,6 +602,22 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     const code = `chainHas(sp, b, ${namedBy(Out.fresh("_x"), env)}, ${x.code}, ${c.code})`;
     return { code: op === "in" ? code : `!${code}`, sort: BOOL };
   }
+  // Read otherwise, it walks from `c` no further than `x`: decided on a
+  // board still being filled once the links reach it.
+  if (
+    (op === "in" || op === "notin") &&
+    e.b.k === "call" &&
+    e.b.fn === "chain" &&
+    e.b.args.length === 1
+  ) {
+    const x = compileExpr(e.a, scope, env, out);
+    expectElem(x, "cell", op);
+    const c = compileExpr(e.b.args[0], scope, env, out);
+    expectElem(c, "cell", "chain");
+    env.used.add("chainHolds");
+    const code = `chainHolds(sp, ${namedBy(Out.fresh("_x"), env)}, ${c.code}, ${x.code})`;
+    return { code: op === "in" ? code : `!${code}`, sort: BOOL };
+  }
   const a = compileExpr(e.a, scope, env, out);
   // `c in cells(r)` of a rectangle a binder names compares the cell with its
   // sides, and no list of its cells is made.
@@ -2876,6 +2892,15 @@ function call(
       return {
         code: `chain(sp, ${namedBy(Out.fresh("_x"), env)}, ${cell(0)})`,
         sort: setOf(elem("cell")),
+      };
+    }
+    case "onward": {
+      arity(2);
+      expect(vs[1], "num", fn);
+      env.used.add("onward");
+      return {
+        code: `onward(${namedBy(Out.fresh("_x"), env)}, ${cell(0)}, ${vs[1].code})`,
+        sort: elem("cell"),
       };
     }
     case "last": {

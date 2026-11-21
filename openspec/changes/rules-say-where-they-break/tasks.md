@@ -14,7 +14,7 @@
       (`Game.rules`, `engine/render/live-errors.ts`).
 - [x] 2.3a Tents moved, checked in the app (diamonds, red number, unpaired
       tent, boxed-in tree); its render scenarios did not move.
-- [ ] 2.3b Batch 1 of `design.md` § "Batches": the exclusion, count, run and
+- [x] 2.3b Batch 1 of `design.md` § "Batches": the exclusion, count, run and
       latin games. Look at each in the app; explain each moved snapshot.
       Moved: unruly (rules drawn their own way through `byRule` and the
       module's `RuleName`), starbattle, norinori (a cross red where its
@@ -96,21 +96,23 @@
       in the compiler; the length is the sum of the line's two ways, since
       the size of their union is not bounded; a line walled in turns red with
       squares still open, which the old check waited for).
-      Signpost waits: its numbers follow from chains of links, and a chain is
-      read only once every link of it is decided. Its old check
-      (`checkCompletion` in `state.ts`) marks a number reached twice (two
-      squares a chain numbers alike, a given one included), a number and
-      the next placed apart, and a number below 1. Each relates two numbers
-      along one chain, so `|chain(c)|` bounded alone (the decided walk from
-      c, plus the open square it stops at, below; the board above) reaches
-      none: two chains' size intervals lose that they share a walk. What
-      comes first: a compiler reading of where one square stands along
-      another's chain (exact inside the decided walk, past it where it is
-      not in it), and the number clue restated through it, as Ascent's step
-      rule was said of the square the next number is on. Run
-      `src/guards` before a
-      push: `capability-surface` records each game that declares `rules`,
-      and only CI runs it.
+      Moved: signpost (three statements under the description's new
+      `implied:`, which only the violation check reads, said between
+      consecutive given numbers,
+      counted from each end with `onward(c, i)`, the square i links on from
+      c: one square holds each number between, each points at the next, and
+      none leads to the first; `x in chain(c)` and `onward` walk no further
+      than they need, in the compiler, and a statement reads no further into
+      a binding its filter leaves undecided. Its check kept only its
+      auto-link of consecutive numbers, `linkConsecutive`. A doubled number
+      is marked only where it meets a given's number when one run passes
+      over a given: the rule pairs consecutive givens, as one over every
+      pair of squares would be cubic in the squares on a whole board, each
+      redraw.
+      The game's own link check keeps a player from most doubled numbers,
+      so in play it shows a number off its arrow from the next).
+      Run `src/guards` before a push: `capability-surface` records each
+      game that declares `rules`, and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);
       then batch 2.
 - [ ] 2.3d Bound the loop and acyclic forms; then batch 3. Loopy's and

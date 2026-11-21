@@ -273,7 +273,11 @@ description author acts on:
   otherwise, the walk is made. A chain counts as a loop for keeping a
   definition (§ "What a technique compiles to"). **`last(c)` is the cell
   `c`'s chain ends at**, whose value names none; none where the chain runs
-  into a loop. On the marks it is a lookup too.
+  into a loop. On the marks it is a lookup too. **`onward(c, i)` is the cell
+  `i` links on from `c`**, `c` itself for 0, none where a link before it
+  names none: Signpost's square some numbers on from a given one. Read on a
+  board still being filled, it and `x in chain(c)` walk no further than they
+  need, so each is decided once the links reach that far.
 - **`compass(c, a, k)` is the cell `k` squares from `c` along compass
   direction `a`**, numbered from 1 up and on clockwise to 8, up and left;
   none off the grid, or for `k` below 1. A position along an arrow is a
@@ -1074,6 +1078,18 @@ says how each form is read; what a description's author acts on:
   to come. The size of a union of stretches is not bounded, a sum of their
   sizes is: Sticks' length is `|horiz(at)| + |vert(at)|`, one of the two
   being empty, where `|stick(at)|` would mark nothing until the line closed.
+  A number counted along a chain is said between two given numbers, counted
+  from each end with `onward`: Signpost's square some numbers on from one
+  given must be the square as many short of the next, so two runs that
+  meet at one number break as a pair while the links between are open,
+  where `|chain(at)|` stays undecided until the walk is whole.
+- **A statement the rules imply goes under `implied:`**, by name, where it
+  says nothing a whole board needs: only the violation check reads it. In
+  the answer check Signpost's three took its check on a 6×8 board from 0.1
+  to 1 ms, and in the soundness checker, which conjoins every rule into each
+  query, they ran it out of memory (2026-11-21). That an implied statement
+  holds of every answer is the violation guard's to catch, as any rule's
+  soundness is.
 - **The rule's name is the violation's** (`shape.<i>` for a shape entry),
   as the answer check reports it.
 
@@ -1693,8 +1709,8 @@ the check. What a small board cannot cover:
   for each pair side by side, each member of `A` and of `B` in exactly
   one, and `paired` reads it. `chain(c)` is
   read the same way, a cell reached where a member holds the value naming
-  it by the answer's `to`, and `last(c)` as the member reached whose value
-  names none.
+  it by the answer's `to`, `last(c)` as the member reached whose value
+  names none, and `onward(c, i)` as the cell each count of links reaches.
 - **A domain stated as the values of a range that pass a test** (`{d in
   range(1, 5) where ...}`, Rome's) is checked up to the range's end, as
   `range(1, 5)` is, past the order.

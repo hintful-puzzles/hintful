@@ -109,6 +109,9 @@ define:
   # square links into j, j's links do not lead round to c, and the numbers
   # let it.
   may(c, j): "not entered(j) and c not in chain(j) and fits(c, j)"
+  # Whether given number k is the least given past given number j.
+  nextGiven(j, k): >-
+    v(k) > v(j) and not (exists q in clues(number): v(q) > v(j) and v(q) < v(k))
 shape:
   # The links run through every square in one sequence, from the first.
   - "exists c in cells: |chain(c)| = |cells|"
@@ -118,6 +121,26 @@ rules:
     (forall c in cells: clue(arrow, c) != none)
     and (exists c in cells: clue(number, c) = 1)
     and (exists c in cells: clue(number, c) = |cells|)
+# What the numbers' clues say of the numbers between two given ones, counted
+# from each end, so that a number placed twice, or a number and the next
+# placed off its arrow, shows while the links between are still being made.
+implied:
+  # Between given numbers j and k, the square i links on from j's is the
+  # square that many short of k's: one square holds each number.
+  between: >-
+    forall j in clues(number), k in clues(number) where nextGiven(j, k),
+    i in range(0, v(k) - v(j)),
+    x in cells where onward(at(j), i) = x,
+    y in cells where onward(y, v(k) - v(j) - i) = at(k): x = y
+  # The square holding each number between them points at the next.
+  pointing: >-
+    forall j in clues(number), k in clues(number) where nextGiven(j, k),
+    i in range(0, v(k) - v(j) - 1),
+    x in cells where onward(at(j), i) = x,
+    y in cells where onward(y, v(k) - v(j) - i - 1) = at(k):
+    exists e in range(1, w + h): compass(x, clue(arrow, x), e) = y
+  # No square leads to the first number.
+  first: "forall j in clues(number) where v(j) = 1, y in cells where at(j) in chain(y): y = at(j)"
 clues:
   # A square's arrow, 1 up, and on clockwise to 8, up and left.
   arrow: { at: cell, value: "range(1, 8)", means: "true" }

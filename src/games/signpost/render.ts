@@ -43,13 +43,14 @@ import type {
 } from "../../engine/contract/types.ts";
 import { drawRectCorners, drawRectOutline } from "../../engine/render/draw.ts";
 import { drawMarkSides } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { type Flash, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { SignpostHint } from "./hint.ts";
 import { ARROW } from "./hint-marks.ts";
 import { dragReleaseMove, executeMove } from "./moves.ts";
+import { MARKED, rules } from "./solver.ts";
 import {
-  FLAG_ERROR,
   FLAG_IMMUTABLE,
   isPointing,
   type SignpostDrawState,
@@ -512,6 +513,10 @@ export function redrawSignpost(
   const marks = stepMarks(hint);
   ds.hint.pack(marks, (x, y) => y * w + x);
   const hintArrows = new Set(marks.of("ring", ARROW).map((p) => p.y * w + p.x));
+  /* Where the board breaks its rules: each square of a number held twice,
+   * of a number and the next off its arrow, or before the first. */
+  const live = liveErrors(rules, renderState).byRule;
+  const broken = new Set(MARKED.flatMap((rule) => (live.get(rule) ?? []).flat()));
 
   // The route drawn last frame crosses tiles, so every tile repaints to take
   // it off; the next frame's route, if any, goes on after the tiles.
@@ -535,13 +540,7 @@ export function redrawSignpost(
         }
       }
 
-      if (
-        renderState.impossible ||
-        renderState.nums[i] < 0 ||
-        renderState.flags[i] & FLAG_ERROR
-      ) {
-        f |= F_ERROR;
-      }
+      if (renderState.impossible || broken.has(i)) f |= F_ERROR;
       if (mistakeSet?.has(i)) f |= F_MISTAKE;
       if (renderState.flags[i] & FLAG_IMMUTABLE) f |= F_IMMUTABLE;
       // The win flash runs the number path: a square's position is its number.
