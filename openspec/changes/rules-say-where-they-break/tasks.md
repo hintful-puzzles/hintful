@@ -137,9 +137,11 @@
       domain, and the guard checks each mask holds the answer's value.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
-- [ ] 2.4 Plant a broken rule and see its mark appear in a game that wrote
+- [x] 2.4 Plant a broken rule and see its mark appear in a game that wrote
       no checker (once batch 1 has moved a game whose checker is deleted:
-      edit its description's rule, see the mark move in the app).
+      edit its description's rule, see the mark move in the app). Range's
+      `shape.0` read over `adj8`: two shaded squares touching at a corner
+      were framed red in the app, and not once reverted (2026-11-21).
 - [x] 2.5 Magnets drew a clash as the pole's symbol in `ERROR`, the + pole's
       own fill, so touching + poles showed nothing. A clashing pole is a
       badge with an `INK` rim (the owner's choice, 2026-11-21).
