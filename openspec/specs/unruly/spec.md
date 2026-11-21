@@ -78,9 +78,8 @@ string with no `d` SHALL decode as Easy.
 
 ### Requirement: Params: Unruly refuses params no board can be dealt for
 
-`validateParams` SHALL reject an odd dimension, an unreasonably large `w2·h2`,
-and a `unique`-mode grid too tall or too long for any valid set of distinct
-rows (the A177790 bound).
+`validateParams` SHALL reject an odd dimension and a `unique`-mode grid too
+tall or too long for any valid set of distinct rows (the A177790 bound).
 
 #### Scenario: Invalid params are rejected
 

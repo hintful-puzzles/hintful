@@ -17,7 +17,6 @@ import {
   gridNewDesc,
   gridNewSquare,
   gridValidateDesc,
-  gridValidateParams,
   PERIODIC_GRID_TYPES,
 } from "./index.ts";
 
@@ -368,30 +367,5 @@ describe("gridNearestEdge", () => {
     // The tie must be real, or this test proves nothing about tiebreaking.
     expect(tied.length).toBeGreaterThan(1);
     expect(chosen?.index).toBe(Math.min(...tied.map((s) => s.index)));
-  });
-});
-
-describe("gridValidateParams", () => {
-  it("accepts a legal size", () => {
-    expect(gridValidateParams("square", 10, 10)).toBeNull();
-    expect(gridValidateParams("cairo", 3, 4)).toBeNull();
-  });
-
-  it("rejects non-positive dimensions", () => {
-    expect(gridValidateParams("square", 0, 5)).toMatch(/positive/);
-    expect(gridValidateParams("square", 5, -1)).toMatch(/positive/);
-  });
-
-  it("rejects an unreasonably large grid", () => {
-    // The guard exists for the resource bound, not for overflow (TS numbers
-    // are doubles) — without it a mistyped size tries to allocate hundreds of
-    // millions of objects.
-    expect(gridValidateParams("square", 1e9, 1e9)).toMatch(/unreasonably large/);
-  });
-
-  it("enforces no per-type minimum — that belongs to the game", () => {
-    // Cairo needs one dimension >= 4 to be *playable*, but that rule lives in
-    // Loopy's GRIDLIST, not the geometry. A 1x1 cairo is small, not invalid.
-    expect(gridValidateParams("cairo", 1, 1)).toBeNull();
   });
 });

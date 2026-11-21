@@ -76,8 +76,8 @@ neither `m` nor `u` as the default limit of 40.
 
 ### Requirement: Params: A Slide board of more than 48 squares is refused, dealt or loaded
 
-`validateParams` SHALL refuse a board of more than 48 squares whatever `full`
-says, so the limit holds whether the board is to be dealt or arrives with its
+Slide's width SHALL declare an `area` of 48 times its height, so the engine
+refuses a larger board whether it is to be dealt or arrives with its
 description: the solver runs an exhaustive breadth-first search whose memory
 grows explosively with board area and, past the bound, exhausts the heap
 rather than merely running slowly. The measurements that set the bound SHALL
@@ -93,8 +93,7 @@ be recorded with it.
 
 - **WHEN** a game ID opens with `7x7m25`, which is `6x7m25` one column wider,
   and carries a description
-- **THEN** it is refused with "Width times height must be at most 48; the
-  solver runs out of memory beyond that."
+- **THEN** it is refused with "Width times height must be at most 48."
 
 ### Requirement: Params: A Slide board's name gives the limit on its shortest solution
 

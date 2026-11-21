@@ -113,7 +113,6 @@ import {
   type UndeadParams,
   type UndeadState,
   type UndeadUi,
-  validateParams,
 } from "./state.ts";
 
 /** A player marking that contradicts the unique solution:
@@ -931,7 +930,6 @@ export const undeadGame: Game<
   menu,
   encodeParams,
   decodeParams,
-  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
 

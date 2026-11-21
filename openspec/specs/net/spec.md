@@ -127,18 +127,18 @@ those shapes that has one answer.
 - **THEN** none of them has exactly one answer
 - **AND** the same walk over a 3×4 wrapping board finds one that does
 
-### Requirement: Params: Net refuses a single square and a grid past a million squares
+### Requirement: Params: Net refuses a single square
 
-`validateParams` SHALL refuse a grid whose width and height are both 1, and
-one of more than 1,000,000 squares, whether or not a board is to be dealt. A
-grid one square wide and longer SHALL be admitted at Easy.
+`validateParams` SHALL refuse a grid whose width and height are both 1,
+whether or not a board is to be dealt. A grid one square wide and longer SHALL
+be admitted at Easy.
 
 #### Scenario: The smallest and the largest grids
 
-- **WHEN** a 1×1, a 1×2, a 1000×1000 and a 1000×1001 grid are validated at
-  Easy
+- **WHEN** a 1×1, a 1×2, a 100×100 and a 101×100 grid are validated at Easy
 - **THEN** the 1×1 is refused with "At least one of width and height must be
-  greater than one.", the 1000×1001 as too large, and the other two admitted
+  greater than one.", the 101×100 by the engine's bound on a board's area,
+  and the other two admitted
 
 ### Requirement: Params: Net's game modes are Bordered and Wrapping
 

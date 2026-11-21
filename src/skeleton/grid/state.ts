@@ -109,7 +109,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: SkeletonParams, _full: boolean): string | null {
   if (p.w < 3 || p.h < 3) return "Width and height must both be at least three.";
-  if (p.w * p.h > 400) return "Width times height must be at most 400.";
   return null;
 }
 

@@ -155,18 +155,6 @@ deal takes: a player can stop a deal.
 - **WHEN** an Easy 60×60 board is dealt and its ID is pasted back
 - **THEN** it opens as Easy
 
-### Requirement: Params: Rectangles refuses a grid of more than a million squares
-
-`validateParams` SHALL refuse a grid of more than 1,000,000 squares, whether a
-board is to be dealt or one arrives with its description.
-
-#### Scenario: One row too many
-
-- **WHEN** the height of `7x7de` is changed to 142858
-- **THEN** the params are refused with "Width times height must not be
-  unreasonably large."
-- **AND** with a height of 142857 they are not
-
 ### Requirement: Params: Rectangles refuses Unreasonable only where no board needs it
 
 `validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable

@@ -22,7 +22,7 @@ import type { Point } from "../../engine/contract/types.ts";
 import { isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { obfuscateBitmap } from "../../engine/game-id/obfuscate.ts";
-import { AREA_TOO_LARGE, unreadParams } from "../../engine/game-id/params.ts";
+import { unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
   type RandomState,
@@ -175,7 +175,6 @@ export function encodeParams(p: MinesParams, full: boolean): string {
 export function validateParams(p: MinesParams, full: boolean): string | null {
   if (full && (p.w <= 2 || p.h <= 2))
     return "Width and height must both be greater than two.";
-  if (p.w > Math.floor((2 ** 28 - 1) / p.h)) return AREA_TOO_LARGE;
   if (p.n > p.w * p.h - 9) return "There must be at least 9 more squares than mines.";
   if (p.firstClickX >= p.w) return "First-click x coordinate must be inside the grid.";
   if (p.firstClickY >= p.h) return "First-click y coordinate must be inside the grid.";

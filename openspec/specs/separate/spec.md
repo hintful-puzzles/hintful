@@ -99,10 +99,9 @@ string with no difficulty letter SHALL decode as Easy.
 
 ### Requirement: Params: Separate refuses a letter count the grid cannot be divided by
 
-`validateParams` SHALL refuse a `k` that does not divide `w·h`, and an
-unreasonably large `w·h`. Under full validation it SHALL also refuse a `k`
-equal to the whole grid, a `k` of 1, and a `k` above 26, the letters of the
-alphabet.
+`validateParams` SHALL refuse a `k` that does not divide `w·h`. Under full
+validation it SHALL also refuse a `k` equal to the whole grid, a `k` of 1, and
+a `k` above 26, the letters of the alphabet.
 
 #### Scenario: Invalid params are rejected
 

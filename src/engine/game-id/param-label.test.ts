@@ -173,9 +173,9 @@ describe("choiceName and expandChoices say a choice in the dialog's word", () =>
 describe("parametersMarkdown, over the same fields", () => {
   const md = parametersMarkdown(config);
 
-  it("lists width and height as one entry with their shared range", () => {
+  it("lists width and height as one entry with their shared range and area", () => {
     expect(md).toContain(
-      "<dt>Width, Height</dt>\n\t<dd>Size of the grid. Each must be at least 3.</dd>",
+      "<dt>Width, Height</dt>\n\t<dd>Size of the grid. Each must be at least 3. Width times height must be at most 10000.</dd>",
     );
   });
 

@@ -5,6 +5,7 @@ import type { PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
   endParams,
+  MAX_BOARD_AREA,
   parseDimensions,
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
@@ -132,6 +133,10 @@ export function validateParams(p: CubeParams, _full: boolean): string | null {
     if (p.d1 <= 0 && p.d2 <= 0)
       return "At least one grid dimension must be greater than zero.";
   }
+  // The engine's bound on a board, held here because on triangles the grid is
+  // no product of the two numbers. Before the count below, which walks it.
+  if (gridArea(p.d1, p.d2, solid.order) > MAX_BOARD_AREA)
+    return `The grid must hold at most ${MAX_BOARD_AREA} squares.`;
 
   // Enough squares in each equivalence class to host that class's faces?
   const nclasses = classCount(p.solid);

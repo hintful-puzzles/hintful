@@ -4,11 +4,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import {
-  AREA_TOO_LARGE,
-  dimensionParamConfig,
-  numberItem,
-} from "../../engine/game-id/params.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
 import {
   dims,
   num,
@@ -117,7 +113,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: SamegameParams, _full: boolean): string | null {
-  if (p.w > Number.MAX_SAFE_INTEGER / p.h) return AREA_TOO_LARGE;
   if (p.w * p.h <= 1) return "Grid area must be greater than one.";
   return null;
 }

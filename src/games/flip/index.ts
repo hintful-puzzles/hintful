@@ -17,7 +17,6 @@ import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
-  AREA_TOO_LARGE,
   dimensionParamConfig,
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
@@ -57,9 +56,6 @@ import {
 } from "./state.ts";
 
 export type { FlipMove, FlipParams, FlipState, FlipUi };
-
-/** Upstream's `INT_MAX`, for the overflow guards in `validateParams`. */
-const INT_MAX = 2147483647;
 
 // --- params ---------------------------------------------------------
 
@@ -195,17 +191,6 @@ export const flipGame: Game<
 
   encodeParams,
   decodeParams,
-
-  validateParams(p): string | null {
-    if (p.w > (INT_MAX - 3) / p.h) {
-      return AREA_TOO_LARGE;
-    }
-    const wh = p.w * p.h;
-    if (wh > (INT_MAX - 3) / wh) {
-      return AREA_TOO_LARGE;
-    }
-    return null;
-  },
 
   transposeParams: transposeDimensions(),
   paramConfig,

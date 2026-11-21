@@ -23,11 +23,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import {
-  AREA_TOO_LARGE,
-  dimensionParamConfig,
-  numberItem,
-} from "../../engine/game-id/params.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
 import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
@@ -173,7 +169,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: PalisadeParams, full: boolean): string | null {
   const { w, h, k } = p;
-  if (w > 0x7fffffff / h) return AREA_TOO_LARGE;
   const wh = w * h;
   if (wh % k) return "Region size must divide grid area.";
   if (!full) return null;

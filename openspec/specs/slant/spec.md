@@ -100,17 +100,6 @@ default difficulty, Easy.
 - **WHEN** `5x5`, the short form of the preset `5x5dh`, is decoded
 - **THEN** the params are 5 by 5 at Easy, the board `5x5de` names
 
-### Requirement: Params: Slant refuses a grid too large to count
-
-`validateParams` SHALL refuse a width times height past the largest whole
-number the app counts exactly, whether or not the board is to be dealt, with
-the collection's sentence "Width times height must not be unreasonably large."
-
-#### Scenario: A height of sixteen digits
-
-- **WHEN** `5x5de` is entered with its height written `9007199254740991`
-- **THEN** the params are refused with that sentence
-
 ### Requirement: Description: Slant descriptions are run-length clue grids
 
 The desc SHALL be the `(w+1) × (h+1)` vertex-clue grid row-major, in the

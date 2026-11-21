@@ -4,6 +4,7 @@ import {
   atof,
   dimensionParamConfig,
   formatG,
+  MAX_BOARD_AREA,
   paramsError,
   parseDimensions,
   parseLeadingFloat,
@@ -238,6 +239,26 @@ describe("paramsError", () => {
       "Mode must be one of A, B.",
     );
     expect(paramsError(retiring, { w: 5, h: 5, mode: 3 }, false)).not.toBeNull();
+  });
+
+  it("holds width times height to the engine's area, before the game", () => {
+    const unbounded = {
+      paramConfig: dimensionParamConfig<P>({ doc: "Size." }),
+      validateParams: () => "asked",
+    };
+    expect(paramsError(unbounded, { w: 100, h: 100, mode: 0 }, false)).toBe("asked");
+    expect(paramsError(unbounded, { w: 101, h: 100, mode: 0 }, false)).toBe(
+      `Width times height must be at most ${MAX_BOARD_AREA}.`,
+    );
+    const tighter = {
+      paramConfig: dimensionParamConfig<P>({ doc: "Size.", maxArea: 999 }),
+    };
+    expect(paramsError(tighter, { w: 50, h: 20, mode: 0 }, true)).toBe(
+      "Width times height must be at most 999.",
+    );
+    expect(() =>
+      dimensionParamConfig<P>({ doc: "Size.", maxArea: MAX_BOARD_AREA + 1 }),
+    ).toThrow();
   });
 
   it("asks the game only once the items are satisfied", () => {

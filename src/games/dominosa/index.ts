@@ -76,6 +76,7 @@ import {
   EDGE_R,
   EDGE_T,
   encodeParams,
+  MAX_ORDER,
   menu,
   newState,
   status,
@@ -592,7 +593,7 @@ export const dominosaGame: Game<
       "n",
       {
         doc: "The highest number that appears on a domino. The set runs from 0–0 up to this number doubled, one of each, so a maximum of <em>n</em> gives a grid <em>n</em>+1 squares wide and <em>n</em>+2 tall.",
-        bounds: { min: 1 },
+        bounds: { min: 1, max: MAX_ORDER },
         label: { slot: "size", words: (p) => `Order ${p.n}` },
       },
     ),

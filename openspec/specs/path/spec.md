@@ -60,7 +60,7 @@ Path and Pairs SHALL be the game's two rulesets, in that order, in the Custom di
 
 ### Requirement: Params: Path's params are its declared codec's
 
-The params SHALL be the width, the height, the ruleset and the tier, written `<w>x<h>[z]d<tier letter>`: `z` for the Path ruleset and nothing for Pairs, so a string written before the game had rulesets decodes to Pairs, and the tier letters `e`, `n`, `t` and `u`. The tier SHALL be written only in the full form; a string without it SHALL decode to Normal. Width and height SHALL each be at least 3, and their product at most 400.
+The params SHALL be the width, the height, the ruleset and the tier, written `<w>x<h>[z]d<tier letter>`: `z` for the Path ruleset and nothing for Pairs, so a string written before the game had rulesets decodes to Pairs, and the tier letters `e`, `n`, `t` and `u`. The tier SHALL be written only in the full form; a string without it SHALL decode to Normal. Width and height SHALL each be at least 3.
 
 #### Scenario: A params string round-trips
 

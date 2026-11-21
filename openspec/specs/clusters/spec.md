@@ -60,10 +60,9 @@ tier letters SHALL be `e`, `t` and `u`.
 
 ### Requirement: Params: Clusters refuses a board size that has no puzzle
 
-Validation SHALL reject a board whose area is at least 10000 as too large and
-one whose area is less than 2 as too small. It SHALL additionally reject a
-board no larger than 2×2 in both dimensions, which has no Clusters puzzle at
-any difficulty.
+Validation SHALL reject a board whose area is less than 2 as too small. It
+SHALL additionally reject a board no larger than 2×2 in both dimensions, which
+has no Clusters puzzle at any difficulty.
 
 #### Scenario: A board with no puzzle at all is rejected
 

@@ -21,7 +21,6 @@ import { UI_UPDATE } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { modifierItem } from "../../engine/game-id/modifier.ts";
 import {
-  AREA_TOO_LARGE,
   dimensionParamConfig,
   endParams,
   paramsLetter,
@@ -365,7 +364,6 @@ function lacksTier({ w, h, mode, diff }: AscentParams): boolean {
 
 function validateParams(p: AscentParams, full: boolean): string | null {
   const { w, h } = p;
-  if (w * h >= 1000) return AREA_TOO_LARGE;
   if (p.mode === MODE_HEXAGON && (h & 1) === 0) return "Height must be an odd number.";
   if (p.mode === MODE_HEXAGON && w <= Math.trunc(h / 2))
     return "Width must be more than half the height for a hexagon grid.";
@@ -433,6 +431,9 @@ const paramConfig: ParamConfigItem<AscentParams>[] = [
   ...dimensionParamConfig<AscentParams>({
     doc: `Size of the grid in squares. The smallest boards lack some difficulties: a 2x2 has only Easy puzzles, a 3x3 ${CLASSIC} or ${ASCENT_SHAPE_NAMES[SHAPE_HEXAGON]} board has none at Normal, and a ${CLASSIC} board two squares wide has none at Hard.`,
     bounds: { min: 2, max: 50 },
+    // The path's numbers run to the area, and a typed number stops at three
+    // digits.
+    maxArea: 999,
     size: (p) => (p.mode === MODE_HEXAGON ? `Size ${p.w}` : `${p.w}x${p.h}`),
   }),
   {

@@ -23,7 +23,7 @@ import type { PresetBoards } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, endParams } from "../../engine/game-id/params.ts";
+import { endParams } from "../../engine/game-id/params.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import {
   SYMM_NONE,
@@ -183,7 +183,6 @@ function absentTier(p: LightupParams): string | null {
 }
 
 export function validateParams(p: LightupParams, full: boolean): string | null {
-  if (p.w * p.h > 0x7fffffff) return AREA_TOO_LARGE;
   if (full) {
     if (p.blackpc < 5 || p.blackpc > 100)
       return "Percentage of walls must be between 5% and 100%.";

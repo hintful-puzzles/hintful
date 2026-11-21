@@ -73,17 +73,6 @@ SHALL be a square grid, after which each of them is refused.
 - **THEN** the first is `3x3b1`, a grid with every barrier drawn, and the
   second is a 3×3 grid with no barrier inside it and no wrapping
 
-### Requirement: Params: Netslide refuses a grid past a million squares
-
-`validateParams` SHALL refuse a grid of more than 1,000,000 squares, in the
-engine's words for an area too large, and SHALL refuse nothing else: a side
-under 2 is refused by the bound its field declares.
-
-#### Scenario: Either side of the bound
-
-- **WHEN** a 1000×1000 and a 1000×1001 grid are validated
-- **THEN** the first is admitted and the second refused
-
 ### Requirement: Params: Netslide's preset titles name the help the barriers give
 
 A preset SHALL be titled by its size and one of three words: `hard` where the

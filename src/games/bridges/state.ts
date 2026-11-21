@@ -19,7 +19,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import { c2nUpper, n2cUpper } from "../../engine/game-id/desc-alphabet.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { modifierItem } from "../../engine/game-id/modifier.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
@@ -231,7 +231,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: BridgesParams, full: boolean): string | null {
-  if (p.w > Math.floor(0x7fffffff / p.h)) return AREA_TOO_LARGE;
   if (full) {
     if (p.islands <= 0 || p.islands > 30)
       return "%age of island squares must be between 1% and 30%.";

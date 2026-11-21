@@ -190,10 +190,9 @@ appended at the end, and entries SHALL NOT be reordered or inserted.
 
 Per-grid-type minimum sizes (both dimensions at least `amin`; at least one
 dimension at least `omin`) SHALL be enforced by Loopy, not by the geometry
-layer, which refuses only a size that is not positive or is too large to
-build. `validateParams` SHALL also
-refuse a Penrose (kite/dart) board narrower than 4, at any height, since every
-patch drawn at that width is degenerate and no redraw recovers it.
+layer, which refuses no size. `validateParams` SHALL also refuse a Penrose
+(kite/dart) board narrower than 4, at any height, since every patch drawn at
+that width is degenerate and no redraw recovers it.
 
 #### Scenario: A Cairo board needs one side of four
 

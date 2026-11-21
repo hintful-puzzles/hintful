@@ -159,19 +159,6 @@ wall, and SHALL NOT call it a black square.
 - **WHEN** the Custom dialog is opened
 - **THEN** the field for `blackpc` is labeled as a percentage of walls
 
-### Requirement: Params: Light Up refuses a grid too large to count
-
-`validateParams` SHALL refuse a width and a height whose product is over
-2147483647, for a deal and for a game ID alike, in the collection's sentence
-for an area too large.
-
-#### Scenario: A width that overflows the count
-
-- **WHEN** the preset params `7x7b20s4d0` are changed in one place, the width,
-  to read `400000000x7b20s4d0`
-- **THEN** they are refused with "Width times height must not be unreasonably
-  large."
-
 ### Requirement: Params: A Light Up label names its walls and symmetry only when they are unusual
 
 The label of a set of params SHALL add `N% walls` after the tier only when

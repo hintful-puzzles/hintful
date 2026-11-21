@@ -14,7 +14,7 @@
 import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { numberItem } from "../../engine/game-id/params.ts";
+import { MAX_BOARD_AREA, numberItem } from "../../engine/game-id/params.ts";
 import { click } from "../../engine/input/hint-gesture.ts";
 import {
   cursorDelta,
@@ -210,7 +210,7 @@ export const cubeGame: Game<CubeParams, CubeState, CubeMove, CubeUi, CubeDrawSta
       },
     }),
     numberItem<CubeParams>("height-bottom", "Height / bottom", "d2", {
-      doc: "For the cube, the height of the grid in squares. For the other solids, this sets the length of the patch's bottom edge. On a grid of squares both numbers must be at least 2; on a grid of triangles one of them may be 0, as long as the other is not. Either way the grid needs room for every painted square with a square to spare for the solid to start on.",
+      doc: `For the cube, the height of the grid in squares. For the other solids, this sets the length of the patch's bottom edge. On a grid of squares both numbers must be at least 2; on a grid of triangles one of them may be 0, as long as the other is not. Either way the grid needs room for every painted square with a square to spare for the solid to start on, and holds at most ${MAX_BOARD_AREA} squares.`,
       bounds: { min: 0 },
     }),
   ],

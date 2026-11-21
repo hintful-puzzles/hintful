@@ -21,7 +21,6 @@ help:
 name: Skeleton
 family: shading
 sizes:
-  # At most 400 squares.
   w: { min: 3, max: 133 }
   h: { min: 3, max: 133 }
 space:

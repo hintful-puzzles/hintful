@@ -72,11 +72,11 @@ describe("Pegs midend integration — lifecycle", () => {
 
   it("newGameFromId rejects invalid params", () => {
     const h = harness();
-    // A bound Pegs applies whatever it is asked to do — the board would be
-    // 40,000 cells. Deliberately NOT the "greater than three" bound, which
-    // Pegs gates on `full`: see the next test.
+    // A bound applied whatever is asked — the board would be 40,000 cells.
+    // Deliberately NOT the "greater than three" bound, which Pegs gates on
+    // `full`: see the next test.
     const error = h.m.newGameFromId("200x200cross:PPH");
-    expect(error).toMatch(/unreasonably large/);
+    expect(error).toMatch(/at most 10000/);
   });
 
   it("newGameFromId accepts a described board below the generable minimum", () => {

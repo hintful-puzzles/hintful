@@ -14,7 +14,7 @@ import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.
 import type { KeyLabel, Point } from "../../engine/contract/types.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { modifierItem } from "../../engine/game-id/modifier.ts";
-import { numberItem } from "../../engine/game-id/params.ts";
+import { MAX_BOARD_AREA, numberItem } from "../../engine/game-id/params.ts";
 import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { colorKeysZeroIsTen } from "../../engine/input/key-labels.ts";
 import {
@@ -460,6 +460,8 @@ export const guessGame: Game<
     numberItem<GuessParams>("pegs-per-guess", "Pegs per guess", "npegs", {
       doc: "How many pegs the hidden combination has, and so how many go in each guess.",
       bounds: { min: 2 },
+      // The board is a row of pegs for each guess.
+      area: { times: "guesses", max: MAX_BOARD_AREA },
       label: { slot: "size", words: (p) => `${p.npegs}x${p.nguesses}` },
     }),
     numberItem<GuessParams>("guesses", "Guesses", "nguesses", {

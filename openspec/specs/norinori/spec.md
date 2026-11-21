@@ -41,8 +41,7 @@ answer to compare with and SHALL report nothing.
 
 A Norinori params string SHALL be the width, `x` and the height, and in the
 full form `d` and the tier's letter (`e`, `n`, `t`). A string that leaves the
-tier out SHALL decode as Easy. Each side SHALL be at least 4 and the grid at
-most 400 squares; the refusal names the bound.
+tier out SHALL decode as Easy. Each side SHALL be at least 4.
 
 #### Scenario: A board's own string
 

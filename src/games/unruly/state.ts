@@ -15,7 +15,7 @@ import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/game-id/dot-runs.ts";
 import { modifierItem } from "../../engine/game-id/modifier.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
@@ -144,9 +144,6 @@ const A177790 = [
 
 export function validateParams(p: UnrulyParams, _full: boolean): string | null {
   if (p.w2 & 1 || p.h2 & 1) return "Width and height must both be even.";
-  if (p.w2 > Number.MAX_SAFE_INTEGER / p.h2) {
-    return AREA_TOO_LARGE;
-  }
   if (p.unique) {
     if (p.w2 < 2 * A177790.length && p.h2 > A177790[p.w2 / 2]) {
       return "Puzzle is too tall for unique-rows mode.";

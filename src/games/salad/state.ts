@@ -31,7 +31,11 @@ import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts"
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
-import { numberItem, squareSize } from "../../engine/game-id/params.ts";
+import {
+  MAX_SQUARE_SIDE,
+  numberItem,
+  squareSize,
+} from "../../engine/game-id/params.ts";
 import {
   choice,
   letters,
@@ -162,7 +166,7 @@ export const paramConfig: ParamConfigItem<SaladParams>[] = [
   rulesetItem<SaladParams>(RULESETS, "mode"),
   numberItem<SaladParams>("size", "Size (s*s)", "order", {
     doc: "Size of the grid in squares.",
-    bounds: { min: 3 },
+    bounds: { min: 3, max: MAX_SQUARE_SIDE },
     label: { slot: "size", words: squareSize("order") },
   }),
   numberItem<SaladParams>("symbols", "Symbols", "nums", {

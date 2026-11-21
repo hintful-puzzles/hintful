@@ -16,11 +16,7 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import {
-  AREA_TOO_LARGE,
-  dimensionParamConfig,
-  numberItem,
-} from "../../engine/game-id/params.ts";
+import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
 import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
@@ -143,7 +139,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 
 export function validateParams(p: SeparateParams, full: boolean): string | null {
   const { w, h, k } = p;
-  if (w > 0x7fffffff / h) return AREA_TOO_LARGE;
   const wh = w * h;
   if (wh % k) return "Number of letters must divide the grid area.";
   if (!full) return null;

@@ -63,15 +63,6 @@ ID written before the game had tiers reads as it did.
 - **THEN** the params are an Easy `20 × 15` grid
 - **AND** decoding a bare `10` yields an Easy `10 × 10` grid
 
-### Requirement: Params: Pattern refuses a grid unreasonably large
-
-`validateParams` SHALL refuse an unreasonably large `w·h`.
-
-#### Scenario: A grossly oversized grid
-
-- **WHEN** params with a grossly oversized `w·h` are checked
-- **THEN** they are refused with an error string
-
 ### Requirement: Params: Pattern refuses Unreasonable at a size none of whose boards needs it
 
 `validateParams` SHALL refuse Unreasonable, when a board is to be dealt, for a

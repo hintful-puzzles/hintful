@@ -11,8 +11,8 @@
  * function named `validateParams` (a declaration, a method, or a property
  * holding a function) and follows what a `return` hands back: both branches of
  * a conditional, the text of a template with each substitution read as a word,
- * a constant by its declaration (`AREA_TOO_LARGE`), and a call by the returns
- * of the function it names (Loopy's `gridValidateParams`), each name bound in
+ * a constant by its declaration, and a call by the returns of the function it
+ * names, each name bound in
  * its own file or through its import. An expression it
  * cannot follow fails, since the sentence could not be read. Whether a sentence
  * is a fragment ("Too many mines for grid size") is a matter of reading; what

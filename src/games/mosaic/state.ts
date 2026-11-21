@@ -17,7 +17,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import type { Point } from "../../engine/contract/types.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
@@ -41,7 +41,6 @@ export const STATE_ERROR = 8;
 /** Mask of the two mark bits; also the modulus of the toggle cycle. */
 export const STATE_MARK_MASK = STATE_BLANK | STATE_MARKED;
 
-const MAX_TILES = 10000;
 const DEFAULT_SIZE = 10;
 const DEFAULT_AGGRESSIVENESS = true;
 
@@ -145,11 +144,21 @@ const BOARDS: readonly MosaicParams[] = [
  */
 const EVERY_TIER = { from: 8, to: 20 };
 
-/** The "Custom type…" form, and the field list the codec below encodes. */
+/**
+ * The "Custom type…" form, and the field list the codec below encodes.
+ *
+ * No shape is refused for its rarity or its wait. On a long thin board the one
+ * rule runs dry somewhere along it, and the share of random pictures it
+ * finishes falls to nothing (measured 2026-10-10: 5×50 none in 20,000, 8×100
+ * none in 8,000); and above Easy aggressive generation asks about every clue
+ * (measured 2026-10-20: an Unreasonable 80×80 took 107 s, and a 100×100 ran
+ * past the deadline in one search). The deal's deadline answers both, and the
+ * page ends a search that outlives it.
+ */
 export const paramConfig: ParamConfigItem<MosaicParams>[] = [
   ...dimensionParamConfig<MosaicParams>({
     fields: { w: "width", h: "height" },
-    doc: `Size of the grid in squares. The grid may hold at most ${MAX_TILES} squares. A long thin puzzle is rare, so on a grid fewer than 20 squares across a long one can take a minute or two to appear, or none is found.`,
+    doc: `Size of the grid in squares. A long thin puzzle is rare, so on a grid fewer than 20 squares across a long one can take a minute or two to appear, or none is found.`,
     bounds: { min: 3 },
   }),
   TIERS.item(
@@ -203,20 +212,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   ),
   searchTierSegment(paramConfig),
 ]);
-
-/**
- * No shape within {@link MAX_TILES} is refused for its rarity or its wait.
- * On a long thin board the one rule runs dry somewhere along it, and the
- * share of random pictures it finishes falls to nothing (measured 2026-10-10:
- * 5×50 none in 20,000, 8×100 none in 8,000); and above Easy aggressive
- * generation asks about every clue (measured 2026-10-20: an Unreasonable
- * 80×80 took 107 s, and a 100×100 ran past the deadline in one search). The
- * deal's deadline answers both, and the page ends a search that outlives it.
- */
-export function validateParams(p: MosaicParams, _full: boolean): string | null {
-  if (p.height > MAX_TILES / p.width) return AREA_TOO_LARGE;
-  return null;
-}
 
 // --- desc codec -----------------------------------------------------------
 

@@ -13,11 +13,7 @@ import {
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import {
-  AREA_TOO_LARGE,
-  parseDimensions,
-  unreadParams,
-} from "../../engine/game-id/params.ts";
+import { parseDimensions, unreadParams } from "../../engine/game-id/params.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as pegs from "../../generated/games/pegs/pegs.compiled.ts";
@@ -115,9 +111,6 @@ export function decodeParams(s: string): PegsParams {
 export function validateParams(p: PegsParams, full: boolean): string | null {
   if (full && (p.w <= 3 || p.h <= 3)) {
     return "Width and height must both be greater than three.";
-  }
-  if (p.w > 10000 / p.h) {
-    return AREA_TOO_LARGE;
   }
   if (full && p.type === TYPE_CROSS) {
     const side = (n: number) => n === 5 || n === 7 || n === 9;

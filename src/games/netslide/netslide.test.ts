@@ -135,7 +135,6 @@ describe("netslide params", () => {
     expect(error({ ...EASY_5x5, movetarget: -1 })).toBe(
       "Number of shuffling moves must be at least 0.",
     );
-    expect(error({ ...EASY_5x5, w: 1001, h: 1000 })).toMatch(/unreasonably large/);
     expect(error(EASY_5x5)).toBeNull();
   });
 

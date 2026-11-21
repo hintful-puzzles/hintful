@@ -6,7 +6,12 @@
  * value and the index to continue from.
  */
 
-import type { ParamBounds, ParamConfigItem, ParamLabel } from "../contract/game.ts";
+import type {
+  AreaBound,
+  ParamBounds,
+  ParamConfigItem,
+  ParamLabel,
+} from "../contract/game.ts";
 import { parseLeadingInt } from "./decimal.ts";
 import { onlyError } from "./only.ts";
 
@@ -165,6 +170,9 @@ export interface DimensionOptions<P> {
   doc: string;
   /** The range each must fall in. */
   bounds?: ParamBounds;
+  /** The most width times height may be, where the game's own logic needs
+   * less than {@link MAX_BOARD_AREA}; the declaration says why. */
+  maxArea?: number;
   /** The size's words in a params label, when `WxH` is not how this board is
    * sized: Ascent's hexagon is "Size 7". */
   size?: (p: P) => string | null;
@@ -204,6 +212,7 @@ export function dimensionParamConfig<P>(
     numberItem<P>("width", "Width", fields.w, {
       doc: opts.doc,
       ...bounds,
+      area: { times: "height", max: opts.maxArea ?? MAX_BOARD_AREA },
       label: {
         slot: "size",
         words: opts.size ?? ((p) => `${p[fields.w]}x${p[fields.h]}`),
@@ -225,9 +234,12 @@ export function numberItem<P>(
   opts: {
     doc: ParamConfigItem<P>["doc"];
     bounds?: ParamBounds;
+    area?: AreaBound;
     label?: ParamLabel<P>;
   },
 ): ParamConfigItem<P> {
+  if (opts.area && opts.area.max > MAX_BOARD_AREA)
+    throw new Error(`${kw}: an area of ${opts.area.max} is past ${MAX_BOARD_AREA}`);
   return {
     kw,
     name,
@@ -248,11 +260,36 @@ export function squareSize<P>(field: PlainNumberKey<P>): (p: P) => string {
 }
 
 /**
- * A `validateParams` refusal for a board whose area would overflow what the
- * game's arrays or arithmetic can hold. Where the ceiling sits is each game's
- * own; the words are the same in every game that has one.
+ * The most squares any board may have, in every game: a 100x100 board. Where a
+ * board has two sides, their fields declare it (`area`); a game sized by one
+ * number derives that number's limit from it.
+ *
+ * Measured 2026-11-21, at each game's easiest tier: dealing does not set it,
+ * since most generators find no board within the deal's deadline somewhere
+ * between 30x30 and 60x60, and the deadline answers that. Drawing does: at
+ * 200x200 a square is a few pixels on a desktop screen, and only the fastest
+ * generators (Fifteen, Blackbox, Map, Mines) still deal there.
  */
-export const AREA_TOO_LARGE = "Width times height must not be unreasonably large.";
+export const MAX_BOARD_AREA = 10_000;
+
+/** The longest side of a square board within {@link MAX_BOARD_AREA}. */
+export const MAX_SQUARE_SIDE = Math.floor(Math.sqrt(MAX_BOARD_AREA));
+
+/** The sentence refusing, and stating, the most `a` times `b` may be. */
+export function areaSentence(a: string, b: string, max: number): string {
+  return `${a} times ${b.toLowerCase()} must be at most ${max}.`;
+}
+
+/** The field an `area` multiplies by, which must be a numeric field. */
+export function areaPartner<P>(
+  config: readonly ParamConfigItem<P>[],
+  item: ParamConfigItem<P>,
+): ParamConfigItem<P> & { type: "string" } {
+  const kw = item.type === "string" ? item.area?.times : undefined;
+  const partner = config.find((i) => i.kw === kw);
+  if (partner?.type !== "string") throw new Error(`${item.kw}: area times no field`);
+  return partner;
+}
 
 /**
  * Why these params cannot be played, or `null` — the one validity check the
@@ -281,6 +318,13 @@ export function paramsError<P>(
   for (const item of game.paramConfig) {
     const error = itemError(item, p, full);
     if (error !== null) return error;
+  }
+  // Before the game's own check, which may size arrays by the area.
+  for (const item of game.paramConfig) {
+    if (item.type !== "string" || !item.area) continue;
+    const partner = areaPartner(game.paramConfig, item);
+    if (!(Number(item.get(p)) * Number(partner.get(p)) <= item.area.max))
+      return areaSentence(item.name, partner.name, item.area.max);
   }
   // What a ruleset or a modifier leaves is what it deals: a board that arrives
   // already written is not held to it.

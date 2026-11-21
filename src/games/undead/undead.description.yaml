@@ -64,7 +64,7 @@ words:
   cell: square
 family: numbers
 sizes:
-  # At most 54 squares in all.
+  # Each side at most 18, narrower than the 10,000 squares a board may hold.
   w: { min: 3, max: 18 }
   h: { min: 3, max: 18 }
   # How many ghosts, vampires and zombies the board holds, which it shows.

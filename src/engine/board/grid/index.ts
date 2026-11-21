@@ -11,7 +11,7 @@
  *   (`Grid`/`GridFace`/`GridEdge`/`GridDot`) and the shared `makeConsistent`
  *   incidence builder.
  * - [`grid-tilings.ts`](./grid-tilings.ts) — the tiling types, the size
- *   dispatch (`gridSizeFor`, every tiling), `gridValidateParams`, the
+ *   dispatch (`gridSizeFor`, every tiling), the
  *   `TilingBuilder` and the square tiling; `grid-tilings-basic.ts`,
  *   `grid-tilings-hex.ts` and `grid-tilings-dodec.ts` hold the other periodic
  *   tilings, and `tilings/` the aperiodic ones.
@@ -46,7 +46,6 @@ export {
   type GridSize,
   type GridType,
   gridNewSquare,
-  gridValidateParams,
   PERIODIC_GRID_TYPES,
 } from "./grid-tilings.ts";
 export { GridTrimmedAwayError } from "./grid-trim.ts";

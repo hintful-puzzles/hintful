@@ -87,18 +87,6 @@ of `noSuchTier`, because no 4×4 board needs a higher tier.
 - **WHEN** the params `4x4dt` or `4x4dh` are checked for a deal
 - **THEN** they are refused, and no board is dealt
 
-### Requirement: Params: Tracks refuses a grid whose area cannot be counted
-
-`validateParams` SHALL refuse, at every check, a width and a height whose
-product is past the largest whole number the program counts exactly.
-
-#### Scenario: A width in the thousands of millions of millions
-
-- **WHEN** the width of `8x8de` is changed to 1200000000000000 and the params
-  are checked, for a deal or for a board that arrives written
-- **THEN** they are refused: "Width times height must not be unreasonably
-  large."
-
 ### Requirement: Description: Tracks descriptions use the upstream encoding
 
 The desc SHALL encode the `w × h` square grid row-major: one lowercase

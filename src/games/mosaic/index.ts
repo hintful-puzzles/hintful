@@ -58,7 +58,6 @@ import {
   statusbarText,
   TIERS,
   textFormat,
-  validateParams,
 } from "./state.ts";
 
 // --- input -------------------------------------------------------------
@@ -158,7 +157,6 @@ export const mosaicGame: Game<
   menu,
   encodeParams,
   decodeParams,
-  validateParams,
   transposeParams: transposeDimensions<MosaicParams>({ w: "width", h: "height" }),
   paramConfig,
 

@@ -62,18 +62,6 @@ The colors field's bounds SHALL refuse fewer than three colors, and
   the words the bounds generate for the field the Custom dialog shows, and
   "Grid area must be greater than one." for the second
 
-### Requirement: Params: Same Game refuses an area too large to count
-
-`validateParams` SHALL refuse a `w·h` past the largest whole number the app
-counts exactly, in the collection's sentence "Width times height must not be
-unreasonably large."
-
-#### Scenario: A height of sixteen digits
-
-- **WHEN** the preset `5x5c3s2` has its height changed to `9007199254740993`
-- **THEN** the params are refused with "Width times height must not be
-  unreasonably large."
-
 ### Requirement: Params: Same Game writes its params whole in both encodings
 
 The short encoding SHALL be the full one: the color count and the scoring

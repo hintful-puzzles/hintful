@@ -103,14 +103,13 @@ Fixed cells SHALL reject monster, clear and pencil edits.
   monster cell
 - **THEN** both edits are rejected
 
-### Requirement: Params: An Undead params string is its declared codec's, and a grid past 54 squares is refused
+### Requirement: Params: An Undead params string is its declared codec's
 
 Undead's params (a width, a height and a difficulty), their bounds and their
 encoding SHALL be those its `paramConfig` and its declared codec give
 (`engine-params`, "A game declares its params encoding once, and both codec
-halves are derived"), with no departure from the codec grammar.
-`validateParams` SHALL refuse `w·h > 54`. A params string that carries no
-difficulty SHALL decode as Normal, at every size.
+halves are derived"), with no departure from the codec grammar. A params
+string that carries no difficulty SHALL decode as Normal, at every size.
 
 #### Scenario: A string with no difficulty
 
@@ -120,8 +119,7 @@ difficulty SHALL decode as Normal, at every size.
 #### Scenario: A grid of 54 squares and one of 60
 
 - **WHEN** a 6×9 board and a 6×10 board go through the engine's params check
-- **THEN** the first is accepted and the second is refused with "Width times
-  height must be at most 54."
+- **THEN** both are accepted: Undead's area is the engine's
 
 ### Requirement: Params: Undead's top tier is Unreasonable and keeps the letter t
 

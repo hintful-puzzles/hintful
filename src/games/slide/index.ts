@@ -70,6 +70,7 @@ import {
   encodeParams,
   isBlock,
   isDist,
+  MAX_CELLS,
   MAXWID,
   menu,
   newState,
@@ -251,8 +252,9 @@ function solve(orig: SlideState, curr: SlideState): SolveResult<SlideMove> {
  * `dimensionParamConfig` because their bounds differ. */
 const paramConfig: ParamConfigItem<SlideParams>[] = [
   numberItem<SlideParams>("width", "Width", "w", {
-    doc: "Size of the board in squares, counting its wall. The whole board can have at most 48 squares: past that, working out whether a board can be solved takes more memory than a browser has to give.",
+    doc: "Size of the board in squares, counting its wall. Past the most squares a board may have, working out whether it can be solved takes more memory than a browser has to give.",
     bounds: { min: 5, max: MAXWID },
+    area: { times: "height", max: MAX_CELLS },
     label: { slot: "size", words: (p) => `${p.w}x${p.h}` },
   }),
   numberItem<SlideParams>("height", "Height", "h", {

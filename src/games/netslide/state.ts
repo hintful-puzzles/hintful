@@ -10,12 +10,7 @@
 
 import { descValue } from "../../engine/contract/desc-error.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
-import {
-  AREA_TOO_LARGE,
-  endParams,
-  formatG,
-  parseLeadingFloat,
-} from "../../engine/game-id/params.ts";
+import { endParams, formatG, parseLeadingFloat } from "../../engine/game-id/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -129,11 +124,6 @@ export function decodeParams(s: string): NetslideParams {
   }
   endParams(s, i);
   return p;
-}
-
-export function validateParams(p: NetslideParams, _full: boolean): string | null {
-  if (p.w * p.h > 1_000_000) return AREA_TOO_LARGE;
-  return null;
 }
 
 /* ----------------------------------------------------------------------

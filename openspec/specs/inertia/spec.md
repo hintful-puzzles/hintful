@@ -57,18 +57,6 @@ least one.
 - **THEN** it is refused with "Grid area must be at least six squares."
 - **AND** a 3×2 board is accepted
 
-### Requirement: Params: Inertia refuses a grid too large to count
-
-`validateParams` SHALL refuse, as too large, a grid whose width times height
-is not a safe integer: one of 2⁵³ squares or more, which the game's arithmetic
-cannot hold exactly.
-
-#### Scenario: A grid a hundred million squares on each side
-
-- **WHEN** a grid a hundred million squares wide and as many high is validated
-- **THEN** it is refused with "Width times height must not be unreasonably
-  large."
-
 ### Requirement: Description: Descriptions encode the grid, and the start square becomes a stop
 
 The desc SHALL be exactly `w · h` characters from `{b, g, m, s, w, S}` (blank,

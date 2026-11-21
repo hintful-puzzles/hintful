@@ -8,11 +8,7 @@ import type { PresetBoards } from "../../engine/contract/game.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import {
-  AREA_TOO_LARGE,
-  parseDimensions,
-  unreadParams,
-} from "../../engine/game-id/params.ts";
+import { parseDimensions, unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
@@ -115,7 +111,6 @@ export function decodeParams(s: string): TwiddleParams {
 export function validateParams(p: TwiddleParams, _full: boolean): string | null {
   if (p.w < p.n) return "Width must be at least the rotating block size.";
   if (p.h < p.n) return "Height must be at least the rotating block size.";
-  if (p.w > Math.floor(0x7fffffff / p.h)) return AREA_TOO_LARGE;
   return null;
 }
 

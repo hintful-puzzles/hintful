@@ -17,7 +17,7 @@ import {
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import {
   choice,
   dims,
@@ -108,7 +108,6 @@ export const { encodeParams, decodeParams } = paramsCodec(
 );
 
 export function validateParams(p: PearlParams, _full: boolean): string | null {
-  if (p.w > Math.floor(0x7fffffff / p.h)) return AREA_TOO_LARGE;
   if (p.difficulty >= DIFF_TRICKY && p.w + p.h < 11)
     return `Width plus height must be at least 11 for ${DIFF_NAMES[DIFF_TRICKY]}.`;
   return null;

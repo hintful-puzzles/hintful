@@ -12,6 +12,7 @@
 import type { ParamBounds, ParamConfigItem } from "../contract/game.ts";
 import { onlySentences } from "./only.ts";
 import { choiceName } from "./param-label.ts";
+import { areaPartner, areaSentence } from "./params.ts";
 
 export const PARAMETERS_PLACEHOLDER = "{{parameters}}";
 
@@ -26,6 +27,8 @@ interface Entry {
   /** What the settings that narrow these fields leave of them, a sentence
    * each (`only.ts`). */
   only: string[];
+  /** The most the fields times another may be (`area`). */
+  area: string[];
 }
 
 /** The range sentence for an entry, or `""` when nothing is bounded. */
@@ -64,14 +67,19 @@ function entries<P>(config: readonly ParamConfigItem<P>[]): Entry[] {
   for (const item of config) {
     const bounds = item.type === "string" ? (item.bounds ?? null) : null;
     const only = onlySentences(config, item.kw);
+    const area =
+      item.type === "string" && item.area
+        ? [areaSentence(item.name, areaPartner(config, item).name, item.area.max)]
+        : [];
     const last = out.at(-1);
     if (typeof item.doc === "object") {
       if (!last) throw new Error(`${item.kw} shares a doc with nothing before it`);
       last.names.push(item.name);
       last.bounds.push(bounds);
       last.only.push(...only);
+      last.area.push(...area);
     } else {
-      out.push({ names: [item.name], doc: item.doc, bounds: [bounds], only });
+      out.push({ names: [item.name], doc: item.doc, bounds: [bounds], only, area });
     }
   }
   return out;
@@ -80,7 +88,9 @@ function entries<P>(config: readonly ParamConfigItem<P>[]): Entry[] {
 /** The Parameters section's body for a game with these fields. */
 export function parametersMarkdown<P>(config: readonly ParamConfigItem<P>[]): string {
   const items = entries(config).map((e) => {
-    const text = [e.doc, boundsSentence(e), ...e.only].filter((s) => s).join(" ");
+    const text = [e.doc, boundsSentence(e), ...e.area, ...e.only]
+      .filter((s) => s)
+      .join(" ");
     return `\t<dt>${e.names.join(", ")}</dt>\n\t<dd>${text}</dd>`;
   });
   return `${INTRO}\n\n<dl>\n${items.join("\n")}\n</dl>`;

@@ -9,6 +9,7 @@
  *     . . 0      x x 0
  */
 import { describe, expect, it } from "vitest";
+import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";
@@ -48,7 +49,9 @@ describe("skeleton params", () => {
 
   it("refuse a board too small or too large", () => {
     expect(validateParams({ w: 2, h: 5, diff: DIFF_EASY }, true)).toMatch(/\.$/);
-    expect(validateParams({ w: 30, h: 30, diff: DIFF_EASY }, true)).toMatch(/\.$/);
+    expect(
+      paramsError(skeletonGame, { w: 101, h: 100, diff: DIFF_EASY }, true),
+    ).toMatch(/\.$/);
     expect(validateParams(P, true)).toBeNull();
   });
 });

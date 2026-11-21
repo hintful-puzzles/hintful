@@ -93,16 +93,6 @@ decode as Easy, and a string of one number SHALL decode as a square board.
 - **WHEN** `7` is decoded
 - **THEN** it is a 7×7 Easy board with aggressive generation on
 
-### Requirement: Params: Mosaic refuses a board of more than 10000 squares
-
-`validateParams` SHALL refuse a board of more than 10000 tiles.
-
-#### Scenario: A board one row past the limit
-
-- **WHEN** the params of a board of 101×100 cells are checked
-- **THEN** they are refused with a non-null error string
-- **AND** a 100×100 board is accepted
-
 ### Requirement: Params: Mosaic's menu leaves its two smallest boards and its largest at Easy
 
 The menu `presets` builds SHALL offer its two smallest boards and its largest

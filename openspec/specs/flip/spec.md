@@ -61,16 +61,6 @@ decode as Crosses.
 - **WHEN** `"5"`, `"5x4"` and `"5x5r"` are decoded
 - **THEN** they give 5×5 Crosses, 5×4 Crosses and 5×5 Random
 
-### Requirement: Params: Flip refuses a size it cannot use
-
-Flip's `validateParams` SHALL refuse unreasonably large dimensions.
-
-#### Scenario: A board too large to hold
-
-- **WHEN** a board 50000 squares wide and 50000 high is validated
-- **THEN** it is refused with "Width times height must not be unreasonably
-  large."
-
 ### Requirement: Description: Flip descriptions are two hex strings
 
 A Flip description SHALL be the toggle matrix, a comma, then the starting

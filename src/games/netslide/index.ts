@@ -71,7 +71,6 @@ import {
   positionOf,
   poweredTiles,
   rulesOf,
-  validateParams,
 } from "./state.ts";
 
 /** Upstream's nine presets, its 5x5 made an upright 4x6. "Difficulty" is entirely a matter of how much help
@@ -256,7 +255,6 @@ export const netslideGame: Game<
   menu: { boards: PRESETS, title: presetTitle },
   encodeParams,
   decodeParams,
-  validateParams,
 
   transposeParams: transposeDimensions(),
   paramConfig: [

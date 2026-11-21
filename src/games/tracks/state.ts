@@ -45,7 +45,7 @@ import {
   UPPER_ALPHABET_SIZE,
 } from "../../engine/game-id/desc-alphabet.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { choice, dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
@@ -292,9 +292,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: TracksParams, full: boolean): string | null {
-  if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return AREA_TOO_LARGE;
-  }
   // Measured 2026-10-05: none in 50,000 boards built at each tier above Easy.
   if (full && p.w === 4 && p.h === 4 && p.diff > DIFF_EASY)
     return noSuchTier("4x4 puzzle", DIFF_NAMES[p.diff]);

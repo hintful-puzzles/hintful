@@ -206,7 +206,9 @@ compatibility decision for the owner.
   words ("Width times height must be at most 54.", not "Grid is too big")
   (`engine-params`, "A params refusal is a sentence").
   `params-refusal.test.ts` reads every string one can return, through
-  constants (`AREA_TOO_LARGE`) and helper calls.
+  constants and helper calls. A board's area is not the game's to bound:
+  `dimensionParamConfig` holds it to the engine's `MAX_BOARD_AREA`, and a game
+  whose own logic needs less declares `maxArea`, saying why.
 - **A line of
   [`params-stability.test.ts`](../src/guards/params-stability.test.ts)
   moves only with the owner's say-so.** Every line that moves is a shared

@@ -149,17 +149,6 @@ refused.
 - **AND** `9x9n10X9`, the preset `9x9n10` with `X9` added, is refused with
   "First-click x coordinate must be inside the grid."
 
-### Requirement: Params: Mines refuses a grid of 2²⁸ squares or more
-
-`validateParams` SHALL refuse a grid whose width times height is 2²⁸ or more,
-in the engine's words for an area too large, whether or not a board is to be
-generated.
-
-#### Scenario: The area bound falls between two grids
-
-- **WHEN** a 16383×16384 grid and a 16384×16384 grid are validated
-- **THEN** the first is admitted and the second refused
-
 ### Requirement: Description: Mines finishes by deduction as its hint's plan
 
 The game SHALL implement `finishesByDeduction` as the engine's walk of its

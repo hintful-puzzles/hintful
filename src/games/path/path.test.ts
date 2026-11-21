@@ -158,7 +158,7 @@ describe("path params", () => {
 
   it("refuse a board too small or too large", () => {
     expect(paramsError(pathGame, { ...P, w: 2, h: 5 }, true)).toMatch(/\.$/);
-    expect(paramsError(pathGame, { ...P, w: 30, h: 30 }, true)).toMatch(/\.$/);
+    expect(paramsError(pathGame, { ...P, w: 101, h: 100 }, true)).toMatch(/\.$/);
     expect(paramsError(pathGame, P, true)).toBeNull();
   });
 });

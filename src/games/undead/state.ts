@@ -106,7 +106,7 @@ export function defaultParams(): UndeadParams {
 /** The "Custom type…" form, and the field list the codec below encodes. */
 export const paramConfig: ParamConfigItem<UndeadParams>[] = [
   ...dimensionParamConfig<UndeadParams>({
-    doc: "Size of the grid in squares, at most 54 squares in all.",
+    doc: "Size of the grid in squares.",
     bounds: { min: 3 },
   }),
   difficultyItem(DIFF_NAMES, {
@@ -122,11 +122,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
-
-export function validateParams(p: UndeadParams, _full: boolean): string | null {
-  if (p.w > Math.floor(54 / p.h)) return "Width times height must be at most 54.";
-  return null;
-}
 
 // --- edge <-> grid mapping (range2grid / grid2range / num2grid) -------------
 

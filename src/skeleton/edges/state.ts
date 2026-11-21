@@ -102,7 +102,6 @@ export function validateParams(p: SkeletonParams, _full: boolean): string | null
   if (p.w < 4 || p.h < 4) return "Width and height must both be at least four.";
   // The generator's loops are made of 2 × 2 blocks.
   if (p.w % 2 !== 0 || p.h % 2 !== 0) return "Width and height must both be even.";
-  if (p.w * p.h > 400) return "Width times height must be at most 400.";
   // The generator found no 4 × 4 board that needs a supposition in 10,000
   // tries (2026-10-22).
   if (p.diff === DIFF_NORMAL && p.w * p.h < 24)

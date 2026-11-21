@@ -22,7 +22,7 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { isDigit } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import {
@@ -170,9 +170,6 @@ function carriesUnreasonable(p: PatternParams): boolean {
 }
 
 export function validateParams(p: PatternParams, full: boolean): string | null {
-  if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return AREA_TOO_LARGE;
-  }
   if (full && p.diff === DIFF_UNREASONABLE && !carriesUnreasonable(p))
     return noSuchTier(`${p.w}x${p.h} puzzle`, pattern.tiers[p.diff]);
   return null;

@@ -14,11 +14,7 @@
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import { isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
-import {
-  AREA_TOO_LARGE,
-  endParams,
-  paramsLetter,
-} from "../../engine/game-id/params.ts";
+import { endParams, paramsLetter } from "../../engine/game-id/params.ts";
 import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
 import type { EntryMistakeKind } from "../../engine/hint/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
@@ -109,7 +105,6 @@ export function decodeParams(s: string): MapParams {
 }
 
 export function validateParams(p: MapParams, full: boolean): string | null {
-  if (p.w > Math.floor(2147483647 / 2 / p.h)) return AREA_TOO_LARGE;
   if (p.n > p.w * p.h) return "There must be no more regions than squares.";
   return full && p.diff > DIFF_EASY ? tierRefusal(p) : null;
 }

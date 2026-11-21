@@ -58,7 +58,7 @@ help:
 name: Skeleton
 family: lines
 sizes:
-  # At most 400 squares, each side even.
+  # Each side even.
   w: { min: 4, max: 100 }
   h: { min: 4, max: 100 }
 space:

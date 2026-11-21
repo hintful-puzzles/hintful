@@ -253,6 +253,10 @@ export type ParamConfigItem<Params> =
        * outside it with a message naming the field, and the help states it. A
        * bound that depends on another field stays in `validateParams`. */
       bounds?: ParamBounds;
+      /** The most this field times another may be, where the two are the
+       * board's sides: `dimensionParamConfig` sets it on the width. The engine
+       * refuses a larger product, and the help states it. */
+      area?: AreaBound;
       get(p: Params): string;
       set(p: Params, value: string): void;
     })
@@ -303,6 +307,13 @@ export interface ParamBounds {
    * has, rather than a cap no sensible board reaches: the Custom dialog's
    * label says it, "Colors (up to 10)", from `max` itself. */
   maxShown?: boolean;
+}
+
+/** The most a numeric field times the field `times` may be. */
+export interface AreaBound {
+  /** The `kw` of the other side, a numeric field of the same game. */
+  times: string;
+  max: number;
 }
 
 /** The Custom dialog's label for `item`: its name, and its max where the

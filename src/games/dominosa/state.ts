@@ -23,7 +23,11 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
-import { paramsLetter, unreadParams } from "../../engine/game-id/params.ts";
+import {
+  MAX_BOARD_AREA,
+  paramsLetter,
+  unreadParams,
+} from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
   clueList,
@@ -86,6 +90,10 @@ export interface DominosaParams {
 /** The fields that fix the board's dimensions. */
 export type DominosaShape = Pick<DominosaParams, "n" | "tall">;
 
+/** The highest order whose grid, `n+1` by `n+2`, holds no more than every
+ * game's {@link MAX_BOARD_AREA}: the root of `(n+1)(n+2) = MAX_BOARD_AREA`. */
+export const MAX_ORDER = Math.floor((Math.sqrt(4 * MAX_BOARD_AREA + 1) - 3) / 2);
+
 export function boardSize({ n, tall }: DominosaShape): { w: number; h: number } {
   return tall ? { w: n + 1, h: n + 2 } : { w: n + 2, h: n + 1 };
 }
@@ -134,10 +142,6 @@ export function decodeParams(str: string): DominosaParams {
 }
 
 export function validateParams(p: DominosaParams, full: boolean): string | null {
-  // Mirror upstream's overflow guard against a huge grid.
-  const INT_MAX = 0x7fffffff;
-  if (p.n > INT_MAX - 2 || p.n + 2 > Math.floor(INT_MAX / (p.n + 1)))
-    return "Maximum number on dominoes must not be unreasonably large.";
   // Measured 2026-10-05: none in a million boards built at each tier above
   // these two sets' highest.
   const highest = p.n === 1 ? DIFF_TRIVIAL : p.n === 2 ? DIFF_BASIC : p.diff;

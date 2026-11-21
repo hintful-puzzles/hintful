@@ -21,6 +21,11 @@ reason a player could see.
   absolutely ok to change things a player sees in order to make them more
   consistent across games").
 
+- Games whose size had no ceiling at all (Salad, Cube, Guess) take the same
+  one, and games with a ceiling only deal time set (Undead 54, Norinori and
+  Path 400) give it up, since the deal's deadline answers a slow deal in
+  every game.
+
 ## Capabilities
 
 ### New Capabilities
@@ -29,7 +34,7 @@ None.
 
 ### Modified Capabilities
 
-`engine-params`; each game spec that states its own bound.
+`engine-params`; `grid`; each game spec that states its own bound.
 
 ## Impact
 

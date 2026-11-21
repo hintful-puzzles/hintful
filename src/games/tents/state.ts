@@ -20,7 +20,7 @@ import {
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
@@ -150,9 +150,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 ]);
 
 export function validateParams(p: TentsParams, full: boolean): string | null {
-  if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return AREA_TOO_LARGE;
-  }
   // Measured 2026-10-05: none in 50,000 boards built.
   if (full && p.w === 4 && p.h === 4 && p.diff > DIFF_EASY)
     return noSuchTier("4x4 puzzle", DIFF_NAMES[p.diff]);

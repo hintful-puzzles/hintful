@@ -102,7 +102,6 @@ import {
   type Slash,
   status,
   textFormat,
-  validateParams,
 } from "./state.ts";
 
 function newUi(_state: SlantState): SlantUi {
@@ -357,7 +356,6 @@ export const slantGame: Game<
   menu,
   encodeParams,
   decodeParams,
-  validateParams,
   transposeParams: transposeDimensions(),
   paramConfig,
 

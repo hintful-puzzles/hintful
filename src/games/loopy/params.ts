@@ -9,7 +9,7 @@
  * names, the encode char and the min-size error messages are *derived* from it.
  */
 
-import { type GridType, gridValidateParams } from "../../engine/board/grid/index.ts";
+import type { GridType } from "../../engine/board/grid/index.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { dimensionParamConfig } from "../../engine/game-id/params.ts";
@@ -27,10 +27,8 @@ import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";
  * working* — and never "tidy" it into `GRIDGEN_LIST` order.
  *
  * `amin` / `omin` are the per-type minimum sizes: both dimensions must be at
- * least `amin`, and at least one must be at least `omin`. They live here rather
- * than in the geometry because they are a *game* judgment about what makes a
- * playable board — `gridValidateParams` implements only the maximum-size
- * guards.
+ * least `amin`, and at least one must be at least `omin`. They are a *game*
+ * judgment about what makes a playable board, which the geometry has none of.
  */
 export const LOOPY_GRIDS = [
   { title: "Squares", type: "square", amin: 3, omin: 3, turns: true },
@@ -150,7 +148,7 @@ export function validateParams(p: LoopyParams, full: boolean): string | null {
       `${p.w}x${p.h} ${LOOPY_GRIDS[p.type].title} puzzle`,
       LOOPY_DIFFS[p.diff],
     );
-  return gridValidateParams(type, p.w, p.h);
+  return null;
 }
 
 /**

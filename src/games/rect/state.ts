@@ -17,12 +17,7 @@ import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { Rect } from "../../engine/contract/types.ts";
 import { isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import {
-  AREA_TOO_LARGE,
-  endParams,
-  formatG,
-  parseLeadingFloat,
-} from "../../engine/game-id/params.ts";
+import { endParams, formatG, parseLeadingFloat } from "../../engine/game-id/params.ts";
 import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import type { TileCache } from "../../engine/render/tile-cache.ts";
@@ -286,7 +281,6 @@ export function decodeParams(s: string): RectParams {
 }
 
 export function validateParams(p: RectParams, full: boolean): string | null {
-  if (p.w > 1_000_000 / p.h) return AREA_TOO_LARGE;
   if (p.w * p.h < 2) return "Grid area must be greater than one.";
   if (full && p.diff === DIFF_UNREASONABLE) return unreasonableRefusal(p);
   return null;

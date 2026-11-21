@@ -150,20 +150,6 @@ whose boards needs the harder tier.
 - **THEN** the params are accepted, and the same params are refused when a
   board is to be dealt
 
-### Requirement: Params: Tents refuses a grid whose area cannot be counted
-
-`validateParams` SHALL refuse, at every check, a width and a height whose
-product is past the largest whole number the program counts exactly, in the
-engine's sentence that the width times the height must not be unreasonably
-large.
-
-#### Scenario: A width in the thousands of millions of millions
-
-- **WHEN** the width of `8x8de` is changed to 1200000000000000 and the params
-  are checked, for a deal or for a board that arrives written
-- **THEN** they are refused: "Width times height must not be unreasonably
-  large."
-
 ### Requirement: Description: Tents descriptions use the upstream run-length encoding
 
 The desc SHALL encode the tree grid row-major as a run-length code, where `_`

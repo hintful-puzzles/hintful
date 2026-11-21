@@ -24,7 +24,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
@@ -120,9 +120,6 @@ const noUnreasonableStrip = (length: number): boolean =>
   length === 1 || length === 3 || length === 4;
 
 export function validateParams(p: FillingParams, full: boolean): string | null {
-  if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return AREA_TOO_LARGE;
-  }
   // Generation only: a board that arrives with its description is graded as
   // it loads, whatever its size and whatever tier its ID names.
   //

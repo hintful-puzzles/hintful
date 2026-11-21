@@ -976,10 +976,10 @@ sentence in the narrowed field's entry of the help's Parameters section.
 
 ### Requirement: A limit on a typed number stays in validateParams
 
-A limit on a typed number (an area, a size a tier needs) SHALL NOT be declared
-with `only` and SHALL stay in the game's `validateParams`: a text field cannot
-show it before OK is pressed, so there is no second copy for a declaration to
-remove.
+A limit on a typed number that depends on another field (a size a tier needs)
+SHALL NOT be declared with `only` and SHALL stay in the game's
+`validateParams`: a text field cannot show it before OK is pressed, so there is
+no second copy for a declaration to remove.
 
 #### Scenario: A ruleset allows a smaller area
 
@@ -1382,26 +1382,46 @@ refuse a hint and a check with that dead end and SHALL NOT ask the game's
 
 ### Requirement: A grid too large for a game is refused in one sentence
 
-A game whose `validateParams` refuses a grid because its width times its
-height is more than the game can hold SHALL return the engine's
-`AREA_TOO_LARGE`, "Width times height must not be unreasonably large.", and no
-sentence of its own. Where the ceiling sits SHALL stay the game's own. A
-ceiling a player meets at a size they might well ask for is no such refusal:
-its sentence SHALL name the number.
+The engine SHALL hold every board to one area, `MAX_BOARD_AREA`, a 100×100
+board: `paramsError` SHALL refuse a larger `area` its width declares, dealt or
+loaded, before `validateParams`, as "Width times height must be at most
+10000.", and the help SHALL state it. A game whose logic needs less SHALL
+declare a smaller `area` (`maxArea`), saying why. Only a board that is no
+product of two fields, as Cube's triangles, SHALL be held in `validateParams`.
 
-#### Scenario: A ceiling a player meets
+#### Scenario: The same largest board in two games
 
-- **WHEN** Undead is asked for a 6×10 board
-- **THEN** it refuses with "Width times height must be at most 54.", since an
-  8×8 board is already past its ceiling and the number is what the player
-  needs
+- **WHEN** Net and Mines are each asked for a 100×100 and a 101×100 board
+- **THEN** both admit the first and refuse the second with "Width times height
+  must be at most 10000."
 
 #### Scenario: Two games with different ceilings
 
-- **WHEN** Net is asked for `1001x1000` and Mines for `16385x16384n10`
-- **THEN** each refuses with "Width times height must not be unreasonably
-  large.", Net because the grid is past a million squares and Mines because it
-  is past 2²⁸
+- **WHEN** Net is asked for a 101×100 board and Ascent, whose typed numbers
+  stop at three digits, for a 40×25 one
+- **THEN** Net refuses with "Width times height must be at most 10000." and
+  Ascent with "Width times height must be at most 999."
+
+#### Scenario: A ceiling a player meets
+
+- **WHEN** Slide, whose solver exhausts the heap past 48 squares, is asked for
+  a 9×6 board
+- **THEN** it refuses with "Width times height must be at most 48.", from the
+  `area` its width declares
+
+#### Scenario: A board's sides under other names
+
+- **WHEN** a game's two sides are not width and height, as Guess's pegs per
+  guess and guesses are
+- **THEN** the first field declares `area` naming the second, and the sentence
+  names both: "Pegs per guess times guesses must be at most 10000."
+
+#### Scenario: A game sized by one number
+
+- **WHEN** a game's board is sized by one number, as Salad's order and
+  Dominosa's highest number are
+- **THEN** that field's `bounds` hold a `max` derived from `MAX_BOARD_AREA`,
+  so its largest board is no larger than any other game's
 
 ### Requirement: A board already won finishes by deduction
 

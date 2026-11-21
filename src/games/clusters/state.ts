@@ -15,7 +15,7 @@ import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../../engine/game-id/dot-runs.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { PAIR_NAMES, type PairIndex } from "../../engine/render/piece.ts";
@@ -171,8 +171,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 const MIN_TRICKY_AREA = 12;
 
 export function validateParams(p: ClustersParams, full: boolean): string | null {
-  // Upstream order: too-large before too-small.
-  if (p.w * p.h >= 10000) return AREA_TOO_LARGE;
   if (p.w * p.h < 2) return "Width times height must be at least 2.";
   // 1x2 and 2x2 pass upstream's area check and have no puzzle whatever the
   // difficulty: every coloring of them either leaves a cell touching none of

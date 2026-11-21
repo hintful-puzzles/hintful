@@ -243,7 +243,6 @@ function absentTier(p: PathParams): string | null {
 }
 
 export function validateParams(p: PathParams, full: boolean): string | null {
-  if (p.w * p.h > 400) return "Width times height must be at most 400.";
   return full ? absentTier(p) : null;
 }
 

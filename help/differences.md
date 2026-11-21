@@ -27,6 +27,10 @@ work, but they are likely to change in a future update, and might be removed.
   upright. On a wider screen, a new board that plays the same either way round
   is dealt turned to fit.
 
+* **One largest board.** A board may hold the same number of squares in every
+  puzzle, where the original's limit differs from puzzle to puzzle and some
+  have none. A few puzzles stop sooner; each puzzle's parameters say where.
+
 * **Links instead of command-line options.** The original’s desktop builds take
   options on the command line; here the same things go in the address. Add
   *?type=params* to a puzzle’s address to choose a variation, or *?id=id-or-seed*

@@ -84,13 +84,10 @@ export interface NorinoriUi {
  * does not hand its squares over at a glance. */
 const MIN_SIDE = 4;
 
-/** The most squares a grid may have. */
-const MAX_AREA = 400;
-
 /** The "Custom type…" form, and the fields the codec below reads and writes. */
 export const paramConfig: ParamConfigItem<NorinoriParams>[] = [
   ...dimensionParamConfig<NorinoriParams>({
-    doc: `Size of the grid in squares: each side at least ${MIN_SIDE}, and at most ${MAX_AREA} squares in all.`,
+    doc: `Size of the grid in squares: each side at least ${MIN_SIDE}.`,
   }),
   difficultyItem(DIFF_NAMES, "diff", {
     doc: "<p><em>Easy</em> puzzles can be finished by looking at one domino, one square or one region at a time.</p><p><em>Normal</em> puzzles need a region whose open squares cannot hold its shaded squares without a certain one.</p><p><em>Tricky</em> puzzles need a square tried shaded, to see which squares that would leave clear.</p>",
@@ -123,7 +120,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
 export function validateParams(p: NorinoriParams, _full: boolean): string | null {
   if (p.w < MIN_SIDE || p.h < MIN_SIDE)
     return `Width and height must both be at least ${MIN_SIDE}.`;
-  if (p.w * p.h > MAX_AREA) return `Width times height must be at most ${MAX_AREA}.`;
   return null;
 }
 

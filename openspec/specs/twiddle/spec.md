@@ -57,7 +57,7 @@ missing `nN` as `n = 2`.
 
 ### Requirement: Params: Twiddle refuses a board smaller than its block
 
-`validateParams` SHALL reject `w < n`, `h < n` and an unreasonably large `w·h`.
+`validateParams` SHALL reject `w < n` and `h < n`.
 
 #### Scenario: A board narrower than its block is rejected
 

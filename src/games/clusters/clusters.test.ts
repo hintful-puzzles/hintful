@@ -14,7 +14,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { presetMenu } from "../../engine/game-id/param-label.ts";
-import { AREA_TOO_LARGE, paramsError } from "../../engine/game-id/params.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
@@ -132,7 +132,9 @@ describe("params", () => {
 
   it("rejects too-large then too-small (upstream order)", () => {
     const easy = (w: number, h: number) => ({ w, h, diff: DIFF_EASY });
-    expect(check(easy(100, 100), true)).toBe(AREA_TOO_LARGE);
+    expect(check(easy(101, 100), true)).toBe(
+      "Width times height must be at most 10000.",
+    );
     expect(check(easy(1, 1), true)).toBe("Width times height must be at least 2.");
     expect(check(easy(7, 7), true)).toBeNull();
   });

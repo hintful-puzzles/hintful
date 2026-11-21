@@ -19,6 +19,7 @@ import { describe, expect, it } from "vitest";
 import { pointAtEdge, squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { paramsError } from "../../engine/game-id/params.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -72,7 +73,9 @@ describe("skeleton params", () => {
 
   it("refuse a board too small, too large, or of an odd side", () => {
     expect(validateParams({ w: 2, h: 6, diff: DIFF_EASY }, true)).toMatch(/\.$/);
-    expect(validateParams({ w: 30, h: 30, diff: DIFF_EASY }, true)).toMatch(/\.$/);
+    expect(
+      paramsError(skeletonGame, { w: 102, h: 100, diff: DIFF_EASY }, true),
+    ).toMatch(/\.$/);
     expect(validateParams({ w: 5, h: 6, diff: DIFF_EASY }, true)).toMatch(/\.$/);
     expect(validateParams(P, true)).toBeNull();
   });

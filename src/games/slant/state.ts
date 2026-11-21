@@ -27,7 +27,7 @@ import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.t
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
+import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
@@ -136,13 +136,6 @@ export const { encodeParams, decodeParams } = paramsCodec(defaultParams, [
   dims(paramConfig),
   choice(paramConfig, "d", "difficulty", DIFF_CHARS, { full: true }),
 ]);
-
-export function validateParams(p: SlantParams, _full: boolean): string | null {
-  if (p.w > Number.MAX_SAFE_INTEGER / p.h) {
-    return AREA_TOO_LARGE;
-  }
-  return null;
-}
 
 // --- desc codec ----------------------------------------------------------
 // Run-length over the (w+1)×(h+1) vertex grid, row-major: a digit 0–4 is a
