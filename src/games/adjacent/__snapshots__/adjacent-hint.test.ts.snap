@@ -2331,12 +2331,28 @@ exports[`adjacent hint render > a bar's elimination outlines the pair and strike
     "y": 70,
   },
   {
+    "h": 2,
+    "op": "rect",
+    "rgb": "rgb(40, 132, 32)",
+    "w": 36,
+    "x": 118,
+    "y": 104,
+  },
+  {
     "h": 36,
     "op": "rect",
     "rgb": "rgb(40, 132, 32)",
     "w": 2,
     "x": 152,
     "y": 70,
+  },
+  {
+    "h": 2,
+    "op": "rect",
+    "rgb": "rgb(40, 132, 32)",
+    "w": 36,
+    "x": 118,
+    "y": 118,
   },
   {
     "h": 36,

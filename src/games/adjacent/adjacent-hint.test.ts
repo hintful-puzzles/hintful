@@ -24,7 +24,7 @@ import {
   describeHintKindPins,
   describeHintPins,
 } from "../../engine/testing/hint-positions.ts";
-import { expectContour } from "../../engine/testing/mark-shape.ts";
+import { isThin, markSides } from "../../engine/testing/mark-shape.ts";
 import {
   DEFAULT_BACKGROUND,
   renderPinnedHint,
@@ -217,7 +217,12 @@ describe("adjacent hint render", () => {
     const { recording } = renderPinnedHint(adjacentGame, pinned("barStrike"), {
       defaultBackground: DEFAULT_BACKGROUND,
     });
-    expectContour(recording.ops, COL_HINT_OUTLINE, 2);
+    // The pair is two references ("this cell", "the 1 beside it"), which the
+    // app colors apart, so each is a closed box: 8 sides, where a renderer
+    // joining across references would give 6.
+    const sides = markSides(recording.ops, COL_HINT_OUTLINE);
+    expect(sides).toHaveLength(8);
+    for (const s of sides) expect(isThin(s)).toBe(true);
     expect(recording.ops.some((o) => o.op === "line" && o.color === COL_PENCIL)).toBe(
       true,
     );
