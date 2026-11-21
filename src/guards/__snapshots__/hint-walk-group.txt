@@ -3,4 +3,4 @@
 8x8 Tricky #0: 72 steps, solved, d5980996e621dce4 [associativity:22 dup:14 hiddenSingle:2 note:11 regionsFull:13 set:3 single:7]
 8x8 Unreasonable #0: 3 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 222ccd8623d44ada [associativity:3]
 8x8 Normal, identity hidden #0: 58 steps, solved, a59621b8467d8c52 [associativity:20 hiddenSingle:1 identityFill:12 regionsFull:25]
-8x8 Easy, Difficulty: Hard #0: 79 steps, solved, 5cb007e3d22b472f [associativity:12 dup:17 hiddenSingle:1 note:16 regionsFull:15 set:4 single:14]
+8x8 Unreasonable, Difficulty: Hard #0: 79 steps, solved, 5cb007e3d22b472f [associativity:12 dup:17 hiddenSingle:1 note:16 regionsFull:15 set:4 single:14]

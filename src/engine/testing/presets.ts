@@ -7,6 +7,7 @@
  *
  * Dev/test-only; never imported by production code.
  */
+import { DIFFICULTY_KW } from "../contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards, PresetMenu } from "../contract/game.ts";
 import { presetMenu, type TitledPresetMenu } from "../game-id/param-label.ts";
 import { paramsError } from "../game-id/params.ts";
@@ -233,6 +234,12 @@ export interface UnofferedValue<Params> {
  * written onto a small grid is still a board the dialog deals, but it may not
  * be a hard one, so this is no substitute for a preset at that tier.
  *
+ * **Except a tier, which tries first the presets of a harder tier**, in menu
+ * order: a harder tier wants a bigger board, and a size the menu offers only
+ * below the tier may have boards too rare to deal, which costs every try
+ * before it is passed over (Group's 6x6 at its unoffered tier, 5 seconds,
+ * where its 8x8 deals in under one).
+ *
  * A `"string"` item is left to the slice: a free scalar has no list of values
  * to hold a preset against.
  */
@@ -253,8 +260,12 @@ export function unofferedValues<Params>(
         : item.choices.map((words, i): [AxisValue, string] => [i, words]);
     for (const [value, words] of offered) {
       if (held.has(value)) continue;
+      const harder =
+        item.kw === DIFFICULTY_KW
+          ? presets.filter((e) => (item.get(e.params) as number) > (value as number))
+          : [];
       let board: UnofferedValue<Params>["board"] = null;
-      for (const base of presets) {
+      for (const base of [...harder, ...presets.filter((e) => !harder.includes(e))]) {
         const params = { ...base.params };
         // The union's two setters share no parameter type, and `value` was
         // built from this item's own type just above.

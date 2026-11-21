@@ -76,10 +76,10 @@ if (recording) {
   });
 
   afterEach(({ task }) => {
-    const names = [task.name];
-    for (let suite = task.suite; suite; suite = suite.suite) names.unshift(suite.name);
-    // The outermost name is the file's, which no title filter reads.
-    const id = gameOf(names.slice(1).join(" "));
+    // Without the file's path, which no title filter reads. A file's top
+    // `describe` has no parent `suite`, so a walk up from the case that drops
+    // the outermost name drops that describe's title instead.
+    const id = gameOf(task.fullTestName ?? task.name);
     if (id !== null) games[id] = (games[id] ?? 0) + (cost() - caseStart) / 1e6;
   });
 

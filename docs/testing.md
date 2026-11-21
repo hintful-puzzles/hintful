@@ -948,8 +948,8 @@ so the slice replaces a `tiers.map(withTier(base))` loop.
   entry per file with the behavior that needs a record the menu does not
   offer.
 - **A value the Custom dialog offers and no preset holds is dealt beside the
-  slice** (`unofferedValues`), written onto the first preset in menu order
-  that `paramsError` accepts it on: the `with*` form of § "How a cross-game
+  slice** (`unofferedValues`), written onto a preset that accepts it and
+  deals it promptly: the `with*` form of § "How a cross-game
   guard finds its population" rule 6, used for the one thing it is right for.
   A tier written onto the smallest grid may not be a hard board, so a rung
   that needs a large board at a hard tier still wants its pin.

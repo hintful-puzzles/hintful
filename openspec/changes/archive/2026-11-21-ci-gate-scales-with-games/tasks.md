@@ -72,25 +72,49 @@
 
 ## 3. The dearest guards
 
-- [ ] 3.1 Profile each of the six; cut a board or round only where another
+- [x] 3.1 Profile each of the six; cut a board or round only where another
       already covers what it would catch. Plant the guard's defect again
       after each cut.
-      Where to start (2026-11-21): the per-game costs in 1.1 say the cost
-      sits in a few games (Loopy, Group, Solo, Mosaic, Sixteen), and
-      hint-resume's and candidate-reading's untitled cost and all of
-      difficulty-contract's are not charged to a game, so profile those by
-      case first. Each walk already holds "one board of every kind"
-      (`build-pipeline`, the boards a cross-game sweep walks), so a cut needs
-      another guard that walks the same kind for the same defect, named at
-      the site. Sharding took the wall-time pressure off, so a guard with no
-      such board is recorded as kept, with why. Per-game counts are taken by
-      appending from the test to a scratch file
-      (`process.getBuiltinModule("node:fs")`): vitest swallows a test's
-      console output here.
+      **The "untitled" cost in 1.1 was mostly the instrument's.**
+      `test-cost-setup.ts` named a case by walking up `task.suite` and
+      dropping the outermost name as the file's, but in vitest 5 a file's top
+      `describe` has no parent, so a case titled for a game by its describe
+      (`group: difficulty contract > …`, `solo: every preset > …`) was charged
+      to no game. It reads `task.fullTestName` now: difficulty-contract run
+      alone charged Group nothing before, 15.4 s of its 23.5 after.
+      **Every one of the six paid for one board it never used**: Group's
+      6x6 at its unoffered tier, which deals nothing in the house count of
+      tries and costs about 5.5 s to give up on, before the 8x8 deals in 4.7.
+      `unofferedValues` (behind `gatePresets` and `dealtBoards`) tried the
+      presets in menu order; it now tries a tier first on the presets of a
+      harder tier. Across every game two tiers have no preset, and only
+      Group's search changed, to the same board (a census through the
+      real `dealsPromptly`, 2026-11-21). difficulty-contract's own
+      `paramsForTier` made the same search, Group's 6x6 Hard refused too;
+      it now takes the menu's preset at the tier, else `unofferedValues`'
+      board. Each guard run alone, local CPU before and after:
+      difficulty-contract 23.5 → 11.8, hint-resume (four shares) 164.7 →
+      143.2, warm-repaint 123.4 → 107.9, hint-quality 81.3 → 66.9,
+      wrong-entry-check 34.1 → 27.8, candidate-reading 30.0 → 22.8.
+      Planted again: cap 1 calling every board unsolved failed the same 95
+      cases at HEAD and after; Group's generator throwing at Extreme failed
+      "either generates every declared tier" and "is monotone in its cap".
+      **Kept, with why** (cases over a second, run alone): no other guard
+      walks the same board for the same defect, and each is the only board
+      of its kind. hint-resume's walk to solved: Loopy 29 s over its tilings,
+      one board each; Mosaic 13.8 s; Solo 9 s, its Killer board the one that
+      catches a hint weaker than its grader (the file's header). warm-repaint:
+      Sixteen 12.9 s, the seeded run, where each random Hint or Check on a
+      scrambled board runs the search to its budget; Ballsort and Sokoban
+      search eight boards each for a pour's stripes and a target's outline,
+      under a second a board. hint-quality's bound-words walk: Loopy 7.3,
+      Mosaic 5.5, Solo 5.5. Each share of hint-resume still pays about
+      11.5 s at load (it was 17), the module graph and the boards
+      `gatePresets` deals for `SOLVE_CASES`.
 
 ## 4. Finish
 
-- [ ] 4.1 `docs/testing.md` § "What runs when" and `gate.yml`'s comment say
+- [x] 4.1 `docs/testing.md` § "What runs when" and `gate.yml`'s comment say
       how it runs now. Commit, push, watch one CI run to green, archive.
-      Done but the archive, which waits on 3.1: the guide and the workflow
-      say it, and Gate run 44878403485 is green.
+      The guide and the workflow say it, and Gate run 44878403485 is green;
+      archived with 3.1, whose push the next session checks on CI.

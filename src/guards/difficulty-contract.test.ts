@@ -22,6 +22,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   cappedSolveFor,
+  DIFFICULTY_KW,
   type DifficultyContract,
   difficultyTiers,
   lowestSolvingCap,
@@ -36,9 +37,9 @@ import { Midend } from "../engine/midend/midend.ts";
 import { getTsGame } from "../engine/midend/registry.ts";
 import { randomNew } from "../engine/random/index.ts";
 import * as answerSearch from "../engine/solve/answer-search.ts";
-import { dealRare, dealsPromptly, dealt } from "../engine/testing/dealt.ts";
+import { dealRare, dealt } from "../engine/testing/dealt.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
-import { firstLeaf, leafPresets } from "../engine/testing/presets.ts";
+import { firstLeaf, leafPresets, unofferedValues } from "../engine/testing/presets.ts";
 import {
   itOverWholeSweep,
   SLOW_TESTS_ENABLED,
@@ -94,23 +95,24 @@ for (const { id, game } of registered) {
 const allLeaves = (game: AnyGame): unknown[] => leafPresets(game).map((e) => e.params);
 
 /**
- * The cheapest preset that is *valid* at `tier` and deals it promptly, or
- * `null` when no preset is.
+ * The params of a board at `tier`, or `null` when no preset's size deals one.
  *
- * Not simply "the first preset with the tier written on it": a tier can be
- * invalid at some sizes and fine at others (Mathrax refuses Normal and
- * Recursive at order 3 and generates them happily above it), so the search has
- * to ask `validateParams`, and only a game where **no** preset accepts the tier
- * is genuinely ungenerable. A size is refused only where it has no board, so
- * one accepted can still have boards too rare to wait on (Group's 6x6 at Hard
- * with its identity shown), and the search passes over it.
+ * The menu's own preset at the tier, which the app deals and so does every
+ * sweep over `gatePresets`; else the board those sweeps deal for a tier no
+ * preset holds (`unofferedValues`). A size can refuse a tier (Mathrax refuses
+ * Normal and Recursive at order 3 and generates them happily above it), so
+ * only a game where **no** preset's size accepts the tier is genuinely
+ * ungenerable.
  */
 function paramsForTier(t: TieredGame, tier: number): unknown | null {
-  for (const leaf of allLeaves(t.game)) {
-    const p = withTier(t.game, leaf, tier);
-    if (paramsError(t.game, p, true) === null && dealsPromptly(t.game, p)) return p;
-  }
-  return null;
+  const presets = leafPresets(t.game);
+  const own = presets.find((e) => tierOf(t.game, e.params) === tier);
+  if (own !== undefined) return own.params;
+  const words = t.tiers[tier];
+  const unoffered = unofferedValues(t.game, presets).find(
+    (v) => v.kw === DIFFICULTY_KW && v.words === words,
+  );
+  return unoffered?.board?.params ?? null;
 }
 
 describe("the tiered-game set is derived from the registry", () => {
