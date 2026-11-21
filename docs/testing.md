@@ -141,34 +141,21 @@ scan for a hint position.
 
 `describeHintPins`
 ([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts))
-keys each pin on a rung's id (`hint.rungs`, [`hints.md`](./hints.md)
-§ "Name the rung a step speaks"). It declares two tests: every pin still
-fires its kind, and a snapshot of the sentence said at each pin, which is
-where a rung's wording is held. It returns the loader the game's own tests
-read through, `pinned(kind)`; `PinnedPosition` says what a pin gives.
+keys each pin on a rung's id ([`hints.md`](./hints.md) § "Name the rung a
+step speaks"); its doc says the tests it declares, the sentence snapshot that
+holds a rung's wording among them.
 
-- **Adding a rung is: name it, run the command, read the count.** A rung
-  with no pin fails the file's test, naming the command; the types let it be
-  missing, so the typecheck stays green while the scan runs. It walks hint-guided play over fixed seeds and writes each
-  pin under how many of the positions walked it held on. That count is the
-  power argument the pin owes ([`method.md`](./method.md)): a rung that held
-  on a handful of several hundred is the one to watch.
+- **Adding a rung is: name it, run the command, read the count.** The scan
+  writes each pin under how many of the positions walked it held on, which
+  is the power argument the pin owes ([`method.md`](./method.md)): a rung
+  that held on a handful of several hundred is the one to watch.
 - **A pin that still fires is left alone**, since tests and snapshots are
-  written against its board; `--all` replaces every pin the scan found. A
-  pin the scan found no position for is left alone and named: it is one kept
-  by hand.
-- **A rung's pin is a position whose plan speaks the rung.** The scan prefers
-  one where the rung's step opens the plan, then the fewest moves in;
-  `index` says where the step is. Some steps are only ever a later leg.
+  written against its board; `--all` replaces every pin the scan found.
 - **Draw a pin with `renderPinnedHint(game, pinned(kind))`**
   ([`render-scenario.ts`](../src/engine/testing/render-scenario.ts)), not
   with a `renderScenario` fed the pin's `id` and `moves`, which shows the
-  step the plan opens with. It plays the legs before the pin's step, throws
-  when the step on show is not the pin's, and returns the pin's `step` typed
-  as the game's.
-- **A game whose mid-game board is itself a desc passes `descOf`**, and its
-  pins are bare `params:desc` strings. Otherwise a pin is a board and the
-  moves played on it.
+  step the plan opens with, not always the pin's.
+- **A game whose mid-game board is itself a desc passes `descOf`**.
 - **Prefer `pinned(kind)` inside a test to one in a `describe` body**, which
   runs at collection, where a pin that does not load fails the whole file.
 - **A refusal is not pinned**, having no step to return. A test that wants a
@@ -827,46 +814,29 @@ a named rule in 100 ms. Exemplar:
 ## What a game owes the cross-game guards
 
 A game joins a cross-game guard by declaring or having the thing the guard
-reads; no list is edited. What each asks of the game's author:
+reads; no list is edited, and `npm run game` names every guard that refuses
+it, with the sections it cites. What the author knows beforehand:
 
-- **Hints**: declaring `hint()` enrolls the game in every guard that reads
-  `HINT_GAMES` (`git grep -l HINT_GAMES -- src scripts`): plans resume from
-  any position, the overlay reaches the render cache, narration form, and the
-  rest. Recipe: [`hints.md`](./hints.md).
-- **Difficulty tiers**: declaring `Game.difficulty`
-  ([`difficulty.ts`](../src/engine/contract/difficulty.ts)) enrolls the game in
-  [`difficulty-contract.test.ts`](../src/guards/difficulty-contract.test.ts):
-  caps are monotonic, every tier generates or refuses with a reason, the tier
-  list matches the difficulty `paramConfig` choices, and tiers survive the
-  params codec. A tiered game that does not declare fails. Adapter rules:
-  [`solver-and-generator.md`](./solver-and-generator.md).
-- **Registration**: a game's directory registers it, and
-  [`src/games/index.ts`](../src/games/index.ts) refuses, as the games load, a
-  directory that registers no game under its name or has no `catalog.ts`.
-- **Layering**: no game imports another game, the engine imports no game
-  (but for `testing/hint-games.ts`, the enrollment file), and neither imports
-  the app shell;
-  [`module-layering.test.ts`](../src/module-layering.test.ts) also holds
-  runtime import cycles at zero.
-- **Mistake overlay**: the game's test paints it and asserts what it drew.
-  Its repaint on a warm frame is `warm-repaint.test.ts`'s, which finds a
-  wrong board itself ([`rendering.md`](./rendering.md) § "Prove the overlay
-  repaints").
+- **Declaring `hint()` or `Game.difficulty` enrolls the game** in every guard
+  of that concern (`git grep -l HINT_GAMES -- src scripts`;
+  [`difficulty-contract.test.ts`](../src/guards/difficulty-contract.test.ts)).
+- **No game imports another game, and the engine imports none**
+  ([`module-layering.test.ts`](../src/module-layering.test.ts)).
+- **The mistake overlay's test paints it and asserts what it drew**; its
+  warm repaint is `warm-repaint.test.ts`'s ([`rendering.md`](./rendering.md)
+  § "Prove the overlay repaints").
 - **A new `Ui` or draw-state field**, or a new optional `Game` method, moves
   [`capability-surface.test.ts`](../src/guards/capability-surface.test.ts)'s
   snapshot. Re-baseline with `vitest run <path> -u` and say so in the change.
 - **A ledger entry**, where the game is an exception a guard cannot read off
-  it: a board no input breaks once solved, a frame drawn wider along one
-  side. The failure names the table, its file and the line to add, and an
-  entry that no longer applies fails until its line goes. Before adding one,
+  it; the failure names the line to add. Before adding one,
   ask whether the game already says it: a game whose rules make no move wrong
   declares `notApplicable.findMistakes`, and every guard that asks about a
   wrong or forced move reads that. A pinned board is written as `params:desc`,
   printed by `npm run game-id -- <game> [<params>] --seed <any>`.
 - **An exported function inserted directly above another** strands the second
-  one's doc comment on the first.
-  [`asset-integrity.test.ts`](../src/asset-integrity.test.ts) scans every
-  `.ts` file under `src/` for it.
+  one's doc comment on the first
+  ([`asset-integrity.test.ts`](../src/asset-integrity.test.ts)).
 
 The last two take their population from the whole tree, so an edit inside one
 game's directory can move them (§ "A game's verdict in one command").

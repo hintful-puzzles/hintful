@@ -120,7 +120,7 @@ is one to weigh against a pointer.
   `hints-marks.md` § "Shade vs ring", without its parts; `hints-marks.md` §
   "Show the evidence as an area", without its parts.
 - [`testing.md`](./testing.md) § "What a new game ships"; `testing.md` §
-  "Pinning a hint's positions"; `testing.md` § "A game's verdict in one
+  "Pinning a hint's positions", without its parts; `testing.md` § "A game's verdict in one
   command"; `testing.md` § "What a game owes the cross-game guards",
   without its parts, which are for the author of a guard.
 - [`engine-catalog.md`](./engine-catalog.md): its table, before writing any
