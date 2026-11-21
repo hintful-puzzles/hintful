@@ -19,6 +19,7 @@ import { BLUE_BOLD, GREEN, RED } from "../../engine/color/colors.ts";
 import {
   cellSurface,
   clueDoneColor,
+  ERROR_TEXT,
   highlightWash,
   INK,
 } from "../../engine/color/palette.ts";
@@ -86,6 +87,8 @@ export const COL_NEUTRAL = FIRST_GAME_SLOT + 4;
 export const COL_NEGATIVE = FIRST_GAME_SLOT + 5;
 export const COL_POSITIVE = FIRST_GAME_SLOT + 6;
 export const COL_NOT = FIRST_GAME_SLOT + 7;
+/** A pole's symbol on its error badge. */
+export const COL_ERROR_TEXT = FIRST_GAME_SLOT + 8;
 
 export function colors(defaultBackground: Color): Color[] {
   const background = defaultBackground;
@@ -103,6 +106,7 @@ export function colors(defaultBackground: Color): Color[] {
   // Blue's bold step: the `?` is thin, and on the cell surface the base blue
   // lost a quarter of its contrast under the hint's hatch.
   out[COL_NOT] = BLUE_BOLD;
+  out[COL_ERROR_TEXT] = ERROR_TEXT;
   return out;
 }
 
@@ -253,6 +257,7 @@ function drawTileCol(
   fg: number,
   perc: number,
   hatch: boolean,
+  badge: boolean,
 ): void {
   const ts = ds.tileSize;
   const cx = coord(x, ts);
@@ -300,6 +305,14 @@ function drawTileCol(
   }
 
   hatchSquare();
+  if (badge) {
+    // A pole's symbol is a badge where it breaks a rule. The ink rim tells
+    // it on the + pole, whose fill is the error's own red.
+    const center = { x: cx + Math.floor(ts / 2), y: cy + Math.floor(ts / 2) };
+    const r = Math.floor(ts * 0.36);
+    dr.drawCircle(center, r, COL_TEXT, COL_TEXT);
+    dr.drawCircle(center, r - Math.max(1, Math.floor(ts / 16)), COL_ERROR, COL_ERROR);
+  }
   if (fg !== -1) drawSym(dr, ts, x, y, which, fg);
 }
 
@@ -339,12 +352,26 @@ function drawTile(
       fg = COL_NOT;
     }
   } else {
-    fg = flags & DS_ERROR ? COL_ERROR : flags & DS_CURSOR ? COL_TEXT : COL_BACKGROUND;
+    fg =
+      flags & DS_ERROR ? COL_ERROR_TEXT : flags & DS_CURSOR ? COL_TEXT : COL_BACKGROUND;
   }
+  const badge = (flags & DS_ERROR) !== 0 && (which === POSITIVE || which === NEGATIVE);
 
   const tone = ((flags >> DS_WIN_SHIFT) & 3) as WinTone;
   if (tone !== WIN_NONE) bg = winSlot(tone);
-  drawTileCol(dr, ds, dominoes, x, y, which, bg, fg, perc, !!(flags & DS_HINT_LINE));
+  drawTileCol(
+    dr,
+    ds,
+    dominoes,
+    x,
+    y,
+    which,
+    bg,
+    fg,
+    perc,
+    !!(flags & DS_HINT_LINE),
+    badge,
+  );
 
   // Fork findMistakes overlay: an inset red outline (distinct from symbol red).
   if (flags & DS_MISTAKE) {

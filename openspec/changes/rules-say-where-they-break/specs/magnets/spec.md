@@ -12,6 +12,8 @@ squares left in its line.
 
 - **WHEN** the player places two `+` poles side by side
 - **THEN** both are drawn as errors at once, with no mistake check asked for
+- **AND** each pole's symbol sits on a red disc rimmed in ink, which reads on
+  the red `+` pole
 
 #### Scenario: A count with too little room is red
 

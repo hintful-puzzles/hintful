@@ -46,13 +46,9 @@
 - [ ] 2.4 Plant a broken rule and see its mark appear in a game that wrote
       no checker (once batch 1 has moved a game whose checker is deleted:
       edit its description's rule, see the mark move in the app).
-- [ ] 2.5 **For the owner:** Magnets draws a clash (two like poles
-      touching) as the pole's symbol in `ERROR`, which is the + pole's own
-      fill (`RED`), so two touching + poles show nothing on the poles, only
-      the line's count. The badge rule (`rendering.md`: an `ERROR` disc, the
-      glyph in `ERROR_TEXT`) is invisible on a red pole too. Recommended:
-      a clashing pole takes the badge with an `INK` rim, which reads on the
-      red pole and the ink one alike. Waiting on the owner's choice of look.
+- [x] 2.5 Magnets drew a clash as the pole's symbol in `ERROR`, the + pole's
+      own fill, so touching + poles showed nothing. A clashing pole is a
+      badge with an `INK` rim (the owner's choice, 2026-11-21).
 
 ## 3. Finish
 

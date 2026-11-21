@@ -37,9 +37,11 @@ import { magnetsGame } from "./index.ts";
 import { CLUE, LINE, SQUARE } from "./kinds.ts";
 import {
   COL_DONE,
+  COL_ERROR_TEXT,
   COL_HIGHLIGHT_WASH,
   COL_NEGATIVE,
   COL_POSITIVE,
+  COL_TEXT,
   colors,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -125,6 +127,32 @@ describe("magnets render scenarios", () => {
     expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_NEGATIVE)).toBe(
       true,
     );
+  });
+
+  it("touching like poles are each a red badge, rimmed so it reads on the + pole", () => {
+    // Two horizontal dominoes one above the other, both set + on the left:
+    // the + ends touch, and so do the − ends.
+    const { id, state } = board(P, "mrs-magnet");
+    const { w, wh, common } = state;
+    const left = (i: number) => common.dominoes[i] === i + 1;
+    const top = Array.from({ length: wh - w }, (_, i) => i).find(
+      (i) => left(i) && left(i + w),
+    );
+    if (top === undefined) throw new Error("no two stacked horizontal dominoes");
+    const moves: MagnetsMove[] = [
+      { type: "set", idx: top, which: 1 },
+      { type: "set", idx: top + w, which: 1 },
+    ];
+    const { recording } = renderScenario({ game: magnetsGame, id, moves });
+    const discs = (fill: number) =>
+      recording.ops.filter((o) => o.op === "circle" && o.fill === fill).length;
+    // A badge on each of the four poles, each on its ink rim, and each
+    // symbol in the badge's text color.
+    expect(discs(COL_ERROR)).toBe(4);
+    expect(discs(COL_TEXT)).toBe(4);
+    expect(
+      recording.ops.filter((o) => o.op === "rect" && o.color === COL_ERROR_TEXT).length,
+    ).toBeGreaterThanOrEqual(4);
   });
 
   /** The clue digits a step outlines as the count it reads. */
@@ -226,8 +254,8 @@ describe("magnets render scenarios", () => {
     });
     // The mistake overlay (inset red outline) appears on a frame *after* the
     // move that placed the cell (docs/rendering.md § "Overlay sidecars":
-    // the overlay must be in the diff key). A live error's symbol is red too,
-    // so the count is taken against the same frame with mistakes hidden.
+    // the overlay must be in the diff key). A live error is red too, so the
+    // count is taken against the same frame with mistakes hidden.
     const red = (ops: typeof recording.ops): number =>
       ops.filter((o) => o.op === "rect" && o.color === COL_ERROR).length;
     const hidden = renderScenario({ game: magnetsGame, id, moves });

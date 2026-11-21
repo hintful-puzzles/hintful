@@ -895,7 +895,9 @@ names the one it applies.
 - **A wall is one flat strong fill** (`wallFill`), not a bevel and not a
   game's own black. A digit on it is the pinned `WHITE`.
 - **A glyph that sits on a piece is a badge**: its own disc, with the glyph
-  in the fill's text color (`ERROR` under `ERROR_TEXT`).
+  in the fill's text color (`ERROR` under `ERROR_TEXT`). Where a piece is
+  itself the error's red (Magnets' + pole), the disc takes an `INK` rim
+  (the owner, 2026-11-21).
 - **A bevel is kept only where the tile is an object the player moves**
   (Fifteen, Sixteen, Twiddle, Slide).
 
