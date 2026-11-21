@@ -75,12 +75,20 @@ globs in tests (repointed by their static prefix), and every guide and spec.
 
 ## 2. Move
 
-- [ ] 2.3 Move the cross-game guards into their own directory (first, so no
-      file moves twice).
-- [ ] 2.1 Move one concern per commit with a codemod; verify by the diff's
-      shape. Run `feedback-probe.mjs --verify` after each.
-- [ ] 2.2 Retire the barrel.
-- [ ] 2.4 Add the layering guard; plant a forbidden import and see it fail.
+- [x] 2.3 Move the cross-game guards into their own directory (first, so no
+      file moves twice). `src/guards/`.
+- [x] 2.1 Move one concern per commit with a codemod; verify by the diff's
+      shape. Run `feedback-probe.mjs --verify` after each. What the codemod
+      could not see, fixed by hand: paths written as patterns (spelling's
+      word-list exemption, deal-profile's described code), a prefix test
+      (catalog-families' Latin engine), a path derived from a sibling's
+      (the compiler's `step-voice` import, now passed by `sources.ts`), and
+      `enrollment.ts`'s `../*/*.ts` glob, which once matched only the family
+      and now names it.
+- [x] 2.2 Retire the barrel. Its 72 importers name the defining modules.
+- [x] 2.4 Add the layering guard (`src/module-layering.test.ts`, ordered by
+      `engine-directories.ts`); a runtime import of the midend planted in
+      `render/draw.ts` failed it.
 
 ## 3. Finish
 

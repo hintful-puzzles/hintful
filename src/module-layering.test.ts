@@ -26,6 +26,7 @@
  */
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { ENGINE_DIRECTORIES } from "./engine/testing/engine-directories.ts";
 import {
   type ImportEdge,
   importsOf,
@@ -109,6 +110,39 @@ function resolve(from: string, spec: string): string | null {
 /** A game's compiled module, generated outside its directory, is the game's. */
 const gameOf = (p: string) =>
   /^src\/(?:generated\/)?games\/([^/]+)\//.exec(p)?.[1] ?? null;
+
+/** The engine directory `p` sits in: `""` for a module at the engine's top,
+ * `null` outside the engine. */
+const engineDirOf = (p: string): string | null =>
+  p.startsWith("src/engine/") ? (/^src\/engine\/([^/]+)\//.exec(p)?.[1] ?? "") : null;
+
+/** Each declared engine directory's place, bottom first. */
+const LAYER = new Map(ENGINE_DIRECTORIES.map(({ dir }, i) => [dir, i]));
+
+/**
+ * The runtime imports in `text`, written at `path`, that reach an engine
+ * directory later in {@link ENGINE_DIRECTORIES} than `path`'s own, and how
+ * many engine-to-engine runtime edges it looked at. A type-only import is
+ * erased and forms no edge; a dynamic one still runs the module it names.
+ */
+function layerBreaches(
+  path: string,
+  text: string,
+): { breaches: string[]; edges: number } {
+  const from = LAYER.get(engineDirOf(path) ?? "");
+  if (from === undefined) return { breaches: [], edges: 0 };
+  const breaches: string[] = [];
+  let edges = 0;
+  for (const { spec, kind } of imports(text, path)) {
+    if (kind === "type") continue;
+    const target = resolve(path, spec);
+    const to = target === null ? undefined : LAYER.get(engineDirOf(target) ?? "");
+    if (to === undefined) continue;
+    edges++;
+    if (to > from) breaches.push(`${path} → ${target}`);
+  }
+  return { breaches, edges };
+}
 
 describe("module layering", () => {
   it("resolves the imports the rules below are counting", () => {
@@ -251,6 +285,52 @@ describe("module layering", () => {
       }
     }
     expect(offenders).toEqual([]);
+  });
+
+  it("places every engine module in a declared directory, and declares none that is empty", () => {
+    // A directory missing from `ENGINE_DIRECTORIES` has no layer, so the rule
+    // below would skip its imports without a sound; a module at the engine's
+    // top is in no concern.
+    const dirs = new Set(
+      Object.keys(sources)
+        .map((p) => engineDirOf(p.replace(/^\.\//, "src/")))
+        .filter((d): d is string => d !== null),
+    );
+    expect([...dirs].filter((d) => !LAYER.has(d))).toEqual([]);
+    expect([...LAYER.keys()].filter((d) => !dirs.has(d))).toEqual([]);
+  });
+
+  it("an engine module imports at run time only from its own directory or one below it", () => {
+    // The order is `engine-directories.ts`'s, bottom to top: rendering never
+    // runs a hint planner, a solver never runs the midend. Shipped modules
+    // only; a test may drive its module from above, through the midend.
+    const offenders: string[] = [];
+    let edges = 0;
+    for (const [path, text] of modules) {
+      const seen = layerBreaches(path, text);
+      offenders.push(...seen.breaches);
+      edges += seen.edges;
+    }
+    expect(offenders).toEqual([]);
+    // A floor far below the count (about 450, 2026-11-21), to tell "checked"
+    // from "resolved nothing".
+    expect(edges).toBeGreaterThan(200);
+  });
+
+  it("would see an engine module import from a directory above its own", () => {
+    const at = "src/engine/render/plant.ts";
+    const upward = 'import { Midend } from "../midend/midend.ts";';
+    expect(layerBreaches(at, upward).breaches).toHaveLength(1);
+    expect(
+      layerBreaches(at, 'const m = import("../hint/hint-plan.ts");').breaches,
+    ).toHaveLength(1);
+    for (const fine of [
+      'import type { Midend } from "../midend/midend.ts";',
+      'import { type Midend } from "../midend/midend.ts";',
+      'import { drawRectOutline } from "./draw.ts";',
+      'import { Dsf } from "../board/dsf.ts";',
+    ])
+      expect(layerBreaches(at, fine).breaches, fine).toEqual([]);
   });
 
   it("preflight stays inside its Baseline 2023 gate", () => {
