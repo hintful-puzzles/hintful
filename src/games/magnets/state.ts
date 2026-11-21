@@ -40,7 +40,6 @@ export const NEGATIVE = 2;
 export const opposite = (x: number): number => (x * 2) % 3;
 
 // --- flag bits (upstream GS_*) --------------------------------------------
-export const GS_ERROR = 1;
 export const GS_SET = 2;
 export const GS_NOTPOSITIVE = 4;
 export const GS_NOTNEGATIVE = 8;
@@ -96,7 +95,7 @@ export interface MagnetsState {
   readonly common: MagnetsCommon;
   /** Per-cell EMPTY/POSITIVE/NEGATIVE, cloned per move. */
   readonly grid: Int8Array;
-  /** Per-cell GS_SET | GS_ERROR | GS_NOTNEUTRAL, cloned per move. */
+  /** Per-cell GS_SET and the GS_NOT* marks, cloned per move. */
   readonly flags: Int32Array;
   /** `2·(w+h)` clue-gray toggles, cloned per move. */
   readonly countsDone: Uint8Array;
@@ -360,68 +359,6 @@ export function clueIndex(w: number, h: number, x: number, y: number): number {
 export const inGrid = (w: number, h: number, x: number, y: number): boolean =>
   x >= 0 && x < w && y >= 0 && y < h;
 
-/** What the counts and the error overlay read. */
-type Board = Pick<MagnetsState, "w" | "h" | "wh" | "flags" | "common"> & {
-  readonly grid: ArrayLike<number>;
-};
-
-/** Count cells of color `which` in a row/column, or (which < 0) the empty,
- * not-yet-set cells. Upstream count_rowcol. */
-export function countRowcol(
-  state: Board,
-  num: number,
-  roworcol: number,
-  which: number,
-): number {
-  const { w, h, grid, flags } = state;
-  let i: number;
-  let di: number;
-  let n: number;
-  if (roworcol === ROW) {
-    i = num * w;
-    di = 1;
-    n = w;
-  } else {
-    i = num;
-    di = w;
-    n = h;
-  }
-  let count = 0;
-  for (let j = 0; j < n; j++, i += di) {
-    if (which < 0) {
-      if (grid[i] === EMPTY && !(flags[i] & GS_SET)) count++;
-    } else if (grid[i] === which) count++;
-  }
-  return count;
-}
-
-/** The error overlay: set GS_ERROR on two touching like poles, clearing it
- * everywhere else. Whether a board is solved is the answer check's
- * (`solver.ts`). */
-function markErrors(state: Board): void {
-  const { w, h, wh, grid, flags, common } = state;
-  for (let i = 0; i < wh; i++) flags[i] &= ~GS_ERROR;
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      const idx = y * w + x;
-      if (common.dominoes[idx] === idx) continue; // no domino here
-      const which = grid[idx];
-      if (which === NEUTRAL) continue;
-      for (const [xx, yy] of [
-        [x, y - 1],
-        [x, y + 1],
-        [x - 1, y],
-        [x + 1, y],
-      ]) {
-        if (inGrid(w, h, xx, yy) && grid[yy * w + xx] === which) {
-          flags[yy * w + xx] |= GS_ERROR;
-          flags[idx] |= GS_ERROR;
-        }
-      }
-    }
-  }
-}
-
 // --- moves ---------------------------------------------------------------
 
 export function executeMove(state: MagnetsState, move: MagnetsMove): MagnetsState {
@@ -479,8 +416,6 @@ export function executeMove(state: MagnetsState, move: MagnetsMove): MagnetsStat
       return assertNever(move, "magnets: executeMove");
   }
 
-  // Refreshes the live GS_ERROR marks the redraw reads.
-  markErrors(next);
   return next;
 }
 

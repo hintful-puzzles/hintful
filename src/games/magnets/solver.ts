@@ -11,6 +11,7 @@
  * game has no search tier.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
@@ -22,6 +23,7 @@ import {
   perPlace,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -214,15 +216,18 @@ export function placedValues(state: MagnetsState): Uint8Array {
   );
 }
 
+/** The board as its rules read it: a tile the player has set holds its
+ * poles or is neutral, any other square is undecided. */
+export const rules: RulesOf<MagnetsState> = describedRules(magnets, {
+  grid: placedValues,
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s.w, s.h, s.common)],
+});
+
 /** Whether a state's tiles are an answer to its board, by the rules the
  * description compiles to. */
 export function isSolved(state: MagnetsState): boolean {
-  const { w, h, common } = state;
-  return magnets.isAnswer(
-    placedValues(state),
-    magnetsSpace(w, h),
-    dealtOf(w, h, common),
-  );
+  return rules.isAnswer(state, placedValues(state));
 }
 
 export function status(state: MagnetsState): GameStatus {

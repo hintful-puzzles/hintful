@@ -41,6 +41,7 @@ import {
   type MarkCell,
   MarkOutlines,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
@@ -49,14 +50,14 @@ import {
   type WinTone,
   winSlot,
 } from "../../engine/render/win-wave.ts";
+import { perPlace } from "../../engine/solve/describe-runtime.ts";
 import type { MagnetsHighlights } from "./hint.ts";
 import { CLUE, LINE, SQUARE } from "./kinds.ts";
+import { cellValue, dealtOf, rules } from "./solver.ts";
 import {
   COLUMN,
   clueIndex,
-  countRowcol,
   EMPTY,
-  GS_ERROR,
   GS_NOTNEGATIVE,
   GS_NOTNEUTRAL,
   GS_NOTPOSITIVE,
@@ -418,18 +419,13 @@ function getCountColor(
   rowcol: number,
   which: number,
   index: number,
-  target: number,
+  broken: ReadonlySet<number>,
   hinted: ReadonlySet<number>,
   reasons: ReadonlySet<number>,
 ): number {
   const { w, h } = state;
-  const count = countRowcol(state, index, rowcol, which);
-  if (
-    count > target ||
-    (count < target && countRowcol(state, index, rowcol, -1) === 0)
-  ) {
-    return COL_ERROR;
-  }
+  const line = rowcol === ROW ? index : h + index;
+  if (broken.has(perPlace(line, cellValue(which)))) return COL_ERROR;
   const idx =
     rowcol === COLUMN
       ? clueIndex(w, h, index, which === POSITIVE ? -1 : h)
@@ -480,6 +476,15 @@ export function redraw(
   const mistakeSet = new Set<number>();
   if (mistakes) for (const m of mistakes) mistakeSet.add(m.y * w + m.x);
 
+  // Where the board breaks a rule: two like poles touching, and each count a
+  // line already passes or can no longer reach, by its place in the rules.
+  const live = liveErrors(rules, state);
+  for (const [a, b] of live.pairs) live.at[a] = live.at[b] = 1;
+  const { count } = dealtOf(w, h, common);
+  const brokenCounts = new Set(
+    [...(live.clues.get("count") ?? [])].map((k) => count.at[k]),
+  );
+
   const cx = ui.cursor.visible ? ui.cursor.x : -1;
   const cy = ui.cursor.visible ? ui.cursor.y : -1;
 
@@ -520,7 +525,7 @@ export function redraw(
       let c = grid[idx];
       c |= outlines.packed(x, y) << DS_HINT_SIDES_SHIFT;
       if (onLine(ROW, y) || onLine(COLUMN, x)) c |= DS_HINT_LINE;
-      if (flags[idx] & GS_ERROR) c |= DS_ERROR;
+      if (live.at[idx]) c |= DS_ERROR;
       if (flags[idx] & GS_SET) c |= DS_SET;
       if (x === cx && y === cy) c |= DS_CURSOR;
       // A domino lights as one piece, at the middle of its two squares. A
@@ -553,7 +558,7 @@ export function redraw(
           rowcol,
           which,
           i,
-          targets[index],
+          brokenCounts,
           hintedClues,
           reasonClues,
         );

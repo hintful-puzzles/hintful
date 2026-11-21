@@ -38,7 +38,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { isSolved, solveMagnets, status } from "./solver.ts";
+import { isSolved, rules, solveMagnets, status } from "./solver.ts";
 import {
   clueIndex,
   DIFF_COUNT,
@@ -303,6 +303,7 @@ export const magnetsGame: Game<
   status,
 
   solve,
+  rules,
   findMistakes,
   clearMistakes,
   hint: {

@@ -32,7 +32,9 @@
       which gives `isAnswer` too, and the guard checks a changed answer
       breaks a rule exactly where it is no answer (Map's four-coloring leaves
       some changes answers). Moved: abcd (its "no diagonal" variation is a
-      module argument `deals` passes). Run `src/guards` before a
+      module argument `deals` passes), magnets (its + and − counts are
+      read as an interval, so a count with too few open squares left
+      turns red before the line is full). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);
@@ -44,6 +46,13 @@
 - [ ] 2.4 Plant a broken rule and see its mark appear in a game that wrote
       no checker (once batch 1 has moved a game whose checker is deleted:
       edit its description's rule, see the mark move in the app).
+- [ ] 2.5 **For the owner:** Magnets draws a clash (two like poles
+      touching) as the pole's symbol in `ERROR`, which is the + pole's own
+      fill (`RED`), so two touching + poles show nothing on the poles, only
+      the line's count. The badge rule (`rendering.md`: an `ERROR` disc, the
+      glyph in `ERROR_TEXT`) is invisible on a red pole too. Recommended:
+      a clashing pole takes the badge with an `INK` rim, which reads on the
+      red pole and the ink one alike. Waiting on the owner's choice of look.
 
 ## 3. Finish
 
