@@ -39,8 +39,8 @@ state and one set of marks, so the writing is not divided among agents.
    shared way, change the puzzle's part and leave the shape. Where it does
    not, the guide for the concern says what else a game may do.
 6. **Write the help page and the spec**: [`help-pages.md`](./help-pages.md),
-   and § "What a game's spec holds". The scaffold took `skip_specs` off the
-   change, so the spec is owed from the first verdict on.
+   and § "What a game's spec holds". The spec is owed from the first verdict
+   on: the scaffold takes `skip_specs` off an open `add-<game>` change.
 7. **Capture the icons**: two committed PNGs, taken from the running game in
    the dev-only `?screenshot` mode
    ([`puzzle-icons`](../openspec/specs/puzzle-icons/spec.md)).

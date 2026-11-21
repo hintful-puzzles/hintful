@@ -9,9 +9,10 @@ import { randomNew } from "../../engine/random/index.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
+import * as skeleton from "../../generated/skeleton/edges/skeleton.compiled.ts";
 import { newSkeletonDesc } from "./generator.ts";
 import { skeletonGame } from "./index.ts";
-import { SKELETON_RUNGS, solveSkeleton } from "./solver.ts";
+import { solveSkeleton } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFF_NORMAL,
@@ -38,7 +39,9 @@ const SEEDS = ["a", "b", "c"];
 
 describeLadderCensus<SkeletonParams & { desc: string }>({
   game: "skeleton",
-  rungs: SKELETON_RUNGS,
+  // The census counts a firing by its technique's id, which a placed kind
+  // with arms shares among the rungs its says-kinds name.
+  rungs: skeleton.ladder.map((e) => e.id),
   unreached: {},
   caps: [DIFF_EASY, DIFF_NORMAL],
   cases: SHAPES.flatMap((p) =>

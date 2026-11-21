@@ -1001,6 +1001,9 @@ cell holds a value of its domain, and the shape, the rules and each dealt
 clue's meaning hold of it. The compiler's `answerCheck` says how each part
 compiles; what a game acts on:
 
+- **`shape:` and `rules:` are one list to the check**: a `shape` entry is a
+  rule named by its place. Name a rule in `rules:` where its name is worth
+  reading in a refusal.
 - **The grid is the game's own**, a value a cell and 0 where none is: the
   check reads only `value` and `known`, never the marks, so `cand` in a rule
   is refused. A game that keeps a value outside its grid gives the check the

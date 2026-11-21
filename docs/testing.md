@@ -263,7 +263,8 @@ would, with the other games' cases skipped; its header in
 `npm run fast-checks` (§ "What runs when"), so it formats every file the
 work changed, the engine's included, and its checks read the whole tree:
 a refusal there may be another file's, and they read files git does not
-track yet.
+track yet. Edit nothing while it runs: it formats and reads the files as
+they stand, and a file changed under it reports a refusal that is the race's.
 
 Do not take a green `vitest run src/games/<game>` as the game's coverage. Its
 input paths, save round-trip, params codec and its source text (color
@@ -274,8 +275,8 @@ literals, hint wording, note vocabulary) are checked by guards outside
   refusing guard cites. A guard that cites none says what it asks in its
   header.
 - **A game it has never seen is refused by the records kept by hand**: the
-  snapshots of `capability-surface.test.ts` and `params-stability.test.ts`,
-  which you write again with `npx vitest run <file> -u` after reading the
+  snapshots of `capability-surface.test.ts`, `params-stability.test.ts` and,
+  for a hinted game, `hint-walk-fingerprint.test.ts`, which you write again with `npx vitest run <file> -u` after reading the
   diff, and the ledgers of § "What a game owes the cross-game guards".
 - **Green here is a commit's verdict and not the gate's.** It ends by saying
   what it did not run: the other games' cases, the floors over the whole

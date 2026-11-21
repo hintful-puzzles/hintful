@@ -22,7 +22,8 @@
  * job is to make a capability's disappearance a reviewable line in a text diff
  * rather than a silence. `vitest -u` re-baselines it, which is correct for an
  * intended change and is why the assertions below are not snapshots: a careless
- * `-u` must not be able to erase the guarantee (`docs/testing.md`).
+ * `-u` must not be able to erase the guarantee. A new game writes its lines
+ * with `-u` (`docs/testing.md` § "A game's verdict in one command").
  *
  * WHY NOT A MANIFEST. Because the change that drops a capability would drop its
  * manifest entry in the same edit, and nothing would notice — the shape this

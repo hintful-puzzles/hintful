@@ -5,7 +5,8 @@
  * (`testing/hint-walk-fingerprint.ts`). To read a difference, run this with
  * `VITE_HINT_WALK` set to a word of the board's name, at the commit before and
  * the commit after: each walk it matches is thrown as the error's text, which
- * is what a run prints in full.
+ * is what a run prints in full. A new game writes its lines with `-u`
+ * (docs/testing.md § "A game's verdict in one command").
  */
 import { describe, expect, it } from "vitest";
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";

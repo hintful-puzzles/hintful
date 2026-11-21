@@ -437,8 +437,9 @@ contract". Exemplar: the skeleton's
   [`solver-and-generator.md`](./solver-and-generator.md) § "A tier means
   exactly its rung".
 - **A game that deduces has tiers** (`engine-params`, "A deductive game has
-  tiers"): at the least Easy, which its deductions and its hint finish, and
-  Unreasonable, a board with one answer that they do not reach
+  tiers"): at the least Easy, which its deductions and its hint finish. An
+  Unreasonable tier, a board with one answer that they do not reach, is
+  added where the game is to deal such boards
   ([`solver-and-generator.md`](./solver-and-generator.md) § "Giving a
   deductive game an Unreasonable tier").
 - **A game with no tiers declares `finishesByDeduction`** (`engine-params`,
