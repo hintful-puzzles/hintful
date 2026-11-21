@@ -65,7 +65,14 @@
       game's do; a brick over an open square is no longer marked;
       `|stretch(L, c, S)|` is bounded by S's sure and possible members, in
       the compiler, and `matched` decides nothing where a set's members were
-      not all read). Run `src/guards` before a
+      not all read). Moved: boats (its `validate.ts` passes keep only the
+      solver's verdicts and the fleet display's count; a run longer than the
+      fleet's longest is stated as a rule, so it is marked as soon as it is
+      laid; a given segment is red only once no completion agrees with it,
+      where the old check compared the shape drawn so far; `stretch(L, c,
+      {x in cells(L) where P})` tests P from c outward, in the compiler, so a
+      boat walled in by water is read whole with its row still open). Run
+      `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

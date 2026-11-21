@@ -13,10 +13,11 @@
  * alike.
  *
  * **Two error layers, deliberately:**
- *  - the *live* rule violations upstream already draws as you play — a line
- *    whose number is exceeded, a segment contradicting its given clue, a boat
- *    the fleet cannot accommodate, and the warning diamond between two boats
- *    that touch diagonally. These need no solver call.
+ *  - the *live* rule violations, drawn as you play from where the board
+ *    breaks its rules (`brokenMarks`): a line whose number is broken, a
+ *    segment contradicting its given clue, a boat the fleet cannot
+ *    accommodate, and the warning diamond between two boats that touch
+ *    diagonally. These need no solver call.
  *  - the *Check & Save* overlay from `findMistakes`, which re-solves to the
  *    unique solution. It catches a locally-legal placement no solution
  *    permits, which is exactly the board a live-only check would let Check &
@@ -78,7 +79,13 @@ import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { BoatsHint } from "./index.ts";
-import type { BoatsMistake } from "./solver.ts";
+import {
+  type BoatsMistake,
+  brokenMarks,
+  FE_COLLISION,
+  FE_FLEET,
+  FE_MISMATCH,
+} from "./solver.ts";
 import {
   type BoatsMove,
   type BoatsParams,
@@ -95,19 +102,12 @@ import {
   SHIP_SINGLE,
   SHIP_TOP,
   SHIP_VAGUE,
-  STATUS_INVALID,
   WATER,
 } from "./state.ts";
-import {
-  checkCollision,
-  checkFleet,
-  countShips,
-  FD_CURSOR,
-  FE_COLLISION,
-  FE_FLEET,
-  FE_MISMATCH,
-  validateGridClues,
-} from "./validate.ts";
+import { checkFleet } from "./validate.ts";
+
+/** Not an error: the keyboard cursor is on this square. */
+const FD_CURSOR = 0x08;
 
 export const PREFERRED_TILE_SIZE = 32;
 
@@ -551,19 +551,11 @@ export function redraw(
   const p = state.params;
   const { w, h } = p;
 
-  // The validation family writes its verdicts into caller-supplied arrays and
-  // takes a mutable `BoatsBoard`, so give it a scratch copy rather than the
-  // immutable state. (No `adjustShips` is needed here: `executeMove` already
-  // resolved every segment's shape before the state was published.)
-  const board = boardOf(state);
-  const borderStatus = new Int32Array(w + h);
-  const cellFlags = new Int32Array(w * h);
+  // Where the board breaks its rules; and the fleet display's count of each
+  // length closed, which `checkFleet` reads off the drawn shapes.
+  const { slots: brokenSlots, cells: cellFlags } = brokenMarks(state);
   const fleetCount = new Int32Array(p.fleet);
-
-  countShips(board, undefined, undefined, borderStatus);
-  checkFleet(board, fleetCount, cellFlags);
-  validateGridClues(board, cellFlags);
-  checkCollision(board, cellFlags);
+  checkFleet(boardOf(state), fleetCount);
 
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
@@ -583,7 +575,7 @@ export function redraw(
   for (let i = 0; i < w + h; i++) {
     if (state.borderClues[i] === NO_CLUE) continue;
     const hatched = i === hatchedSlot;
-    const key = borderStatus[i] + (hatched ? BORDER_HATCHED : 0);
+    const key = brokenSlots[i] + (hatched ? BORDER_HATCHED : 0);
     if (!ds.border.changed(i, key)) continue;
 
     const column = i < w;
@@ -601,7 +593,7 @@ export function redraw(
         fontType: "variable",
         size: half,
       },
-      borderStatus[i] === STATUS_INVALID ? COL_ERROR : COL_COUNT,
+      brokenSlots[i] ? COL_ERROR : COL_COUNT,
       String(state.borderClues[i]),
     );
   }
@@ -635,7 +627,7 @@ export function redraw(
   /** What square `i` shows: its given or its played content, or what an
    * in-progress drag would make it, previewed without committing a move. */
   const shown = (i: number): number => {
-    const ship = state.gridClues[i] !== EMPTY ? state.gridClues[i] : board.grid[i];
+    const ship = state.gridClues[i] !== EMPTY ? state.gridClues[i] : state.grid[i];
     const x = i % w;
     const y = (i - x) / w;
     if (

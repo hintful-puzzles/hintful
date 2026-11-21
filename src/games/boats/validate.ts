@@ -13,8 +13,8 @@
  * mutating-validator hazard in docs/solver-and-generator.md § "Solver-gated
  * generation").
  *
- * Each `errs` parameter is optional and, when given, is *filled in* with the
- * per-slot or per-cell error flags the renderer paints; the solver passes none.
+ * The live marks are the rules' (`brokenMarks` in `solver.ts`); these passes
+ * are the solver's and the fleet display's.
  */
 
 import {
@@ -34,15 +34,6 @@ import {
   STATUS_INVALID,
   WATER,
 } from "./state.ts";
-
-/** Per-cell error flags (upstream `FE_*` / `FD_*`). */
-export const FE_COLLISION = 0x01;
-/** A placed segment contradicts the given clue on that square. */
-export const FE_MISMATCH = 0x02;
-/** This square belongs to a completed boat the fleet has no room for. */
-export const FE_FLEET = 0x04;
-/** Not an error — the keyboard cursor is on this square. */
-export const FD_CURSOR = 0x08;
 
 /** A maximal run of not-known-to-be-water cells along one row or column. */
 export interface BoatsRun {
@@ -81,14 +72,12 @@ export function fleetShipCount(b: BoatsBoard): number {
 /**
  * Upstream `boats_count_ships`: per-row and per-column tallies of ships and
  * water, checked against the border numbers. `blankCounts`/`shipCounts` are
- * indexed columns `0…w−1` then rows `w…w+h−1`; `errs` (same indexing) receives
- * the per-line `STATUS_*` the renderer colors the number with.
+ * indexed columns `0…w−1` then rows `w…w+h−1`.
  */
 export function countShips(
   b: BoatsBoard,
   blankCounts?: Int32Array,
   shipCounts?: Int32Array,
-  errs?: Int32Array,
 ): number {
   const { w, h, grid, borderClues } = b;
   let ret = STATUS_COMPLETE;
@@ -106,15 +95,8 @@ export function countShips(
     if (shipCounts) shipCounts[x] = ships;
     if (borderClues[x] === NO_CLUE) continue;
 
-    if (ships > borderClues[x] || blanks > h - borderClues[x]) {
-      ret = STATUS_INVALID;
-      if (errs) errs[x] = STATUS_INVALID;
-    } else if (ships < borderClues[x]) {
-      ret = ret !== STATUS_INVALID ? STATUS_INCOMPLETE : ret;
-      if (errs) errs[x] = STATUS_INCOMPLETE;
-    } else if (errs) {
-      errs[x] = STATUS_COMPLETE;
-    }
+    if (ships > borderClues[x] || blanks > h - borderClues[x]) ret = STATUS_INVALID;
+    else if (ships < borderClues[x] && ret !== STATUS_INVALID) ret = STATUS_INCOMPLETE;
   }
 
   for (let y = 0; y < h; y++) {
@@ -129,15 +111,10 @@ export function countShips(
     if (shipCounts) shipCounts[y + w] = ships;
     if (borderClues[y + w] === NO_CLUE) continue;
 
-    if (ships > borderClues[y + w] || blanks > w - borderClues[y + w]) {
+    if (ships > borderClues[y + w] || blanks > w - borderClues[y + w])
       ret = STATUS_INVALID;
-      if (errs) errs[y + w] = STATUS_INVALID;
-    } else if (ships < borderClues[y + w]) {
-      ret = ret !== STATUS_INVALID ? STATUS_INCOMPLETE : ret;
-      if (errs) errs[y + w] = STATUS_INCOMPLETE;
-    } else if (errs) {
-      errs[y + w] = STATUS_COMPLETE;
-    }
+    else if (ships < borderClues[y + w] && ret !== STATUS_INVALID)
+      ret = STATUS_INCOMPLETE;
   }
 
   return ret;
@@ -202,77 +179,47 @@ export function adjustShips(b: BoatsBoard): number {
   return ret;
 }
 
-/**
- * Upstream `boats_check_collision`: two boats touching diagonally. The flag is
- * recorded on the top-left cell of the offending 2×2 block, which is where the
- * renderer draws its warning diamond (between the four cells).
- */
-export function checkCollision(b: BoatsBoard, errs?: Int32Array): boolean {
+/** Upstream `boats_check_collision`: whether two boats touch diagonally. */
+function checkCollision(b: BoatsBoard): boolean {
   const { w, h, grid } = b;
-  let found = false;
-  for (let x = 0; x < w - 1; x++) {
-    for (let y = 0; y < h - 1; y++) {
+  for (let x = 0; x < w - 1; x++)
+    for (let y = 0; y < h - 1; y++)
       if (
         (isShip(grid[y * w + x]) && isShip(grid[(y + 1) * w + (x + 1)])) ||
         (isShip(grid[(y + 1) * w + x]) && isShip(grid[y * w + (x + 1)]))
-      ) {
-        if (errs) errs[y * w + x] |= FE_COLLISION;
-        found = true;
-      } else if (errs) {
-        errs[y * w + x] &= ~FE_COLLISION;
-      }
-    }
-  }
-  return found;
+      )
+        return true;
+  return false;
 }
 
 /**
  * Upstream `boats_check_fleet`: count every *completed* boat (one whose shape
- * is resolved end to end) and compare against the fleet inventory. A boat of a
- * size the fleet has no room for is flagged `FE_FLEET` on each of its squares.
- * A `SHIP_VAGUE` square breaks a run — an unresolved boat is not counted.
+ * is resolved end to end) into `fleetCount`, by length, and compare against
+ * the fleet inventory. A `SHIP_VAGUE` square breaks a run: an unresolved boat
+ * is not counted.
  */
-export function checkFleet(
-  b: BoatsBoard,
-  fleetCount?: Int32Array,
-  errs?: Int32Array,
-): number {
+export function checkFleet(b: BoatsBoard, fleetCount?: Int32Array): number {
   const { w, h, fleet, grid, fleetData } = b;
   const counts = fleetCount ?? new Int32Array(fleet);
   counts.fill(0);
   let ret = STATUS_COMPLETE;
 
-  if (errs) for (let i = 0; i < w * h; i++) errs[i] &= ~FE_FLEET;
-
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      if (fleet >= 1 && grid[y * w + x] === SHIP_SINGLE) {
-        if (errs && fleetData[0] === 0) errs[y * w + x] |= FE_FLEET;
-        counts[0]++;
-      }
-    }
-  }
+  for (let x = 0; x < w; x++)
+    for (let y = 0; y < h; y++)
+      if (fleet >= 1 && grid[y * w + x] === SHIP_SINGLE) counts[0]++;
 
   // Vertical boats, then horizontal ones — same walk on each axis.
   for (let x = 0; x < w; x++) {
     let len = 0;
     let inShip = false;
     for (let y = 0; y < h; y++) {
-      let isError = false;
       if (grid[y * w + x] === SHIP_TOP) inShip = true;
       if (inShip) len++;
 
       if (inShip && grid[y * w + x] === SHIP_BOTTOM) {
         inShip = false;
-        if (len > fleet) {
-          ret = STATUS_INVALID;
-          isError = true;
-        } else if (len > 0) {
-          counts[len - 1]++;
-          if (fleetData[len - 1] === 0) isError = true;
-        }
-        if (errs && isError)
-          for (let i = 0; i < len; i++) errs[(y - i) * w + x] |= FE_FLEET;
+        if (len > fleet) ret = STATUS_INVALID;
+        else if (len > 0) counts[len - 1]++;
         len = 0;
       } else if (grid[y * w + x] === SHIP_VAGUE) {
         inShip = false;
@@ -285,21 +232,13 @@ export function checkFleet(
     let len = 0;
     let inShip = false;
     for (let x = 0; x < w; x++) {
-      let isError = false;
       if (grid[y * w + x] === SHIP_LEFT) inShip = true;
       if (inShip) len++;
 
       if (inShip && grid[y * w + x] === SHIP_RIGHT) {
         inShip = false;
-        if (len > fleet) {
-          ret = STATUS_INVALID;
-          isError = true;
-        } else if (len > 0) {
-          counts[len - 1]++;
-          if (fleetData[len - 1] === 0) isError = true;
-        }
-        if (errs && isError)
-          for (let i = 0; i < len; i++) errs[y * w + x - i] |= FE_FLEET;
+        if (len > fleet) ret = STATUS_INVALID;
+        else if (len > 0) counts[len - 1]++;
         len = 0;
       } else if (grid[y * w + x] === SHIP_VAGUE) {
         inShip = false;
@@ -367,7 +306,7 @@ export function collectRuns(b: BoatsBoard): BoatsRun[] {
  * have ships on one whole axis, and a resolved shape must equal the clue.
  * Also reports `STATUS_INCOMPLETE` while any square is still `SHIP_VAGUE`.
  */
-export function validateGridClues(b: BoatsBoard, errs?: Int32Array): number {
+function validateGridClues(b: BoatsBoard): number {
   const { w, h, grid, gridClues } = b;
   let ret = STATUS_COMPLETE;
 
@@ -375,11 +314,7 @@ export function validateGridClues(b: BoatsBoard, errs?: Int32Array): number {
     for (let y = 0; y < h; y++) {
       const i = y * w + x;
       if (grid[i] === SHIP_VAGUE && ret !== STATUS_INVALID) ret = STATUS_INCOMPLETE;
-
-      if (gridClues[i] === EMPTY) {
-        if (errs) errs[i] &= ~FE_MISMATCH;
-        continue;
-      }
+      if (gridClues[i] === EMPTY) continue;
 
       let error = false;
       if (
@@ -402,12 +337,7 @@ export function validateGridClues(b: BoatsBoard, errs?: Int32Array): number {
           error = true;
       }
 
-      if (error) {
-        ret = STATUS_INVALID;
-        if (errs) errs[i] |= FE_MISMATCH;
-      } else if (errs) {
-        errs[i] &= ~FE_MISMATCH;
-      }
+      if (error) ret = STATUS_INVALID;
     }
   }
 

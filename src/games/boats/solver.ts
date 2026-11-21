@@ -15,6 +15,7 @@
  */
 
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
@@ -24,6 +25,7 @@ import {
   type GridSpace,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -167,6 +169,55 @@ function dealtOf(b: BoatsBoard): boats.Dealt {
       boats: b.fleetData.slice(0, b.fleet),
     },
   };
+}
+
+/** The board as its rules read it: a boat segment, water, or nothing yet. */
+export const rules: RulesOf<BoatsState> = describedRules(boats, {
+  grid: (s) => Uint8Array.from(s.grid, describedOf),
+  size: (s) => [s.params.w, s.params.h],
+  deals: (s) => [dealtOf(boardOf(s))],
+});
+
+/** Per-square live marks: two boats touching at a corner, the flag on the
+ * top-left square of the four; a given segment the board contradicts; and a
+ * square of a boat no length in the fleet fits. */
+export const FE_COLLISION = 0x01;
+export const FE_MISMATCH = 0x02;
+export const FE_FLEET = 0x04;
+
+const TOUCHING: boats.RuleName = "shape.0";
+const NO_LENGTH: boats.RuleName = "shape.1";
+const TOO_LONG: boats.RuleName = "shape.4";
+
+/** Where the board breaks its rules, as the renderer draws it: each border
+ * number broken, by its slot, and each square's `FE_*` marks. The fleet's
+ * total, which the numbers count out line by line, is drawn by none. */
+export function brokenMarks(s: BoatsState): { slots: Uint8Array; cells: Int32Array } {
+  const { w, h } = s.params;
+  const slots = new Uint8Array(w + h);
+  const cells = new Int32Array(w * h);
+  const board = boardOf(s);
+  const dl = dealtOf(board);
+  const g = rules.grid(s);
+  for (const v of rules.violations(s, g)) {
+    if (v.rule === TOUCHING) {
+      const [a, b] = v.at;
+      cells[Math.min(a % w, b % w) + Math.min((a / w) | 0, (b / w) | 0) * w] |=
+        FE_COLLISION;
+    } else if (v.rule === "clue.seg") cells[dl.seg.at[v.clue]] |= FE_MISMATCH;
+    else if (v.rule === "clue.n") slots[slotOfLine(board, dl.n.at[v.clue])] = 1;
+    else if (v.rule === TOO_LONG) cells[v.at[0]] |= FE_FLEET;
+    else if (v.rule === NO_LENGTH) {
+      // The boat its head starts, right or down.
+      const c = v.at[0];
+      const step = c % w < w - 1 && g[c + 1] === SHIP ? 1 : w;
+      for (let x = c; x < w * h && g[x] === SHIP; x += step) {
+        cells[x] |= FE_FLEET;
+        if (step === 1 && x % w === w - 1) break;
+      }
+    }
+  }
+  return { slots, cells };
 }
 
 // --- the hint's vocabulary ---------------------------------------------------

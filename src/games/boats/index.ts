@@ -98,6 +98,7 @@ import {
   hintWalk,
   isBoatsAnswer,
   lowestSolvingDiff,
+  rules,
   SEA,
   SHIP,
   solveBoats,
@@ -626,6 +627,7 @@ export const boatsGame: Game<
   status,
 
   solve,
+  rules,
   findMistakes,
   clearMistakes: (_state, mistakes) =>
     mistakes.map(({ x, y }) => ({

@@ -20,6 +20,23 @@ export function stretch(
   return L.slice(a, b);
 }
 
+/** `stretch(L, c, {x in cells(L) where P})` with `P` tested from `c`
+ * outward, `inS` its test: the run reads its own squares and the two that
+ * end it, and nothing else of the line. */
+export function stretchWhere(
+  L: readonly number[],
+  c: number,
+  inS: (x: number) => boolean,
+): readonly number[] {
+  const i = L.indexOf(c);
+  if (i < 0 || !inS(c)) return [];
+  let a = i;
+  while (a > 0 && inS(L[a - 1])) a--;
+  let b = i + 1;
+  while (b < L.length && inS(L[b])) b++;
+  return L.slice(a, b);
+}
+
 /** `connected(S)`: whether the cells `S` are one group, each reaching every
  * other through members side by side. None and one are. */
 export function connected(sp: GridSpace, S: readonly number[]): boolean {

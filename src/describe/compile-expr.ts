@@ -2575,7 +2575,57 @@ function ownForm(
 ): Val | null {
   if (fn === "latin") return latin(args, scope, env, out);
   if (isBentSight(fn, args)) return bentSight(fn, args, scope, env, out);
+  if (fn === "stretch") return stretchOver(args, scope, env, out);
   return null;
+}
+
+/**
+ * `stretch(L, c, {x in cells(L) where P})`, `P` tested from `c` outward:
+ * the run reads its own squares and the two that end it, so a boat walled in
+ * by water is read whole with the rest of its row still open. `null` for any
+ * other set, which `stretch` reads whole.
+ */
+function stretchOver(
+  args: readonly Expr[],
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  if (args.length !== 3) return null;
+  const [line, at] = args;
+  // The set may be written through a definition, as Boats' `shipsOf(L)`.
+  const S = inlined(args[2], scope, env);
+  if (S.k !== "agg" || S.fn !== "set" || S.binders.length !== 1) return null;
+  const b = S.binders[0];
+  if (b.kind !== "in" || S.term?.k !== "name" || S.term.name !== b.name) return null;
+  if (
+    b.of.k !== "call" ||
+    b.of.fn !== "cells" ||
+    b.of.args.length !== 1 ||
+    JSON.stringify(b.of.args[0]) !== JSON.stringify(line)
+  )
+    return null;
+  const L = compileExpr(line, scope, env, out);
+  expectElem(L, "line", "stretch");
+  const c = once(compileExpr(at, scope, env, out), out);
+  expectElem(c, "cell", "stretch");
+  const x = Out.fresh("_sx");
+  const inS = Out.fresh("_in");
+  const inner = new Map(scope).set(b.name, { code: x, sort: elem("cell") });
+  out.open(`const ${inS} = (${x}: number): boolean => {`);
+  const tests = [b.where, S.where].flatMap((w) => {
+    if (w === null) return [];
+    const v = compileExpr(w, inner, env, out);
+    expect(v, "bool", "stretch");
+    return [v.code];
+  });
+  out.emit(`return ${tests.length > 0 ? tests.join(" && ") : "true"};`);
+  out.close("};");
+  env.used.add("stretchWhere");
+  return {
+    code: `stretchWhere(sp.lineCells[${L.code}], ${c.code}, ${inS})`,
+    sort: setOf(elem("cell")),
+  };
 }
 
 /** `clue(kind, x)`, or `clue(kind, x, d)` of a clue per value: the clue of

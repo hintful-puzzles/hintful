@@ -69,7 +69,13 @@ import {
   fleetRows,
   PREFERRED_TILE_SIZE,
 } from "./render.ts";
-import { findMistakes, solveBoats, solveToGrid } from "./solver.ts";
+import {
+  brokenMarks,
+  FE_FLEET,
+  findMistakes,
+  solveBoats,
+  solveToGrid,
+} from "./solver.ts";
 import {
   type BoatsMove,
   type BoatsParams,
@@ -94,17 +100,10 @@ import {
   SHIP_RIGHT,
   SHIP_SINGLE,
   SHIP_VAGUE,
-  STATUS_INVALID,
   textFormat,
   WATER,
 } from "./state.ts";
-import {
-  adjustShips,
-  checkCollision,
-  checkFleet,
-  countShips,
-  validateGridClues,
-} from "./validate.ts";
+import { adjustShips, checkFleet, countShips } from "./validate.ts";
 
 const params = (over: Partial<BoatsParams> = {}): BoatsParams => ({
   w: 6,
@@ -696,19 +695,36 @@ describe("boats solve", () => {
 
 // --- mistakes --------------------------------------------------------------
 
+describe("boats live marks", () => {
+  it("marks a run longer than the fleet's longest with its ends still open", () => {
+    const p = params();
+    const s0 = newState(p, newBoatsDesc(p, randomNew("long run")).desc);
+    // The first row whose first four squares are open.
+    const y = [...Array(p.h).keys()].find((r) =>
+      [0, 1, 2, 3].every((x) => s0.gridClues[r * p.w + x] === EMPTY),
+    );
+    if (y === undefined) throw new Error("no open row");
+    const lay = (n: number): BoatsState => {
+      const s = { ...s0, grid: Int8Array.from(s0.grid) };
+      for (let x = 0; x < n; x++) s.grid[y * p.w + x] = SHIP_VAGUE;
+      return s;
+    };
+    const fleetMarked = (s: BoatsState) =>
+      [...brokenMarks(s).cells.keys()].filter(
+        (i) => brokenMarks(s).cells[i] & FE_FLEET,
+      );
+    expect(fleetMarked(lay(3))).toEqual([]);
+    expect(fleetMarked(lay(4))).toEqual([0, 1, 2, 3].map((x) => y * p.w + x));
+  });
+});
+
 describe("boats findMistakes", () => {
   it("reports a square on every board the live flags mark", () => {
     // The live flags fall on numbers and given squares too, which are never
     // reported, so the claim is about the board and not about each flag.
     const liveFlagged = (s: BoatsState): boolean => {
-      const board = boardOf(s);
-      const lines = new Int32Array(s.params.w + s.params.h);
-      const cells = new Int32Array(s.params.w * s.params.h);
-      countShips(board, undefined, undefined, lines);
-      checkFleet(board, undefined, cells);
-      validateGridClues(board, cells);
-      checkCollision(board, cells);
-      return lines.includes(STATUS_INVALID) || cells.some((f) => f !== 0);
+      const { slots, cells } = brokenMarks(s);
+      return slots.includes(1) || cells.some((f) => f !== 0);
     };
     const fill = (s: BoatsState, i: number, to: "B" | "W"): BoatsState => {
       const [x, y] = [i % s.params.w, Math.floor(i / s.params.w)];

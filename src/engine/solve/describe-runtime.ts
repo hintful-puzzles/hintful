@@ -117,6 +117,7 @@ export {
   matched,
   reaches,
   stretch,
+  stretchWhere,
 } from "./describe-runtime/reach.ts";
 export {
   rectCells,

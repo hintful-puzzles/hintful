@@ -196,6 +196,10 @@ shape:
   # rules above and the fleet's count of each length; stated, the checker
   # need not count it out board by board.
   - "count(c in cells where value(c) = 1) = total"
+  # No run of segments is longer than the fleet's longest boat. It follows
+  # from the length rule; stated, a run too long is broken while the squares
+  # beside it are still open, so it is marked as soon as it is laid.
+  - "forall c in cells: |rowPart(c)| <= longest and |colPart(c)| <= longest"
 clues:
   # A number beside a row or column: how many of its squares hold a boat
   # segment.

@@ -1044,7 +1044,9 @@ says how each form is read; what a description's author acts on:
   each value that element's domain holds (a Mathrax digit no digit across
   its clue pairs with), `|stretch(L, c, S)|` between the stretch over S's
   sure members and over its possible ones (Bricks' three in a row with the
-  row still open), `matched` by Hall's condition
+  row still open), a `stretch` over a set filtered from its own line as
+  tested from its cell outward, reading no square past the two that end it
+  (a Boats boat walled in by water), `matched` by Hall's condition
   on each group, and `latin`/`distinct` as each pair that repeats. A form
   that reads only decided elements needs nothing: a connectivity or loop rule
   is reported once its elements are decided, and bounding it earlier is that
