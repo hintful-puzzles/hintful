@@ -585,6 +585,10 @@ grid while a gesture is live, and paints only what they say:
   game has a mark for two pieces clashing (Tents' diamond on the shared side
   or corner), and on both otherwise.
 - **Any other violation marks its elements**, and a clue's marks the clue.
+- **A game that draws one rule's breach its own way reads `byRule`**, the
+  rule named by a constant typed as its module's `RuleName`, so renaming or
+  moving the rule fails the typecheck (Unruly's bar along a run of three,
+  its badge on an over-full line's pieces).
 - **What the rules do not say is not an error.** A game that flagged more
   (a heuristic, a "largest piece wins") flagged a guess; a game that flagged
   less now shows what its rules already make certain. Where the marks are

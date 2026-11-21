@@ -187,6 +187,10 @@ export function violations(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): Viol
   return _out;
 }
 
+/** The statements a violation names, so a game that draws one its own
+ * way names it by a name the description has. */
+export type RuleName = "domain" | "clue.runs";
+
 export interface LineBinding {
   L: number;
   R: Int32Array | null;

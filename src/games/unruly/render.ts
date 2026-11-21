@@ -1,7 +1,7 @@
 /**
  * Unruly rendering. A per-tile cache keyed on a packed flag word (upstream's
  * `tile` int); error overlays (3-in-a-row bars, the count `!`, unique-match
- * bars) recomputed each frame from the validators; the win flash, which
+ * bars) recomputed each frame from where the board breaks its rules; the win flash, which
  * fills each cell it passes with the flash color, under its piece.
  *
  * The board is pieces on a quiet surface (`engine/render/piece.ts`): the two states
@@ -33,22 +33,14 @@ import type {
 } from "../../engine/contract/types.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
-import {
-  FE_COL_MATCH,
-  FE_HOR_ROW_LEFT,
-  FE_HOR_ROW_RIGHT,
-  FE_ROW_MATCH,
-  FE_VER_ROW_BOTTOM,
-  FE_VER_ROW_TOP,
-  markCounts,
-  markRows,
-} from "./solver.ts";
+import { ALIKE, BALANCE, RUN, rules } from "./solver.ts";
 import type {
   UnrulyMistake,
   UnrulyMove,
@@ -85,7 +77,14 @@ export function colors(defaultBackground: Color): Color[] {
 }
 
 // --- packed tile flags (upstream FE_*/FF_*; also the cache key) ---------
+// A run of three's bar: a cell's half toward each end of the run it is in.
+const FE_HOR_ROW_LEFT = 0x0001;
+const FE_HOR_ROW_RIGHT = 0x0002;
+const FE_VER_ROW_TOP = 0x0004;
+const FE_VER_ROW_BOTTOM = 0x0008;
 const FE_COUNT = 0x10;
+const FE_ROW_MATCH = 0x0020;
+const FE_COL_MATCH = 0x0040;
 const FF_ONE = 0x80;
 const FF_ZERO = 0x100;
 const FF_CURSOR = 0x200;
@@ -98,6 +97,34 @@ const FF_MISTAKE = 0x2000;
 const FF_HINT_TARGET = 0x4000; // the forced cell (ringed)
 const FF_HINT_LINE = 0x10000; // a cell of the line the sentence names (hatched)
 const FF_HINT_OUTLINE = 0x20000; // a cited premise / pivotal cell (COL_HINT_OUTLINE outline)
+
+/** Each cell's error flags, from where the board breaks its rules: a bar
+ * along a run of three, a badge on each piece of a line with more than its
+ * half of them, and a bar across each of two lines alike. */
+function errorFlags(state: UnrulyState): Int32Array {
+  const { w2 } = state;
+  const flags = new Int32Array(state.grid.length);
+  const live = liveErrors(rules, state);
+  const rowOf = (c: number): number => Math.floor(c / w2);
+  for (const at of live.byRule.get(RUN) ?? []) {
+    const [a, b, c] = [...new Set(at)].sort((p, q) => p - q);
+    const across = rowOf(a) === rowOf(c);
+    const [first, last] = across
+      ? [FE_HOR_ROW_LEFT, FE_HOR_ROW_RIGHT]
+      : [FE_VER_ROW_TOP, FE_VER_ROW_BOTTOM];
+    flags[a] |= first;
+    flags[b] |= first | last;
+    flags[c] |= last;
+  }
+  for (const at of live.byRule.get(BALANCE) ?? [])
+    for (const c of at) flags[c] |= FE_COUNT;
+  for (const at of live.byRule.get(ALIKE) ?? []) {
+    // Two rows span two rows of the grid; two columns, all of them.
+    const rows = new Set(at.map(rowOf)).size === 2;
+    for (const c of at) flags[c] |= rows ? FE_ROW_MATCH : FE_COL_MATCH;
+  }
+  return flags;
+}
 
 // --- geometry -----------------------------------------------------------
 /** The board's pixel origin. Exported so `interpretMove` reads the same number
@@ -311,7 +338,6 @@ export function redraw(
   const { prev, state, ui, animTime, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w2, h2, grid, immutable } = state;
-  const s = w2 * h2;
   const mistakeSet =
     mistakes && mistakes.length > 0
       ? new Set(mistakes.map((m) => m.y * w2 + m.x))
@@ -342,23 +368,14 @@ export function redraw(
     );
   }
 
-  // Recompute error overlays each frame (live error display, like upstream).
-  const gridfs = new Int32Array(s);
-  markRows(state, gridfs);
-  const rowfs = new Uint8Array(2 * (w2 + h2));
-  markCounts(state, rowfs);
+  const gridfs = errorFlags(state);
 
   for (let y = 0; y < h2; y++) {
     for (let x = 0; x < w2; x++) {
       const i = y * w2 + x;
       let tile = gridfs[i];
-      if (grid[i] === ONE) {
-        tile |= FF_ONE;
-        if (rowfs[y] || rowfs[2 * h2 + x]) tile |= FE_COUNT;
-      } else if (grid[i] === ZERO) {
-        tile |= FF_ZERO;
-        if (rowfs[h2 + y] || rowfs[2 * h2 + w2 + x]) tile |= FE_COUNT;
-      }
+      if (grid[i] === ONE) tile |= FF_ONE;
+      else if (grid[i] === ZERO) tile |= FF_ZERO;
       tile |= flash.win(sweepStep(x, y)) << FF_FLASH_SHIFT;
       if (immutable[i]) tile |= FF_IMMUTABLE;
       if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y)

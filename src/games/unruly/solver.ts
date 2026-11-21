@@ -2,13 +2,15 @@
  * Unruly solver: the ladder `unruly.description.yaml` states, compiled, on the
  * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`),
  * with the reason each technique records for the hint; the answer check its rules
- * compile to, which the state reads; and the error overlay the renderer reads.
+ * compile to, which the state reads; and where a board breaks them, which the
+ * renderer draws.
  *
  * The solver fills the view's own grid in place: it fills thousands of cells
  * per board during generation, where a clone per fill would be wasteful. The
  * `Game`'s `executeMove` stays pure.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
@@ -31,16 +33,6 @@ export interface GridView {
   unique: boolean;
   grid: Uint8Array;
 }
-
-// --- error-overlay flags (set by markRows, read by render.ts) -------
-export const FE_HOR_ROW_LEFT = 0x0001;
-const FE_HOR_ROW_MID = 0x0003;
-export const FE_HOR_ROW_RIGHT = 0x0002;
-export const FE_VER_ROW_TOP = 0x0004;
-const FE_VER_ROW_MID = 0x000c;
-export const FE_VER_ROW_BOTTOM = 0x0008;
-export const FE_ROW_MATCH = 0x0020;
-export const FE_COL_MATCH = 0x0040;
 
 // --- the described ladder -----------------------------------------------
 
@@ -87,128 +79,24 @@ export function solveCopy(view: GridView, grid: Uint8Array, diff: number): GridV
   return work;
 }
 
-// --- the error overlay and the answer check ---------------------------------
-//
-// The overlay marks what is wrong on a board still being filled, which no
-// rule of the answer says, and draws a row's count as its own mark; the
-// answer check is the description's rules, compiled.
+// --- the rules: the answer check, and where a board breaks them ------------
 
-/** Per-row and per-column counts of each color. */
-interface Counts {
-  onesRows: Int32Array;
-  onesCols: Int32Array;
-  zerosRows: Int32Array;
-  zerosCols: Int32Array;
-}
+/** The rules Unruly draws its own way where they break, by the place each
+ * has in the description. */
+export const RUN: unruly.RuleName = "shape.0";
+export const BALANCE: unruly.RuleName = "shape.1";
+export const ALIKE: unruly.RuleName = "unique.shape.0";
 
-function countsOf(view: GridView): Counts {
-  const { w2, h2, grid } = view;
-  const s: Counts = {
-    onesRows: new Int32Array(h2),
-    onesCols: new Int32Array(w2),
-    zerosRows: new Int32Array(h2),
-    zerosCols: new Int32Array(w2),
-  };
-  for (let y = 0; y < h2; y++) {
-    for (let x = 0; x < w2; x++) {
-      const v = grid[y * w2 + x];
-      if (v === ONE) {
-        s.onesRows[y]++;
-        s.onesCols[x]++;
-      } else if (v === ZERO) {
-        s.zerosRows[y]++;
-        s.zerosCols[x]++;
-      }
-    }
-  }
-  return s;
-}
-
-function markRowsOriented(
-  view: GridView,
-  horizontal: boolean,
-  check: number,
-  errors: Int32Array,
-): void {
-  const { w2, h2, grid } = view;
-  const dx = horizontal ? 1 : 0;
-  const dy = 1 - dx;
-  const err1 = horizontal ? FE_HOR_ROW_LEFT : FE_VER_ROW_TOP;
-  const err2 = horizontal ? FE_HOR_ROW_MID : FE_VER_ROW_MID;
-  const err3 = horizontal ? FE_HOR_ROW_RIGHT : FE_VER_ROW_BOTTOM;
-  for (let y = dy; y < h2 - dy; y++) {
-    for (let x = dx; x < w2 - dx; x++) {
-      const i1 = (y - dy) * w2 + (x - dx);
-      const i2 = y * w2 + x;
-      const i3 = (y + dy) * w2 + (x + dx);
-      if (grid[i1] === check && grid[i2] === check && grid[i3] === check) {
-        errors[i1] |= err1;
-        errors[i2] |= err2;
-        errors[i3] |= err3;
-      }
-    }
-  }
-}
-
-function markUnique(view: GridView, horizontal: boolean, errors: Int32Array): void {
-  const { w2, h2, grid } = view;
-  const rmult = horizontal ? w2 : 1;
-  const cmult = horizontal ? 1 : w2;
-  const nr = horizontal ? h2 : w2;
-  const nc = horizontal ? w2 : h2;
-  const err = horizontal ? FE_ROW_MATCH : FE_COL_MATCH;
-  for (let r = 0; r < nr; r++) {
-    let nfull = 0;
-    for (let c = 0; c < nc; c++) if (grid[r * rmult + c * cmult] !== EMPTY) nfull++;
-    if (nfull !== nc) continue;
-    for (let r2 = r + 1; r2 < nr; r2++) {
-      let match = true;
-      for (let c = 0; c < nc; c++) {
-        if (grid[r * rmult + c * cmult] !== grid[r2 * rmult + c * cmult]) {
-          match = false;
-          break;
-        }
-      }
-      if (match) {
-        for (let c = 0; c < nc; c++) {
-          errors[r * rmult + c * cmult] |= err;
-          errors[r2 * rmult + c * cmult] |= err;
-        }
-      }
-    }
-  }
-}
-
-/** Mark every three-in-a-row run (and, in unique mode, every identical
- * full row/column pair) into `errors`. */
-export function markRows(view: GridView, errors: Int32Array): void {
-  markRowsOriented(view, true, ONE, errors);
-  markRowsOriented(view, false, ONE, errors);
-  markRowsOriented(view, true, ZERO, errors);
-  markRowsOriented(view, false, ZERO, errors);
-  if (view.unique) {
-    markUnique(view, true, errors);
-    markUnique(view, false, errors);
-  }
-}
-
-/** Mark each row and column holding more of a piece than its half into
- * `errors`, laid out as upstream: `[0,h2)` rows-ones, `[h2,2h2)` rows-zeros,
- * `[2h2,2h2+w2)` cols-ones, `[2h2+w2,2h2+2w2)` cols-zeros. */
-export function markCounts(view: GridView, errors: Uint8Array): void {
-  const { w2, h2 } = view;
-  const w = w2 / 2;
-  const h = h2 / 2;
-  const s = countsOf(view);
-  for (let i = 0; i < w2; i++) {
-    errors[2 * h2 + i] = s.onesCols[i] > h ? 1 : 0;
-    errors[2 * h2 + w2 + i] = s.zerosCols[i] > h ? 1 : 0;
-  }
-  for (let i = 0; i < h2; i++) {
-    errors[i] = s.onesRows[i] > w ? 1 : 0;
-    errors[h2 + i] = s.zerosRows[i] > w ? 1 : 0;
-  }
-}
+/** The board as its rules read it: the grid holds the description's values. */
+export const rules: RulesOf<UnrulyState> = {
+  grid: (s) => s.grid,
+  violations: (s, g) =>
+    unruly.violations(
+      g,
+      describedSpace(unruly.units, s.w2, s.h2),
+      s.unique ? ["unique"] : [],
+    ),
+};
 
 /** Whether the grid is an answer, by the rules its description compiles to. */
 export function isComplete(view: GridView): boolean {

@@ -572,6 +572,14 @@ export function compileGame(
     "",
     ...broken,
     "",
+    "/** The statements a violation names, so a game that draws one its own",
+    " * way names it by a name the description has. */",
+    `export type RuleName = ${quoted([
+      "domain",
+      ...ruleList(json).map((r) => r.name),
+      ...[...d.clueKinds.keys()].map((k) => `clue.${k}`),
+    ])};`,
+    "",
     code.join("\n\n"),
   ].join("\n");
   return `${[

@@ -16,6 +16,8 @@
       tent, boxed-in tree); its render scenarios did not move.
 - [ ] 2.3b Batch 1 of `design.md` § "Batches": the exclusion, count, run and
       latin games. Look at each in the app; explain each moved snapshot.
+      Moved: unruly (rules drawn their own way through `byRule` and the
+      module's `RuleName`).
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);
       then batch 2.
 - [ ] 2.3d Bound the loop and acyclic forms; then batch 3. Loopy's and

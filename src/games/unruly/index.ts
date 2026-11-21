@@ -41,7 +41,7 @@ import {
   redraw,
   type UnrulyDrawState,
 } from "./render.ts";
-import { findMistakes, LADDERS, marksOf, solveToString } from "./solver.ts";
+import { findMistakes, LADDERS, marksOf, rules, solveToString } from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
@@ -240,6 +240,7 @@ export const unrulyGame: Game<
       );
     },
   },
+  rules,
   findMistakes,
   clearMistakes,
 
