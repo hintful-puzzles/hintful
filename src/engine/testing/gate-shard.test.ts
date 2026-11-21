@@ -4,7 +4,7 @@
  * reports green.
  */
 import { describe, expect, it } from "vitest";
-import { inShard, shardFromEnv, sharesOf } from "./gate-shard.ts";
+import { ofShard, shardFromEnv, sharesOf } from "./gate-shard.ts";
 
 const shardsOf = (of: number) =>
   Array.from({ length: of }, (_, index) => ({ index, of }));
@@ -18,15 +18,20 @@ describe("CI's shards", () => {
     expect(() => shardFromEnv({ GATE_CI_PART: "0/4" })).toThrow();
   });
 
-  it("place each file in exactly one shard", () => {
-    const files = Array.from({ length: 200 }, (_, i) => `src/guards/g${i}.test.ts`);
+  it("place each file in exactly one shard, as many in each", () => {
+    // Paths alike but for a few characters, as the tree's are.
+    const files = Array.from(
+      { length: 203 },
+      (_, i) =>
+        `src/games/g${i % 70}/g${i % 70}-${["hint", "render", "ladder"][i % 3]}.test.ts`,
+    );
     for (const of of [1, 2, 3, 4, 7]) {
-      for (const file of files)
-        expect(shardsOf(of).filter((s) => inShard(file, s)).length, file).toBe(1);
-      // A placement that put everything in one shard would pass the above.
-      if (of > 1)
-        for (const shard of shardsOf(of))
-          expect(files.some((f) => inShard(f, shard))).toBe(true);
+      const shards = shardsOf(of).map((s) => ofShard(files, s));
+      expect(shards.flat().sort()).toEqual([...files].sort());
+      const sizes = shards.map((s) => s.length);
+      expect(Math.max(...sizes) - Math.min(...sizes), `${sizes}`).toBeLessThanOrEqual(
+        1,
+      );
     }
   });
 

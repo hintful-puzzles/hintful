@@ -7,7 +7,7 @@ import {
 } from "vitest/config";
 import { sourceScanTests } from "./scripts/checks/source-scans.ts";
 import { otherGamesFilter, scopeFromEnv } from "./src/engine/testing/game-scope.ts";
-import { inShard, shardFromEnv, sharesOf } from "./src/engine/testing/gate-shard.ts";
+import { ofShard, shardFromEnv, sharesOf } from "./src/engine/testing/gate-shard.ts";
 import { describeFirst } from "./vite-plugins/describe.ts";
 import { draftPuzzles } from "./vite-plugins/draft-puzzles.ts";
 import { gameCodeLoader } from "./vite-plugins/game-code.ts";
@@ -83,9 +83,7 @@ function projects(): TestProjectInlineConfiguration[] {
   const spread = process.env["GATE_TEST_PASS"] === "scan" ? [] : SPREAD;
   let own = { include, exclude: [...exclude, ...spread] };
   if (SHARD !== null) {
-    const files = globSync(own.include, { exclude: own.exclude })
-      .filter((file) => inShard(file, SHARD))
-      .sort();
+    const files = ofShard(globSync(own.include, { exclude: own.exclude }), SHARD);
     own = { include: files.length > 0 ? files : [NO_FILE], exclude: [] };
   }
   return [

@@ -35,18 +35,31 @@ export function shardFromEnv(
 }
 
 /**
- * Whether a test file is the shard's. A file is placed by its path's hash, so
- * a file added or removed moves no other between shards, and every shard
- * computes the same placement from the same tree without asking another.
- * The placement does not know what a file costs, so the shards' totals
- * differ by the luck of the hash; `test-cost.ts` judges their mean.
+ * The test files of `files` that are the shard's. They are ordered by their
+ * paths' hashes and dealt in turn, so each shard holds as many files as the
+ * next, give or take one, and every shard computes the same placement from
+ * the same tree without asking another. A file's own hash residue is no
+ * placement: FNV-1a's low bits follow its characters' low bits, and four
+ * shards by `hash % 4` drew 252, 136, 154 and 106 of 648 files (Gate run
+ * 44877134962). The placement does not know what a file costs, so the
+ * shards' totals still differ by the luck of the order; `test-cost.ts`
+ * judges their mean.
  */
-export function inShard(file: string, shard: GateShard): boolean {
-  // FNV-1a over the path's UTF-16 units: any hash that spreads paths will do.
+export function ofShard(files: readonly string[], shard: GateShard): string[] {
+  return files
+    .map((file) => ({ file, hash: fnv1a(file) }))
+    .sort((a, b) => a.hash - b.hash || (a.file < b.file ? -1 : 1))
+    .filter((_, i) => i % shard.of === shard.index)
+    .map(({ file }) => file)
+    .sort();
+}
+
+/** FNV-1a over a string's UTF-16 units: an order unrelated to the paths'. */
+function fnv1a(text: string): number {
   let hash = 0x811c9dc5;
-  for (let i = 0; i < file.length; i++)
-    hash = Math.imul(hash ^ file.charCodeAt(i), 0x01000193) >>> 0;
-  return hash % shard.of === shard.index;
+  for (let i = 0; i < text.length; i++)
+    hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193) >>> 0;
+  return hash;
 }
 
 /**

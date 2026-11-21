@@ -55,10 +55,10 @@ import { cpuUnit } from "./cpu-unit.ts";
  * its dearest shard's, and the suite as a whole has no budget: it grows a
  * shard at a time (the matrix in `.github/workflows/gate.yml`). What is held
  * is the shards' mean, since the placement of files is blind to their cost
- * (`gate-shard.ts`). 1200 s is half the whole suite's budget before the shards
- * (2400 s, about ten minutes on four workers): the dearest shard, a third over
- * the mean (Gate run 44851276935's costs placed in four shards), then runs
- * about seven minutes, and a run with its setup stays under the ten.
+ * (`gate-shard.ts`). A shard of 901 s took 7.8 minutes, its setup included
+ * (Gate run 44877134962), so at a mean of 900 s a shard a third over it runs
+ * about ten, the run's length before the shards. That run's mean was 603 s
+ * over four shards.
  *
  * A game's own files are held in CI to seconds (owner, 2026-11-09: CI's time
  * is the engine's, and dozens of games are to come): 25 s is the dearest
@@ -66,7 +66,7 @@ import { cpuUnit } from "./cpu-unit.ts";
  * margin; Gate run 42709305769), so that a game grows no further, and the
  * rest averaged 8 s.
  */
-const BUDGET = { file: 120, shard: 1200, commit: 90, push: 300, game: 25 };
+const BUDGET = { file: 120, shard: 900, commit: 90, push: 300, game: 25 };
 
 /** The workload's main-thread CPU seconds on the reference runner: its
  * process CPU there (Gate run 40553996591, the least of three, 1.458 s) times

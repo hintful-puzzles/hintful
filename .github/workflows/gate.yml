@@ -76,9 +76,10 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
-    # Runners differ by 1.8x, and a limit too close to a slow runner's run had
-    # six of eight runs canceled with no verdict on 2026-10-22: the limit is
-    # about twice the slowest shard's run, the setup included.
+    # The dearest shard took 7.8 minutes, its setup included (Gate run
+    # 44877134962), and runners differ by 1.8x: the limit is about 1.4 times a
+    # slow runner's run, since a limit too close to it had six of eight runs
+    # canceled with no verdict on 2026-10-22.
     timeout-minutes: 20
     strategy:
       # Every shard runs to its verdict, so one run names every failure.

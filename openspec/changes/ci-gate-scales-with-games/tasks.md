@@ -41,8 +41,20 @@
       on a sharded run. Record the figures chosen and why, and update the
       spec if it states them.
       `BUDGET.suite` (2400 s) is gone: the suite grows a shard at a time.
-      `BUDGET.shard` is 1200 s, judged on the shards' mean, since the
-      placement is blind to cost; the reasons are at `BUDGET`. Each shard
+      `BUDGET.shard` is 900 s, judged on the shards' mean, since the
+      placement is blind to cost; the reasons are at `BUDGET`.
+      The first sharded run (Gate run 44877134962, `97e525038`): every shard
+      green, in 3.8 to 7.8 minutes with setup, the checks job 2. The suite
+      cost 40.2 reference minutes against 33.8 unsharded: each of 16 workers
+      imports the module graph, and each shard deals its own boards. It drew
+      252, 136, 154 and 106 files, since a residue of FNV-1a follows the low
+      bits of a path's characters; files are now dealt in turn in hash order,
+      134 a shard. The suite job failed one game's budget, Bridges at 33 s
+      (30 s unsharded, the runner's noise on a game at 1.2 times its budget):
+      its hint corpus walks one seed in CI and five in its deep tier, since on
+      the first seed the shapes fire every arm and the shipped presets every
+      arm but `mustReachOut`, which a pinned board holds (unpinned, the
+      ledger check failed). Each shard
       scales its costs on its own runner and the `suite` job sums them, and
       judges the games' own files there, where a game's files split between
       shards are summed again. Four shards: the suite's 2030 s is a mean of

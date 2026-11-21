@@ -16,7 +16,7 @@ import { randomNew } from "../../engine/random/index.ts";
 import { observeMidend } from "../../engine/testing/drive-midend.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { leafPresets } from "../../engine/testing/presets.ts";
-import { itDeep } from "../../engine/testing/slow.ts";
+import { deepBudget, itDeep } from "../../engine/testing/slow.ts";
 import { newBridgesDesc } from "./generator.ts";
 import {
   type BridgesHighlights,
@@ -75,9 +75,16 @@ const UNREACHED_BY_PRESETS: Kind[] = [];
  */
 const SHIPPED_PINNED = ["7x7i30e10m2d2:3a4a3a1g4a6c3g2c2i4a4a4a2"];
 
-/** Five, because the two connectivity arms are the rare ones and three seeds
- * miss them outright. */
-const SEEDS = ["bh-a", "bh-b", "bh-c", "bh-d", "bh-e"];
+/** Five in the deep tier, because the two connectivity arms are the rare ones
+ * and three seeds miss them outright. In CI the first alone: on it the shapes
+ * fire every arm, and the shipped ones every arm but `mustReachOut`, which
+ * {@link SHIPPED_PINNED} holds (2026-11-21). */
+const SEEDS = ["bh-a", "bh-b", "bh-c", "bh-d", "bh-e"].slice(0, deepBudget(1, 5));
+
+/** The firings a corpus walk must see to mean anything: a fifth of the
+ * corpus's, about 300 a seed (2026-11-21), so an empty or one-board corpus
+ * fails it. */
+const FIRINGS_FLOOR = 200 * SEEDS.length;
 
 /** The shipped presets, plus the axes the Type dialog varies that the ladder
  * reads: loops forbidden, and the two extremes of `maxb`. */
@@ -183,7 +190,7 @@ describe("the corpus reaches every premise, and the ledger says which it cannot"
 
   it("looked at enough firings to mean anything", () => {
     // The vacuity guard: every assertion below passes over an empty census.
-    expect(firingCount).toBeGreaterThan(1000);
+    expect(firingCount).toBeGreaterThan(FIRINGS_FLOOR);
     expect(stalled, "a board the deduction could not finish").toBe(0);
   });
 
@@ -267,7 +274,7 @@ describe("every step stands on the board the player can see", () => {
       }
     }
     // The vacuity guards: the comparison ran, and it ran across limits.
-    expect(shown).toBeGreaterThan(1000);
+    expect(shown).toBeGreaterThan(FIRINGS_FLOOR);
     expect(limits).toBeGreaterThan(5);
   });
 });
@@ -301,8 +308,9 @@ describe("what the plan shows, and what it keeps to itself", () => {
     // Not vacuous in either direction: some steps really do force several
     // bridges at once, which is what makes the single-origin claim worth
     // asserting rather than trivially true.
-    expect(steps).toBeGreaterThan(1000);
-    expect(multi).toBeGreaterThan(100);
+    expect(steps).toBeGreaterThan(FIRINGS_FLOOR);
+    // About 75 a seed (2026-11-21).
+    expect(multi).toBeGreaterThan(20 * SEEDS.length);
   });
 
   it("the sentence's numbers are the picture's", () => {
