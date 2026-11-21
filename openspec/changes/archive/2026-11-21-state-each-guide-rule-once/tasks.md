@@ -154,7 +154,7 @@ copies point.
       4,227; 4,314; 3,412; 4,811 lines. As 2.2 found, the route barely
       moves; its cost is the size of the sections it names (3.3).
 - [x] 3.2 Commit, push, archive.
-- [ ] 3.3 The owner asked (2026-11-21): "when you're done with this change,
+- [x] 3.3 The owner asked (2026-11-21): "when you're done with this change,
       please do another architecture review pass in the next session".
       After archiving, scaffold `architectural-review-second-pass` on the
       shape of `archive/2026-11-20-architectural-review` (a measured,
