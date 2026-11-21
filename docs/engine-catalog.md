@@ -239,16 +239,11 @@ returns or refuses. What every game imports from here:
 
 ### `retry-limit.ts` — a bound on generate-until-it-works
 
-**Bound every synchronous retry loop** with `retryLimit(label)`: an
-unbounded loop that never succeeds owns its thread, and no test timeout
-fires. **A generator passes it no count.** The app's deal arms one deadline
-(`underDealDeadline`) and a direct call counts `MAX_REGENERATE` tries; pass
-a count only where the number is part of the algorithm. Exhaustion throws
-and returns no fallback, so a bound can end a deal and never choose its
-board. A legal but rare seed wants a recovery path with the cap outside it;
-the header says when. `retry-bound.test.ts` scans for the loops that owe a
-bound ([`solver-and-generator.md`](./solver-and-generator.md) § "Every retry
-loop is bounded"). Exemplar: `src/skeleton/grid/generator.ts`.
+`retryLimit(label)` is the guard a "generate until it works" loop calls
+once a pass, and `RetryLimitExceeded` what it throws when spent. Where it
+goes, what it is passed and what `retry-bound.test.ts` holds are
+[`solver-and-generator.md`](./solver-and-generator.md) § "Every retry loop
+is bounded".
 
 ### `deal-census.ts` — why a draw was thrown away
 
@@ -270,9 +265,9 @@ grading: [`solver-and-generator.md`](./solver-and-generator.md).
 - **`difficultyItem`** is the Custom dialog's difficulty field; declare it
   and write no field of your own. `tierOf`, `withTier` and `tierNameOf`
   read it.
-- **`DifficultyContract`** is a solve-at-cap verdict. Declaring it enrolls
-  the game in `difficulty-contract.test.ts`, cap-monotonicity above all: a
-  game that breaks it fails Check & Save on its easier boards.
+- **`DifficultyContract`** is a solve-at-cap verdict
+  ([`solver-and-generator.md`](./solver-and-generator.md) § "The difficulty
+  contract").
 - **`permitsSearch`** asks whether the params request `Unreasonable`. Use
   it and do not compare tier names yourself.
 - **`noSuchTier(what, tier)`** is the sentence `validateParams` returns for
@@ -582,33 +577,20 @@ game's keypad offers, the Marks key, or mark-all (`markAllPress`). See
 
 ### `pointer.ts` — button codes and cursor helpers
 
-Take every button, key and cursor fact from here, and **never restate one
-locally**, a magic number where a named button exists included. Exemplar:
-`src/skeleton/grid/index.ts`.
+Every button, key and cursor fact. How a game uses them, and the guards
+that hold it to them, are [`input.md`](./input.md) § "Button codes and a
+key held with Shift", `input.md` § "The numeric keypad never arrives" and
+`input.md` § "Keyboard cursors". Exemplar: `src/skeleton/grid/index.ts`.
 
-- **Buttons and keys.** The button constants, `stripModifiers(button)`
-  (never redeclare `MOD_MASK`), `isEraseKey`, `isCancelKey` and the
-  `BACKSPACE`, `DELETE` and `ESCAPE` codes.
-- **`digitOf(button)`** is the digit a key stands for, or `null`, looking
-  through the modifier bits. The bound and what `0` means are the game's
-  and stay beside the call.
-- **`numpadDirection(button)`** is the step a number-pad digit names where
-  the pad is a direction pad, all eight, and `null` for 5 and 0. **Take it
-  before `digitOf`**, or a diagonal both moves the cursor and types.
+- **Buttons and keys**: the button constants, `stripModifiers(button)`,
+  `isEraseKey`, `isCancelKey` and the `BACKSPACE`, `DELETE` and `ESCAPE`
+  codes.
+- **Digits**: `digitOf(button)` and `numpadDirection(button)`.
 - **`shearedHexStep(step, y, h)`** is a square-grid step on a hexagonal
   board held as a sheared grid.
-- **Every game holds the keyboard cursor as a `GridCursor` under
-  `ui.cursor`**, built by
-  `newCursor` and driven by `moveCursor(cursor, button, w, h, wrap?)`,
-  which reveals and moves in one press and returns whether anything
-  changed, with `showCursor` and `hideCursor`. `isCursorMove`,
-  `cursorDelta` and `gridCursorMove` are for a traversal of the game's own
-  (half-grid, lock modes, corner-skipping), which keeps its own logic.
-
-`emittable-keys.test.ts` enforces the vocabulary from this module's export
-list. `cursor-vocabulary.test.ts` fails a cursor held under any other
-field, whatever it is named. `decimal.test.ts` finds a digit code in a game
-by its value: a `48`, a `0x39`, a numeric `case`, a `c >= "0"`.
+- **The cursor**: `GridCursor`, `newCursor`, `moveCursor`, `showCursor`,
+  `hideCursor`, and for a traversal of the game's own `isCursorMove`,
+  `cursorDelta` and `gridCursorMove`.
 
 ### `key-map.ts` — what the keyboard sends
 
@@ -628,10 +610,9 @@ Build `Game.requestKeys` from these and do not spell digit codes in a game;
   same for a game that reads its tenth value off the `0` key.
 - `letterKeyboard()`: the alphabet in QWERTY rows (`KeyLabel.row`), for a
   game that types words.
-- **Never list `pencilModeKey`.** `Midend.requestKeys` appends it for any
-  game `takesNotes` recognizes, by a `pencil` array on the state or the
-  mode flag on the `Ui`. `takesNotes` is the one definition of that
-  population.
+- **`pencilModeKey`** is the Marks key the midend appends
+  ([`input.md`](./input.md) § "The on-screen keypad"); `takesNotes` is the
+  one definition of the games it goes to.
 
 ## `game-id/` — descs and params
 
@@ -1100,28 +1081,19 @@ Reach for it in every game that carries `ui.pencilMode` and
 game keeps its coordinates, its symbols and its
 own `Move`. Exemplar: `keen/index.ts`.
 
-- **Input.** `pressNoteTakingCell` resolves a press against the game's
-  `canEnter` and `canMark` and reports `"moved"`, `"unmoved"` or `null`.
+- **Input**: `pressNoteTakingCell`, `tapNoteTakingCell` and
+  `dragEnteredNoteTakingCell` resolve a press, a release and a drag;
   `releaseHighlightAfterEntry` and `noOpEntryResult` are what an entry does
   to the highlight, `toggleNoteTakingMode` the mode switch, and
-  `noteEntryGesture` the taps and keys of a hint step's entries.
-- **A press that might be a drag changes nothing about the selection.** The
-  release resolves it: `tapNoteTakingCell` when it committed nothing,
-  `dragEnteredNoteTakingCell` when it committed a move. The press must not
-  move or hide the highlight, because the release needs what it was on.
-  `TapTarget.onSelection` is the one override, for a selection that is not
-  a cell. `select-or-drag.test.ts` drives every member's press and release.
-- **The picture is `drawCellBackground`.** Pack
-  `winHighlight(flash.win(p)) ?? cellHighlight(ui, x, y)` into the tile key
-  as the `CellHighlight`; `highlightFill` is the fill alone, and the wash is
-  `highlightWash` of the board's background.
-  `note-taking-cell-render.test.ts` holds every member to it. See
-  [`rendering.md`](./rendering.md) § "The note-taking cell's picture".
-- **Offer both pencil preferences, both on by default**, so a gesture does
-  the same thing in every member. `note-taking-cell.test.ts` holds both.
-- **Lay notes out with `noteGrid`**, in the cell's `ringTextBox`, so a hint's
-  ring goes round them; `sizedBy` gives cells whose note areas differ one
-  size.
+  `noteEntryGesture` the taps and keys of a hint step's entries. When each
+  is called is [`mechanics.md`](./mechanics.md) § "Pencil marks: the full
+  note-taking UX", and `select-or-drag.test.ts` drives every member's press
+  and release.
+- **The picture**: `drawCellBackground`, `cellHighlight`, `highlightFill`
+  and `highlightWash` ([`rendering.md`](./rendering.md) § "The note-taking
+  cell's picture").
+- **The notes' layout**: `noteGrid`
+  ([`hints-marks.md`](./hints-marks.md) § "Shade vs ring").
 
 ### `code-rows.ts` — the code-breaking mechanic
 
@@ -1807,9 +1779,8 @@ never on the midend.
 
 Read it when your `Ui` holds more than plain data. A game calls neither
 `copyUi` nor `restoreUi`; the midend does, for a
-canceled press ([`input.md`](./input.md) § "A canceled press is the
-engine's"). Keep the `Ui` to what the copy can take: plain objects, arrays,
-typed arrays, `Map`, `Set`, and classes whose content is their own fields.
+canceled press. What the copy can take is [`input.md`](./input.md) § "A
+canceled press is the engine's".
 
 ### `same-value.ts` — whether two values hold the same thing
 

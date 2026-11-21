@@ -546,32 +546,22 @@ does this; a game supplies the moves it is written in.
   placement ("a 5 now sits in this row and column, so strike it from these
   notes"), or silent under auto-pencil ("A placement's cull continues its
   journey").
-- **Notes are markings `findMistakes` checks.** Flag an empty cell whose
-  non-empty notes exclude its answer, as `kind: "note"`; notes with extra
-  candidates are ordinary. Pass `notes` to `entryMistakes`
-  ([`engine/hint/entry-mistakes.ts`](../src/engine/hint/entry-mistakes.ts)). A note
-  claims its value is still possible. A game whose notes have no stated
-  meaning decides this before its hint, since a candidate hint cannot read a
-  note it cannot trust.
+- **Notes are markings `findMistakes` checks**, so a note claims its value
+  is still possible and the plan may reason from it
+  ([`solver-and-generator.md`](./solver-and-generator.md) § "Marks are
+  checked like entries").
 
 ## A populate step never resets notes
 
-`pencilAll` is additive: it fills only cells with no mark yet. The hint's
-opener and the Mark-all press both use it, the press through
-`adaptiveMarkAllMove`
-([`engine/hint/candidate-hint.ts`](../src/engine/hint/candidate-hint.ts)), so a press
-only ever adds or removes. A fill that resets every cell throws away the
-player's deductions as soon as one cell is blank.
+`pencilAll` is additive, and the hint's opener uses it as the Mark-all
+press does ([`mechanics.md`](./mechanics.md) § "Pencil marks: the full
+note-taking UX").
 
 - **The plan's working copy mirrors the additive fill exactly**, or the plan
   teaches strikes on candidates the player already crossed out. `lazyPopulate`
   does.
 - **A resetting move kept in the union for the replay of saved move logs** is
   documented at its arm as unreachable from input.
-- **A test of this rule must narrow a cell by hand**: a resetting fill writes
-  back exactly what was there otherwise. The guard is
-  [`guards/mark-all.test.ts`](../src/guards/mark-all.test.ts), which a game
-  joins by declaring `markAll`.
 
 ## Two readings of an unmarked cell
 

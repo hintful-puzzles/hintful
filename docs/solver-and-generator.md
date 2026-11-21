@@ -659,8 +659,8 @@ asks whether its tier is named `Unreasonable`, and for a game with no
 - **A Check and a Search that refute alike emit the same words**, so no
   narration guard separates them. Make the guarantee structural: assert that
   planning at the top tier gives the same plan as planning at the tier below,
-  with a control that shows the equality is not vacuous
-  (`spokes-hint.test.ts`).
+  with a control showing the tier below adds firings the one under it lacks,
+  so the equality is not vacuous (`spokes-hint.test.ts`).
 - **A strategy game's hint is a search and is allowed**: the player is asked
   to accept "this move serves the stated goal", not the search. That is a
   fourth contract for untiered games, a stable subgoal and the next move
@@ -749,18 +749,20 @@ at a size that has no board of one.
 **A game with tiers declares `Game.difficulty`, a `DifficultyContract`
 ([`engine/contract/difficulty.ts`](../src/engine/contract/difficulty.ts)): a `solveAtCap` that
 runs its solver from a fresh state with the ladder capped, and answers
-`"solved"`, `"unsolved"` or `"impossible"`.** Declaring it enrolls the game
-in the cross-game guards (`difficulty-contract.test.ts`); an untiered game
-omits it. Exemplar: `difficulty` in
+`"solved"`, `"unsolved"` or `"impossible"`** (`engine-difficulty`, "A
+tiered game declares a difficulty contract on its Game"). Declaring it, with
+the difficulty item, enrolls the game in `difficulty-contract.test.ts`,
+above all in cap-monotonicity, which Check & Save depends on; an untiered
+game omits it. Exemplar: `difficulty` in
 [`skeleton/grid/index.ts`](../src/skeleton/grid/index.ts).
 
 - **The contract holds the solver, not the tier list.** The names, and how
-  params hold a tier (`tierOf`, `withTier`), come from the game's
-  `difficultyItem` ([mechanics.md](./mechanics.md) § "Difficulty is a
-  declared contract"). Do not derive them from the technique ladder; the
-  `engine-difficulty` spec refuses it. A technique's `tier` is a number and a
-  tier list is names, a ladder is built inside a solve from board state, and
-  a tier is often no rung at all.
+  params hold a tier, are the game's `difficultyItem`
+  ([mechanics.md](./mechanics.md) § "Difficulty is a declared contract").
+  Do not derive them from the technique ladder; the `engine-difficulty` spec
+  refuses it. A technique's `tier` is a number and a tier list is names, a
+  ladder is built inside a solve from board state, and a tier is often no
+  rung at all.
 - **`solveAtCap` is written per game.** Only `newState(p, desc)` is shared;
   the verdict mapping is the game's. `latinVerdict` is the one shared mapping.
 - **Build a fresh state in `solveAtCap`.** A reused scratch carries an
@@ -1400,7 +1402,8 @@ every number it owes" check in Seismic's fill.
 `aux` only where that is impractical and you have measured that it is.** The
 midend keeps `aux` from `newDesc` and passes it to `solve(orig, curr, aux)`
 only for a new game or a `#seed` ID. A `:desc` ID or a loaded save has none,
-and Solve then reports "not known". If a game takes `aux`, test Solve
+and Solve then reports "not known", as a hint that reads the same answer
+does. Hint and Solve share the one answer. If a game takes `aux`, test Solve
 through a real `Midend`: the threading lives there, so a direct test of
 `solve` can pass while the shipped Solve does nothing. Exemplar: `solve` in
 [`skeleton/grid/index.ts`](../src/skeleton/grid/index.ts).
@@ -1501,7 +1504,18 @@ hidden checks marks against it as any game checks a digit.
 **Where the player pencils candidates, a blank cell whose marks leave out
 its answer is a mistake, as a wrong entry is.** A candidate hint reasons
 from those marks. Marks with extra candidates beside the answer are ordinary
-mid-solve state, and a cell with no marks says nothing.
+mid-solve state, and a cell with no marks says nothing
+([`ts-engine`](../openspec/specs/ts-engine/spec.md), "A candidate note
+that excludes the answer is a mistake"). The flag is `kind: "note"`, drawn
+as a wrong placement is, and the answer is derived from the placed givens,
+never from notes.
+
+- **This holds only where notes are candidates.** Where the help page
+  documents marks as free-purpose, no reading of a note can be called
+  wrong, and the game checks placements only (Rome). Read the game's help
+  page before applying the rule, and record a decline in the change's
+  `design.md`. A game whose notes have no stated meaning decides this before
+  its hint, since a candidate hint cannot read a note it cannot trust.
 
 Do not write the loop. `entryMistakes` in
 [`engine/hint/entry-mistakes.ts`](../src/engine/hint/entry-mistakes.ts) owns it; the

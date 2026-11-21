@@ -70,7 +70,9 @@ Before each concern, read the opening of its guide (its `## What every
 game does` and its `## Sections` table), then the sections below for your
 kind, and any other whose "Read it when" is true of your game. A `##`
 section named here is read with its `###` parts. Everything else in the
-guides is for a game that is not yours.
+guides is for a game that is not yours. What the route has each kind read
+is `node scripts/checks/guide-sections.mjs --route`: a passage that grows it
+is one to weigh against a pointer.
 
 **Which kind.** Ask what the player marks and how the board is solved:
 

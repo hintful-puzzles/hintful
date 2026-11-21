@@ -470,12 +470,12 @@ difficulty), [`solo/index.ts`](../src/games/solo/index.ts) (a fold).
 
 ## Difficulty is a declared contract
 
-A tiered game declares its difficulty item in `paramConfig` and
-`Game.difficulty` ([`engine/contract/difficulty.ts`](../src/engine/contract/difficulty.ts)),
-which holds only the capped solve, `solveAtCap` (`engine-difficulty`, "A
-tiered game declares a difficulty contract on its Game"). Declaring both
-enrolls the game in `difficulty-contract.test.ts`, above all in
-cap-monotonicity, which Check & Save depends on. Exemplar: the skeleton's
+A tiered game declares two things
+([`engine/contract/difficulty.ts`](../src/engine/contract/difficulty.ts)):
+its difficulty item in `paramConfig`, which is this section, and
+`Game.difficulty`, the capped solve its tiers are graded by, which is
+[`solver-and-generator.md`](./solver-and-generator.md) § "The difficulty
+contract". Exemplar: the skeleton's
 [`state.ts`](../src/skeleton/grid/state.ts) and
 [`index.ts`](../src/skeleton/grid/index.ts).
 
@@ -496,9 +496,8 @@ cap-monotonicity, which Check & Save depends on. Exemplar: the skeleton's
 - **A `DIFF_*` constant names a solver rung, not a tier.** A `DIFF_TRIVIAL`
   that is the first tier is shown as "Easy". At runtime the names come from
   `difficultyTiers(game)`, never from the constants or the technique ladder
-  (`engine-difficulty`, "A game's tiers are read from its difficulty item";
-  [`solver-and-generator.md`](./solver-and-generator.md) § "The difficulty
-  contract"). What a tier means is
+  (`engine-difficulty`, "A game's tiers are read from its difficulty item").
+  What a tier means is
   [`solver-and-generator.md`](./solver-and-generator.md) § "A tier means
   exactly its rung".
 - **A game that deduces has tiers** (`engine-params`, "A deductive game has
@@ -1022,9 +1021,12 @@ does".
   region, and a Solo Killer cage, which forbids repeats, is one, flagged
   `holdsEvery: false`. A game without a row and column model keeps a plain
   fill.
-- **A guard on Mark-all narrows a cell's notes first**, or a Mark-all that
-  resets them passes. Mutation-check the guard
-  ([`testing.md`](./testing.md)).
+- **Mark-all fills only cells with no mark yet, and never resets one**, or
+  it throws away the player's deductions as soon as one cell is blank
+  (`pencilAll`). **A guard on Mark-all narrows a cell's notes first**, or a
+  Mark-all that resets them passes, since it writes back exactly what was
+  there. The guard is [`guards/mark-all.test.ts`](../src/guards/mark-all.test.ts),
+  which a game joins by declaring `markAll`.
 - **Refuse a note Mark-all would never make.** Where a cell's full note set
   varies by cell (bounded by the grid edge, or by the size of its area),
   input refuses a note outside it: no solver considers that candidate, so
@@ -1037,7 +1039,9 @@ does".
   hand**: `stickyPencilPref()`, `pencilKeepHighlightPref()`, and
   `autoPencilPref(name)`, which takes its label because the sentence names
   the regions the game clears. `pencil-prefs.test.ts` fails a divergent copy
-  of a shared label.
+  of a shared label. A note-taking cell game offers sticky pencil and keep
+  highlight, both on by default, so a gesture does the same thing in every
+  game; `note-taking-cell.test.ts` holds both.
 - **Do not write the pointer arm by hand.** Call `pressNoteTakingCell`
   ([`engine/mechanics/note-taking-cell.ts`](../src/engine/mechanics/note-taking-cell.ts)) with
   two predicates about the cell (`canEnter`, `canMark`) and your
@@ -1062,16 +1066,8 @@ does".
   `drawCellBackground` and pack `cellHighlight` into the tile key
   ([`rendering.md`](./rendering.md) § "The note-taking cell's picture"). A
   member that does not fails `note-taking-cell-render.test.ts`.
-- **Do not list the Marks key.** The midend appends `pencilModeKey` to the
-  keypad of every game that takes notes, which it reads off a `pencil`
-  array on the state or `ui.pencilMode`, whether or not the notes are
-  candidate marks (`engine-notes`, "The engine gives every note-taking game
-  its Marks key"). The game answers the code: a note-taking cell game
-  routes it, and Enter on the highlight, through `toggleNoteTakingMode`,
-  and the app's bare `P` sends the same code. The key is lit from
-  `ui.pencilMode`, which the midend reports after every transition, so a
-  mode kept under another name never lights it. `pencil-mode-key.test.ts`
-  holds the key to being there, to acting, and to showing the mode.
+- **Do not list the Marks key**; the midend appends it
+  ([`input.md`](./input.md) § "The on-screen keypad").
 - **Sticky pencil mode is a `pencilSticky` boolean on the `Ui`, default
   true, offered through `prefs`.** The shared arm does the rest
   (`engine-notes`, "The sticky pencil toggle is a mode switch, not a
@@ -1081,16 +1077,9 @@ does".
   has, a wider border or a grown canvas) and repaints it
   ([`engine-catalog.md`](./engine-catalog.md) § "`pencil-indicator.ts` —
   the pencil-mode indicator").
-- **Notes are first-class in `findMistakes`.** An empty cell whose non-empty
-  notes have crossed out the solution value is a mistake (`kind: "note"`),
-  drawn as a wrong placement is, and extra candidates are not
-  ([`ts-engine`](../openspec/specs/ts-engine/spec.md), "A candidate note
-  that excludes the answer is a mistake"). Derive the solution from the
-  placed givens only, never from notes. This holds only where notes are
-  candidates: where the help page documents marks as free-purpose, no
-  reading of a note can be called wrong, and the game checks placements
-  only (Rome). Read the game's help page before applying the rule, and
-  record a decline in the change's `design.md`.
+- **Notes are first-class in `findMistakes`**
+  ([`solver-and-generator.md`](./solver-and-generator.md) § "Marks are
+  checked like entries").
 
 ## The reference aid
 

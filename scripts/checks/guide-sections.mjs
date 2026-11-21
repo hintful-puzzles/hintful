@@ -65,10 +65,11 @@ function headingsOf(text) {
   const found = [];
   let offset = 0;
   let fenced = false;
-  for (const line of text.split("\n")) {
+  for (const [index, line] of text.split("\n").entries()) {
     if (line.startsWith("```")) fenced = !fenced;
     const match = fenced ? null : /^(#{2,4}) (.+?)\s*$/.exec(line);
-    if (match) found.push({ level: match[1].length, text: match[2], offset });
+    if (match)
+      found.push({ level: match[1].length, text: match[2], offset, line: index });
     offset += Buffer.byteLength(line) + 1;
   }
   return found;
@@ -97,6 +98,105 @@ for (const file of tracked) {
     headings,
     titles: new Set(headings.map((h) => h.text)),
   });
+}
+
+if (process.argv[2] === "--route") {
+  printRoute();
+  process.exit(0);
+}
+
+/**
+ * `--route`: what `new-game.md` § "The route by kind of game" has an author
+ * of each kind read before any source, in lines and bytes. A kind reads
+ * new-game.md's opening and the route; the opening of every guide it cites;
+ * and each cited section with its parts, unless the citation says "without
+ * its parts". A section cited "only where" it applies is counted, so this is
+ * the most a kind reads by the route. A guide's own table that sends a game
+ * further ("the sections its table sends your game to") is not followed.
+ */
+function printRoute() {
+  const route = guides.get("new-game.md");
+  const heading = "The route by kind of game";
+  const at = route.headings.findIndex((h) => h.text === heading);
+  const end = route.headings.slice(at + 1).find((h) => h.level <= 2);
+  const lines = route.text.split("\n").slice(route.headings[at].line, end?.line);
+  /** Each block of the route: its bold lead and its text. */
+  const blocks = [];
+  for (const line of lines) {
+    const lead = /^\*\*(.+?)\*\*/.exec(line)?.[1];
+    if (lead) blocks.push({ lead: lead.replace(/\.$/, ""), text: "" });
+    if (blocks.length > 0) blocks.at(-1).text += `${line}\n`;
+  }
+  const block = (lead) => blocks.find((b) => b.lead.startsWith(lead));
+  const shared = [block("Every game")];
+  const deduction = block("A game solved by deduction");
+  const kinds = blocks.filter((b) => b.text.includes("adds:") && b !== deduction);
+  if (shared[0] === undefined || deduction === undefined || kinds.length === 0) {
+    console.error("✗ guide-sections --route: the route's blocks were not found");
+    process.exit(1);
+  }
+  const byDeduction = /deduction/;
+  const kindTable = route.text.slice(route.headings[at].offset);
+
+  for (const kind of kinds) {
+    const row = new RegExp(`^\\| ${kind.lead} \\|[^\\n]*\\|([^|]*)\\|[^|]*\\|$`, "m");
+    const solvedBy = row.exec(kindTable)?.[1] ?? "";
+    const read = byDeduction.test(solvedBy)
+      ? [...shared, deduction, kind]
+      : [...shared, kind];
+    /** Per guide, the lines read. */
+    const taken = new Map();
+    const take = (guide, from, to) => {
+      if (!taken.has(guide)) taken.set(guide, new Set());
+      for (let i = from; i < to; i++) taken.get(guide).add(i);
+    };
+    const openingOf = (guide) => {
+      const g = guides.get(guide);
+      const table = g.headings.findIndex((h) => h.text === SECTIONS);
+      const first = table === -1 ? undefined : g.headings[table + 1];
+      take(guide, 0, first?.line ?? g.text.split("\n").length);
+    };
+    const routeOpening = route.headings.find(
+      (h) => h.level === 2 && h !== route.headings[0],
+    );
+    take("new-game.md", 0, routeOpening.line);
+    take("new-game.md", route.headings[at].line, end?.line ?? lines.length);
+    for (const { text } of read) {
+      const folded = fold(text);
+      for (const cite of namedCitations(folded)) {
+        const g = guides.get(cite.guide);
+        const h = g?.headings.findIndex((x) => x.text === cite.heading) ?? -1;
+        if (h === -1) {
+          console.error(
+            `✗ guide-sections --route: ${cite.guide} § "${cite.heading}" is no section`,
+          );
+          process.exit(1);
+        }
+        openingOf(cite.guide);
+        const after = folded.slice(cite.mark).replace(/^§\s*"[^"]*"/, "");
+        const whole = !/^,?\s*without its parts/.test(after);
+        const next = g.headings
+          .slice(h + 1)
+          .find((x) => (whole ? x.level <= g.headings[h].level : true));
+        take(cite.guide, g.headings[h].line, next?.line ?? g.text.split("\n").length);
+      }
+      for (const match of folded.matchAll(
+        /([a-z-]+\.md)`?\]\([^)]*\):\s*its (?:opening|table)/g,
+      )) {
+        openingOf(match[1]);
+      }
+    }
+    let total = 0;
+    let bytes = 0;
+    const parts = [];
+    for (const [guide, set] of [...taken].sort((a, b) => b[1].size - a[1].size)) {
+      const all = guides.get(guide).text.split("\n");
+      total += set.size;
+      for (const i of set) bytes += Buffer.byteLength(all[i]) + 1;
+      parts.push(`${guide} ${set.size}`);
+    }
+    console.log(`${kind.lead}: ${total} lines, ${bytes} bytes (${parts.join(", ")})`);
+  }
 }
 
 let tabled = 0;

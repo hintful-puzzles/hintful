@@ -185,31 +185,16 @@ direct rungs comes from combining constraints, so it is a chain of at least
 three links, and the sentence asks the player to run the propagation in their
 head.
 
-Which treatment a rung takes is decided by
-[`solver-and-generator.md`](./solver-and-generator.md) § "Check, Tactic,
-Search", by whether each link writes a mark the player can make, not by
-whether a trial was involved:
+A rung is a Check, a Tactic or a Search, classified by whether each link
+writes a mark the player can make, by the shape of its call and never by the
+length of its sentence ([`solver-and-generator.md`](./solver-and-generator.md)
+§ "Check, Tactic, Search"). What the hint does with each:
 
-- **A Check** is one placement and one validator call with no fixpoint. It is
-  ordinary deduction and narrates directly at any tier. Exemplar: Sticks'
-  techniques, each a `with` premise in
-  [`sticks.description.yaml`](../src/games/sticks/sticks.description.yaml).
-- **A Tactic** is a chain whose every link is a fact the game's marks record.
-  It is taught as ordinary steps, each writing its mark, and needs no chain
-  picture.
-- **A Search** runs a fixpoint or sub-solve from its hypothesis, or follows a
-  chain of suppositions, however short. It is `Unreasonable` and is not
-  narrated: the hint refuses and says deduction has run out. Exemplars:
-  Undead's `forcingPass`, the Latin forcing chain.
-
-- **Judge the shape of the call, not the length of the sentence.** A rung
-  that runs a fixpoint from its hypothesis is a Search however short its
-  sentence.
-- **Where a Check and a Search refute alike**, no wording check separates
-  them, so prove structurally that the hint reaches only the permitted one.
-  Spokes asserts that a plan computed at its top tier equals one computed at
-  Normal, with a control showing Normal adds firings the tier below lacks, so
-  the equality cannot pass vacuously.
+- **A Check** narrates directly, at any tier.
+- **A Tactic** is taught as ordinary steps, each writing its mark, and needs
+  no chain picture.
+- **A Search** is not narrated: the hint refuses and says deduction has run
+  out.
 - **Stating the classified contradiction and anchoring it to the board is not
   a walk.** [`guards/hint-quality.test.ts`](../src/guards/hint-quality.test.ts)
   ("no hint leaves a chain for the player to carry, at any tier") holds every

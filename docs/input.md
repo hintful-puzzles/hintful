@@ -907,10 +907,15 @@ Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `keen/index.ts`,
   params. The label `"Clear"` is what the panel turns into the clear icon, so
   do not reword it.
 - **Do not list the Marks key.** `Midend.requestKeys` appends `pencilModeKey`
-  for any game `takesNotes` recognizes. The game owes that the key acts: it
-  sends `PENCIL_MODE_BUTTON`, as the app's bare `P` shortcut does, and
-  `toggleNoteTakingMode` handles it for a note-taking cell game.
-  `pencil-mode-key.test.ts` asserts both.
+  for any game `takesNotes` recognizes, by a `pencil` array on the state or
+  `ui.pencilMode`, whether or not the notes are candidate marks
+  (`engine-notes`, "The engine gives every note-taking game its Marks
+  key"). The game owes that the key acts: it sends `PENCIL_MODE_BUTTON`, as
+  the app's bare `P` shortcut does, and a note-taking cell game routes it,
+  and Enter on the highlight, through `toggleNoteTakingMode`. The key is lit
+  from `ui.pencilMode`, which the midend reports after every transition, so
+  a mode kept under another name never lights it. `pencil-mode-key.test.ts`
+  holds the key to being there, to acting, and to showing the mode.
 - **A board with a `pencil` array offers a keypad, and so does a game with
   a working row (`engine/mechanics/code-rows.ts`); no other game does without a ledger
   entry.** `input-parity.test.ts` holds the biconditional (`hasPencilArray`,

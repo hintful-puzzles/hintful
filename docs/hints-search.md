@@ -455,13 +455,12 @@ Twiddle's large blocks, and a game a search finishes stays on `planSlides`.
 
 ## Recover the answer from the board
 
-Do not depend on `aux` for the hint or for Solve. It is absent for a resumed
-save and for a shared game ID, which are the games a player comes back to
-stuck, and "solution not known" on a board the player is looking at is not
-acceptable. Derive the answer from the board wherever that can be done,
-prefer `aux` only where the generator's answer is tidier, and verify every
-derived answer with the game's own exact test before a player sees it. Hint
-and Solve share the one answer. Exemplars:
+The hint reads the answer Solve derives from the board, and where `aux`
+may stand in for it is [`solver-and-generator.md`](./solver-and-generator.md)
+§ "Solve and the generator's aux": it is absent for a resumed save and a
+shared game ID, the games a player comes back to stuck. Verify every
+derived answer with the game's own exact test before a player sees it.
+Exemplars:
 [`untangle/solution.ts`](../src/games/untangle/solution.ts) over
 [`planar.ts`](../src/games/untangle/planar.ts), and
 [`netslide/reconstruct.ts`](../src/games/netslide/reconstruct.ts) with
