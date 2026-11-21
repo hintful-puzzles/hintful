@@ -67,6 +67,36 @@
       pair by the two other references (`hints.md` § the deictic rules)
       rather than a third.
 
+- [x] 2.5 Every hint frame draws. `warm-repaint` paints each mark kind once,
+      so Signpost's centered ring passed it while throwing on every ringed
+      square that shows a number. `hint-resume.test.ts`'s frame sweep, which
+      walks every step of each preset's opening plan, now draws each step's
+      frame and fails on a throw: it failed at Signpost's step 2 with the
+      defect planted, for about 2 s more over the collection.
+      Asserting `ringCrossings` there too was tried and dropped: its one
+      finding is Loopy's, below. `ringCrossings` called Mathrax's "12×"
+      crossed because a wide label's box corners leave the disc while its
+      glyphs do not; it now takes a label centered on a disc and no wider
+      than it as on the disc.
+- [ ] 2.5a Loopy, 9x11 Hats Hard (the gate's deal), step 308 of the opening
+      plan: about fifteen of the player's pair signs crowd one corner, some
+      overlapping each other, and none of `drawPairRing`'s three shapes fits
+      clear of them, so its fallback (`?? shapes[0]`) crosses an "=".
+      One game's issue, not a crash: raise with the owner, recommending the
+      fallback take the shape crossing the fewest signs, and that the
+      crowding itself (signs over signs) is the thing worth a look.
+- [ ] 2.6 The app's repaint edges an outline or ring *outside* the mark
+      (`mark-flash.ts` `repainted`), and the edge lands on content the game
+      drew over the mark: on Mathrax, the evidence outline's edge replaces
+      the black rim of the clue disc it passes under with a speckled arc
+      (seen 2026-11-21, `7de#sweep0`, the 12× step). The frame pair cannot
+      tell an occluder from the background beside a mark, since neither
+      changes when the mark is hidden. Recommendation: measure the occluders
+      once more, with the hint inks drawn opaque in black and in white
+      *without* the rest of the frame's change; a pixel whose ink coverage
+      is zero but which lies inside the mark's own drawn footprint is
+      covered, and takes no edge.
+
 ## 3. Finish
 
 - [ ] 3.1 The guides describe one way a variant (`hints-marks.md`

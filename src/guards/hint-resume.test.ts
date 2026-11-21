@@ -39,7 +39,7 @@ import {
 } from "../engine/testing/hint-games.ts";
 import { expectLedger } from "../engine/testing/ledger.ts";
 import { preferredDrawState } from "../engine/testing/preferred-draw-state.ts";
-import { RecordingDrawing } from "../engine/testing/recording-drawing.ts";
+import { type DrawOp, RecordingDrawing } from "../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../engine/testing/render-scenario.ts";
 import { sameState } from "../engine/testing/same-state.ts";
 import { itOverWholeSweep } from "../engine/testing/slow.ts";
@@ -317,6 +317,10 @@ function stateKey(s: unknown): string {
 
 /** What the board draws for `state`: with `step` on display, or with no hint. */
 function frameOf(game: AnyGame, state: unknown, step?: HintStep<unknown>): string {
+  return JSON.stringify(opsOf(game, state, step));
+}
+
+function opsOf(game: AnyGame, state: unknown, step?: HintStep<unknown>): DrawOp[] {
   const rec = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
   const ds = preferredDrawState(game, state);
   game.redraw(rec, ds, {
@@ -328,7 +332,7 @@ function frameOf(game: AnyGame, state: unknown, step?: HintStep<unknown>): strin
     flash: NO_FLASH,
     hint: step,
   });
-  return JSON.stringify(rec.ops);
+  return rec.ops;
 }
 
 /**
@@ -362,6 +366,14 @@ describe("a kept hint plan leaves the board alone, and its every step changes it
         if (!res?.ok) continue; // a refusal has no steps to check
         let plain = frameOf(game, state);
         res.steps.forEach((step, i) => {
+          // The frame the player sees with the step on display draws. A ring
+          // meets the board's content only as the walk fills it in, so a fresh
+          // board's first steps alone passed a ring that threw on any square
+          // showing a number.
+          let shown: DrawOp[] = [];
+          expect(() => {
+            shown = opsOf(game, state, step);
+          }, `${at}: plan step ${i}'s frame does not draw: "${step.explanation}"`).not.toThrow();
           const after = game.executeMove(state, step.move);
           // The engine guarantees a displayed step is never stale. The
           // Towers-specific trigger (auto-pencil resolving a later step) has
@@ -384,7 +396,7 @@ describe("a kept hint plan leaves the board alone, and its every step changes it
           judged++;
           if (plainAfter === plain) {
             expect(
-              frameOf(game, after, step) !== frameOf(game, state, step),
+              frameOf(game, after, step) !== JSON.stringify(shown),
               `${at}: plan step ${i} changes nothing the board draws: "${step.explanation}"`,
             ).toBe(true);
           }

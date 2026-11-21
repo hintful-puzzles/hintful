@@ -66,13 +66,12 @@ export function ringCrossings(ops: readonly DrawOp[]): string[] {
         size: t.size,
       } as DrawTextOptions;
       const box = textBox(t, options, t.text);
-      const onDisc = discs.some((d) =>
-        [
-          [box.x, box.y],
-          [box.x + box.w, box.y],
-          [box.x, box.y + box.h],
-          [box.x + box.w, box.y + box.h],
-        ].every(([px, py]) => Math.hypot(px - d.cx, py - d.cy) <= d.r),
+      // A label sits on a disc when it is centered within it and no wider:
+      // a wide label's box corners leave the circle while its glyphs do not.
+      const onDisc = discs.some(
+        (d) =>
+          Math.hypot(box.x + box.w / 2 - d.cx, box.y + box.h / 2 - d.cy) <= d.r / 2 &&
+          box.w <= 2 * d.r,
       );
       if (!onDisc && ringSide(shape, box, -1) === "crossed")
         crossings.push(
