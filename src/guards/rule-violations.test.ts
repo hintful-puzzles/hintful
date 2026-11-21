@@ -14,6 +14,7 @@ import { expect, it } from "vitest";
 import { dealt } from "../engine/testing/dealt.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import { type AnyGame, gatePresets } from "../engine/testing/hint-games.ts";
+import { type WalkBoard, walkHints } from "../engine/testing/hint-walk.ts";
 
 const RULED: [string, AnyGame][] = REGISTERED_GAMES.filter(
   ([, g]) => g.rules !== undefined,
@@ -21,6 +22,9 @@ const RULED: [string, AnyGame][] = REGISTERED_GAMES.filter(
 
 /** How many partial boards each answer is undecided into. */
 const PARTIALS = 60;
+
+/** How many hint steps each board is walked, at most. */
+const WALK_STEPS = 40;
 
 it("drew a populated roster", () => {
   expect(RULED.length).toBeGreaterThan(0);
@@ -73,5 +77,41 @@ for (const [id, game] of RULED) {
       caught / planted,
       `${id}: ${caught} of ${planted} changed answers caught`,
     ).toBeGreaterThan(0.9);
+  });
+
+  // The test above undecides the answer as the rules read it; this one reads
+  // the player's own boards, so a state the game reads wrong (a square read
+  // as decided that the answer holds otherwise) is caught too. A hint walk is
+  // a way to the answer every game has.
+  it(`${id}: each board a hint walk passes reads as the answer reads, and breaks no rule`, () => {
+    const rules = game.rules as NonNullable<AnyGame["rules"]>;
+    let full: Uint8Array = new Uint8Array(0);
+    let checked = 0;
+    const stateOf = (b: WalkBoard): unknown =>
+      (b.midend as unknown as { state: unknown }).state;
+    walkHints(
+      game,
+      { steps: WALK_STEPS },
+      {
+        board(b) {
+          const start = stateOf(b);
+          const solved = game.solve(start, start);
+          if (!solved.ok) throw new Error(`${id}/${b.title}: no solution`);
+          full = rules.grid(game.executeMove(start, solved.move));
+        },
+        played(_step, i, b) {
+          const state = stateOf(b);
+          const g = rules.grid(state);
+          const wrong = [...g.keys()].filter((x) => g[x] !== 0 && g[x] !== full[x]);
+          expect(
+            wrong,
+            `${id}/${b.title}: step ${i} reads these unlike the answer`,
+          ).toEqual([]);
+          expect(rules.violations(state, g), `${id}/${b.title}: step ${i}`).toEqual([]);
+          checked++;
+        },
+      },
+    );
+    expect(checked, `${id}: no board walked`).toBeGreaterThan(0);
   });
 }

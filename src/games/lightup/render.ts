@@ -4,8 +4,9 @@
  * the collection's quiet surface. A wall is a solid block (`wallFill`) with its clue
  * (red when provably wrong); an open square is the cell surface, washed yellow
  * when lit; a bulb is a white disc (red when lit by another bulb); the
- * impossible-mark is the ruled-out cross; and the completion flash fills the
- * open squares it is on with the flash color.
+ * impossible-mark is the ruled-out cross (red where nothing can light its
+ * square); the red marks are where the rules break (`errorFlags`); and the
+ * completion flash fills the open squares it is on with the flash color.
  */
 
 import { BLACK, WHITE, YELLOW_WASH } from "../../engine/color/colors.ts";
@@ -36,6 +37,7 @@ import {
   drawMarkSides,
   MARK_ALL,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
@@ -48,6 +50,7 @@ import {
   winSlot,
 } from "../../engine/render/win-wave.ts";
 import type { LightupHint, LightupMistake } from "./index.ts";
+import { dealtOf, EVERY_SQUARE_LIT, NO_BULB_LIGHTS_ANOTHER, rules } from "./solver.ts";
 import {
   F_BLACK,
   F_IMPOSSIBLE,
@@ -57,7 +60,6 @@ import {
   type LightupMove,
   type LightupState,
   type LightupUi,
-  numberWrong,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -116,6 +118,8 @@ const DF_LIGHT = 8;
 const DF_OVERLAP = 16;
 const DF_CURSOR = 32;
 const DF_NUMBERWRONG = 64;
+/** A crossed square nothing can light any more. */
+const DF_DARK = 128;
 /** Bits 15–16: the tone of the completion flash on the square. */
 const DF_WIN_SHIFT = 15;
 const DF_IMPOSSIBLE = 256;
@@ -144,34 +148,44 @@ export function newDrawState(state: LightupState, tileSize: number): LightupDraw
 
 // --- per-tile flags + draw -------------------------------------------------------
 
+/** Where the board breaks a rule, per square: `DF_OVERLAP` on a bulb another
+ * lights, `DF_NUMBERWRONG` on a number that can no longer get its bulbs, and
+ * `DF_DARK` on a cross nothing can light any more. */
+function errorFlags(state: LightupState): Uint16Array {
+  const live = liveErrors(rules, state);
+  const out = new Uint16Array(state.w * state.h);
+  const mark = (rule: string, df: number): void => {
+    for (const at of live.byRule.get(rule) ?? []) for (const i of at) out[i] |= df;
+  };
+  mark(EVERY_SQUARE_LIT, DF_DARK);
+  mark(NO_BULB_LIGHTS_ANOTHER, DF_OVERLAP);
+  const { number } = dealtOf(state);
+  for (const k of live.clues.get("number") ?? []) out[number.at[k]] |= DF_NUMBERWRONG;
+  return out;
+}
+
 function tileFlags(
   state: LightupState,
   ui: LightupUi,
   x: number,
   y: number,
   flash: Flash,
+  error: number,
 ): number {
   const i = idx(x, y, state.w);
   const flags = state.flags[i];
-  const lights = state.lights[i];
-  let ret = 0;
+  let ret = error;
 
   if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y) ret |= DF_CURSOR;
 
   if (flags & F_BLACK) {
     ret |= DF_BLACK;
-    if (flags & F_NUMBERED) {
-      if (numberWrong(state, x, y)) ret |= DF_NUMBERWRONG;
-      ret |= DF_NUMBERED;
-    }
+    if (flags & F_NUMBERED) ret |= DF_NUMBERED;
   } else {
     // Only an open square: a wall never lights.
     ret |= flash.win(sweepStep(x, y)) << DF_WIN_SHIFT;
-    if (lights > 0) ret |= DF_LIT;
-    if (flags & F_LIGHT) {
-      ret |= DF_LIGHT;
-      if (lights > 1) ret |= DF_OVERLAP;
-    }
+    if (state.lights[i] > 0) ret |= DF_LIT;
+    if (flags & F_LIGHT) ret |= DF_LIGHT;
     if (flags & F_IMPOSSIBLE) ret |= DF_IMPOSSIBLE;
   }
   return ret;
@@ -259,7 +273,7 @@ function tileRedraw(
       dsFlags & DF_IMPOSSIBLE &&
       (!(dsFlags & DF_LIT) || ui.drawBlobsWhenLit)
     ) {
-      drawRuledOutCross(dr, box, COL_RULED_OUT);
+      drawRuledOutCross(dr, box, dsFlags & DF_DARK ? COL_ERROR : COL_RULED_OUT);
     }
     // An open square shows no text, so its ring has none to keep clear of.
     if (ds.hint.ringed(i)) drawCellRing(dr, band, NOTHING_TO_CLEAR);
@@ -309,11 +323,12 @@ export function redraw(
   const wrong = mistakes?.length
     ? new Set(mistakes.map((m) => idx(m.x, m.y, w)))
     : null;
+  const errors = errorFlags(state);
 
   for (let x = 0; x < w; x++) {
     for (let y = 0; y < h; y++) {
       const i = idx(x, y, w);
-      let df = tileFlags(state, ui, x, y, flash);
+      let df = tileFlags(state, ui, x, y, flash, errors[i]);
       if (wrong?.has(i)) df |= DF_WRONG;
       if (ui.drawBlobsWhenLit) df |= DF_BLOBS_PREF;
       if (ds.tiles.changed(i, df)) tileRedraw(dr, ds, state, ui, x, y);

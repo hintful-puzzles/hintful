@@ -16,6 +16,7 @@
  * the answer from at every tier. The hint never runs it.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import {
   type Answer,
   answerCache,
@@ -70,7 +71,7 @@ function valuesOf(state: LightupState, marks: boolean): Uint8Array {
 }
 
 /** The board as the description deals it: its walls, and its numbers. */
-function dealtOf({ flags, lights }: LightupState): lightup.Dealt {
+export function dealtOf({ flags, lights }: LightupState): lightup.Dealt {
   const black = (f: number): boolean => (f & F_BLACK) !== 0;
   const numbered = (f: number): boolean => (f & F_NUMBERED) !== 0;
   return {
@@ -86,6 +87,21 @@ function dealtOf({ flags, lights }: LightupState): lightup.Dealt {
     ),
   };
 }
+
+/** The board as its rules read it: a bulb; a wall, and a square crossed or
+ * lit without a bulb, as holding none, since a bulb on a lit square would
+ * light another; any other square undecided. */
+export const rules: RulesOf<LightupState> = {
+  grid: ({ flags, lights }) =>
+    Uint8Array.from(flags, (f, i) =>
+      f & F_LIGHT ? BULB : f & (F_BLACK | F_IMPOSSIBLE) || lights[i] > 0 ? NONE : 0,
+    ),
+  violations: (s, g) => lightup.violations(g, lightupSpace(s.w, s.h), dealtOf(s)),
+};
+
+/** The rules a square breaks, as the live errors draw them. */
+export const EVERY_SQUARE_LIT: lightup.RuleName = "shape.0";
+export const NO_BULB_LIGHTS_ANOTHER: lightup.RuleName = "shape.1";
 
 function lightupSpace(w: number, h: number): GridSpace {
   return describedSpace(lightup.units, w, h);

@@ -754,6 +754,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint.refreshStep",
       "prefs",
       "revealOne",
+      "rules",
       "rulesOut",
       "targetVerbs",
       "textFormat",

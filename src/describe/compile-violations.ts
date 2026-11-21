@@ -359,7 +359,11 @@ class Check {
       );
       return r;
     }
-    if (e.k === "bin" && COMPARE.has(e.op) && (counted(e.a) || counted(e.b))) {
+    if (
+      e.k === "bin" &&
+      COMPARE.has(e.op) &&
+      (counted(e.a, scope, this.env) || counted(e.b, scope, this.env))
+    ) {
       const a = this.bounds(e.a, scope);
       const b = this.bounds(e.b, scope);
       out.emit(`let ${r}: number = ${U};`);
@@ -502,10 +506,11 @@ class Check {
     const { out } = this;
     const lo = Out.fresh("_lo");
     const hi = Out.fresh("_hi");
+    const aCounted = e.k === "bin" && counted(e.a, scope, this.env);
     if (
       e.k === "bin" &&
       (e.op === "+" || e.op === "-" || e.op === "*") &&
-      (counted(e.a) || counted(e.b))
+      (aCounted || counted(e.b, scope, this.env))
     ) {
       const a = this.bounds(e.a, scope);
       const b = this.bounds(e.b, scope);
@@ -525,7 +530,7 @@ class Check {
       }
       // A scaled count still names where it is over or under.
       const one =
-        e.op === "*" ? (counted(e.a) ? a : b) : e.op === "-" ? a : counted(e.a) ? a : b;
+        e.op === "*" ? (aCounted ? a : b) : e.op === "-" ? a : aCounted ? a : b;
       return { lo, hi, yes: one.yes, no: one.no };
     }
     const agg = lastFilterOut(sizeAsCount(e));
@@ -675,13 +680,15 @@ const PURE: ReadonlySet<string> = new Set([
 
 /** Whether `e` is a count or sum, or arithmetic over one: a term the check
  * bounds rather than evaluates. */
-function counted(e: Expr): boolean {
+function counted(e0: Expr, scope: Scope, env: Env): boolean {
+  // A count may be written through a definition, as Light Up's `bulbs(k)`.
+  const e = inlined(e0, scope, env);
   const a = sizeAsCount(e);
   if (a !== null) return a.fn === "count" || a.fn === "sum";
   return (
     e.k === "bin" &&
     (e.op === "+" || e.op === "-" || e.op === "*") &&
-    (counted(e.a) || counted(e.b))
+    (counted(e.a, scope, env) || counted(e.b, scope, env))
   );
 }
 

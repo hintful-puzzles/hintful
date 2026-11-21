@@ -1057,7 +1057,10 @@ says how each form is read; what a description's author acts on:
 The guard is `src/guards/rule-violations.test.ts`: every game that declares
 `rules` (`docs/rendering.md` § "Live errors are the rules'") undecides its
 answers at random and must report nothing, and must report most answers with
-one value changed.
+one value changed. It also walks each board's hints, and every board on the
+way must report nothing and read, where `rules.grid` decides an element, as
+the answer does: so a game's reading of its own state (Light Up's lit square
+as holding no bulb) is checked as well as the compiler's.
 
 ## A kind of rule places its techniques
 

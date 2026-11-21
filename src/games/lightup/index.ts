@@ -66,6 +66,7 @@ import {
   holdsBulb,
   isSolved,
   NONE,
+  rules,
 } from "./solver.ts";
 import {
   cloneState,
@@ -409,6 +410,7 @@ export const lightupGame: Game<
   status: (s) => (isSolved(s) ? "solved" : "ongoing"),
 
   solve,
+  rules,
   findMistakes,
   clearMistakes,
   revealOne,

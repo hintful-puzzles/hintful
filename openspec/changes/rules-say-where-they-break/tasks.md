@@ -23,10 +23,10 @@
       showing its count with the tallest unplaced) needs a bound the
       compiler lacks; ordering comparisons of an undecided `value` against
       its domain's interval come first, in the compiler.
-      Light Up's numbered wall counts a lit or crossed open square as
-      holding no bulb: its `rules.grid` reads such a square as 2, which
-      every answer agrees with (a bulb there breaks the lighting rule), so
-      the clue's interval matches its old check. Run `src/guards` before a
+      Moved: lightup (its `rules.grid` reads a lit or crossed square as
+      holding no bulb; it gains a red cross where nothing can light the
+      square). A count written through a definition (`bulbs(k)`) is
+      bounded now, as a count written out is. Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

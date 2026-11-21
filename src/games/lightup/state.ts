@@ -283,26 +283,6 @@ export function gridOverlap({ flags, lights }: LightupState): boolean {
   return false;
 }
 
-/** The display-error test for a clue: definitely too many bulbs, or too
- * few even if every plausible neighbor became one. */
-export function numberWrong(state: LightupState, x: number, y: number): boolean {
-  const clue = state.lights[idx(x, y, state.w)];
-  let n = 0;
-  let empty = 0;
-  for (const pt of getSurrounds(state.w, state.h, x, y)) {
-    const i = idx(pt.x, pt.y, state.w);
-    if (state.flags[i] & F_LIGHT) {
-      n++;
-      continue;
-    }
-    if (state.flags[i] & F_BLACK) continue;
-    if (state.flags[i] & F_IMPOSSIBLE) continue;
-    if (state.lights[i] > 0) continue;
-    empty++;
-  }
-  return n > clue || n + empty < clue;
-}
-
 // --- state construction ----------------------------------------------------------------
 
 export function emptyState(p: LightupParams): LightupState {
