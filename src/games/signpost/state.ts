@@ -13,6 +13,7 @@ import { DESC_REPEATED, type DescParse } from "../../engine/contract/desc-error.
 import { isDigit } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
+import type { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import type { TileCache } from "../../engine/render/tile-cache.ts";
 
 // --- directions ------------------------------------------------------
@@ -96,6 +97,8 @@ export interface SignpostDrawState {
   /** Per cell: its flags, its derived number (up to n·(n+1), past the flags'
    * word) and its inbound arrow's direction (-1 for none). */
   tiles: TileCache;
+  /** The hint's marks on the squares. */
+  hint: OverlaySidecar;
   /** Whether the last frame drew the win flash's route, which crosses tiles,
    * so the next repaints every tile to take it off. */
   route: boolean;

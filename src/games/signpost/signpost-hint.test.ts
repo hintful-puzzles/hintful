@@ -146,4 +146,13 @@ describe("signpost hint frame", () => {
     expect(opsOfKind(ops, "hatch")).toHaveLength(h.line.length);
     expect(ops).toMatchSnapshot();
   });
+
+  it("rings a square that shows a number, leaving the number outside", () => {
+    const result = renderPinnedHint(signpostGame, pinned("onlyBefore"));
+    const ops = result.recording.ops;
+    // The ringed square's number sits flush in its corner, so the ring moves
+    // off center to leave it outside rather than cross it.
+    expect(opsOfKind(ops, "text").length).toBeGreaterThan(0);
+    expectRing(ops, { rings: 2 });
+  });
 });

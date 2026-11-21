@@ -38,6 +38,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { registerGame } from "../../engine/midend/registry.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   DIFF_EASY,
@@ -399,12 +400,14 @@ function computeSize(p: SignpostParams, ts: number): Size {
 }
 
 function newDrawState(s: SignpostState, tileSize: number): SignpostDrawState {
+  const hint = new OverlaySidecar(s.n);
   return {
     tileSize,
     w: s.w,
     h: s.h,
     n: s.n,
-    tiles: new TileCache(s.n, { words: 3 }),
+    tiles: new TileCache(s.n, { words: 3, overlays: [hint] }),
+    hint,
     route: false,
     dragging: false,
     dragBackground: null,

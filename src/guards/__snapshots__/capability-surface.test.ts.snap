@@ -1497,6 +1497,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "dragY",
       "dragging",
       "h",
+      "hint",
       "n",
       "route",
       "tileSize",

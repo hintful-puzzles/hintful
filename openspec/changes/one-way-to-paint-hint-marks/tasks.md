@@ -38,8 +38,14 @@
         clue's outlined squares are one contour; the equivalence anchor's
         doubled ring folds into the one outline (a reference of its own, so
         a shape apart; the words name it by noun, not by glyph).
+  - [x] Signpost: onto the sidecar for the square's outline, stripes and
+        ring; the arrow's ring stays its own flag (a mark on an arrow). The
+        square's ring keeps `drawRing` off center, not `drawCellRing`: its
+        number is flush in the corner, and a centered ring threw "No round
+        ring fits" in the app on every ringed square showing a number. No
+        test drew one; `signpost-hint.test.ts` now does.
   - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2):
-        Signpost, Sticks, Boats, and the
+        Sticks, Boats, and the
         border grid (Palisade, Separate). Fold Range's and Slant's doubled
         "premise" outline and Lightup's dark-square ring into the one
         outline (`hints-marks.md` § "Outline the evidence": one shape for

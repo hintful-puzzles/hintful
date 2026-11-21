@@ -34,7 +34,7 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -42,8 +42,7 @@ import type {
   Rect,
 } from "../../engine/contract/types.ts";
 import { drawRectCorners, drawRectOutline } from "../../engine/render/draw.ts";
-import { hatchPeriod } from "../../engine/render/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { drawMarkSides } from "../../engine/render/hint-mark.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { type Flash, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { SignpostHint } from "./hint.ts";
@@ -97,14 +96,9 @@ const F_IMMUTABLE = 0x008;
 const F_ARROW_POINT = 0x010;
 const F_ARROW_INPOINT = 0x020;
 const F_DIM = 0x040;
-/** The displayed hint links from this square's arrow. */
+/** The displayed hint links from this square's arrow. The square's own ring,
+ * outline and stripes ride `ds.hint`. */
 const F_HINT_ARROW = 0x080;
-/** The displayed hint links into this square: ringed. */
-const F_HINT_RING = 0x100;
-/** This square is on the line the hint's sentence names: striped. */
-const F_HINT_LINE = 0x200;
-/** The hint reasons from this square: outlined. */
-const F_HINT_OUTLINE = 0x400;
 /** The link out of this square is one the answer does not hold. Apart from
  * `F_ERROR`, which a given's number never shows: a clash of numbers is not
  * the given's fault, and a wrong link out of it is the player's. */
@@ -263,6 +257,7 @@ function tileRedraw(
   dir: number,
   num: number,
   f: number,
+  i: number,
 ): void {
   const ts = ds.tileSize;
   const n = ds.n;
@@ -316,7 +311,7 @@ function tileRedraw(
   if (ty > BORDER) dr.drawRect({ x: tx, y: ty, w: ts, h: 1 }, COL_GRID);
   if (tx > BORDER) dr.drawRect({ x: tx, y: ty, w: 1, h: ts }, COL_GRID);
   // The line a hint's sentence names, under everything the square shows.
-  if (f & F_HINT_LINE) dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
+  ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
 
   // Large outward-pointing arrow (or star for the final immutable cell).
   const asz = Math.floor((7 * ts) / 32);
@@ -361,14 +356,11 @@ function tileRedraw(
       inside: glyph,
     });
   }
-  if (f & F_HINT_RING) dr.drawRing(tile, clear, thick);
-  if (f & F_HINT_OUTLINE)
-    drawMarkSides(
-      dr,
-      { box: tile, outer: 0, inner: thick },
-      MARK_ALL,
-      COL_HINT_OUTLINE,
-    );
+  const band = { box: tile, outer: 0, inner: thick };
+  drawMarkSides(dr, band, ds.hint.outlineSides(i), COL_HINT_OUTLINE);
+  // Not `drawCellRing`, which centers its ring: the number is flush in the
+  // corner, and only a ring free to move off center leaves it outside.
+  if (ds.hint.ringed(i)) dr.drawRing(tile, clear, thick);
 
   dr.drawUpdate({ x: tx, y: ty, w: ts, h: ts });
 }
@@ -517,16 +509,9 @@ export function redrawSignpost(
   }
 
   const mistakeSet = mistakes?.length ? new Set(mistakes.map((m) => m.index)) : null;
-  const hintFlags = new Map<number, number>();
   const marks = stepMarks(hint);
-  const add = (flag: number) => (p: Point) => {
-    const i = p.y * w + p.x;
-    hintFlags.set(i, (hintFlags.get(i) ?? 0) | flag);
-  };
-  marks.of("stripes", CELL).forEach(add(F_HINT_LINE));
-  marks.of("outline", CELL).forEach(add(F_HINT_OUTLINE));
-  marks.of("ring", ARROW).forEach(add(F_HINT_ARROW));
-  marks.of("ring", CELL).forEach(add(F_HINT_RING));
+  ds.hint.pack(marks, (x, y) => y * w + x);
+  const hintArrows = new Set(marks.of("ring", ARROW).map((p) => p.y * w + p.x));
 
   // The route drawn last frame crosses tiles, so every tile repaints to take
   // it off; the next frame's route, if any, goes on after the tiles.
@@ -564,7 +549,7 @@ export function redrawSignpost(
         const tone = flash.win(renderState.nums[i]);
         if (tone) f |= tone === WIN_LEAD ? F_FLASH | F_FLASH_LEAD : F_FLASH;
       }
-      f |= hintFlags.get(i) ?? 0;
+      if (hintArrows.has(i)) f |= F_HINT_ARROW;
       if (renderState.next[i] !== -1) f |= F_ARROW_POINT;
       if (renderState.prev[i] !== -1) {
         f |= F_ARROW_INPOINT;
@@ -585,6 +570,7 @@ export function redrawSignpost(
           state.dirs[i],
           renderState.nums[i],
           f,
+          i,
         );
       }
     }
