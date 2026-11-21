@@ -167,6 +167,8 @@ export {
   decidedAll,
   heldIn,
   knownIn,
+  overDomain,
+  stoppedAt,
   undecided,
   unmatched,
   type Violation,

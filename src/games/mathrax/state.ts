@@ -9,11 +9,8 @@
  * that result; `=` means each diagonal pair is equal; `E`/`O` mean all four
  * digits are even / odd.
  *
- * **Two bitmask conventions.** {@link mathraxOptions} and
- * {@link mathraxValidate} keep upstream's `BIT(d) = 1 << (d−1)`, as the C they
- * port reads it. The player's pencil marks use the Latin-family `1 << n` (bits
- * `1..o`), which `engine/hint/candidate-hint.ts` reads. Marks never reach the desc
- * or a save (the save replays moves), so the divergence is free.
+ * The player's pencil marks use the Latin-family `1 << n` (bits `1..o`), which
+ * `engine/hint/candidate-hint.ts` reads.
  */
 
 import {
@@ -23,16 +20,14 @@ import {
   type DescParse,
   descValue,
 } from "../../engine/contract/desc-error.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { endParams, paramsLetter } from "../../engine/game-id/params.ts";
 import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
-import {
-  type ClueList,
-  clueList,
-  latinSpace,
-} from "../../engine/solve/describe-runtime.ts";
+import { type ClueList, clueList } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
@@ -150,13 +145,6 @@ const OPTION_LETTERS: ReadonlyArray<{ bit: number; letter: string }> = [
 
 /** A given: the player may not change it. */
 export const F_IMMUTABLE = 0x01;
-/** This digit is duplicated in its row or column. */
-export const FE_COUNT = 0x02;
-export const FE_TOPLEFT = 0x04;
-export const FE_TOPRIGHT = 0x08;
-export const FE_BOTLEFT = 0x10;
-export const FE_BOTRIGHT = 0x20;
-export const FE_ERRORMASK = 0x3e;
 
 // --- params ----------------------------------------------------------------
 
@@ -227,9 +215,7 @@ export interface MathraxState {
   params: MathraxParams;
   /** `o²` working digits (0 = blank). */
   grid: Uint8Array;
-  /** `o²` per-cell flags: {@link F_IMMUTABLE} plus the live `FE_*` error bits,
-   * which {@link mathraxValidate} recomputes after every `set` and `solve` move
-   * (upstream, too, keeps them on the state for `game_redraw` to read). */
+  /** `o²` per-cell flags: {@link F_IMMUTABLE} on a given. */
   flags: Uint8Array;
   /** `o²` pencil-mark bitmaps, bit `n` = candidate `n` (see the module note). */
   pencil: Int32Array;
@@ -248,10 +234,16 @@ export function cloneState(s: MathraxState): MathraxState {
   };
 }
 
+/** The board as its rules read it: a digit is its value, a blank square
+ * undecided. */
+export const rules: RulesOf<MathraxState> = describedRules(mathrax, {
+  grid: (s) => Uint8Array.from(s.grid),
+  size: (s) => [s.params.o, s.params.o],
+  deals: (s) => [dealtOf(s.clues)],
+});
+
 export function status(s: MathraxState): "solved" | "ongoing" {
-  return mathrax.isAnswer(s.grid, latinSpace(s.params.o), dealtOf(s.clues))
-    ? "solved"
-    : "ongoing";
+  return rules.isAnswer(s, s.grid) ? "solved" : "ongoing";
 }
 
 const KIND_OF_TYPE = new Map<number, keyof mathrax.Dealt>([
@@ -433,120 +425,6 @@ export function newState(p: MathraxParams, desc: string): MathraxState {
     pencil: new Int32Array(p.o * p.o),
     clues,
   };
-}
-
-// --- live validity ---------------------------------------------------------
-
-/** Upstream `BIT(d)`, bit `d − 1`, as {@link mathraxOptions} and
- * {@link mathraxValidate} read it; the player's pencil marks use `1 << n` (see
- * the module note). */
-export function bitOf(d: number): number {
-  return 1 << (d - 1);
-}
-
-/** "No constraint": upstream's `~0`, every bit set. */
-const ALL_DIGITS = ~0;
-
-/**
- * The digits this cell may hold given `clue` at one of its corners and `mark`,
- * the candidate mask of the cell diagonally opposite (upstream
- * `mathrax_options`). Arithmetic clues enumerate every `(a, b)` pair satisfying
- * the operation; `E`/`O` return the fixed even/odd masks; equality arrives as
- * `CLUE_SUB` with number 0, so `|a − b| == 0` handles it. What
- * {@link mathraxValidate} flags a cell by; the solver reads the clues as
- * `mathrax.description.yaml` states them.
- */
-export function mathraxOptions(clue: number, mark: number): number {
-  const type = clueType(clue);
-  switch (type) {
-    case CLUE_ADD:
-    case CLUE_SUB:
-    case CLUE_MUL:
-    case CLUE_DIV: {
-      const cnum = clueNum(clue);
-      let ret = 0;
-      // Upstream enumerates 1..9 regardless of the grid order; the caller's
-      // candidate mask is what bounds the result.
-      for (let a = 1; a <= 9; a++) {
-        if (!(mark & bitOf(a))) continue;
-        for (let b = 1; b <= 9; b++) {
-          const hi = Math.max(a, b);
-          const lo = Math.min(a, b);
-          if (
-            (type === CLUE_ADD && a + b === cnum) ||
-            (type === CLUE_SUB && Math.abs(a - b) === cnum) ||
-            (type === CLUE_MUL && a * b === cnum) ||
-            (type === CLUE_DIV && ((hi / lo) | 0) === cnum && hi % lo === 0)
-          ) {
-            ret |= bitOf(b);
-          }
-        }
-      }
-      return ret;
-    }
-    case CLUE_EVN:
-      return 0xaa; // 2, 4, 6, 8
-    case CLUE_ODD:
-      return 0x155; // 1, 3, 5, 7, 9
-    default:
-      return ALL_DIGITS;
-  }
-}
-
-/**
- * Recompute every cell's `FE_*` error bits in place (upstream
- * `mathrax_validate_game`), the error overlay: whether a board is solved is the
- * compiled answer check's. A cell is flagged `FE_COUNT` when its digit repeats
- * in its row or column, and `FE_TOPLEFT`/… when the clue at that corner admits
- * no pairing between this cell and the one diagonally opposite it.
- *
- * Upstream's `is_solver` mode (read a blank cell's marks instead of "any digit")
- * is never used by the shipped game, so it is not ported.
- */
-export function mathraxValidate(
-  o: number,
-  grid: Uint8Array,
-  clues: Int32Array,
-  flags: Uint8Array,
-): void {
-  const co = o - 1;
-  const maxbits = (1 << o) - 1;
-
-  // Row/column occurrence counts: `counts[(d−1)·o + y]` for rows, offset by o²
-  // for columns.
-  const counts = new Int32Array(o * o * 2);
-  for (let x = 0; x < o; x++) {
-    for (let y = 0; y < o; y++) {
-      flags[y * o + x] &= ~FE_ERRORMASK;
-      const d = grid[y * o + x];
-      if (!d) continue;
-      counts[(d - 1) * o + y]++;
-      counts[(d - 1) * o + o * o + x]++;
-    }
-  }
-
-  for (let y = 0; y < o; y++) {
-    for (let x = 0; x < o; x++) {
-      const i = y * o + x;
-      const d = grid[i];
-      const bits = d ? bitOf(d) : maxbits;
-
-      if (d && (counts[(d - 1) * o + y] > 1 || counts[(d - 1) * o + o * o + x] > 1))
-        flags[i] |= FE_COUNT;
-
-      // Flag `bit` when the clue at index `clue` admits no pairing between this
-      // cell and the cell `(ox, oy)` diagonally across its intersection.
-      const corner = (clue: number, ox: number, oy: number, bit: number): void => {
-        const other = grid[oy * o + ox];
-        const opts = mathraxOptions(clues[clue], other ? bitOf(other) : maxbits);
-        if (!(opts & bits)) flags[i] |= bit;
-      };
-      if (y < co && x < co) corner(y * co + x, x + 1, y + 1, FE_BOTRIGHT);
-      if (y > 0 && x < co) corner((y - 1) * co + x, x + 1, y - 1, FE_TOPRIGHT);
-      if (y < co && x > 0) corner(y * co + x - 1, x - 1, y + 1, FE_BOTLEFT);
-      if (y > 0 && x > 0) corner((y - 1) * co + x - 1, x - 1, y - 1, FE_TOPLEFT);
-    }
-  }
 }
 
 // --- moves -----------------------------------------------------------------

@@ -45,7 +45,11 @@
       in a cage" as its own rule, out of the total's meaning, so a repeat
       marks the two numbers and a total turns red once out of reach; a
       board's units and dealt blocks reach `describedRules` through its
-      `units` and `size`). Run `src/guards` before a
+      `units` and `size`). Moved: mathrax (a term one undecided element
+      stops is read over each value that element's domain holds, in the
+      compiler, so a digit no digit across its clue pairs with is red with
+      the cell across open; `liveErrors.clueAt` says where each broken clue
+      is broken, for the clue's quarter at each cell). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

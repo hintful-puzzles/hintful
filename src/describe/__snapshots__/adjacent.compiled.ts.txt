@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/adjacent/adjacent.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, type Violation, STRIKE, clueAt, freshBinding, heldIn, rangeMask, setOf, staleChecking, undecided } from "../../../engine/solve/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, type Violation, STRIKE, clueAt, freshBinding, heldIn, overDomain, rangeMask, setOf, staleChecking, stoppedAt, undecided } from "../../../engine/solve/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -123,7 +123,8 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
 
 /** Each statement the board `g`, a value an element and 0 where it is
  * undecided, already breaks: false on every completion of it. */
-export function violations(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): Violation[] {
+export function violations(g0: ArrayLike<number>, sp: GridSpace, cl: Dealt): Violation[] {
+  const g = Int32Array.from(g0);
   const _out: Violation[] = [];
   const _rd: number[] = [];
   let _wit: readonly number[] | null = null;
@@ -148,10 +149,15 @@ export function violations(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): Viol
             _rd.length = 0;
             _wit = null;
             let _vd8: number = 2;
+            const _lf9 = (): boolean => {
+              return (heldIn(g, v_c0, _rd) !== heldIn(g, v_c0_0, _rd));
+            };
             try {
-              _vd8 = (heldIn(g, v_c0, _rd) !== heldIn(g, v_c0_0, _rd)) ? 1 : 0;
+              _vd8 = _lf9() ? 1 : 0;
             } catch (e) {
               undecided(e);
+              const _x10 = stoppedAt();
+              if (_x10 >= 0) _vd8 = overDomain(g, _x10, _domain, _rd, _lf9);
             }
             if (_vd8 === 0 && _sure === 1) {
               _out.push({ rule: "shape.0", clue: -1, at: [v_c0, v_c0_0] });
@@ -165,19 +171,24 @@ export function violations(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): Viol
   } catch (e) {
     undecided(e);
   }
-  for (let _k9 = 0; _k9 < cl.bar.at.length; _k9++) {
-    const _at10 = cl.bar.at[_k9];
-    const _v11 = cl.bar.v[_k9];
+  for (let _k11 = 0; _k11 < cl.bar.at.length; _k11++) {
+    const _at12 = cl.bar.at[_k11];
+    const _v13 = cl.bar.v[_k11];
     _rd.length = 0;
     _wit = null;
-    let _vd12: number = 2;
+    let _vd14: number = 2;
+    const _lf15 = (): boolean => {
+      return ((_v13 === 1) === (Math.abs((heldIn(g, sp.edgeEnds[2 * _at12], _rd) - heldIn(g, sp.edgeEnds[2 * _at12 + 1], _rd))) === 1));
+    };
     try {
-      _vd12 = ((_v11 === 1) === (Math.abs((heldIn(g, sp.edgeEnds[2 * _at10], _rd) - heldIn(g, sp.edgeEnds[2 * _at10 + 1], _rd))) === 1)) ? 1 : 0;
+      _vd14 = _lf15() ? 1 : 0;
     } catch (e) {
       undecided(e);
+      const _x16 = stoppedAt();
+      if (_x16 >= 0) _vd14 = overDomain(g, _x16, _domain, _rd, _lf15);
     }
-    if (_vd12 === 0 && _sure === 1) {
-      _out.push({ rule: "clue.bar", clue: _k9, at: (_wit ?? _rd).slice() });
+    if (_vd14 === 0 && _sure === 1) {
+      _out.push({ rule: "clue.bar", clue: _k11, at: (_wit ?? _rd).slice() });
     }
   }
   return _out;

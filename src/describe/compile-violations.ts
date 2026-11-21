@@ -8,7 +8,8 @@
  * stopping it (`describe-runtime/violations.ts`), so its verdict is exact
  * where it reads only decided ones. Over that, the check bounds what a
  * partial board does say: the connectives and quantifiers by Kleene's
- * logic, a count or a sum by the interval its undecided members leave, and
+ * logic, a count or a sum by the interval its undecided members leave, a
+ * term one undecided element stops by each value that element may hold, and
  * `matched` by Hall's condition on each group. A statement's leading
  * `forall`s and conjunctions say where it breaks: each binding whose body
  * is false is one violation, at the elements it binds.
@@ -192,8 +193,10 @@ export function violationCheck(
       1,
     );
   out.emit("return _out;");
+  if (c.triesValues)
+    out.entries.unshift({ indent: 1, text: "const g = Int32Array.from(g0);" });
   const params = [
-    "g: ArrayLike<number>",
+    c.triesValues ? "g0: ArrayLike<number>" : "g: ArrayLike<number>",
     "sp: GridSpace",
     ...(readsClues.yes ? ["cl: Dealt"] : []),
     ...(statements.some((s) => s.on !== null) ? ["variations: readonly string[]"] : []),
@@ -216,6 +219,9 @@ class Check {
   /** Whether a violation's place is read from the witness, so the code
    * keeps one. */
   readsWitness = false;
+  /** Whether a term is read over an undecided element's values, which the
+   * code writes into its own copy of the board. */
+  triesValues = false;
   /** The code of the mask of values element `x` may hold, where the check
    * can read one. */
   private readonly domainOf: ((x: string) => string) | null;
@@ -490,12 +496,37 @@ class Check {
   private leaf(e: Expr, scope: Scope, r: string): string {
     const { out, env } = this;
     out.emit(`let ${r}: number = ${U};`);
-    out.open("try {");
+    if (this.domainOf === null) {
+      out.open("try {");
+      const v = compileExpr(e, scope, env, out);
+      expect(v, "bool", "a rule");
+      out.emit(`${r} = ${v.code} ? ${T} : ${F};`);
+      out.close("} catch (e) {");
+      out.emit("  undecided(e);");
+      out.emit("}");
+      return r;
+    }
+    // Stopped by one undecided element, the term is read over each value
+    // that element may hold: a digit no digit across a Mathrax clue pairs
+    // with breaks it while the square across is open.
+    const f = Out.fresh("_lf");
+    out.open(`const ${f} = (): boolean => {`);
     const v = compileExpr(e, scope, env, out);
     expect(v, "bool", "a rule");
-    out.emit(`${r} = ${v.code} ? ${T} : ${F};`);
+    out.emit(`return ${v.code};`);
+    out.close("};");
+    const x = Out.fresh("_x");
+    env.used.add("stoppedAt");
+    env.used.add("overDomain");
+    this.triesValues = true;
+    out.open("try {");
+    out.emit(`${r} = ${f}() ? ${T} : ${F};`);
     out.close("} catch (e) {");
     out.emit("  undecided(e);");
+    out.emit(`  const ${x} = stoppedAt();`);
+    out.emit(
+      `  if (${x} >= 0) ${r} = overDomain(g, ${x}, ${this.domainOf(x)}, ${READ}, ${f});`,
+    );
     out.emit("}");
     return r;
   }

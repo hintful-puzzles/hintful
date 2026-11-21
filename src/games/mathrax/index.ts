@@ -129,7 +129,6 @@ import {
   type MathraxParams,
   type MathraxState,
   type MathraxUi,
-  mathraxValidate,
   newState,
   newUi,
   OPTION_ADD,
@@ -139,6 +138,7 @@ import {
   OPTION_ODD,
   OPTION_SUB,
   OPTIONSMASK,
+  rules,
   status,
   validateParams,
 } from "./state.ts";
@@ -273,9 +273,6 @@ function executeMove(state: MathraxState, move: MathraxMove): MathraxState {
           }
         }
       }
-      // Upstream recomputes the live error flags after *both* a real entry and
-      // a pencil change.
-      mathraxValidate(o, next.grid, next.clues, next.flags);
       return next;
     }
     case "pencilAll":
@@ -290,7 +287,6 @@ function executeMove(state: MathraxState, move: MathraxMove): MathraxState {
           next.pencil[i] = 0;
         }
       }
-      mathraxValidate(o, next.grid, next.clues, next.flags);
       return next;
     }
     default:
@@ -643,6 +639,7 @@ export const mathraxGame: Game<
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes: (_state, mistakes) => clearEntries(setMoves, mistakes),

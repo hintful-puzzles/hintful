@@ -29,9 +29,52 @@ export interface Violation {
 /** Thrown by a read of an undecided element; caught by the term it stops. */
 const UNDECIDED: unique symbol = Symbol("undecided");
 
+/** The element whose read stopped the last term stopped, or -1 where that
+ * was no one element's. */
+let stop = -1;
+
 /** Rethrow `e` unless it is an undecided read's stop. */
 export function undecided(e: unknown): void {
   if (e !== UNDECIDED) throw e;
+}
+
+/** The element the last stop was at, or -1 (read straight after the catch,
+ * before anything else may stop). */
+export function stoppedAt(): number {
+  return stop;
+}
+
+/**
+ * The verdict on a term `f` that one undecided element `x` stopped, taken
+ * over each value `mask` lets `x` hold: `0` (false) where every value makes
+ * the term false, `1` where every one makes it true, and `2` (undecided)
+ * otherwise, or where another undecided read stops it. Sound because some
+ * value of `mask` is `x`'s on every completion. `g` holds each value at `x`
+ * while `f` runs, and 0 there after.
+ */
+export function overDomain(
+  g: Int32Array,
+  x: number,
+  mask: number,
+  rd: number[],
+  f: () => boolean,
+): number {
+  let seen = 0;
+  const n0 = rd.length;
+  for (let d = 1; d < 32; d++) {
+    if (!((mask >> d) & 1)) continue;
+    g[x] = d;
+    rd.length = n0;
+    try {
+      seen |= f() ? 1 : 2;
+    } catch (e) {
+      undecided(e);
+      seen = 3;
+      break;
+    }
+  }
+  g[x] = 0;
+  return seen === 1 ? 1 : seen === 2 ? 0 : 2;
 }
 
 /** `value(x)` on a board being filled: `-1` for `none`, the value where it
@@ -43,6 +86,7 @@ export function heldIn(g: ArrayLike<number>, x: number, rd: number[]): number {
     rd.push(x);
     return v;
   }
+  stop = x;
   throw UNDECIDED;
 }
 
@@ -54,13 +98,18 @@ export function knownIn(g: ArrayLike<number>, x: number, rd: number[]): boolean 
     rd.push(x);
     return true;
   }
+  stop = x;
   throw UNDECIDED;
 }
 
 /** Stop the term unless every element of `els` is decided: for a runtime
  * call that reads the grid itself (`beamOf`). */
 export function decidedAll(g: ArrayLike<number>, els: readonly number[]): void {
-  for (const x of els) if (!(g[x] > 0)) throw UNDECIDED;
+  for (const x of els)
+    if (!(g[x] > 0)) {
+      stop = -1;
+      throw UNDECIDED;
+    }
 }
 
 /**

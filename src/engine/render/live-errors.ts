@@ -16,6 +16,10 @@ export interface LiveErrors {
   readonly pairs: readonly (readonly [number, number])[];
   /** The clues broken, by kind, each by its index in its kind's list. */
   readonly clues: ReadonlyMap<string, ReadonlySet<number>>;
+  /** The elements each broken clue is broken at, by kind and then by its
+   * index: for a game that marks a clue toward a square (Mathrax's quarter
+   * of a corner clue). Empty where its violations name none. */
+  readonly clueAt: ReadonlyMap<string, ReadonlyMap<number, readonly number[]>>;
   /** The elements of each violation other than a clue's, by the statement
    * it breaks: for a game that draws a rule's breach its own way (Unruly's
    * bar along a run of three), named by its module's `RuleName`. */
@@ -27,6 +31,7 @@ function liveErrorsOf(violations: readonly Violation[], n: number): LiveErrors {
   const at = new Uint8Array(n);
   const pairs: [number, number][] = [];
   const clues = new Map<string, Set<number>>();
+  const clueAt = new Map<string, Map<number, number[]>>();
   const byRule = new Map<string, (readonly number[])[]>();
   for (const v of violations) {
     if (v.clue < 0) {
@@ -39,12 +44,17 @@ function liveErrorsOf(violations: readonly Violation[], n: number): LiveErrors {
       const s = clues.get(kind) ?? new Set<number>();
       clues.set(kind, s);
       s.add(v.clue);
+      const byClue = clueAt.get(kind) ?? new Map<number, number[]>();
+      clueAt.set(kind, byClue);
+      const els = byClue.get(v.clue) ?? [];
+      byClue.set(v.clue, els);
+      for (const x of v.at) if (!els.includes(x)) els.push(x);
       continue;
     }
     if (v.at.length === 2) pairs.push([v.at[0], v.at[1]]);
     else for (const x of v.at) at[x] = 1;
   }
-  return { at, pairs, clues, byRule };
+  return { at, pairs, clues, clueAt, byRule };
 }
 
 /** The live errors of `state` as `g` holds its values: the state's own, or a

@@ -63,6 +63,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -80,15 +81,12 @@ import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
 import {
   clueLabel,
+  dealtOf,
   F_IMMUTABLE,
-  FE_BOTLEFT,
-  FE_BOTRIGHT,
-  FE_COUNT,
-  FE_TOPLEFT,
-  FE_TOPRIGHT,
   type MathraxMove,
   type MathraxState,
   type MathraxUi,
+  rules,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 40;
@@ -149,8 +147,49 @@ export interface MathraxHint {
 
 // --- draw-only flags (upstream FD_*) ---------------------------------------
 
+/** The cell's digit repeats in its row or column. */
+const FE_COUNT = 0x02;
+/** The clue at the cell's corner is broken at this cell. */
+const FE_TOPLEFT = 0x04;
+const FE_TOPRIGHT = 0x08;
+const FE_BOTLEFT = 0x10;
+const FE_BOTRIGHT = 0x20;
 /** Bits 9–11: the cell's `CellHighlight`. */
 const FD_HIGHLIGHT_SHIFT = 9;
+
+/** Where the board breaks a rule, as each cell's error flags: `FE_COUNT` on
+ * each of two digits alike in a line, and the corner's flag on each cell a
+ * corner clue is broken at, so that cell's quarter of the clue is red. */
+function errorFlags(state: MathraxState): Uint8Array {
+  const o = state.params.o;
+  const co = o - 1;
+  const out = new Uint8Array(o * o);
+  const live = liveErrors(rules, state);
+  for (const [a, b] of live.pairs) {
+    out[a] |= FE_COUNT;
+    out[b] |= FE_COUNT;
+  }
+  const dealt = dealtOf(state.clues);
+  for (const [kind, byClue] of live.clueAt) {
+    const list = dealt[kind as keyof typeof dealt];
+    for (const [k, cells] of byClue) {
+      const kx = list.at[k] % co;
+      const ky = Math.floor(list.at[k] / co);
+      for (const c of cells) {
+        const left = c % o === kx;
+        const top = Math.floor(c / o) === ky;
+        out[c] |= top
+          ? left
+            ? FE_BOTRIGHT
+            : FE_BOTLEFT
+          : left
+            ? FE_TOPRIGHT
+            : FE_TOPLEFT;
+      }
+    }
+  }
+  return out;
+}
 
 // --- geometry --------------------------------------------------------------
 
@@ -478,11 +517,12 @@ export function redraw(
   const index = (x: number, y: number): number => y * o + x;
   ds.wrong.packCells(mistakes ?? null, index);
   ds.hint.pack(stepMarks(hint), index, (m) => valueBit(m.n));
+  const errors = errorFlags(state);
 
   for (let y = 0; y < o; y++) {
     for (let x = 0; x < o; x++) {
       const i = y * o + x;
-      let fs = state.flags[i];
+      let fs = state.flags[i] | errors[i];
 
       // The selection is not drawn while the board is won.
       const highlight =
@@ -519,7 +559,8 @@ export function redraw(
   for (const c of onTop) {
     const box = markBand(ts, c.x, c.y).box;
     dr.clip(box);
-    drawCornerClues(dr, ts, state, c.x, c.y, state.flags[c.y * o + c.x]);
+    const i = c.y * o + c.x;
+    drawCornerClues(dr, ts, state, c.x, c.y, state.flags[i] | errors[i]);
     dr.unclip();
   }
 

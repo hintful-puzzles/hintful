@@ -1040,7 +1040,9 @@ says how each form is read; what a description's author acts on:
   connectives and quantifiers, the interval a count or a sum can still
   reach, an undecided `value(x)` in a sum or product as its domain's least
   and greatest (Keen's open square adds at least 1), `value(x) = k`
-  against `x`'s domain, `matched` by Hall's condition
+  against `x`'s domain, a term one undecided element stops as read over
+  each value that element's domain holds (a Mathrax digit no digit across
+  its clue pairs with), `matched` by Hall's condition
   on each group, and `latin`/`distinct` as each pair that repeats. A form
   that reads only decided elements needs nothing: a connectivity or loop rule
   is reported once its elements are decided, and bounding it earlier is that

@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/pattern/pattern.description.yaml: edit that, not this.
 
-import { type ListClues, type Fire, type GridSpace, type Marks, type Violation, PLACE, freshBinding, heldIn, listAt, rangeMask, runFits, runsOf, sameList, sameSet, staleChecking, stretch, undecided } from "../../../engine/solve/describe-runtime.ts";
+import { type ListClues, type Fire, type GridSpace, type Marks, type Violation, PLACE, freshBinding, heldIn, listAt, overDomain, rangeMask, runFits, runsOf, sameList, sameSet, staleChecking, stoppedAt, stretch, undecided } from "../../../engine/solve/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -149,8 +149,9 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
 
 /** Each statement the board `g`, a value an element and 0 where it is
  * undecided, already breaks: false on every completion of it. */
-export function violations(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): Violation[] {
-  const _g5: number[] = [];
+export function violations(g0: ArrayLike<number>, sp: GridSpace, cl: Dealt): Violation[] {
+  const _g6: number[] = [];
+  const g = Int32Array.from(g0);
   const _out: Violation[] = [];
   const _rd: number[] = [];
   let _wit: readonly number[] | null = null;
@@ -166,19 +167,24 @@ export function violations(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): Viol
     _rd.length = 0;
     _wit = null;
     let _vd4: number = 2;
-    try {
-      _g5.length = 0;
-      G6: {
-        const _a9 = sp.lineCells[_at2];
-        for (let _i10 = 0; _i10 < _a9.length; _i10++) {
-          const v_c = _a9[_i10];
+    const _lf5 = (): boolean => {
+      _g6.length = 0;
+      G7: {
+        const _a10 = sp.lineCells[_at2];
+        for (let _i11 = 0; _i11 < _a10.length; _i11++) {
+          const v_c = _a10[_i11];
           if (!((heldIn(g, v_c, _rd) === 1))) continue;
-          _g5.push(v_c);
+          _g6.push(v_c);
         }
       }
-      _vd4 = sameList(runsOf(sp.lineCells[_at2], _g5), _v3) ? 1 : 0;
+      return sameList(runsOf(sp.lineCells[_at2], _g6), _v3);
+    };
+    try {
+      _vd4 = _lf5() ? 1 : 0;
     } catch (e) {
       undecided(e);
+      const _x12 = stoppedAt();
+      if (_x12 >= 0) _vd4 = overDomain(g, _x12, _domain, _rd, _lf5);
     }
     if (_vd4 === 0 && _sure === 1) {
       _out.push({ rule: "clue.runs", clue: _k1, at: (_wit ?? _rd).slice() });

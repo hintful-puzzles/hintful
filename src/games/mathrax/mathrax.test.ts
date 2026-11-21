@@ -26,6 +26,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { pencilIndicatorReach } from "../../engine/render/pencil-indicator.ts";
 import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
@@ -45,7 +46,6 @@ import { mathraxGame } from "./index.ts";
 import { computeSize, origin, PREFERRED_TILE_SIZE } from "./render.ts";
 import { mathraxSolve, SOLVE_STUCK, SOLVE_UNIQUE } from "./solver.ts";
 import {
-  bitOf,
   CLUE_ADD,
   CLUE_DIV,
   CLUE_EVN,
@@ -64,15 +64,11 @@ import {
   encodeDesc,
   encodeParams,
   F_IMMUTABLE,
-  FE_COUNT,
-  FE_ERRORMASK,
   type MathraxDiff,
   type MathraxMove,
   type MathraxParams,
   type MathraxState,
   type MathraxUi,
-  mathraxOptions,
-  mathraxValidate,
   newState,
   newUi,
   OPTION_ADD,
@@ -82,6 +78,7 @@ import {
   OPTION_ODD,
   OPTION_SUB,
   OPTIONSMASK,
+  rules,
   setClueNum,
   validateParams,
 } from "./state.ts";
@@ -295,35 +292,6 @@ describe("mathrax desc codec", () => {
 // --- clue semantics --------------------------------------------------------
 
 describe("mathrax clue semantics", () => {
-  const ALL = (o: number) => (1 << o) - 1;
-
-  it("enumerates the partners an arithmetic clue admits", () => {
-    // "sum to 7" against a confirmed 3 admits only 4.
-    expect(mathraxOptions(CLUE_ADD | setClueNum(7), bitOf(3))).toBe(bitOf(4));
-    // "differ by 2" against a confirmed 3 admits 1 and 5.
-    expect(mathraxOptions(CLUE_SUB | setClueNum(2), bitOf(3))).toBe(
-      bitOf(1) | bitOf(5),
-    );
-    // Equality is "differ by 0".
-    expect(mathraxOptions(CLUE_SUB | setClueNum(0), bitOf(3))).toBe(bitOf(3));
-    // "multiply to 12" against a confirmed 3 admits only 4.
-    expect(mathraxOptions(CLUE_MUL | setClueNum(12), bitOf(3))).toBe(bitOf(4));
-    // "ratio 3" against a confirmed 3 admits 1 and 9 (3/1 and 9/3).
-    expect(mathraxOptions(CLUE_DIV | setClueNum(3), bitOf(3))).toBe(
-      bitOf(1) | bitOf(9),
-    );
-  });
-
-  it("returns the fixed even/odd masks, and 'no constraint' for no clue", () => {
-    expect(mathraxOptions(CLUE_EVN, ALL(9)) & ALL(9)).toBe(
-      bitOf(2) | bitOf(4) | bitOf(6) | bitOf(8),
-    );
-    expect(mathraxOptions(CLUE_ODD, ALL(9)) & ALL(9)).toBe(
-      bitOf(1) | bitOf(3) | bitOf(5) | bitOf(7) | bitOf(9),
-    );
-    expect(mathraxOptions(0, bitOf(1)) & ALL(9)).toBe(ALL(9));
-  });
-
   it("runs the description's tiers at the difficulty levels, in order", () => {
     expect(ladderTiers).toHaveLength(4);
     expect([
@@ -498,35 +466,44 @@ describe("mathrax generator", () => {
 
 // --- live validity ---------------------------------------------------------
 
-describe("mathrax live error flags", () => {
-  it("flags a duplicated digit in a row or column", () => {
-    const o = 3;
-    const grid = new Uint8Array([1, 1, 0, 0, 0, 0, 0, 0, 0]);
-    const flags = new Uint8Array(9);
-    mathraxValidate(o, grid, new Int32Array(4), flags);
-    expect(flags[0] & FE_COUNT).toBeTruthy();
-    expect(flags[1] & FE_COUNT).toBeTruthy();
-    expect(flags[2] & FE_COUNT).toBeFalsy();
+describe("mathrax live errors", () => {
+  /** A 3×3 board with `grid` filled in and `clues` at its four corners. */
+  const board = (grid: number[], clues: number[] = [0, 0, 0, 0]): MathraxState => ({
+    params: { o: 3, diff: "easy", options: 0 },
+    grid: Uint8Array.from(grid),
+    flags: new Uint8Array(9),
+    pencil: new Int32Array(9),
+    clues: Int32Array.from(clues),
+  });
+  const sumAt = (st: MathraxState) => [
+    ...(liveErrors(rules, st).clueAt.get("sum")?.get(0) ?? []),
+  ];
+
+  it("marks a duplicated digit in a row or column", () => {
+    const live = liveErrors(rules, board([1, 1, 0, 0, 0, 0, 0, 0, 0]));
+    expect(live.pairs).toEqual([[1, 0]]);
   });
 
-  it("flags both cells of a diagonal pair a clue cannot admit", () => {
-    // A single "sum to 5" clue at the only interior intersection of a 3×3, with
-    // 1 and 1 on its main diagonal: 1 + 1 != 5, so both are in error.
-    const o = 3;
-    const clues = new Int32Array(4);
-    clues[0] = CLUE_ADD | setClueNum(5);
-    const grid = new Uint8Array([1, 0, 0, 0, 1, 0, 0, 0, 0]);
-    const flags = new Uint8Array(9);
-    mathraxValidate(o, grid, clues, flags);
-    expect(flags[0] & FE_ERRORMASK).toBeTruthy();
-    expect(flags[4] & FE_ERRORMASK).toBeTruthy();
+  it("marks both cells of a diagonal pair a clue cannot admit", () => {
+    // "Sum to 5" at the top-left corner, 1 and 1 on its main diagonal.
+    const st = board([1, 0, 0, 0, 1, 0, 0, 0, 0], [CLUE_ADD | setClueNum(5), 0, 0, 0]);
+    expect(sumAt(st).sort()).toEqual([0, 4]);
   });
 
-  it("flags nothing on an untouched board", () => {
+  it("marks a digit no digit across its clue pairs with, the cell across still open", () => {
+    // 1 needs a 4 across "sum to 5", and a 3×3 holds no 4: the open cell
+    // across has nothing to hold either.
+    const st = board([1, 0, 0, 0, 0, 0, 0, 0, 0], [CLUE_ADD | setClueNum(5), 0, 0, 0]);
+    expect(sumAt(st).sort()).toEqual([0, 4]);
+    // 2 pairs with a 3, so nothing is marked.
+    expect(
+      sumAt(board([2, 0, 0, 0, 0, 0, 0, 0, 0], [CLUE_ADD | setClueNum(5), 0, 0, 0])),
+    ).toEqual([]);
+  });
+
+  it("marks nothing on an untouched board", () => {
     const st = newState(FIX_PARAMS, FIX.desc);
-    const flags = Uint8Array.from(st.flags);
-    mathraxValidate(FIX_PARAMS.o, st.grid, st.clues, flags);
-    expect(flags.every((f) => (f & FE_ERRORMASK) === 0)).toBe(true);
+    expect(rules.violations(st, rules.grid(st))).toEqual([]);
   });
 });
 
