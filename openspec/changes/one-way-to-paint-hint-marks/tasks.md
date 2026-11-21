@@ -60,9 +60,15 @@
         "premise" outline and Lightup's dark-square ring into the one
         outline (`hints-marks.md` § "Outline the evidence": one shape for
         one role), unless the words lean on the difference.
-  - [ ] Contour packed by hand, onto `evidenceSides(words)` (D4): Path,
-        Pearl, Wordtrail, Rect, Tracks, Slide, the edges skeleton; Flip and
-        Mosaic's `MarkOutlines` given `words`.
+  - [x] Contour packed by hand, onto `evidenceSides(words)` (D4): Path,
+        Wordtrail, Rect and the edges skeleton; Pearl and Tracks, whose
+        squares are a mark kind of their own, through `evidenceSidesOf`;
+        Slide reads its sidecar's sides; Flip's `MarkOutlines` given `words`.
+        Mosaic keeps a `MarkOutlines` a block: it joins only within one
+        block, stricter than a reference, so two blocks one reference names
+        still read as two squares (its comment's reason). Wordtrail's
+        spotlight keeps `outlineSides`: it is not a hint mark. No snapshot
+        moved; all seven games walked in the app.
   - [ ] Rings drawn by hand on a cell's band, onto `drawCellRing`: Flip,
         Mines, Range, Slant, Sticks, Boats, Tracks, Signpost, Lightup.
 - [ ] 2.2 A render snapshot that moves is a look that changed: check each

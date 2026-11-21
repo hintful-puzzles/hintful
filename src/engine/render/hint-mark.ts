@@ -40,7 +40,7 @@
  */
 
 import type { GameDrawing } from "../contract/game.ts";
-import { CELL, type StepMarks } from "../contract/hint-words.ts";
+import { CELL, type MarkKind, type StepMarks } from "../contract/hint-words.ts";
 import type { Rect } from "../contract/types.ts";
 import { type RingClear, ringContentBox } from "./ring.ts";
 
@@ -124,11 +124,27 @@ export function outlineSides(
  * the words do not outline.
  */
 export function evidenceSides(words: StepMarks): (x: number, y: number) => number {
-  const outlined = new Set(words.of("outline", CELL).map((c) => CELL.key(c)));
-  const together = words.together("outline", CELL);
+  return evidenceSidesOf(words, CELL, (x, y) => ({ x, y }));
+}
+
+/**
+ * {@link evidenceSides} for a game whose squares are a mark kind of its own:
+ * `at` names the element at a position, and null off the board.
+ */
+export function evidenceSidesOf<E>(
+  words: StepMarks,
+  kind: MarkKind<E>,
+  at: (x: number, y: number) => E | null,
+): (x: number, y: number) => number {
+  const outlined = new Set(words.of("outline", kind).map((e) => kind.key(e)));
+  const together = words.together("outline", kind);
   return (x, y) => {
-    if (!outlined.has(CELL.key({ x, y }))) return 0;
-    return outlineSides(x, y, (nx, ny) => together({ x, y }, { x: nx, y: ny }));
+    const e = at(x, y);
+    if (e === null || !outlined.has(kind.key(e))) return 0;
+    return outlineSides(x, y, (nx, ny) => {
+      const n = at(nx, ny);
+      return n !== null && together(e, n);
+    });
   };
 }
 

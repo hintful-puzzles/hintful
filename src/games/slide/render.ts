@@ -71,7 +71,7 @@ import type {
   Size,
 } from "../../engine/contract/types.ts";
 import { drawRectCorners } from "../../engine/render/draw.ts";
-import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import { drawMarkSides } from "../../engine/render/hint-mark.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
@@ -278,8 +278,6 @@ export function newDrawState(state: SlideState, tileSize: number): SlideDrawStat
 /** A square's hint outline: the sides of it the square carries, in
  * `hint-mark.ts`'s side bits. */
 type TileMarks = number;
-
-const NO_MARKS: TileMarks = 0;
 
 // --- the fiddly bit: one section of one tile ---------------------------
 
@@ -701,17 +699,11 @@ export function redraw(
   const wh = w * h;
 
   // The hint's marks, from its words alone. The ring and the outline each
-  // name one block. The outline's side is drawn wherever the neighbor is not
-  // outlined, so it comes out as one shape round its block.
+  // name one block, so the sidecar's outline is one shape round its block.
   const marks = stepMarks(hint);
   const at = (x: number, y: number): number => y * w + x;
   ds.hint.pack(marks, at);
   const ringed = new Set(marks.of("ring", CELL).map((c) => at(c.x, c.y)));
-  const outlined = new Set(marks.of("outline", CELL).map((c) => at(c.x, c.y)));
-  const sides = (set: Set<number>, x: number, y: number): number =>
-    set.has(at(x, y))
-      ? outlineSides(x, y, (nx, ny) => nx >= 0 && nx < w && set.has(at(nx, ny)))
-      : 0;
 
   // The board we display, which is not state's board while a block is held:
   // the held block is drawn where it would land if it were put down now. That
@@ -803,15 +795,7 @@ export function redraw(
       }
 
       if (ds.tiles.changed(i, val)) {
-        drawTile(
-          dr,
-          ds,
-          x,
-          y,
-          val,
-          i,
-          outlined.has(i) ? sides(outlined, x, y) : NO_MARKS,
-        );
+        drawTile(dr, ds, x, y, val, i, ds.hint.outlineSides(i));
         if (ringed.has(i)) ringRepainted = true;
       }
     }

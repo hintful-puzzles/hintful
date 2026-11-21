@@ -56,7 +56,11 @@ import {
 } from "../../engine/mechanics/line-drawing.ts";
 import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
-import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import {
+  drawMarkSides,
+  evidenceSides,
+  outlineSides,
+} from "../../engine/render/hint-mark.ts";
 import {
   drawPathArrow,
   drawPathStart,
@@ -601,10 +605,8 @@ export function redraw(
   // The displayed step's marks, read from its words and from nowhere else:
   // the kinds read here are the kinds a sentence may name.
   const named = stepMarks(hint);
-  const evidence = new Set(named.of("outline", CELL).map((c) => c.y * w + c.x));
+  const evidence = evidenceSides(named);
   const striped = new Set(named.of("stripes", CELL).map((c) => c.y * w + c.x));
-  const inEvidence = (x: number, y: number): boolean =>
-    x >= 0 && x < w && y >= 0 && y < h && evidence.has(y * w + x);
   const spotlit =
     ui.spotlight === null ? new Set<number>() : spotlitSquares(state, ui.spotlight);
   const inSpotlight = (x: number, y: number): boolean =>
@@ -628,7 +630,7 @@ export function redraw(
         (striped.has(i) ? F_STRIPES : 0) |
         // The win flash sweeps the letters; a dark square never lights.
         (letters[i] === 0 ? 0 : flash.win(sweepStep(x, y)) << K_TONE) |
-        (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0) |
+        (evidence(x, y) << K_OUTLINE) |
         (inSpotlight(x, y) ? outlineSides(x, y, inSpotlight) << K_SPOT : 0);
       let sides = 0;
       let hintOut = 0;

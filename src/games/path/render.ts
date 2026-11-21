@@ -46,7 +46,7 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -66,7 +66,7 @@ import {
   LINE,
 } from "../../engine/mechanics/line-drawing.ts";
 import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
-import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import { drawMarkSides, evidenceSides } from "../../engine/render/hint-mark.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { type PieceBox, spreadColors } from "../../engine/render/spread-colors.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
@@ -547,10 +547,8 @@ export function redraw(
   // the kinds read here are the kinds a sentence may name.
   const named = stepMarks(hint);
   // A step rings edges and never a square, so the marks on squares are all
-  // outlines, round the area they cover together.
-  const evidence = new Set(named.of("outline", CELL).map((c) => c.y * w + c.x));
-  const inEvidence = (x: number, y: number): boolean =>
-    x >= 0 && x < w && y >= 0 && y < h && evidence.has(y * w + x);
+  // outlines, round the area each reference covers.
+  const evidence = evidenceSides(named);
   const hintWords = edgeHintWords(
     g,
     stepEdgeHints(
@@ -571,7 +569,7 @@ export function redraw(
         (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y ? F_CURSOR : 0) |
         (flash.win(steps ? steps[i] : sweepStep(x, y)) << K_TONE) |
         (ends[i] !== NO_END && done.has(ends[i]) ? F_DONE : 0) |
-        (inEvidence(x, y) ? outlineSides(x, y, inEvidence) << K_OUTLINE : 0) |
+        (evidence(x, y) << K_OUTLINE) |
         (reach[i] !== NO_END ? (ds.numberColor[reach[i]] + 1) << K_PIECE : 0) |
         (arrives[i] >= 0
           ? ((arrives[i] + 1) << K_ARRIVES) |

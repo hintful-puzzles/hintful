@@ -56,7 +56,7 @@ import {
 } from "../../engine/mechanics/edge-hint.ts";
 import { dragPreview } from "../../engine/mechanics/line-drawing.ts";
 import { drawRectCorners } from "../../engine/render/draw.ts";
-import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import { drawMarkSides, evidenceSidesOf } from "../../engine/render/hint-mark.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { loopSteps, WIN_LEAD, walkLoop } from "../../engine/render/win-wave.ts";
@@ -487,17 +487,11 @@ function hintFlags(
       asked.push({ edge, shape: t.line ? "line" : "cross", role: "ring" });
   }
   out.set(edgeHintWords(squareEdges(w, h), asked));
-  // One contour round a contiguous region, one ring per scattered square
-  // (`engine/render/hint-mark.ts`).
-  const area = marks.of("outline", SQUARE);
-  const inArea = new Set(area);
-  for (const c of area) {
-    const sides = outlineSides(
-      c % w,
-      Math.floor(c / w),
-      (ax, ay) => ax >= 0 && ax < w && ay >= 0 && ay < h && inArea.has(ay * w + ax),
-    );
-    out[c] |= sides << H_AREA_SHIFT;
-  }
+  // One contour round each reference's squares (`engine/render/hint-mark.ts`).
+  const sides = evidenceSidesOf(marks, SQUARE, (x, y) =>
+    x >= 0 && x < w && y >= 0 && y < h ? y * w + x : null,
+  );
+  for (const c of marks.of("outline", SQUARE))
+    out[c] |= sides(c % w, Math.floor(c / w)) << H_AREA_SHIFT;
   return out;
 }

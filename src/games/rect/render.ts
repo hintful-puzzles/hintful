@@ -49,7 +49,7 @@ import {
   glyphFont,
 } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
-import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
+import { drawMarkSides, evidenceSides } from "../../engine/render/hint-mark.ts";
 import { type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
@@ -465,11 +465,9 @@ function hintTileBits(
 ): Int32Array {
   const bits = new Int32Array(w * h);
   const marks = stepMarks(hint);
-  const outlined = new Set(marks.of("outline", CELL).map((p: Point) => p.y * w + p.x));
-  const isOutlined = (x: number, y: number) =>
-    x >= 0 && y >= 0 && x < w && y < h && outlined.has(y * w + x);
-  for (const i of outlined)
-    bits[i] |= outlineSides(i % w, Math.floor(i / w), isOutlined) << OUTLINE_SHIFT;
+  const sides = evidenceSides(marks);
+  for (const p of marks.of("outline", CELL))
+    bits[p.y * w + p.x] |= sides(p.x, p.y) << OUTLINE_SHIFT;
   for (const p of marks.of("stripes", CELL)) bits[p.y * w + p.x] |= F_STRIPES;
   return bits;
 }

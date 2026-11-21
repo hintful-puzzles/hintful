@@ -140,7 +140,9 @@ export function redraw(
   const animating = animTime > 0 && prev != null;
 
   const named = stepMarks(hint);
-  const marks = new MarkOutlines(named.of("ring", CELL), named.of("outline", CELL), {});
+  const marks = new MarkOutlines(named.of("ring", CELL), named.of("outline", CELL), {
+    words: named,
+  });
   const striped = new Set(named.of("stripes", CELL).map((p) => p.y * w + p.x));
 
   for (let i = 0; i < wh; i++) {

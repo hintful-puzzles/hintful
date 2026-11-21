@@ -59,8 +59,8 @@ import { glyphFont } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
 import {
   drawMarkSides,
+  evidenceSidesOf,
   MARK_ALL,
-  outlineSides,
 } from "../../engine/render/hint-mark.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/render/piece.ts";
@@ -275,15 +275,14 @@ function hintFlags(state: TracksState, step?: HintStep<TracksMove>): Int32Array 
     out[i] |= word;
   });
 
-  // One contour round a contiguous region, one ring per scattered cell: the
-  // shared rule, so the picture never draws a boundary the deduction did not
-  // reason across (`engine/render/hint-mark.ts`).
-  const area = outlined.filter(isCell);
-  const inArea = new Set(area.map((c) => c.y * w + c.x));
-  for (const c of area) {
-    const sides = outlineSides(c.x, c.y, (ax, ay) => inArea.has(ay * w + ax));
-    mark(c.x, c.y, sides << H_AREA_SHIFT);
-  }
+  // One contour round each reference's squares, the shared rule, so the
+  // picture never draws a boundary the deduction did not reason across
+  // (`engine/render/hint-mark.ts`).
+  const areaSides = evidenceSidesOf(marks, PIECE, (x, y) =>
+    x >= 0 && x < w && y >= 0 && y < h ? { x, y } : null,
+  );
+  for (const c of outlined.filter(isCell))
+    mark(c.x, c.y, areaSides(c.x, c.y) << H_AREA_SHIFT);
   for (const line of marks.of("stripes", LINE)) {
     if (line < w) for (let y = 0; y < h; y++) mark(line, y, H_LINE);
     else for (let x = 0; x < w; x++) mark(x, line - w, H_LINE);
