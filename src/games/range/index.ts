@@ -11,7 +11,6 @@
  * contradict the unique solution.
  */
 
-import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   type Game,
   type SolveResult,
@@ -37,6 +36,10 @@ import {
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SHADED_NAME } from "../../engine/render/piece.ts";
+import {
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
 import { type RangeHint, rangeHint } from "./hint.ts";
 import {
   border,

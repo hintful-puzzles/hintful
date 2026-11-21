@@ -9,7 +9,7 @@
  * to deduce, and Mines, whose answer is hidden and whose test is its own.
  */
 
-import type { GameStatus } from "./contract/types.ts";
+import type { GameStatus } from "../contract/types.ts";
 
 /** What {@link hintFinishes} reads off a game. */
 interface Deducing<State, Move> {

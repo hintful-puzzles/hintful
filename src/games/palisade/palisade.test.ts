@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -11,7 +10,6 @@ import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
 import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import {
   BORDER,
   BORDER_MASK,
@@ -27,7 +25,9 @@ import {
   forcedEdgesOf,
 } from "../../engine/mechanics/border-grid-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
+import { ladderWalk, TIERS } from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newDesc } from "./generator.ts";
 import { palisadeGame } from "./index.ts";

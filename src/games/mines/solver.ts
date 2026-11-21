@@ -1,6 +1,6 @@
 /**
  * Mines' deduction: the ladder `mines.description.yaml` states, compiled, on
- * the engine's marks (`engine/ladder-runtime.ts`). The hint walks it from the
+ * the engine's marks (`engine/solve/ladder-runtime.ts`). The hint walks it from the
  * player's board, and the generator solves on it to certify each board it
  * deals, so every board dealt is one the hint finishes.
  *
@@ -12,12 +12,13 @@
  * opening shows it; a flag is the player's claim and never a premise.
  */
 
-import { singleFirings } from "../../engine/deduction-fixpoint.ts";
+import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { singleFirings } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -26,9 +27,8 @@ import {
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-} from "../../engine/ladder-runtime.ts";
-import { type RandomState, randomUpto } from "../../engine/random/index.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as mines from "../../generated/games/mines/mines.compiled.ts";
 
 /** What the marks hold: a mine, or a safe square. */

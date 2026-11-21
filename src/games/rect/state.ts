@@ -12,11 +12,6 @@
  * transient drag preview, but those never live in state.
  */
 
-import {
-  DIFF_EASY,
-  searchTierSegment,
-  searchTiers,
-} from "../../engine/answer-search.ts";
 import { DESC_TOO_LONG, type DescParse } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { Rect } from "../../engine/contract/types.ts";
@@ -31,6 +26,11 @@ import {
 import { type Ruleset, rulesetItem } from "../../engine/game-id/ruleset.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
 import type { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  DIFF_EASY,
+  searchTierSegment,
+  searchTiers,
+} from "../../engine/solve/answer-search.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 
 /** The two puzzles, indexed by `mode`. */

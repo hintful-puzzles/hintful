@@ -1,6 +1,6 @@
 /**
  * Norinori's deductions: the ladder `norinori.description.yaml` states,
- * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`),
+ * compiled, on the engine's marks and runner (`engine/solve/ladder-runtime.ts`),
  * and the answer check its rules compile to.
  *
  * {@link solveNorinori} runs the ladder to a fixpoint, which is how the
@@ -14,8 +14,8 @@
  */
 
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
-import { describedSpace, partition } from "../../engine/describe-runtime.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
+import { describedSpace, partition } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -24,7 +24,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as norinori from "../../generated/games/norinori/norinori.compiled.ts";
 import { BLANK, CROSSED, DIFF_TRICKY, type NorinoriMark, SHADED } from "./state.ts";
 

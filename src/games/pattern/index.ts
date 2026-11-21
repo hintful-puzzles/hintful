@@ -7,7 +7,6 @@
  * paints with Ctrl/Shift held.
  */
 
-import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   type Game,
   type HintResult,
@@ -23,7 +22,6 @@ import { trackTargets } from "../../engine/contract/hint-track.ts";
 import { CELL, type Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   endDrag,
   isCursorMove,
@@ -54,6 +52,11 @@ import {
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/render/piece.ts";
+import {
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import { voice } from "../../generated/games/pattern/pattern.compiled.ts";
 import { newPatternDesc } from "./generator.ts";
 import { CLUE, cellAt, LINE } from "./hint-marks.ts";

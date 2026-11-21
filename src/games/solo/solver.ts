@@ -1,6 +1,6 @@
 /**
  * Solo (Sudoku) solver: the ladder `solo.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), each rung
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), each rung
  * able to run alone; then upstream's forcing chain (`solver_forcing`) and
  * bounded recursion, which no description states.
  *
@@ -17,7 +17,7 @@ import type { NotesLadder } from "../../engine/candidate-plan.ts";
 import type {
   CompiledTechniques,
   FiringTally,
-} from "../../engine/deduction-fixpoint.ts";
+} from "../../engine/solve/deduction-fixpoint.ts";
 import {
   type Caps,
   CellMarks,
@@ -27,9 +27,9 @@ import {
   TIERS,
   uncluedRung,
   withSearch,
-} from "../../engine/ladder-runtime.ts";
-import { latinLadder } from "../../engine/latin.ts";
-import { set as latinSet } from "../../generated/engine/latin.compiled.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { latinLadder } from "../../engine/solve/latin.ts";
+import { set as latinSet } from "../../generated/engine/solve/latin.compiled.ts";
 import * as solo from "../../generated/games/solo/solo.compiled.ts";
 import type { BlockStructure, SoloState } from "./state.ts";
 import {

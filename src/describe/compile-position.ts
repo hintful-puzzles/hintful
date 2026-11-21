@@ -458,6 +458,7 @@ export function compilePlanning(
   source: string,
   runtime: string,
   positionRuntime: string,
+  stepVoice: string,
 ): string {
   Out.reset();
   const applied = planningWith(json, Object.keys(json.variations ?? {}));
@@ -652,7 +653,7 @@ export function compilePlanning(
       stepsOf(d.steps ?? {}, (part, src) => parsed(json.game, part, src)),
       [],
       null,
-      runtime,
+      stepVoice,
     ),
     "/** The description's dead-end claims, by id. */",
     `export type DeadEndId = ${ids.length === 0 ? "never" : ids.join(" | ")};`,

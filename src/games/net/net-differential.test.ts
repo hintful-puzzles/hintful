@@ -14,8 +14,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/contract/desc-error.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import reference from "./__fixtures__/net-c-reference.json" with { type: "json" };
 import { netGame } from "./index.ts";
 import { answerOf } from "./solver.ts";

@@ -9,7 +9,6 @@
  */
 
 import { descValue } from "../../engine/contract/desc-error.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import {
   AREA_TOO_LARGE,
@@ -31,6 +30,7 @@ import {
   offset,
   parseWireDesc,
 } from "../../engine/mechanics/wires.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as netslide from "../../generated/games/netslide/netslide.compiled.ts";
 
 /* ----------------------------------------------------------------------

@@ -1,7 +1,7 @@
 /**
  * Pearl's solver: the ladder `pearl.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`) over the board
- * read as a tiling (`engine/square-tiling.ts`): each square a dot, each edge
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`) over the board
+ * read as a tiling (`engine/solve/square-tiling.ts`): each square a dot, each edge
  * between two squares side by side an edge, the loop's or not.
  *
  * One ladder serves the generator, which keeps a removed pearl only while
@@ -14,13 +14,13 @@
  */
 
 import { DIRECTIONS, dirX, dirY, opposite } from "../../engine/board/square-edges.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   type GridSpace,
   rangeMask,
   tilingSpace,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -28,8 +28,8 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import { type SquareTiling, squareTiling } from "../../engine/square-tiling.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { type SquareTiling, squareTiling } from "../../engine/solve/square-tiling.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { NOCLUE, type PearlState } from "./state.ts";
 

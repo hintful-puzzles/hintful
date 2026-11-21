@@ -14,7 +14,7 @@
 import {
   STATED as LATIN_STATED,
   voice as latinVoice,
-} from "../generated/engine/latin.compiled.ts";
+} from "../generated/engine/solve/latin.compiled.ts";
 import {
   CELL,
   indefinite,
@@ -33,9 +33,9 @@ import {
   whole,
 } from "./contract/hint-words.ts";
 import type { Point } from "./contract/types.ts";
-import type { LatinWingReason } from "./latin.ts";
 import { type GenericLatinReason, hiddenSingleLine } from "./latin-hint.ts";
 import { EDGE, type ForcedBorderEdge } from "./mechanics/border-grid-hint.ts";
+import type { LatinWingReason } from "./solve/latin.ts";
 import { statedParts } from "./stated.ts";
 import { lineUnit } from "./step-voice.ts";
 

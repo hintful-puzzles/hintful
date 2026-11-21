@@ -20,7 +20,9 @@ import type {
 import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
 import { CELL, type Sentence } from "./contract/hint-words.ts";
 import type { Point } from "./contract/types.ts";
-import { PLACE } from "./describe-runtime.ts";
+import { type Judging, judgeWalked } from "./move-judge.ts";
+import type { PairIndex } from "./render/piece.ts";
+import { PLACE } from "./solve/describe-runtime.ts";
 import {
   type CellMarks,
   type LadderEntry,
@@ -28,11 +30,9 @@ import {
   type Said,
   type Taken,
   TIERS,
-} from "./ladder-runtime.ts";
-import { type Judging, judgeWalked } from "./move-judge.ts";
-import type { PairIndex } from "./render/piece.ts";
+} from "./solve/ladder-runtime.ts";
+import { stepBudget } from "./solve/step-budget.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
-import { stepBudget } from "./step-budget.ts";
 
 /** What a step's highlights hold: the cell it fills and the value it fills it
  * with, which keep-track compares a move against. The marks are the words'. */

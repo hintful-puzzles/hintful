@@ -13,8 +13,8 @@
 import { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { latinGenerate } from "../../engine/latin.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { latinGenerate } from "../../engine/solve/latin.ts";
 import { solveKeen } from "./solver.ts";
 import {
   buildMinimal,

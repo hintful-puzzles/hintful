@@ -13,8 +13,9 @@ import {
   isPlanning,
 } from "./description.ts";
 
-const RUNTIME = "src/engine/describe-runtime.ts";
-const POSITION_RUNTIME = "src/engine/position-runtime.ts";
+const RUNTIME = "src/engine/solve/describe-runtime.ts";
+const POSITION_RUNTIME = "src/engine/solve/position-runtime.ts";
+const STEP_VOICE = "src/engine/step-voice.ts";
 
 /** Where every compiled module is written: generated, and ignored by git. */
 export const GENERATED = "src/generated";
@@ -60,15 +61,17 @@ export function compileSource(
   if (file === undefined || !compiles(file))
     throw new Error(`${source} does not compile`);
   const runtime = importPath(compiledPath(source), RUNTIME);
-  if (isLibrary(file)) return compileLibrary(file, source, runtime);
+  const stepVoice = importPath(compiledPath(source), STEP_VOICE);
+  if (isLibrary(file)) return compileLibrary(file, source, runtime, stepVoice);
   if (isPlanning(file))
     return compilePlanning(
       file,
       source,
       runtime,
       importPath(compiledPath(source), POSITION_RUNTIME),
+      stepVoice,
     );
   const libraries = [...all.values()].filter(isLibrary);
   if (!isFormal(file)) throw new Error(`${source} states no rules`);
-  return compileGame(file, libraries, source, runtime);
+  return compileGame(file, libraries, source, runtime, stepVoice);
 }

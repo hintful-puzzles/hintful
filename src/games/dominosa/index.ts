@@ -9,7 +9,6 @@
  * value highlights.
  */
 
-import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
@@ -40,6 +39,7 @@ import {
   verbGesture,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newDominosaDesc } from "./generator.ts";
 import {
   DOMINOSA_RUNGS,

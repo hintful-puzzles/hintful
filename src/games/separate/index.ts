@@ -10,11 +10,9 @@
  * mark) with a half-grid keyboard cursor.
  */
 
-import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import type { Game, UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { interpretTargetVerbs } from "../../engine/input/target-verb.ts";
 import {
@@ -31,6 +29,11 @@ import {
   borderStepEdge,
 } from "../../engine/mechanics/border-grid-hint.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import { newSeparateDesc } from "./generator.ts";
 import {
   SEPARATE_RUNGS,

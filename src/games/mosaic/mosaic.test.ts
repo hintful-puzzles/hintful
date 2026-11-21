@@ -2,7 +2,6 @@
 // paint semantics, solve bitmap), clue SOLVED/ERROR flagging, completion
 // counting, status / status bar, text format, and input mapping.
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import {
   DESC_TOO_LONG,
   DESC_TOO_SHORT,
@@ -24,6 +23,7 @@ import {
   RIGHT_DRAG,
 } from "../../engine/input/pointer.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { mosaicGame } from "./index.ts";
 import { status } from "./solver.ts";
 import {

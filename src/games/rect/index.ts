@@ -9,7 +9,6 @@
  * is ported exactly. A drag or click that changes nothing produces no move.
  */
 
-import { DIFF_EASY, solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
@@ -41,6 +40,7 @@ import {
   stripModifiers,
 } from "../../engine/input/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { DIFF_EASY, solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newDesc } from "./generator.ts";
 import {
   type RectHint,

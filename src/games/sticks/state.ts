@@ -11,12 +11,6 @@
  * and the cursor is drawn from the `Ui`.
  */
 
-import {
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
-  searchTierItem,
-  searchTierSegment,
-} from "../../engine/answer-search.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
@@ -37,6 +31,12 @@ import {
   SYMMETRY_CHOICES,
 } from "../../engine/generate/symmetric-blacks.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/solve/answer-search.ts";
 import * as sticks from "../../generated/games/sticks/sticks.compiled.ts";
 
 // --- cell flag bits (upstream values) ---------------------------------------

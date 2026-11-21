@@ -9,7 +9,6 @@
  * [`solver.ts`](./solver.ts), and the board in [`state.ts`](./state.ts).
  */
 
-import { solveFromAnswer } from "../../engine/answer-search.ts";
 import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
@@ -20,6 +19,7 @@ import {
   lineDrawing,
 } from "../../engine/mechanics/line-drawing.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newPathDesc } from "./generator.ts";
 import { type PathHighlights, pathHint, pathJudgeMove, pathKeepTrack } from "./hint.ts";
 import { pathLines } from "./moves.ts";

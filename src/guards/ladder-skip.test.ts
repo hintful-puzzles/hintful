@@ -9,8 +9,8 @@
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
-import { CellMarks } from "../engine/ladder-runtime.ts";
 import { getTsGame } from "../engine/registry.ts";
+import { CellMarks } from "../engine/solve/ladder-runtime.ts";
 import { dealt, dealtAgain } from "../engine/testing/dealt.ts";
 import { type AnyGame, gatePresets } from "../engine/testing/hint-games.ts";
 import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";
@@ -27,7 +27,7 @@ const modules = import.meta.glob<string>("../generated/games/*/*.compiled.ts", {
 const SKIPPING = Object.entries(modules)
   .filter(([key, text]) =>
     usesOf(parsed(resolveSpecifier("src/guards/x.ts", key), text), {
-      module: "src/engine/describe-runtime.ts",
+      module: "src/engine/solve/describe-runtime.ts",
       name: "Footprint",
     }).some(({ node }) => {
       const ref = node.parent;

@@ -20,17 +20,17 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import {
-  describedSpace,
-  type GridSpace,
-  traceBeam,
-} from "../../engine/describe-runtime.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { bin2hex, hex2bin, obfuscateBitmap } from "../../engine/game-id/obfuscate.ts";
 import { unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
+import {
+  describedSpace,
+  type GridSpace,
+  traceBeam,
+} from "../../engine/solve/describe-runtime.ts";
 import { units } from "../../generated/games/blackbox/blackbox.compiled.ts";
 
 // --- flag constants (upstream BALL_* / LASER_*) -----------------------

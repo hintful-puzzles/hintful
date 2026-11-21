@@ -84,6 +84,7 @@ describe("the compiler refuses an ill-sorted technique", () => {
       { library: "t", techniques: { x: { for: forClause, conclude } } },
       "t",
       "./runtime.ts",
+      "./step-voice.ts",
     );
   it.each([
     ["an unknown name", "strike(c, nowhere)"],
@@ -239,6 +240,7 @@ describe("a technique states how its dearest read grows with the board", () => {
       { library: "t", techniques: { x: { for: forClause, conclude: "strike(c, 1)" } } },
       "t",
       "./runtime.ts",
+      "./step-voice.ts",
     );
   it.each([
     ["one cell's candidates", "c in cells where |cand(c)| = 1", "n"],
@@ -280,6 +282,7 @@ describe("a role a step marks several sorts in holds a set of each", () => {
       },
       "t",
       "./runtime.ts",
+      "./step-voice.ts",
     );
 
   it("by the sort's name, typed so", () => {
@@ -316,6 +319,7 @@ describe("a stated clause names only what its technique states", () => {
       },
       "t",
       "./runtime.ts",
+      "./step-voice.ts",
     );
 
   it("so a number term, a lexicon word and a role it marks are said", () => {
@@ -397,6 +401,7 @@ describe("a stated clause names only what its technique states", () => {
       },
       "t",
       "./runtime.ts",
+      "./step-voice.ts",
     );
     expect(code).toContain("  wording: number;");
     expect(code).toMatch(
@@ -457,6 +462,7 @@ describe("a stated clause names only what its technique states", () => {
         libraries,
         "src/games/loopy/loopy.description.yaml",
         "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
       );
     };
     const step = (over: Record<string, unknown>): Record<string, unknown> => ({
@@ -612,6 +618,7 @@ describe("a stated clause names only what its technique states", () => {
           [...sources.values()].filter(isLibrary),
           "src/games/loopy/loopy.description.yaml",
           "../../engine/describe-runtime.ts",
+          "./step-voice.ts",
         );
       };
 
@@ -638,6 +645,7 @@ describe("a stated clause names only what its technique states", () => {
           [...sources.values()].filter(isLibrary),
           "src/games/loopy/loopy.description.yaml",
           "../../engine/describe-runtime.ts",
+          "./step-voice.ts",
         );
         expect(code).toContain('why: readonly StepClause<StepsById<E>, "reason", E>[]');
         expect(code).toContain('spoken: ["why"]');
@@ -728,6 +736,7 @@ describe("a witness is written for a hint only", () => {
       },
       "t",
       "./runtime.ts",
+      "./step-voice.ts",
     );
   /** The technique's lines without the block a hint alone runs: the
    * `if (fire !== null) {` block and all it holds. */
@@ -774,6 +783,7 @@ describe("a witness is written for a hint only", () => {
       },
       "t",
       "./runtime.ts",
+      "./step-voice.ts",
     );
     const hint = code.slice(code.indexOf("const _rc: number[]"));
     expect(hint).toContain("_rc.push(");

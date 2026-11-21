@@ -1,6 +1,6 @@
 /**
  * Seismic's solver: the ladder `seismic.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`); the answer check
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`); the answer check
  * its rules compile to; and the error overlay.
  *
  * One ladder serves the generator (which strips a clue only while the board
@@ -15,8 +15,12 @@
  */
 
 import type { Dsf } from "../../engine/board/dsf.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
-import { describedSpace, partition, rangeMask } from "../../engine/describe-runtime.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
+import {
+  describedSpace,
+  partition,
+  rangeMask,
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -24,7 +28,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 import {
   DIFF_EASY,

@@ -1,6 +1,6 @@
 /**
  * Signpost's solver: the ladder `signpost.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
  * check its rules compile to, and the search beneath the ladder.
  *
  * The marks hold each square's link as the description reads it: 1 for the
@@ -16,14 +16,14 @@ import {
   type Answer,
   answerCache,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
+} from "../../engine/solve/answer-search.ts";
 import {
   clueList,
   compass,
   describedSpace,
   type GridSpace,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -31,7 +31,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import {
   cloneState,

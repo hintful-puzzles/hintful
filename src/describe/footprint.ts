@@ -19,7 +19,10 @@
  * footprint never leaves out a read: a missed read would skip a binding that
  * now fires.
  */
-import type { Footprint, FootprintStep as Step } from "../engine/describe-runtime.ts";
+import type {
+  Footprint,
+  FootprintStep as Step,
+} from "../engine/solve/describe-runtime.ts";
 import type { Definition, MarkSort, Technique } from "./description.ts";
 import type { Binder, Expr } from "./expr.ts";
 

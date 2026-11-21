@@ -19,7 +19,7 @@ import type { Point } from "../../engine/contract/types.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf } from "../../engine/described-hint.ts";
 import type { HintStep } from "../../engine/index.ts";
-import type { CellMarks } from "../../engine/ladder-runtime.ts";
+import type { CellMarks } from "../../engine/solve/ladder-runtime.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { DOT, painted, WALL } from "./hint-marks.ts";
 import type { GalaxiesMove } from "./index.ts";

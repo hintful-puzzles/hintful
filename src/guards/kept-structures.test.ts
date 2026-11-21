@@ -7,7 +7,7 @@
  */
 import { expect, it } from "vitest";
 import { difficultyTiers } from "../engine/contract/difficulty.ts";
-import { setKeptCheck } from "../engine/describe-runtime.ts";
+import { setKeptCheck } from "../engine/solve/describe-runtime.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   type AnyGame,
@@ -18,7 +18,7 @@ import { dealtBoards } from "../engine/testing/presets.ts";
 
 /** What a compiled module calls to read a kept structure. */
 const KEPT = ["keptEdgeGroups", "linkedSum", "linkedOf"].map((name) => ({
-  module: "src/engine/describe-runtime.ts",
+  module: "src/engine/solve/describe-runtime.ts",
   name,
 }));
 

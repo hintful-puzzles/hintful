@@ -9,7 +9,6 @@
  * right that a board has one answer.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_NOT_UNIQUE,
@@ -19,6 +18,7 @@ import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { describeDealtTiers } from "../../engine/testing/absent-tiers.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { crossingGame } from "./index.ts";

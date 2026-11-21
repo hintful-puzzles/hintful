@@ -144,7 +144,13 @@ export function inCandidateWords(
           ),
   };
   try {
-    compileGame(json, libraries, `${candidate.game}.description.yaml`, "runtime.ts");
+    compileGame(
+      json,
+      libraries,
+      `${candidate.game}.description.yaml`,
+      "runtime.ts",
+      "step-voice.ts",
+    );
   } catch (e) {
     if (e instanceof CompileError) return e.message;
     throw e;

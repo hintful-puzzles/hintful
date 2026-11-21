@@ -9,12 +9,6 @@
  * shared between the two cells it separates, so every edit records both sides.
  */
 
-import {
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
-  searchTierItem,
-  searchTierSegment,
-} from "../../engine/answer-search.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
@@ -38,6 +32,12 @@ import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import type { BorderHint } from "../../engine/mechanics/border-grid-hint.ts";
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/solve/answer-search.ts";
 
 // The edge encoding, direction tables and bounds test are shared with Separate
 // in `engine/mechanics/border-grid.ts`. Import them from there, never through this file:

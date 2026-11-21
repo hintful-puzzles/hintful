@@ -39,8 +39,11 @@ import {
 } from "../../engine/contract/hint-refusal.ts";
 import { type Sentence, StepMarks } from "../../engine/contract/hint-words.ts";
 import { NARRATION_LIMIT } from "../../engine/contract/wording-rules.ts";
-import { type FrontierCandidate, HintFrontier } from "../../engine/hint-frontier.ts";
 import { deduceHintPlan } from "../../engine/hint-plan.ts";
+import {
+  type FrontierCandidate,
+  HintFrontier,
+} from "../../engine/solve/hint-frontier.ts";
 import * as ascent from "../../generated/games/ascent/ascent.compiled.ts";
 import { linesAt, linesCost, pointersAt, type RuledOut } from "./hint-edges.ts";
 import { PATH, SQUARE } from "./hint-marks.ts";

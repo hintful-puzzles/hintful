@@ -34,8 +34,8 @@
 
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { latinGenerate } from "../../engine/latin.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import { latinGenerate } from "../../engine/solve/latin.ts";
 import { mathraxSolve, SOLVE_UNIQUE } from "./solver.ts";
 import {
   CLUE_ADD,

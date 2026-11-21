@@ -1,6 +1,6 @@
 /**
  * Rectangles' solver: the ladder `rect.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
  * check its rules compile to, and the search beneath the ladder.
  *
  * The answer is on the edges between squares side by side, each a line or
@@ -15,6 +15,8 @@
  * each from {@link reasonOf}.
  */
 
+import { assertNever } from "../../engine/contract/assert-never.ts";
+import type { Rect } from "../../engine/contract/types.ts";
 import {
   type Answer,
   type AnswerSearch,
@@ -22,10 +24,8 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
   solvedPositions,
-} from "../../engine/answer-search.ts";
-import { assertNever } from "../../engine/contract/assert-never.ts";
-import type { Rect } from "../../engine/contract/types.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+} from "../../engine/solve/answer-search.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueAt,
   clueList,
@@ -37,7 +37,7 @@ import {
   rectInner,
   rectRim,
   through,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -45,7 +45,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 import type { RectEdge } from "./hint-marks.ts";
 import { clueDimensions, HIDDEN, type RectClues } from "./state.ts";

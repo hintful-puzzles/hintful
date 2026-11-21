@@ -14,9 +14,9 @@ compiled descriptions are generated into the source tree", "Every command
 generates the compiled descriptions it reads", "A compiler change shows in a
 diff"). The parser and the compilers are
 [`src/describe/`](../src/describe/). The runtime the compiled code calls is
-[`engine/describe-runtime.ts`](../src/engine/describe-runtime.ts), and a
+[`engine/solve/describe-runtime.ts`](../src/engine/solve/describe-runtime.ts), and a
 planning game's rules are the engine's
-[`engine/position-runtime.ts`](../src/engine/position-runtime.ts), the
+[`engine/solve/position-runtime.ts`](../src/engine/solve/position-runtime.ts), the
 engine's because the engine and games import nothing above them. The
 development tools that also read a description's rules, the interpreter and
 the soundness checkers, are under [`research/`](../research/): the gate
@@ -35,7 +35,7 @@ itself is § "The file". A game whose techniques are stated:
 1. **States its techniques in `<name>.description.yaml`** beside the code
    that runs them. It places the library's with `use` and states its own
    (§ "The formula syntax", § "A statement's order is behavior"); the Latin
-   library is [`engine/latin.description.yaml`](../src/engine/latin.description.yaml).
+   library is [`engine/solve/latin.description.yaml`](../src/engine/solve/latin.description.yaml).
    Its `names` block says what a player calls each, by the technique's id or a
    rung it is recorded under (a library's by its rung): Check & save names a
    move by it, and the compiler refuses a ladder technique with none
@@ -237,7 +237,7 @@ Towers' line says `distinct(f(x) over x in L)`.
 
 **Names and functions** are the ones
 [`compile-geometry.ts`](../src/describe/compile-geometry.ts) knows, over the space in
-[`describe-runtime/space.ts`](../src/engine/describe-runtime/space.ts), whose `GridSpace`
+[`describe-runtime/space.ts`](../src/engine/solve/describe-runtime/space.ts), whose `GridSpace`
 says what each set holds and in which order. The compiler refuses a name or
 function it does not have, naming it; the interpreter reads more
 ([`research/describe/README.md`](../research/describe/README.md)). What a
@@ -512,7 +512,7 @@ decides the grade, and a technique is one rung, as everywhere.
 
 ## What a technique compiles to
 
-A function over [`describe-runtime.ts`](../src/engine/describe-runtime.ts)'s
+A function over [`describe-runtime.ts`](../src/engine/solve/describe-runtime.ts)'s
 marks and grid that enumerates its bindings and hands the first binding
 whose conclusion changes the marks to `fire`
 ([`compile.ts`](../src/describe/compile.ts)'s header says how terms are
@@ -879,7 +879,7 @@ speed) and of each `*-describe-<game>` change.
 
 ## The runtime a ladder runs on
 
-[`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts) owns the marks
+[`engine/solve/ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts) owns the marks
 (`CellMarks`: a value and a candidate mask a cell), makes a firing's facts,
 runs the module's `placing` techniques as each value is placed (recording
 their strikes as the placement's cull) and its `striking` techniques as a
@@ -1588,7 +1588,7 @@ may read a supplied count (`rest`, the spokes a later leg still decides).
 **A technique whose words need what held says `witness: true`**: the
 compiler then reads, on the same marks as the terms and only on a hint's
 path, what held in its `for` clauses' `where`s and its `premise`, and the
-firing's `says.witness` carries it (`Witness`, `engine/describe-runtime/marks.ts`).
+firing's `says.witness` carries it (`Witness`, `engine/solve/describe-runtime/marks.ts`).
 It is a tree over the formula: the side of an `or` that held (`arm`, the left
 tried first), the first member an `exists` held for (`member`: the binders'
 values), the cell and value a `with` supposed and what held under it
@@ -1608,7 +1608,7 @@ each binder is drawn from or defined as (`n = |{...}|`, `a in open(k)`), are
 compiled a further time, in place (nothing hoisted out of its loop, or the read
 would run before `_rc` is declared), with every read of a mark (`known`, `value`, `cand`,
 `in cand`, an edge's mark) recording its element, and the firing's
-`says.reads` (`Reads`, `engine/describe-runtime/marks.ts`) lists the answer elements
+`says.reads` (`Reads`, `engine/solve/describe-runtime/marks.ts`) lists the answer elements
 (`cells`) and edge-mark elements (`edges`) read on the path the formula took,
 each once, first read first. A read under a `with` of the supposed element is
 not a read of the board and is not recorded. Cost (Path's `lineBreaks`,
@@ -1622,7 +1622,7 @@ strike. A technique whose firing should rest on a few marks reads those
 Exemplar: `path-witness.test.ts`.
 
 **What a fact rests on is the engine's, derived from the reads**: `ladderWalk`
-keeps a `FactGraph` (`engine/fact-graph.ts`, `walk.graph`) of every fact the
+keeps a `FactGraph` (`engine/solve/fact-graph.ts`, `walk.graph`) of every fact the
 walk made, with its firing, and a fact's parents are the earlier facts about
 any element its firing read. `restsOn(id)` answers from any fact: what it
 rests on transitively, the elements read that no fact made (the board's own

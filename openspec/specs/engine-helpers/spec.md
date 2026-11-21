@@ -699,9 +699,9 @@ The engine SHALL provide, in `src/engine/board/square-edges.ts`, a geometry of a
 ### Requirement: Every deduction ladder is compiled from its game's description
 
 The engine SHALL provide `runDeductionFixpoint` in
-`src/engine/deduction-fixpoint.ts`, the one runner a logic game's solver and
-its explained hint share, so that the ordered-technique loop, the difficulty
-cap, the step budget and its attribution are written once. A game's
+`src/engine/solve/deduction-fixpoint.ts`, the one runner a logic game's
+solver and explained hint share, so the technique loop, the difficulty cap,
+the step budget and its attribution are written once. A game's
 techniques SHALL be stated in its description and run as the code
 `npm run describe` compiles from it, and the runner SHALL accept only a
 ladder built from a compiled module, so that a ladder written by hand does

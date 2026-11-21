@@ -1,7 +1,7 @@
 /**
  * Net's solver: the ladder `net.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/ladder-runtime.ts`) over the board read
- * as a tiling (`engine/square-tiling.ts`): each square a dot, each side
+ * engine's marks and runner (`engine/solve/ladder-runtime.ts`) over the board read
+ * as a tiling (`engine/solve/square-tiling.ts`): each square a dot, each side
  * between two squares an edge, wired or not.
  *
  * One ladder serves the generator, which rewires a network until the ladder
@@ -12,18 +12,18 @@
  * anything, so a board the ladder finishes has one answer.
  */
 
+import { D, DIRECTIONS, L, R, U } from "../../engine/board/square-edges.ts";
 import {
   type Answer,
   answerCache,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
-import { D, DIRECTIONS, L, R, U } from "../../engine/board/square-edges.ts";
+} from "../../engine/solve/answer-search.ts";
 import {
   clueList,
   type GridSpace,
   rangeMask,
   tilingSpace,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -32,8 +32,8 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import { type SquareTiling, squareTiling } from "../../engine/square-tiling.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { type SquareTiling, squareTiling } from "../../engine/solve/square-tiling.ts";
 import * as net from "../../generated/games/net/net.compiled.ts";
 import { LOCKED, type NetState, NOTE_NONE, NOTE_WIRE, sideIndex } from "./state.ts";
 

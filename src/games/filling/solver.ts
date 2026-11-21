@@ -1,6 +1,6 @@
 /**
  * Filling's solver: the ladder `filling.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), and the
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the
  * search beneath the ladder.
  *
  * A region is the squares side by side that hold one number. The ladder is
@@ -16,14 +16,16 @@
  *
  * A hint walks the same ladder, one firing at a time ({@link deduceHintPlan}).
  */
+
+import type { Judging } from "../../engine/move-judge.ts";
 import {
   type Answer,
   answerCache,
   type Deduced,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
-import type { DeductionRecord } from "../../engine/deduction-record.ts";
-import { popcount, rangeMask } from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/answer-search.ts";
+import type { DeductionRecord } from "../../engine/solve/deduction-record.ts";
+import { popcount, rangeMask } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -34,9 +36,8 @@ import {
   type Taken,
   TIERS,
   uncluedRung,
-} from "../../engine/ladder-runtime.ts";
-import type { Judging } from "../../engine/move-judge.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
 import { dealtOf, spaceOf } from "./state.ts";
 

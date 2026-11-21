@@ -38,8 +38,8 @@ import type {
   DeductionTechnique,
   LadderCandidate,
   SingleFiringOptions,
-} from "../deduction-fixpoint.ts";
-import * as fixpoint from "../deduction-fixpoint.ts";
+} from "../solve/deduction-fixpoint.ts";
+import * as fixpoint from "../solve/deduction-fixpoint.ts";
 import type { AnyGame } from "./enrollment.ts";
 
 export interface LadderContinuity {

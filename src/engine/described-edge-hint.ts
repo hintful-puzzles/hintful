@@ -32,21 +32,21 @@ import {
   spokenOf,
   techniqueOf,
 } from "./described-hint.ts";
+import { type Judging, judgeWalked, type MovedFact } from "./move-judge.ts";
 import {
   type CellMarks,
   type LadderEntry,
   ladderWalk,
   type Taken,
   TIERS,
-} from "./ladder-runtime.ts";
-import { type Judging, judgeWalked, type MovedFact } from "./move-judge.ts";
+} from "./solve/ladder-runtime.ts";
+import { stepBudget } from "./solve/step-budget.ts";
 import {
   type Clauses,
   type StatedContext,
   statedParts,
   statedSentence,
 } from "./stated.ts";
-import { stepBudget } from "./step-budget.ts";
 
 /** What a firing says, as the compiled module types it: its terms and the
  * elements it marks by role, and the arm that held where it has arms. */

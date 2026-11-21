@@ -13,7 +13,6 @@
  * Check & Save (`findMistakes`) hard-blocks on any current violation.
  */
 
-import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
 import {
   type Game,
@@ -22,7 +21,6 @@ import {
   type UiUpdate,
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   cursorDelta,
   isMouseDown,
@@ -50,6 +48,11 @@ import {
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { UNSHADED_NAME } from "../../engine/render/piece.ts";
+import {
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import { newBricksDesc } from "./generator.ts";
 import {
   type BricksHint,

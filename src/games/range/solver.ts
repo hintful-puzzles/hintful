@@ -1,6 +1,6 @@
 /**
  * Range's solver: the ladder `range.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), the answer check
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
  * its rules compile to, the search beneath the ladder, and the generator, a
  * port of `range.c`'s `new_game_desc`.
  *
@@ -22,6 +22,10 @@
  * a board still being filled, which no rule of the answer says.
  */
 
+import { Dsf } from "../../engine/board/dsf.ts";
+import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { RandomState } from "../../engine/random/index.ts";
 import {
   type Answer,
   answerCache,
@@ -29,15 +33,12 @@ import {
   DIFF_EASY,
   dealUnreasonable,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
-import { Dsf } from "../../engine/board/dsf.ts";
-import { shuffle } from "../../engine/board/shuffle.ts";
-import { retryLimit } from "../../engine/contract/retry-limit.ts";
+} from "../../engine/solve/answer-search.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -46,8 +47,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import type { RandomState } from "../../engine/random/index.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as range from "../../generated/games/range/range.compiled.ts";
 import {
   BLACK,

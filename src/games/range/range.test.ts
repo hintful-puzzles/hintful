@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import {
   DESC_NOT_UNIQUE,
   loadVerdict,
@@ -10,6 +9,7 @@ import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { type RangeMistake, rangeGame } from "./index.ts";
 import {
   BLACK,

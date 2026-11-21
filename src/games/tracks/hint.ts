@@ -15,12 +15,12 @@
 import { D, dirX, dirY, L, opposite, R, U } from "../../engine/board/square-edges.ts";
 import { keepTrackBy } from "../../engine/contract/hint-track.ts";
 import type { MarkKind } from "../../engine/contract/hint-words.ts";
-import { PLACE, STRIKE_EDGE } from "../../engine/describe-runtime.ts";
 import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/described-edge-hint.ts";
-import type { CellMarks, Ladder } from "../../engine/ladder-runtime.ts";
+import { PLACE, STRIKE_EDGE } from "../../engine/solve/describe-runtime.ts";
+import type { CellMarks, Ladder } from "../../engine/solve/ladder-runtime.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import {
   STATED,

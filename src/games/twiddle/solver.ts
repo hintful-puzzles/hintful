@@ -1,6 +1,6 @@
 /**
  * Twiddle's moves, as the engine's staged planner takes them
- * (`engine/permutation-planner.ts`): each of the description's anticlockwise
+ * (`engine/solve/permutation-planner.ts`): each of the description's anticlockwise
  * turns is a generator, and its clockwise turn the generator undone.
  */
 
@@ -8,8 +8,8 @@ import {
   type Move,
   type PermutationPlan,
   planByStage,
-} from "../../engine/permutation-planner.ts";
-import { moveEffect } from "../../engine/position-runtime.ts";
+} from "../../engine/solve/permutation-planner.ts";
+import { moveEffect } from "../../engine/solve/position-runtime.ts";
 import * as twiddle from "../../generated/games/twiddle/twiddle.compiled.ts";
 import type { TwiddleMove, TwiddleState } from "./state.ts";
 import { positionOf, rulesOf, turnOf } from "./state.ts";

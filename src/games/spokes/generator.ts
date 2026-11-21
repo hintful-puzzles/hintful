@@ -26,10 +26,10 @@
  * reordering of the draws changes every board.
  */
 
-import { DEALING_BUDGET } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { DEALING_BUDGET } from "../../engine/solve/answer-search.ts";
 import { spokesSolve } from "./solver.ts";
 import {
   blankBoard,

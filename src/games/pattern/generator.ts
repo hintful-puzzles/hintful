@@ -15,9 +15,10 @@
  * what shows the match holds on real boards (docs/testing.md
  * § "Byte-match: fidelity where there is a right answer").
  */
-import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
+
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/solve/answer-search.ts";
 import { isSoluble, searchAnswers } from "./solver.ts";
 import {
   computeRuns,

@@ -10,11 +10,11 @@
 import { describe, expect, it } from "vitest";
 import { validateDesc } from "../../engine/contract/desc-error.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
-import { latinSpace } from "../../engine/describe-runtime.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { latinSpace } from "../../engine/solve/describe-runtime.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {

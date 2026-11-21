@@ -1,7 +1,7 @@
 /**
  * The compiler from a description's techniques to TypeScript
  * (`openspec/changes/compile-the-latin-ladder/design.md`): each technique
- * becomes a function over `engine/describe-runtime.ts`'s marks and grid that enumerates its
+ * becomes a function over `engine/solve/describe-runtime.ts`'s marks and grid that enumerates its
  * bindings in the order its binders are written, and fires the first whose
  * conclusion changes the marks.
  *
@@ -94,6 +94,7 @@ export function compileLibrary(
   lib: LibraryJson,
   source: string,
   runtime: string,
+  stepVoice: string,
 ): string {
   Out.reset();
   const used = new Set<string>();
@@ -152,7 +153,7 @@ export function compileLibrary(
     }),
     techniques,
     null,
-    runtime,
+    stepVoice,
   )
     .join("\n")
     .trimEnd();
@@ -262,6 +263,7 @@ export function compileGame(
   libraries: readonly LibraryJson[],
   source: string,
   runtime: string,
+  stepVoice: string,
 ): string {
   Out.reset();
   const d = loadDescription(withEveryVariation(json), libraries);
@@ -421,7 +423,7 @@ export function compileGame(
           `export const RULES_OUT = ${JSON.stringify(d.rulesOut)} as const;`,
           "",
         ]),
-    ...stepsBlock(d.steps, own, json.words ?? null, runtime),
+    ...stepsBlock(d.steps, own, json.words ?? null, stepVoice),
     ...(own.some((t) => t.says !== null)
       ? [
           "/** What a firing of each technique that says anything says, by id. */",

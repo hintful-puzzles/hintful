@@ -21,7 +21,7 @@
 
 import type { HintStep, HintTrackVerdict } from "../contract/game.ts";
 import type { MarkKind } from "../contract/hint-words.ts";
-import type { GridSpace } from "../describe-runtime.ts";
+import type { GridSpace } from "../solve/describe-runtime.ts";
 import {
   BORDER,
   BORDER_MASK,

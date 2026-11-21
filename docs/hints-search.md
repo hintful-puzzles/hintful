@@ -417,7 +417,7 @@ the heuristic and the budgets, and never decides when the exact search
 [`netslide/hint.ts`](../src/games/netslide/hint.ts).
 
 The other planner for moves that permute cells is
-[`engine/permutation-planner.ts`](../src/engine/permutation-planner.ts), which
+[`engine/solve/permutation-planner.ts`](../src/engine/solve/permutation-planner.ts), which
 places pieces in reading order the way a person does and has no reach to run
 out of. Its plans run longer than a search's and its first request on a large
 board is slow, so it suits a game no search reaches far enough with, such as

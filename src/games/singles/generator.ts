@@ -7,8 +7,8 @@
 
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { latinGenerateRect } from "../../engine/latin.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import { latinGenerateRect } from "../../engine/solve/latin.ts";
 import { layCovered, solveSpecific } from "./solver.ts";
 import {
   DIFF_EASY,

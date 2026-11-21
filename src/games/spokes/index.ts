@@ -17,7 +17,6 @@
  * local validation, not a comparison against the answer.
  */
 
-import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
@@ -51,6 +50,7 @@ import {
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newSpokesDesc } from "./generator.ts";
 import { type SpokesHint, spokesHint, spokesJudgeMove } from "./hint.ts";
 import {

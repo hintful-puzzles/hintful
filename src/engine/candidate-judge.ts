@@ -19,8 +19,8 @@ import {
   planPrefs,
 } from "./candidate-hint.ts";
 import type { HintStep, MoveVerdict } from "./contract/game.ts";
-import type { CellMarks } from "./ladder-runtime.ts";
 import { judgeByWalk, movedFacts, verdictOf } from "./move-judge.ts";
+import type { CellMarks } from "./solve/ladder-runtime.ts";
 
 /** What a player calls each of a plan's deductions, by rung: the game's
  * compiled `NAMES`, which must name every rung but the setup's. */

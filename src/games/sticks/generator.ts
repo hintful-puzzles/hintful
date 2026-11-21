@@ -12,12 +12,12 @@
  * deterministic, so the desc is a pure function of the seed.
  */
 
-import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { placeSymmetricBlacks } from "../../engine/generate/symmetric-blacks.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/solve/answer-search.ts";
 import { deductionFinishes, searchAnswers, sticksMakeDsf } from "./solver.ts";
 import { encodeDesc, F_BLOCK, F_HOR, F_VER, type SticksParams } from "./state.ts";
 

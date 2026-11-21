@@ -11,7 +11,6 @@
  * unique solution.
  */
 
-import { solveFromAnswer } from "../../engine/answer-search.ts";
 import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
 import {
   type DifficultyContract,
@@ -41,6 +40,7 @@ import {
   verbGesture,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import {
   RULES_OUT,
   SAYS_EACH,

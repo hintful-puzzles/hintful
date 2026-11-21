@@ -51,18 +51,18 @@ import {
   type Sentence,
   unshaped,
 } from "../../engine/contract/hint-words.ts";
-import { popcount } from "../../engine/describe-runtime.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
+import { popcount } from "../../engine/solve/describe-runtime.ts";
 import type {
   CellMarks,
   Firing,
   Ladder,
   Said,
   Taken,
-} from "../../engine/ladder-runtime.ts";
-import { techniqueFirings } from "../../engine/ladder-runtime.ts";
-import { voice as latinVoice } from "../../generated/engine/latin.compiled.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { techniqueFirings } from "../../engine/solve/ladder-runtime.ts";
+import { voice as latinVoice } from "../../generated/engine/solve/latin.compiled.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import { REGION, type RegionMark } from "./hint-marks.ts";
 import { dealtOf, gridOf, mapLadder, mapMarks } from "./solver.ts";

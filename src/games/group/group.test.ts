@@ -17,9 +17,9 @@ import {
   LEFT_RELEASE,
   MOD_SHFT,
 } from "../../engine/input/pointer.ts";
-import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
+import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE } from "../../engine/solve/latin.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,

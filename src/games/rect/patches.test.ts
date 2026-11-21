@@ -6,12 +6,12 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import { loadVerdict } from "../../engine/contract/desc-error.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";
 import { ladder } from "../../generated/games/rect/rect.compiled.ts";

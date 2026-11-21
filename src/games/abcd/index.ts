@@ -9,7 +9,6 @@
  * flags any entry contradicting the unique solution.
  */
 
-import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { adaptiveMarkAll, candidateHint } from "../../engine/candidate-hint.ts";
 import { candidateJudge } from "../../engine/candidate-judge.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
@@ -29,7 +28,6 @@ import {
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { clearKey } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT2,
@@ -50,6 +48,11 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import { NAMES } from "../../generated/games/abcd/abcd.compiled.ts";
 import { newAbcdDesc } from "./generator.ts";
 import {

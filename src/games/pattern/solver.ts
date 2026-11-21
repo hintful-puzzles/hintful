@@ -1,6 +1,6 @@
 /**
  * Pattern's solver: the ladder `pattern.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
  * check its rules compile to, and the search beneath the ladder.
  *
  * The ladder is upstream's line solver (`do_row`): a line's squares that
@@ -19,20 +19,22 @@
  * the description keeps 1 for shaded and 2 for clear, and 0 where a square
  * has neither yet.
  */
+
+import type { GameStatus } from "../../engine/contract/types.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import {
   type Answer,
   answerCache,
   type Deduced,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
-import type { GameStatus } from "../../engine/contract/types.ts";
+} from "../../engine/solve/answer-search.ts";
 import {
   describedSpace,
   type GridSpace,
   listClues,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -43,9 +45,8 @@ import {
   runLadder,
   type Taken,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import type { Judging } from "../../engine/move-judge.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as pattern from "../../generated/games/pattern/pattern.compiled.ts";
 import {
   GRID_EMPTY,

@@ -4,7 +4,6 @@
  * completion, `findMistakes`, and the mistake render overlay.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import {
   DESC_NOT_UNIQUE,
@@ -24,6 +23,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../../engine/testing/render-scenario.ts";

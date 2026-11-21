@@ -1,6 +1,6 @@
 /**
  * Salad's solver — a consumer of the shared Latin framework
- * ([`engine/latin.ts`](../../engine/latin.ts)), per
+ * ([`engine/solve/latin.ts`](../../engine/latin.ts)), per
  * docs/solver-and-generator.md § "The Latin family".
  *
  * **The empty square is a symbol of the cube.** Salad wants "each of `nums`
@@ -29,9 +29,9 @@
  * the cube never recurses or follows a forcing chain at either tier.
  */
 
-import { latinSpace } from "../../engine/describe-runtime.ts";
 import { type EntryBoard, entryMistake } from "../../engine/entry-mistakes.ts";
-import type { Ladder } from "../../engine/ladder-runtime.ts";
+import { latinSpace } from "../../engine/solve/describe-runtime.ts";
+import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
   DIFF_IMPOSSIBLE,
   type LatinRepeats,
@@ -40,7 +40,7 @@ import {
   latinLadder,
   latinSolver,
   latinVerdict,
-} from "../../engine/latin.ts";
+} from "../../engine/solve/latin.ts";
 import * as salad from "../../generated/games/salad/salad.compiled.ts";
 import {
   CIRCLE,

@@ -13,12 +13,6 @@
  * game's, and a fresh cube local to {@link ./solver.ts}.
  */
 
-import {
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
-  searchTierItem,
-  searchTierSegment,
-} from "../../engine/answer-search.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import {
   type CandidateReading,
@@ -32,6 +26,12 @@ import { modifierItem } from "../../engine/game-id/modifier.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
 import { dims, flag, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/solve/answer-search.ts";
 import * as abcd from "../../generated/games/abcd/abcd.compiled.ts";
 
 // --- constants -------------------------------------------------------------

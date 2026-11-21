@@ -8,7 +8,6 @@
  * non-clue cell.
  */
 
-import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import { coord, fromCoord } from "../../engine/board/geometry.ts";
 import {
   type Game,
@@ -32,7 +31,6 @@ import {
   revealEntry,
 } from "../../engine/entry-mistakes.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { drag, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
 import {
@@ -50,6 +48,11 @@ import {
 } from "../../engine/input/pointer.ts";
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import { statedSentence } from "../../engine/stated.ts";
 import { STATED } from "../../generated/games/filling/filling.compiled.ts";
 import { newFillingDesc } from "./generator.ts";

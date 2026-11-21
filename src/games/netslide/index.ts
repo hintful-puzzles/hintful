@@ -24,13 +24,13 @@ import {
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
 import { wrappingRulesetItem } from "../../engine/game-id/ruleset.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   interpretTargetVerbs,
   type TargetVerbs,
   verbGesture,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { newDesc } from "./generator.ts";
 import {
   arrowFor,

@@ -1,6 +1,6 @@
 /**
  * Rome's solver: the ladder `rome.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/ladder-runtime.ts`); the answer check its
+ * engine's marks and runner (`engine/solve/ladder-runtime.ts`); the answer check its
  * rules compile to; and the validity check the board paints as it is played.
  *
  * One ladder serves the generator, which lays its arrows on it and keeps a
@@ -17,14 +17,14 @@ import {
   type DescParse,
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
   partition,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
-import { readDesc } from "../../engine/game-id/desc-reader.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -32,7 +32,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as rome from "../../generated/games/rome/rome.compiled.ts";
 import {
   dirBit,

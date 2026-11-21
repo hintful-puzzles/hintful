@@ -168,7 +168,7 @@ techniques:
             {stripes: These {tally} rows} fit {d} only in {outline},
             taking {if two: both | all {tally}} columns' {d}
 
-  # engine/wing.ts: for each value a of an open middle cell m but x, an end that
+  # engine/solve/wing.ts: for each value a of an open middle cell m but x, an end that
   # sees m and is down to a and x; a cell t seeing every end, and m too where m
   # could be x, cannot be x (XY-wing, XYZ-wing). Each t is reached from an end
   # of m's least other value, and each end is the first of its kind that sees t.

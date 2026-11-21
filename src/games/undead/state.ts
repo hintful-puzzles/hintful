@@ -7,12 +7,12 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { describedSpace, traceSight } from "../../engine/describe-runtime.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
+import { describedSpace, traceSight } from "../../engine/solve/describe-runtime.ts";
 import * as undead from "../../generated/games/undead/undead.compiled.ts";
 /**
  * Types and pure state helpers for Undead ("Haunted Mirror Mazes"), from

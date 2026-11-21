@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { deduceHintPlan } from "./hint-plan.ts";
-import { StepBudgetExceeded, stepBudget } from "./step-budget.ts";
+import { StepBudgetExceeded, stepBudget } from "./solve/step-budget.ts";
 
 /**
  * A toy board: a run of cells, each `null` until decided. The "deduction"

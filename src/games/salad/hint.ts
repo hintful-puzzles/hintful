@@ -75,8 +75,6 @@ import {
   type Premise,
 } from "../../engine/hint-text.ts";
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
-import type { Said } from "../../engine/ladder-runtime.ts";
-import { type LatinSolver, setCells } from "../../engine/latin.ts";
 import { hiddenSingleLine, type SingleReasonUnder } from "../../engine/latin-hint.ts";
 import {
   byCell,
@@ -85,6 +83,8 @@ import {
   latinStrikeRungs,
 } from "../../engine/latin-notes.ts";
 import { noteEntryGesture } from "../../engine/mechanics/note-taking-cell.ts";
+import type { Said } from "../../engine/solve/ladder-runtime.ts";
+import { type LatinSolver, setCells } from "../../engine/solve/latin.ts";
 import type * as salad from "../../generated/games/salad/salad.compiled.ts";
 import { NAMES } from "../../generated/games/salad/salad.compiled.ts";
 import { CLUE } from "./kinds.ts";

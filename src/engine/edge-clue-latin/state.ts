@@ -31,8 +31,8 @@ import {
   size,
 } from "../game-id/params-codec.ts";
 import { digitOf, type GridCursor, isEraseKey, newCursor } from "../input/pointer.ts";
-import type { Ladder } from "../ladder-runtime.ts";
-import type { LatinSolver } from "../latin.ts";
+import type { Ladder } from "../solve/ladder-runtime.ts";
+import type { LatinSolver } from "../solve/latin.ts";
 
 // --- the clue kind -----------------------------------------------------------
 

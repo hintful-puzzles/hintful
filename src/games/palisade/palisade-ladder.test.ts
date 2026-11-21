@@ -6,8 +6,9 @@
  * Each case is a dealt Easy board solved from nothing, and one dealt
  * Unreasonable, on which the ladder stops short.
  */
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
+
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newDesc } from "./generator.ts";
 import { deduce, deduction, palisadeLadderIds } from "./solver.ts";

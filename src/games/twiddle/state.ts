@@ -6,7 +6,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
@@ -16,6 +15,7 @@ import {
 } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as twiddle from "../../generated/games/twiddle/twiddle.compiled.ts";
 
 // --- types -----------------------------------------------------------

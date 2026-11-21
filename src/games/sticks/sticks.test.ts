@@ -5,7 +5,6 @@
  * lifecycle + save round-trip, and tier-2.5 render scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -30,6 +29,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/render/win-wave.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

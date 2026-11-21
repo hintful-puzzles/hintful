@@ -288,7 +288,7 @@ export function buildSpace(spec: SpaceSpec): Space {
     for (const c of lineCells.get(u) ?? [])
       unitsOf.set(c, [...(unitsOf.get(c) ?? []), u]);
   fns.set("units_of", ([c]) => unitsOf.get(asElem(c, "cell")) ?? []);
-  // As `src/engine/describe-runtime/space.ts` orders them: on a Latin square a
+  // As `src/engine/solve/describe-runtime/space.ts` orders them: on a Latin square a
   // cell's row and column interleaved by index, the row's first at each;
   // with other units, every cell sharing one, in reading order.
   const latin = units.every((u) => rows.includes(u) || cols.includes(u));

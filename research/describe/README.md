@@ -32,7 +32,7 @@ its `node_modules` a link to this one's.
 
 ## The files
 
-Every description lives beside its code (`src/engine/latin.description.yaml`,
+Every description lives beside its code (`src/engine/solve/latin.description.yaml`,
 `src/games/<id>/*.description.yaml`); the loader, the parser and the
 schema are in `src/describe/`.
 

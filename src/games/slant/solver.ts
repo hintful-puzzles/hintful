@@ -1,6 +1,6 @@
 /**
  * Slant's solver: the ladder `slant.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the reason
  * each technique records for the hint; and the answer check its rules compile
  * to.
  *
@@ -10,6 +10,8 @@
  * hint, which walks it. No technique supposes anything, so a board the ladder
  * fills is uniquely solved, at either tier.
  */
+
+import type { Judging } from "../../engine/move-judge.ts";
 import {
   clueList,
   describedSpace,
@@ -17,8 +19,8 @@ import {
   type Reads,
   rangeMask,
   slash,
-} from "../../engine/describe-runtime.ts";
-import { FactGraph } from "../../engine/fact-graph.ts";
+} from "../../engine/solve/describe-runtime.ts";
+import { FactGraph } from "../../engine/solve/fact-graph.ts";
 import {
   CellMarks,
   compiledRung,
@@ -30,9 +32,8 @@ import {
   type Taken,
   TIERS,
   uncluedRung,
-} from "../../engine/ladder-runtime.ts";
-import type { Judging } from "../../engine/move-judge.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_HARD, type Slash } from "./state.ts";
 
@@ -296,7 +297,7 @@ export interface SlantCites {
 /**
  * The hint's walk: every firing that draws a diagonal, in order, and the
  * facts the walk made with what the hint says of them. The walk's graph
- * (`engine/fact-graph.ts`) holds which fact rests on which; what only Slant
+ * (`engine/solve/fact-graph.ts`) holds which fact rests on which; what only Slant
  * knows is kept beside it by fact or firing.
  */
 export interface SlantPlan {

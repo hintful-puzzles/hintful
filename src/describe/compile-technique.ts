@@ -3,7 +3,7 @@
  * reads it makes again before it concludes, and the stale-read guard.
  */
 
-import { MADE } from "../engine/marks-made.ts";
+import { MADE } from "../engine/solve/marks-made.ts";
 import { bindingLoops, compileExpr, type Recheck, witnessOf } from "./compile-expr.ts";
 import { drawBrokeSets, MAX_GROWTH, power, techniqueGrowth } from "./compile-growth.ts";
 import {

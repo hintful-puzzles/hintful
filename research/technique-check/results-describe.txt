@@ -1,9 +1,9 @@
-ok  latin      placed                         current: recorded src/engine/latin.description.yaml#placed f965cdcac2c540d2
-ok  latin      hiddenSingle                   current: recorded src/engine/latin.description.yaml#hiddenSingle e5e97baf69fa65cf
-ok  latin      single                         current: recorded src/engine/latin.description.yaml#single 0791b39aed8af914
-ok  latin      set                            current: recorded src/engine/latin.description.yaml#set b5ac302d9954e973
-ok  latin      fish                           current: recorded src/engine/latin.description.yaml#fish 655c8b81fe0798b1
-ok  latin      wing                           current: recorded src/engine/latin.description.yaml#wing e104ec34cad128f8
+ok  latin      placed                         current: recorded src/engine/solve/latin.description.yaml#placed f965cdcac2c540d2
+ok  latin      hiddenSingle                   current: recorded src/engine/solve/latin.description.yaml#hiddenSingle e5e97baf69fa65cf
+ok  latin      single                         current: recorded src/engine/solve/latin.description.yaml#single 0791b39aed8af914
+ok  latin      set                            current: recorded src/engine/solve/latin.description.yaml#set b5ac302d9954e973
+ok  latin      fish                           current: recorded src/engine/solve/latin.description.yaml#fish 655c8b81fe0798b1
+ok  latin      wing                           current: recorded src/engine/solve/latin.description.yaml#wing e104ec34cad128f8
 --  abcd +no diagonal n=3: no board of order 3 has an answer, so nothing is checked there
 --  abcd +no diagonal n=3: no board of order 4 has an answer, so nothing is checked there
 ok  abcd       placed                         current: recorded src/games/abcd/abcd.description.yaml#placed 43ecf850cbceb846

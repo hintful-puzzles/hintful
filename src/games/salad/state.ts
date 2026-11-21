@@ -30,7 +30,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { numberItem, squareSize } from "../../engine/game-id/params.ts";
@@ -45,6 +44,7 @@ import { RULESET_KW, type Ruleset, rulesetItem } from "../../engine/game-id/rule
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { type RowColRegion, rowColRegions } from "../../engine/latin-hint.ts";
+import { clueList, latinSpace } from "../../engine/solve/describe-runtime.ts";
 import * as salad from "../../generated/games/salad/salad.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

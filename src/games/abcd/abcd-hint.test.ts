@@ -8,12 +8,12 @@
  * not repeated here.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import type { CandidateReading } from "../../engine/candidate-hint.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";

@@ -21,8 +21,8 @@ import {
   ladderWalk,
   type Taken,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import type { StepBudget } from "../../engine/solve/step-budget.ts";
 import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 import { SQUARE } from "./kinds.ts";
 import {

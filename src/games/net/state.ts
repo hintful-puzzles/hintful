@@ -1,11 +1,5 @@
 /** Types, bit vocabulary, params and pure state helpers for Net. */
 
-import {
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
-  searchTierItem,
-  searchTierSegment,
-} from "../../engine/answer-search.ts";
 import { D, L, R, U } from "../../engine/board/square-edges.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
@@ -25,6 +19,12 @@ import {
   offset,
   parseWireDesc,
 } from "../../engine/mechanics/wires.ts";
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/solve/answer-search.ts";
 import * as net from "../../generated/games/net/net.compiled.ts";
 
 /* ----------------------------------------------------------------------

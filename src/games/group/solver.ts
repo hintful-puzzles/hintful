@@ -1,7 +1,7 @@
 /**
  * Group solver: the ladder `group.description.yaml` states, compiled, and the
  * answer check its rules compile to, on the shared `LatinSolver`
- * (`engine/latin.ts`), whose forcing chains and recursion are the search above
+ * (`engine/solve/latin.ts`), whose forcing chains and recursion are the search above
  * the ladder. The tiers, by display name and constant:
  *
  *   Easy (`DIFF_TRIVIAL`)   → the library's singles.
@@ -14,14 +14,14 @@
  * Cells are numbered `y·o + x`; row `a`, column `b` holds the product `a·b`.
  */
 
-import { latinSpace } from "../../engine/describe-runtime.ts";
-import type { Ladder } from "../../engine/ladder-runtime.ts";
+import { latinSpace } from "../../engine/solve/describe-runtime.ts";
+import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
   type LatinReason,
   type LatinSolver,
   latinLadder,
   latinSolver,
-} from "../../engine/latin.ts";
+} from "../../engine/solve/latin.ts";
 import type { Clauses } from "../../engine/stated.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";
 import { DIFF_UNREASONABLE } from "./state.ts";

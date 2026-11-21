@@ -1,6 +1,6 @@
 /**
  * Loopy's solver: the ladder `loopy.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`) over the
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`) over the
  * board's tiling (`tilingSpace`), and the answer check its rules compile to.
  *
  * One ladder serves the generator, which keeps a removed clue only while the
@@ -18,6 +18,7 @@
  */
 
 import type { Grid } from "../../engine/board/grid/index.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import {
   clueList,
   type GridSpace,
@@ -28,8 +29,8 @@ import {
   relationKey,
   STRIKE_EDGE,
   tilingSpace,
-} from "../../engine/describe-runtime.ts";
-import type { FactGraph } from "../../engine/fact-graph.ts";
+} from "../../engine/solve/describe-runtime.ts";
+import type { FactGraph } from "../../engine/solve/fact-graph.ts";
 import {
   CellMarks,
   compiledRung,
@@ -41,9 +42,8 @@ import {
   type Said,
   type Taken,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import type { Judging } from "../../engine/move-judge.ts";
-import type { StepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import type { StepBudget } from "../../engine/solve/step-budget.ts";
 import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";
 import { DIFF_HARD } from "./params.ts";
 import {
@@ -324,7 +324,7 @@ const solutions = new WeakMap<Grid, Uint8Array | null>();
 // or at least one line between them) and from Hard about *pairs* (two edges
 // known to be both lines or both empty, or exactly one of each). The player
 // notes both (`LoopyState.corners` and `pairs`). The walk's graph holds each
-// firing's facts and what each rests on (`engine/fact-graph.ts`); a corner is a
+// firing's facts and what each rests on (`engine/solve/fact-graph.ts`); a corner is a
 // `STRIKE_EDGE` about its angle, a pair a `RELATE` about its two edges. What
 // the graph cannot say, because only Loopy knows it, is kept here beside it:
 // why each note holds (`Note`) and the chain of pairs a firing narrates.

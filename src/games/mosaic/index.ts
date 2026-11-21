@@ -6,7 +6,6 @@
  * result to every cell it passes that held what the pressed one held.
  */
 
-import { solveFromAnswer } from "../../engine/answer-search.ts";
 import type { Game, UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
@@ -19,6 +18,7 @@ import {
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { SHADED_NAME, UNSHADED_NAME } from "../../engine/render/piece.ts";
+import { solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { type MosaicHint, mosaicHint } from "./hint.ts";
 import {
   colors,

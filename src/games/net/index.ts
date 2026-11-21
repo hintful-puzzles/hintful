@@ -9,11 +9,6 @@
  * input, moves, solve, preferences, and the game object.
  */
 
-import {
-  DIFF_EASY,
-  searchTierContract,
-  solveFromAnswer,
-} from "../../engine/answer-search.ts";
 import { fromCoord } from "../../engine/board/geometry.ts";
 import {
   anticlockwise,
@@ -71,6 +66,11 @@ import {
 import { offset } from "../../engine/mechanics/wires.ts";
 import { type RandomState, randomNew, randomUpto } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  DIFF_EASY,
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
 import { newDesc } from "./generator.ts";
 import {
   NET_RUNGS,

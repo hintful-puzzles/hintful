@@ -3,9 +3,9 @@
  * its desc is written in.
  */
 
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import type { DescReader } from "../../engine/game-id/desc-reader.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as flip from "../../generated/games/flip/flip.compiled.ts";
 
 // --- types ----------------------------------------------------------

@@ -17,7 +17,6 @@ import {
   parseConfigInt,
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { gridCursorMove, LEFT_RELEASE, newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
@@ -26,6 +25,7 @@ import {
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { answerCount, newDesc } from "./answer.ts";
 import { BLACKBOX_RUNGS, type BlackboxRung, hint, hintKeepTrack } from "./hint.ts";
 import { HINT_MARKS } from "./hint-marks.ts";

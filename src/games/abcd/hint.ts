@@ -44,7 +44,6 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { rangeMask } from "../../engine/describe-runtime.ts";
 import {
   candidateConclusions,
   cleanObviousText,
@@ -54,14 +53,15 @@ import {
   populateText,
 } from "../../engine/hint-text.ts";
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
+import type { CellRegion } from "../../engine/latin-hint.ts";
+import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
+import { rangeMask } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   type Firing as LadderFiring,
   type Said,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import type { CellRegion } from "../../engine/latin-hint.ts";
-import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import {
   type SaysById,
   voice,

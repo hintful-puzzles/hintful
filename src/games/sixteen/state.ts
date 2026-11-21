@@ -5,12 +5,12 @@ import {
   descValue,
 } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { dimensionParamConfig, numberItem } from "../../engine/game-id/params.ts";
 import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as sixteen from "../../generated/games/sixteen/sixteen.compiled.ts";
 
 // --- types -----------------------------------------------------------

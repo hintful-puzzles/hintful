@@ -20,9 +20,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/crossing-c-reference.json" with { type: "json" };
 import { newCrossingDesc } from "./generator.ts";

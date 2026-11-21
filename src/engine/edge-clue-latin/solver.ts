@@ -1,11 +1,11 @@
 /**
  * The edge-clue Latin square's solver: the game's described ladder
  * (`ClueKind.ladder`) and the answer check its rules compile to
- * (`ClueKind.isAnswer`), on the shared `LatinSolver` (`engine/latin.ts`),
+ * (`ClueKind.isAnswer`), on the shared `LatinSolver` (`engine/solve/latin.ts`),
  * whose forcing chains and recursion are the search above the ladder.
  */
 
-import { latinSolver } from "../latin.ts";
+import { latinSolver } from "../solve/latin.ts";
 import { type ClueKind, DIFF_RECURSIVE } from "./state.ts";
 
 /**

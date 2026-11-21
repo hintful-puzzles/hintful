@@ -4,11 +4,6 @@
  * of its 3×3 neighborhood, itself included.
  */
 
-import {
-  DIFF_EASY,
-  searchTierSegment,
-  searchTiers,
-} from "../../engine/answer-search.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
@@ -26,6 +21,11 @@ import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/param
 import { dims, num, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { encodeRunLength, scanRunLength } from "../../engine/game-id/run-length.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
+import {
+  DIFF_EASY,
+  searchTierSegment,
+  searchTiers,
+} from "../../engine/solve/answer-search.ts";
 import * as mosaic from "../../generated/games/mosaic/mosaic.compiled.ts";
 
 // --- cell-state flags (upstream `enum cell_state`) ----------------------

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { applyRules, generateGrid, isSolved, searchAnswers } from "./solver.ts";
 import { BLACK, EMPTY, idx, newState, type RangeParams, WHITE } from "./state.ts";
 

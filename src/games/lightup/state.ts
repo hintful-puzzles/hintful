@@ -9,7 +9,6 @@
  * bulbs lighting an open square.
  */
 
-import { searchTiers } from "../../engine/answer-search.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -33,6 +32,7 @@ import {
   SYMM_ROT4,
 } from "../../engine/generate/symmetric-blacks.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
+import { searchTiers } from "../../engine/solve/answer-search.ts";
 import * as lightup from "../../generated/games/lightup/lightup.compiled.ts";
 
 // --- cell flags (upstream values) -------------------------------------------

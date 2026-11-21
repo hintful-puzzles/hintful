@@ -1,7 +1,7 @@
 /**
  * Towers solver: the ladder `towers.description.yaml` states, compiled, and
  * the answer check its rules compile to, on the shared `LatinSolver`
- * (`engine/latin.ts`), whose forcing chains and recursion are the search above
+ * (`engine/solve/latin.ts`), whose forcing chains and recursion are the search above
  * the ladder. The tiers:
  *
  *   Easy (`DIFF_EASY`)         → the facing pairs, each clue's bounds, and
@@ -15,8 +15,13 @@
  * each, left of each row, right of each, and sees its line nearest it first.
  */
 
-import { clueAt, type GridSpace, latinSpace } from "../../engine/describe-runtime.ts";
-import type { Ladder } from "../../engine/ladder-runtime.ts";
+import type { SingleReason } from "../../engine/latin-hint.ts";
+import {
+  clueAt,
+  type GridSpace,
+  latinSpace,
+} from "../../engine/solve/describe-runtime.ts";
+import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
@@ -24,8 +29,7 @@ import {
   type LatinSolver,
   latinLadder,
   latinSolver,
-} from "../../engine/latin.ts";
-import type { SingleReason } from "../../engine/latin-hint.ts";
+} from "../../engine/solve/latin.ts";
 import * as towers from "../../generated/games/towers/towers.compiled.ts";
 import { DIFF_UNREASONABLE, dealtOf } from "./state.ts";
 

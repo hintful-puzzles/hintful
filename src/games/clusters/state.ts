@@ -9,7 +9,6 @@
  * the given bytes stay clean for the desc encoder.
  */
 
-import { searchTiers } from "../../engine/answer-search.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
@@ -20,6 +19,7 @@ import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/param
 import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { PAIR_NAMES, type PairIndex } from "../../engine/render/piece.ts";
+import { searchTiers } from "../../engine/solve/answer-search.ts";
 import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------

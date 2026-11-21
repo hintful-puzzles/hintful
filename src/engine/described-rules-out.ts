@@ -16,10 +16,10 @@
 
 import type { RulesOut } from "./contract/game.ts";
 import type { Point } from "./contract/types.ts";
-import { PLACE } from "./describe-runtime.ts";
 import { premiseOf } from "./described-hint.ts";
-import type { CellMarks, LadderEntry } from "./ladder-runtime.ts";
-import { stepBudget } from "./step-budget.ts";
+import { PLACE } from "./solve/describe-runtime.ts";
+import type { CellMarks, LadderEntry } from "./solve/ladder-runtime.ts";
+import { stepBudget } from "./solve/step-budget.ts";
 
 /** The compiled module's `RULES_OUT`. */
 export interface DescribedRulesOut {

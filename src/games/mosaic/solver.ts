@@ -1,6 +1,6 @@
 /**
  * Mosaic's solver and generator: the ladder `mosaic.description.yaml` states,
- * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`), with
+ * compiled, on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), with
  * the reason each technique records for the hint; the answer check its rules
  * compile to; the search for a board's answers over the ladder; and the
  * generator, which grades every board it deals on the same ladder.
@@ -10,6 +10,11 @@
  * those numbers first anyway, so Easy boards are dealt by it too.
  */
 
+import { shuffle } from "../../engine/board/shuffle.ts";
+import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import { type RandomState, randomBits } from "../../engine/random/index.ts";
 import {
   type Answer,
   answerCache,
@@ -17,12 +22,8 @@ import {
   DIFF_EASY,
   dealUnreasonable,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
-import { shuffle } from "../../engine/board/shuffle.ts";
-import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import type { GameStatus } from "../../engine/contract/types.ts";
-import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+} from "../../engine/solve/answer-search.ts";
+import { clueList, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -32,9 +33,8 @@ import {
   runLadder,
   type Said,
   TIERS as SCALE,
-} from "../../engine/ladder-runtime.ts";
-import { type RandomState, randomBits } from "../../engine/random/index.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as mosaic from "../../generated/games/mosaic/mosaic.compiled.ts";
 import {
   countAround,

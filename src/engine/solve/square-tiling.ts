@@ -7,7 +7,7 @@
  * edges meet at a corner exactly where they bound one face.
  */
 
-import { D, DX, DY, L, R, U } from "./board/square-edges.ts";
+import { D, DX, DY, L, R, U } from "../board/square-edges.ts";
 import type { Tiling } from "./describe-runtime.ts";
 
 /** A square grid as a tiling, and where each side of each square is in it. */

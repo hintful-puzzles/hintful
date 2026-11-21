@@ -3,7 +3,7 @@
  * so it is a valid group multiplication table (Latin **and** associative).
  *
  * Port of `puzzles/unfinished/group.c`. The solver rides on the shared
- * `engine/latin.ts` (see `solver.ts`); this module is the Game glue — params,
+ * `engine/solve/latin.ts` (see `solver.ts`); this module is the Game glue — params,
  * move interpretation/execution, the two Group-specific visual aids (row/column
  * reorder + subgroup dividers) and the diagonal multifill, `findMistakes` for
  * Check & Save, and the config/pref forms.
@@ -50,7 +50,6 @@ import {
   NO_SOLUTION,
 } from "../../engine/contract/solve-failure.ts";
 import type { KeyLabel, Point, Size } from "../../engine/contract/types.ts";
-import { PLACE } from "../../engine/describe-runtime.ts";
 import {
   clearEntries,
   type EntryMoves,
@@ -83,13 +82,6 @@ import {
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
-import {
-  DIFF_AMBIGUOUS,
-  DIFF_IMPOSSIBLE,
-  type LatinSolver,
-  latinVerdict,
-} from "../../engine/latin.ts";
 import { rowColRegions, type SingleReason } from "../../engine/latin-hint.ts";
 import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
@@ -102,6 +94,17 @@ import {
   pencilKeepHighlightPref,
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { PLACE } from "../../engine/solve/describe-runtime.ts";
+import type {
+  Firing as LadderFiring,
+  Said,
+} from "../../engine/solve/ladder-runtime.ts";
+import {
+  DIFF_AMBIGUOUS,
+  DIFF_IMPOSSIBLE,
+  type LatinSolver,
+  latinVerdict,
+} from "../../engine/solve/latin.ts";
 import { statedParts, statedSentence } from "../../engine/stated.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";
 import { newGameDesc } from "./generator.ts";

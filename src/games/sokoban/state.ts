@@ -18,11 +18,11 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import { isDigit } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as sokoban from "../../generated/games/sokoban/sokoban.compiled.ts";
 
 // --- the cell alphabet (char codes) -----------------------------------

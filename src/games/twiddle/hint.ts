@@ -18,7 +18,7 @@ import type {
 import { SEARCH_OUT_OF_REACH } from "../../engine/contract/hint-refusal.ts";
 import type { Sentence } from "../../engine/contract/hint-words.ts";
 import { NARRATION_LIMIT } from "../../engine/contract/wording-rules.ts";
-import type { Role, Segment } from "../../engine/permutation-planner.ts";
+import type { Role, Segment } from "../../engine/solve/permutation-planner.ts";
 import { voice } from "../../generated/games/twiddle/twiddle.compiled.ts";
 import { BLOCK, LIFTED, TILE } from "./kinds.ts";
 import { planTwiddle, playTurn, type Turn, turnMove } from "./solver.ts";

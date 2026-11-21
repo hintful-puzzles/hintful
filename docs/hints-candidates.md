@@ -359,7 +359,7 @@ Exemplar: `extremeClueLines` in
 ## Continue from the last step
 
 A plan takes each next firing through a `HintFrontier`
-([`engine/hint-frontier.ts`](../src/engine/hint-frontier.ts)), which prefers
+([`engine/solve/hint-frontier.ts`](../src/engine/solve/hint-frontier.ts)), which prefers
 a firing reading a cell the latest step wrote, then the step before, three
 deep, and otherwise the ladder's first choice. `runCandidatePlan` does this;
 a game does nothing but keep its premises true. Requirements: "A candidate
@@ -489,7 +489,7 @@ the cells its words do not name".
 - **A read the player must check is drawn, not only carried.** `reads` shows
   nothing. A value confined across several lines stripes them through
   `confinedPremise` (`engine/hint-text.ts`); a technique with such a firing
-  says the lines, built into `ConfinedLines` (`engine/latin.ts`), and calls
+  says the lines, built into `ConfinedLines` (`engine/solve/latin.ts`), and calls
   it ("A value confined across several lines shows the lines").
 - **A fish has two readings; name the smaller.** `k` columns holding a value
   in only `k` rows is also the other rows holding it in only the other

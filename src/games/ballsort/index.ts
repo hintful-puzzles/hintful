@@ -11,7 +11,6 @@
 
 import type { SolveResult } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   type Game,
   registerGame,
@@ -34,6 +33,7 @@ import {
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { newDesc } from "./generator.ts";
 import {
   BALLSORT_RUNGS,

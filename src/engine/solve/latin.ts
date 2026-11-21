@@ -35,9 +35,10 @@
  * multiplicity is 1, and the techniques read as on a Latin square.
  */
 
-import * as compiled from "../generated/engine/latin.compiled.ts";
-import { shuffle } from "./board/shuffle.ts";
-import type { DifficultyVerdict } from "./contract/difficulty.ts";
+import * as compiled from "../../generated/engine/solve/latin.compiled.ts";
+import { shuffle } from "../board/shuffle.ts";
+import type { DifficultyVerdict } from "../contract/difficulty.ts";
+import { type RandomState, randomUpto } from "../random/index.ts";
 import type { CompiledTechniques } from "./deduction-fixpoint.ts";
 import { latinSpace, valuesOf } from "./describe-runtime.ts";
 import {
@@ -58,7 +59,6 @@ import {
   uncluedRung,
   withSearch,
 } from "./ladder-runtime.ts";
-import { type RandomState, randomUpto } from "./random/index.ts";
 
 /** Upstream `enum { diff_impossible = 10, diff_ambiguous, diff_unfinished }`
  * — positive sentinels larger than any real difficulty level, so a

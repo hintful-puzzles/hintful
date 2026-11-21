@@ -7,7 +7,6 @@
  * docs/testing.md § "The test tiers".
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_CONTRADICTORY,
@@ -28,6 +27,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {

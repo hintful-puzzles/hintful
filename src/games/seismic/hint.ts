@@ -42,7 +42,6 @@ import {
   whole,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { describedSpace, rangeMask } from "../../engine/describe-runtime.ts";
 import {
   candidateConclusions,
   cleanObviousText,
@@ -52,9 +51,10 @@ import {
 } from "../../engine/hint-text.ts";
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import { digitKeyCode } from "../../engine/input/key-labels.ts";
-import { CellMarks, type Said, TIERS } from "../../engine/ladder-runtime.ts";
 import type { CellRegion } from "../../engine/latin-hint.ts";
 import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
+import { describedSpace, rangeMask } from "../../engine/solve/describe-runtime.ts";
+import { CellMarks, type Said, TIERS } from "../../engine/solve/ladder-runtime.ts";
 import * as seismic from "../../generated/games/seismic/seismic.compiled.ts";
 import { dealtOf, seismicLadder } from "./solver.ts";
 import {

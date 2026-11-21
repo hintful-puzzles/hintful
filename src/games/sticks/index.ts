@@ -15,7 +15,6 @@
  * (`findMistakes`).
  */
 
-import { searchTierContract, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   type Game,
   type SolveResult,
@@ -24,7 +23,6 @@ import {
 } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   CURSOR_LEFT,
   CURSOR_RIGHT,
@@ -51,6 +49,11 @@ import {
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
+import {
+  searchTierContract,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import { newSticksDesc } from "./generator.ts";
 import { type SticksHint, sticksHint } from "./hint.ts";
 import {

@@ -37,7 +37,6 @@ import {
   stripModifiers,
 } from "../input/pointer.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../input/target-verb.ts";
-import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../latin.ts";
 import { rowColRegions } from "../latin-hint.ts";
 import {
   noOpEntryResult,
@@ -45,6 +44,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../mechanics/note-taking-cell.ts";
+import { DIFF_AMBIGUOUS, DIFF_IMPOSSIBLE, latinVerdict } from "../solve/latin.ts";
 import { coord, type EdgeClueDrawState, fromCoord } from "./render.ts";
 import { solveEdgeClues } from "./solver.ts";
 import {

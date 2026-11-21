@@ -60,7 +60,7 @@ describe("a family the code can vouch for agrees with the code", () => {
    *   shares) is a Latin square — its hints speak of rows and columns holding
    *   each symbol once;
    * - **above**: every game tagged Latin squares uses the shared Latin engine
-   *   (`engine/latin`, `engine/latin-hint` or those sentences) — a Latin square
+   *   (`engine/solve/latin`, `engine/latin-hint` or those sentences) — a Latin square
    *   that built its own solver from nothing would be a family member the
    *   shared work could not reach, and that is worth hearing about.
    *
@@ -96,11 +96,13 @@ describe("a family the code can vouch for agrees with the code", () => {
 
   it("finds the shared Latin engine in every game tagged Latin squares", () => {
     // The Latin engine: its modules, and its compiled ladder.
-    const engine = gamesImporting(
-      [...latin],
-      (m) =>
-        m.startsWith("src/engine/latin") || m.startsWith("src/generated/engine/latin"),
-    );
+    const LATIN_ENGINE = new Set([
+      "src/engine/solve/latin.ts",
+      "src/engine/latin-hint.ts",
+      "src/engine/latin-notes.ts",
+      "src/generated/engine/solve/latin.compiled.ts",
+    ]);
+    const engine = gamesImporting([...latin], (m) => LATIN_ENGINE.has(m));
     const silent = latin.filter((id) => !engine.includes(id));
     const speakers = speaking(silent, ["narrateLatinReason", "latinPremise"]);
     expect(silent.filter((id) => !speakers.includes(id))).toEqual([]);

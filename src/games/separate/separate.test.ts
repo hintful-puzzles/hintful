@@ -6,7 +6,6 @@
  * mistakes-overlay frame) driven through a real Midend.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_TOO_LONG,
@@ -26,6 +25,7 @@ import {
 } from "../../engine/mechanics/border-grid.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
   DEFAULT_BACKGROUND,

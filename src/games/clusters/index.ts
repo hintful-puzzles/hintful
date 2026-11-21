@@ -12,7 +12,6 @@
  * break.
  */
 
-import { type Answer, solveFromAnswer } from "../../engine/answer-search.ts";
 import {
   type Game,
   type SolveResult,
@@ -46,6 +45,7 @@ import {
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { type Answer, solveFromAnswer } from "../../engine/solve/answer-search.ts";
 import { newClustersDesc } from "./generator.ts";
 import { type ClustersHint, clustersHint } from "./hint.ts";
 import {

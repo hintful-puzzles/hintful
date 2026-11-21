@@ -1,6 +1,6 @@
 /**
  * Crossing's solver: the ladder `crossing.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`); the search
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`); the search
  * over it for a board's answers; the mistake check; and the hint's plan, read
  * off the compiled ladder's firings.
  *
@@ -17,12 +17,14 @@
  * exist at each tier.
  */
 
+import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import type { Judging } from "../../engine/move-judge.ts";
 import {
   type Answer,
   answerCache,
   type Deduced,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
+} from "../../engine/solve/answer-search.ts";
 import {
   clueList,
   describedSpace,
@@ -30,8 +32,7 @@ import {
   popcount,
   rangeMask,
   STRIKE,
-} from "../../engine/describe-runtime.ts";
-import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -44,8 +45,7 @@ import {
   type Said,
   type Taken,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import type { Judging } from "../../engine/move-judge.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 import {
   type CrossingPuzzle,

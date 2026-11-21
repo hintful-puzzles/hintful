@@ -17,7 +17,7 @@ import type { Binding } from "./bindings.ts";
 import { describedLibrary, type Instance, instantiate } from "./description.ts";
 
 export const LIBRARIES: readonly LibraryJson[] = [
-  describedLibrary("src/engine/latin.description.yaml"),
+  describedLibrary("src/engine/solve/latin.description.yaml"),
 ];
 
 export interface DealtBoard<P, S> {

@@ -1,6 +1,6 @@
 /**
  * Path's solver: the ladder `path.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/ladder-runtime.ts`), the answer check
+ * engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
  * its rules compile to, and the search beneath the ladder.
  *
  * The answer is on the edges between squares side by side, each a line or
@@ -16,25 +16,31 @@
  */
 
 import {
-  type Answer,
-  answerCache,
-  type Deduced,
-  searchAnswers,
-} from "../../engine/answer-search.ts";
-import {
   pieceThrough,
   type SquareEdges,
   squareEdges,
 } from "../../engine/board/square-edges.ts";
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
+import {
+  CROSS,
+  type EdgeMark,
+  LINE,
+  OPEN,
+} from "../../engine/mechanics/line-drawing.ts";
+import {
+  type Answer,
+  answerCache,
+  type Deduced,
+  searchAnswers,
+} from "../../engine/solve/answer-search.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -43,13 +49,7 @@ import {
   runLadder,
   type Taken,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import {
-  CROSS,
-  type EdgeMark,
-  LINE,
-  OPEN,
-} from "../../engine/mechanics/line-drawing.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as path from "../../generated/games/path/path.compiled.ts";
 import {
   DIFF_TRICKY,

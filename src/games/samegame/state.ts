@@ -3,7 +3,6 @@ import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
   AREA_TOO_LARGE,
@@ -18,6 +17,7 @@ import {
 } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as samegame from "../../generated/games/samegame/samegame.compiled.ts";
 
 // --- types ------------------------------------------------------------

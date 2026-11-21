@@ -49,7 +49,7 @@
 
 export const MODULES = [
   {
-    module: "src/engine/latin.ts",
+    module: "src/engine/solve/latin.ts",
     cases: [
       {
         within: "LatinSolver",
@@ -462,7 +462,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/deduction-fixpoint.ts",
+    module: "src/engine/solve/deduction-fixpoint.ts",
     cases: [
       {
         within: "firstFiring",
@@ -517,7 +517,7 @@ export const MODULES = [
   },
 
   {
-    module: "src/engine/ladder-runtime.ts",
+    module: "src/engine/solve/ladder-runtime.ts",
     cases: [
       {
         within: "ladderTechniques",

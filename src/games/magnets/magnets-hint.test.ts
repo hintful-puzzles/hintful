@@ -9,7 +9,7 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { type Narration, stepMarks } from "../../engine/contract/hint-words.ts";
 import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newMagnetsDesc } from "./generator.ts";

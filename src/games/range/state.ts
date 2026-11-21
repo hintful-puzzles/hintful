@@ -9,12 +9,6 @@
  * are identified by `grid[i] > 0` and are never written by a move.
  */
 
-import {
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
-  searchTierItem,
-  searchTierSegment,
-} from "../../engine/answer-search.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
 import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
 import {
@@ -29,6 +23,12 @@ import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { SHADED_NAME } from "../../engine/render/piece.ts";
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/solve/answer-search.ts";
 import * as range from "../../generated/games/range/range.compiled.ts";
 
 // --- cells -----------------------------------------------------------------

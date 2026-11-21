@@ -90,7 +90,7 @@ In this order, each step as the skeleton
 | – Edge games flag set edges only | the player draws walls or edges |
 | – Live rule errors and the re-solve are both | the game already draws rule errors as the player works |
 | – Self-validating games run their rule checker | the win check is a validity pass over the grid |
-| The Latin family | your game is on a Latin square and imports `engine/latin.ts` |
+| The Latin family | your game is on a Latin square and imports `engine/solve/latin.ts` |
 
 ## One engine, two projections
 
@@ -106,9 +106,9 @@ is the first projection and `hintWalk` the second, over one `ladder`.
 ## The deduction fixpoint
 
 **A logic game's solver and hint run the ladder compiled from its
-description, through [`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts)
+description, through [`engine/solve/ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts)
 (`describedLadder`, `ladderTechniques`, `runLadder`, `ladderWalk`), on the
-one loop in [`engine/deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts).**
+one loop in [`engine/solve/deduction-fixpoint.ts`](../src/engine/solve/deduction-fixpoint.ts).**
 The loop is an ordered ladder, easiest first, that restarts from the top the
 moment a technique fires, so one firing is one hint group. It takes only a
 ladder the runtime built (`CompiledTechniques`), and the runtime pairs only a
@@ -119,7 +119,7 @@ What a game must get right:
 - **The grade is the highest tier that fired on each scale, and a cap
   excludes by tier, never by position.** `ladderTechniques` does both from the
   caps the game passes.
-- **Pass a step budget ([`step-budget.ts`](../src/engine/step-budget.ts)) on
+- **Pass a step budget ([`step-budget.ts`](../src/engine/solve/step-budget.ts)) on
   the hint call and omit it on the generator call.**
   A technique that reports progress without changing the board then fails
   loud on the hint path, and the error names the techniques by firing count.
@@ -135,7 +135,7 @@ The shapes that are not the plain one:
 | --- | --- |
 | a technique that, restarted, visits only what a firing reached, so the restart costs little | `CellMarks.visit`, and [`descriptions.md`](./descriptions.md) § "What a technique compiles to" |
 | two scales, each capped and graded apart | [`solo/solver.ts`](../src/games/solo/solver.ts) `SolverUsage.ladder` |
-| a Search no description states, after the compiled techniques | `withSearch`, in [`engine/latin.ts`](../src/engine/latin.ts) |
+| a Search no description states, after the compiled techniques | `withSearch`, in [`engine/solve/latin.ts`](../src/engine/solve/latin.ts) |
 | a hint rung offering a technique's firing only where it serves another | `keptRung`, in [`tents/solver.ts`](../src/games/tents/solver.ts) `linkFor` |
 | a count kept from the firings tally rather than a wrapped rung | [`undead/solver.ts`](../src/games/undead/solver.ts) `solveDeductive` |
 
@@ -264,7 +264,7 @@ game's own solver cannot solve:
 - **An untiered game answers `Game.finishesByDeduction(state)`**, and
   `registerGame` throws for one that leaves it out. Where nothing is deduced
   (a sliding puzzle, a search, a guessing game) the answer is
-  `nothingToDeduce` ([`engine/hint-finishes.ts`](../src/engine/hint-finishes.ts)),
+  `nothingToDeduce` ([`engine/solve/hint-finishes.ts`](../src/engine/solve/hint-finishes.ts)),
   and `untiered-load.test.ts` holds that to the game's code: it is given
   exactly by the games whose hint cannot end in `DEDUCTION_EXHAUSTED`.
 - **A game that deduces and has no tiers answers with `hintFinishes`, never
@@ -284,7 +284,7 @@ A desc upstream's generator wrote that fails these checks is refused, and
 played from the opening a whole plan at a time, ends on a solved board.** A
 solver can settle a board its hint cannot, and a hint can finish one its
 solver stops on, and the hint is what the player meets. The engine gives
-`hintFinishes` ([`engine/hint-finishes.ts`](../src/engine/hint-finishes.ts));
+`hintFinishes` ([`engine/solve/hint-finishes.ts`](../src/engine/solve/hint-finishes.ts));
 a game may walk its own hint engine instead. The walk reads the hint's
 refusals, so a hint that meets a board it cannot finish returns a refusal and
 does not throw. Exemplar: `filling/index.ts`.
@@ -305,7 +305,7 @@ does not throw. Exemplar: `filling/index.ts`.
 ### Giving a deductive game an Unreasonable tier
 
 **To deal boards with one answer that the deductions do not reach, write
-three things for [`engine/answer-search.ts`](../src/engine/answer-search.ts):
+three things for [`engine/solve/answer-search.ts`](../src/engine/solve/answer-search.ts):
 the deduction with a verdict, what to assume where it stops, and what the
 deal draws.** The loop, its bound, the contract and the caching are the
 engine's, and its header says which export is which. Copy
@@ -417,7 +417,7 @@ The budget and the order:
 **Start `draw` from what the Easy generator already makes, and measure which
 start and which strip suit the game before copying another game's.**
 `UnreasonableDeal` in
-[`engine/answer-search.ts`](../src/engine/answer-search.ts) says what
+[`engine/solve/answer-search.ts`](../src/engine/solve/answer-search.ts) says what
 `draw`, `strip`, `deduced` and `answer` each are. In `deduced`, add the hint
 only where it finishes boards the solver does not: asking it of every
 candidate costs a whole replay on each.
@@ -578,7 +578,7 @@ Crossing's solver and hint.
 the boards that need it are a large share.** A description's
 `tiers: [Easy, Normal, Unreasonable]`, passed to `searchTiers`, gives the
 three
-([`engine/answer-search.ts`](../src/engine/answer-search.ts)); its contract
+([`engine/solve/answer-search.ts`](../src/engine/solve/answer-search.ts)); its contract
 asks `deductionFinishes(state, cap)` below Unreasonable, and the game grades
 a rung a tier there (§ "A tier means exactly its rung"). Exemplar: Mosaic.
 
@@ -648,7 +648,7 @@ asks whether its tier is named `Unreasonable`, and for a game with no
   Exemplar: Rome's `loop`, which follows arrows already on the board.
 - **"If this cell is a, that one is b" is a supposition**, even where both
   cells' candidates are notes: no mark records the conditional. Exemplar:
-  `forcing` in [`engine/latin.ts`](../src/engine/latin.ts), a Search.
+  `forcing` in [`engine/solve/latin.ts`](../src/engine/solve/latin.ts), a Search.
 - **Nested speculation is Search twice over**, and so is every true
   recursion tier. Exemplar of a Search: `forcingPass` in Undead's solver.
 - **A bounded walk is still a supposition**, whether a propagation from a
@@ -1312,7 +1312,7 @@ the generator's limit:
   cannot pass.
 - **Where draws are thrown away for a second answer, the search has it in
   hand.** `solvedPositions`
-  ([`engine/answer-search.ts`](../src/engine/answer-search.ts)) hands the
+  ([`engine/solve/answer-search.ts`](../src/engine/solve/answer-search.ts)) hands the
   answers over; a clue can move where they differ so the dealt answer stands
   and the other does not. Exemplar:
   [`rect/generator.ts`](../src/games/rect/generator.ts).
@@ -1564,17 +1564,17 @@ pass's flags and adds one for a cell the answer contradicts, and
 ## The Latin family
 
 **A game on a Latin square builds on
-[`engine/latin.ts`](../src/engine/latin.ts): it states its deductions and
+[`engine/solve/latin.ts`](../src/engine/solve/latin.ts): it states its deductions and
 its ladder in a description, and its `solver.ts` deals the board as the
 compiled ladder reads it, pairs each technique with its reason, and passes
 the compiled `ladder` and the compiled `isAnswer` over that board to
 `latinSolver`** ([descriptions.md](./descriptions.md) § "The answer check"). `latin.ts`'s header
-says what the engine gives: the marks (`engine/ladder-runtime.ts`'s
+says what the engine gives: the marks (`engine/solve/ladder-runtime.ts`'s
 `CellMarks`), the library's techniques
-([`latin.description.yaml`](../src/engine/latin.description.yaml)), forcing
+([`latin.description.yaml`](../src/engine/solve/latin.description.yaml)), forcing
 chains and guess-and-verify recursion at `diffRecursive` (the recursion
 doubling as the uniqueness check), and the generator. The population is
-`git grep -l engine/latin.ts src/games`. The hint side starts at
+`git grep -l engine/solve/latin.ts src/games`. The hint side starts at
 [hints-candidates.md](./hints-candidates.md) § "What every game does".
 
 Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
@@ -1604,7 +1604,7 @@ symbol.
   fake it.** `LatinSolverConfig.repeats` makes the last symbol repeat, and
   its description says the same (`answer.value.repeat`, descriptions.md
   § "The formula syntax"); the comments of
-  [`latin.description.yaml`](../src/engine/latin.description.yaml) say how
+  [`latin.description.yaml`](../src/engine/solve/latin.description.yaml) say how
   the library's techniques then read its multiplicity. Read the marker array back off the
   final cube (`cubeOut`). A game with exactly one such symbol per line needs
   no declaration.

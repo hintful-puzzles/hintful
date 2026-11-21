@@ -1,6 +1,6 @@
 /**
  * Sticks' solver: the ladder `sticks.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), the answer check
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
  * its rules compile to, and the search beneath the ladder.
  *
  * Every technique is upstream's one (`sticks_try`): suppose a line in a blank
@@ -18,19 +18,20 @@
  * The live error overlay ({@link findLiveErrors}) stays the game's own: it
  * judges a board still being filled, which no rule of the answer says.
  */
+
+import { Dsf } from "../../engine/board/dsf.ts";
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Answer,
   answerCache,
   type Deduced,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
-import { Dsf } from "../../engine/board/dsf.ts";
+} from "../../engine/solve/answer-search.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
-} from "../../engine/describe-runtime.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -39,7 +40,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as sticks from "../../generated/games/sticks/sticks.compiled.ts";
 import {
   F_BLOCK,

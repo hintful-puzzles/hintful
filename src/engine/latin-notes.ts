@@ -13,8 +13,8 @@ import {
   strikesOf,
   techniqueRung,
 } from "./candidate-plan.ts";
-import { type Ladder, TIERS } from "./ladder-runtime.ts";
-import { type LatinReason, type LatinRepeats, LatinSolver } from "./latin.ts";
+import { type Ladder, TIERS } from "./solve/ladder-runtime.ts";
+import { type LatinReason, type LatinRepeats, LatinSolver } from "./solve/latin.ts";
 
 /**
  * A Latin game's ladder as a plan that deduces from the notes runs it

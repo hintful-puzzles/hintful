@@ -1,6 +1,6 @@
 /**
  * Dominosa's solver: the ladder `dominosa.description.yaml` states,
- * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`),
+ * compiled, on the engine's marks and runner (`engine/solve/ladder-runtime.ts`),
  * the answer check its rules compile to, and the search beneath the ladder.
  *
  * The answer is on the spots, the edges between squares side by side, each
@@ -20,8 +20,8 @@ import {
   answerCache,
   type Deduced,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
-import { type GridSpace, rangeMask } from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/answer-search.ts";
+import { type GridSpace, rangeMask } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -29,7 +29,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as dominosa from "../../generated/games/dominosa/dominosa.compiled.ts";
 import {
   DIFF_BASIC,

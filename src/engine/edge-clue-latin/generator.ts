@@ -14,13 +14,13 @@
 
 import { shuffle } from "../board/shuffle.ts";
 import { retryLimit } from "../contract/retry-limit.ts";
+import type { RandomState } from "../random/index.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
   DIFF_UNFINISHED,
   latinGenerate,
-} from "../latin.ts";
-import type { RandomState } from "../random/index.ts";
+} from "../solve/latin.ts";
 import { solveEdgeClues } from "./solver.ts";
 import {
   ADJTHAN,

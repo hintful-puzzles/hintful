@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { pathGame } from "../games/path/index.ts";
-import { pathWalk } from "../games/path/solver.ts";
-import { DIFF_NORMAL, MODE_PATH, newState } from "../games/path/state.ts";
-import { newDesc as newSlantDesc } from "../games/slant/generator.ts";
-import { deduceHintPlan } from "../games/slant/solver.ts";
-import { DIFF_HARD, newState as slantNewState } from "../games/slant/state.ts";
+import { pathGame } from "../../games/path/index.ts";
+import { pathWalk } from "../../games/path/solver.ts";
+import { DIFF_NORMAL, MODE_PATH, newState } from "../../games/path/state.ts";
+import { newDesc as newSlantDesc } from "../../games/slant/generator.ts";
+import { deduceHintPlan } from "../../games/slant/solver.ts";
+import { DIFF_HARD, newState as slantNewState } from "../../games/slant/state.ts";
+import { randomNew } from "../random/index.ts";
 import {
   MARK,
   PLACE,
@@ -15,7 +16,6 @@ import {
 } from "./describe-runtime.ts";
 import { FactGraph, placeNotes, readsOf } from "./fact-graph.ts";
 import { ladderWalk, TIERS } from "./ladder-runtime.ts";
-import { randomNew } from "./random/index.ts";
 
 const reads = (cells: number[], edges: number[] = []) => ({ cells, edges });
 

@@ -25,7 +25,6 @@ import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point, Size } from "../../engine/contract/types.ts";
 import { numberItem } from "../../engine/game-id/params.ts";
 import { paramsCodec, size } from "../../engine/game-id/params-codec.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   type Game,
   registerGame,
@@ -48,6 +47,7 @@ import {
   stripModifiers,
 } from "../../engine/input/pointer.ts";
 import { WIN_NONE, type WinTone } from "../../engine/render/win-wave.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { newUntangleDesc } from "./generator.ts";
 import {
   deduceUntangleHintPlan,

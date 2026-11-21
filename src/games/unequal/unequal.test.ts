@@ -33,9 +33,9 @@ import {
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
-import { DIFF_IMPOSSIBLE } from "../../engine/latin.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
+import { DIFF_IMPOSSIBLE } from "../../engine/solve/latin.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

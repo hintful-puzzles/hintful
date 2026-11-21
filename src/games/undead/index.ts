@@ -64,7 +64,7 @@ import {
 } from "../../engine/pencil-prefs.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import { registerGame } from "../../engine/registry.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import { newUndeadDesc } from "./generator.ts";
 import {
   border,

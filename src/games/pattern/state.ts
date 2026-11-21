@@ -10,12 +10,6 @@
  * `grid` clones per move.
  */
 
-import {
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
-  searchTierItem,
-  searchTierSegment,
-} from "../../engine/answer-search.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
@@ -31,6 +25,12 @@ import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { AREA_TOO_LARGE, dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import type { GridCursor, GridDrag } from "../../engine/input/pointer.ts";
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/solve/answer-search.ts";
 import * as pattern from "../../generated/games/pattern/pattern.compiled.ts";
 
 // --- cell values (upstream #defines) -------------------------------------

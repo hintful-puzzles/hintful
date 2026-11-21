@@ -20,7 +20,7 @@
  * the declaration and nothing else.
  */
 import { describe, expect, it } from "vitest";
-import type { FiringTally } from "../deduction-fixpoint.ts";
+import type { FiringTally } from "../solve/deduction-fixpoint.ts";
 import { triesWhileLoading } from "./dealt.ts";
 import { inDeepTier } from "./slow.ts";
 

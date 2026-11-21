@@ -10,7 +10,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
   DESC_NOT_UNIQUE,
@@ -27,6 +26,7 @@ import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { pencilIndicatorReach } from "../../engine/render/pencil-indicator.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";

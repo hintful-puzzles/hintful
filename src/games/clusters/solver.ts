@@ -1,6 +1,6 @@
 /**
  * Clusters' solver: the ladder `clusters.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), with the
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the
  * walk a hint takes over it; the answer check its rules
  * compile to; the search for a board's answers over the ladder; and the
  * error overlay the renderer and the mistake check read.
@@ -14,8 +14,8 @@
  * ladder's verdict on every board it tries decides which puzzles exist.
  */
 
-import { type Answer, searchAnswers } from "../../engine/answer-search.ts";
-import { clueList, describedSpace } from "../../engine/describe-runtime.ts";
+import { type Answer, searchAnswers } from "../../engine/solve/answer-search.ts";
+import { clueList, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -24,7 +24,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as clusters from "../../generated/games/clusters/clusters.compiled.ts";
 import { COLMASK, DIFF_TRICKY, F_COLOR_0, F_COLOR_1, F_SINGLE } from "./state.ts";
 

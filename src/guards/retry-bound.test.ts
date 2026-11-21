@@ -93,7 +93,7 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   "engine/board/grid/tilings/spectre.ts › extendCoords": [
     "pushes a level each pass, up to n",
   ],
-  "engine/latin.ts › matching": [
+  "engine/solve/latin.ts › matching": [
     "Hopcroft–Karp: each phase enlarges the matching, which neither side can exceed",
     "a depth-first walk of the phase's layered graph, each edge tried once",
   ],

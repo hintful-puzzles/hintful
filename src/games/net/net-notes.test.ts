@@ -4,7 +4,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { D, L, R, U } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
@@ -18,6 +17,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newDesc } from "./generator.ts";

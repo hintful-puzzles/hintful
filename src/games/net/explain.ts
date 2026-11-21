@@ -30,9 +30,9 @@ import {
   DIRECTIONS,
   opposite,
 } from "../../engine/board/square-edges.ts";
-import type { FactGraph } from "../../engine/fact-graph.ts";
-import type { CellMarks } from "../../engine/ladder-runtime.ts";
 import { offset } from "../../engine/mechanics/wires.ts";
+import type { FactGraph } from "../../engine/solve/fact-graph.ts";
+import type { CellMarks } from "../../engine/solve/ladder-runtime.ts";
 import type { Dealt } from "../../generated/games/net/net.compiled.ts";
 import { type Fired, type NetGeometry, NONE, recordedMarks, WIRE } from "./solver.ts";
 import {

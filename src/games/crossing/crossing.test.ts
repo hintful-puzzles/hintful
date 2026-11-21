@@ -8,7 +8,6 @@
  * format, and tier-2.5 render scenarios with snapshots.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   COL_BACKGROUND,
   COL_ERROR,
@@ -37,6 +36,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { colorToOKLCH } from "../../engine/testing/oklch.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";

@@ -35,10 +35,14 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { PLACE } from "../../engine/describe-runtime.ts";
 import type { TargetVerbs } from "../../engine/input/target-verb.ts";
-import { type CellMarks, ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import { type Judging, judgeWalked } from "../../engine/move-judge.ts";
+import { PLACE } from "../../engine/solve/describe-runtime.ts";
+import {
+  type CellMarks,
+  ladderWalk,
+  TIERS,
+} from "../../engine/solve/ladder-runtime.ts";
 import * as net from "../../generated/games/net/net.compiled.ts";
 import { Facts, type Rung, record, type Side, type Step, survey } from "./explain.ts";
 import { SIDE, type SideMark } from "./hint-marks.ts";

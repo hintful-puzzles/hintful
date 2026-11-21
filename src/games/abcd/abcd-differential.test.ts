@@ -12,8 +12,8 @@
  * build this repo does not have — see `engine/testing/differential.ts`.
  */
 
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { validateDesc } from "../../engine/contract/desc-error.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/abcd-c-reference.json" with { type: "json" };
 import { newAbcdDesc } from "./generator.ts";

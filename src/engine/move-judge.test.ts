@@ -41,22 +41,7 @@ import { unrulyGame } from "../games/unruly/index.ts";
 import { NAMES } from "../generated/games/lightup/lightup.compiled.ts";
 import { NAMES as UNRULY_NAMES } from "../generated/games/unruly/unruly.compiled.ts";
 import { D, dirX, dirY, L, R, U } from "./board/square-edges.ts";
-import type { Reads } from "./describe-runtime.ts";
-import {
-  describedSpace,
-  type Fire,
-  type GridSpace,
-  type Marks,
-  PLACE,
-} from "./describe-runtime.ts";
 import { SYMM_ROT4 } from "./generate/symmetric-blacks.ts";
-import {
-  CellMarks,
-  compiledRung,
-  type LadderEntry,
-  ladderWalk,
-  TIERS,
-} from "./ladder-runtime.ts";
 import {
   auditChains,
   type ChainAudit,
@@ -66,6 +51,21 @@ import {
   verdictOf,
 } from "./move-judge.ts";
 import { randomNew } from "./random/index.ts";
+import type { Reads } from "./solve/describe-runtime.ts";
+import {
+  describedSpace,
+  type Fire,
+  type GridSpace,
+  type Marks,
+  PLACE,
+} from "./solve/describe-runtime.ts";
+import {
+  CellMarks,
+  compiledRung,
+  type LadderEntry,
+  ladderWalk,
+  TIERS,
+} from "./solve/ladder-runtime.ts";
 import { dealt } from "./testing/dealt.ts";
 
 const EASY: LightupParams = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };

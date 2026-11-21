@@ -13,7 +13,6 @@
  * which is the solver's.
  */
 
-import { searchTiers } from "../../engine/answer-search.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { DOWN, RIGHT, squareEdges } from "../../engine/board/square-edges.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
@@ -44,6 +43,7 @@ import {
   LINE,
   type LineDrawingUi,
 } from "../../engine/mechanics/line-drawing.ts";
+import { searchTiers } from "../../engine/solve/answer-search.ts";
 import * as path from "../../generated/games/path/path.compiled.ts";
 
 // --- difficulty -------------------------------------------------------------

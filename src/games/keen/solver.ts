@@ -1,7 +1,7 @@
 /**
  * Keen solver: the ladder `keen.description.yaml` states, compiled, and the
  * answer check its rules compile to, on the shared `LatinSolver`
- * (`engine/latin.ts`), whose forcing chains and recursion are the search above
+ * (`engine/solve/latin.ts`), whose forcing chains and recursion are the search above
  * the ladder. The tiers:
  *
  *   Easy (`DIFF_EASY`)         → each cage's values amalgamated, only at a cap
@@ -17,8 +17,9 @@
  */
 
 import type { Point } from "../../engine/contract/types.ts";
-import { latinSpace } from "../../engine/describe-runtime.ts";
-import type { Ladder } from "../../engine/ladder-runtime.ts";
+import type { SingleReason } from "../../engine/latin-hint.ts";
+import { latinSpace } from "../../engine/solve/describe-runtime.ts";
+import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import {
   DIFF_AMBIGUOUS,
   DIFF_IMPOSSIBLE,
@@ -26,8 +27,7 @@ import {
   type LatinSolver,
   latinLadder,
   latinSolver,
-} from "../../engine/latin.ts";
-import type { SingleReason } from "../../engine/latin-hint.ts";
+} from "../../engine/solve/latin.ts";
 import type { Clauses } from "../../engine/stated.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
 import {

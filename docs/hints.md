@@ -1012,7 +1012,7 @@ themselves. Decide first where the record comes from:
 - **Threaded**: an optional recorder passed into the game's own rules, built
   only on the hint path, with every reason allocation gated on it so the
   generator's path is unchanged. Exemplars: `compiledRung`
-  ([`engine/ladder-runtime.ts`](../src/engine/ladder-runtime.ts)), which
+  ([`engine/solve/ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts)), which
   builds a reason only where the marks carry a recorder, and the skeleton's
   `ladder`.
 - **Parallel**: separate code over the solver's primitives that the generator
@@ -1026,7 +1026,7 @@ A compiled ladder's `firings` tally counts by rung id, which is not a
 record. What the ladder gives is the walk and a certified rung list:
 
 - **Walk it with `ladderWalk`**
-  ([`ladder-runtime.ts`](../src/engine/ladder-runtime.ts)), built once over
+  ([`ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts)), built once over
   the working marks, whose doc says what it takes and returns. Turn each
   firing it takes into a step and hand that to `deduceHintPlan`. It takes
   the firing that continues from the plan's latest steps, rung order
@@ -1068,7 +1068,7 @@ record. What the ladder gives is the walk and a certified rung list:
 Rules for any recorder:
 
 - **Group by a firing id, not by adjacency.** Give one firing's ops a shared
-  `group` ([`deduction-record.ts`](../src/engine/deduction-record.ts)) and
+  `group` ([`deduction-record.ts`](../src/engine/solve/deduction-record.ts)) and
   merge records by group into one multi-cell `HintStep`, in first-seen order.
   The links of a real chain stay separate steps.
 - **One `group` covers exactly one firing.** A counter that bumps once per
@@ -1111,7 +1111,7 @@ rule that fired.
 
 A described game has this by construction: its compiled ladder fires one
 binding at a time (`ladderWalk` in
-[`ladder-runtime.ts`](../src/engine/ladder-runtime.ts)), so the bullets bind
+[`ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts)), so the bullets bind
 a hand-written solver.
 
 ### A firing is not always a technique, so check the boundary too
@@ -1445,7 +1445,7 @@ can afford the exhaustive form, every cell marked alone as the answer has it
 
 ### The step budget
 
-Tick a [`stepBudget`](../src/engine/step-budget.ts) once per iteration of
+Tick a [`stepBudget`](../src/engine/solve/step-budget.ts) once per iteration of
 any "repeat until no progress" loop on the hint path, so a rule that reports
 progress without changing the board throws a labeled error in milliseconds
 and does not hang inside one `hint()` call.
@@ -1456,7 +1456,7 @@ and does not hang inside one `hint()` call.
   the marks' budget that only a hint's walk carries (gated),
   `deduceForcedEdges` in `palisade/solver.ts` (hint-only, so unconditional).
 - **A compiled ladder's loop ticks the budget**
-  ([`deduction-fixpoint.ts`](../src/engine/deduction-fixpoint.ts)): set the
+  ([`deduction-fixpoint.ts`](../src/engine/solve/deduction-fixpoint.ts)): set the
   marks' `budget` on the hint's run and leave it unset on the generator's.
 - **A search bounded by its visited set needs no budget.**
 

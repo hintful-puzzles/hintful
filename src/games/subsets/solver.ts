@@ -1,6 +1,6 @@
 /**
  * Subsets' solver: the ladder `subsets.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), the hint plan
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the hint plan
  * read off its firings, and the board's validator.
  *
  * The marks hold each square's set as one more than the number its letters
@@ -13,7 +13,8 @@
  * arrow rule that it wrote, commented out and never compiled.
  */
 
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import type { Judging } from "../../engine/move-judge.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
@@ -21,7 +22,7 @@ import {
   PLACE,
   rangeMask,
   STRIKE,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -33,9 +34,8 @@ import {
   type Taken,
   TIERS,
   uncluedRung,
-} from "../../engine/ladder-runtime.ts";
-import type { Judging } from "../../engine/move-judge.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import {
   ADJTHAN,

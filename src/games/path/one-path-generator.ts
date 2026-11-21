@@ -18,7 +18,6 @@
  * numbers on a board against seven, with as many walls (2026-10-23).
  */
 
-import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import {
   edgeBetween,
@@ -32,6 +31,7 @@ import {
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { OPEN } from "../../engine/mechanics/line-drawing.ts";
 import { type RandomState, randomBits, randomUpto } from "../../engine/random/index.ts";
+import { dealUnreasonable } from "../../engine/solve/answer-search.ts";
 import { type PathSolve, searchAnswer, solvePath } from "./solver.ts";
 import {
   DIFF_EASY,

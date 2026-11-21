@@ -10,7 +10,6 @@ import { NO_MOVE_WORTH_MAKING } from "../../engine/contract/hint-refusal.ts";
 import type { Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
@@ -23,6 +22,7 @@ import {
   stripModifiers,
 } from "../../engine/input/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { voice } from "../../generated/games/fifteen/fifteen.compiled.ts";
 import { TILE } from "./kinds.ts";
 import {

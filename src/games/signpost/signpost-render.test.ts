@@ -7,7 +7,6 @@
  * assertions survive a careless `-u`).
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
@@ -16,6 +15,7 @@ import {
   WIN_BODY,
   WIN_NONE,
 } from "../../engine/render/win-wave.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { opsOfKind, RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {

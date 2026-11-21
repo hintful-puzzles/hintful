@@ -6,8 +6,8 @@
 import { describe, expect, it } from "vitest";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing, markSides } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";

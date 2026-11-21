@@ -15,7 +15,6 @@ import type { KeyLabel, Point } from "../../engine/contract/types.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { modifierItem } from "../../engine/game-id/modifier.ts";
 import { numberItem } from "../../engine/game-id/params.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { colorKeysZeroIsTen } from "../../engine/input/key-labels.ts";
 import {
@@ -40,6 +39,7 @@ import {
   withRuleOuts,
 } from "../../engine/mechanics/code-rows.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import {
   GUESS_RUNGS,
   type GuessHighlights,

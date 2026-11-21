@@ -1,6 +1,6 @@
 /**
  * Unruly solver: the ladder `unruly.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the reason
  * each technique records for the hint; the answer check its rules compile to,
  * which the state reads; and the error overlay the renderer reads.
  *
@@ -8,8 +8,9 @@
  * per board during generation, where a clone per fill would be wasteful. The
  * `Game`'s `executeMove` stays pure.
  */
-import { describedSpace } from "../../engine/describe-runtime.ts";
+
 import { entryMistakes, gridCell } from "../../engine/entry-mistakes.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -17,7 +18,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as unruly from "../../generated/games/unruly/unruly.compiled.ts";
 import { EMPTY, ONE, ZERO } from "./constants.ts";
 import type { UnrulyMistake, UnrulyState } from "./state.ts";

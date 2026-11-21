@@ -18,7 +18,6 @@ import {
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
 import { rulesetItem } from "../../engine/game-id/ruleset.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { MOD_MASK, MOD_NUM_KEYPAD, newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
@@ -26,6 +25,7 @@ import {
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { hint, hintKeepTrack, TWIDDLE_RUNGS, type TwiddleRung } from "./hint.ts";
 import {
   animLength,

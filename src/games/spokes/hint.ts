@@ -8,8 +8,8 @@
 
 import type { HintResult, MoveVerdict } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
-import { PLACE } from "../../engine/describe-runtime.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
+import { PLACE } from "../../engine/solve/describe-runtime.ts";
 import { STATED } from "../../generated/games/spokes/spokes.compiled.ts";
 import { HUB, SPOKE, type Spoke } from "./kinds.ts";
 import {

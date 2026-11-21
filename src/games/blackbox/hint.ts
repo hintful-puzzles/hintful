@@ -40,7 +40,8 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { clueList, traceBeam } from "../../engine/describe-runtime.ts";
+import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
+import { clueList, traceBeam } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -48,9 +49,8 @@ import {
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-} from "../../engine/ladder-runtime.ts";
-import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as blackbox from "../../generated/games/blackbox/blackbox.compiled.ts";
 import { BUTTON, LASER } from "./hint-marks.ts";
 import {

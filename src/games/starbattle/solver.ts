@@ -1,6 +1,6 @@
 /**
  * Star Battle's deductions: the ladder `starbattle.description.yaml` states,
- * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`),
+ * compiled, on the engine's marks and runner (`engine/solve/ladder-runtime.ts`),
  * with the reason each technique records for the hint, and the answer check
  * its rules compile to.
  *
@@ -15,8 +15,8 @@
  */
 
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
-import { describedSpace, partition } from "../../engine/describe-runtime.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
+import { describedSpace, partition } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -25,7 +25,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as starbattle from "../../generated/games/starbattle/starbattle.compiled.ts";
 import {
   BLANK,

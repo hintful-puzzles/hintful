@@ -10,9 +10,7 @@ import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { SEARCH_OUT_OF_REACH } from "../../engine/contract/hint-refusal.ts";
 import type { Sentence } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
@@ -39,6 +37,8 @@ import {
   slidePieces,
   toroidalDist,
 } from "../../engine/slide-planner.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import * as sixteen from "../../generated/games/sixteen/sixteen.compiled.ts";
 import { SQUARE, TILE } from "./kinds.ts";
 import {

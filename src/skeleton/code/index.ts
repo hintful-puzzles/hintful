@@ -11,7 +11,6 @@
 import { rejectMove } from "../../engine/contract/assert-never.ts";
 import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { KeyLabel, Point, ReferenceModel } from "../../engine/contract/types.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { click, key, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import { digitKeyCode, digitKeys } from "../../engine/input/key-labels.ts";
 import {
@@ -35,6 +34,7 @@ import {
   selectedSlot,
   withRuleOuts,
 } from "../../engine/mechanics/code-rows.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import {
   codesFitting,
   SKELETON_RUNGS,

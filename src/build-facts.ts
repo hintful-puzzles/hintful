@@ -45,4 +45,4 @@ export {
 export { getTsGame, registeredGameIds } from "./engine/registry.ts";
 export { expandPair } from "./engine/render/piece.ts";
 export { RULES_OUT_PLACEHOLDER, rulesOutHelp } from "./engine/rules-out.ts";
-export { WING_PLACEHOLDER, wingHelp } from "./engine/wing.ts";
+export { WING_PLACEHOLDER, wingHelp } from "./engine/solve/wing.ts";

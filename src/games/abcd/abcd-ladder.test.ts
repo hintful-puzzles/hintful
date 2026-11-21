@@ -15,8 +15,9 @@
  *
  * ABCD is untiered, so there is one cap.
  */
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newAbcdDesc } from "./generator.ts";
 import { solveAbcd } from "./solver.ts";

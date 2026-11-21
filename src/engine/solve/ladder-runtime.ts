@@ -9,6 +9,7 @@
  * recursion); a game whose whole solve is its ladder uses it as it is.
  */
 
+import type { Traced } from "../move-judge.ts";
 import type {
   CompiledTechniques,
   DeductionTechnique,
@@ -37,7 +38,6 @@ import {
 } from "./describe-runtime.ts";
 import { FactGraph, readsOf } from "./fact-graph.ts";
 import { MADE } from "./marks-made.ts";
-import type { Traced } from "./move-judge.ts";
 import { type StepBudget, stepBudget } from "./step-budget.ts";
 
 /** Why a placement struck a value from a cell: the value just placed at

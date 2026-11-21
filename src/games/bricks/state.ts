@@ -205,7 +205,7 @@ const BOARDS: BricksParams[] = [
  *
  * - Upstream's `Normal` is **`Unreasonable`** here: a board with one answer
  *   that the ladder stops short of, which the engine's search proves
- *   (`engine/answer-search.ts`). A search is not a technique a player can
+ *   (`engine/solve/answer-search.ts`). A search is not a technique a player can
  *   follow, and only a tier named `Unreasonable` may ship one.
  * - Upstream's `Tricky` has **no name at all**, because it has no boards (see
  *   `MAX_GENERABLE_DIFF`). `DIFF_CHARS` still spells it, so a game ID or saved

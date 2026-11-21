@@ -1,6 +1,6 @@
 /**
  * Magnets' solver: the ladder `magnets.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), and the
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the
  * answer check its rules compile to.
  *
  * Easy is upstream's: a square down to one value, a line whose count is met
@@ -12,7 +12,7 @@
  */
 
 import type { GameStatus } from "../../engine/contract/types.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
@@ -20,7 +20,7 @@ import {
   partition,
   perPlace,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -28,7 +28,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 import {
   COLUMN,

@@ -24,11 +24,15 @@ import {
   type DescParse,
   descValue,
 } from "../../engine/contract/desc-error.ts";
-import { type ClueList, clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { endParams, paramsLetter } from "../../engine/game-id/params.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
+import {
+  type ClueList,
+  clueList,
+  latinSpace,
+} from "../../engine/solve/describe-runtime.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------

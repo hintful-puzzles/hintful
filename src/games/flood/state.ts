@@ -7,12 +7,12 @@ import {
 import type { PresetBoards } from "../../engine/contract/game.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import { digitValue, isDigit, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { parseDimensions, unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as flood from "../../generated/games/flood/flood.compiled.ts";
 import { choosemove, completed, fill, SolverScratch } from "./solver.ts";
 

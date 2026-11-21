@@ -4,7 +4,7 @@
  * layout: every layout of a 3×3 board, and of a 2×4 one.
  */
 import { expect, it } from "vitest";
-import { describedSpace, sightSets } from "../../src/engine/describe-runtime.ts";
+import { describedSpace, sightSets } from "../../src/engine/solve/describe-runtime.ts";
 import { sightlineGuards } from "./describe-check.ts";
 
 for (const [w, h] of [

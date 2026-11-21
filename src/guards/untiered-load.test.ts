@@ -20,8 +20,8 @@ import {
 import { DRAFT_HINT } from "../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../engine/contract/hint-refusal.ts";
 import { fakeGame } from "../engine/fake-game.ts";
-import { hintFinishes, nothingToDeduce } from "../engine/hint-finishes.ts";
 import { _unregisterGame, registerGame } from "../engine/registry.ts";
+import { hintFinishes, nothingToDeduce } from "../engine/solve/hint-finishes.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import {
   gamesUsing,

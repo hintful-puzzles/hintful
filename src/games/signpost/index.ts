@@ -5,14 +5,6 @@
  * follows its cell's arrow and the numbers run consecutively.
  */
 
-import {
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
-  searchTierContract,
-  searchTierItem,
-  searchTierSegment,
-  solveFromAnswer,
-} from "../../engine/answer-search.ts";
 import { MAX_CANDIDATE_VALUE } from "../../engine/board/candidate-bits.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
@@ -23,7 +15,6 @@ import {
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   fromCoord as fromCoordE,
   type Game,
@@ -48,6 +39,15 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  searchTierContract,
+  searchTierItem,
+  searchTierSegment,
+  solveFromAnswer,
+} from "../../engine/solve/answer-search.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { newSignpostDesc } from "./generator.ts";
 import {

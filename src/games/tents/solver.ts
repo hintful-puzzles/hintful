@@ -1,6 +1,6 @@
 /**
  * Tents' solver: the ladder `tents.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/ladder-runtime.ts`): a value a square
+ * engine's marks and runner (`engine/solve/ladder-runtime.ts`): a value a square
  * (a tent, grass or a tree), and on each tent the player's link to its tree,
  * a mark naming one tree.
  *
@@ -14,7 +14,8 @@
  */
 
 import type { GameStatus } from "../../engine/contract/types.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
@@ -22,8 +23,7 @@ import {
   MARK,
   PLACE,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
-import { spokenOf, techniqueOf } from "../../engine/described-hint.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -37,7 +37,7 @@ import {
   type Said,
   type Taken,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import {
   BLANK,

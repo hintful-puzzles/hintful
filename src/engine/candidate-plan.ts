@@ -48,9 +48,6 @@ import {
   so,
 } from "./contract/hint-words.ts";
 import type { Point } from "./contract/types.ts";
-import { describedSpace, PLACE, STRIKE } from "./describe-runtime.ts";
-import { FactGraph } from "./fact-graph.ts";
-import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
 import {
   type Conclusions,
   candidateConclusions,
@@ -59,14 +56,6 @@ import {
   type Premise,
   populateText,
 } from "./hint-text.ts";
-import {
-  admits,
-  type Caps,
-  CellMarks,
-  type Ladder,
-  type Firing as LadderFiring,
-  techniqueFirings,
-} from "./ladder-runtime.ts";
 import {
   type CellRegion,
   type RowColRegion,
@@ -78,7 +67,22 @@ import {
   type WholeRegion,
 } from "./latin-hint.ts";
 import type { Judging, TracedFiring } from "./move-judge.ts";
-import { stepBudget } from "./step-budget.ts";
+import { describedSpace, PLACE, STRIKE } from "./solve/describe-runtime.ts";
+import { FactGraph } from "./solve/fact-graph.ts";
+import {
+  type FrontierCandidate,
+  gridKey,
+  HintFrontier,
+} from "./solve/hint-frontier.ts";
+import {
+  admits,
+  type Caps,
+  CellMarks,
+  type Ladder,
+  type Firing as LadderFiring,
+  techniqueFirings,
+} from "./solve/ladder-runtime.ts";
+import { stepBudget } from "./solve/step-budget.ts";
 
 /** Why a placement's row/column cull strikes what it strikes: the value just
  * placed at `(px, py)`. Every candidate game's reason union carries it. */

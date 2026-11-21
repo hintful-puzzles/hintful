@@ -1,5 +1,5 @@
 /**
- * Tests for the generic Latin-square solver/generator (`engine/latin.ts`).
+ * Tests for the generic Latin-square solver/generator (`engine/solve/latin.ts`).
  *
  * `latin.ts` is the largest module in the engine and the Latin family sits on
  * it. Tested only end to end through `latinSolver`, a defect planted in one of
@@ -30,6 +30,7 @@
  * generator change while proving nothing the differentials do not already.
  */
 import { describe, expect, it } from "vitest";
+import { randomNew, randomUpto } from "../random/index.ts";
 import type { DeductionRecord } from "./deduction-record.ts";
 import {
   DIFF_AMBIGUOUS,
@@ -44,7 +45,6 @@ import {
   latinSolver,
   matching,
 } from "./latin.ts";
-import { randomNew, randomUpto } from "./random/index.ts";
 
 /** A plain Latin-square config: no game-specific deductions or rules, the
  * library's singles at 0, its set at 1, its fish and wing at 2, the search at

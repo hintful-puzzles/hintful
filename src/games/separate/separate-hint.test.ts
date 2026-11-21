@@ -11,14 +11,14 @@
  * this is a slice of that corpus sized for the gate.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
-import { ladderWalk, TIERS } from "../../engine/ladder-runtime.ts";
 import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/mechanics/border-grid.ts";
 import { type BorderHint, EDGE } from "../../engine/mechanics/border-grid-hint.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
+import { ladderWalk, TIERS } from "../../engine/solve/ladder-runtime.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { opsOfKind } from "../../engine/testing/recording-drawing.ts";

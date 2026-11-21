@@ -1,6 +1,6 @@
 /**
  * ABCD's solver: the ladder `abcd.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/ladder-runtime.ts`), the answer check
+ * engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
  * its rules compile to, and the search beneath the ladder.
  *
  * The ladder is upstream's three techniques (`abcd_solve_game`): a line
@@ -21,8 +21,8 @@ import {
   answerCache,
   type Deduced,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+} from "../../engine/solve/answer-search.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
@@ -30,7 +30,7 @@ import {
   perPlace,
   popcount,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -39,7 +39,7 @@ import {
   runLadder,
   TIERS,
   uncluedRung,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as abcd from "../../generated/games/abcd/abcd.compiled.ts";
 import {
   type AbcdParams,

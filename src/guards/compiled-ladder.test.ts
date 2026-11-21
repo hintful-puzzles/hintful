@@ -24,10 +24,10 @@ const sources = import.meta.glob<string>(["../**/*.ts", "!../**/*.test.ts"], {
   import: "default",
 });
 
-const RUNTIME = "src/engine/ladder-runtime.ts";
+const RUNTIME = "src/engine/solve/ladder-runtime.ts";
 /** The brands, by the module that declares each. */
 const BRANDS: readonly ExportRef[] = [
-  { module: "src/engine/deduction-fixpoint.ts", name: "CompiledTechniques" },
+  { module: "src/engine/solve/deduction-fixpoint.ts", name: "CompiledTechniques" },
   { module: RUNTIME, name: "Rung" },
 ];
 /** Where a brand is given: the runtime, and a tool wrapping what it gave. */

@@ -16,8 +16,8 @@
 import { describe, expect, it } from "vitest";
 import { evidenceOf } from "../../engine/candidate-plan.ts";
 import type { HintStep } from "../../engine/contract/game.ts";
-import { confinedLines } from "../../engine/latin.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { confinedLines } from "../../engine/solve/latin.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { narrate, premise, type SaladHint } from "./hint.ts";
 import { saladGame } from "./index.ts";

@@ -50,8 +50,8 @@ const MAX_SEEDS = 40;
  */
 const DRIVING = [
   ...new Set([
-    ...using("src/engine/deduction-fixpoint.ts", "singleFirings", "call"),
-    ...using("src/engine/ladder-runtime.ts", "ladderWalk", "call"),
+    ...using("src/engine/solve/deduction-fixpoint.ts", "singleFirings", "call"),
+    ...using("src/engine/solve/ladder-runtime.ts", "ladderWalk", "call"),
   ]),
 ];
 const CONTINUING: readonly string[] = DRIVING.filter((id) => {
@@ -75,7 +75,7 @@ describe("ladder hint plans continue from their latest step where they can", () 
   // A game that builds its own frontier continues by it, and
   // `hint-frontier.test.ts`'s `OWN_FRONTIER` accounts for it.
   it("finds every game on deduceHintPlan continuing, or taking the frontier itself", () => {
-    const own = using("src/engine/hint-frontier.ts", "HintFrontier", "new");
+    const own = using("src/engine/solve/hint-frontier.ts", "HintFrontier", "new");
     expect(own.length).toBeGreaterThan(0);
     const off = using("src/engine/hint-plan.ts", "deduceHintPlan", "call").filter(
       (id) => !CONTINUING.includes(id) && !own.includes(id),

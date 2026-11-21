@@ -9,10 +9,10 @@
  * ladder or the search, a change to their power changes which boards exist.
  */
 
-import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { dealUnreasonable } from "../../engine/solve/answer-search.ts";
 import { deducedBricks, deductionFinishes, searchAnswers } from "./solver.ts";
 import {
   applyBounds,

@@ -7,7 +7,6 @@
  */
 
 import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
-import { PLACE } from "../../engine/describe-runtime.ts";
 import { describedEdgeHint, type Fired } from "../../engine/described-edge-hint.ts";
 import { edgeContinuation } from "../../engine/hint-text.ts";
 import {
@@ -18,6 +17,7 @@ import {
   type ForcedBorderEdge,
   forcedEdgesOf,
 } from "../../engine/mechanics/border-grid-hint.ts";
+import { PLACE } from "../../engine/solve/describe-runtime.ts";
 import {
   SAYS_KINDS,
   STATED,

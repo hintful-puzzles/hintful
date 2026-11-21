@@ -77,7 +77,6 @@ import {
   narrateLatinReason,
   type Premise,
 } from "../../engine/hint-text.ts";
-import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
 import {
   byCell,
   latinNotesLadder,
@@ -90,6 +89,10 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
+import type {
+  Firing as LadderFiring,
+  Said,
+} from "../../engine/solve/ladder-runtime.ts";
 import { statedParts } from "../../engine/stated.ts";
 import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
 import type { HintReason } from "./solver.ts";

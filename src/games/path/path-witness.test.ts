@@ -7,15 +7,19 @@
  * closes it is placed, so no firing of `lineBreaks` is left to name it.
  */
 import { describe, expect, it } from "vitest";
-import { brokeAt, witnessNodes, witnessOfDef } from "../../engine/describe-runtime.ts";
+import { randomNew } from "../../engine/random/index.ts";
+import {
+  brokeAt,
+  witnessNodes,
+  witnessOfDef,
+} from "../../engine/solve/describe-runtime.ts";
 import {
   ladderTechniques,
   runLadder,
   type Said,
   TIERS,
   techniqueFirings,
-} from "../../engine/ladder-runtime.ts";
-import { randomNew } from "../../engine/random/index.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import type {
   LineBreaksBinding,
   LineBreaksSays,

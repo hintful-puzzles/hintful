@@ -372,12 +372,13 @@ function stepWhen(step: Step, e: Expr, where: string): string {
 }
 
 /** The module's planner steps: each kind's clauses in `STATED`'s form, what
- * the planner supplies, and each wording's `when` as code. */
+ * the planner supplies, and each wording's `when` as code. `stepVoice` is the
+ * specifier the module imports `step-voice.ts` by. */
 export function stepsBlock(
   steps: readonly Step[],
   own: readonly Technique[],
   words: GameWords | null,
-  runtime: string,
+  stepVoice: string,
 ): string[] {
   if (steps.length === 0) return [];
   for (const s of steps) {
@@ -464,7 +465,7 @@ export function stepsBlock(
     ]),
     "};",
     "",
-    `import { ${steps.some((s) => clauseTerms(s).length > 0) ? "type StepClause, " : ""}stepVoice, type StepVoice, ${steps.some((s) => s.terms.some((t) => t.kind === "unit")) ? "type Unit, " : ""}type Voice } from "${runtime.replace(/describe-runtime\.ts$/, "step-voice.ts")}";`,
+    `import { ${steps.some((s) => clauseTerms(s).length > 0) ? "type StepClause, " : ""}stepVoice, type StepVoice, ${steps.some((s) => s.terms.some((t) => t.kind === "unit")) ? "type Unit, " : ""}type Voice } from "${stepVoice}";`,
     "",
     "/** The steps, spoken: a game declares once what its marks are drawn on and",
     " * how its values print, the description's nouns filled in. */",

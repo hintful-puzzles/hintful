@@ -15,11 +15,6 @@
  * guarantee.
  */
 
-import {
-  DIFF_EASY,
-  searchTierItem,
-  searchTierSegment,
-} from "../../engine/answer-search.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import {
   DESC_CONTRADICTORY,
@@ -37,6 +32,11 @@ import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { dimensionParamConfig } from "../../engine/game-id/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { type GridCursor, newCursor } from "../../engine/input/pointer.ts";
+import {
+  DIFF_EASY,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/solve/answer-search.ts";
 import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 
 // --- params ----------------------------------------------------------------

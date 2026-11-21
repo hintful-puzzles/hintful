@@ -581,7 +581,7 @@ load".
   bounded expansion count, an iteration count, or the result's shape.
 - **Bound non-termination in the code, not with a timeout.** These tests are
   synchronous, so a runaway loop blocks the event loop and no timer fires.
-  Use [`step-budget.ts`](../src/engine/step-budget.ts) for solver and hint
+  Use [`step-budget.ts`](../src/engine/solve/step-budget.ts) for solver and hint
   fixpoints and [`retry-limit.ts`](../src/engine/contract/retry-limit.ts) for
   retries.
 - **Do not judge a generator's cost from a vitest run.** The module runner

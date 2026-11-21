@@ -33,19 +33,19 @@ import { DEDUCTION_EXHAUSTED } from "./contract/hint-refusal.ts";
 import { changedCells, trackLeg, trackTargets } from "./contract/hint-track.ts";
 import { CELL, type MarkKind, type Sentence } from "./contract/hint-words.ts";
 import type { Point } from "./contract/types.ts";
-import { PLACE } from "./describe-runtime.ts";
 import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
 import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
+import { type Judging, judgeWalked } from "./move-judge.ts";
+import type { PairIndex } from "./render/piece.ts";
+import { PLACE } from "./solve/describe-runtime.ts";
 import {
   type CellMarks,
   type LadderEntry,
   ladderWalk,
   TIERS,
-} from "./ladder-runtime.ts";
-import { type Judging, judgeWalked } from "./move-judge.ts";
-import type { PairIndex } from "./render/piece.ts";
+} from "./solve/ladder-runtime.ts";
+import { stepBudget } from "./solve/step-budget.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
-import { stepBudget } from "./step-budget.ts";
 
 /** What a step's highlights hold: the squares it decides, each with the value
  * it asks, and the squares drawn apart from the outline. */

@@ -1,4 +1,5 @@
 import { expect, it } from "vitest";
+import { randomNew, randomUpto } from "../random/index.ts";
 import {
   chain,
   chainEnd,
@@ -25,7 +26,6 @@ import {
   through,
 } from "./describe-runtime.ts";
 import { CellMarks } from "./ladder-runtime.ts";
-import { randomNew, randomUpto } from "./random/index.ts";
 
 it("relates edges as the relations stated imply, transitively", () => {
   // From scratch: each element's sense relative to `a`, by breadth-first

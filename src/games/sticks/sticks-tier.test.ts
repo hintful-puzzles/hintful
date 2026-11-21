@@ -10,7 +10,6 @@
  * every fill, so it is for boards of twenty white squares or so.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_NOT_UNIQUE,
@@ -20,6 +19,7 @@ import { paramsError } from "../../engine/game-id/params.ts";
 import { SYMM_NONE, SYMM_ROT2 } from "../../engine/generate/symmetric-blacks.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,

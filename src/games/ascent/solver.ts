@@ -1,6 +1,6 @@
 /**
  * Ascent's solver: the ladder `ascent.description.yaml` states, compiled, on
- * the engine's wide marks and runner (`engine/ladder-runtime.ts`), and the
+ * the engine's wide marks and runner (`engine/solve/ladder-runtime.ts`), and the
  * answer check its rules compile to. The generator removes a clue only while
  * the ladder at the board's tier still solves the result, so its verdict on
  * every intermediate board decides which puzzles exist; `solve()`,
@@ -11,8 +11,12 @@
  * its steps.
  */
 
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
-import { clueList, describedSpace, PLACE } from "../../engine/describe-runtime.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
+import {
+  clueList,
+  describedSpace,
+  PLACE,
+} from "../../engine/solve/describe-runtime.ts";
 import {
   compiledRung,
   describedLadder,
@@ -21,7 +25,7 @@ import {
   runLadder,
   TIERS,
   WideCellMarks,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as ascent from "../../generated/games/ascent/ascent.compiled.ts";
 import {
   type AscentState,

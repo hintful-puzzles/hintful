@@ -20,8 +20,8 @@
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { difficultyTiers } from "../engine/contract/difficulty.ts";
-import { setStaleCheck } from "../engine/describe-runtime.ts";
 import { getTsGame } from "../engine/registry.ts";
+import { setStaleCheck } from "../engine/solve/describe-runtime.ts";
 import { dealt, dealtAgain } from "../engine/testing/dealt.ts";
 import { type AnyGame, gatePresets } from "../engine/testing/hint-games.ts";
 import { seedBudget } from "../engine/testing/slow.ts";
@@ -39,7 +39,7 @@ const GUARDED = Object.entries(modules)
   .filter(
     ([key, text]) =>
       usesOf(parsed(resolveSpecifier("src/guards/x.ts", key), text), {
-        module: "src/engine/describe-runtime.ts",
+        module: "src/engine/solve/describe-runtime.ts",
         name: "staleChecking",
       }).length > 0,
   )

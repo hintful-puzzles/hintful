@@ -3,7 +3,6 @@
  * generator solvability, solver, findMistakes, and a render smoke.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/answer-search.ts";
 import {
   DESC_OUT_OF_RANGE,
   DESC_REPEATED,
@@ -15,6 +14,7 @@ import {
 import { describeParams } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { newSignpostDesc } from "./generator.ts";
 import { signpostGame } from "./index.ts";

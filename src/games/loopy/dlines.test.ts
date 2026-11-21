@@ -16,8 +16,8 @@ import {
   type Grid,
   type GridType,
 } from "../../engine/board/grid/index.ts";
-import { tilingSpace } from "../../engine/describe-runtime.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { tilingSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   dlineCount,
   dlineEnds,

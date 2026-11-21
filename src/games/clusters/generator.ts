@@ -12,9 +12,10 @@
  * Easy and Normal by the ladder, Unreasonable by the search where the ladder
  * stops short.
  */
-import { dealUnreasonable } from "../../engine/answer-search.ts";
+
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { dealUnreasonable } from "../../engine/solve/answer-search.ts";
 import {
   answerSearch,
   type ClustersStatus,

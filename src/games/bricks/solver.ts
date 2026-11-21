@@ -1,6 +1,6 @@
 /**
  * Bricks' solver: the ladder `bricks.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), the answer check
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
  * its rules compile to, and the search beneath the ladder.
  *
  * Every technique is upstream's one (`bricks_solver_try`): suppose a color in
@@ -20,18 +20,18 @@
  * localizes each break into the flags the renderer draws.
  */
 
+import { entryMistakes } from "../../engine/entry-mistakes.ts";
 import {
   type Answer,
   answerCache,
   type Deduced,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
+} from "../../engine/solve/answer-search.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
-} from "../../engine/describe-runtime.ts";
-import { entryMistakes } from "../../engine/entry-mistakes.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -40,7 +40,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as bricks from "../../generated/games/bricks/bricks.compiled.ts";
 import {
   BRICKS_STEPS,

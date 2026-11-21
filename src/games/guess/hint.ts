@@ -23,7 +23,13 @@ import type {
 } from "../../engine/contract/game.ts";
 import { GAME_OVER, SEARCH_OUT_OF_REACH } from "../../engine/contract/hint-refusal.ts";
 import type { MarkKind, Relation, Sentence } from "../../engine/contract/hint-words.ts";
-import { describedSpace, type GridSpace } from "../../engine/describe-runtime.ts";
+import {
+  pendingRuleOuts,
+  type RuleOut,
+  ruleOutProgress,
+} from "../../engine/mechanics/code-rows.ts";
+import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
+import { describedSpace, type GridSpace } from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   compiledRung,
@@ -33,14 +39,8 @@ import {
   runLadder,
   TIERS as SCALE,
   uncluedRung,
-} from "../../engine/ladder-runtime.ts";
-import {
-  pendingRuleOuts,
-  type RuleOut,
-  ruleOutProgress,
-} from "../../engine/mechanics/code-rows.ts";
-import { claimRelation, judgeRivals } from "../../engine/rival-judging.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as guess from "../../generated/games/guess/guess.compiled.ts";
 import { COLOR, ROW, SLOT } from "./hint-marks.ts";
 import {

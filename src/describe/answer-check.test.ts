@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { clueList, describedSpace, latinSpace } from "../engine/describe-runtime.ts";
+import {
+  clueList,
+  describedSpace,
+  latinSpace,
+} from "../engine/solve/describe-runtime.ts";
 import * as unequal from "../generated/games/unequal/unequal.compiled.ts";
 import * as unruly from "../generated/games/unruly/unruly.compiled.ts";
 

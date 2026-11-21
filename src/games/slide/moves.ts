@@ -8,7 +8,7 @@
 
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as slide from "../../generated/games/slide/slide.compiled.ts";
 import {
   ANCHOR,

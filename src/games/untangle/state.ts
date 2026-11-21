@@ -22,9 +22,9 @@ import {
   type DescParse,
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import type { WinTone } from "../../engine/render/win-wave.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as untangle from "../../generated/games/untangle/untangle.compiled.ts";
 
 /**

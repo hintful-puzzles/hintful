@@ -5,7 +5,7 @@
  */
 
 import { rejectMove } from "../../engine/contract/assert-never.ts";
-import { describedSpace } from "../../engine/describe-runtime.ts";
+import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import * as cube from "../../generated/games/cube/cube.compiled.ts";
 import { Direction, type GridSquare } from "./grid.ts";
 import {

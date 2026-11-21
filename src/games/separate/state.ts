@@ -9,12 +9,6 @@
  * walls on the U/R/D/L edges and bits 4..7 are "no-wall" marks.
  */
 
-import {
-  DIFF_EASY,
-  DIFF_UNREASONABLE,
-  searchTierItem,
-  searchTierSegment,
-} from "../../engine/answer-search.ts";
 import { boxedGridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
@@ -40,6 +34,12 @@ import {
   initBorders,
   outOfBounds,
 } from "../../engine/mechanics/border-grid.ts";
+import {
+  DIFF_EASY,
+  DIFF_UNREASONABLE,
+  searchTierItem,
+  searchTierSegment,
+} from "../../engine/solve/answer-search.ts";
 import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import { isSolved } from "./solver.ts";
 

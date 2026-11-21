@@ -22,8 +22,11 @@ import {
 } from "../../src/describe/description.ts";
 import { type Expr, parse } from "../../src/describe/expr.ts";
 import { CHECKED_POSITIONS } from "../../src/describe/soundness.ts";
-import { describedSpace, type GridSpace } from "../../src/engine/describe-runtime.ts";
-import type { Layers, PositionRules } from "../../src/engine/position-runtime.ts";
+import {
+  describedSpace,
+  type GridSpace,
+} from "../../src/engine/solve/describe-runtime.ts";
+import type { Layers, PositionRules } from "../../src/engine/solve/position-runtime.ts";
 import { type Ctx, evaluate } from "../describe/evaluate.ts";
 import type { Value } from "../describe/space.ts";
 
@@ -56,8 +59,9 @@ export async function compiled(d: PlanningJson, label: string): Promise<Module> 
     compilePlanning(
       d,
       label,
-      `${ROOT}src/engine/describe-runtime.ts`,
-      `${ROOT}src/engine/position-runtime.ts`,
+      `${ROOT}src/engine/solve/describe-runtime.ts`,
+      `${ROOT}src/engine/solve/position-runtime.ts`,
+      `${ROOT}src/engine/step-voice.ts`,
     ),
   );
   return (await import(path)) as Module;

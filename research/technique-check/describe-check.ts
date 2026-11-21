@@ -67,7 +67,7 @@ import {
   tilingSpace,
   traceBeam,
   within,
-} from "../../src/engine/describe-runtime.ts";
+} from "../../src/engine/solve/describe-runtime.ts";
 import { blocks } from "../describe/space.ts";
 import { say } from "../progress.ts";
 import { asZ3, type B, fresh, type I, Z3 } from "./pzl.ts";

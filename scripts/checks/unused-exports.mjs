@@ -107,9 +107,9 @@ const KEPT_UNUSED = {
   // The compiler (src/describe/compile.ts) writes calls to these into a
   // compiled module, by name, for a statement that uses the form; no module
   // compiled today does.
-  "src/engine/describe-runtime.ts::linked":
+  "src/engine/solve/describe-runtime.ts::linked":
     "called by compiled code for linked(k) read with a square supposed",
-  "src/engine/describe-runtime.ts::rectWithin":
+  "src/engine/solve/describe-runtime.ts::rectWithin":
     "called by compiled code for every cell of one rectangle in another",
   // Read by the soundness checker under research/, which this scan does not
   // read, so that it checks at the orders the fingerprint names.
@@ -137,15 +137,15 @@ const KEPT_UNUSED = {
     "read by research/technique-check/dead-end-check.test.ts, which records a dead-end claim's verdict against it",
   "src/describe/description.ts::withVariations":
     "read by the interpreter and the soundness checker under research/",
-  "src/engine/describe-runtime.ts::SightAt":
+  "src/engine/solve/describe-runtime.ts::SightAt":
     "read by research/technique-check/describe-check.ts, whose step-wise sightline keeps one a way",
-  "src/engine/describe-runtime.ts::sightEntry":
+  "src/engine/solve/describe-runtime.ts::sightEntry":
     "read by research/technique-check/describe-check.ts, which walks a sightline a step at a time from the game's own entry",
-  "src/engine/describe-runtime.ts::sightAhead":
+  "src/engine/solve/describe-runtime.ts::sightAhead":
     "read by research/technique-check/describe-check.ts, which walks a sightline a step at a time by the game's own step",
-  "src/engine/describe-runtime.ts::sightTurn":
+  "src/engine/solve/describe-runtime.ts::sightTurn":
     "read by research/technique-check/describe-check.ts, which walks a sightline a step at a time with the game's own turn",
-  "src/engine/describe-runtime.ts::sightSets":
+  "src/engine/solve/describe-runtime.ts::sightSets":
     "read by research/technique-check/sightline.guard.test.ts, which holds the checker's sightline equal to it on every small layout",
   "src/games/netslide/state.ts::dealtOf":
     "read by research/technique-check/boards/netslide.ts, which deals the dead-end checker its boards as the game does",

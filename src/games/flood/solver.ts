@@ -7,7 +7,7 @@
  * inner loops typed-array-tight.
  */
 
-import { stepBudget } from "../../engine/step-budget.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 
 /** A grid of colors: the state's layer, or the solver's own working copy. */
 export type Colors = Uint8Array | Int32Array;

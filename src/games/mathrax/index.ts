@@ -75,8 +75,6 @@ import {
   isEraseKey,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import type { Said } from "../../engine/ladder-runtime.ts";
-import type { LatinSolver } from "../../engine/latin.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
 import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
@@ -91,6 +89,8 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
+import type { Said } from "../../engine/solve/ladder-runtime.ts";
+import type { LatinSolver } from "../../engine/solve/latin.ts";
 import { statedParts } from "../../engine/stated.ts";
 import * as mathrax from "../../generated/games/mathrax/mathrax.compiled.ts";
 import { newMathraxDesc } from "./generator.ts";

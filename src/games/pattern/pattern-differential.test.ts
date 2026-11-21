@@ -7,8 +7,9 @@
  * The fixture is frozen and cannot be regenerated; see
  * `engine/testing/differential.ts`.
  */
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+
 import { validateDesc } from "../../engine/contract/desc-error.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeDescDifferential } from "../../engine/testing/differential.ts";
 import cReference from "./__fixtures__/pattern-c-reference.json" with { type: "json" };
 import { newPatternDesc } from "./generator.ts";

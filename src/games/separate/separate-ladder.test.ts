@@ -6,10 +6,11 @@
  * Each case is a dealt Easy board solved from nothing, and one filled at
  * random on which the solver stops short.
  */
-import { DIFF_EASY } from "../../engine/answer-search.ts";
+
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { divvyRectangle } from "../../engine/generate/divvy.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { describeLadderCensus } from "../../engine/testing/ladder-census.ts";
 import { newSeparateDesc } from "./generator.ts";
 import { deduce, deduction } from "./solver.ts";

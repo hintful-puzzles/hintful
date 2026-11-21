@@ -1,6 +1,6 @@
 /**
  * Bridges' solver: the ladder `bridges.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), and the answer
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the answer
  * check its rules compile to.
  *
  * The answer is on the edges between squares, each holding one more than the
@@ -15,12 +15,12 @@
  * ({@link bridgesWalk}).
  */
 
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -29,7 +29,7 @@ import {
   runLadder,
   type Taken,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as bridges from "../../generated/games/bridges/bridges.compiled.ts";
 import {
   type BridgesOp,

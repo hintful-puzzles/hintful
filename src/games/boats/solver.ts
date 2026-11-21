@@ -1,6 +1,6 @@
 /**
  * Boats' solver: the ladder `boats.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
+ * engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the reason
  * each technique records for the hint; and the answer check its rules
  * compile to.
  *
@@ -22,7 +22,7 @@ import {
   describedSpace,
   type GridSpace,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -30,7 +30,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as boats from "../../generated/games/boats/boats.compiled.ts";
 import {
   type BoatsBoard,

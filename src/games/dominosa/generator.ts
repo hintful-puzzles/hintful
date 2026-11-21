@@ -7,11 +7,11 @@
  * only where the solver deals it at that tier (`dealsAt`).
  */
 
-import { DEALING_BUDGET } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { dominoLayout } from "../../engine/generate/laydomino.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { DEALING_BUDGET } from "../../engine/solve/answer-search.ts";
 import { dealsAt } from "./solver.ts";
 import {
   boardSize,

@@ -3,15 +3,15 @@
  * every game that has one.
  */
 import { describe, expect, it } from "vitest";
-import type { CandidateReading } from "./candidate-hint.ts";
-import type { Point } from "./contract/types.ts";
+import type { CandidateReading } from "../candidate-hint.ts";
+import type { Point } from "../contract/types.ts";
+import { dealt } from "../testing/dealt.ts";
+import { enrolledIn, gamesImporting, gamesUsing } from "../testing/enrollment.ts";
+import { HINT_GAMES } from "../testing/hint-games.ts";
+import { expectLedger } from "../testing/ledger.ts";
+import { planContinuity } from "../testing/plan-continuity.ts";
+import { boardWidth, leafPresets } from "../testing/presets.ts";
 import { type FrontierCandidate, gridKey, HintFrontier } from "./hint-frontier.ts";
-import { dealt } from "./testing/dealt.ts";
-import { enrolledIn, gamesImporting, gamesUsing } from "./testing/enrollment.ts";
-import { HINT_GAMES } from "./testing/hint-games.ts";
-import { expectLedger } from "./testing/ledger.ts";
-import { planContinuity } from "./testing/plan-continuity.ts";
-import { boardWidth, leafPresets } from "./testing/presets.ts";
 
 type Step = { highlights: { targets: Point[] } };
 
@@ -273,12 +273,12 @@ describe("hint plans continue from their previous step where they can", () => {
     const ids = HINT_GAMES.map(([id]) => id);
     const direct = gamesUsing(
       ids,
-      { module: "src/engine/hint-frontier.ts", name: "HintFrontier" },
+      { module: "src/engine/solve/hint-frontier.ts", name: "HintFrontier" },
       "new",
     ).filter((id) => !FRONTIER_GAMES.includes(id));
     expectLedger(direct, OWN_FRONTIER, {
       table: "OWN_FRONTIER",
-      file: "src/engine/hint-frontier.test.ts",
+      file: "src/engine/solve/hint-frontier.test.ts",
       found: "hint games that build a `new HintFrontier` outside the candidate plans",
       add: "plan through the candidate plans, or add it naming the test that measures its continuity",
     });

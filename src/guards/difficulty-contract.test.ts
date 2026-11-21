@@ -20,7 +20,6 @@
  * its tiers are*, so the enrollment and the list cannot disagree either.
  */
 import { describe, expect, it, vi } from "vitest";
-import * as answerSearch from "../engine/answer-search.ts";
 import {
   cappedSolveFor,
   type DifficultyContract,
@@ -36,6 +35,7 @@ import { paramsError } from "../engine/game-id/params.ts";
 import { Midend } from "../engine/midend.ts";
 import { randomNew } from "../engine/random/index.ts";
 import { getTsGame } from "../engine/registry.ts";
+import * as answerSearch from "../engine/solve/answer-search.ts";
 import { dealRare, dealsPromptly, dealt } from "../engine/testing/dealt.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
 import { firstLeaf, leafPresets } from "../engine/testing/presets.ts";

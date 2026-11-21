@@ -11,8 +11,8 @@
 
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
-import { latinGenerate } from "../../engine/latin.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import { latinGenerate } from "../../engine/solve/latin.ts";
 import { solveTowers } from "./solver.ts";
 import { DIFF_EASY, diffToLevel, lineCells, type TowersParams } from "./state.ts";
 

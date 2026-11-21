@@ -4,6 +4,11 @@
  * target. A position is the numbers decided so far, taken or left.
  */
 import { describe, expect, it } from "vitest";
+import { difficultyTiers } from "../contract/difficulty.ts";
+import { PUZZLE_NOT_REASONABLE } from "../contract/hint-refusal.ts";
+import { RetryLimitExceeded, underDealTries } from "../contract/retry-limit.ts";
+import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "../contract/solve-failure.ts";
+import { paramsCodec } from "../game-id/params-codec.ts";
 import {
   type Answer,
   answerCache,
@@ -20,11 +25,6 @@ import {
   solvedPositions,
   solveFromAnswer,
 } from "./answer-search.ts";
-import { difficultyTiers } from "./contract/difficulty.ts";
-import { PUZZLE_NOT_REASONABLE } from "./contract/hint-refusal.ts";
-import { RetryLimitExceeded, underDealTries } from "./contract/retry-limit.ts";
-import { MULTIPLE_SOLUTIONS, NO_SOLUTION } from "./contract/solve-failure.ts";
-import { paramsCodec } from "./game-id/params-codec.ts";
 
 /** Whether each of 1.. is taken, as far as it is decided. */
 type Taken = boolean[];

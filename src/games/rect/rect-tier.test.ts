@@ -9,7 +9,6 @@
  * whether those two are right that a board has one answer.
  */
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_NOT_UNIQUE,
@@ -20,6 +19,7 @@ import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/index.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,

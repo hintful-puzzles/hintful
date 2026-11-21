@@ -21,15 +21,15 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
-import {
-  clueList,
-  describedSpace,
-  type GridSpace,
-} from "../../engine/describe-runtime.ts";
 import { digitValue, parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { paramsLetter, unreadParams } from "../../engine/game-id/params.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+} from "../../engine/solve/describe-runtime.ts";
 import * as dominosa from "../../generated/games/dominosa/dominosa.compiled.ts";
 
 // --- combinatorial helpers (upstream TRI / DCOUNT / DINDEX macros) ----------

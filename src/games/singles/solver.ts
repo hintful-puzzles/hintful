@@ -1,6 +1,6 @@
 /**
  * Singles' solver: the ladder `singles.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), and the
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the
  * answer check its rules compile to.
  *
  * Easy is upstream's readings of the numbers (a sandwich, a touching pair,
@@ -13,7 +13,7 @@ import {
   clueList,
   describedSpace,
   type GridSpace,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -22,7 +22,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as singles from "../../generated/games/singles/singles.compiled.ts";
 import { F_BLACK, F_CIRCLE, F_ERROR, type SinglesState } from "./state.ts";
 

@@ -6,8 +6,8 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { randomNew, randomUpto } from "../random/index.ts";
 import { type Effect, effectOf, planByStage } from "./permutation-planner.ts";
-import { randomNew, randomUpto } from "./random/index.ts";
 
 interface Fixture {
   readonly generators: readonly Effect[];

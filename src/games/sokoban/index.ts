@@ -13,7 +13,6 @@ import { rejectMove } from "../../engine/contract/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
 import { drag } from "../../engine/input/hint-gesture.ts";
 import {
@@ -27,6 +26,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { registerGame } from "../../engine/registry.ts";
 import { solveBySearch } from "../../engine/search-outcome.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { newSokobanDesc } from "./generator.ts";
 import {
   hasNoSolution,

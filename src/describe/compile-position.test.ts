@@ -20,7 +20,7 @@ const game = (
 });
 
 const compile = (d: PlanningJson): string =>
-  compilePlanning(d, "toy", "./runtime.ts", "./position.ts");
+  compilePlanning(d, "toy", "./runtime.ts", "./position.ts", "./step-voice.ts");
 
 describe("the position compiler refuses an ill-formed move", () => {
   it.each([

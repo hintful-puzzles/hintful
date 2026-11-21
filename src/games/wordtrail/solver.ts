@@ -1,6 +1,6 @@
 /**
  * Wordtrail's solver: the ladder `wordtrail.description.yaml` states,
- * compiled, on the engine's marks and runner (`engine/ladder-runtime.ts`),
+ * compiled, on the engine's marks and runner (`engine/solve/ladder-runtime.ts`),
  * and the answer check its rules compile to.
  *
  * The answer is on the edges between squares side by side, each a line,
@@ -20,13 +20,19 @@
 
 import { type SquareEdges, squareEdges } from "../../engine/board/square-edges.ts";
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+import {
+  CROSS,
+  type EdgeChange,
+  LINE,
+  OPEN,
+} from "../../engine/mechanics/line-drawing.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -35,13 +41,7 @@ import {
   runLadder,
   TIERS as SCALE,
   type Taken,
-} from "../../engine/ladder-runtime.ts";
-import {
-  CROSS,
-  type EdgeChange,
-  LINE,
-  OPEN,
-} from "../../engine/mechanics/line-drawing.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as wordtrail from "../../generated/games/wordtrail/wordtrail.compiled.ts";
 import { DIFF_NORMAL, type EdgeCode, LINE_BACK } from "./state.ts";
 import type { Trail } from "./trails.ts";

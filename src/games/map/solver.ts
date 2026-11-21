@@ -1,8 +1,8 @@
 /**
  * Map's solver: the ladder `map.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/ladder-runtime.ts`), with the reason
+ * engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the reason
  * each technique records for the hint, and the engine's search above it
- * (`engine/answer-search.ts`).
+ * (`engine/solve/answer-search.ts`).
  * The tiers are upstream's (`map_solver`):
  *   - Easy — `lone`: a region down to one color;
  *   - Normal — `pair`: two bordering regions down to the same two colors use
@@ -17,8 +17,12 @@
  * (`0..3`), since the marks hold no value 0.
  */
 
-import { type Deduced, searchAnswers } from "../../engine/answer-search.ts";
-import { describedSpace, popcount, rangeMask } from "../../engine/describe-runtime.ts";
+import { type Deduced, searchAnswers } from "../../engine/solve/answer-search.ts";
+import {
+  describedSpace,
+  popcount,
+  rangeMask,
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -26,7 +30,7 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import { graphNeighbors } from "./graph.ts";
 import { DIFF_RECURSE, DIFFCOUNT } from "./state.ts";

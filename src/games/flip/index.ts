@@ -13,7 +13,6 @@ import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/game-id/params.ts";
 import { dims, letters, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { RULESET_KW, rulesetItem } from "../../engine/game-id/ruleset.ts";
-import { nothingToDeduce } from "../../engine/hint-finishes.ts";
 import {
   dimensionParamConfig,
   type Game,
@@ -29,6 +28,7 @@ import {
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
 import { randomUpto } from "../../engine/random/index.ts";
+import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import type * as flip from "../../generated/games/flip/flip.compiled.ts";
 import { genCrossesMatrix, genRandomMatrix } from "./generator.ts";
 import { FLIP_RUNGS, type FlipRung, hint, hintKeepTrack } from "./hint.ts";

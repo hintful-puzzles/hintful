@@ -1,6 +1,6 @@
 /**
  * Spokes' solver: the ladder `spokes.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
  * check its rules compile to, and the search beneath the ladder.
  *
  * The answer is on the links between hubs, side by side and corner to
@@ -14,20 +14,20 @@
  * the same ladder one firing at a time ({@link spokesWalk}).
  */
 
+import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
+import { spokenOf } from "../../engine/described-hint.ts";
 import {
   type Answer,
   answerCache,
   type Deduced,
   searchAnswers,
-} from "../../engine/answer-search.ts";
-import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+} from "../../engine/solve/answer-search.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
-} from "../../engine/describe-runtime.ts";
-import { spokenOf } from "../../engine/described-hint.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -36,7 +36,7 @@ import {
   runLadder,
   type Taken,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as spokes from "../../generated/games/spokes/spokes.compiled.ts";
 import {
   DIFF_HARD,

@@ -5,10 +5,10 @@
  */
 
 import type { Narration } from "../../engine/contract/hint-words.ts";
-import { clueList, latinSpace } from "../../engine/describe-runtime.ts";
 import { ADJTHAN, type ClueKind } from "../../engine/edge-clue-latin/state.ts";
-import { type LatinReason, latinLadder } from "../../engine/latin.ts";
 import type { SingleReason } from "../../engine/latin-hint.ts";
+import { clueList, latinSpace } from "../../engine/solve/describe-runtime.ts";
+import { type LatinReason, latinLadder } from "../../engine/solve/latin.ts";
 import * as unequal from "../../generated/games/unequal/unequal.compiled.ts";
 
 /** Why a sign ruled a candidate out: the larger end (`greater`) or the

@@ -8,7 +8,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { DIFF_EASY } from "../../engine/answer-search.ts";
 import {
   DESC_NOT_UNIQUE,
   loadVerdict,
@@ -28,6 +27,7 @@ import {
   MOD_SHFT,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { newDesc } from "./generator.ts";
 import { netGame } from "./index.ts";

@@ -23,9 +23,9 @@ import {
   type Sentence,
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { PLACE } from "../../engine/describe-runtime.ts";
-import { placeNotes } from "../../engine/fact-graph.ts";
 import { judgeWalked } from "../../engine/move-judge.ts";
+import { PLACE } from "../../engine/solve/describe-runtime.ts";
+import { placeNotes } from "../../engine/solve/fact-graph.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
 import {

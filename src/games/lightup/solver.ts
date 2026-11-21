@@ -1,6 +1,6 @@
 /**
  * Light Up's solver: the ladder `lightup.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
  * check its rules compile to, and the search beneath the ladder.
  *
  * Easy is upstream's cheap scan, a column at a time: a dark square with one
@@ -20,14 +20,14 @@ import {
   answerCache,
   type Deduced,
   searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
+} from "../../engine/solve/answer-search.ts";
 import {
   clueAt,
   clueList,
   describedSpace,
   type GridSpace,
   stretch,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -37,8 +37,8 @@ import {
   runLadder,
   type Said,
   TIERS,
-} from "../../engine/ladder-runtime.ts";
-import { stepBudget } from "../../engine/step-budget.ts";
+} from "../../engine/solve/ladder-runtime.ts";
+import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as lightup from "../../generated/games/lightup/lightup.compiled.ts";
 import {
   F_BLACK,

@@ -26,11 +26,6 @@
  * fixed seed extends the previous barrier set rather than replacing it.
  */
 
-import {
-  DEALING_BUDGET,
-  DIFF_EASY,
-  dealUnreasonable,
-} from "../../engine/answer-search.ts";
 import { shuffle as shuffleArray } from "../../engine/board/shuffle.ts";
 import {
   anticlockwise,
@@ -52,6 +47,11 @@ import {
   type Xyd,
 } from "../../engine/mechanics/wires.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import {
+  DEALING_BUDGET,
+  DIFF_EASY,
+  dealUnreasonable,
+} from "../../engine/solve/answer-search.ts";
 import { computeLoops } from "./loops.ts";
 import { finishes, searchAnswers, settle } from "./solver.ts";
 import { LOCKED, type NetParams, newState } from "./state.ts";

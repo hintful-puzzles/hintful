@@ -14,7 +14,6 @@ import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
 import { NOT_STARTED } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { dimensionParamConfig, parseConfigInt } from "../../engine/game-id/params.ts";
-import { hintFinishes } from "../../engine/hint-finishes.ts";
 import {
   type Game,
   registerGame,
@@ -39,6 +38,7 @@ import {
   randomStateEncode,
   randomUpto,
 } from "../../engine/random/index.ts";
+import { hintFinishes } from "../../engine/solve/hint-finishes.ts";
 import { firstOpen } from "./generator.ts";
 import {
   MINES_RUNGS,

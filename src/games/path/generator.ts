@@ -14,7 +14,6 @@
  * the join takes away, so the board keeps only the numbers it needs.
  */
 
-import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import {
   across,
@@ -29,6 +28,7 @@ import {
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { OPEN } from "../../engine/mechanics/line-drawing.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { dealUnreasonable } from "../../engine/solve/answer-search.ts";
 import { newOnePathDesc } from "./one-path-generator.ts";
 import { type PathSolve, searchAnswer, solvePath } from "./solver.ts";
 import {

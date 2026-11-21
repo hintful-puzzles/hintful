@@ -1,6 +1,6 @@
 /**
  * Separate's solver: the ladder `separate.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
  * check its rules compile to, and the search beneath the ladder.
  *
  * The answer is on the edges between squares side by side, each a wall or
@@ -16,29 +16,7 @@
  * A hint walks the same ladder, one firing at a time ({@link hintFirings}).
  */
 
-import {
-  type Answer,
-  answerCache,
-  type Deduced,
-  searchAnswers as searchBoard,
-} from "../../engine/answer-search.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
-import {
-  clueList,
-  describedSpace,
-  type GridSpace,
-  rangeMask,
-} from "../../engine/describe-runtime.ts";
-import {
-  CellMarks,
-  describedLadder,
-  type Ladder,
-  ladderTechniques,
-  runLadder,
-  type Said,
-  TIERS,
-} from "../../engine/ladder-runtime.ts";
 import {
   BORDER,
   BORDER_D,
@@ -48,6 +26,28 @@ import {
   DISABLED,
   initBorders,
 } from "../../engine/mechanics/border-grid.ts";
+import {
+  type Answer,
+  answerCache,
+  type Deduced,
+  searchAnswers as searchBoard,
+} from "../../engine/solve/answer-search.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
+import {
+  clueList,
+  describedSpace,
+  type GridSpace,
+  rangeMask,
+} from "../../engine/solve/describe-runtime.ts";
+import {
+  CellMarks,
+  describedLadder,
+  type Ladder,
+  ladderTechniques,
+  runLadder,
+  type Said,
+  TIERS,
+} from "../../engine/solve/ladder-runtime.ts";
 import * as separate from "../../generated/games/separate/separate.compiled.ts";
 import type { SeparateShape } from "./state.ts";
 

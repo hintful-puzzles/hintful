@@ -59,6 +59,7 @@ import {
 import { getTsGame } from "../engine/registry.ts";
 import { expandPair, PAIR_NAMES } from "../engine/render/piece.ts";
 import { RULES_OUT_PLACEHOLDER } from "../engine/rules-out.ts";
+import { WING_PLACEHOLDER } from "../engine/solve/wing.ts";
 import {
   OPTIONAL_GAME_MEMBERS,
   REGISTERED_GAMES,
@@ -66,7 +67,6 @@ import {
 import { HINT_GAMES } from "../engine/testing/hint-games.ts";
 import { itOverWholeSweep } from "../engine/testing/slow.ts";
 import { nodesOf, parsed } from "../engine/testing/syntax.ts";
-import { WING_PLACEHOLDER } from "../engine/wing.ts";
 import { puzzleDataMap, puzzleIds } from "../puzzle/catalog.ts";
 import { type CommandPuzzle, commandList } from "../puzzle/command-list.ts";
 import { insertGameLists, NO_RIGHT_CLICK } from "../puzzle/game-lists.ts";

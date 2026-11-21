@@ -8,12 +8,12 @@
  * changes which boards exist.
  */
 
-import { dealUnreasonable } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { placeSymmetricBlacks } from "../../engine/generate/symmetric-blacks.ts";
 import type { RandomState } from "../../engine/random/index.ts";
+import { dealUnreasonable } from "../../engine/solve/answer-search.ts";
 import { deductionFinishes, searchAnswers } from "./solver.ts";
 import {
   cloneState,

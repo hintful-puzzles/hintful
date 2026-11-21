@@ -46,7 +46,6 @@ import {
   NO_SOLUTION,
 } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { latinSpace, PLACE } from "../../engine/describe-runtime.ts";
 import {
   clearEntries,
   entryMistakes,
@@ -77,8 +76,6 @@ import {
   stripModifiers,
 } from "../../engine/input/pointer.ts";
 import { beginSweep, dragMarkVerbs, sweepTo } from "../../engine/input/target-verb.ts";
-import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
-import { latinVerdict, setCells } from "../../engine/latin.ts";
 import { hiddenSingleLine, rowColRegions } from "../../engine/latin-hint.ts";
 import { latinNotesLadder, latinStrikeRungs } from "../../engine/latin-notes.ts";
 import {
@@ -94,6 +91,12 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
+import { latinSpace, PLACE } from "../../engine/solve/describe-runtime.ts";
+import type {
+  Firing as LadderFiring,
+  Said,
+} from "../../engine/solve/ladder-runtime.ts";
+import { latinVerdict, setCells } from "../../engine/solve/latin.ts";
 import type * as towers from "../../generated/games/towers/towers.compiled.ts";
 import { NAMES, WORDS } from "../../generated/games/towers/towers.compiled.ts";
 import { newTowersDesc } from "./generator.ts";

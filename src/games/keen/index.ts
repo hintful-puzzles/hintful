@@ -70,8 +70,6 @@ import {
   moveCursor,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
-import type { Firing as LadderFiring, Said } from "../../engine/ladder-runtime.ts";
-import { latinVerdict } from "../../engine/latin.ts";
 import { rowColRegions } from "../../engine/latin-hint.ts";
 import {
   byCell,
@@ -91,6 +89,11 @@ import {
   stickyPencilPref,
 } from "../../engine/pencil-prefs.ts";
 import { registerGame } from "../../engine/registry.ts";
+import type {
+  Firing as LadderFiring,
+  Said,
+} from "../../engine/solve/ladder-runtime.ts";
+import { latinVerdict } from "../../engine/solve/latin.ts";
 import { statedParts } from "../../engine/stated.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
 import { newKeenDesc } from "./generator.ts";

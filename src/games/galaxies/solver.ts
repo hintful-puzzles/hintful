@@ -1,6 +1,6 @@
 /**
  * Galaxies' solver: the ladder `galaxies.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/ladder-runtime.ts`), the answer
+ * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
  * check its rules compile to, and the search beneath the ladder.
  *
  * The answer is on the edges between squares side by side, each a line or
@@ -13,13 +13,13 @@
  * A hint walks the same ladder, one firing at a time ({@link hintWalk}).
  */
 
+import type { Point } from "../../engine/contract/types.ts";
 import {
   type AnswerSearch,
   type Deduced,
   searchAnswers,
-} from "../../engine/answer-search.ts";
-import type { Point } from "../../engine/contract/types.ts";
-import type { FiringTally } from "../../engine/deduction-fixpoint.ts";
+} from "../../engine/solve/answer-search.ts";
+import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
   describedSpace,
@@ -27,7 +27,7 @@ import {
   MARK,
   opp,
   rangeMask,
-} from "../../engine/describe-runtime.ts";
+} from "../../engine/solve/describe-runtime.ts";
 import {
   CellMarks,
   describedLadder,
@@ -37,7 +37,7 @@ import {
   type Taken,
   TIERS,
   uncluedRung,
-} from "../../engine/ladder-runtime.ts";
+} from "../../engine/solve/ladder-runtime.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import {
   addAssoc,

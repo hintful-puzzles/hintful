@@ -4,7 +4,6 @@
  * from those.
  */
 
-import { DIFF_EASY, dealUnreasonable } from "../../engine/answer-search.ts";
 import type { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
@@ -15,6 +14,7 @@ import {
   regionsBeside,
 } from "../../engine/generate/redivide.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { DIFF_EASY, dealUnreasonable } from "../../engine/solve/answer-search.ts";
 import {
   type Deduction,
   deduce,

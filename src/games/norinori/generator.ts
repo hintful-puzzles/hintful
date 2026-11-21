@@ -8,7 +8,6 @@
  * away from one that is too easy: it is dealt again.
  */
 
-import { solvedPositions } from "../../engine/answer-search.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { drawRejected } from "../../engine/contract/deal-census.ts";
 import {
@@ -24,6 +23,7 @@ import {
 } from "../../engine/generate/divide.ts";
 import { type MendJudge, mendDivision } from "../../engine/generate/mend-division.ts";
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { solvedPositions } from "../../engine/solve/answer-search.ts";
 import { areasOf, type NorinoriBoard, solveNorinori } from "./solver.ts";
 import {
   BLANK,
@@ -190,7 +190,7 @@ const SEARCH_BUDGET = 24;
  * agrees with the marks in `from` and is not `answer`: none where it met
  * none.
  *
- * Trial and error over the ladder (`engine/answer-search.ts`). Where the
+ * Trial and error over the ladder (`engine/solve/answer-search.ts`). Where the
  * ladder stops, an open square of the region with the fewest is assumed each
  * way, the way `answer` does not have it first, so a second answer is met
  * before the first is.
