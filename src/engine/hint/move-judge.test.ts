@@ -43,6 +43,7 @@ import { NAMES as UNRULY_NAMES } from "../../generated/games/unruly/unruly.compi
 import { D, dirX, dirY, L, R, U } from "../board/square-edges.ts";
 import { SYMM_ROT4 } from "../generate/symmetric-blacks.ts";
 import { randomNew } from "../random/index.ts";
+import { CellMarks } from "../solve/cell-marks.ts";
 import type { Reads } from "../solve/describe-runtime.ts";
 import {
   describedSpace,
@@ -51,13 +52,8 @@ import {
   type Marks,
   PLACE,
 } from "../solve/describe-runtime.ts";
-import {
-  CellMarks,
-  compiledRung,
-  type LadderEntry,
-  ladderWalk,
-  TIERS,
-} from "../solve/ladder-runtime.ts";
+import { compiledRung, type LadderEntry, TIERS } from "../solve/ladder-runtime.ts";
+import { ladderWalk } from "../solve/ladder-walk.ts";
 import { dealt } from "../testing/dealt.ts";
 import {
   auditChains,

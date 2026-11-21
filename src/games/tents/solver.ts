@@ -1,8 +1,8 @@
 /**
  * Tents' solver: the ladder `tents.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/solve/ladder-runtime.ts`): a value a square
- * (a tent, grass or a tree), and on each tent the player's link to its tree,
- * a mark naming one tree.
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`): a value a square (a tent, grass or a tree), and on each
+ * tent the player's link to its tree, a mark naming one tree.
  *
  * One ladder serves the generator, which keeps a board only where the ladder
  * finishes it at its tier and not at the tier below, so its verdict on every
@@ -15,6 +15,7 @@
 
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { spokenOf, techniqueOf } from "../../engine/hint/described-hint.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -26,7 +27,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Firing,
   keptRung,
@@ -36,9 +36,9 @@ import {
   type Rung,
   runLadder,
   type Said,
-  type Taken,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import {
   BLANK,

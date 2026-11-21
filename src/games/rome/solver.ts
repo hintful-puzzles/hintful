@@ -1,7 +1,8 @@
 /**
  * Rome's solver: the ladder `rome.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/solve/ladder-runtime.ts`); the answer check its
- * rules compile to; and the validity check the board paints as it is played.
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`);
+ * the answer check its rules compile to; and the validity check the board paints as
+ * it is played.
  *
  * One ladder serves the generator, which lays its arrows on it and keeps a
  * blanked clue only while the board still solves, so its verdict on every
@@ -18,6 +19,7 @@ import {
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   cluesWhere,
@@ -27,7 +29,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

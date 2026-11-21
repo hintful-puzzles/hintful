@@ -1,8 +1,8 @@
 /**
- * Crossing's solver: the ladder `crossing.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`); the search
- * over it for a board's answers; the mistake check; and the hint's plan, read
- * off the compiled ladder's firings.
+ * Crossing's solver: the ladder `crossing.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`); the search over it for a board's answers; the mistake
+ * check; and the hint's plan, read off the compiled ladder's firings.
  *
  * Upstream's solver has two deductions, a run's still-fitting numbers
  * narrowing its squares and a square down to one digit (`// TODO harder
@@ -25,6 +25,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   cluesWhere,
   describedSpace,
@@ -35,18 +36,16 @@ import {
   STRIKE,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Firing,
   type Ladder,
   type LadderEntry,
   ladderTechniques,
-  ladderWalk,
   runLadder,
   type Said,
-  type Taken,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import * as crossing from "../../generated/games/crossing/crossing.compiled.ts";
 import {
   type CrossingPuzzle,

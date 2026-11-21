@@ -1,9 +1,9 @@
 /**
  * Mosaic's solver and generator: the ladder `mosaic.description.yaml` states,
- * compiled, on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), with
- * the reason each technique records for the hint; the answer check its rules
- * compile to; the search for a board's answers over the ladder; and the
- * generator, which grades every board it deals on the same ladder.
+ * compiled, on the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), with the reason each technique records for the hint; the
+ * answer check its rules compile to; the search for a board's answers over the
+ * ladder; and the generator, which grades every board it deals on the same ladder.
  *
  * Upstream's generator ran its own copy of the first two techniques, with
  * shortcuts for a number that is 0 or fills its block; the ladder fires on
@@ -23,9 +23,9 @@ import {
   dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type LadderEntry,
   ladderTechniques,

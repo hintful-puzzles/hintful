@@ -71,13 +71,13 @@ import {
   populateText,
 } from "../../engine/hint/hint-text.ts";
 import type { CellRegion } from "../../engine/hint/latin-hint.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   describedSpace,
   rangeMask,
   step,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Firing as LadderFiring,
   type Said,

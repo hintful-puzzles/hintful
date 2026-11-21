@@ -1,7 +1,7 @@
 /**
  * The regions and singles a candidate plan reads, and the reasons a row/column
  * Latin game's singles narrate as. A single is read off the notes the walk
- * shows (`candidate-plan.ts`): a **naked** one, a cell's own notes down to one
+ * shows (`candidate-walk.ts`): a **naked** one, a cell's own notes down to one
  * value, shades the cell alone; a **hidden** one, a value with one home left in
  * a region, names and shades the whole region.
  */

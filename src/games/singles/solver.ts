@@ -1,7 +1,7 @@
 /**
- * Singles' solver: the ladder `singles.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the
- * answer check its rules compile to.
+ * Singles' solver: the ladder `singles.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), and the answer check its rules compile to.
  *
  * Easy is upstream's readings of the numbers (a sandwich, a touching pair,
  * a crowded corner) with what a covered or a clear square forces around it,
@@ -9,9 +9,9 @@
  * squares the uncovered ones would fall apart without.
  */
 
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   type LadderEntry,

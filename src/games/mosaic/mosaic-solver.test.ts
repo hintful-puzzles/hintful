@@ -6,7 +6,8 @@ import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { filledBy, spokenOf } from "../../engine/hint/described-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
-import { ladderWalk, TIERS } from "../../engine/solve/ladder-runtime.ts";
+import { TIERS } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk } from "../../engine/solve/ladder-walk.ts";
 import { mosaicGame } from "./index.ts";
 import {
   deductionTier,

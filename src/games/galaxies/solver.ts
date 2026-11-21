@@ -1,7 +1,8 @@
 /**
- * Galaxies' solver: the ladder `galaxies.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
- * check its rules compile to, and the search beneath the ladder.
+ * Galaxies' solver: the ladder `galaxies.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * The answer is on the edges between squares side by side, each a line or
  * none, and the player's arrows are a mark on each square naming a dot: the
@@ -19,6 +20,7 @@ import {
   type Deduced,
   searchAnswers,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -29,15 +31,14 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import {
   addAssoc,

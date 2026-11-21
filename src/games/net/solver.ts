@@ -1,8 +1,8 @@
 /**
  * Net's solver: the ladder `net.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/solve/ladder-runtime.ts`) over the board read
- * as a tiling (`engine/solve/square-tiling.ts`): each square a dot, each side
- * between two squares an edge, wired or not.
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`)
+ * over the board read as a tiling (`engine/solve/square-tiling.ts`): each square a
+ * dot, each side between two squares an edge, wired or not.
  *
  * One ladder serves the generator, which rewires a network until the ladder
  * settles it and keeps an Easy board only where the ladder finishes it from
@@ -18,6 +18,7 @@ import {
   answerCache,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   clueList,
   cluesWhere,
@@ -27,7 +28,6 @@ import {
   tilingSpace,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,

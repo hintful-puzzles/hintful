@@ -1,8 +1,8 @@
 /**
  * Boats' solver: the ladder `boats.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the reason
- * each technique records for the hint; and the answer check its rules
- * compile to.
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), with the reason each technique records for the hint;
+ * and the answer check its rules compile to.
  *
  * One ladder serves the generator, which keeps a removed clue only while the
  * board still solves, so its verdict on every intermediate board decides
@@ -17,6 +17,7 @@
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   clueList,
   describedSpace,
@@ -24,7 +25,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

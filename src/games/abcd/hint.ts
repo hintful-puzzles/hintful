@@ -55,9 +55,9 @@ import {
 import type { CellRegion } from "../../engine/hint/latin-hint.ts";
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import type { NoteTakingUi } from "../../engine/mechanics/note-taking-cell.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { rangeMask } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   type Firing as LadderFiring,
   type Said,
   TIERS,

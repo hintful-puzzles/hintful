@@ -1,8 +1,8 @@
 /**
- * Range's solver: the ladder `range.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
- * its rules compile to, the search beneath the ladder, and the generator, a
- * port of `range.c`'s `new_game_desc`.
+ * Range's solver: the ladder `range.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`),
+ * the answer check its rules compile to, the search beneath the ladder, and the
+ * generator, a port of `range.c`'s `new_game_desc`.
  *
  * The ladder is Easy: a shaded square's neighbors are clear, a number's view
  * capped where it can run no further, a number's view made to reach its
@@ -34,9 +34,9 @@ import {
   dealUnreasonable,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   type LadderEntry,

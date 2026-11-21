@@ -18,14 +18,13 @@ import {
   type Fired,
 } from "../../engine/hint/described-edge-hint.ts";
 import { spokenOf } from "../../engine/hint/described-hint.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
-  type CellMarks,
   describedLadder,
   type Ladder,
-  ladderWalk,
-  type Taken,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import type { StepBudget } from "../../engine/solve/step-budget.ts";
 import * as magnets from "../../generated/games/magnets/magnets.compiled.ts";
 import { SQUARE } from "./kinds.ts";

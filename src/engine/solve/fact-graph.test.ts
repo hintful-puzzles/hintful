@@ -15,7 +15,8 @@ import {
   STRIKE_EDGE,
 } from "./describe-runtime.ts";
 import { FactGraph, placeNotes, readsOf } from "./fact-graph.ts";
-import { ladderWalk, TIERS } from "./ladder-runtime.ts";
+import { TIERS } from "./ladder-runtime.ts";
+import { ladderWalk } from "./ladder-walk.ts";
 
 const reads = (cells: number[], edges: number[] = []) => ({ cells, edges });
 

@@ -1,8 +1,8 @@
 /**
- * Slant's solver: the ladder `slant.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the reason
- * each technique records for the hint; and the answer check its rules compile
- * to.
+ * Slant's solver: the ladder `slant.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`),
+ * with the reason each technique records for the hint; and the answer check its
+ * rules compile to.
  *
  * One ladder serves the generator, which keeps a removed number only while
  * the board still solves, so its verdict on every intermediate board decides
@@ -12,6 +12,7 @@
  */
 
 import type { Judging } from "../../engine/hint/move-judge.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   cluesWhere,
   describedSpace,
@@ -22,17 +23,15 @@ import {
 } from "../../engine/solve/describe-runtime.ts";
 import { FactGraph } from "../../engine/solve/fact-graph.ts";
 import {
-  CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
 import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_HARD, type Slash } from "./state.ts";

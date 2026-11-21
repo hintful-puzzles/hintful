@@ -1,7 +1,8 @@
 /**
  * Rectangles' solver: the ladder `rect.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
- * check its rules compile to, and the search beneath the ladder.
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * The answer is on the edges between squares side by side, each a line or
  * none. A clue's fits are the rectangles it allows round its square that the
@@ -25,6 +26,7 @@ import {
   searchAnswers as searchBoard,
   solvedPositions,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueAt,
@@ -39,7 +41,6 @@ import {
   through,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

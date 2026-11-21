@@ -20,6 +20,7 @@
 
 import type { MoveVerdict } from "../contract/game.ts";
 import { phrase, type Sentence, unshaped } from "../contract/hint-words.ts";
+import type { CellMarks } from "../solve/cell-marks.ts";
 import {
   type Facts,
   MARK,
@@ -28,7 +29,7 @@ import {
   STRIKE_EDGE,
 } from "../solve/describe-runtime.ts";
 import type { FactGraph } from "../solve/fact-graph.ts";
-import type { CellMarks, Firing } from "../solve/ladder-runtime.ts";
+import type { Firing } from "../solve/ladder-runtime.ts";
 
 /** A fact a move made: a value placed, a candidate struck, an edge's mark
  * struck, a cell marked; `at` is the cell or the edge. */
@@ -223,7 +224,7 @@ export interface Traced {
  * graph's facts it made (its own from `from`, then its placements' culls, up
  * to `to`), and its technique, by `id`, which offers what it would fire on
  * other marks. A ladder walk's `taken` are these as they are; a walk of
- * another kind says what its technique offers (`candidate-plan.ts`).
+ * another kind says what its technique offers (`candidate-walk.ts`).
  */
 export interface TracedFiring {
   readonly firing: Firing & {

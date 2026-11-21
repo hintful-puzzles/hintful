@@ -107,7 +107,9 @@ is the first projection and `hintWalk` the second, over one `ladder`.
 
 **A logic game's solver and hint run the ladder compiled from its
 description, through [`engine/solve/ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts)
-(`describedLadder`, `ladderTechniques`, `runLadder`, `ladderWalk`), on the
+(`describedLadder`, `ladderTechniques`, `runLadder`) on the marks of
+[`cell-marks.ts`](../src/engine/solve/cell-marks.ts), and a hint through
+[`ladder-walk.ts`](../src/engine/solve/ladder-walk.ts)'s `ladderWalk`, on the
 one loop in [`engine/solve/deduction-fixpoint.ts`](../src/engine/solve/deduction-fixpoint.ts).**
 The loop is an ordered ladder, easiest first, that restarts from the top the
 moment a technique fires, so one firing is one hint group. It takes only a
@@ -1566,7 +1568,7 @@ its ladder in a description, and its `solver.ts` deals the board as the
 compiled ladder reads it, pairs each technique with its reason, and passes
 the compiled `ladder` and the compiled `isAnswer` over that board to
 `latinSolver`** ([descriptions.md](./descriptions.md) § "The answer check"). `latin.ts`'s header
-says what the engine gives: the marks (`engine/solve/ladder-runtime.ts`'s
+says what the engine gives: the marks (`engine/solve/cell-marks.ts`'s
 `CellMarks`), the library's techniques
 ([`latin.description.yaml`](../src/engine/solve/latin.description.yaml)), forcing
 chains and guess-and-verify recursion at `diffRecursive` (the recursion

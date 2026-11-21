@@ -41,13 +41,13 @@ import {
 } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { claimRelation, judgeRivals } from "../../engine/hint/rival-judging.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   clueList,
   describedSpace,
   traceBeam,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   compiledRung,
   describedLadder,
   ladderTechniques,

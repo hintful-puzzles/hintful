@@ -1,7 +1,8 @@
 /**
  * Path's solver: the ladder `path.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
- * its rules compile to, and the search beneath the ladder.
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * The answer is on the edges between squares side by side, each a line or
  * none; a cross, a wall and an edge no line will take are all "none". The
@@ -34,6 +35,7 @@ import {
   type Deduced,
   searchAnswers,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -43,14 +45,13 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
-  type Taken,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as path from "../../generated/games/path/path.compiled.ts";
 import {
   DIFF_TRICKY,

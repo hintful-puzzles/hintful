@@ -51,7 +51,7 @@ const MAX_SEEDS = 40;
 const DRIVING = [
   ...new Set([
     ...using("src/engine/solve/deduction-fixpoint.ts", "singleFirings", "call"),
-    ...using("src/engine/solve/ladder-runtime.ts", "ladderWalk", "call"),
+    ...using("src/engine/solve/ladder-walk.ts", "ladderWalk", "call"),
   ]),
 ];
 const CONTINUING: readonly string[] = DRIVING.filter((id) => {

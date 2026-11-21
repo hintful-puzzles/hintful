@@ -1,7 +1,8 @@
 /**
- * Palisade's solver: the ladder `palisade.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
- * check its rules compile to, and the search beneath the ladder.
+ * Palisade's solver: the ladder `palisade.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * The answer is on the edges between squares side by side, each a wall or
  * none, and a group is the squares the edges known to have none join. The
@@ -31,6 +32,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   cluesWhere,
@@ -39,7 +41,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

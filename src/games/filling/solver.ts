@@ -1,7 +1,7 @@
 /**
- * Filling's solver: the ladder `filling.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the
- * search beneath the ladder.
+ * Filling's solver: the ladder `filling.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), and the search beneath the ladder.
  *
  * A region is the squares side by side that hold one number. The ladder is
  * Easy: a region grows where it must (`mustGrow`, `onlyWay`), a number is
@@ -24,6 +24,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { DeductionRecord } from "../../engine/solve/deduction-record.ts";
 import {
   describedSpace,
@@ -31,16 +32,14 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
 import { dealtOf } from "./state.ts";

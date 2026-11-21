@@ -980,7 +980,7 @@ A compiled ladder's `firings` tally counts by rung id, which is not a
 record. What the ladder gives is the walk and a certified rung list:
 
 - **Walk it with `ladderWalk`**
-  ([`ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts)), built once over
+  ([`ladder-walk.ts`](../src/engine/solve/ladder-walk.ts)), built once over
   the working marks, whose doc says what it takes and returns; a described
   game's plan loop walks it for you. It takes
   the firing that continues from the plan's latest steps, rung order
@@ -1065,7 +1065,7 @@ rule that fired.
 
 A described game has this by construction: its compiled ladder fires one
 binding at a time (`ladderWalk` in
-[`ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts)), so the bullets bind
+[`ladder-walk.ts`](../src/engine/solve/ladder-walk.ts)), so the bullets bind
 a hand-written solver.
 
 ### A firing is not always a technique, so check the boundary too
@@ -1288,7 +1288,7 @@ whichever firings made them, so the chain begins from all of them; from the
 last alone, its replay never left the cell one value. Tests:
 `move-judge.test.ts`, "where a chain began".
 
-What the notes games taught, in `candidate-plan.ts`'s walk
+What the notes games taught, in `candidate-walk.ts`'s walk
 (`candidate-judge.ts`). A move's facts are read off the board as the player
 reads it: a blank cell's notes, or where it has none what its regions leave
 it. So penciling everything in makes no fact, and notes written into a cell

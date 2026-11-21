@@ -1,7 +1,8 @@
 /**
- * Loopy's solver: the ladder `loopy.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`) over the
- * board's tiling (`tilingSpace`), and the answer check its rules compile to.
+ * Loopy's solver: the ladder `loopy.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`) over the board's tiling (`tilingSpace`), and the answer
+ * check its rules compile to.
  *
  * One ladder serves the generator, which keeps a removed clue only while the
  * board still solves at its tier, so its verdict on every intermediate board
@@ -19,6 +20,7 @@
 
 import type { Grid } from "../../engine/board/grid/index.ts";
 import type { Judging } from "../../engine/hint/move-judge.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   cluesWhere,
   type GridSpace,
@@ -33,17 +35,15 @@ import {
 } from "../../engine/solve/describe-runtime.ts";
 import type { FactGraph } from "../../engine/solve/fact-graph.ts";
 import {
-  CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   runLadder,
   type Said,
-  type Taken,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import type { StepBudget } from "../../engine/solve/step-budget.ts";
 import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";
 import { DIFF_HARD } from "./params.ts";

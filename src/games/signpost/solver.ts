@@ -1,7 +1,8 @@
 /**
- * Signpost's solver: the ladder `signpost.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
- * check its rules compile to, and the search beneath the ladder.
+ * Signpost's solver: the ladder `signpost.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * The marks hold each square's link as the description reads it: 1 for the
  * last square, which links to none, and `d` for a link to the square `d - 1`
@@ -17,6 +18,7 @@ import {
   answerCache,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   clueList,
   compass,
@@ -24,7 +26,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

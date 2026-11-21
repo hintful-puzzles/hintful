@@ -1,7 +1,7 @@
 /**
  * Skeleton's solver: the ladder `skeleton.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the
- * answer check its rules compile to.
+ * on the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), and the answer check its rules compile to.
  *
  * The answer is on the edges between squares side by side, each a line or
  * none; a cross, a wall and an edge no line will take are all "none".
@@ -23,6 +23,7 @@ import {
   LINE,
   OPEN,
 } from "../../engine/mechanics/line-drawing.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -31,14 +32,13 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-  type Taken,
 } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as skeleton from "../../generated/skeleton/edges/skeleton.compiled.ts";
 import { DIFF_NORMAL, LINES_PER_SQUARE } from "./state.ts";
 

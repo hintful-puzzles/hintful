@@ -1,7 +1,8 @@
 /**
  * ABCD's solver: the ladder `abcd.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
- * its rules compile to, and the search beneath the ladder.
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * The ladder is upstream's three techniques (`abcd_solve_game`): a line
  * holding its count of a letter, a square down to one letter, and the runs
@@ -22,6 +23,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -32,7 +34,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

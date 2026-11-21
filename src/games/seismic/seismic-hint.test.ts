@@ -15,11 +15,8 @@ import {
   nakedSingles,
 } from "../../engine/hint/candidate-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import {
-  type CellMarks,
-  describedLadder,
-  type Firing,
-} from "../../engine/solve/ladder-runtime.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
+import { describedLadder, type Firing } from "../../engine/solve/ladder-runtime.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { type PlanWalkVisitor, walkHint } from "../../engine/testing/plan-walk.ts";

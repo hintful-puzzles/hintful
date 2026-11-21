@@ -1,7 +1,7 @@
 /**
- * Bridges' solver: the ladder `bridges.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the answer
- * check its rules compile to.
+ * Bridges' solver: the ladder `bridges.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), and the answer check its rules compile to.
  *
  * The answer is on the edges between squares, each holding one more than the
  * bridges running across it, so a bridge between two islands is one value on
@@ -15,6 +15,7 @@
  * ({@link bridgesWalk}).
  */
 
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -22,14 +23,13 @@ import {
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
-  type Taken,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as bridges from "../../generated/games/bridges/bridges.compiled.ts";
 import {
   type BridgesOp,

@@ -1,7 +1,8 @@
 /**
- * Spokes' solver: the ladder `spokes.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
- * check its rules compile to, and the search beneath the ladder.
+ * Spokes' solver: the ladder `spokes.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * The answer is on the links between hubs, side by side and corner to
  * corner (the space's edges, `edges: king`), each a line or none; a mark, a
@@ -22,6 +23,7 @@ import {
   type Deduced,
   searchAnswers,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -30,14 +32,13 @@ import {
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
-  type Taken,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as spokes from "../../generated/games/spokes/spokes.compiled.ts";
 import {
   DIFF_HARD,

@@ -1,8 +1,8 @@
 /**
- * Mines' deduction: the ladder `mines.description.yaml` states, compiled, on
- * the engine's marks (`engine/solve/ladder-runtime.ts`). The hint walks it from the
- * player's board, and the generator solves on it to certify each board it
- * deals, so every board dealt is one the hint finishes.
+ * Mines' deduction: the ladder `mines.description.yaml` states, compiled, on the
+ * engine's marks (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`). The hint
+ * walks it from the player's board, and the generator solves on it to certify each
+ * board it deals, so every board dealt is one the hint finishes.
  *
  * **The numbers are revealed, not dealt.** Each one is a clue of the
  * description's `count` kind once its square is opened, so the clue list is
@@ -13,10 +13,10 @@
  */
 
 import { type RandomState, randomUpto } from "../../engine/random/index.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { singleFirings } from "../../engine/solve/deduction-fixpoint.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,

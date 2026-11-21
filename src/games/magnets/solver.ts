@@ -1,7 +1,7 @@
 /**
- * Magnets' solver: the ladder `magnets.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the
- * answer check its rules compile to.
+ * Magnets' solver: the ladder `magnets.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), and the answer check its rules compile to.
  *
  * Easy is upstream's: a square down to one value, a line whose count is met
  * or has just enough room, and a line's one odd gap. Normal adds its count of
@@ -12,6 +12,7 @@
  */
 
 import type { GameStatus } from "../../engine/contract/types.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -22,7 +23,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

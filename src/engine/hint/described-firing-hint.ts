@@ -34,13 +34,10 @@ import { changedCells, trackLeg, trackTargets } from "../contract/hint-track.ts"
 import { CELL, type MarkKind, type Sentence } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import type { PairIndex } from "../render/piece.ts";
+import type { CellMarks } from "../solve/cell-marks.ts";
 import { PLACE } from "../solve/describe-runtime.ts";
-import {
-  type CellMarks,
-  type LadderEntry,
-  ladderWalk,
-  TIERS,
-} from "../solve/ladder-runtime.ts";
+import { type LadderEntry, TIERS } from "../solve/ladder-runtime.ts";
+import { ladderWalk } from "../solve/ladder-walk.ts";
 import { stepBudget } from "../solve/step-budget.ts";
 import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
 import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";

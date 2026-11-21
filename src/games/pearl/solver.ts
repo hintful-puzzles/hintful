@@ -1,8 +1,8 @@
 /**
- * Pearl's solver: the ladder `pearl.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`) over the board
- * read as a tiling (`engine/solve/square-tiling.ts`): each square a dot, each edge
- * between two squares side by side an edge, the loop's or not.
+ * Pearl's solver: the ladder `pearl.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`)
+ * over the board read as a tiling (`engine/solve/square-tiling.ts`): each square a
+ * dot, each edge between two squares side by side an edge, the loop's or not.
  *
  * One ladder serves the generator, which keeps a removed pearl only while
  * the ladder still finishes the board at its tier, so its verdict on every
@@ -14,6 +14,7 @@
  */
 
 import { DIRECTIONS, dirX, dirY, opposite } from "../../engine/board/square-edges.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   cluesWhere,
@@ -23,7 +24,6 @@ import {
   tilingSpace,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

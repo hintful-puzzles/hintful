@@ -29,9 +29,9 @@ import {
   type RuleOut,
   ruleOutProgress,
 } from "../../engine/mechanics/code-rows.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { describedSpace, type GridSpace } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,

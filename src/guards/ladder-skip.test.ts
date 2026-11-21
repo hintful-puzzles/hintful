@@ -10,7 +10,7 @@ import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
 import { getTsGame } from "../engine/midend/registry.ts";
-import { CellMarks } from "../engine/solve/ladder-runtime.ts";
+import { CellMarks } from "../engine/solve/cell-marks.ts";
 import { dealt, dealtAgain } from "../engine/testing/dealt.ts";
 import { type AnyGame, gatePresets } from "../engine/testing/hint-games.ts";
 import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";

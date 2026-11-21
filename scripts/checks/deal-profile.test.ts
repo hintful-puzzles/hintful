@@ -59,7 +59,7 @@ const DESCRIBED = readdirSync("src/games")
 
 /** Code that runs only because a game is described. */
 const DESCRIBED_CODE =
-  /\.compiled\.ts|\/engine\/solve\/(describe-runtime|ladder-runtime|position-runtime)(\.ts|\/)/;
+  /\.compiled\.ts|\/engine\/solve\/(describe-runtime|ladder-runtime|ladder-walk|cell-marks|position-runtime)(\.ts|\/)/;
 
 interface ProfileNode {
   id: number;

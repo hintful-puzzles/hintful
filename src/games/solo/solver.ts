@@ -1,8 +1,8 @@
 /**
- * Solo (Sudoku) solver: the ladder `solo.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), each rung
- * able to run alone; then upstream's forcing chain (`solver_forcing`) and
- * bounded recursion, which no description states.
+ * Solo (Sudoku) solver: the ladder `solo.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), each rung able to run alone; then upstream's forcing
+ * chain (`solver_forcing`) and bounded recursion, which no description states.
  *
  * The solver doubles as the generator's grading oracle: the solver-gated
  * minimizer removes givens while this solver still solves at the target
@@ -14,13 +14,13 @@
  */
 
 import type { NotesLadder } from "../../engine/hint/candidate-plan.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type {
   CompiledTechniques,
   FiringTally,
 } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   type Caps,
-  CellMarks,
   type Ladder,
   ladderTechniques,
   runLadder,

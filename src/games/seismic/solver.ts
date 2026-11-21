@@ -1,7 +1,7 @@
 /**
- * Seismic's solver: the ladder `seismic.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`); the answer check
- * its rules compile to; and the error overlay.
+ * Seismic's solver: the ladder `seismic.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`);
+ * the answer check its rules compile to; and the error overlay.
  *
  * One ladder serves the generator (which strips a clue only while the board
  * still solves, so the solver's verdict on every intermediate board decides
@@ -15,6 +15,7 @@
  */
 
 import type { Dsf } from "../../engine/board/dsf.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   describedSpace,
@@ -23,7 +24,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

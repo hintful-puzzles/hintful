@@ -1,7 +1,7 @@
 /**
- * Sticks' solver: the ladder `sticks.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
- * its rules compile to, and the search beneath the ladder.
+ * Sticks' solver: the ladder `sticks.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`),
+ * the answer check its rules compile to, and the search beneath the ladder.
  *
  * Every technique is upstream's one (`sticks_try`): suppose a line in a blank
  * square and see a number broken at once, so the square's line runs the other
@@ -27,13 +27,13 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   clueList,
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   type LadderEntry,

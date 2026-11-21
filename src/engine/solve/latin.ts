@@ -10,7 +10,7 @@
  * chains and guess-and-verify recursion (which doubles as the generators'
  * uniqueness check).
  *
- * The candidates are the engine's marks (`ladder-runtime.ts`'s `CellMarks`),
+ * The candidates are the engine's marks (`cell-marks.ts`'s `CellMarks`),
  * a mask a cell; upstream's `o³` cube survives only where a generator reads
  * it ({@link LatinSolver.writeCube}). `forcing` is upstream's deduction, and
  * the negative-result sentinels keep upstream's numeric values so a game's
@@ -39,10 +39,10 @@ import * as compiled from "../../generated/engine/solve/latin.compiled.ts";
 import { shuffle } from "../board/shuffle.ts";
 import type { DifficultyVerdict } from "../contract/difficulty.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
+import { CellMarks, type PlaceRung } from "./cell-marks.ts";
 import type { CompiledTechniques } from "./deduction-fixpoint.ts";
 import { latinSpace, valuesOf } from "./describe-runtime.ts";
 import {
-  CellMarks,
   type CompiledLadder,
   type CompiledTechniquesOf,
   type DealtOf,
@@ -51,7 +51,6 @@ import {
   type Library,
   ladderTechniques,
   type OwnRungs,
-  type PlaceRung,
   type Rung,
   runLadder,
   TIERS,

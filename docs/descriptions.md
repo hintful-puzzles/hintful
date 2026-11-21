@@ -873,8 +873,9 @@ speed) and of each `*-describe-<game>` change.
 
 ## The runtime a ladder runs on
 
-[`engine/solve/ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts) owns the marks
-(`CellMarks`: a value and a candidate mask a cell), makes a firing's facts,
+[`engine/solve/cell-marks.ts`](../src/engine/solve/cell-marks.ts) owns the marks
+(`CellMarks`: a value and a candidate mask a cell), and
+[`engine/solve/ladder-runtime.ts`](../src/engine/solve/ladder-runtime.ts) makes a firing's facts,
 runs the module's `placing` techniques as each value is placed (recording
 their strikes as the placement's cull) and its `striking` techniques as a
 fact strikes a value (`CellMarks.striking`, set beside `placing`), and runs

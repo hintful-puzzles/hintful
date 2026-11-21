@@ -114,7 +114,7 @@ function effectOf(before: unknown, after: unknown, width: number | null): Effect
  * is spoken: what it outlines, what it reads, and what it strikes from. Setup
  * rests on nothing, and a placement's or a note step's own element is what it
  * fills; a note leg outlines nothing, but a strike folded into the notes it
- * leaves (`candidate-plan.ts`'s `fold`) outlines its evidence like any strike.
+ * leaves (`candidate-walk.ts`'s `fold`) outlines its evidence like any strike.
  *
  * Map's evidence is the pair or chain a narrowing rests on. A step whose own
  * target is one of those regions is writing that premise, not reasoning from

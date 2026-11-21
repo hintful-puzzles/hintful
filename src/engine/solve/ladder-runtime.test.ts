@@ -1,8 +1,8 @@
 import { expect, it } from "vitest";
+import { CellMarks } from "./cell-marks.ts";
 import { describedSpace } from "./describe-runtime.ts";
 import {
   type Caps,
-  CellMarks,
   compiledRung,
   type LadderEntry,
   ladderTechniques,

@@ -1,16 +1,18 @@
 /**
- * Ascent's solver: the ladder `ascent.description.yaml` states, compiled, on
- * the engine's wide marks and runner (`engine/solve/ladder-runtime.ts`), and the
- * answer check its rules compile to. The generator removes a clue only while
- * the ladder at the board's tier still solves the result, so its verdict on
- * every intermediate board decides which puzzles exist; `solve()`,
- * `findMistakes` and the difficulty ask it too. No tier supposes anything.
+ * Ascent's solver: the ladder `ascent.description.yaml` states, compiled, on the
+ * engine's wide marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), and the answer check its rules compile to. The generator
+ * removes a clue only while the ladder at the board's tier still solves the
+ * result, so its verdict on every intermediate board decides which puzzles
+ * exist; `solve()`, `findMistakes` and the difficulty ask it too. No tier
+ * supposes anything.
  *
  * The hint reads the same ladder ({@link readingOf}): the rungs that only
  * strike narrow a board's marks, and a placing rung's firings on them are
  * its steps.
  */
 
+import { WideCellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -24,7 +26,6 @@ import {
   ladderTechniques,
   runLadder,
   TIERS,
-  WideCellMarks,
 } from "../../engine/solve/ladder-runtime.ts";
 import * as ascent from "../../generated/games/ascent/ascent.compiled.ts";
 import {

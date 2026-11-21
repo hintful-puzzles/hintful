@@ -50,22 +50,22 @@ import {
   candidateGesture,
   candidateHint,
   emitObviousCleanStep,
+  evidenceOf,
   keepCandidateHintTrack,
   type Mark,
   populateStep,
+  populateThenClean,
   refreshCandidateHintStep,
   regionReach,
 } from "../../engine/hint/candidate-hint.ts";
 import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
 import {
   type CandidateRung,
-  evidenceOf,
   type Firing,
   LATIN_POPULATE_RUNGS,
   type Leg,
   type NotesLadder,
   type PlanRung,
-  populateThenClean,
   runLatinCandidatePlan,
   techniqueRung,
 } from "../../engine/hint/candidate-plan.ts";

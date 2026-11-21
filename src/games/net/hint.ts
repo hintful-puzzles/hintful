@@ -37,12 +37,10 @@ import {
 import type { Point } from "../../engine/contract/types.ts";
 import { type Judging, judgeWalked } from "../../engine/hint/move-judge.ts";
 import type { TargetVerbs } from "../../engine/input/target-verb.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { PLACE } from "../../engine/solve/describe-runtime.ts";
-import {
-  type CellMarks,
-  ladderWalk,
-  TIERS,
-} from "../../engine/solve/ladder-runtime.ts";
+import { TIERS } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk } from "../../engine/solve/ladder-walk.ts";
 import * as net from "../../generated/games/net/net.compiled.ts";
 import { Facts, type Rung, record, type Side, type Step, survey } from "./explain.ts";
 import { SIDE, type SideMark } from "./hint-marks.ts";

@@ -113,7 +113,9 @@ the `engine-helpers` spec and the engine specs an entry names.
 | `solve/` — the deduction ladder and what compiled descriptions run on |
 | – `square-tiling.ts` — a square grid as a tiling |
 | – `latin.ts` — Latin-square solver *and* generator |
+| – `cell-marks.ts` — the marks a compiled technique reads |
 | – `ladder-runtime.ts` — what a compiled ladder runs on |
+| – `ladder-walk.ts` — a hint's walk over a compiled ladder |
 | – `position-runtime.ts` — what a planning game's compiled rules give |
 | – `deduction-fixpoint.ts` — the shared technique ladder |
 | – `step-budget.ts` — the fixpoint non-termination guard |
@@ -138,7 +140,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `finish-search.ts` — the depth-first search that finds a line or proves none |
 | – `candidate-hint.ts` — candidate-elimination plan plumbing |
 | – `entry-mistakes.ts` — Check & Save for one value or a set of marks per cell |
-| – `candidate-plan.ts` — the candidate-elimination plan walk |
+| – `candidate-plan.ts` — the candidate-elimination plan and its walk |
 | – `candidate-judge.ts` — a notes game's last move, judged by its plan |
 | – `latin-hint.ts` — regions and the reasons of a single |
 | – `latin-notes.ts` — a Latin ladder run on the player's notes |
@@ -1285,16 +1287,32 @@ its reason, and runs a described game's own on its clues
 keeps a deal for the life of the object it is read from. `marks-made.ts` numbers the kinds of fact `Marks.made` counts,
 which the compiler reads to check a binding again before it fires.
 
+### `cell-marks.ts` — the marks a compiled technique reads
+
+Reach for `CellMarks` when a game's techniques are stated in a description:
+a value a cell and the values each may still hold, and the edges' and
+cells' marks where the description keeps them. `WideCellMarks` holds a
+domain whose values run past 31 (`ascent/solver.ts`). A game's solver
+extends `CellMarks` only to keep a Search no description states. Exemplar:
+`unruly/solver.ts`; the guide is [`descriptions.md`](./descriptions.md)
+§ "The runtime a ladder runs on".
+
 ### `ladder-runtime.ts` — what a compiled ladder runs on
 
-Reach for `CellMarks` and `describedLadder` when a game's techniques are
-stated in a description: the engine's marks, the pairing of each technique
-with its reason, and `ladderTechniques` and `runLadder` to run it capped per
-scale. `ladderWalk` is a hint's walk over the same firings for a game with no
-notes. `withSearch` puts a Search no description states after the ladder, and
+Reach for `describedLadder` when a game's techniques are stated in a
+description: the pairing of each technique with its reason, and
+`ladderTechniques` and `runLadder` to run it on the marks capped per scale.
+`withSearch` puts a Search no description states after the ladder, and
 `keptRung` makes a hint rung of the compiled firings that serve another.
 Exemplars: `unruly/solver.ts`, `seismic/solver.ts`; the guide is
 [`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
+
+### `ladder-walk.ts` — a hint's walk over a compiled ladder
+
+`ladderWalk` is a hint's walk over a ladder's firings for a game with no
+notes, one firing a call, the next chosen through `hint-frontier.ts`.
+`Taken` is a firing it took. Exemplar: `slant/solver.ts`; see
+[`hints.md`](./hints.md) § "Recording the deduction".
 
 ### `position-runtime.ts` — what a planning game's compiled rules give
 
@@ -1310,8 +1328,8 @@ moves pieces the same way on every board as the `Effect`
 ### `deduction-fixpoint.ts` — the shared technique ladder
 
 The loop every compiled ladder runs on, ordered and restarted from the top on
-each firing. A game reaches it through `ladder-runtime.ts` (`runLadder`,
-`ladderWalk`); it takes only a ladder that file built from a compiled
+each firing. A game reaches it through `ladder-runtime.ts`'s `runLadder`
+and `ladder-walk.ts`'s `ladderWalk`; it takes only a ladder that file built from a compiled
 description (`CompiledTechniques`), so a hand-written one does not
 typecheck. Exemplar: `src/skeleton/grid/solver.ts`.
 
@@ -1587,8 +1605,10 @@ Exemplars: `pegs/solver.ts` (in place, one try) and `samegame/solver.ts`
 Reach for it when your hint strikes pencil notes. These are the pure
 helpers of a pencil-notes game's hint: `nakedSingles`,
 `emitObviousCleanStep`, `Reach` and `regionReach` (what a placed value
-rules out), the move dialect `CandidateMoveAdapter`, and
-`keepCandidateHintTrack` and `refreshCandidateHintStep`. A board scan reads
+rules out), the move dialect `CandidateMoveAdapter`, `valuesOf` (the values
+a strike names), `evidenceOf` (what a step's words outline and stripe),
+`populateThenClean`, and `keepCandidateHintTrack` and
+`refreshCandidateHintStep`. A board scan reads
 `grid.length`, so a board need not be square; `w` is only the row stride.
 Exemplar: `keen/index.ts`.
 
@@ -1623,7 +1643,7 @@ checks those in its own loop and asks `entryMistake(board, i)` for the rest
 sound**: the hint reasons from the marks, so it must refuse on a mark set
 without its cell's answer. Exemplar: `src/skeleton/grid/index.ts`.
 
-### `candidate-plan.ts` — the candidate-elimination plan walk
+### `candidate-plan.ts` — the candidate-elimination plan and its walk
 
 Reach for it when you write a notes game's `buildSteps`.
 `runCandidatePlan` is a pencil-notes game's whole `buildSteps` walk: the
@@ -1632,7 +1652,8 @@ clean, a placement's cull, and each next firing taken through a
 `HintFrontier`. A rung returns firings as legs and the walk builds every
 step. `techniqueRung` makes a technique of the game's ladder a rung run on
 the notes, gated by its place in the ladder and the board's tier. The game
-supplies its rungs, regions and words. See
+supplies its rungs, regions and words; the walk itself is
+`candidate-walk.ts`'s, which no game imports. See
 [`hints-candidates.md`](./hints-candidates.md) § "What every game does".
 
 - **Its `reading` is the player's.** Under the implicit one there is no

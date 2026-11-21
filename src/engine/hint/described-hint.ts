@@ -21,15 +21,10 @@ import { DEDUCTION_EXHAUSTED } from "../contract/hint-refusal.ts";
 import { CELL, type Sentence } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import type { PairIndex } from "../render/piece.ts";
+import type { CellMarks } from "../solve/cell-marks.ts";
 import { PLACE } from "../solve/describe-runtime.ts";
-import {
-  type CellMarks,
-  type LadderEntry,
-  ladderWalk,
-  type Said,
-  type Taken,
-  TIERS,
-} from "../solve/ladder-runtime.ts";
+import { type LadderEntry, type Said, TIERS } from "../solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../solve/ladder-walk.ts";
 import { stepBudget } from "../solve/step-budget.ts";
 import { type Judging, judgeWalked } from "./move-judge.ts";
 import { type Clauses, statedSentence } from "./stated.ts";

@@ -4,8 +4,10 @@
  * value when a cell's notes collapse to one.
  *
  * This module owns the pure plan helpers (the naked singles, lazy populate,
- * the obvious clean, the implied notes) and the generic `keepCandidateHintTrack` / `refreshCandidateHintStep`.
- * The walk that composes them into a plan is `candidate-plan.ts`. See
+ * the obvious clean and the setup they make, the implied notes, the evidence a
+ * step's words name and the values a strike's name) and the generic
+ * `keepCandidateHintTrack` / `refreshCandidateHintStep`. The walk that
+ * composes them into a plan is `candidate-walk.ts`. See
  * `docs/hints-candidates.md` § "What every game does".
  */
 
@@ -22,7 +24,7 @@ import {
 import type { Point } from "../contract/types.ts";
 import { markAllPress, type PointerAction } from "../input/hint-gesture.ts";
 import { type NoteTakingUi, noteEntryGesture } from "../mechanics/note-taking-cell.ts";
-import type { CellMarks } from "../solve/ladder-runtime.ts";
+import type { CellMarks } from "../solve/cell-marks.ts";
 import type { CellRegion } from "./latin-hint.ts";
 import type { Judging } from "./move-judge.ts";
 
@@ -87,7 +89,7 @@ export function noteBitOf(enc?: NoteEncoding): (n: number) => number {
  * incidental fields); the generic plan functions act only on this subset and
  * treat anything else as off-plan. `pencilAdd` is `pencilStrike`'s mirror: it
  * writes the listed notes, and is how a plan under the implicit reading
- * (`candidate-plan.ts`'s `CandidateReading`) puts a cell's candidates on the
+ * ({@link CandidateReading}) puts a cell's candidates on the
  * board before a deduction reads or strikes them. */
 export type CandidateMove =
   | {
@@ -959,4 +961,64 @@ export function refreshCandidateHintStep<
     return anyEmptyLacksNotes(grid, pencil) ? step : null;
   }
   return step;
+}
+
+/** The evidence a step's words name: the cells they outline, each once, and
+ * the cells they stripe. The walk's own steps take theirs from it, and so does
+ * a game's own `step` leg. */
+export function evidenceOf(words: Narration): { area: Point[]; hatch?: Point[] } {
+  const area: Point[] = [];
+  const hatch: Point[] = [];
+  const seen = new Set<string>();
+  for (const r of words.refs) {
+    if (r.kind.name !== CELL.name || r.role === "ring") continue;
+    const into = r.role === "outline" ? area : hatch;
+    for (const c of r.elements as readonly Point[]) {
+      const k = `${r.role}|${CELL.key(c)}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      into.push(c);
+    }
+  }
+  return hatch.length > 0 ? { area, hatch } : { area };
+}
+
+/** The setup a candidate plan does before its every rung competes. */
+export interface PlanSetUp {
+  /** Whether the setup is finished. */
+  done(): boolean;
+  /** Take the next setup step, and say whether it pushed a step; one that
+   * pushed nothing (a clean with nothing to clean) still counts as taken. */
+  step(): boolean;
+}
+
+/**
+ * The {@link PlanSetUp} most games take: pencil the notes in once (`pop`,
+ * usually {@link lazyPopulate}), then clean the obvious candidates once
+ * (`clean`, usually {@link emitObviousCleanStep}, reporting whether it pushed
+ * a step).
+ */
+export function populateThenClean(
+  pop: { done(): boolean; ensure(): void },
+  clean: () => boolean,
+): PlanSetUp {
+  let cleaned = false;
+  return {
+    done: () => pop.done() && cleaned,
+    step: () => {
+      if (!pop.done()) {
+        pop.ensure();
+        return true;
+      }
+      cleaned = true;
+      return clean();
+    },
+  };
+}
+
+/** The values `marks` strike, smallest first: the list a strike's narration
+ * names. A value struck in two cells appears twice; the sentence decides
+ * whether to name it once. */
+export function valuesOf(marks: readonly Mark[]): number[] {
+  return marks.map((m) => m.n).sort((a, b) => a - b);
 }

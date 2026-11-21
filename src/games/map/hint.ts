@@ -56,18 +56,14 @@ import {
   type Fired,
 } from "../../engine/hint/described-edge-hint.ts";
 import { spokenOf, techniqueOf } from "../../engine/hint/described-hint.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { popcount } from "../../engine/solve/describe-runtime.ts";
-import type {
-  CellMarks,
-  Firing,
-  Ladder,
-  Said,
-  Taken,
-} from "../../engine/solve/ladder-runtime.ts";
+import type { Firing, Ladder, Said } from "../../engine/solve/ladder-runtime.ts";
 import {
   describedLadder,
   techniqueFirings,
 } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import { voice as latinVoice } from "../../generated/engine/solve/latin.compiled.ts";
 import * as map from "../../generated/games/map/map.compiled.ts";
 import { REGION, type RegionMark } from "./hint-marks.ts";

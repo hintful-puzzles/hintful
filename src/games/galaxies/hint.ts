@@ -22,7 +22,7 @@ import {
   type Fired,
 } from "../../engine/hint/described-edge-hint.ts";
 import { spokenOf } from "../../engine/hint/described-hint.ts";
-import type { CellMarks } from "../../engine/solve/ladder-runtime.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { DOT, painted, WALL } from "./hint-marks.ts";
 import type { GalaxiesMove } from "./index.ts";

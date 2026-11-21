@@ -26,7 +26,8 @@ import {
 } from "../../engine/mechanics/border-grid-hint.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
-import { ladderWalk, TIERS } from "../../engine/solve/ladder-runtime.ts";
+import { TIERS } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk } from "../../engine/solve/ladder-walk.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { newDesc } from "./generator.ts";

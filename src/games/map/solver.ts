@@ -1,16 +1,14 @@
 /**
  * Map's solver: the ladder `map.description.yaml` states, compiled, on the
- * engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the reason
- * each technique records for the hint, and the engine's search above it
- * (`engine/solve/answer-search.ts`).
- * The tiers are upstream's (`map_solver`):
- *   - Easy — `lone`: a region down to one color;
- *   - Normal — `pair`: two bordering regions down to the same two colors use
- *     both, so a region bordering both is neither;
- *   - Tricky — `weigh`: every color one region can take, each read off a
- *     neighbor down to that color and one other;
- *   - Unreasonable — a search on a most-constrained region, counting the
- *     answers to two, as upstream's recursion did.
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), with the reason each technique records for the hint,
+ * and the engine's search above it (`engine/solve/answer-search.ts`). The tiers
+ * are upstream's (`map_solver`): - Easy — `lone`: a region down to one color; -
+ * Normal — `pair`: two bordering regions down to the same two colors use both,
+ * so a region bordering both is neither; - Tricky — `weigh`: every color one
+ * region can take, each read off a neighbor down to that color and one other; -
+ * Unreasonable — a search on a most-constrained region, counting the answers to
+ * two, as upstream's recursion did.
  *
  * The board is its regions, the space's cells, and which border which, the
  * relation `borders` the map deals. A color is one more than its index
@@ -18,6 +16,7 @@
  */
 
 import { type Deduced, searchAnswers } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   describedSpace,
   perBoard,
@@ -25,7 +24,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

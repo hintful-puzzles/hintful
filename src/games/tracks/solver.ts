@@ -1,9 +1,9 @@
 /**
- * Tracks' solver: the ladder `tracks.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`). The answer is
- * the edges between squares, each crossed by the track or not, and the
- * player's mark on a square, track or none, is the mark the description
- * keeps on the cells.
+ * Tracks' solver: the ladder `tracks.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`). The answer is the edges between squares, each crossed by
+ * the track or not, and the player's mark on a square, track or none, is the mark
+ * the description keeps on the cells.
  *
  * One ladder serves the generator, which keeps a clue square only while the
  * ladder finishes the board at its tier and not below, so its verdict on
@@ -18,6 +18,7 @@
  */
 
 import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -27,7 +28,6 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

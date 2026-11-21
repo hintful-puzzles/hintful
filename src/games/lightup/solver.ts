@@ -1,7 +1,8 @@
 /**
- * Light Up's solver: the ladder `lightup.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
- * check its rules compile to, and the search beneath the ladder.
+ * Light Up's solver: the ladder `lightup.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * Easy is upstream's cheap scan, a column at a time: a dark square with one
  * free square left that could light it, then a number whose count leaves its
@@ -21,6 +22,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   clueAt,
   cluesWhere,
@@ -29,7 +31,6 @@ import {
   stretch,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   type LadderEntry,

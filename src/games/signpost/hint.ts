@@ -22,7 +22,8 @@ import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/hint/described-edge-hint.ts";
-import type { CellMarks, Ladder } from "../../engine/solve/ladder-runtime.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
+import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import * as signpost from "../../generated/games/signpost/signpost.compiled.ts";
 import { ARROW } from "./hint-marks.ts";
 import {

@@ -62,6 +62,7 @@ import {
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
+  valuesOf,
 } from "../../engine/hint/candidate-hint.ts";
 import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
 import {
@@ -71,7 +72,6 @@ import {
   runLatinCandidatePlan,
   strikesOf,
   techniqueRung,
-  valuesOf,
 } from "../../engine/hint/candidate-plan.ts";
 import {
   latinPremise,

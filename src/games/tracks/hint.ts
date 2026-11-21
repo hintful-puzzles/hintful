@@ -19,8 +19,9 @@ import {
   describedEdgeHint,
   type Fired as FiredOf,
 } from "../../engine/hint/described-edge-hint.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { PLACE, STRIKE_EDGE } from "../../engine/solve/describe-runtime.ts";
-import type { CellMarks, Ladder } from "../../engine/solve/ladder-runtime.ts";
+import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import {
   STATED,

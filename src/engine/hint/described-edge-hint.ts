@@ -25,13 +25,9 @@ import {
   type Sentence,
 } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
-import {
-  type CellMarks,
-  type LadderEntry,
-  ladderWalk,
-  type Taken,
-  TIERS,
-} from "../solve/ladder-runtime.ts";
+import type { CellMarks } from "../solve/cell-marks.ts";
+import { type LadderEntry, TIERS } from "../solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../solve/ladder-walk.ts";
 import { stepBudget } from "../solve/step-budget.ts";
 import {
   DEFAULT_PLAN,

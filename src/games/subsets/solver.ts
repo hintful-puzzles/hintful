@@ -1,7 +1,8 @@
 /**
- * Subsets' solver: the ladder `subsets.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the hint plan
- * read off its firings, and the board's validator.
+ * Subsets' solver: the ladder `subsets.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the hint plan read off its firings, and the board's
+ * validator.
  *
  * The marks hold each square's set as one more than the number its letters
  * add up to, and a square's candidates are the sets it may still hold. The
@@ -14,6 +15,7 @@
  */
 
 import type { Judging } from "../../engine/hint/move-judge.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -23,17 +25,15 @@ import {
   STRIKE,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
   uncluedRung,
 } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as subsets from "../../generated/games/subsets/subsets.compiled.ts";
 import {

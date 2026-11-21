@@ -22,8 +22,10 @@ import {
   type Fired,
 } from "../../engine/hint/described-edge-hint.ts";
 import { spokenOf } from "../../engine/hint/described-hint.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
-import type { CellMarks, Ladder, Taken } from "../../engine/solve/ladder-runtime.ts";
+import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as rect from "../../generated/games/rect/rect.compiled.ts";
 import { LINE, RECTANGLE, type RectEdge } from "./hint-marks.ts";
 import { executeMove, isSolved, readClaims } from "./moves.ts";

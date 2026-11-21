@@ -42,13 +42,13 @@ import {
   keepCandidateHintTrack,
   type Mark,
   refreshCandidateHintStep,
+  valuesOf,
 } from "../../engine/hint/candidate-hint.ts";
 import { candidateJudge } from "../../engine/hint/candidate-judge.ts";
 import {
   CANDIDATE_RUNGS,
   type PlanRung,
   runCandidatePlan,
-  valuesOf,
 } from "../../engine/hint/candidate-plan.ts";
 import {
   clearEntries,

@@ -1,7 +1,7 @@
 /**
- * Wordtrail's solver: the ladder `wordtrail.description.yaml` states,
- * compiled, on the engine's marks and runner (`engine/solve/ladder-runtime.ts`),
- * and the answer check its rules compile to.
+ * Wordtrail's solver: the ladder `wordtrail.description.yaml` states, compiled,
+ * on the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), and the answer check its rules compile to.
  *
  * The answer is on the edges between squares side by side, each a line,
  * which runs one way, or none; a cross, an edge beside a dark square and an edge no line will take
@@ -26,6 +26,7 @@ import {
   LINE,
   OPEN,
 } from "../../engine/mechanics/line-drawing.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   cluesWhere,
@@ -35,14 +36,13 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,
   runLadder,
   TIERS as SCALE,
-  type Taken,
 } from "../../engine/solve/ladder-runtime.ts";
+import type { Taken } from "../../engine/solve/ladder-walk.ts";
 import * as wordtrail from "../../generated/games/wordtrail/wordtrail.compiled.ts";
 import { DIFF_NORMAL, type EdgeCode, LINE_BACK } from "./state.ts";
 import type { Trail } from "./trails.ts";

@@ -18,7 +18,8 @@ import { BORDER, DISABLED, DX, DY, FLIP } from "../../engine/mechanics/border-gr
 import { type BorderHint, EDGE } from "../../engine/mechanics/border-grid-hint.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
-import { ladderWalk, TIERS } from "../../engine/solve/ladder-runtime.ts";
+import { TIERS } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk } from "../../engine/solve/ladder-walk.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { walkHint } from "../../engine/testing/plan-walk.ts";

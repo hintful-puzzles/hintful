@@ -28,7 +28,8 @@ import {
 } from "../../engine/hint/described-edge-hint.ts";
 import type { SuppliedHooks } from "../../engine/hint/described-hint.ts";
 import { EDGE } from "../../engine/mechanics/edge-hint.ts";
-import type { CellMarks, Ladder } from "../../engine/solve/ladder-runtime.ts";
+import type { CellMarks } from "../../engine/solve/cell-marks.ts";
+import type { Ladder } from "../../engine/solve/ladder-runtime.ts";
 import * as pearl from "../../generated/games/pearl/pearl.compiled.ts";
 import { STATED } from "../../generated/games/pearl/pearl.compiled.ts";
 import { SQUARE } from "./kinds.ts";

@@ -1,7 +1,7 @@
 /**
- * Bricks' solver: the ladder `bricks.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer check
- * its rules compile to, and the search beneath the ladder.
+ * Bricks' solver: the ladder `bricks.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`),
+ * the answer check its rules compile to, and the search beneath the ladder.
  *
  * Every technique is upstream's one (`bricks_solver_try`): suppose a color in
  * an open square and see a rule broken at once, so the square is the other
@@ -27,13 +27,13 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   cluesWhere,
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   type LadderEntry,

@@ -13,7 +13,7 @@
  */
 
 import type { HintStep, MoveVerdict } from "../contract/game.ts";
-import type { CellMarks } from "../solve/ladder-runtime.ts";
+import type { CellMarks } from "../solve/cell-marks.ts";
 import {
   type CandidatePlanPrefs,
   type CandidatePrefsUi,

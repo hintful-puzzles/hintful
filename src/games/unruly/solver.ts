@@ -1,8 +1,8 @@
 /**
- * Unruly solver: the ladder `unruly.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the reason
- * each technique records for the hint; the answer check its rules compile to,
- * which the state reads; and the error overlay the renderer reads.
+ * Unruly solver: the ladder `unruly.description.yaml` states, compiled, on the
+ * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`),
+ * with the reason each technique records for the hint; the answer check its rules
+ * compile to, which the state reads; and the error overlay the renderer reads.
  *
  * The solver fills the view's own grid in place: it fills thousands of cells
  * per board during generation, where a clone per fill would be wasteful. The
@@ -10,9 +10,9 @@
  */
 
 import { entryMistakes, gridCell } from "../../engine/hint/entry-mistakes.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

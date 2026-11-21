@@ -1,7 +1,7 @@
 /**
  * Undead's solver: the ladder `undead.description.yaml` states, compiled, on
- * the engine's marks and runner (`engine/solve/ladder-runtime.ts`), and the two
- * searches no description states.
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), and the two searches no description states.
  *
  * One ladder serves the generator's grading, the difficulty probe and the
  * hint, which reads its firings off the player's notes ({@link undeadFirings}). Its Easy
@@ -21,6 +21,7 @@
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION, type SolveFailure } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
   clueList,
@@ -29,7 +30,6 @@ import {
   STRIKE,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type Ladder,
   ladderTechniques,

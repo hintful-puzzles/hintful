@@ -1,9 +1,9 @@
 /**
- * Clusters' solver: the ladder `clusters.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), with the
- * walk a hint takes over it; the answer check its rules
- * compile to; the search for a board's answers over the ladder; and the
- * error overlay the renderer and the mistake check read.
+ * Clusters' solver: the ladder `clusters.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), with the walk a hint takes over it; the answer check
+ * its rules compile to; the search for a board's answers over the ladder; and
+ * the error overlay the renderer and the mistake check read.
  *
  * Easy's techniques each refute one color of one square by the rule it would
  * break at once, at the square or at a tile beside it. Normal's read two
@@ -15,9 +15,9 @@
  */
 
 import { type Answer, searchAnswers } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   describedLadder,
   type LadderEntry,
   ladderTechniques,

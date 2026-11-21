@@ -1,7 +1,8 @@
 /**
- * Pattern's solver: the ladder `pattern.description.yaml` states, compiled,
- * on the engine's marks and runner (`engine/solve/ladder-runtime.ts`), the answer
- * check its rules compile to, and the search beneath the ladder.
+ * Pattern's solver: the ladder `pattern.description.yaml` states, compiled, on
+ * the engine's marks and runner (`engine/solve/cell-marks.ts` and
+ * `ladder-runtime.ts`), the answer check its rules compile to, and the search
+ * beneath the ladder.
  *
  * The ladder is upstream's line solver (`do_row`): a line's squares that
  * every way its runs can fit, round what the line holds, gives one value.
@@ -29,6 +30,7 @@ import {
   type Deduced,
   searchAnswers as searchBoard,
 } from "../../engine/solve/answer-search.ts";
+import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
   describedSpace,
   type GridSpace,
@@ -36,16 +38,14 @@ import {
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
 import {
-  CellMarks,
   compiledRung,
   describedLadder,
   type Ladder,
   ladderTechniques,
-  ladderWalk,
   runLadder,
-  type Taken,
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
+import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as pattern from "../../generated/games/pattern/pattern.compiled.ts";
 import {
