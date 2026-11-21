@@ -464,13 +464,17 @@ class Check {
     if (e.k === "call" && e.fn === "matched") {
       const sides = e.args.map((a) => this.sureAndMaybe(a, scope));
       if (sides.length === 2 && sides[0] !== null && sides[1] !== null) {
-        const [A, B] = sides as [[string, string], [string, string]];
+        const [A, B] = sides as [[string, string, string], [string, string, string]];
         this.env.used.add("unmatched");
         this.env.used.add("matched");
         const w = Out.fresh("_um");
-        out.emit(`const ${w} = unmatched(sp, ${A[0]}, ${A[1]}, ${B[0]}, ${B[1]});`);
+        // Where either set's members were not all read, nothing is decided.
+        out.emit(
+          `const ${w} = ${A[2]} && ${B[2]} ? unmatched(sp, ${A[0]}, ${A[1]}, ${B[0]}, ${B[1]}) : null;`,
+        );
         out.emit(`let ${r}: number = ${U};`);
-        out.open(`if (${w}.length > 0) {`);
+        out.open(`if (${w} === null) {`);
+        out.close(`} else if (${w}.length > 0) {`);
         out.emit(`${r} = ${F};`);
         out.emit(`${WITNESS} = ${w};`);
         out.close(
@@ -610,6 +614,21 @@ class Check {
       // breaks is what it read (a Dominosa square's barred sides).
       return named ? { lo, hi, yes, no } : { lo, hi, yes: null, no: null };
     }
+    const run = stretchOf(e, scope, this.env);
+    const sides = run === null ? null : this.sureAndMaybe(run[2], scope);
+    if (run !== null && sides !== null) {
+      // A stretch only grows as its set does: Bricks' run of three is three
+      // once three bricks sit in a row, whatever squares are still open.
+      const [must, may, whole] = sides;
+      const L = compileExpr(run[0], scope, this.env, out).code;
+      const c = compileExpr(run[1], scope, this.env, out).code;
+      this.env.used.add("stretch");
+      out.emit(`const ${lo} = stretch(sp.lineCells[${L}], ${c}, ${must}).length;`);
+      out.emit(
+        `const ${hi} = ${whole} ? stretch(sp.lineCells[${L}], ${c}, ${may}).length : Infinity;`,
+      );
+      return { lo, hi, yes: null, no: null };
+    }
     out.emit(`let ${lo} = -Infinity;`);
     out.emit(`let ${hi} = Infinity;`);
     out.open("try {");
@@ -657,8 +676,10 @@ class Check {
   }
 
   /** A set `{x in S where P}` of the answer's elements as two arrays, those
-   * surely in it and those that may be; `null` for any other term. */
-  private sureAndMaybe(e0: Expr, scope: Scope): [string, string] | null {
+   * surely in it and those that may be, and whether the second is whole,
+   * which it is not where reading the set's members stopped; `null` for any
+   * other term. */
+  private sureAndMaybe(e0: Expr, scope: Scope): [string, string, string] | null {
     const e = inlined(e0, scope, this.env);
     if (
       e.k !== "agg" ||
@@ -687,7 +708,7 @@ class Check {
     );
     // A set whose members are themselves undecided says nothing.
     out.emit(`if (!${ok}) ${must}.length = 0;`);
-    return [must, may];
+    return [must, may, ok];
   }
 }
 
@@ -735,6 +756,18 @@ const PURE: ReadonlySet<string> = new Set([
   "cell",
   "edge",
   "at",
+  "w",
+  "h",
+  "row",
+  "col",
+  "cells",
+  "adj4",
+  "adj8",
+  "peers",
+  "end1",
+  "end2",
+  "ends",
+  "other",
 ]);
 
 /** Whether `e` is a count or sum, or arithmetic over one: a term the check
@@ -744,11 +777,26 @@ function counted(e0: Expr, scope: Scope, env: Env): boolean {
   const e = inlined(e0, scope, env);
   const a = sizeAsCount(e);
   if (a !== null) return a.fn === "count" || a.fn === "sum";
+  if (stretchOf(e, scope, env) !== null) return true;
   return (
     e.k === "bin" &&
     (e.op === "+" || e.op === "-" || e.op === "*") &&
     (counted(e.a, scope, env) || counted(e.b, scope, env))
   );
+}
+
+/** `|stretch(L, c, S)|`'s three arguments, where its line and cell read no
+ * value of the answer; `null` for any other term. */
+function stretchOf(
+  e: Expr,
+  scope: Scope,
+  env: Env,
+): readonly [Expr, Expr, Expr] | null {
+  if (e.k !== "size") return null;
+  const of = inlined(e.of, scope, env);
+  if (of.k !== "call" || of.fn !== "stretch" || of.args.length !== 3) return null;
+  const [L, c, S] = of.args;
+  return readsHeld(L) || readsHeld(c) ? null : [L, c, S];
 }
 
 /** `|{x in S where P}|` as `count(x in S where P)`; an aggregate as it is. */

@@ -342,16 +342,11 @@ export function redraw(
     }
   }
 
-  // Error flags to display: from the drag preview (live), or the Check & Save
-  // overlay — never on a plain committed frame (upstream).
-  let errorFlags: Uint16Array | null = null;
-  if (hasDrag) {
-    errorFlags = new Uint16Array(s);
-    bricksValidate(shown, w, h, errorFlags);
-  } else if (mistakes && mistakes.length > 0) {
-    errorFlags = new Uint16Array(s);
-    for (const m of mistakes) errorFlags[m.index] |= m.flags;
-  }
+  // Where the board shown, the drag's preview included, breaks a rule; and
+  // the Check & Save overlay.
+  const errorFlags = new Uint16Array(s);
+  bricksValidate(shown, w, h, errorFlags);
+  for (const m of mistakes ?? []) errorFlags[m.index] |= m.flags;
 
   for (let i = 0; i < s; i++) {
     if (shown[i] & F_BOUND) continue;
@@ -363,7 +358,7 @@ export function redraw(
     // of the one above, so a cell's place is its pixel origin's.
     const { x: tx, y: ty } = tileOrigin(x, y, h, ts);
     n |= flash.win(sweepStep(tx, ty)) << K_LIT;
-    if (errorFlags) n |= errorFlags[i];
+    n |= errorFlags[i];
     if (ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y) n |= FE_CURSOR;
     if (hintTargets.has(i)) n |= HINT_TARGET;
     else if (hintEvid.has(i)) n |= HINT_EVID;

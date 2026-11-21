@@ -1042,7 +1042,9 @@ says how each form is read; what a description's author acts on:
   and greatest (Keen's open square adds at least 1), `value(x) = k`
   against `x`'s domain, a term one undecided element stops as read over
   each value that element's domain holds (a Mathrax digit no digit across
-  its clue pairs with), `matched` by Hall's condition
+  its clue pairs with), `|stretch(L, c, S)|` between the stretch over S's
+  sure members and over its possible ones (Bricks' three in a row with the
+  row still open), `matched` by Hall's condition
   on each group, and `latin`/`distinct` as each pair that repeats. A form
   that reads only decided elements needs nothing: a connectivity or loop rule
   is reported once its elements are decided, and bounding it earlier is that

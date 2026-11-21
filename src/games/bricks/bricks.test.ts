@@ -71,6 +71,8 @@ import {
   F_BOUND,
   F_EMPTY,
   F_SHADE,
+  F_UNSHADE,
+  FE_ERROR,
   gridSize,
   newState,
 } from "./state.ts";
@@ -243,6 +245,25 @@ describe("bricks solver", () => {
     st.grid[base + 3] = F_SHADE;
     st.grid[base + 4] = F_SHADE;
     expect(bricksValidate(st.grid, st.w, st.h)).toBe("invalid");
+  });
+
+  it("marks a brick resting on nothing only once neither square beneath can hold one", () => {
+    const st = newState(FIX_PARAMS, FIX.desc);
+    const { w, h, grid } = st;
+    // A playable square whose two squares beneath are playable too.
+    const playable = (i: number) => (grid[i] & COL_MASK) !== 0;
+    let c = -1;
+    for (let i = w; i < (h - 1) * w && c < 0; i++)
+      if (i % w > 0 && playable(i) && playable(i + w - 1) && playable(i + w)) c = i;
+    expect(c).toBeGreaterThan(-1);
+    grid[c] = F_SHADE;
+    grid[c + w - 1] = F_UNSHADE;
+    const errors = new Uint16Array(w * h);
+    bricksValidate(grid, w, h, errors);
+    expect(errors[c] & FE_ERROR).toBe(0);
+    grid[c + w] = F_UNSHADE;
+    bricksValidate(grid, w, h, errors);
+    expect(errors[c] & FE_ERROR).toBe(FE_ERROR);
   });
 });
 

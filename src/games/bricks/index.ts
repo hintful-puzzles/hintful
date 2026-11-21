@@ -79,6 +79,7 @@ import {
   deductionFinishes,
   findMistakes,
   isSolved,
+  rules,
 } from "./solver.ts";
 import {
   type BricksMistake,
@@ -417,6 +418,7 @@ export const bricksGame: Game<
   },
 
   solve,
+  rules,
   difficulty,
   hint: {
     plan: bricksHint,

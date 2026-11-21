@@ -15,11 +15,12 @@
  * Unreasonable board is dealt by, and what Solve and the mistake check know
  * the answer from at either tier. The hint never runs it.
  *
- * The live error overlay ({@link bricksValidate}) stays the game's own: it
- * judges a board still being filled, which no rule of the answer says, and
- * localizes each break into the flags the renderer draws.
+ * Where a board breaks its rules ({@link bricksValidate}) is read off the
+ * rules the description compiles to (`rules`), as the flags the renderer
+ * draws.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { entryMistakes } from "../../engine/hint/entry-mistakes.ts";
 import {
   type Answer,
@@ -33,6 +34,7 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -43,7 +45,6 @@ import {
 } from "../../engine/solve/ladder-runtime.ts";
 import * as bricks from "../../generated/games/bricks/bricks.compiled.ts";
 import {
-  BRICKS_STEPS,
   type BricksMistake,
   type BricksState,
   type CellColor,
@@ -149,7 +150,7 @@ export function deducedBricks(board: Board): boolean[] {
 
 /** Whether a state's bricks are an answer to its board, by the rules the
  * description compiles to. A square left empty is not shaded. */
-export function isSolved(state: BricksState): boolean {
+export function isSolved(state: Board): boolean {
   const values = valuesOf(state.grid).map((v) => v || CLEAR);
   return bricks.isAnswer(
     values,
@@ -287,130 +288,27 @@ export function findMistakes(state: BricksState): BricksMistake[] {
   return out;
 }
 
-// --- the live error overlay --------------------------------------------------
+// --- where the board breaks its rules ----------------------------------------
 
 export type BricksStatus = "complete" | "unfinished" | "invalid";
 
-// Rank so `max` is a plain numeric comparison (upstream STATUS_* ints).
-const RANK = { complete: 0, unfinished: 1, invalid: 2 } as const;
-const worse = (a: BricksStatus, b: BricksStatus): BricksStatus =>
-  RANK[a] >= RANK[b] ? a : b;
+/** The board as its rules read it: a shaded brick, nothing where a square is
+ * clear or holds a number or a hole, and no value where it is empty. */
+export const rules: RulesOf<Board> = describedRules(bricks, {
+  grid: (b) => valuesOf(b.grid),
+  size: (b) => [b.w, b.h],
+  deals: (b) => [dealtOf(b)],
+});
 
-function validateThrees(
-  w: number,
-  h: number,
-  grid: Uint16Array,
-  errors: Uint16Array | null,
-): BricksStatus {
-  let ret: BricksStatus = "complete";
-  for (let y = 0; y < h; y++) {
-    for (let x = 1; x < w - 1; x++) {
-      const i1 = y * w + x - 1;
-      const i2 = y * w + x;
-      const i3 = y * w + x + 1;
-      if (
-        (grid[i1] & COL_MASK) === F_SHADE &&
-        (grid[i2] & COL_MASK) === F_SHADE &&
-        (grid[i3] & COL_MASK) === F_SHADE
-      ) {
-        ret = "invalid";
-        if (errors) {
-          errors[i1] |= FE_LINE_LEFT;
-          errors[i2] |= FE_LINE_LEFT | FE_LINE_RIGHT;
-          errors[i3] |= FE_LINE_RIGHT;
-        }
-      }
-    }
-  }
-  return ret;
-}
-
-function validateGravity(
-  w: number,
-  h: number,
-  grid: Uint16Array,
-  errors: Uint16Array | null,
-): BricksStatus {
-  let ret: BricksStatus = "complete";
-  for (let y = 0; y < h - 1; y++) {
-    for (let x = 0; x < w; x++) {
-      const i1 = y * w + x;
-      if ((grid[i1] & COL_MASK) !== F_SHADE) continue;
-
-      const i2 = (y + 1) * w + x - 1;
-      const i3 = (y + 1) * w + x;
-
-      let n2 = x === 0 ? F_BOUND : grid[i2];
-      if (!(n2 & F_BOUND)) n2 &= COL_MASK;
-      let n3 = grid[i3];
-      if (!(n3 & F_BOUND)) n3 &= COL_MASK;
-
-      if (n2 !== F_SHADE && n3 !== F_SHADE) ret = worse("unfinished", ret);
-
-      const w2 = !n2 || n2 === F_UNSHADE || n2 === F_BOUND;
-      const w3 = !n3 || n3 === F_UNSHADE || n3 === F_BOUND;
-
-      if (w2 && w3) {
-        ret = "invalid";
-        if (errors) {
-          errors[i1] |= FE_ERROR;
-          if (n2 !== F_BOUND) errors[i2] |= FE_TOPRIGHT;
-          if (n3 !== F_BOUND) errors[i3] |= FE_TOPLEFT;
-        }
-      }
-    }
-  }
-  return ret;
-}
-
-function validateCounts(
-  w: number,
-  h: number,
-  grid: Uint16Array,
-  errors: Uint16Array | null,
-): BricksStatus {
-  let ret: BricksStatus = "complete";
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      let n = grid[y * w + x];
-      if (n & COL_MASK || n & F_BOUND) continue;
-      n &= NUM_MASK;
-      if (n === UNKNOWN_NUMBER) continue;
-
-      let shade = 0;
-      let unshade = 0;
-      for (const [dx, dy] of BRICKS_STEPS) {
-        const x2 = x + dx;
-        const y2 = y + dy;
-        if (x2 < 0 || x2 >= w || y2 < 0 || y2 >= h) {
-          unshade++;
-        } else {
-          const n2 = grid[y2 * w + x2];
-          if (n2 & COL_MASK) {
-            const c = n2 & COL_MASK;
-            if (c === F_SHADE) shade++;
-            else if (c === F_UNSHADE) unshade++;
-          } else {
-            unshade++;
-          }
-        }
-      }
-
-      if (shade < n) ret = worse(ret, "unfinished");
-      if (shade > n || 6 - unshade < n) {
-        ret = "invalid";
-        if (errors) errors[y * w + x] |= FE_ERROR;
-      }
-    }
-  }
-  return ret;
-}
+const RUN: bricks.RuleName = "shape.0";
+const RESTS: bricks.RuleName = "shape.1";
 
 /**
- * The live validity pass (upstream `bricks_validate`), which the renderer
- * and the mistake check draw from: COMPLETE, UNFINISHED or INVALID, and when
- * `errors` is given it is cleared and each break's localized `FE_*` flags are
- * ORed in. It never decides that a board is solved ({@link isSolved} does).
+ * Whether `grid` breaks a rule, is unfinished or is its board's answer, and,
+ * with `errors` given, where it breaks one as the `FE_*` flags the renderer
+ * draws: a bar along a run of three or more shaded, a diamond under a brick
+ * that can rest on nothing (its pieces on the squares beneath), and a number
+ * that can no longer count its bricks.
  */
 export function bricksValidate(
   grid: Uint16Array,
@@ -418,8 +316,32 @@ export function bricksValidate(
   h: number,
   errors: Uint16Array | null = null,
 ): BricksStatus {
-  errors?.fill(0);
-  let ret = validateThrees(w, h, grid, errors);
-  ret = worse(validateGravity(w, h, grid, errors), ret);
-  return worse(validateCounts(w, h, grid, errors), ret);
+  const board = { w, h, grid };
+  const g = rules.grid(board);
+  const broken = rules.violations(board, g);
+  if (errors) {
+    errors.fill(0);
+    const numbers = dealtOf(board).number.at;
+    const inRun = new Uint8Array(w * h);
+    for (const v of broken) {
+      if (v.rule === RUN) inRun[v.at[0]] = 1;
+      else if (v.rule === RESTS) {
+        const c = v.at[0];
+        const x = c % w;
+        errors[c] |= FE_ERROR;
+        const left = c + w - 1;
+        const right = c + w;
+        if (x > 0 && !(grid[left] & F_BOUND)) errors[left] |= FE_TOPRIGHT;
+        if (!(grid[right] & F_BOUND)) errors[right] |= FE_TOPLEFT;
+      } else if (v.rule === "clue.number") errors[numbers[v.clue]] |= FE_ERROR;
+    }
+    for (let c = 0; c < w * h; c++)
+      if (inRun[c] && c % w < w - 1 && inRun[c + 1]) {
+        errors[c] |= FE_LINE_LEFT;
+        errors[c + 1] |= FE_LINE_RIGHT;
+      }
+  }
+  if (broken.length > 0) return "invalid";
+  if (g.includes(0)) return "unfinished";
+  return isSolved(board) ? "complete" : "invalid";
 }
