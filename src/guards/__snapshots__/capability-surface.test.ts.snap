@@ -1528,6 +1528,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "h",
+      "hint",
       "tileSize",
       "tiles",
       "w",
@@ -2090,9 +2091,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "cursorPoint",
       "dragPoint",
-      "hintTx",
-      "hintTy",
-      "hintVertex",
+      "hint",
       "lit",
       "started",
       "tileSize",
