@@ -26,7 +26,7 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -39,8 +39,8 @@ import {
   drawThickRectOutline,
   glyphFont,
 } from "../../engine/render/draw.ts";
-import { hatchPeriod } from "../../engine/render/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { drawCellRing, drawMarkSides } from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import {
   drawPiece,
   drawRuledOutCross,
@@ -109,30 +109,24 @@ const F_MISTAKE = 1 << 19;
 const F_HINT_CLUE = 1 << 21; // the clue driving the deduction — digit in COL_HINT_OUTLINE
 /** The win flash's tone on the cell, in two bits above the hint's. */
 const WIN_SHIFT = 25;
-const F_HINT_HATCH = 1 << 24; // on the run the sentence names — hatched
-
-/** A cell's role in the displayed hint, with its cache flag. The `target` is
- * the forced cell, shaded or clear alike (the narration says which mark),
- * ringed; the `area` is the deduction's evidence, outlined in
- * COL_HINT_OUTLINE; a `shadedRef` is a shaded premise cell, which keeps its piece
- * and takes a doubled outline in COL_HINT_OUTLINE. */
-const HINT_FLAG = { none: 0, target: 1 << 20, area: 1 << 22, shadedRef: 1 << 23 };
-type HintKind = keyof typeof HINT_FLAG;
 
 export interface RangeDrawState {
   tileSize: number;
   w: number;
   h: number;
-  /** What each cell shows, as its packed key. */
+  /** What each cell shows, as its packed key, and the hint's marks. */
   tiles: TileCache;
+  hint: OverlaySidecar;
 }
 
 export function newDrawState(state: RangeState, tileSize: number): RangeDrawState {
+  const hint = new OverlaySidecar(state.w * state.h);
   return {
     tileSize,
     w: state.w,
     h: state.h,
-    tiles: new TileCache(state.w * state.h),
+    tiles: new TileCache(state.w * state.h, { overlays: [hint] }),
+    hint,
   };
 }
 
@@ -147,13 +141,12 @@ function drawCell(
   error: boolean,
   cursor: boolean,
   tone: WinTone,
-  hintKind: HintKind,
+  hint: OverlaySidecar,
+  i: number,
   /** This clue drives the displayed deduction, so its digit draws `COL_HINT_OUTLINE`
    * (see `RangeHint.clue`). The clue is *inside* the outlined area or striped
    * run it drives, so it keeps that mark and changes only its digit. */
-  clueRef = false,
-  /** On the run the sentence names (`RangeHint.hatch`). */
-  hatched = false,
+  clueRef: boolean,
 ): void {
   const b = border(ts);
   const x = b + ts * c;
@@ -170,7 +163,7 @@ function drawCell(
 
   drawRectOutline(dr, x, y, ts + 1, ts + 1, COL_GRID);
   dr.drawRect(box, surface);
-  if (hatched) dr.drawHatch(box, hatchPeriod(ts));
+  hint.drawHatch(dr, i, box, ts);
 
   // Content before the marks, which sit at the cell's edge beside it. A
   // violation is told by the frame below, so a shaded piece keeps its color.
@@ -193,24 +186,18 @@ function drawCell(
   // Out at the corners of the cell, clear of the piece.
   if (cursor) drawRectCorners(dr, tx, ty, Math.floor(ts / 2) - 2, COL_CURSOR, thick);
 
-  // The hint marks sit on the cell's own border. A shaded premise gets a
-  // doubled inset outline so "this shaded square is the reason" reads distinct
-  // from the ring of the forced move. The target is never previewed with its
-  // mark: a placed piece or cross would read as already done, so the narration
-  // says which mark and auto-hint applies it for real.
+  // The hint marks sit on the cell's own border. The target is never
+  // previewed with its mark: a placed piece or cross would read as already
+  // done, so the narration says which mark and auto-hint applies it for real.
   const band = { box, outer: 0, inner: thick };
-  if (hintKind === "area") drawMarkSides(dr, band, MARK_ALL, COL_HINT_OUTLINE);
-  if (hintKind === "target") {
+  drawMarkSides(dr, band, hint.outlineSides(i), COL_HINT_OUTLINE);
+  if (hint.ringed(i)) {
     const clue = clueText(ts, tx, ty);
     const clear: RingClear =
       value > 0
         ? { enclose: [textBox(clue.origin, clue.options, String(value))], avoid: [] }
         : NOTHING_TO_CLEAR;
-    dr.drawRing(box, clear, thick);
-  }
-  if (hintKind === "shadedRef") {
-    drawRectOutline(dr, x + 1, y + 1, ts - 1, ts - 1, COL_HINT_OUTLINE);
-    drawRectOutline(dr, x + 2, y + 2, ts - 3, ts - 3, COL_HINT_OUTLINE);
+    drawCellRing(dr, band, clear);
   }
 
   dr.drawUpdate({ x, y, w: ts + 1, h: ts + 1 });
@@ -244,11 +231,8 @@ export function redraw(
   const mistakeSet = mistakes ? new Set(mistakes.map((m) => idx(m.r, m.c, w))) : null;
 
   const marks = stepMarks(hint);
-  const at = (p: Point): number => idx(p.y, p.x, w);
-  const hintTarget = new Set(marks.of("ring", CELL).map(at));
-  const hintOutline = new Set(marks.of("outline", CELL).map(at));
-  const hintClue = new Set(marks.of("outline", CLUE).map(at));
-  const hintHatch = new Set(marks.of("stripes", CELL).map(at));
+  ds.hint.pack(marks, (x, y) => idx(y, x, w));
+  const hintClue = new Set(marks.of("outline", CLUE).map((p) => idx(p.y, p.x, w)));
 
   for (let r = 0; r < h; r++) {
     for (let c = 0; c < w; c++) {
@@ -257,27 +241,15 @@ export function redraw(
       const error = errors[i];
       const mistake = mistakeSet?.has(i) ?? false;
       const cursor = ui.cursor.visible && r === ui.cursor.y && c === ui.cursor.x;
-      // An outlined shaded square is a premise, which keeps its piece and
-      // takes the doubled outline.
-      const hintKind: HintKind = hintTarget.has(i)
-        ? "target"
-        : hintOutline.has(i)
-          ? value === BLACK
-            ? "shadedRef"
-            : "area"
-          : "none";
       const clueRef = hintClue.has(i);
-      const hatched = hintHatch.has(i);
-
       const tone = flash.win(sweepStep(c, r));
 
-      let packed = (value + 2) | HINT_FLAG[hintKind];
+      let packed = value + 2;
       if (error) packed |= F_ERROR;
       if (cursor) packed |= F_CURSOR;
       packed |= tone << WIN_SHIFT;
       if (mistake) packed |= F_MISTAKE;
       if (clueRef) packed |= F_HINT_CLUE;
-      if (hatched) packed |= F_HINT_HATCH;
 
       if (ds.tiles.changed(i, packed)) {
         drawCell(
@@ -289,9 +261,9 @@ export function redraw(
           error || mistake,
           cursor,
           tone,
-          hintKind,
+          ds.hint,
+          i,
           clueRef,
-          hatched,
         );
       }
     }

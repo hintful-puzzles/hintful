@@ -100,11 +100,11 @@ describe("hint color legend", () => {
       flash: NO_FLASH,
       hint: step,
     });
-    // The cited black square takes a doubled outline (`line` ops, not a body
-    // fill).
-    expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_OUTLINE)).toBe(
-      true,
-    );
+    // The cited black square is outlined like any evidence: one box of four
+    // thin sides, never a body fill.
+    const sides = markSides(rec.ops, COL_HINT_OUTLINE);
+    expect(sides).toHaveLength(4);
+    for (const s of sides) expect(isThin(s)).toBe(true);
     // The forced cell is ringed, and nothing else (the premise's outline
     // included) takes the ring's ink.
     expectRing(rec.ops);

@@ -30,8 +30,12 @@
         a strand reference of its own (the outline sets are open squares),
         so it keeps its inset box with the white line. Run in the app: the
         clue, the dark square and the other squares are closed shapes apart.
+  - [x] Range: onto the sidecar. A clue's view is one contour (was a box
+        a square), the shaded premise's doubled outline folds into the one
+        outline, ring and outline no longer exclusive; the clue keeps its
+        digit in the hint color (a `CLUE` mark, its own word bit).
   - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2):
-        Range, Slant, Signpost, Sticks, Boats, and the
+        Slant, Signpost, Sticks, Boats, and the
         border grid (Palisade, Separate). Fold Range's and Slant's doubled
         "premise" outline and Lightup's dark-square ring into the one
         outline (`hints-marks.md` § "Outline the evidence": one shape for
