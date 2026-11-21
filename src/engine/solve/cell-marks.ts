@@ -30,7 +30,9 @@ import { MADE } from "./marks-made.ts";
 import type { StepBudget } from "./step-budget.ts";
 
 /** Why a placement struck a value from a cell: the value just placed at
- * `(px, py)`. */
+ * `(px, py)`. It is also the reason a candidate hint's walk narrates for the
+ * row/column cull after a placement, so every candidate game's reason union
+ * carries it. */
 export interface DupReason {
   kind: "dup";
   n: number;

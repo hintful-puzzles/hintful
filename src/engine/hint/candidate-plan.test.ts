@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { HintStep } from "../contract/game.ts";
 import { CELL, mark, Narration, phrase, unshaped } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
+import type { DupReason } from "../solve/cell-marks.ts";
 import type { CandidateHighlights, CandidateReading } from "./candidate-hint.ts";
 import {
   type CandidatePlan,
-  type DupReason,
   type Firing,
   type PlanRung,
   runCandidatePlan,

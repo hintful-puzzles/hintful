@@ -39,7 +39,7 @@ import * as compiled from "../../generated/engine/solve/latin.compiled.ts";
 import { shuffle } from "../board/shuffle.ts";
 import type { DifficultyVerdict } from "../contract/difficulty.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
-import { CellMarks, type PlaceRung } from "./cell-marks.ts";
+import { CellMarks, type DupReason, type PlaceRung } from "./cell-marks.ts";
 import type { CompiledTechniques } from "./deduction-fixpoint.ts";
 import { latinSpace, valuesOf } from "./describe-runtime.ts";
 import {
@@ -91,7 +91,7 @@ export type LatinReason =
   | { kind: "single" }
   /** Height `n` was just placed at `(px, py)`, which rules it out of the rest
    * of that row and column. */
-  | { kind: "dup"; n: number; px: number; py: number }
+  | DupReason
   | LatinSetReason
   | LatinWingReason;
 

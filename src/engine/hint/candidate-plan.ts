@@ -20,7 +20,7 @@
 import type { HintStep } from "../contract/game.ts";
 import type { Sentence } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
-import type { CellMarks } from "../solve/cell-marks.ts";
+import type { CellMarks, DupReason } from "../solve/cell-marks.ts";
 import { STRIKE } from "../solve/describe-runtime.ts";
 import {
   admits,
@@ -59,15 +59,6 @@ import {
   singleReasonOf,
   type WholeRegion,
 } from "./latin-hint.ts";
-
-/** Why a placement's row/column cull strikes what it strikes: the value just
- * placed at `(px, py)`. Every candidate game's reason union carries it. */
-export interface DupReason {
-  kind: "dup";
-  n: number;
-  px: number;
-  py: number;
-}
 
 /** The rungs the walk speaks in every game: the setup's, and a placement's
  * cull ({@link DupReason}). */

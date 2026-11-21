@@ -7,6 +7,7 @@
  */
 
 import type { Point } from "../contract/types.ts";
+import type { DupReason } from "../solve/cell-marks.ts";
 import type { LatinSetReason, LatinWingReason } from "../solve/latin.ts";
 import type { CandidateReading } from "./candidate-hint.ts";
 
@@ -123,8 +124,7 @@ export function hiddenSingleLine(
 
 /** The generic Latin reasons whose narration is shared verbatim by the *row/column*
  * games (Keen, Unequal): a {@link SingleReason} (naked or hidden single)
- * plus the generic `dup` / `set` eliminations from `LatinReason`. The
- * `dup` reason may carry extra fields (`px`/`py`) — only `n` is read here. */
+ * plus the generic `dup` / `set` eliminations from `LatinReason`. */
 export type GenericLatinReason =
   | SingleReason
   /** A single in a cell whose units, named, hold every other value. */
@@ -132,6 +132,6 @@ export type GenericLatinReason =
   /** A value with one home left in a unit the game names, a block or a
    * diagonal as well as a line. */
   | { kind: "hiddenSingle"; n: number; unit: { name: string; cells: readonly Point[] } }
-  | { kind: "dup"; n: number; px: number; py: number }
+  | DupReason
   | LatinSetReason
   | LatinWingReason;

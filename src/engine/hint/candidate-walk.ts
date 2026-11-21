@@ -16,6 +16,7 @@ import {
   so,
 } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
+import type { DupReason } from "../solve/cell-marks.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
 import { describedSpace, PLACE, STRIKE } from "../solve/describe-runtime.ts";
 import { FactGraph } from "../solve/fact-graph.ts";
@@ -48,7 +49,6 @@ import {
 import type {
   CandidatePlan,
   CandidateRung,
-  DupReason,
   Firing,
   Leg,
   PlanRung,

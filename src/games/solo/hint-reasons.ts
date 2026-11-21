@@ -14,6 +14,7 @@ import {
   techniqueRung,
 } from "../../engine/hint/candidate-plan.ts";
 import { byCell } from "../../engine/hint/latin-notes.ts";
+import type { DupReason } from "../../engine/solve/cell-marks.ts";
 import type { GridSpace } from "../../engine/solve/describe-runtime.ts";
 import { PLACE, valuesOf } from "../../engine/solve/describe-runtime.ts";
 import type {
@@ -49,7 +50,7 @@ export type SoloReason =
    * digit, under the implicit candidate reading. */
   | { kind: "regionsFull" }
   /** A digit placed at `(px, py)`, struck from the rest of a shared group. */
-  | { kind: "dup"; n: number; px: number; py: number }
+  | DupReason
   /** Every cell of `confined` that can still take `n` also lies in `target`, so
    * `n` must sit in their overlap and is ruled out of the rest of `target`. One
    * of the two is a block, the other a row, column or diagonal. */

@@ -86,6 +86,7 @@ import {
 } from "../../engine/hint/latin-notes.ts";
 import type { PointerAction } from "../../engine/input/hint-gesture.ts";
 import { noteEntryGesture } from "../../engine/mechanics/note-taking-cell.ts";
+import type { DupReason } from "../../engine/solve/cell-marks.ts";
 import type { Said } from "../../engine/solve/ladder-runtime.ts";
 import { type LatinSolver, latinLadder, setCells } from "../../engine/solve/latin.ts";
 import * as salad from "../../generated/games/salad/salad.compiled.ts";
@@ -156,7 +157,7 @@ export type SaladReason =
    * "might be empty" mark. */
   | { kind: "circleXNote"; count: number }
   | SingleReasonUnder<"populate">
-  | { kind: "dup"; n: number; px: number; py: number }
+  | DupReason
   | LatinStrikeReason;
 
 /** Every rung a Salad step can be: the Latin family's on the populate reading,

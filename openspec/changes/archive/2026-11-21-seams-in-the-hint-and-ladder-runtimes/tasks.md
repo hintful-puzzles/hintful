@@ -42,6 +42,12 @@
       (`commitMove`, `afterTransition`, `emitStatusBar`, `requestRedraw`),
       so the reason recorded in `split-the-large-files` stands.)
 
+- [x] 1.5 Found while splitting: the cull reason `{ kind: "dup"; n; px; py }`
+      was written six times (two named `DupReason`s, in `ladder-runtime.ts`
+      and `candidate-plan.ts`, and inline in `latin.ts`, `latin-hint.ts`,
+      Salad's and Solo's reason unions). `cell-marks.ts`'s is the one;
+      the rest name it.
+
 ## 2. Finish
 
-- [ ] 2.1 The catalog cites the new files. Commit, push, archive.
+- [x] 2.1 The catalog cites the new files. Commit, push, archive.

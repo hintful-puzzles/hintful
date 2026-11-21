@@ -55,7 +55,6 @@ import {
 import {
   CANDIDATE_RUNGS,
   type CandidateRung,
-  type DupReason,
   type Firing,
   type NotesLadder,
   type PlanRung,
@@ -71,7 +70,7 @@ import {
   populateText,
 } from "../../engine/hint/hint-text.ts";
 import type { CellRegion } from "../../engine/hint/latin-hint.ts";
-import { CellMarks } from "../../engine/solve/cell-marks.ts";
+import { CellMarks, type DupReason } from "../../engine/solve/cell-marks.ts";
 import {
   describedSpace,
   rangeMask,
