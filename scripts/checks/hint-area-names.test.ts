@@ -127,7 +127,15 @@ it("reports every reference that names one thing and paints an area", () => {
         const frame = (step: HintStep<unknown>, words: Sentence): string[] => {
           const rec = new RecordingDrawing(palette);
           const ds = game.newDrawState(state, tile);
-          game.redraw(rec, ds, null, state, 1, ui, 0, NO_FLASH, { ...step, words });
+          game.redraw(rec, ds, {
+            prev: null,
+            state,
+            dir: 1,
+            ui,
+            animTime: 0,
+            flash: NO_FLASH,
+            hint: { ...step, words },
+          });
           return rec.ops.map((o) => JSON.stringify(o));
         };
         let walked = 0;

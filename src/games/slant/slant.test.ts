@@ -390,9 +390,24 @@ describe("slant rendering", () => {
     const dr = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
     const ds = slantGame.newDrawState(s, 32);
     const u = ui();
-    slantGame.redraw?.(dr, ds, null, s, 1, u, 0, NO_FLASH, undefined, undefined);
+    slantGame.redraw?.(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: u,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     dr.ops.length = 0;
-    slantGame.redraw?.(dr, ds, null, s, 1, u, 0, NO_FLASH, undefined, [{ x: 0, y: 0 }]);
+    slantGame.redraw?.(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: u,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes: [{ x: 0, y: 0 }],
+    });
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 
@@ -405,7 +420,14 @@ describe("slant rendering", () => {
     for (const fade of [false, true]) {
       const dr = new RecordingDrawing(palette);
       const ds = slantGame.newDrawState(s, 32);
-      slantGame.redraw?.(dr, ds, null, s, 1, ui({ fadeGrounded: fade }), 0, NO_FLASH);
+      slantGame.redraw?.(dr, ds, {
+        prev: null,
+        state: s,
+        dir: 1,
+        ui: ui({ fadeGrounded: fade }),
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       const groundedLines = dr.ops.filter(
         (o) => o.op === "line" && o.color === COL_GROUNDED,
       );
@@ -420,16 +442,14 @@ describe("slant: the win flash", () => {
   const palette = slantGame.colors(DEFAULT_BACKGROUND);
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(palette);
-    slantGame.redraw(
-      dr,
-      slantGame.newDrawState(state, 32),
-      null,
+    slantGame.redraw(dr, slantGame.newDrawState(state, 32), {
+      prev: null,
       state,
-      1,
-      ui(),
-      0,
+      dir: 1,
+      ui: ui(),
+      animTime: 0,
       flash,
-    );
+    });
     return dr;
   };
   /** Where each square painted in the flash color is drawn, as `x,y`. */

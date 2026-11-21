@@ -83,7 +83,14 @@ describe("map win flash", () => {
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(mapGame.colors(DEFAULT_BACKGROUND));
     const ds = mapGame.newDrawState(state, TS);
-    mapGame.redraw(dr, ds, null, state, 1, mapGame.newUi(state), 0, flash);
+    mapGame.redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: mapGame.newUi(state),
+      animTime: 0,
+      flash,
+    });
     return dr;
   };
   /** The cells whose square a frame fills in the flash color. */

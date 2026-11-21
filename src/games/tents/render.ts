@@ -38,7 +38,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
 import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
@@ -53,12 +53,7 @@ import {
 } from "../../engine/render/hint-mark.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import { type HintLink, LINK, NUMBER } from "./hint-marks.ts";
 import {
   BLANK,
@@ -557,15 +552,9 @@ function drawLinkRing(
 export function redraw(
   dr: GameDrawing,
   ds: TentsDrawState,
-  _prev: TentsState | null,
-  state: TentsState,
-  _dir: number,
-  ui: TentsUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<TentsMove>,
-  mistakes?: readonly TentsMistake[],
+  frame: Frame<TentsState, TentsUi, TentsMove, unknown, TentsMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, grid, numbers } = state;
 

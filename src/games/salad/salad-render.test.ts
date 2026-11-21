@@ -351,7 +351,7 @@ function paint(
 ): RecordingDrawing {
   const ds = newDrawState(state, saladGame.preferredTileSize);
   const rec = new RecordingDrawing(saladGame.colors(DEFAULT_BACKGROUND));
-  redraw(rec, ds, null, state, 0, ui, 0, flash);
+  redraw(rec, ds, { prev: null, state, dir: 0, ui, animTime: 0, flash });
   return rec;
 }
 

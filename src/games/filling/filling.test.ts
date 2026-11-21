@@ -361,7 +361,14 @@ describe("filling win flash", () => {
       (flash: Flash) => {
         const dr = new RecordingDrawing(fillingGame.colors(DEFAULT_BACKGROUND));
         const ds = preferredDrawState(fillingGame, state);
-        fillingGame.redraw(dr, ds, null, state, 1, fillingGame.newUi(state), 0, flash);
+        fillingGame.redraw(dr, ds, {
+          prev: null,
+          state,
+          dir: 1,
+          ui: fillingGame.newUi(state),
+          animTime: 0,
+          flash,
+        });
         return dr;
       },
       (dr) =>

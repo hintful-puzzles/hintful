@@ -860,16 +860,14 @@ describe("boats rendering", () => {
       newState(p, "1,1,1,1,1,1,1,1,1,1,1,1,"),
     );
     const rec = new RecordingDrawing(boatsGame.colors([1, 1, 1]));
-    boatsGame.redraw(
-      rec,
-      preferredDrawState(boatsGame, state),
-      null,
+    boatsGame.redraw(rec, preferredDrawState(boatsGame, state), {
+      prev: null,
       state,
-      1,
-      boatsGame.newUi(state),
-      0,
-      NO_FLASH,
-    );
+      dir: 1,
+      ui: boatsGame.newUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     // The diamond is a polygon filled COL_ERROR outlined COL_INK,
     // with the exclamation mark in COL_COLLISION_TEXT on top.
@@ -918,7 +916,14 @@ describe("boats rendering", () => {
     const paint = (flash: Flash) => {
       const rec = new RecordingDrawing(palette);
       const ds = preferredDrawState(boatsGame, won);
-      boatsGame.redraw(rec, ds, null, won, 1, boatsGame.newUi(won), 0, flash);
+      boatsGame.redraw(rec, ds, {
+        prev: null,
+        state: won,
+        dir: 1,
+        ui: boatsGame.newUi(won),
+        animTime: 0,
+        flash,
+      });
       return rec.ops;
     };
     // A lit element by its square's origin: a water square's lit surface, or
@@ -1047,16 +1052,14 @@ describe("boats fleet display layout", () => {
   function fleetInkRight(p: BoatsParams): number {
     const state = newState(p, "0,".repeat(p.w + p.h));
     const rec = new RecordingDrawing(boatsGame.colors([1, 1, 1]));
-    boatsGame.redraw(
-      rec,
-      preferredDrawState(boatsGame, state),
-      null,
+    boatsGame.redraw(rec, preferredDrawState(boatsGame, state), {
+      prev: null,
       state,
-      1,
-      boatsGame.newUi(state),
-      0,
-      NO_FLASH,
-    );
+      dir: 1,
+      ui: boatsGame.newUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     let right = 0;
     for (const op of rec.ops) {
       if (op.op === "circle" && op.fill === COL_SHIP)

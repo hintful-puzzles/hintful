@@ -49,7 +49,15 @@ function renderState(
 ): RecordingDrawing {
   const rec = new RecordingDrawing(palette);
   const ds = newDrawState(state, 32);
-  redraw(rec, ds, null, state, 1, ui, 0, NO_FLASH, undefined, mistakes);
+  redraw(rec, ds, {
+    prev: null,
+    state,
+    dir: 1,
+    ui,
+    animTime: 0,
+    flash: NO_FLASH,
+    mistakes,
+  });
   return rec;
 }
 
@@ -83,7 +91,15 @@ describe("hint color legend", () => {
     };
     const rec = new RecordingDrawing(palette);
     const ds = newDrawState(state, 32);
-    redraw(rec, ds, null, state, 1, noCursor, 0, NO_FLASH, step);
+    redraw(rec, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: noCursor,
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: step,
+    });
     // The cited black square takes a doubled outline (`line` ops, not a body
     // fill).
     expect(rec.ops.some((o) => o.op === "line" && o.color === COL_HINT_OUTLINE)).toBe(
@@ -164,7 +180,14 @@ describe("pieces on a quiet surface", () => {
     ]);
     const paint = (flash: Flash) => {
       const rec = new RecordingDrawing(palette);
-      redraw(rec, newDrawState(state, 32), null, state, 1, noCursor, 0, flash);
+      redraw(rec, newDrawState(state, 32), {
+        prev: null,
+        state,
+        dir: 1,
+        ui: noCursor,
+        animTime: 0,
+        flash,
+      });
       return rec;
     };
     // The cells whose ground is the flash color, each as its index.

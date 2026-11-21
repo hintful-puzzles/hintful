@@ -50,7 +50,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -86,7 +86,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import type { RomeHint } from "./hint.ts";
 import type { RomeMistake } from "./index.ts";
 import {
@@ -367,15 +367,9 @@ function drawArrow(
 export function redraw(
   dr: GameDrawing,
   ds: RomeDrawState,
-  _prev: RomeState | null,
-  state: RomeState,
-  _dir: number,
-  ui: RomeUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<RomeMove, RomeHint>,
-  mistakes?: readonly RomeMistake[],
+  frame: Frame<RomeState, RomeUi, RomeMove, RomeHint, RomeMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const ox = origin(ts);
   const { w, h, grid, pencil, regions } = state;

@@ -76,7 +76,14 @@ describe("Black Box redraw", () => {
     const s = makeState(5, 5, [[0, 0]]);
     const ds = freshDs(s);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, s, 1, freshUi(s), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: freshUi(s),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
     // Nothing is settled yet: no square is marked, fired or revealed.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_SETTLED)).toBe(false);
@@ -88,7 +95,14 @@ describe("Black Box redraw", () => {
     s = blackboxGame.executeMove(s, { type: "toggleLock", x: 1, y: 1 });
     s = blackboxGame.executeMove(s, { type: "toggleLock", x: 3, y: 3 });
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(s), null, s, 1, freshUi(s), 0, NO_FLASH);
+    redraw(dr, freshDs(s), {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: freshUi(s),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const lifted = ops.filter((o) => o.op === "rect" && o.color === COL_SETTLED);
     expect(lifted.length).toBe(2);
     // One disc, the ball's, and the two strokes of one cross.
@@ -104,7 +118,14 @@ describe("Black Box redraw", () => {
     s = blackboxGame.executeMove(s, { type: "fire", rangeno: top });
     const ds = freshDs(s);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, s, 1, freshUi(s), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: freshUi(s),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // The matched entry/exit cells show the laser number "1".
     expect(ops.some((o) => o.op === "text" && o.text === "1")).toBe(true);
   });
@@ -119,7 +140,14 @@ describe("Black Box redraw", () => {
     const s0 = makeState(5, 5, balls);
     const ds0 = freshDs(s0);
     const r0 = recordingDrawing();
-    redraw(r0.dr, ds0, null, s0, 1, freshUi(s0), 0, NO_FLASH);
+    redraw(r0.dr, ds0, {
+      prev: null,
+      state: s0,
+      dir: 1,
+      ui: freshUi(s0),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(r0.ops.some((o) => o.op === "circle" && o.fill === COL_BUTTON)).toBe(false);
 
     // Mark the right number of guesses → button appears.
@@ -128,7 +156,14 @@ describe("Black Box redraw", () => {
       s1 = blackboxGame.executeMove(s1, { type: "toggleBall", x: x + 1, y: y + 1 });
     const ds1 = freshDs(s1);
     const r1 = recordingDrawing();
-    redraw(r1.dr, ds1, null, s1, 1, freshUi(s1), 0, NO_FLASH);
+    redraw(r1.dr, ds1, {
+      prev: null,
+      state: s1,
+      dir: 1,
+      ui: freshUi(s1),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(r1.ops.some((o) => o.op === "circle" && o.fill === COL_BUTTON)).toBe(true);
   });
 
@@ -154,7 +189,14 @@ describe("Black Box redraw", () => {
     };
     const paint = (flash: Flash) => {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(s), null, s, 1, freshUi(s), 0, flash);
+      redraw(dr, freshDs(s), {
+        prev: null,
+        state: s,
+        dir: 1,
+        ui: freshUi(s),
+        animTime: 0,
+        flash,
+      });
       return ops;
     };
     const squares = (ops: ReturnType<typeof paint>): string[] =>

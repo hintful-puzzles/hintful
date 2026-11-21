@@ -24,18 +24,13 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import { SQUARE } from "./hint-marks.ts";
 import {
   ELSEWHERE,
@@ -223,14 +218,9 @@ function drawTile(dr: GameDrawing, ts: number, r: Rect, t: Tile): void {
 export function redraw(
   dr: GameDrawing,
   ds: WordguessDrawState,
-  _prev: WordguessState | null,
-  state: WordguessState,
-  _dir: number,
-  ui: WordguessUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<WordguessMove>,
+  frame: Frame<WordguessState, WordguessUi, WordguessMove>,
 ): void {
+  const { state, ui, flash, hint } = frame;
   const ts = ds.tileSize;
   const { len, nguesses } = state.params;
   const o = outcome(state);

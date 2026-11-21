@@ -23,7 +23,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -35,12 +35,7 @@ import type {
 import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
 import { textBox } from "../../engine/render/ring.ts";
-import {
-  type Flash,
-  sweepRanks,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepRanks, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import { SIGN, TILE } from "./kinds.ts";
 import { OPS, type Op } from "./solver.ts";
 import {
@@ -400,14 +395,9 @@ function slide(
 export function redraw(
   dr: GameDrawing,
   ds: NumgameDrawState,
-  prev: NumgameState | null,
-  state: NumgameState,
-  _dir: number,
-  ui: NumgameUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<NumgameMove>,
+  frame: Frame<NumgameState, NumgameUi, NumgameMove>,
 ): void {
+  const { prev, state, ui, animTime, flash, hint } = frame;
   const moving = animTime > 0 && prev !== null ? slide(prev, state) : null;
   // Mid-slide the board is the one being left, less the number in flight.
   const board = moving && prev ? prev : state;

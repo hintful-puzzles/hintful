@@ -301,7 +301,15 @@ describe("solo render (initial frame)", () => {
     };
     const frame = (ds: SoloDrawState, h?: typeof hint) => {
       const rec = new RecordingDrawing(palette);
-      soloGame.redraw(rec, ds, null, state, 0, ui, 0, NO_FLASH, h);
+      soloGame.redraw(rec, ds, {
+        prev: null,
+        state,
+        dir: 0,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        hint: h,
+      });
       return rec.ops;
     };
 

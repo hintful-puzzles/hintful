@@ -48,7 +48,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -70,7 +70,6 @@ import {
   textBox,
 } from "../../engine/render/ring.ts";
 import {
-  type Flash,
   loopSteps,
   WIN_NONE,
   type WinTone,
@@ -944,15 +943,9 @@ function signAt(signs: ReadonlyMap<string, Point>, pair: LoopyPair): Point {
 export function redraw(
   dr: GameDrawing,
   ds: LoopyDrawState,
-  _prev: LoopyState | null,
-  s: LoopyState,
-  _dir: number,
-  ui: LoopyRenderUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<LoopyMove>,
-  mistakes?: readonly LoopyMistake[],
+  frame: Frame<LoopyState, LoopyRenderUi, LoopyMove, unknown, LoopyMistake>,
 ): void {
+  const { state: s, ui, flash, hint, mistakes } = frame;
   const g = s.grid;
   const ts = ds.tileSize;
   const mistaken = new Uint8Array(g.numEdges);

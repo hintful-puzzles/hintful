@@ -28,14 +28,12 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
-import type { MarkedDeadEnd } from "../../engine/contract/hint-refusal.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
-  type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
@@ -352,16 +350,9 @@ function drawArrow(
 export function redraw(
   dr: GameDrawing,
   ds: InertiaDrawState,
-  prev: InertiaState | null,
-  s: InertiaState,
-  dir: number,
-  ui: InertiaUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<InertiaMove>,
-  _mistakes?: readonly unknown[],
-  deadEnd?: MarkedDeadEnd,
+  frame: Frame<InertiaState, InertiaUi, InertiaMove>,
 ): void {
+  const { prev, state: s, dir, ui, animTime, flash, hint, deadEnd } = frame;
   const { w, h } = s.params;
   const ts = ds.tileSize;
   const marks = stepMarks(hint ?? deadEnd);

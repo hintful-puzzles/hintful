@@ -24,7 +24,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Rect, Size } from "../../engine/contract/types.ts";
 import { regionFills } from "../../engine/generate/region-fill.ts";
@@ -48,12 +48,7 @@ import {
 } from "../../engine/render/region-walls.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { NorinoriMistake } from "./index.ts";
 import {
   CROSSED,
@@ -275,15 +270,9 @@ function shadedInError(state: NorinoriState): Set<number> {
 export function redraw(
   dr: GameDrawing,
   ds: NorinoriDrawState,
-  _prev: NorinoriState | null,
-  state: NorinoriState,
-  _dir: number,
-  ui: NorinoriUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<NorinoriMove>,
-  mistakes?: readonly NorinoriMistake[],
+  frame: Frame<NorinoriState, NorinoriUi, NorinoriMove, unknown, NorinoriMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, grid } = state;
   const b = border(ts);

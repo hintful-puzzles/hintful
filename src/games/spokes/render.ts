@@ -37,7 +37,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -50,7 +50,7 @@ import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import type { SpokesHint } from "./hint.ts";
 import { HUB, SPOKE } from "./kinds.ts";
 import {
@@ -380,15 +380,9 @@ function drawHub(
 export function redraw(
   dr: GameDrawing,
   ds: SpokesDrawState,
-  _prev: SpokesState | null,
-  state: SpokesState,
-  _dir: number,
-  ui: SpokesUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SpokesMove, SpokesHint>,
-  mistakes?: readonly SpokesMistake[],
+  frame: Frame<SpokesState, SpokesUi, SpokesMove, SpokesHint, SpokesMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h } = state;
 

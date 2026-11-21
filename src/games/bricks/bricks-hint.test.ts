@@ -486,17 +486,15 @@ describe("bricks hint — rendering (tier 2.5)", () => {
       hint?: typeof step,
     ) => {
       const rec = new RecordingDrawing(palette);
-      bricksGame.redraw(
-        rec,
-        ds,
-        null,
+      bricksGame.redraw(rec, ds, {
+        prev: null,
         state,
-        0,
-        bricksGame.newUi(state),
-        0,
-        NO_FLASH,
+        dir: 0,
+        ui: bricksGame.newUi(state),
+        animTime: 0,
+        flash: NO_FLASH,
         hint,
-      );
+      });
       return rec.ops;
     };
 

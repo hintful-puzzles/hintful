@@ -40,7 +40,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -77,7 +77,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import {
   clueLabel,
   F_IMMUTABLE,
@@ -454,15 +454,9 @@ const PENCIL_BOX = (o: number, ts: number) =>
 export function redraw(
   dr: GameDrawing,
   ds: MathraxDrawState,
-  _prev: MathraxState | null,
-  state: MathraxState,
-  _dir: number,
-  ui: MathraxUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<MathraxMove, MathraxHint>,
-  mistakes?: readonly Point[],
+  frame: Frame<MathraxState, MathraxUi, MathraxMove, MathraxHint, Point>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const o = state.params.o;
   if (ds.tiles.firstFrame()) {

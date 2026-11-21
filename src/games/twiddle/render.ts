@@ -17,7 +17,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import { drawRecessedBorder, glyphFont } from "../../engine/render/draw.ts";
@@ -30,7 +30,7 @@ import {
   textBox,
 } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { BLOCK, LIFTED, TILE } from "./kinds.ts";
 import type { TwiddleMove, TwiddleState, TwiddleUi } from "./state.ts";
 
@@ -410,14 +410,9 @@ function drawTurnArrow(
 export function redraw(
   dr: GameDrawing,
   ds: TwiddleDrawState,
-  prev: TwiddleState | null,
-  state: TwiddleState,
-  dir: number,
-  ui: TwiddleUi,
-  animTime: number,
-  flash: Flash,
-  activeHint?: HintStep<TwiddleMove>,
+  frame: Frame<TwiddleState, TwiddleUi, TwiddleMove>,
 ): void {
+  const { prev, state, dir, ui, animTime, flash, hint: activeHint } = frame;
   const ts = ds.tileSize;
   const { w, h, n } = state;
   const hw = highlightWidth(ts);

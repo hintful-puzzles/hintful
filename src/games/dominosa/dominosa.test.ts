@@ -481,16 +481,14 @@ describe("dominosa render", () => {
     const paint = (flash: Flash): number[] => {
       const dr = new RecordingDrawing(palette);
       const ds = preferredDrawState(dominosaGame, solved);
-      dominosaGame.redraw(
-        dr,
-        ds,
-        null,
-        solved,
-        1,
-        dominosaGame.newUi(solved),
-        0,
+      dominosaGame.redraw(dr, ds, {
+        prev: null,
+        state: solved,
+        dir: 1,
+        ui: dominosaGame.newUi(solved),
+        animTime: 0,
         flash,
-      );
+      });
       const lit = new Set<number>();
       let tile = -1;
       for (const op of dr.ops) {

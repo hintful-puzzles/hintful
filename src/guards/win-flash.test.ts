@@ -50,7 +50,14 @@ function solvedBoard(id: string, game: AnyGame): (flash: Flash) => string {
   const tileSize = game.preferredTileSize;
   return (flash) => {
     const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
-    game.redraw(dr, game.newDrawState(state, tileSize), null, state, 1, ui, 0, flash);
+    game.redraw(dr, game.newDrawState(state, tileSize), {
+      prev: null,
+      state,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash,
+    });
     // What is seen, so without the palette indices: an element lit in a
     // color it already rests in (Path's yellow pair under the body) has not
     // changed, and only its other tone shows it.

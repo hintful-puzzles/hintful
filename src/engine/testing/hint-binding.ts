@@ -85,7 +85,16 @@ function defects<W extends Narration>(
     const rec = new RecordingDrawing(palette);
     const ds = game.newDrawState(state, tileSize);
     const { hint, deadEnd } = w ? shown(w) : {};
-    game.redraw(rec, ds, null, state, 1, ui, 0, NO_FLASH, hint, undefined, deadEnd);
+    game.redraw(rec, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      hint,
+      deadEnd,
+    });
     return JSON.stringify(rec.ops);
   };
 

@@ -178,7 +178,14 @@ describe("the reference aid repaints on a warm draw state", () => {
     const ui = subsetsGame.newUi(s);
     const frame = () => {
       const rec = new RecordingDrawing(subsetsGame.colors(DEFAULT_BACKGROUND));
-      subsetsGame.redraw(rec, ds, null, s, 0, ui, 0, NO_FLASH);
+      subsetsGame.redraw(rec, ds, {
+        prev: null,
+        state: s,
+        dir: 0,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return rec.ops.filter((o) => o.op === "circle" && o.fill === COL_HINT_SPOT);
     };
     ui.highlightSet = set;
@@ -234,18 +241,15 @@ describe("subsets rule-out mistakes", () => {
     const strikes = (focus: number | null) => {
       ui.highlightCell = focus;
       const rec = new RecordingDrawing(subsetsGame.colors(DEFAULT_BACKGROUND));
-      subsetsGame.redraw(
-        rec,
-        newDrawState(board, TS),
-        null,
-        board,
-        0,
+      subsetsGame.redraw(rec, newDrawState(board, TS), {
+        prev: null,
+        state: board,
+        dir: 0,
         ui,
-        0,
-        NO_FLASH,
-        undefined,
-        findMistakes(board),
-      );
+        animTime: 0,
+        flash: NO_FLASH,
+        mistakes: findMistakes(board),
+      });
       // A line that is not a stroke of a cleared slot's cross is a strike.
       return rec.ops
         .filter((o) => o.op === "line" && o.color !== COL_RULED_OUT)

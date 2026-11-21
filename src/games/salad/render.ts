@@ -37,7 +37,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -74,7 +74,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import type { SaladHint } from "./hint.ts";
 import { CLUE } from "./kinds.ts";
 import type { SaladMistake } from "./solver.ts";
@@ -569,15 +569,9 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
 export function redraw(
   dr: GameDrawing,
   ds: SaladDrawState,
-  _prev: SaladState | null,
-  s: SaladState,
-  _dir: number,
-  ui: SaladUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SaladMove, SaladHint>,
-  mistakes?: readonly SaladMistake[],
+  frame: Frame<SaladState, SaladUi, SaladMove, SaladHint, SaladMistake>,
 ): void {
+  const { state: s, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const o = s.order;
   const thick = ts <= 21 ? 1 : 2.5;

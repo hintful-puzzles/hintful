@@ -107,7 +107,14 @@ describe("Unruly redraw", () => {
     const state = blank();
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // 36 empty tile bodies.
     expect(bodies(ops).filter((o) => o.color === COL_EMPTY).length).toBe(36);
     // The outer grid edge frame was drawn on first draw.
@@ -120,7 +127,14 @@ describe("Unruly redraw", () => {
     state = place(state, 2, 2, ZERO);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(squares(ops)).toHaveLength(1);
     expect(discs(ops)).toHaveLength(1);
     // The piece carries the state, so no cell is filled in a piece's color.
@@ -134,7 +148,14 @@ describe("Unruly redraw", () => {
     state = place(state, 2, 0, ONE);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // The error rectangle helper emits 4 strips per affected tile.
     expect(
       ops.filter((o) => o.op === "rect" && o.color === COL_ERROR).length,
@@ -150,7 +171,14 @@ describe("Unruly redraw", () => {
     state = place(state, 5, 0, ONE);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // A badge: the `!` in the error's text color, on a disc of the error color.
     const marks = opsOfKind(ops, "text").filter((o) => o.text === "!");
     expect(marks).toHaveLength(4);
@@ -164,7 +192,14 @@ describe("Unruly redraw", () => {
     const state = place(withClue(ONE), 3, 3, ONE);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(squares(ops)).toHaveLength(2);
     expect(bodies(ops).filter((o) => o.color === COL_GIVEN)).toHaveLength(1);
   });
@@ -177,7 +212,7 @@ describe("Unruly redraw", () => {
     ui.cursor.x = 2;
     ui.cursor.y = 3;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
     expect(
       ops.filter((o) => "color" in o && o.color === COL_CURSOR).length,
     ).toBeGreaterThanOrEqual(4);
@@ -190,7 +225,15 @@ describe("Unruly redraw", () => {
     state = place(state, 2, 2, ZERO);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH, undefined, [{ x: 2, y: 2 }]);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes: [{ x: 2, y: 2 }],
+    });
     const errorRects = ops.filter((o) => o.op === "rect" && o.color === COL_ERROR);
     expect(errorRects.length).toBe(4);
   });
@@ -204,7 +247,14 @@ describe("Unruly redraw", () => {
       animTime: number,
     ): number[] => {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(state), prev, state, 1, freshUi(), animTime, NO_FLASH);
+      redraw(dr, freshDs(state), {
+        prev,
+        state,
+        dir: 1,
+        ui: freshUi(),
+        animTime,
+        flash: NO_FLASH,
+      });
       return squares(ops);
     };
     const [settled] = widthAt(null, filled, 0);
@@ -240,7 +290,15 @@ describe("Unruly redraw", () => {
       highlights: { target },
     };
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH, hint);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+      hint,
+    });
     // Target cell: a **ring**, and nothing else in its ink. A fill in a game
     // whose move is "put one of two pieces here" reads as a third piece
     // already placed, so the cell keeps its own surface under the mark.
@@ -261,15 +319,36 @@ describe("Unruly redraw", () => {
     const state = blank();
     const ds = freshDs(state);
     const first = recordingDrawing();
-    redraw(first.dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(first.dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(first.ops.length).toBeGreaterThan(0);
     const second = recordingDrawing();
-    redraw(second.dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(second.dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(second.ops.length).toBe(0);
     // One placed cell redraws only its own tile body.
     const moved = place(state, 0, 0, ONE);
     const third = recordingDrawing();
-    redraw(third.dr, ds, null, moved, 1, freshUi(), 0, NO_FLASH);
+    redraw(third.dr, ds, {
+      prev: null,
+      state: moved,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(bodies(third.ops).length).toBe(1);
   });
 });
@@ -287,7 +366,7 @@ describe("Unruly: the win flash sweeps the cells", () => {
 
   const paint = (flash: Flash, ds = freshDs(state)) => {
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, flash);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui: freshUi(), animTime: 0, flash });
     return ops;
   };
   /** The cells a frame fills with the flash color, as the `x,y` drawn at. */
@@ -328,7 +407,14 @@ describe("Unruly: the win flash sweeps the cells", () => {
       bodies(ops).reduce((top, op) => (op.x + op.y < top.x + top.y ? op : top)).color;
     const paintGiven = (flash: Flash) => {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(given), null, given, 1, freshUi(), 0, flash);
+      redraw(dr, freshDs(given), {
+        prev: null,
+        state: given,
+        dir: 1,
+        ui: freshUi(),
+        animTime: 0,
+        flash,
+      });
       return ops;
     };
     expect(surfaceAt(paintGiven(NO_FLASH))).toBe(COL_GIVEN);

@@ -766,7 +766,7 @@ describe("reference-aid rendering (tier 2.5)", () => {
       highlightCell: null,
       tallyCursor: null,
     };
-    redraw(rec, ds, null, state, 0, ui, 0, NO_FLASH, undefined, undefined);
+    redraw(rec, ds, { prev: null, state, dir: 0, ui, animTime: 0, flash: NO_FLASH });
     expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_HINT_SPOT)).toBe(
       true,
     );

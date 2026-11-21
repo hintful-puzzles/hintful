@@ -29,7 +29,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
@@ -42,7 +42,6 @@ import {
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
-  type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
@@ -290,15 +289,9 @@ function drawSquare(
 export function redrawFilling(
   dr: GameDrawing,
   ds: FillingDrawState,
-  _prev: FillingState | null,
-  state: FillingState,
-  _dir: number,
-  ui: FillingUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<FillingMove, FillingHint>,
-  mistakes?: readonly Point[],
+  frame: Frame<FillingState, FillingUi, FillingMove, FillingHint, Point>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, board, clues } = state;
   const sz = w * h;

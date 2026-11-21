@@ -677,7 +677,14 @@ describe("inertia rendering", () => {
   const floors = (s: InertiaState, flash: Flash, ...colors: number[]): string[] => {
     const dr = new RecordingDrawing(inertiaGame.colors([1, 1, 1]));
     const ds = inertiaGame.newDrawState(s, 32);
-    inertiaGame.redraw(dr, ds, null, s, 1, inertiaGame.newUi(s), 0, flash);
+    inertiaGame.redraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: inertiaGame.newUi(s),
+      animTime: 0,
+      flash,
+    });
     return dr.ops.flatMap((o) =>
       o.op === "rect" && colors.includes(o.color) && o.w === 31 && o.h === 31
         ? [`${o.x},${o.y}`]
@@ -735,7 +742,14 @@ describe("inertia rendering", () => {
     if (!redraw) throw new Error("expected a redraw");
     const paint = (u: InertiaUi) => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, s, 0, u, 0, NO_FLASH);
+      redraw(dr, ds, {
+        prev: null,
+        state: s,
+        dir: 0,
+        ui: u,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return dr.ops;
     };
     const arrows = (ops: DrawOp[], color: number) =>

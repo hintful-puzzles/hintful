@@ -151,7 +151,14 @@ describe("ascent render", () => {
     const state = ascentGame.executeMove(start, solved.move);
     const ds = ascentGame.newDrawState(state, 48);
     const rec = new RecordingDrawing(ascentGame.colors(DEFAULT_BACKGROUND));
-    ascentGame.redraw?.(rec, ds, null, state, 1, ascentGame.newUi(state), 0, NO_FLASH);
+    ascentGame.redraw?.(rec, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: ascentGame.newUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     const cells = [...state.grid.keys()].filter((i) => state.grid[i] >= 0);
     const middle = (i: number) =>
@@ -422,7 +429,14 @@ describe("ascent win flash", () => {
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(ascentGame.colors(DEFAULT_BACKGROUND));
       const ds = preferredDrawState(ascentGame, state);
-      ascentGame.redraw(dr, ds, null, state, 1, ascentGame.newUi(state), 0, flash);
+      ascentGame.redraw(dr, ds, {
+        prev: null,
+        state,
+        dir: 1,
+        ui: ascentGame.newUi(state),
+        animTime: 0,
+        flash,
+      });
       return opsOfKind(dr.ops, "rect");
     };
     // A square's fill is the one rect it draws a tile across.

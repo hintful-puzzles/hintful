@@ -324,16 +324,14 @@ describe("separate: the win flash", () => {
   const palette = separateGame.colors(DEFAULT_BACKGROUND);
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(palette);
-    separateGame.redraw(
-      dr,
-      separateGame.newDrawState(state, 48),
-      null,
+    separateGame.redraw(dr, separateGame.newDrawState(state, 48), {
+      prev: null,
       state,
-      1,
+      dir: 1,
       ui,
-      0,
+      animTime: 0,
       flash,
-    );
+    });
     return dr;
   };
   /** Where each square painted in the flash color is drawn, as `x,y`. */

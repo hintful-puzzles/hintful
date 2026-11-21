@@ -19,7 +19,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -37,7 +37,7 @@ import {
 } from "../../engine/render/draw.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { SQUARE, TILE } from "./kinds.ts";
 import type { SixteenMove, SixteenParams, SixteenState, SixteenUi } from "./state.ts";
 
@@ -156,14 +156,9 @@ export function colors(defaultBackground: Color): Color[] {
 export function redraw(
   dr: GameDrawing,
   ds: SixteenDrawState,
-  prev: SixteenState | null,
-  state: SixteenState,
-  dir: number,
-  ui: SixteenUi,
-  animTime: number,
-  flash: Flash,
-  activeHint?: HintStep<SixteenMove, SixteenHintHighlights>,
+  frame: Frame<SixteenState, SixteenUi, SixteenMove, SixteenHintHighlights>,
 ): void {
+  const { prev, state, dir, ui, animTime, flash, hint: activeHint } = frame;
   const ts = ds.tileSize;
   const hw = raisedBevelWidth(ts);
 

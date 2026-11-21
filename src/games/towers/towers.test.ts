@@ -537,7 +537,14 @@ describe("towers render", () => {
       ui.cursor.visible = pencilMode;
       const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
+      redraw(dr, ds, {
+        prev: null,
+        state: st,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return dr;
     };
     // The indicator's pencil body is the only COL_PENCIL_BODY-filled polygon
@@ -567,7 +574,14 @@ describe("towers render", () => {
       ui.threeD = threeD;
       const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
+      redraw(dr, ds, {
+        prev: null,
+        state: st,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return dr;
     };
 
@@ -679,7 +693,16 @@ describe("towers render", () => {
       const dr = new RecordingDrawing(palette);
       const lit = on && kind === "hatch" ? hint : undefined;
       const wrong = on && kind === "mistake" ? [{ x: 0, y: 1 }] : undefined;
-      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH, lit, wrong);
+      redraw(dr, ds, {
+        prev: null,
+        state: st,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        hint: lit,
+        mistakes: wrong,
+      });
       return dr.ops;
     };
 
@@ -722,7 +745,14 @@ describe("towers: the win flash sweeps the squares", () => {
 
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(towersGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, newDrawState(state, TS), null, state, 1, ui, 0, flash);
+    redraw(dr, newDrawState(state, TS), {
+      prev: null,
+      state,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash,
+    });
     return dr.ops;
   };
   /** The squares a frame fills with the flash color, as the `x,y` drawn at. */

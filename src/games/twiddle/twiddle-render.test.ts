@@ -59,7 +59,7 @@ describe("Twiddle rendering", () => {
     const ds = fresh(state);
     const { dr, ops } = recordingDrawing();
 
-    redraw(dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 0, ui: UI, animTime: 0, flash: NO_FLASH });
 
     // The two recessed-border bevels (highlight then lowlight) before tiles.
     const firstPolys = opsOfKind(ops, "polygon").slice(0, 2);
@@ -77,11 +77,18 @@ describe("Twiddle rendering", () => {
     const state = executeMove(prev, { type: "rotate", x: 0, y: 0, dir: 1 });
     const ds = fresh(state);
     // Prime the cache with a static draw.
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    redraw(recordingDrawing().dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     const { dr, ops } = recordingDrawing();
     const half = animLength(state.n) / 2;
-    redraw(dr, ds, prev, state, 1, UI, half, NO_FLASH);
+    redraw(dr, ds, { prev, state, dir: 1, ui: UI, animTime: half, flash: NO_FLASH });
 
     // Rotation clips the block region per tile.
     expect(ops.some((o) => o.op === "clip")).toBe(true);
@@ -98,11 +105,25 @@ describe("Twiddle rendering", () => {
     const prev = solved3x3();
     const state = executeMove(prev, { type: "rotate", x: 0, y: 0, dir: 1 });
     const ds = fresh(state);
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    redraw(recordingDrawing().dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     const { dr, ops } = recordingDrawing();
     // animTime == animMax → angle 0 → tiles back on their grid cells.
-    redraw(dr, ds, prev, state, 1, UI, animLength(state.n), NO_FLASH);
+    redraw(dr, ds, {
+      prev,
+      state,
+      dir: 1,
+      ui: UI,
+      animTime: animLength(state.n),
+      flash: NO_FLASH,
+    });
     const settled = opsOfKind(ops, "text").find((o) => o.text === "1");
     expect(settled?.x).toBe(48); // coord(0) + ts/2
     expect(settled?.y).toBe(96); // coord(1) + ts/2
@@ -115,19 +136,24 @@ describe("Twiddle rendering", () => {
   it("draws a band round the outer edge of the cursor's block", () => {
     const state = solved3x3();
     const ds = fresh(state);
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    redraw(recordingDrawing().dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     const { dr, ops } = recordingDrawing();
-    redraw(
-      dr,
-      ds,
-      null,
+    redraw(dr, ds, {
+      prev: null,
       state,
-      0,
-      { cursor: newCursor(0, 0, true), hoverBlock: null },
-      0,
-      NO_FLASH,
-    );
+      dir: 0,
+      ui: { cursor: newCursor(0, 0, true), hoverBlock: null },
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // A 2×2 block: each of its four tiles bands its two outer sides.
     expect(cursorBands(ops)).toBe(8);
   });
@@ -135,23 +161,35 @@ describe("Twiddle rendering", () => {
   it("outlines the block the mouse would turn the same way, and rubs it out when it leaves", () => {
     const state = solved3x3();
     const ds = fresh(state);
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    redraw(recordingDrawing().dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     const over = recordingDrawing();
-    redraw(
-      over.dr,
-      ds,
-      null,
+    redraw(over.dr, ds, {
+      prev: null,
       state,
-      0,
-      { cursor: newCursor(), hoverBlock: { x: 1, y: 1 } },
-      0,
-      NO_FLASH,
-    );
+      dir: 0,
+      ui: { cursor: newCursor(), hoverBlock: { x: 1, y: 1 } },
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(cursorBands(over.ops)).toBe(8);
 
     const gone = recordingDrawing();
-    redraw(gone.dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    redraw(gone.dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(cursorBands(gone.ops)).toBe(0);
     // The block's four tiles repaint without it.
     expect(opsOfKind(gone.ops, "text")).toHaveLength(4);
@@ -160,7 +198,14 @@ describe("Twiddle rendering", () => {
   it("dots every block's pivot, at grid corners for an even block and below the number for an odd one", () => {
     const even = solved3x3();
     const ops = recordingDrawing();
-    redraw(ops.dr, fresh(even), null, even, 0, UI, 0, NO_FLASH);
+    redraw(ops.dr, fresh(even), {
+      prev: null,
+      state: even,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const dots = opsOfKind(ops.ops, "circle").filter((o) => o.fill === COL_PIVOT);
     // Four 2×2 blocks on 3×3, centered on the grid's inner corners.
     expect(dots.map((d) => [d.cx, d.cy])).toEqual([
@@ -175,7 +220,14 @@ describe("Twiddle rendering", () => {
       Array.from({ length: 16 }, (_, i) => i + 1).join(","),
     );
     const oddOps = recordingDrawing();
-    redraw(oddOps.dr, fresh(odd), null, odd, 0, UI, 0, NO_FLASH);
+    redraw(oddOps.dr, fresh(odd), {
+      prev: null,
+      state: odd,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const oddDots = opsOfKind(oddOps.ops, "circle").filter((o) => o.fill === COL_PIVOT);
     expect(oddDots).toHaveLength(4);
     // Below the number of the first block's center square.
@@ -190,7 +242,7 @@ describe("Twiddle: the win flash sweeps the tiles", () => {
 
   const paint = (flash: Flash, ds = fresh(state)) => {
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 0, UI, 0, flash);
+    redraw(dr, ds, { prev: null, state, dir: 0, ui: UI, animTime: 0, flash });
     return ops;
   };
   /** The tiles whose face a frame fills with the flash color, as the `x,y`

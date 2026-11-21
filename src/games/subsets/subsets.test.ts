@@ -691,7 +691,14 @@ describe("subsets rendering (tier 2.5)", () => {
     const solution = fixtureSolution();
     const paint = (flash: Flash, ds = newDrawState(solution, TS)) => {
       const dr = new RecordingDrawing(subsetsGame.colors([1, 1, 1]));
-      redraw(dr, ds, null, solution, 1, newUi(), 0, flash);
+      redraw(dr, ds, {
+        prev: null,
+        state: solution,
+        dir: 1,
+        ui: newUi(),
+        animTime: 0,
+        flash,
+      });
       return dr.ops;
     };
     /** The slots of a frame on the given surface, as the `x,y` drawn at. */
@@ -765,7 +772,7 @@ describe("subsets rendering (tier 2.5)", () => {
     const size = subsetsGame.computeSize(PARAMS, 36);
     const frame = (ds: ReturnType<typeof newDrawState>, ui: SubsetsUi) => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
+      redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
       return dr.ops;
     };
     const focused = { ...newUi(), highlightCell: 0 };

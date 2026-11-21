@@ -27,7 +27,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -46,12 +46,7 @@ import {
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
 import { ringFits, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { MosaicHint } from "./hint.ts";
 import { BLOCK, blockOf } from "./kinds.ts";
 import {
@@ -294,15 +289,9 @@ function drawCell(
 export function redraw(
   dr: GameDrawing,
   ds: MosaicDrawState,
-  _prev: MosaicState | null,
-  state: MosaicState,
-  _dir: number,
-  ui: MosaicUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<MosaicMove, MosaicHint>,
-  mistakes?: readonly MosaicMistake[],
+  frame: Frame<MosaicState, MosaicUi, MosaicMove, MosaicHint, MosaicMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { width, height, board, cells } = state;
 

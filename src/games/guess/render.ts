@@ -23,7 +23,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { type StepMarks, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -734,15 +734,9 @@ function currmoveRedraw(
 export function redraw(
   dr: GameDrawing,
   ds: GuessDrawState,
-  _prev: GuessState | null,
-  s: GuessState,
-  _dir: number,
-  ui: GuessUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<GuessMove>,
-  mistakes?: readonly GuessMistake[],
+  frame: Frame<GuessState, GuessUi, GuessMove, unknown, GuessMistake>,
 ): void {
+  const { state: s, ui, flash, hint, mistakes } = frame;
   const first = ds.pegs.firstFrame();
   const newMove = s.nextGo !== ds.nextGo || first;
   const marks = stepMarks(hint);

@@ -16,7 +16,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Rect, Size } from "../../engine/contract/types.ts";
 import { drawThickRectOutline } from "../../engine/render/draw.ts";
@@ -29,12 +29,7 @@ import {
 import { drawPiece, TWO_SHAPES } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { FlipMove, FlipParams, FlipState, FlipUi } from "./state.ts";
 
 export interface FlipDrawState {
@@ -112,14 +107,9 @@ export function computeSize(p: FlipParams, tileSize: number): Size {
 export function redraw(
   dr: GameDrawing,
   ds: FlipDrawState,
-  prev: FlipState | null,
-  s: FlipState,
-  _dir: number,
-  ui: FlipUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<FlipMove>,
+  frame: Frame<FlipState, FlipUi, FlipMove>,
 ): void {
+  const { prev, state: s, ui, animTime, flash, hint } = frame;
   const { w, h } = s;
   const wh = w * h;
   const tile = ds.tileSize;

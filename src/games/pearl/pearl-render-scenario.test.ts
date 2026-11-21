@@ -196,7 +196,14 @@ describe("pearl win flash", () => {
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(pearlGame.colors(DEFAULT_BACKGROUND));
     const ds = pearlGame.newDrawState(state, PREFERRED_TILE_SIZE);
-    pearlGame.redraw(dr, ds, null, state, 1, pearlGame.newUi(state), 0, flash);
+    pearlGame.redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: pearlGame.newUi(state),
+      animTime: 0,
+      flash,
+    });
     return dr;
   };
   /** The squares a frame draws in the flash's color, by cell. */

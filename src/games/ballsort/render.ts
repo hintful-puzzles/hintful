@@ -20,14 +20,13 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawPiece } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import {
-  type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
@@ -505,14 +504,9 @@ function along(path: readonly Point[], f: number): Point {
 export function redraw(
   dr: GameDrawing,
   ds: BallsortDrawState,
-  prev: BallsortState | null,
-  s: BallsortState,
-  _dir: number,
-  ui: BallsortUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<BallsortMove>,
+  frame: Frame<BallsortState, BallsortUi, BallsortMove>,
 ): void {
+  const { prev, state: s, ui, animTime, flash, hint } = frame;
   const ts = ds.tileSize;
   const { size } = layoutOf(s.w, s.h, ts);
 

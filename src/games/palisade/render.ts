@@ -19,7 +19,7 @@ import {
   REGION_DONE,
 } from "../../engine/color/palette.ts";
 import { COL_ERROR, FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
 import { BORDER_MASK, buildDsf } from "../../engine/mechanics/border-grid.ts";
@@ -43,7 +43,7 @@ import {
   newBorderGridDrawState,
 } from "../../engine/mechanics/border-grid-render.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import {
   bitcount,
   EMPTY,
@@ -111,15 +111,9 @@ export function newDrawState(
 export function redraw(
   dr: GameDrawing,
   ds: PalisadeDrawState,
-  _prev: PalisadeState | null,
-  state: PalisadeState,
-  _dir: number,
-  ui: PalisadeUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<PalisadeMove, PalisadeHint>,
-  mistakes?: readonly PalisadeMistake[],
+  frame: Frame<PalisadeState, PalisadeUi, PalisadeMove, PalisadeHint, PalisadeMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, k, clues, borders } = state;
   const wh = w * h;

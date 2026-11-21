@@ -22,7 +22,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import { regionFills } from "../../engine/generate/region-fill.ts";
@@ -42,12 +42,7 @@ import {
 } from "../../engine/render/region-walls.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { StarbattleMistake } from "./index.ts";
 import { StarbattleBoard, touchingStars } from "./solver.ts";
 import {
@@ -255,15 +250,15 @@ function starsInError(state: StarbattleState): Set<number> {
 export function redraw(
   dr: GameDrawing,
   ds: StarbattleDrawState,
-  _prev: StarbattleState | null,
-  state: StarbattleState,
-  _dir: number,
-  ui: StarbattleUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<StarbattleMove>,
-  mistakes?: readonly StarbattleMistake[],
+  frame: Frame<
+    StarbattleState,
+    StarbattleUi,
+    StarbattleMove,
+    unknown,
+    StarbattleMistake
+  >,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { size, grid } = state;
   const b = border(ts);

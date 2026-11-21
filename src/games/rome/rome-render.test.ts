@@ -85,7 +85,7 @@ function frame(
 ): { dr: RecordingDrawing; ds: RomeDrawState } {
   const ds = newDrawState(state, TS);
   const dr = new RecordingDrawing(PALETTE);
-  redraw(dr, ds, null, state, 1, ui, 0, flash);
+  redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash });
   return { dr, ds };
 }
 
@@ -144,12 +144,26 @@ describe("region outlines", () => {
     const ds = newDrawState(state, TS);
 
     const first = new RecordingDrawing(PALETTE);
-    redraw(first, ds, null, state, 1, newUi(), 0, NO_FLASH);
+    redraw(first, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: newUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(first.ops.some((o) => o.op === "rect" && o.color === COL_BORDER)).toBe(true);
 
     // A second redraw of an unchanged board repaints nothing at all.
     const second = new RecordingDrawing(PALETTE);
-    redraw(second, ds, null, state, 1, newUi(), 0, NO_FLASH);
+    redraw(second, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: newUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(second.ops).toHaveLength(0);
   });
 });

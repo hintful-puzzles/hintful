@@ -22,6 +22,7 @@ import {
   type DescParse,
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import type { WinTone } from "../../engine/render/win-wave.ts";
 import { describedSpace } from "../../engine/solve/describe-runtime.ts";
@@ -121,12 +122,9 @@ export interface UntangleDrawState {
   /** Last drag / cursor vertex drawn. */
   dragPoint: number;
   cursorPoint: number;
-  /** Last displayed hint: the hinted vertex (-1 if none) and its target
-   * pixel position. Tracked so a manual hint (which moves no vertex) still
-   * defeats the redraw early-out. */
-  hintVertex: number;
-  hintTx: number;
-  hintTy: number;
+  /** The hint step last drawn, whole or narrowed to where to look. A
+   * displayed step moves no vertex, so the redraw early-out compares it. */
+  hint: HintStep<UntangleMove> | null;
   /** Last pixel positions drawn, per vertex (length n). */
   x: number[];
   y: number[];

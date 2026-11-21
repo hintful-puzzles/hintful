@@ -682,16 +682,14 @@ describe("Sokoban: the win flash", () => {
   const walls = 2;
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(palette);
-    sokobanGame.redraw(
-      dr,
-      sokobanGame.newDrawState(state, 32),
-      null,
+    sokobanGame.redraw(dr, sokobanGame.newDrawState(state, 32), {
+      prev: null,
       state,
-      1,
+      dir: 1,
       ui,
-      0,
+      animTime: 0,
       flash,
-    );
+    });
     return dr;
   };
   /** Where each square painted in the flash color is drawn, as `x,y`. */

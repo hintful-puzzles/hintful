@@ -125,7 +125,14 @@ describe("Net: the win flash spreads from the source along the wires", () => {
     const ds = preferredDrawState(netGame, solved);
     const m = boardMargin(ds.tileSize);
     const dr = new RecordingDrawing(netGame.colors(DEFAULT_BACKGROUND));
-    netGame.redraw(dr, ds, null, solved, 1, ui, 0, flash);
+    netGame.redraw(dr, ds, {
+      prev: null,
+      state: solved,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash,
+    });
     // A tile's ground is never lit: the tiles stay as they are.
     expect(opsOfKind(dr.ops, "rect").filter((o) => litSlot(o.color))).toEqual([]);
     const tiles = opsOfKind(dr.ops, "polygon")

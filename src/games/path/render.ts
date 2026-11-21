@@ -45,7 +45,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -70,12 +70,7 @@ import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { type PieceBox, spreadColors } from "../../engine/render/spread-colors.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { PathHighlights } from "./hint.ts";
 import { pathLines, withChanges } from "./moves.ts";
 import {
@@ -523,15 +518,9 @@ function pieces(
 export function redraw(
   dr: GameDrawing,
   ds: PathDrawState,
-  _prev: PathState | null,
-  state: PathState,
-  _dir: number,
-  ui: PathUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<PathMove, PathHighlights>,
-  mistakes?: readonly EdgeMistake[],
+  frame: Frame<PathState, PathUi, PathMove, PathHighlights, EdgeMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, ends } = state;
   const g = squareEdges(w, h);

@@ -130,8 +130,10 @@ count before and after in one sentence. Exemplar:
 - **Carry the suggestion as the step's highlight, and draw the move from piece
   to destination in the hint color.** Read the source from live state, so an
   executed hint shows the line shrink to nothing.
-- **Fold the hint's signature into the redraw's early-out.** A displayed hint
-  moves no piece, so a renderer that returns early on "nothing moved" skips it.
+- **Fold the displayed step itself into the redraw's early-out.** A displayed
+  hint moves no piece, so a renderer that returns early on "nothing moved"
+  skips it. Compare the step, not marks picked from it: where to look narrows
+  the step to one mark, which may be none of the ones picked.
 - **A game that animates its moves needs no hint animation.** An executed step
   rides that pipeline, and the midend stretches it.
 

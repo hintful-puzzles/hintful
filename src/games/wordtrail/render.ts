@@ -40,7 +40,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import {
@@ -64,12 +64,7 @@ import {
 } from "../../engine/render/path-arrow.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { WordtrailHighlights } from "./hint.ts";
 import { withChanges, wordtrailLines } from "./moves.ts";
 import { fittingTrails } from "./solver.ts";
@@ -572,15 +567,15 @@ function drawList(
 export function redraw(
   dr: GameDrawing,
   ds: WordtrailDrawState,
-  _prev: WordtrailState | null,
-  state: WordtrailState,
-  _dir: number,
-  ui: WordtrailUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<WordtrailMove, WordtrailHighlights>,
-  mistakes?: readonly EdgeMistake[],
+  frame: Frame<
+    WordtrailState,
+    WordtrailUi,
+    WordtrailMove,
+    WordtrailHighlights,
+    EdgeMistake
+  >,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, letters } = state;
   const g = squareEdges(w, h);

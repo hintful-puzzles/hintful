@@ -586,7 +586,7 @@ describe("netslide hint rendering", () => {
     const palette = colors([1, 1, 1]);
 
     const first = new RecordingDrawing(palette);
-    redraw(first, ds, null, state, 0, ui, 0, NO_FLASH);
+    redraw(first, ds, { prev: null, state, dir: 0, ui, animTime: 0, flash: NO_FLASH });
     expect(ringsOf(first.ops)).toEqual([]);
 
     const res = hintOf(state, aux);
@@ -594,17 +594,15 @@ describe("netslide hint rendering", () => {
     if (!res.ok) return;
 
     const second = new RecordingDrawing(palette);
-    redraw(
-      second,
-      ds,
-      null,
+    redraw(second, ds, {
+      prev: null,
       state,
-      0,
+      dir: 0,
       ui,
-      0,
-      NO_FLASH,
-      res.steps[0] as HintStep<NetslideMove, NetslideHint>,
-    );
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: res.steps[0] as HintStep<NetslideMove, NetslideHint>,
+    });
 
     expect(
       ringsOf(second.ops).length,
@@ -672,22 +670,28 @@ describe("the hint marks while the hinted slide animates", () => {
 
     // Paint the pre-move frame first, so the draw state's cache is warm exactly as
     // it is in the app when the slide begins.
-    redraw(
-      new RecordingDrawing(palette),
-      ds,
-      null,
+    redraw(new RecordingDrawing(palette), ds, {
+      prev: null,
       state,
-      0,
-      newUi(state),
-      0,
-      NO_FLASH,
-      step,
-    );
+      dir: 0,
+      ui: newUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: step,
+    });
 
     // Halfway through the slide: the line is drawn half a tile back along its
     // direction of travel.
     const rec = new RecordingDrawing(palette);
-    redraw(rec, ds, state, after, 0, newUi(after), ANIM_TIME / 2, NO_FLASH, step);
+    redraw(rec, ds, {
+      prev: state,
+      state: after,
+      dir: 0,
+      ui: newUi(after),
+      animTime: ANIM_TIME / 2,
+      flash: NO_FLASH,
+      hint: step,
+    });
     return { state, after, slide, marks, rec };
   }
 

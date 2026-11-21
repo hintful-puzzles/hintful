@@ -427,7 +427,14 @@ describe("bricks completion and solve (through a real Midend)", () => {
     const paint = (flash: Flash): string[] => {
       const dr = new RecordingDrawing(palette);
       const ds = bricksGame.newDrawState(done, PREFERRED_TILE_SIZE);
-      bricksGame.redraw(dr, ds, null, done, 1, bricksGame.newUi(done), 0, flash);
+      bricksGame.redraw(dr, ds, {
+        prev: null,
+        state: done,
+        dir: 1,
+        ui: bricksGame.newUi(done),
+        animTime: 0,
+        flash,
+      });
       return dr.ops.flatMap((o) =>
         o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
       );

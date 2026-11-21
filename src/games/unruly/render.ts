@@ -23,7 +23,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -36,12 +36,7 @@ import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import { type Cell, EMPTY, ONE, pairIndex, ZERO } from "./constants.ts";
 import type { UnrulyHint } from "./index.ts";
 import {
@@ -311,15 +306,9 @@ function countBadge(
 export function redraw(
   dr: GameDrawing,
   ds: UnrulyDrawState,
-  prev: UnrulyState | null,
-  state: UnrulyState,
-  _dir: number,
-  ui: UnrulyUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<UnrulyMove, UnrulyHint>,
-  mistakes?: readonly UnrulyMistake[],
+  frame: Frame<UnrulyState, UnrulyUi, UnrulyMove, UnrulyHint, UnrulyMistake>,
 ): void {
+  const { prev, state, ui, animTime, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w2, h2, grid, immutable } = state;
   const s = w2 * h2;

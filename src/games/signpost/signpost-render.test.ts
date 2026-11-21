@@ -131,7 +131,14 @@ describe("Signpost win flash", () => {
   function surfaces(flash: Flash): number[] {
     const dr = new RecordingDrawing(signpostGame.colors(DEFAULT_BACKGROUND));
     const ds = preferredDrawState(signpostGame, state);
-    signpostGame.redraw(dr, ds, null, state, 1, signpostGame.newUi(state), 0, flash);
+    signpostGame.redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: signpostGame.newUi(state),
+      animTime: 0,
+      flash,
+    });
     const ts = ds.tileSize;
     const out: number[] = new Array(state.n).fill(-1);
     for (const o of opsOfKind(dr.ops, "rect")) {
@@ -183,7 +190,7 @@ describe("Signpost win flash", () => {
     };
     const ui = signpostGame.newUi(state);
     const lit = new RecordingDrawing(signpostGame.colors(DEFAULT_BACKGROUND));
-    signpostGame.redraw(lit, ds, null, state, 1, ui, 0, flash);
+    signpostGame.redraw(lit, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash });
     const route = opsOfKind(lit.ops, "line").filter((o) => o.color === COL_FLASH);
     expect(route.length).toBeGreaterThan(0);
     for (const o of route)
@@ -197,7 +204,14 @@ describe("Signpost win flash", () => {
       );
 
     const after = new RecordingDrawing(signpostGame.colors(DEFAULT_BACKGROUND));
-    signpostGame.redraw(after, ds, null, state, 1, ui, 0, NO_FLASH);
+    signpostGame.redraw(after, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const squares = opsOfKind(after.ops, "rect").filter(
       (o) => o.w === ts && o.h === ts,
     );

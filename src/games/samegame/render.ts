@@ -10,8 +10,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
-import type { MarkedDeadEnd } from "../../engine/contract/hint-refusal.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
 import { drawRectOutline } from "../../engine/render/draw.ts";
@@ -24,7 +23,7 @@ import {
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import {
   isCleared,
   isStuck,
@@ -257,16 +256,9 @@ function drawFrame(
 export function redraw(
   dr: GameDrawing,
   ds: SamegameDrawState,
-  _prev: SamegameState | null,
-  state: SamegameState,
-  _dir: number,
-  ui: SamegameUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SamegameMove>,
-  _mistakes?: readonly never[],
-  deadEnd?: MarkedDeadEnd,
+  frame: Frame<SamegameState, SamegameUi, SamegameMove, unknown, never>,
 ): void {
+  const { state, ui, flash, hint, deadEnd } = frame;
   const ts = ds.tileSize;
   const { w, h } = state;
   // No removal is left: the board is cleared, or stuck.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { GameDrawing, HintStep } from "../contract/game.ts";
+import type { Frame, GameDrawing, HintStep } from "../contract/game.ts";
 import { CELL, mark, phrase, stepMarks } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import type { AnyGame } from "./enrollment.ts";
@@ -23,17 +23,7 @@ function toyGame(opts: { dropOutlines?: boolean; roles?: object } = {}): AnyGame
       [0, 1, 1],
     ],
     newDrawState: () => ({}),
-    redraw(
-      dr: GameDrawing,
-      _ds: unknown,
-      _prev: unknown,
-      _s: unknown,
-      _dir: number,
-      _ui: unknown,
-      _anim: number,
-      _flash: number,
-      hint?: HintStep<null, H>,
-    ) {
+    redraw(dr: GameDrawing, _ds: unknown, { hint }: Frame<unknown, unknown, null, H>) {
       dr.drawRect({ x: 0, y: 0, w: 20, h: 10 }, 0);
       const marks = stepMarks(hint);
       for (const p of marks.of("ring", CELL)) cell(dr, p, 1);

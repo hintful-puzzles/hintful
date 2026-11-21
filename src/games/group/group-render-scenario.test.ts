@@ -148,17 +148,15 @@ describe("group hint marks on a warm canvas", () => {
     hint: ReturnType<typeof hintOver>,
   ) => {
     const rec = new RecordingDrawing(palette);
-    groupGame.redraw(
-      rec,
-      ds,
-      null,
+    groupGame.redraw(rec, ds, {
+      prev: null,
       state,
-      0,
-      groupGame.newUi(state),
-      0,
-      NO_FLASH,
+      dir: 0,
+      ui: groupGame.newUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
       hint,
-    );
+    });
     raster.apply(rec.ops);
   };
   /** Paint `frames` in order on one draw state, and the last on a fresh one. */

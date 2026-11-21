@@ -46,7 +46,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -82,7 +82,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import {
   checkKillerCageSum,
   onDiag0,
@@ -578,15 +578,9 @@ const PENCIL_BOX = (cr: number, ts: number) =>
 export function redraw(
   dr: GameDrawing,
   ds: SoloDrawState,
-  _prev: SoloState | null,
-  state: SoloState,
-  _dir: number,
-  ui: SoloUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SoloMove, SoloHint>,
-  mistakes?: readonly { x: number; y: number }[],
+  frame: Frame<SoloState, SoloUi, SoloMove, SoloHint, { x: number; y: number }>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const cr = state.cr;
   const ge = gridExtra(ts);

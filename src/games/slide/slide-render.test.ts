@@ -498,18 +498,23 @@ describe("slide win flash", () => {
     // The squares the flash repaints over a settled frame: the lit ones.
     const paint = (flash: Flash) => {
       const ds = slideGame.newDrawState(won, TS);
-      slideGame.redraw(
-        new RecordingDrawing(PALETTE),
-        ds,
-        null,
-        won,
-        1,
+      slideGame.redraw(new RecordingDrawing(PALETTE), ds, {
+        prev: null,
+        state: won,
+        dir: 1,
         ui,
-        0,
-        NO_FLASH,
-      );
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       const rec = new RecordingDrawing(PALETTE);
-      slideGame.redraw(rec, ds, null, won, 1, ui, 0, flash);
+      slideGame.redraw(rec, ds, {
+        prev: null,
+        state: won,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash,
+      });
       return rec.ops;
     };
     /** An element: a floor square or `A` as `x,y`, the key block as one. */

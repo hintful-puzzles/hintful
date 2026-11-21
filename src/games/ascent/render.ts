@@ -28,7 +28,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -45,7 +45,7 @@ import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawPathArrow, drawPathStart } from "../../engine/render/path-arrow.ts";
 import { ringContentBox, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, WIN_NONE, winSlot } from "../../engine/render/win-wave.ts";
+import { WIN_NONE, winSlot } from "../../engine/render/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-marks.ts";
 import {
@@ -589,15 +589,9 @@ function displayNumber(i: number, ui: AscentUi, state: AscentState): number {
 export function redrawAscent(
   dr: GameDrawing,
   ds: AscentDrawState,
-  _prev: AscentState | null,
-  state: AscentState,
-  _dir: number,
-  ui: AscentUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<AscentMove, AscentHighlights>,
-  mistakes?: readonly AscentMistake[],
+  frame: Frame<AscentState, AscentUi, AscentMove, AscentHighlights, AscentMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const w = state.w;
   const h = state.h;
   const tileSize = ds.tileSize;

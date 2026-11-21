@@ -545,7 +545,7 @@ describe("sticks: the win flash sweeps the open cells", () => {
 
   const paint = (flash: Flash, ds = newDrawState(state, TS)) => {
     const dr = new RecordingDrawing(sticksGame.colors([1, 1, 1]));
-    redraw(dr, ds, null, state, 1, newUi(), 0, flash);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui: newUi(), animTime: 0, flash });
     return dr.ops;
   };
   /** The cells a frame fills with the flash color, as the `x,y` drawn at. */

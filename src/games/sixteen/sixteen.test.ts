@@ -1082,7 +1082,15 @@ describe("Sixteen hint rendering", () => {
     const ds = sixteenGame.newDrawState(s, 32);
 
     const { dr, ops } = recordingDrawing();
-    sixteenGame.redraw?.(dr, ds, null, s, 1, ui, 0, NO_FLASH, result.steps[0]);
+    sixteenGame.redraw?.(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: result.steps[0],
+    });
 
     // The tile and each square its journey lands on are ringed; the arrow is
     // filled in the ring's ink, with no ring of its own.
@@ -1134,7 +1142,15 @@ describe("Sixteen hint rendering", () => {
       h?: typeof hint,
     ) => {
       const { dr, ops } = recordingDrawing();
-      sixteenGame.redraw(dr, ds, null, s, 1, ui, 0, NO_FLASH, h);
+      sixteenGame.redraw(dr, ds, {
+        prev: null,
+        state: s,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        hint: h,
+      });
       return ops;
     };
 
@@ -1189,7 +1205,15 @@ describe("Sixteen hint track and direction fixes", () => {
     );
 
     const { dr: dr1 } = recordingDrawing();
-    sixteenGame.redraw?.(dr1, ds1, null, s1, 1, ui1, 0, NO_FLASH, activeHint1);
+    sixteenGame.redraw?.(dr1, ds1, {
+      prev: null,
+      state: s1,
+      dir: 1,
+      ui: ui1,
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: activeHint1,
+    });
     // Since curCol (0) < targetCol (2), it should point right (ds1.hintArrowX = 3)
     const ds1Typed = ds1 as unknown as {
       hintArrowX: number | null;
@@ -1217,7 +1241,15 @@ describe("Sixteen hint track and direction fixes", () => {
     );
 
     const { dr: dr2 } = recordingDrawing();
-    sixteenGame.redraw?.(dr2, ds2, null, s2, 1, ui2, 0, NO_FLASH, activeHint2);
+    sixteenGame.redraw?.(dr2, ds2, {
+      prev: null,
+      state: s2,
+      dir: 1,
+      ui: ui2,
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: activeHint2,
+    });
     // Since curCol (2) > targetCol (0), it should point left (ds2.hintArrowX = -1)
     const ds2Typed = ds2 as unknown as {
       hintArrowX: number | null;
@@ -1353,22 +1385,28 @@ describe("the hint marks while the hinted slide animates", () => {
 
     // Paint the still pre-move frame first, so the cache is warm exactly
     // as in the app when the hinted slide begins.
-    sixteenGame.redraw?.(
-      recordingDrawing().dr,
-      ds,
-      null,
+    sixteenGame.redraw?.(recordingDrawing().dr, ds, {
+      prev: null,
       state,
-      1,
+      dir: 1,
       ui,
-      0,
-      NO_FLASH,
-      step,
-    );
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: step,
+    });
 
     // Halfway through the slide.
     const anim = sixteenGame.animLength?.(state, after, 1, ui) ?? 0;
     const { dr, ops } = recordingDrawing();
-    sixteenGame.redraw?.(dr, ds, state, after, 1, ui, anim / 2, NO_FLASH, step);
+    sixteenGame.redraw?.(dr, ds, {
+      prev: state,
+      state: after,
+      dir: 1,
+      ui,
+      animTime: anim / 2,
+      flash: NO_FLASH,
+      hint: step,
+    });
     return { state, after, m, hl, from, ops };
   }
 
@@ -1413,16 +1451,14 @@ describe("Sixteen: the win flash", () => {
   const palette = sixteenGame.colors(DEFAULT_BACKGROUND);
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(palette);
-    sixteenGame.redraw(
-      dr,
-      sixteenGame.newDrawState(state, 32),
-      null,
+    sixteenGame.redraw(dr, sixteenGame.newDrawState(state, 32), {
+      prev: null,
       state,
-      1,
+      dir: 1,
       ui,
-      0,
+      animTime: 0,
       flash,
-    );
+    });
     return dr;
   };
   /** Where each tile whose face is the flash color is drawn, as `x,y`. */

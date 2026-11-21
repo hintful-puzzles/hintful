@@ -756,7 +756,14 @@ describe("mines render", () => {
 
     const paint = (state: MinesState) => {
       const rec = new RecordingDrawing(palette);
-      minesGame.redraw?.(rec, ds, null, state, 0, ui, 0, NO_FLASH);
+      minesGame.redraw?.(rec, ds, {
+        prev: null,
+        state,
+        dir: 0,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return rec;
     };
 
@@ -788,18 +795,16 @@ describe("mines render", () => {
     const ds = minesGame.newDrawState(state, 20);
     const ui = minesGame.newUi(state);
     const palette = minesGame.colors(BG);
-    minesGame.redraw(
-      new RecordingDrawing(palette),
-      ds,
-      null,
+    minesGame.redraw(new RecordingDrawing(palette), ds, {
+      prev: null,
       state,
-      1,
+      dir: 1,
       ui,
-      0,
-      NO_FLASH,
-    );
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const rec = new RecordingDrawing(palette);
-    minesGame.redraw(rec, ds, null, state, 1, ui, 0, flash);
+    minesGame.redraw(rec, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash });
     const faces = new Map<string, number>();
     let cell = "";
     for (const op of rec.ops) {
@@ -880,7 +885,15 @@ describe("mines mistakes", () => {
     const ds = minesGame.newDrawState(wrong, 20);
     const paint = (mistakes?: readonly Point[]) => {
       const rec = new RecordingDrawing(palette);
-      minesGame.redraw(rec, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, mistakes);
+      minesGame.redraw(rec, ds, {
+        prev: null,
+        state: wrong,
+        dir: 0,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        mistakes,
+      });
       return rec.ops;
     };
     paint();

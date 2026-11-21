@@ -562,7 +562,14 @@ describe("abcd render", () => {
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
     const ds = newDrawState(withMark, abcdGame.preferredTileSize);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, withMark, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: withMark,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // The highlighted cursor cell fills its background with the wash.
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_HIGHLIGHT_WASH)).toBe(
       true,
@@ -580,7 +587,14 @@ describe("abcd render", () => {
       ui.cursor.visible = pencilMode;
       const ds = newDrawState(st, abcdGame.preferredTileSize);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
+      redraw(dr, ds, {
+        prev: null,
+        state: st,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return dr;
     };
     const glyph = (r: RecordingDrawing) =>
@@ -597,7 +611,14 @@ describe("abcd render", () => {
     const palette = abcdGame.colors([0.9, 0.9, 0.9]);
     const ds = newDrawState(s, abcdGame.preferredTileSize);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, s, 1, newUi(s), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: newUi(s),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(dr.ops.some((o) => o.op === "text" && o.color === COL_ERROR)).toBe(true);
   });
 
@@ -628,7 +649,14 @@ describe("abcd render", () => {
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(palette);
       const ds = newDrawState(s, abcdGame.preferredTileSize);
-      redraw(dr, ds, null, s, 1, newUi(s), 0, flash);
+      redraw(dr, ds, {
+        prev: null,
+        state: s,
+        dir: 1,
+        ui: newUi(s),
+        animTime: 0,
+        flash,
+      });
       return dr;
     };
     const run = winFlashRun(paint, (dr) =>

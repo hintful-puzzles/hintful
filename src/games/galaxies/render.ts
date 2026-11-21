@@ -19,7 +19,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color } from "../../engine/contract/types.ts";
 import { drawRectOutline } from "../../engine/render/draw.ts";
@@ -29,7 +29,6 @@ import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
-  type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
@@ -741,15 +740,9 @@ function splitMistakeOverlay(
 export function redraw(
   dr: GameDrawing,
   ds: GalaxiesDrawState,
-  _prev: GalaxiesState | null,
-  s: GalaxiesState,
-  _dir: number,
-  ui: GalaxiesUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<GalaxiesMove, GalaxiesHint>,
-  mistakes?: readonly GalaxiesMistake[],
+  frame: Frame<GalaxiesState, GalaxiesUi, GalaxiesMove, GalaxiesHint, GalaxiesMistake>,
 ): void {
+  const { state: s, ui, flash, hint, mistakes } = frame;
   const w = ds.w;
   const h = ds.h;
   const tile = ds.tileSize;

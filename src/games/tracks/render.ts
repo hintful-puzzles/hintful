@@ -46,7 +46,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import {
@@ -66,7 +66,7 @@ import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, WIN_LEAD, WIN_NONE } from "../../engine/render/win-wave.ts";
+import { WIN_LEAD, WIN_NONE } from "../../engine/render/win-wave.ts";
 import { pieceOfOp } from "./hint.ts";
 import { LINE, PIECE, type Piece } from "./kinds.ts";
 import { copyAndApplyDrag } from "./moves.ts";
@@ -776,15 +776,9 @@ function s2dFlags(b: Board, x: number, y: number, ui: TracksUi): number {
 export function redraw(
   dr: GameDrawing,
   ds: TracksDrawState,
-  _prev: TracksState | null,
-  state: TracksState,
-  _dir: number,
-  ui: TracksUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<TracksMove>,
-  mistakes?: readonly Point[],
+  frame: Frame<TracksState, TracksUi, TracksMove, unknown, Point>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const m = metrics(ds.tileSize);
   const { w, h } = state;
   const hintMarks = hintFlags(state, hint);

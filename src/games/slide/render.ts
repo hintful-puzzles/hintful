@@ -61,7 +61,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -75,12 +75,7 @@ import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  WIN_LEAD,
-  type WinTone,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, WIN_LEAD, type WinTone } from "../../engine/render/win-wave.ts";
 import { slid } from "./moves.ts";
 import {
   cursorPos,
@@ -699,14 +694,9 @@ function findPiecepart(w: number, h: number, dsf: Dsf, x: number, y: number): nu
 export function redraw(
   dr: GameDrawing,
   ds: SlideDrawState,
-  _prev: SlideState | null,
-  state: SlideState,
-  _dir: number,
-  ui: SlideUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SlideMove>,
+  frame: Frame<SlideState, SlideUi, SlideMove>,
 ): void {
+  const { state, ui, flash, hint } = frame;
   const { w, h } = state;
   const wh = w * h;
 

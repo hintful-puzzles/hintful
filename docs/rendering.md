@@ -29,7 +29,11 @@ The skeleton's [`render.ts`](../src/skeleton/grid/render.ts) does steps 1 to
 3. In `newDrawState`, return `tileSize`, a `TileCache` with every overlay
    sidecar registered on it, the sidecars and a `HintMarks`. See § "The tile
    cache and the diff key" and § "Overlay sidecars".
-4. In `redraw`, when `ds.tiles.firstFrame()`, draw only what is the game's
+4. `redraw(dr, ds, frame)` destructures what it reads from the `Frame`
+   (`game.ts`): the state, the `Ui`, the animation, the flash, the hint step,
+   the mistakes and a dead end. A new frame input is a field there, not a
+   signature edit in every game.
+   In `redraw`, when `ds.tiles.firstFrame()`, draw only what is the game's
    own (the grid's frame). The ground is already laid. See § "The first
    frame and a fresh draw state".
 5. Read the displayed step's marks with `stepMarks(hint)`, put them in the

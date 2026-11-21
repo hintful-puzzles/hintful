@@ -69,7 +69,14 @@ describe("rect render scenarios", () => {
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
       const ds = preferredDrawState(rectGame, solved);
-      rectGame.redraw(dr, ds, null, solved, 1, rectGame.newUi(solved), 0, flash);
+      rectGame.redraw(dr, ds, {
+        prev: null,
+        state: solved,
+        dir: 1,
+        ui: rectGame.newUi(solved),
+        animTime: 0,
+        flash,
+      });
       return dr.ops;
     };
     // The cells whose ground is the flash color, each as its index.

@@ -260,7 +260,14 @@ describe("Pegs win flash", () => {
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(G.colors(DEFAULT_BACKGROUND));
       const ds = G.newDrawState(state, TS);
-      G.redraw(dr, ds, null, state, 1, G.newUi(state), 0, flash);
+      G.redraw(dr, ds, {
+        prev: null,
+        state,
+        dir: 1,
+        ui: G.newUi(state),
+        animTime: 0,
+        flash,
+      });
       return dr.ops;
     };
     // The cells whose ground is the flash color, each as its index.

@@ -23,7 +23,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
 import {
@@ -288,15 +288,9 @@ function tileRedraw(
 export function redraw(
   dr: GameDrawing,
   ds: LightupDrawState,
-  _prev: LightupState | null,
-  state: LightupState,
-  _dir: number,
-  ui: LightupUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<LightupMove, LightupHint>,
-  mistakes?: readonly LightupMistake[],
+  frame: Frame<LightupState, LightupUi, LightupMove, LightupHint, LightupMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h } = state;
 

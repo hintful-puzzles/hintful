@@ -25,7 +25,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/render/draw.ts";
@@ -33,12 +33,7 @@ import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import { CLUE, LINE } from "./hint-marks.ts";
 import type { PatternHint } from "./index.ts";
 import { lineHasError } from "./solver.ts";
@@ -296,15 +291,9 @@ function drawNumbers(
 export function redraw(
   dr: GameDrawing,
   ds: PatternDrawState,
-  _prev: PatternState | null,
-  state: PatternState,
-  _dir: number,
-  ui: PatternUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<PatternMove, PatternHint>,
-  mistakes?: readonly PatternMistake[],
+  frame: Frame<PatternState, PatternUi, PatternMove, PatternHint, PatternMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h } = state.common;
   const { grid } = state;

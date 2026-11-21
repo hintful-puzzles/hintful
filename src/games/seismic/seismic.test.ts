@@ -1092,7 +1092,14 @@ describe("seismic rendering", () => {
     // load through the midend.
     const marked = seismicGame.executeMove(state, move as SeismicMove);
     const dr = new RecordingDrawing(seismicGame.colors([1, 1, 1]));
-    redraw(dr, newDrawState(marked, TILE), null, marked, 1, newUi(marked), 0, NO_FLASH);
+    redraw(dr, newDrawState(marked, TILE), {
+      prev: null,
+      state: marked,
+      dir: 1,
+      ui: newUi(marked),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const penciled = dr.ops.filter(
       (o) => o.op === "text" && o.color === COL_NUM_PENCIL,
     );
@@ -1110,7 +1117,7 @@ describe("seismic rendering", () => {
 
     const paint = () => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
+      redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
       return dr.ops;
     };
     const glyph = (ops: readonly DrawOp[]) =>
@@ -1159,7 +1166,14 @@ describe("seismic rendering", () => {
     const palette = seismicGame.colors([1, 1, 1]);
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, newDrawState(state, TILE), null, state, 1, newUi(state), 0, flash);
+      redraw(dr, newDrawState(state, TILE), {
+        prev: null,
+        state,
+        dir: 1,
+        ui: newUi(state),
+        animTime: 0,
+        flash,
+      });
       return dr;
     };
     /** The cells painted in one of `slots`, givens among them, as `x,y`. */

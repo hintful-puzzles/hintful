@@ -50,7 +50,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -76,12 +76,7 @@ import {
 } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { BoatsHint } from "./index.ts";
 import type { BoatsMistake } from "./solver.ts";
 import {
@@ -577,15 +572,9 @@ function drawWaves(
 export function redraw(
   dr: GameDrawing,
   ds: BoatsDrawState,
-  _prev: BoatsState | null,
-  state: BoatsState,
-  _dir: number,
-  ui: BoatsUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<BoatsMove, BoatsHint>,
-  mistakes?: readonly BoatsMistake[],
+  frame: Frame<BoatsState, BoatsUi, BoatsMove, BoatsHint, BoatsMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const p = state.params;
   const { w, h } = p;

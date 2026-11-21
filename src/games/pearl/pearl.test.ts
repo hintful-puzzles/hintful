@@ -305,18 +305,42 @@ describe("pearl mistake overlay is in the diff key (paint-twice)", () => {
 
     // Frame 1: warm the cache with NO mistakes (draws the laid segment).
     const dr1 = new RecordingDrawing(palette);
-    redraw(dr1, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, []);
+    redraw(dr1, ds, {
+      prev: null,
+      state: wrong,
+      dir: 0,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes: [],
+    });
     expect(dr1.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);
 
     // Frame 2: same drawstate, WITH mistakes — the overlay must still paint
     // even though the cell's tile value is otherwise unchanged.
     const dr2 = new RecordingDrawing(palette);
-    redraw(dr2, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, mistakes);
+    redraw(dr2, ds, {
+      prev: null,
+      state: wrong,
+      dir: 0,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
     expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
 
     // Frame 3: clearing the overlay erases it (repaints without COL_ERROR).
     const dr3 = new RecordingDrawing(palette);
-    redraw(dr3, ds, null, wrong, 0, ui, 0, NO_FLASH, undefined, []);
+    redraw(dr3, ds, {
+      prev: null,
+      state: wrong,
+      dir: 0,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes: [],
+    });
     const cellRepainted = dr3.ops.some((o) => o.op === "rect");
     expect(cellRepainted).toBe(true);
     expect(dr3.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);

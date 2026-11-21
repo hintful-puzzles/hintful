@@ -566,7 +566,14 @@ describe("bridges auto-mark aid", () => {
       const ds = newDrawState(s1, 24);
       const ui = { ...bridgesGame.newUi(s1), autoMark };
       const rec = new RecordingDrawing(palette);
-      bridgesGame.redraw?.(rec, ds, null, s1, 0, ui, 0, NO_FLASH);
+      bridgesGame.redraw?.(rec, ds, {
+        prev: null,
+        state: s1,
+        dir: 0,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return rec.ops.filter((o) => o.op === "circle" && o.fill === COL_MARK).length;
     };
 
@@ -574,16 +581,14 @@ describe("bridges auto-mark aid", () => {
     expect(markCircles(false)).toBe(0); // no lift when the pref is off
     // An island with bridges still to take has the quiet surface.
     const fresh = new RecordingDrawing(palette);
-    bridgesGame.redraw?.(
-      fresh,
-      newDrawState(s0, 24),
-      null,
-      s0,
-      0,
-      bridgesGame.newUi(s0),
-      0,
-      NO_FLASH,
-    );
+    bridgesGame.redraw?.(fresh, newDrawState(s0, 24), {
+      prev: null,
+      state: s0,
+      dir: 0,
+      ui: bridgesGame.newUi(s0),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const faces = (fill: number) =>
       fresh.ops.filter((o) => o.op === "circle" && o.fill === fill).length;
     expect(faces(COL_ISLAND)).toBeGreaterThan(0);
@@ -615,7 +620,14 @@ describe("bridges render smoke (tier 2.5)", () => {
     const paint = (flash: Flash) => {
       const rec = new RecordingDrawing(palette);
       const ds = newDrawState(solved, 24);
-      bridgesGame.redraw(rec, ds, null, solved, 1, bridgesGame.newUi(solved), 0, flash);
+      bridgesGame.redraw(rec, ds, {
+        prev: null,
+        state: solved,
+        dir: 1,
+        ui: bridgesGame.newUi(solved),
+        animTime: 0,
+        flash,
+      });
       return rec.ops;
     };
     // The squares drawn in the flash's color, by index: an island by its rim,

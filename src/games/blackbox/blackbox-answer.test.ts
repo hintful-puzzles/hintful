@@ -158,7 +158,15 @@ describe("Black Box's check", () => {
     const ds = game.newDrawState(s, 32);
     const paint = (mistakes?: readonly Point[]) => {
       const rec = new RecordingDrawing(palette);
-      game.redraw(rec, ds, null, s, 0, ui, 0, NO_FLASH, undefined, mistakes);
+      game.redraw(rec, ds, {
+        prev: null,
+        state: s,
+        dir: 0,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        mistakes,
+      });
       return rec.ops;
     };
     // The corner button repaints every frame; the box's squares only on change.

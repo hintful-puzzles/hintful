@@ -43,7 +43,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import { offset, wireDistance } from "../../engine/mechanics/wires.ts";
@@ -58,7 +58,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, WIN_LEAD } from "../../engine/render/win-wave.ts";
+import { WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { NetHint } from "./hint.ts";
 import { SIDE } from "./hint-marks.ts";
 import { computeLoops, ERR_SHIFT } from "./loops.ts";
@@ -592,15 +592,9 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: NetDrawState,
-  prev: NetState | null,
-  current: NetState,
-  dir: number,
-  ui: NetUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<NetMove, NetHint>,
-  mistakes?: readonly NetMistake[],
+  frame: Frame<NetState, NetUi, NetMove, NetHint, NetMistake>,
 ): void {
+  const { prev, state: current, dir, ui, animTime, flash, hint, mistakes } = frame;
   let state = current;
 
   // The displayed hint's marks, from its words and nowhere else.

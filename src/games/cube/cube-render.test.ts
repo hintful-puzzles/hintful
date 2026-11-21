@@ -50,7 +50,7 @@ describe("Cube rendering", () => {
     const { state, ds } = freshCube();
     const { dr, ops } = recordingDrawing();
 
-    redraw(dr, ds, null, state, 0, {}, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 0, ui: {}, animTime: 0, flash: NO_FLASH });
 
     // A background rect at the origin.
     expect(
@@ -89,7 +89,7 @@ describe("Cube rendering", () => {
   it("draws fewer faces than the solid has (back-face culling)", () => {
     const { state, ds } = freshCube();
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 0, {}, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 0, ui: {}, animTime: 0, flash: NO_FLASH });
 
     const polys = opsOfKind(ops, "polygon");
     const facePolys = polys.length - state.grid.length;
@@ -104,7 +104,14 @@ describe("Cube rendering", () => {
     const { dr, ops } = recordingDrawing();
 
     // Mid-roll: prev = old state, animTime between 0 and ROLLTIME.
-    redraw(dr, ds, state, rolled, 0, {}, 0.06, NO_FLASH);
+    redraw(dr, ds, {
+      prev: state,
+      state: rolled,
+      dir: 0,
+      ui: {},
+      animTime: 0.06,
+      flash: NO_FLASH,
+    });
 
     const polys = opsOfKind(ops, "polygon");
     expect(polys.length).toBeGreaterThan(state.grid.length);
@@ -127,7 +134,7 @@ describe("Cube rendering", () => {
     const each = total / letters.length;
     const paint = (prev: CubeState, cur: CubeState, dir: number, at: number) => {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, ds, prev, cur, dir, {}, at, NO_FLASH);
+      redraw(dr, ds, { prev, state: cur, dir, ui: {}, animTime: at, flash: NO_FLASH });
       return ops;
     };
     expect(cubeGame.animLength?.(state, solved, 1, {})).toBeCloseTo(total);
@@ -160,7 +167,7 @@ describe("Cube rendering", () => {
     const paint = (flash: Flash): number[] => {
       const { dr, ops } = recordingDrawing();
       const ds = newDrawState(state, cubeGame.preferredTileSize);
-      redraw(dr, ds, null, state, 1, {}, 0, flash);
+      redraw(dr, ds, { prev: null, state, dir: 1, ui: {}, animTime: 0, flash });
       return opsOfKind(ops, "polygon")
         .slice(0, state.grid.length)
         .flatMap((o, i) => (isLit(o.fill) ? [i] : []));

@@ -78,7 +78,14 @@ function framesAt(g: BuiltGame, at: { x: number; y: number }): Frames {
   const ui = game.newUi(state) as NoteTakingFields;
   const paint = (): DrawOp[] => {
     const rec = new RecordingDrawing(palette);
-    game.redraw(rec, ds, null, state, 1, ui, 0, NO_FLASH);
+    game.redraw(rec, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     return rec.ops;
   };
 

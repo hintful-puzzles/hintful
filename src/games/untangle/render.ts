@@ -23,7 +23,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -34,7 +34,6 @@ import type {
 import { drawRectOutline, glyphFont } from "../../engine/render/draw.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import {
-  type Flash,
   sweepRanks,
   WIN_NONE,
   type WinTone,
@@ -116,13 +115,9 @@ function mix(a: RationalPoint, b: RationalPoint, t: number): RationalPoint {
 export function redrawUntangle(
   dr: GameDrawing,
   ds: UntangleDrawState,
-  prev: UntangleState | null,
-  s: UntangleState,
-  ui: UntangleUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<UntangleMove>,
+  frame: Frame<UntangleState, UntangleUi, UntangleMove>,
 ): void {
+  const { prev, state: s, ui, animTime, flash, hint } = frame;
   const n = s.n;
   const ts = ds.tileSize;
 
@@ -158,11 +153,7 @@ export function redrawUntangle(
   const moved = hint?.move.points[0]?.i ?? -1;
   const [spot] = marks.of("ring", SPOT);
 
-  // Hint marker pixels (or -1 when none is drawn). Folded into the
-  // early-out so a manual hint, which moves no vertex, still repaints.
   const hintVertex = ringed.includes(moved) ? moved : -1;
-  const hintTx = spot ? Math.trunc((spot.x * ts) / spot.d) : -1;
-  const hintTy = spot ? Math.trunc((spot.y * ts) / spot.d) : -1;
 
   // Early-out: nothing visible changed.
   if (
@@ -170,18 +161,14 @@ export function redrawUntangle(
     !litChanged &&
     ds.dragPoint === ui.dragPoint &&
     ds.cursorPoint === ui.cursorPoint &&
-    ds.hintVertex === hintVertex &&
-    ds.hintTx === hintTx &&
-    ds.hintTy === hintTy &&
+    ds.hint === (hint ?? null) &&
     !pointsMoved
   ) {
     return;
   }
   ds.dragPoint = ui.dragPoint;
   ds.cursorPoint = ui.cursorPoint;
-  ds.hintVertex = hintVertex;
-  ds.hintTx = hintTx;
-  ds.hintTy = hintTy;
+  ds.hint = hint ?? null;
   ds.started = true;
 
   // Full-frame: fill the background every repaint.

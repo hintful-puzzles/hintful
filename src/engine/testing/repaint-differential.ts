@@ -424,7 +424,8 @@ export function repaintDifferential(
   const spy: AnyGame = {
     ...game,
     // The midend's own drawing is a sink: the warm frame is recorded here.
-    redraw: (_dr, ds, prev, s, dir, ui, anim, flash, hint, mistakes, deadEnd) => {
+    redraw: (_dr, ds, frame) => {
+      const { state: s, animTime: anim, flash, hint, mistakes, deadEnd } = frame;
       moving = anim > 0 || flash.time > 0 || flash.winning;
       if (moving) reached.animated++;
       if (hint) reached.hinted++;
@@ -441,24 +442,15 @@ export function repaintDifferential(
         return read.call(this, role, kind);
       } as typeof read;
       try {
-        game.redraw(
-          cold,
-          game.newDrawState(s, tileSize),
-          prev,
-          s,
-          dir,
-          structuredClone(ui),
-          anim,
-          flash,
-          hint,
-          mistakes,
-          deadEnd,
-        );
+        game.redraw(cold, game.newDrawState(s, tileSize), {
+          ...frame,
+          ui: structuredClone(frame.ui),
+        });
       } finally {
         StepMarks.prototype.of = read;
       }
       const hot = new BlitterRecording(palette);
-      game.redraw(hot, ds, prev, s, dir, ui, anim, flash, hint, mistakes, deadEnd);
+      game.redraw(hot, ds, frame);
       frames++;
       if (warm === null) warm = new BoxRaster(size.w, size.h);
       warm.apply(hot, frames);
@@ -549,8 +541,13 @@ export function repaintDifferential(
   // the board wrong the hint only refuses, so most hinted games never showed
   // a hint frame at all.
   if (hasHint(game)) {
-    lastEvent = "hint";
-    m.hint();
+    // As the app asks: where to look first, painted warm over the bare board,
+    // then the whole step.
+    lastEvent = "hint, where to look";
+    m.hint(true);
+    settle();
+    lastEvent = "explain the hint";
+    m.explainHint();
     settle();
     for (let s = 0; s < 3; s++) {
       lastEvent = "next hint step";

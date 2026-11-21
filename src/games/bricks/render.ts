@@ -40,7 +40,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -52,12 +52,7 @@ import { drawThickRectOutline, glyphFont } from "../../engine/render/draw.ts";
 import { drawClearSquare, drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { BricksHint } from "./hint.ts";
 import { bricksValidate } from "./solver.ts";
 import {
@@ -326,15 +321,9 @@ function clueText(
 export function redraw(
   dr: GameDrawing,
   ds: BricksDrawState,
-  _prev: BricksState | null,
-  state: BricksState,
-  _dir: number,
-  ui: BricksUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<BricksMove, BricksHint>,
-  mistakes?: readonly BricksMistake[],
+  frame: Frame<BricksState, BricksUi, BricksMove, BricksHint, BricksMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, grid } = state;
   const s = w * h;

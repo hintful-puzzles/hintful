@@ -708,7 +708,14 @@ describe("mathrax moves", () => {
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(palette);
       const ds = preferredDrawState(mathraxGame, solved);
-      mathraxGame.redraw(dr, ds, null, solved, 1, newUi(solved), 0, flash);
+      mathraxGame.redraw(dr, ds, {
+        prev: null,
+        state: solved,
+        dir: 1,
+        ui: newUi(solved),
+        animTime: 0,
+        flash,
+      });
       return dr;
     };
     // The cells filled in the flash color, each as its index.

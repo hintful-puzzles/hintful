@@ -27,8 +27,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
-import type { MarkedDeadEnd } from "../../engine/contract/hint-refusal.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -42,12 +41,7 @@ import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawPiece } from "../../engine/render/piece.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  WIN_NONE,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, WIN_NONE, winSlot } from "../../engine/render/win-wave.ts";
 import { BARREL, GOAL, PUSH } from "./hint-marks.ts";
 import { motionAt, motionFor, motionLength } from "./motion.ts";
 import { DIRS, type Push } from "./solver.ts";
@@ -296,16 +290,9 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: SokobanDrawState,
-  prev: SokobanState | null,
-  state: SokobanState,
-  dir: number,
-  ui: SokobanUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<SokobanMove, unknown>,
-  _mistakes?: readonly unknown[],
-  deadEnd?: MarkedDeadEnd,
+  frame: Frame<SokobanState, SokobanUi, SokobanMove>,
 ): void {
+  const { prev, state, dir, ui, animTime, flash, hint, deadEnd } = frame;
   const ts = ds.tileSize;
   const { w, h } = state;
 

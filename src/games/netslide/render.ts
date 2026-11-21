@@ -35,13 +35,13 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import { wireDistance } from "../../engine/mechanics/wires.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, WIN_LEAD } from "../../engine/render/win-wave.ts";
+import { WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { NetslideHint } from "./hint.ts";
 import { TILE } from "./kinds.ts";
 import {
@@ -595,14 +595,9 @@ function arrowFill(
 export function redraw(
   dr: GameDrawing,
   ds: NetslideDrawState,
-  prev: NetslideState | null,
-  current: NetslideState,
-  _dir: number,
-  ui: NetslideUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<NetslideMove, NetslideHint>,
+  frame: Frame<NetslideState, NetslideUi, NetslideMove, NetslideHint>,
 ): void {
+  const { prev, state: current, ui, animTime, flash, hint } = frame;
   const ts = ds.tileSize;
   const b = border(ts);
 

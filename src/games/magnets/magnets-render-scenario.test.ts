@@ -248,7 +248,14 @@ describe("magnets render scenarios", () => {
       (flash: Flash) => {
         const dr = new RecordingDrawing(colors(DEFAULT_BACKGROUND));
         const ui = { cursor: { x: 0, y: 0, visible: false } };
-        redraw(dr, newDrawState(state, ts), state, ui, flash);
+        redraw(dr, newDrawState(state, ts), {
+          prev: null,
+          state,
+          dir: 1,
+          ui,
+          animTime: 0,
+          flash,
+        });
         return dr;
       },
       (dr) => {
@@ -287,7 +294,14 @@ describe("magnets render scenarios", () => {
     const ts = PREFERRED_TILE_SIZE;
     const ds = newDrawState(state, ts);
     const ui = { cursor: { x: 0, y: 0, visible: false } };
-    redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, state, ui, NO_FLASH);
+    redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const leaders = [
       horizontalDomino(state),
       state.common.dominoes.findIndex((o, i) => o === i + state.w),
@@ -297,12 +311,19 @@ describe("magnets render scenarios", () => {
       const x = i % state.w;
       const y = Math.floor(i / state.w);
       ui.cursor = { x, y, visible: false };
-      redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, state, ui, NO_FLASH);
+      redraw(new RecordingDrawing(colors(DEFAULT_BACKGROUND)), ds, {
+        prev: null,
+        state,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       // The cursor arriving repaints this square and not its partner, so
       // whatever the square paints past its own box stays on the canvas.
       ui.cursor = { x, y, visible: true };
       const dr = new RecordingDrawing(colors(DEFAULT_BACKGROUND));
-      redraw(dr, ds, state, ui, NO_FLASH);
+      redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
       const box = {
         x0: (x + 1) * ts,
         y0: (y + 1) * ts,

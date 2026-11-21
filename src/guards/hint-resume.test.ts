@@ -319,7 +319,15 @@ function stateKey(s: unknown): string {
 function frameOf(game: AnyGame, state: unknown, step?: HintStep<unknown>): string {
   const rec = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
   const ds = preferredDrawState(game, state);
-  game.redraw(rec, ds, null, state, 1, game.newUi(state), 0, NO_FLASH, step);
+  game.redraw(rec, ds, {
+    prev: null,
+    state,
+    dir: 1,
+    ui: game.newUi(state),
+    animTime: 0,
+    flash: NO_FLASH,
+    hint: step,
+  });
   return JSON.stringify(rec.ops);
 }
 

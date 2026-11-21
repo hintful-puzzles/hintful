@@ -852,7 +852,7 @@ describe("crossing number-list placement", () => {
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     const ds = newDrawState(st, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state: st, dir: 1, ui, animTime: 0, flash: NO_FLASH });
     return dr;
   }
 
@@ -893,7 +893,7 @@ describe("crossing number-list placement", () => {
     const ds = newDrawState(state, TS);
     const paint = (ui: CrossingUi): RecordingDrawing => {
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
+      redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
       return dr;
     };
     const heldOps = (dr: RecordingDrawing): number =>
@@ -1388,17 +1388,40 @@ describe("crossing rendering", () => {
 
     // Frame 1 warms the cache with no overlay…
     const first = new RecordingDrawing(palette);
-    redraw(first, ds, null, dirty, 1, ui, 0, NO_FLASH);
+    redraw(first, ds, {
+      prev: null,
+      state: dirty,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(errLines(first)).toBe(0);
 
     // …frame 2 adds the overlay on an otherwise unchanged board…
     const second = new RecordingDrawing(palette);
-    redraw(second, ds, dirty, dirty, 1, ui, 0, NO_FLASH, undefined, mistakes);
+    redraw(second, ds, {
+      prev: dirty,
+      state: dirty,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
     expect(errLines(second)).toBeGreaterThan(0);
 
     // …and frame 3 clears it again.
     const third = new RecordingDrawing(palette);
-    redraw(third, ds, dirty, dirty, 1, ui, 0, NO_FLASH, undefined, []);
+    redraw(third, ds, {
+      prev: dirty,
+      state: dirty,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes: [],
+    });
     expect(errLines(third)).toBe(0);
   });
 
@@ -1409,7 +1432,7 @@ describe("crossing rendering", () => {
     const paint = (ui: CrossingUi): RecordingDrawing => {
       const ds = newDrawState(state, TS);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
+      redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
       return dr;
     };
 
@@ -1466,7 +1489,14 @@ describe("crossing rendering", () => {
     const palette = crossingGame.colors([0.827, 0.827, 0.827]);
     const ds = newDrawState(noted, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, noted, 1, newUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: noted,
+      dir: 1,
+      ui: newUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(dr.ops.some((o) => o.op === "text" && o.text === "4")).toBe(true);
   });
 
@@ -1486,7 +1516,14 @@ describe("crossing rendering", () => {
     const paint = (flash: Flash): string[] => {
       const ds = newDrawState(solved, TS);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, solved, 1, newUi(), 0, flash);
+      redraw(dr, ds, {
+        prev: null,
+        state: solved,
+        dir: 1,
+        ui: newUi(),
+        animTime: 0,
+        flash,
+      });
       return dr.ops.flatMap((o) =>
         o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
       );
@@ -1523,7 +1560,14 @@ describe("crossing rendering", () => {
 
     const ds = newDrawState(withDigits, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, withDigits, 1, newUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: withDigits,
+      dir: 1,
+      ui: newUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     // Every digit is drawn in the same (grid) color…
     const digitColors = dr.ops.flatMap((o) =>

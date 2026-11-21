@@ -1,18 +1,13 @@
 import { BLACK, FREE, FREE_NAMES } from "../../engine/color/colors.ts";
 import { surfaceGrid } from "../../engine/color/palette.ts";
 import { FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
 import { drawRectOutline } from "../../engine/render/draw.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  WIN_BODY,
-  WIN_LEAD,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { WIN_BODY, WIN_LEAD, winSlot } from "../../engine/render/win-wave.ts";
 import { completed, fill } from "./solver.ts";
 import {
   FILLX,
@@ -200,14 +195,9 @@ export function joinedBy(
 export function redraw(
   dr: GameDrawing,
   ds: FloodDrawState,
-  _prev: FloodState | null,
-  state: FloodState,
-  _dir: number,
-  ui: FloodUi,
-  _animTime: number,
-  flash: Flash,
-  activeHint?: HintStep<FloodMove>,
+  frame: Frame<FloodState, FloodUi, FloodMove>,
 ): void {
+  const { state, ui, flash, hint: activeHint } = frame;
   const ts = ds.tileSize;
   const { w, h, colors: ncolors } = state;
 

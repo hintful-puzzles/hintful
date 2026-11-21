@@ -56,7 +56,7 @@ describe("Fifteen rendering", () => {
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
 
-    redraw(dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 0, ui: UI, animTime: 0, flash: NO_FLASH });
 
     // The two recessed-border bevels are drawn before any tiles.
     const firstPolys = opsOfKind(ops, "polygon").slice(0, 2);
@@ -73,11 +73,25 @@ describe("Fifteen rendering", () => {
     const state = executeMove(prev, { type: "move", x: 2, y: 3 }); // tile 15 → (3,3)
     const ds = freshDs(state);
     // Settle the cache with a static draw of the new state first…
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH);
+    redraw(recordingDrawing().dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     // …then redraw mid-animation from prev → state at half the anim time.
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, prev, state, 1, UI, 0.13 / 2, NO_FLASH);
+    redraw(dr, ds, {
+      prev,
+      state,
+      dir: 1,
+      ui: UI,
+      animTime: 0.13 / 2,
+      flash: NO_FLASH,
+    });
 
     // Tile "15" is drawn at an x between its old column (2) and home
     // column (3): its settled center is coord(3)+ts/2 = 192; mid-slide it
@@ -99,7 +113,14 @@ describe("Fifteen rendering", () => {
     const run = winFlashRun(
       (flash: Flash) => {
         const { dr } = recordingDrawing();
-        redraw(dr, freshDs(state), null, state, 1, UI, 0, flash);
+        redraw(dr, freshDs(state), {
+          prev: null,
+          state,
+          dir: 1,
+          ui: UI,
+          animTime: 0,
+          flash,
+        });
         return dr;
       },
       (dr) =>
@@ -155,12 +176,28 @@ describe("the hint mark while the hinted slide animates", () => {
 
     const ds = freshDs(state);
     // Warm the cache with the still pre-move frame, hint displayed.
-    redraw(recordingDrawing().dr, ds, null, state, 0, UI, 0, NO_FLASH, step);
+    redraw(recordingDrawing().dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: step,
+    });
 
     // Halfway through the slide into the gap.
     const anim = fifteenGame.animLength?.(state, after, 1, UI) ?? 0;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, state, after, 1, UI, anim / 2, NO_FLASH, step);
+    redraw(dr, ds, {
+      prev: state,
+      state: after,
+      dir: 1,
+      ui: UI,
+      animTime: anim / 2,
+      flash: NO_FLASH,
+      hint: step,
+    });
 
     // The hint ring is round the tile's face, centered on the tile drawn at
     // its interpolated position — half a cell from its origin toward the gap

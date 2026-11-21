@@ -25,7 +25,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -43,12 +43,7 @@ import {
 import { drawPiece, drawRuledOutCross, TWO_SHAPES } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import { BUTTON, LASER } from "./hint-marks.ts";
 import {
   BALL_GUESS,
@@ -397,15 +392,9 @@ function drawLaserTile(
 export function redraw(
   dr: GameDrawing,
   ds: BlackboxDrawState,
-  _prev: BlackboxState | null,
-  state: BlackboxState,
-  _dir: number,
-  ui: BlackboxUi,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<unknown> | null,
-  mistakes?: readonly Point[],
+  frame: Frame<BlackboxState, BlackboxUi, unknown, unknown, Point>,
 ): void {
+  const { state, ui, animTime, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const marked = hintFlags(state, hint);
   for (const m of mistakes ?? []) {

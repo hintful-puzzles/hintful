@@ -21,7 +21,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
 import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
@@ -41,7 +41,7 @@ import {
 } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, WIN_LEAD } from "../../engine/render/win-wave.ts";
+import { sweepStep, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { DominosaHint } from "./hint.ts";
 import { SPOT } from "./kinds.ts";
 import {
@@ -394,15 +394,9 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: DominosaDrawState,
-  _prev: DominosaState | null,
-  state: DominosaState,
-  _dir: number,
-  ui: DominosaUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<DominosaMove, DominosaHint>,
-  mistakes?: readonly DominosaMistake[],
+  frame: Frame<DominosaState, DominosaUi, DominosaMove, DominosaHint, DominosaMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, grid, numbers } = state;
   const wh = w * h;

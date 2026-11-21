@@ -503,7 +503,14 @@ describe("pattern render", () => {
     const paint = (flash: Flash) => {
       const dr = new RecordingDrawing(palette);
       const ds = preferredDrawState(patternGame, solved);
-      patternGame.redraw(dr, ds, null, solved, 1, patternGame.newUi(solved), 0, flash);
+      patternGame.redraw(dr, ds, {
+        prev: null,
+        state: solved,
+        dir: 1,
+        ui: patternGame.newUi(solved),
+        animTime: 0,
+        flash,
+      });
       return dr.ops;
     };
     // The cells whose ground is the flash color, each as its index.

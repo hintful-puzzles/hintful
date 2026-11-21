@@ -33,7 +33,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -52,12 +52,7 @@ import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawMarkSides, outlineSides } from "../../engine/render/hint-mark.ts";
 import { type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { RectHint } from "./hint.ts";
 import { LINE, RECTANGLE } from "./hint-marks.ts";
 import {
@@ -636,15 +631,9 @@ function hintRings(
 export function redraw(
   dr: GameDrawing,
   ds: RectDrawState,
-  _prev: RectState | null,
-  state: RectState,
-  _dir: number,
-  ui: RectUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<RectMove, RectHint>,
-  mistakes?: readonly RectMistake[],
+  frame: Frame<RectState, RectUi, RectMove, RectHint, RectMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const { w, h } = state;
   const tile = ds.tileSize;
   const hintBits = hintTileBits(w, h, hint);

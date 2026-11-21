@@ -709,7 +709,14 @@ describe("netslide rendering", () => {
     const paint = (flash: Flash) => {
       const ds = netslideGame.newDrawState(won, PREFERRED_TILE_SIZE);
       const rec = new RecordingDrawing(netslideGame.colors([1, 1, 1]));
-      netslideGame.redraw(rec, ds, null, won, 1, newUi(won), 0, flash);
+      netslideGame.redraw(rec, ds, {
+        prev: null,
+        state: won,
+        dir: 1,
+        ui: newUi(won),
+        animTime: 0,
+        flash,
+      });
       return rec;
     };
     /** The tiles whose wires a frame draws in the flash color, by cell: each

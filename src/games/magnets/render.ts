@@ -29,7 +29,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
 import { drawThickRectOutline, glyphFont } from "../../engine/render/draw.ts";
@@ -44,7 +44,6 @@ import {
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
-  type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
@@ -63,6 +62,7 @@ import {
   GS_NOTPOSITIVE,
   GS_SET,
   type MagnetsMistake,
+  type MagnetsMove,
   type MagnetsState,
   type MagnetsUi,
   NEGATIVE,
@@ -464,12 +464,9 @@ function markBand(ts: number, x: number, y: number): MarkBand {
 export function redraw(
   dr: GameDrawing,
   ds: MagnetsDrawState,
-  state: MagnetsState,
-  ui: MagnetsUi,
-  flash: Flash,
-  mistakes?: readonly MagnetsMistake[],
-  hint?: HintStep<unknown, MagnetsHighlights>,
+  frame: Frame<MagnetsState, MagnetsUi, MagnetsMove, MagnetsHighlights, MagnetsMistake>,
 ): void {
+  const { state, ui, flash, mistakes, hint } = frame;
   const ts = ds.tileSize;
   const { w, h, grid, flags, common } = state;
   const { dominoes, colcount, rowcount } = common;

@@ -25,7 +25,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -48,12 +48,7 @@ import {
 } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { RangeHint } from "./hint.ts";
 import { CLUE } from "./kinds.ts";
 import { findErrors } from "./solver.ts";
@@ -235,15 +230,9 @@ function clueText(
 export function redraw(
   dr: GameDrawing,
   ds: RangeDrawState,
-  _prev: RangeState | null,
-  state: RangeState,
-  _dir: number,
-  ui: RangeUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<RangeMove, RangeHint>,
-  mistakes?: readonly Cell[],
+  frame: Frame<RangeState, RangeUi, RangeMove, RangeHint, Cell>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, grid } = state;
 

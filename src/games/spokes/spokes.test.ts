@@ -634,7 +634,7 @@ describe("spokes rendering", () => {
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
     const ds = newDrawState(state, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
 
     expect(
       dr.ops.filter((o) => o.op === "circle" && o.outline === COL_HOLDING).length,
@@ -650,7 +650,7 @@ describe("spokes rendering", () => {
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
     const ds = newDrawState(state, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
 
     // Four corner brackets, two segments each.
     expect(
@@ -692,7 +692,14 @@ describe("spokes rendering", () => {
     const palette = spokesGame.colors(DEFAULT_BACKGROUND);
     const ds = newDrawState(lit, TS);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, lit, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: lit,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     expect(dr.ops.some((o) => o.op === "circle" && o.fill === COL_SATISFIED)).toBe(
       false,
@@ -715,7 +722,14 @@ describe("spokes: the win flash sweeps the hubs", () => {
 
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(spokesGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, newDrawState(state, TS), null, state, 1, newUi(), 0, flash);
+    redraw(dr, newDrawState(state, TS), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: newUi(),
+      animTime: 0,
+      flash,
+    });
     return dr.ops;
   };
   /** The hubs whose face a frame fills with the flash color, as grid `x,y`. */

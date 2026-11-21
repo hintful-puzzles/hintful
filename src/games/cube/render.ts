@@ -22,12 +22,12 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Size } from "../../engine/contract/types.ts";
 import { strokeScaledPolygon } from "../../engine/render/draw.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { type Bbox, enumGridSquares, findBbox } from "./grid.ts";
 import { SQUARE } from "./kinds.ts";
 import { SOLIDS, transformPoly } from "./solids.ts";
@@ -111,14 +111,9 @@ export function computeSize(p: CubeParams, tileSize: number): Size {
 export function redraw(
   dr: GameDrawing,
   ds: CubeDrawState,
-  prev: CubeState | null,
-  state: CubeState,
-  dir: number,
-  _ui: unknown,
-  animTime: number,
-  flash: Flash,
-  hint?: HintStep<CubeMove>,
+  frame: Frame<CubeState, unknown, CubeMove>,
 ): void {
+  const { prev, state, dir, animTime, flash, hint } = frame;
   const gs = ds.tileSize;
   const bb = ds.bbox;
   const xsize = Math.trunc((bb.r - bb.l + 2 * ds.border) * gs);

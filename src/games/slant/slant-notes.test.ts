@@ -446,18 +446,16 @@ describe("slant marks render", () => {
 
   function frame(state: SlantState, ui: SlantUi, hint?: unknown, mistakes?: unknown) {
     const dr = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
-    slantGame.redraw(
-      dr,
-      slantGame.newDrawState(state, TS),
-      null,
+    slantGame.redraw(dr, slantGame.newDrawState(state, TS), {
+      prev: null,
       state,
-      1,
+      dir: 1,
       ui,
-      0,
-      NO_FLASH,
-      hint as never,
-      mistakes as never,
-    );
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: hint as never,
+      mistakes: mistakes as never,
+    });
     return dr.ops;
   }
 
@@ -511,9 +509,23 @@ describe("slant marks render", () => {
   it("marks are keyed per tile, so a new mark repaints the squares beside it", () => {
     const ds = slantGame.newDrawState(s, TS);
     const dr = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
-    slantGame.redraw(dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    slantGame.redraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const dr2 = new RecordingDrawing(slantGame.colors(DEFAULT_BACKGROUND));
-    slantGame.redraw(dr2, ds, s, executeMove(s, mark), 1, ui, 0, NO_FLASH);
+    slantGame.redraw(dr2, ds, {
+      prev: s,
+      state: executeMove(s, mark),
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(barsAcross(dr2.ops, COL_PENCIL)).toHaveLength(4);
   });
 

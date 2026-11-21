@@ -45,7 +45,8 @@ function checkedGame() {
     ...fakeGame,
     hint: { ...fakeGame.hint, plan: hint },
     findMistakes: (s) => (s.count === -9 ? ["wrong"] : []),
-    redraw: (_dr, ds, _p, _s, _d, _ui, _a, _f, _h, _m, deadEnd) => {
+    redraw: (_dr, ds, frame) => {
+      const { deadEnd } = frame;
       ds.redrawCalls += 1;
       shown.push(deadEnd ?? null);
     },

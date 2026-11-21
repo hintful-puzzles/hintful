@@ -256,7 +256,14 @@ describe("Untangle: the win flash sweeps the points", () => {
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(untangleGame.colors(DEFAULT_BACKGROUND));
     const ds = untangleGame.newDrawState(state, ts);
-    untangleGame.redraw(dr, ds, null, state, 1, untangleGame.newUi(state), 0, flash);
+    untangleGame.redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: untangleGame.newUi(state),
+      animTime: 0,
+      flash,
+    });
     return dr.ops;
   };
   const flashLine = (op: DrawOp): op is DrawOp & { op: "line" } =>

@@ -445,7 +445,14 @@ describe("unequal render", () => {
     const at = (y: number) => ({ ...newUi(st), cursor: { x: 2, y, visible: true } });
     const frame = (ds: ReturnType<typeof unequalGame.newDrawState>, y: number) => {
       const dr = new RecordingDrawing(palette);
-      unequalGame.redraw(dr, ds, null, st, 1, at(y), 0, NO_FLASH);
+      unequalGame.redraw(dr, ds, {
+        prev: null,
+        state: st,
+        dir: 1,
+        ui: at(y),
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return dr.ops;
     };
 
@@ -499,7 +506,14 @@ describe("unequal: the win flash sweeps the cells", () => {
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(unequalGame.colors(DEFAULT_BACKGROUND));
     const ds = unequalGame.newDrawState(state, TS);
-    unequalGame.redraw(dr, ds, null, state, 1, newUi(state), 0, flash);
+    unequalGame.redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: newUi(state),
+      animTime: 0,
+      flash,
+    });
     return dr.ops;
   };
   /** The cells a frame fills with the flash color, as the `x,y` drawn at. */

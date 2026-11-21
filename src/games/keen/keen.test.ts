@@ -478,7 +478,14 @@ describe("keen render", () => {
     const run = winFlashRun(
       (flash: Flash) => {
         const dr = new RecordingDrawing(keenGame.colors(DEFAULT_BACKGROUND));
-        redraw(dr, newDrawState(st, ts), null, st, 1, newUi(st), 0, flash);
+        redraw(dr, newDrawState(st, ts), {
+          prev: null,
+          state: st,
+          dir: 1,
+          ui: newUi(st),
+          animTime: 0,
+          flash,
+        });
         return dr;
       },
       (dr) =>
@@ -504,7 +511,14 @@ describe("keen render", () => {
       ui.pencilMode = pencilMode;
       const ds = newDrawState(st, ts);
       const dr = new RecordingDrawing(palette);
-      redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH);
+      redraw(dr, ds, {
+        prev: null,
+        state: st,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return dr;
     };
     const glyph = (r: RecordingDrawing) =>
@@ -554,7 +568,15 @@ describe("keen render", () => {
     };
     const frame = (ds: KeenDrawState, h?: typeof hint) => {
       const rec = new RecordingDrawing(palette);
-      redraw(rec, ds, null, st, 0, ui, 0, NO_FLASH, h);
+      redraw(rec, ds, {
+        prev: null,
+        state: st,
+        dir: 0,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        hint: h,
+      });
       return rec.ops;
     };
 

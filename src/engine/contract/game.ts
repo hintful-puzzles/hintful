@@ -581,6 +581,39 @@ export function hasHint(game: { readonly hint: object }): boolean {
 }
 
 /**
+ * What one `redraw` paints: the midend builds it once a frame, and a game
+ * destructures the fields it reads, so a new input is a field here and no
+ * game's signature moves.
+ *
+ * The animation's fields stay flat rather than one nullable object: `animTime`
+ * runs on through a flash after `prev` has been dropped, and `dir` outlives
+ * both, so they are not present or absent together.
+ */
+export interface Frame<
+  State,
+  Ui,
+  Move = unknown,
+  Highlights = unknown,
+  Mistake = unknown,
+> {
+  readonly state: State;
+  /** The state animated from, while a move animates; else null. */
+  readonly prev: State | null;
+  /** +1 for a move forward, -1 for an undo. */
+  readonly dir: number;
+  readonly ui: Ui;
+  /** Seconds into the move's animation, at the game's own scale, eased. */
+  readonly animTime: number;
+  readonly flash: Flash;
+  readonly hint?: HintStep<Move, Highlights>;
+  readonly mistakes?: readonly Mistake[];
+  /** A displayed refusal whose words mark its cause, painted as a step's are
+   * (`stepMarks`); only a game whose hint makes one reads it, and it never
+   * comes with a `hint`. */
+  readonly deadEnd?: MarkedDeadEnd;
+}
+
+/**
  * Every hook is declared with method syntax, never as a function-typed
  * property. The registry holds a game with its type parameters erased, and a
  * property's parameters are checked contravariantly, which the erased type
@@ -943,22 +976,11 @@ export interface Game<
    * is deliberately no counterpart to upstream's `game_set_size`, which resized
    * a live draw state. */
   newDrawState(s: State, tileSize: number): DrawState;
-  /** Paint the board. `ds` is never null — see {@link Game.newDrawState}.
-   * `deadEnd` is a displayed refusal whose words mark its cause, painted as a
-   * step's are (`stepMarks`); only a game whose hint makes one reads it, and it
-   * never comes with a `hint`. */
+  /** Paint the board. `ds` is never null — see {@link Game.newDrawState}. */
   redraw(
     dr: GameDrawing,
     ds: DrawState,
-    prev: State | null,
-    s: State,
-    dir: number,
-    ui: Ui,
-    animTime: number,
-    flash: Flash,
-    hint?: HintStep<Move, Highlights>,
-    mistakes?: readonly Mistake[],
-    deadEnd?: MarkedDeadEnd,
+    frame: Frame<State, Ui, Move, Highlights, Mistake>,
   ): void;
   animLength?(a: State, b: State, dir: number, ui: Ui): number;
   /** A flash for an outcome the status does not show (a Mines death, a Same

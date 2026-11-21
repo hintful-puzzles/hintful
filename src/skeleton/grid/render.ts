@@ -25,7 +25,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
 import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
@@ -42,12 +42,7 @@ import {
 } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { SkeletonMistake } from "./index.ts";
 import {
   BLANK,
@@ -246,15 +241,9 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: SkeletonDrawState,
-  _prev: SkeletonState | null,
-  state: SkeletonState,
-  _dir: number,
-  ui: SkeletonUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SkeletonMove>,
-  mistakes?: readonly SkeletonMistake[],
+  frame: Frame<SkeletonState, SkeletonUi, SkeletonMove, unknown, SkeletonMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, clues, grid } = state;
   const b = border(ts);

@@ -35,7 +35,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -55,12 +55,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  WIN_LEAD,
-  WIN_NONE,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/render/win-wave.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
 import {
@@ -547,15 +542,9 @@ function keyMark(
 export function redraw(
   dr: GameDrawing,
   ds: SlantDrawState,
-  _prev: SlantState | null,
-  state: SlantState,
-  _dir: number,
-  ui: SlantUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SlantMove, SlantHint>,
-  mistakes?: readonly SlantMistake[],
+  frame: Frame<SlantState, SlantUi, SlantMove, SlantHint, SlantMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, clues, soln } = state;
   const W = w + 1;

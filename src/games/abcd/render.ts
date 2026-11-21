@@ -38,7 +38,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -76,7 +76,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import type { AbcdHint } from "./hint.ts";
 import { CLUE } from "./hint-marks.ts";
 import {
@@ -504,15 +504,9 @@ const PENCIL_BOX = (p: { w: number; h: number; n: number }, ts: number) =>
 export function redraw(
   dr: GameDrawing,
   ds: AbcdDrawState,
-  _prev: AbcdState | null,
-  state: AbcdState,
-  _dir: number,
-  ui: AbcdUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<AbcdMove, AbcdHint>,
-  mistakes?: readonly Point[],
+  frame: Frame<AbcdState, AbcdUi, AbcdMove, AbcdHint, Point>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, n } = state.params;
 

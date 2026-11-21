@@ -45,9 +45,28 @@ function boardFor(game: AnyGame) {
   let ui: unknown;
   const spy: AnyGame = {
     ...game,
-    redraw(dr, ds, prev, state, dir, seen, animTime, flashTime, hint, mistakes) {
+    redraw(dr, ds, frame) {
+      const {
+        prev,
+        state,
+        dir,
+        ui: seen,
+        animTime,
+        flash: flashTime,
+        hint,
+        mistakes,
+      } = frame;
       ui = seen;
-      game.redraw(dr, ds, prev, state, dir, seen, animTime, flashTime, hint, mistakes);
+      game.redraw(dr, ds, {
+        prev,
+        state,
+        dir,
+        ui: seen,
+        animTime,
+        flash: flashTime,
+        hint,
+        mistakes,
+      });
     },
   };
   const { midend: m, last } = observeMidend(new Midend(spy));

@@ -31,7 +31,14 @@ function paintWith(s: WordguessState, ui: WordguessUi) {
   const draw = wordguessGame.newDrawState(s, TS) as WordguessDrawState;
   return () => {
     const rec = new RecordingDrawing(PALETTE);
-    redraw(rec, draw, null, s, 1, ui, 0, NO_FLASH);
+    redraw(rec, draw, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     return rec.ops;
   };
 }

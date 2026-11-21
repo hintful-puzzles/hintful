@@ -70,7 +70,14 @@ describe("Ball Sort's frames", () => {
     for (let k = 3; k < 10; k++) {
       const rec = new RecordingDrawing(G.colors(DEFAULT_BACKGROUND));
       const t = (k / 10) * POUR_SECONDS;
-      redraw(rec, newDrawState(after, TS), before, after, 1, newUi(after), t, NO_FLASH);
+      redraw(rec, newDrawState(after, TS), {
+        prev: before,
+        state: after,
+        dir: 1,
+        ui: newUi(after),
+        animTime: t,
+        flash: NO_FLASH,
+      });
       // The teal ball still in tube 2, and no other.
       expect(discs(rec.ops, teal).filter(within), `${t}s`).toHaveLength(1);
       frames++;

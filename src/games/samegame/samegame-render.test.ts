@@ -65,7 +65,14 @@ describe("Same Game redraw", () => {
   it("frames the field with a line and no bevel", () => {
     const state = mkState("1,2");
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: emptyUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(ops.some((o) => o.op === "polygon")).toBe(false);
     // The frame, then the field one pixel inside it: 2 tiles and a gap wide,
     // plus the frame's two pixels.
@@ -78,7 +85,14 @@ describe("Same Game redraw", () => {
     const dealt = mkState("1,2");
     const state = { ...dealt, tiles: dealt.tiles.map((t, i) => (i === 0 ? 0 : t)) };
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: emptyUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const at = ops.filter((o) => o.op === "rect" && o.x === 16 && o.y === 16);
     expect(at.map((o) => o.op === "rect" && o.color)).toEqual([COL_CELL]);
   });
@@ -88,14 +102,28 @@ describe("Same Game redraw", () => {
     // paints a full-TILE_SIZE-wide rect in its color.
     const state = mkState("1,1");
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: emptyUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const fullWidth = (o: RecordingDrawing["ops"][number]) =>
       o.op === "rect" && o.color === COL_PIECE && o.w === TS;
     expect(ops.some(fullWidth)).toBe(true);
     // A differing pair leaves the inner-only width (no full-width join fill).
     const state2 = mkState("1,2");
     const r2 = recordingDrawing();
-    redraw(r2.dr, freshDs(state2), null, state2, 1, emptyUi(state2), 0, NO_FLASH);
+    redraw(r2.dr, freshDs(state2), {
+      prev: null,
+      state: state2,
+      dir: 1,
+      ui: emptyUi(state2),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(r2.ops.some(fullWidth)).toBe(false);
   });
 
@@ -105,14 +133,28 @@ describe("Same Game redraw", () => {
     ui.selected[0] = true;
     ui.nselected = 1;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, ui, 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_SEL)).toBe(true);
   });
 
   it("recolors tile innards to COL_INK on a stuck board", () => {
     const state: SamegameState = mkState("1,2");
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: emptyUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // Drawn as the inner square.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_INK)).toBe(true);
   });
@@ -124,7 +166,14 @@ describe("Same Game: the win flash on a cleared board", () => {
   const palette = PALETTE;
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(palette);
-    redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, flash);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: emptyUi(state),
+      animTime: 0,
+      flash,
+    });
     return dr;
   };
   /** Where each square painted in the flash color is drawn, as `x,y`. */
@@ -160,7 +209,14 @@ describe("Same Game: the flash of a board with no move left", () => {
   /** Whether the field's margin, the one rect wider than a tile, is lit. */
   const marginLit = (time: number): boolean => {
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, emptyUi(state), 0, ownFlash(time));
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: emptyUi(state),
+      animTime: 0,
+      flash: ownFlash(time),
+    });
     return ops.some((o) => o.op === "rect" && o.color === COL_LIFTED && o.w > TS);
   };
 

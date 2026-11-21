@@ -350,7 +350,14 @@ describe("tracks render", () => {
     );
     const ds = newDrawState(solved, tracksGame.preferredTileSize);
     const dr = new RecordingDrawing(tracksGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, ds, null, solved, 1, tracksGame.newUi(solved), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: solved,
+      dir: 1,
+      ui: tracksGame.newUi(solved),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(dr.ops.some((o) => o.op === "text")).toBe(true);
     expect(dr.ops.some((o) => o.op === "line")).toBe(true);
   });
@@ -375,10 +382,25 @@ describe("tracks render", () => {
     const palette = tracksGame.colors(DEFAULT_BACKGROUND);
 
     // Warm the drawstate without the overlay, then repaint with it.
-    redraw(new RecordingDrawing(palette), ds, null, bad, 1, ui, 0, NO_FLASH);
+    redraw(new RecordingDrawing(palette), ds, {
+      prev: null,
+      state: bad,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const mistakes = tracksGame.findMistakes?.(bad) ?? [];
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, bad, 1, ui, 0, NO_FLASH, undefined, mistakes);
+    redraw(dr, ds, {
+      prev: null,
+      state: bad,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 });

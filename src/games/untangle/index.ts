@@ -481,15 +481,11 @@ export const untangleGame: Game<
     lit: new Array<WinTone>(s.n).fill(WIN_NONE),
     dragPoint: -1,
     cursorPoint: -1,
-    hintVertex: -1,
-    hintTx: -1,
-    hintTy: -1,
+    hint: null,
     x: new Array<number>(s.n).fill(-1),
     y: new Array<number>(s.n).fill(-1),
   }),
-  redraw: (dr, ds, prev, s, _dir, ui, animTime, flash, hint) => {
-    redrawUntangle(dr, ds, prev, s, ui, animTime, flash, hint);
-  },
+  redraw: redrawUntangle,
 };
 
 /** The quadrant test from untangle.c:1479 — is the vector (dx,dy) within

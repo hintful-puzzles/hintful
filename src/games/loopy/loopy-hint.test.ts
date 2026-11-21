@@ -1177,7 +1177,15 @@ describe("Loopy mistakes", () => {
     const ui = loopyGame.newUi(state);
     ui.drawFaintLines = false;
     const ds = loopyGame.newDrawState(state, PREFERRED_TILE_SIZE);
-    loopyGame.redraw(dr, ds, null, state, 0, ui, 0, NO_FLASH, undefined, mistakes);
+    loopyGame.redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
     const red = dr.ops.filter((o) => o.op === "line" && o.color === COL_MISTAKE);
     // A cross: two strokes, and the edge's own faint line is not drawn at all.
     expect(red).toHaveLength(2);

@@ -32,7 +32,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../color/roles.ts";
-import type { GameDrawing, HintStep } from "../contract/game.ts";
+import type { Frame, GameDrawing } from "../contract/game.ts";
 import { stepMarks } from "../contract/hint-words.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../contract/types.ts";
 import {
@@ -59,7 +59,7 @@ import {
 } from "../render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
-import { type Flash, sweepStep } from "../render/win-wave.ts";
+import { sweepStep } from "../render/win-wave.ts";
 import {
   displayChar,
   type EdgeClueMove,
@@ -408,15 +408,9 @@ const PENCIL_BOX = (order: number, ts: number) => {
 export function redraw(
   dr: GameDrawing,
   ds: EdgeClueDrawState,
-  _prev: EdgeClueState | null,
-  state: EdgeClueState,
-  _dir: number,
-  ui: EdgeClueUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<EdgeClueMove, EdgeClueHint>,
-  mistakes?: readonly Point[],
+  frame: Frame<EdgeClueState, EdgeClueUi, EdgeClueMove, EdgeClueHint, Point>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const o = state.order;
 

@@ -13,7 +13,7 @@ import {
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
 import { cellSurface, givenSurface, INK } from "../../engine/color/palette.ts";
 import { FIRST_GAME_SLOT, rolePalette } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -31,7 +31,6 @@ import {
 import { textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
-  type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
@@ -174,14 +173,9 @@ function drawPlayfieldBorder(
 export function redraw(
   dr: GameDrawing,
   ds: FifteenDrawState,
-  prev: FifteenState | null,
-  state: FifteenState,
-  _dir: number,
-  _ui: FifteenUi,
-  animTime: number,
-  flash: Flash,
-  activeHint?: HintStep<FifteenMove>,
+  frame: Frame<FifteenState, FifteenUi, FifteenMove>,
 ): void {
+  const { prev, state, animTime, flash, hint: activeHint } = frame;
   const ts = ds.tileSize;
   const { w, h, n } = state;
   const hw = raisedBevelWidth(ts);

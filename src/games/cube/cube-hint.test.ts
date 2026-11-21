@@ -234,7 +234,15 @@ describe("cube hint marks", () => {
     if (!step) throw new Error("no step outlines a goal");
     const dr = new RecordingDrawing(cubeGame.colors(DEFAULT_BACKGROUND));
     const ds = cubeGame.newDrawState(s, cubeGame.preferredTileSize);
-    redraw(dr, ds, null, s, 0, {}, 0, NO_FLASH, step);
+    redraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 0,
+      ui: {},
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: step,
+    });
     const lines = opsOfKind(dr.ops, "line");
     // The square to roll onto is ringed round, and the goal's outline is
     // its four sides, so the two differ in shape; nothing in a hint color

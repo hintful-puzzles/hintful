@@ -722,17 +722,15 @@ describe("boats hint — rendering", () => {
     // Drawn from the step itself, as the player would see it.
     const ts = 32;
     const recording = new RecordingDrawing(boatsGame.colors(DEFAULT_BACKGROUND));
-    boatsGame.redraw(
-      recording,
-      boatsGame.newDrawState(state, ts),
-      null,
+    boatsGame.redraw(recording, boatsGame.newDrawState(state, ts), {
+      prev: null,
       state,
-      0,
-      boatsGame.newUi(state),
-      0,
-      NO_FLASH,
-      step,
-    );
+      dir: 0,
+      ui: boatsGame.newUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: step,
+    });
     const hatches = opsOfKind(recording.ops, "hatch");
     // Every square of the line, and its number's slot when it has one.
     const slot = isColumn ? line[0].x : w + line[0].y;

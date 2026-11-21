@@ -546,7 +546,14 @@ describe("lightup rendering", () => {
       (flash: Flash) => {
         const dr = new RecordingDrawing(lightupGame.colors(DEFAULT_BACKGROUND));
         const ds = preferredDrawState(lightupGame, won);
-        lightupGame.redraw(dr, ds, null, won, 1, lightupGame.newUi(won), 0, flash);
+        lightupGame.redraw(dr, ds, {
+          prev: null,
+          state: won,
+          dir: 1,
+          ui: lightupGame.newUi(won),
+          animTime: 0,
+          flash,
+        });
         return dr;
       },
       (dr) =>

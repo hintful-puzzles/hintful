@@ -91,7 +91,14 @@ function winRoute(s: PathState): number[] {
     },
   };
   const dr = new RecordingDrawing(pathGame.colors([0.9, 0.9, 0.9]));
-  pathGame.redraw(dr, newDrawState(s, 40), null, s, 1, pathGame.newUi(s), 0, flash);
+  pathGame.redraw(dr, newDrawState(s, 40), {
+    prev: null,
+    state: s,
+    dir: 1,
+    ui: pathGame.newUi(s),
+    animTime: 0,
+    flash,
+  });
   return asked;
 }
 

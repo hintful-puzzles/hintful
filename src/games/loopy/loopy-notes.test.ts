@@ -389,7 +389,15 @@ describe("notes on the board", () => {
     const palette = loopyGame.colors(DEFAULT_BACKGROUND);
     const draw = (ui: LoopyUi, mistakes = loopyGame.findMistakes?.(state) ?? []) => {
       const dr = new RecordingDrawing(palette);
-      loopyGame.redraw(dr, b.ds, null, state, 0, ui, 0, NO_FLASH, undefined, mistakes);
+      loopyGame.redraw(dr, b.ds, {
+        prev: null,
+        state,
+        dir: 0,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        mistakes,
+      });
       return dr.ops;
     };
 

@@ -383,7 +383,14 @@ describe("executeMove + completion", () => {
     const frame = (flash: Flash): string[] => {
       const dr = new RecordingDrawing(palette);
       const ds = clustersGame.newDrawState(won, PREFERRED_TILE_SIZE);
-      clustersGame.redraw(dr, ds, null, won, 1, newUi(), 0, flash);
+      clustersGame.redraw(dr, ds, {
+        prev: null,
+        state: won,
+        dir: 1,
+        ui: newUi(),
+        animTime: 0,
+        flash,
+      });
       return dr.ops.flatMap((o) =>
         o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
       );

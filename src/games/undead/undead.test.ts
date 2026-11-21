@@ -353,7 +353,7 @@ describe("undead: the win flash sweeps the cells, the clues and the counts", () 
 
   const paint = (flash: Flash, ds = newDrawState(state, TS)) => {
     const dr = new RecordingDrawing(undeadGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, ds, null, state, 1, ui, 0, flash);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash });
     return dr.ops;
   };
   // A draw state that has laid the counts out, to tell which one a pixel is in.

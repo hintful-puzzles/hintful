@@ -605,29 +605,7 @@ export const bridgesGame: Game<
     gesture: hintGesture,
   },
 
-  redraw(
-    dr,
-    ds,
-    prev,
-    s,
-    _dir,
-    ui,
-    _animTime,
-    flash,
-    hintStep?: HintStep<BridgesMove>,
-    mistakes?: readonly BridgesMistake[],
-  ): void {
-    redrawBridges(
-      dr,
-      ds,
-      prev,
-      s,
-      ui,
-      flash,
-      mistakes,
-      hintStep as HintStep<BridgesMove, BridgesHighlights> | undefined,
-    );
-  },
+  redraw: redrawBridges,
   animLength: () => 0,
 };
 

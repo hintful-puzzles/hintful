@@ -37,7 +37,7 @@ describe("Flood redraw", () => {
     const state = newState({ w: 2, h: 2, colors: 3, leniency: 0 }, "0112,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui: UI, animTime: 0, flash: NO_FLASH });
 
     expect(ops.some((o) => o.op === "polygon")).toBe(false);
     // The frame: the field and a separator (1 pixel at this size) on each side.
@@ -52,7 +52,7 @@ describe("Flood redraw", () => {
     const state = newState({ w: 2, h: 1, colors: 3, leniency: 0 }, "01,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui: UI, animTime: 0, flash: NO_FLASH });
     // A thin (w = sepWidth = 1) rect in the grid's color appears.
     expect(ops.some((o) => o.op === "rect" && o.color === COL_GRID && o.w === 1)).toBe(
       true,
@@ -65,7 +65,7 @@ describe("Flood redraw", () => {
     const state = newState({ w: 2, h: 1, colors: 3, leniency: 0 }, "01,9");
     const ds = floodGame.newDrawState(state, small) as FloodDrawState;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui: UI, animTime: 0, flash: NO_FLASH });
     expect(ops[0]).toMatchObject({ op: "rect", color: COL_GRID, w: 2 * small + 2 });
     expect(
       ops.some(
@@ -78,7 +78,14 @@ describe("Flood redraw", () => {
     const state = newState({ w: 2, h: 2, colors: 3, leniency: 0 }, "0112,9");
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, { cursor: newCursor(0, 0, true) }, 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: { cursor: newCursor(0, 0, true) },
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // The cursor outline is four lines in the mark color.
     expect(ops.filter((o) => o.op === "line" && o.color === COL_MARK).length).toBe(4);
   });
@@ -97,7 +104,15 @@ describe("Flood redraw", () => {
       explanation: words.text,
       words,
     };
-    redraw(dr, ds, null, state, 1, UI, 0, NO_FLASH, hint);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: UI,
+      animTime: 0,
+      flash: NO_FLASH,
+      hint,
+    });
     expectRing(ops);
   });
 
@@ -114,7 +129,14 @@ describe("Flood redraw", () => {
     const run = winFlashRun(
       (flash) => {
         const { dr, ops } = recordingDrawing();
-        redraw(dr, freshDs(state), null, state, 1, UI, 0, flash);
+        redraw(dr, freshDs(state), {
+          prev: null,
+          state,
+          dir: 1,
+          ui: UI,
+          animTime: 0,
+          flash,
+        });
         return ops;
       },
       // Whole-tile rects only: a separator strip along a tile's edge is TS
@@ -139,7 +161,14 @@ describe("Flood redraw", () => {
     const { dr, ops } = recordingDrawing();
     // 0.05 / DEFEAT_FLASH_FRAME(0.1) = 0 (≠ 1) → BADFLASH → every
     // tile painted in the mark color at full size.
-    redraw(dr, ds, null, state, 1, UI, 0, ownFlash(0.05));
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: UI,
+      animTime: 0,
+      flash: ownFlash(0.05),
+    });
     const tiles = opsOfKind(ops, "rect").filter((o) => o.w === TS && o.h === TS);
     expect(tiles).toHaveLength(9);
     expect(tiles.every((o) => o.color === COL_MARK)).toBe(true);

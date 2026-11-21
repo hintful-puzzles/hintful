@@ -38,7 +38,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, DrawTextOptions, Point } from "../../engine/contract/types.ts";
 import {
@@ -50,7 +50,7 @@ import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import type { MinesHint } from "./hint.ts";
 import {
   around,
@@ -357,15 +357,9 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: MinesDrawState,
-  _prev: MinesState | null,
-  s: MinesState,
-  _dir: number,
-  ui: MinesUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<MinesMove, MinesHint>,
-  mistakes?: readonly Point[],
+  frame: Frame<MinesState, MinesUi, MinesMove, MinesHint, Point>,
 ): void {
+  const { state: s, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const border = borderFor(ts);
   const cx0 = (x: number) => coord(x, ts, border);

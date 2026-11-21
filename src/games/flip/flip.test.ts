@@ -311,7 +311,14 @@ describe("Flip redraw", () => {
     const ds = flipGame.newDrawState(s, flipGame.preferredTileSize);
 
     const a = recordingDrawing();
-    flipGame.redraw(a.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    flipGame.redraw(a.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // (w+1)+(h+1) = 8 grid lines, all COL_GRID, drawn once.
     const gridLines = a.ops.filter((o) => o.op === "line" && o.color === COL_GRID);
     expect(gridLines.length).toBe(8);
@@ -321,7 +328,14 @@ describe("Flip redraw", () => {
     // unchanged ⇒ no new tile/grid ops (the cache that keeps animation
     // from repainting the whole board every frame).
     const b = recordingDrawing();
-    flipGame.redraw(b.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    flipGame.redraw(b.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(b.ops.filter((o) => o.op === "line").length).toBe(0);
     expect(b.ops.filter((o) => o.op === "rect").length).toBe(0);
   });
@@ -419,7 +433,14 @@ describe("Flip win flash", () => {
     const run = winFlashRun(
       (flash) => {
         const { dr, ops } = recordingDrawing();
-        flipGame.redraw(dr, preferredDrawState(flipGame, s), null, s, 1, ui, 0, flash);
+        flipGame.redraw(dr, preferredDrawState(flipGame, s), {
+          prev: null,
+          state: s,
+          dir: 1,
+          ui,
+          animTime: 0,
+          flash,
+        });
         return ops;
       },
       lit,

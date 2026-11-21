@@ -214,10 +214,10 @@ export function probeBoard(
       current = next;
       game.changedState?.(ui, prev, next);
     },
-    redraw: (dr, ds, prev, s, dir, ui, ...rest) => {
-      seen = ui;
+    redraw: (dr, ds, frame) => {
+      seen = frame.ui;
       painted = true;
-      return game.redraw(dr, ds, prev, s, dir, ui, ...rest);
+      return game.redraw(dr, ds, frame);
     },
   };
   const m = new Midend(spy);
@@ -247,16 +247,14 @@ export function probeBoard(
   const palette = m.getColorPalette(DEFAULT_BACKGROUND);
   const paint = (state: unknown, ui: unknown) => {
     const dr = new RecordingDrawing(palette);
-    game.redraw(
-      dr,
-      game.newDrawState(state, tileSize),
-      null,
+    game.redraw(dr, game.newDrawState(state, tileSize), {
+      prev: null,
       state,
-      1,
+      dir: 1,
       ui,
-      0,
-      NO_FLASH,
-    );
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     return JSON.stringify(dr.ops);
   };
   return {

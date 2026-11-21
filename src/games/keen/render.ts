@@ -33,7 +33,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -69,7 +69,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import {
   C_ADD,
   C_DIV,
@@ -481,15 +481,9 @@ const PENCIL_BOX = (w: number, ts: number) =>
 export function redraw(
   dr: GameDrawing,
   ds: KeenDrawState,
-  _prev: KeenState | null,
-  state: KeenState,
-  _dir: number,
-  ui: KeenUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<KeenMove, KeenHint>,
-  mistakes?: readonly { x: number; y: number }[],
+  frame: Frame<KeenState, KeenUi, KeenMove, KeenHint, { x: number; y: number }>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const w = state.params.w;
   const ge = gridExtra(ts);

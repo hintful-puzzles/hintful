@@ -28,7 +28,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -66,7 +66,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import type { GroupMove } from "./state.ts";
 import {
   EF_DIGIT_MASK,
@@ -472,15 +472,9 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: GroupDrawState,
-  _prev: GroupState | null,
-  state: GroupState,
-  _dir: number,
-  ui: GroupUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<GroupMove, GroupHint>,
-  mistakes?: readonly Point[],
+  frame: Frame<GroupState, GroupUi, GroupMove, GroupHint, Point>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const w = state.w;
   const ts = ds.tileSize;
 

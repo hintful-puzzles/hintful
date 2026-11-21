@@ -28,7 +28,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -39,12 +39,7 @@ import type {
 import { glyphFont } from "../../engine/render/draw.ts";
 import { type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  WIN_LEAD,
-  WIN_NONE,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/render/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { PIECE, SPAN } from "./hint-marks.ts";
 import { dragReleaseOps, executeMove } from "./moves.ts";
@@ -1052,13 +1047,9 @@ function hintWords(
 export function redrawBridges(
   dr: GameDrawing,
   ds: BridgesDrawState,
-  _prev: BridgesState | null,
-  s: BridgesState,
-  ui: BridgesUi,
-  flash: Flash,
-  mistakes: readonly BridgesMistake[] = [],
-  hint?: HintStep<BridgesMove, BridgesHighlights>,
+  frame: Frame<BridgesState, BridgesUi, BridgesMove, BridgesHighlights, BridgesMistake>,
 ): void {
+  const { state: s, ui, flash, mistakes = [], hint } = frame;
   const ts = ds.tileSize;
   const b = border(ts);
   const w = s.w;

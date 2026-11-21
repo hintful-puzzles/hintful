@@ -87,7 +87,14 @@ function frameWith(
   ui.pencilMode = on;
   if (ui.cursor) ui.cursor.visible = false;
   const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
-  game.redraw(dr, game.newDrawState(state, ts), null, state, 1, ui, 0, NO_FLASH);
+  game.redraw(dr, game.newDrawState(state, ts), {
+    prev: null,
+    state,
+    dir: 1,
+    ui,
+    animTime: 0,
+    flash: NO_FLASH,
+  });
   return dr.ops;
 }
 

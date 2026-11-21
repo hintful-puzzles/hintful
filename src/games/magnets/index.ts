@@ -6,12 +6,7 @@
 
 import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
-import type {
-  Game,
-  HintStep,
-  SolveResult,
-  UiUpdate,
-} from "../../engine/contract/game.ts";
+import type { Game, SolveResult, UiUpdate } from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
@@ -360,16 +355,7 @@ export const magnetsGame: Game<
   preferredTileSize: PREFERRED_TILE_SIZE,
   computeSize,
   newDrawState,
-  redraw: (dr, ds, _prev, s, _dir, ui, _animTime, flash, hintStep, mistakes) =>
-    redraw(
-      dr,
-      ds,
-      s,
-      ui,
-      flash,
-      mistakes,
-      hintStep as HintStep<MagnetsMove, MagnetsHighlights> | undefined,
-    ),
+  redraw,
 };
 
 registerGame(magnetsGame);

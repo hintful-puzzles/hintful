@@ -173,7 +173,14 @@ describe("Patches' look", () => {
     const st = newState(patches(3, 2), SMALL);
     const ds = newDrawState(st, 32);
     const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, ds, null, st, 1, rectGame.newUi(st), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: st,
+      dir: 1,
+      ui: rectGame.newUi(st),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const texts = opsOfKind(dr.ops, "text").map((o) => o.text);
     expect(texts.filter((t) => t === "?")).toHaveLength(2);
     // Two frames of four sides each.
@@ -183,7 +190,14 @@ describe("Patches' look", () => {
   /** The colors the rects of a frame were drawn in. */
   const colorsOf = (s: RectState): Set<number> => {
     const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, newDrawState(s, 32), null, s, 1, rectGame.newUi(s), 0, NO_FLASH);
+    redraw(dr, newDrawState(s, 32), {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: rectGame.newUi(s),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     return new Set(opsOfKind(dr.ops, "rect").map((o) => o.color));
   };
   const tinted = (colors: Set<number>) =>
@@ -210,7 +224,14 @@ describe("Patches' look", () => {
     let s = newState(p, "SAg");
     s = executeMove(executeMove(s, rect(0, 0, 1, 2)), rect(1, 0, 1, 1));
     const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, newDrawState(s, 32), null, s, 1, rectGame.newUi(s), 0, NO_FLASH);
+    redraw(dr, newDrawState(s, 32), {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui: rectGame.newUi(s),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const rects = opsOfKind(dr.ops, "rect");
     // Its square below the square clue wears the clue's fill, though the
     // 1×2 is no rectangle the clue allows: the two clues' and that one.

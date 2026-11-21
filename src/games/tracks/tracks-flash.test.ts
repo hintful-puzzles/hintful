@@ -44,7 +44,14 @@ function flashOn(
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(tracksGame.colors(DEFAULT_BACKGROUND));
     const ds = tracksGame.newDrawState(state, PREFERRED_TILE_SIZE);
-    tracksGame.redraw(dr, ds, null, state, 1, tracksGame.newUi(state), 0, flash);
+    tracksGame.redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: tracksGame.newUi(state),
+      animTime: 0,
+      flash,
+    });
     return dr;
   };
   // A tile clips to itself, so the clips' corners are the grid's lines.

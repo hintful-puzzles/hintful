@@ -2447,21 +2447,19 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
       dr.drawRect({ x: 0, y: 0, w, h }, 0);
       dr.drawUpdate({ x: 0, y: 0, w, h });
     }
-    const frame = this.animation.frame();
-    this.game.redraw(
-      dr,
-      this.drawState,
-      frame.prev,
-      this.state,
-      frame.dir,
-      this.ui,
-      frame.time,
-      frame.flash,
-      this.drawnHintStep ?? undefined,
-      this.activeMistakes ?? undefined,
-      this.activeDeadEnd ?? undefined,
-    );
-    frame.wave?.endFrame();
+    const anim = this.animation.frame();
+    this.game.redraw(dr, this.drawState, {
+      state: this.state,
+      prev: anim.prev,
+      dir: anim.dir,
+      ui: this.ui,
+      animTime: anim.time,
+      flash: anim.flash,
+      hint: this.drawnHintStep ?? undefined,
+      mistakes: this.activeMistakes ?? undefined,
+      deadEnd: this.activeDeadEnd ?? undefined,
+    });
+    anim.wave?.endFrame();
     dr.endDraw();
   }
 

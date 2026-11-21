@@ -389,7 +389,14 @@ describe("tents input (drag model)", () => {
 
     const frame = () => {
       const dr = new RecordingDrawing(tentsGame.colors(DEFAULT_BACKGROUND));
-      tentsGame.redraw(dr, newDrawState(state, TS), null, state, 1, ui, 0, NO_FLASH);
+      tentsGame.redraw(dr, newDrawState(state, TS), {
+        prev: null,
+        state,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return JSON.stringify(dr.ops);
     };
 
@@ -544,9 +551,24 @@ describe("tents render (tier 2)", () => {
 
     // Paint the tent tile without the overlay, then again WITH it (no tile-
     // value change) — the overlay must still appear on the second paint.
-    redraw(rec, ds, null, wrong, 1, ui, 0, NO_FLASH, undefined, undefined);
+    redraw(rec, ds, {
+      prev: null,
+      state: wrong,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     rec.ops.length = 0;
-    redraw(rec, ds, null, wrong, 1, ui, 0, NO_FLASH, undefined, mistakes);
+    redraw(rec, ds, {
+      prev: null,
+      state: wrong,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
 
     expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
@@ -570,16 +592,14 @@ describe("tents: the win flash sweeps the squares", () => {
 
   const paint = (flash: Flash) => {
     const dr = new RecordingDrawing(tentsGame.colors(DEFAULT_BACKGROUND));
-    redraw(
-      dr,
-      newDrawState(state, TS),
-      null,
+    redraw(dr, newDrawState(state, TS), {
+      prev: null,
       state,
-      1,
-      tentsGame.newUi(state),
-      0,
+      dir: 1,
+      ui: tentsGame.newUi(state),
+      animTime: 0,
       flash,
-    );
+    });
     return dr.ops;
   };
   /** The squares a frame fills with the flash color, as the `x,y` drawn at. */

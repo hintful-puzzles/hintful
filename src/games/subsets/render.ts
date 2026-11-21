@@ -42,7 +42,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -64,7 +64,7 @@ import {
 import { drawRuledOutCross } from "../../engine/render/piece.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { SLOT, TALLY_SET } from "./hint-marks.ts";
 import { candidateCells, candidateSets, subsetsValidate } from "./solver.ts";
 import {
@@ -215,15 +215,9 @@ export function newDrawState(state: SubsetsState, tileSize: number): SubsetsDraw
 export function redraw(
   dr: GameDrawing,
   ds: SubsetsDrawState,
-  _prev: SubsetsState | null,
-  state: SubsetsState,
-  _dir: number,
-  ui: SubsetsUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SubsetsMove>,
-  mistakes?: readonly SubsetsMistake[],
+  frame: Frame<SubsetsState, SubsetsUi, SubsetsMove, unknown, SubsetsMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, n } = state;
   const cw = CELL_WIDTH;

@@ -395,7 +395,14 @@ describe("rendering smoke", () => {
 
     const ds = newDrawState(state, 48);
     const dr = new RecordingDrawing(pal);
-    redraw(dr, ds, null, state, 0, newUi(state), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 0,
+      ui: newUi(state),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(
       dr.ops.filter((o) => o.op !== "clip" && o.op !== "unclip").length,
     ).toBeGreaterThan(0);
@@ -417,7 +424,14 @@ describe("rendering smoke", () => {
       (flash: Flash) => {
         const dr = new RecordingDrawing(colors([0.9, 0.9, 0.9]));
         const ds = newDrawState(state, PREFERRED_TILE_SIZE);
-        redraw(dr, ds, null, state, 1, newUi(state), 0, flash);
+        redraw(dr, ds, {
+          prev: null,
+          state,
+          dir: 1,
+          ui: newUi(state),
+          animTime: 0,
+          flash,
+        });
         return dr;
       },
       (dr) =>

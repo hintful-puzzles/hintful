@@ -70,7 +70,14 @@ describe("Palisade redraw", () => {
   it("draws clue text and unknown edges in line-maybe on first draw", () => {
     const state = makeState();
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 0,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     // Some clue digit was rendered.
     expect(ops.some((o) => o.op === "text" && /^[0-4]$/.test(o.text ?? ""))).toBe(true);
@@ -92,7 +99,14 @@ describe("Palisade redraw", () => {
     s.borders[i - 1] |= BORDER(1);
 
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(s), null, s, 0, freshUi(), 0, NO_FLASH);
+    redraw(dr, freshDs(s), {
+      prev: null,
+      state: s,
+      dir: 0,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 
@@ -102,7 +116,14 @@ describe("Palisade redraw", () => {
     // Untouched board: one big undivided region ⇒ no correct shade.
     {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH);
+      redraw(dr, freshDs(state), {
+        prev: null,
+        state,
+        dir: 0,
+        ui: freshUi(),
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       expect(ops.some((o) => o.op === "rect" && o.color === COL_CORRECT)).toBe(false);
     }
 
@@ -113,7 +134,14 @@ describe("Palisade redraw", () => {
     if (!sol) return;
     const solved = { ...state, borders: sol.slice() };
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(solved), null, solved, 0, freshUi(), 0, NO_FLASH);
+    redraw(dr, freshDs(solved), {
+      prev: null,
+      state: solved,
+      dir: 0,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_CORRECT)).toBe(true);
   });
 
@@ -124,7 +152,14 @@ describe("Palisade redraw", () => {
     const solved = { ...state, borders: sol.slice() };
     const paint = (flash: Flash) => {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(solved), null, solved, 1, freshUi(), 0, flash);
+      redraw(dr, freshDs(solved), {
+        prev: null,
+        state: solved,
+        dir: 1,
+        ui: freshUi(),
+        animTime: 0,
+        flash,
+      });
       return ops;
     };
     // The cells whose ground is the flash color, each as its index.
@@ -153,9 +188,15 @@ describe("Palisade redraw", () => {
   it("reddens a findMistakes overlay edge", () => {
     const state = makeState();
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH, undefined, [
-      { x: 1, y: 1, dir: 1 },
-    ]);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 0,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes: [{ x: 1, y: 1, dir: 1 }],
+    });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
   });
 
@@ -182,17 +223,15 @@ describe("Palisade redraw", () => {
       };
     };
     const { dr, ops } = recordingDrawing();
-    redraw(
-      dr,
-      freshDs(state),
-      null,
+    redraw(dr, freshDs(state), {
+      prev: null,
       state,
-      0,
-      freshUi(),
-      0,
-      NO_FLASH,
-      stepRinging([own, { x: 1, y: 1, dir: 2, kind: "wall" }]),
-    );
+      dir: 0,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: stepRinging([own, { x: 1, y: 1, dir: 2, kind: "wall" }]),
+    });
     // The action edge AND its sibling are both ringed (they share a fate, so
     // they share a mark); referenced cells get a COL_HINT_OUTLINE outline. Each
     // edge's pill is drawn by both of its cells, so a bare count cannot tell
@@ -200,24 +239,29 @@ describe("Palisade redraw", () => {
     const hintRings = (o: RecordingDrawing["ops"]) => ringsOf(o).length;
     expectRing(ops, { rings: 4 });
     const alone = recordingDrawing();
-    redraw(
-      alone.dr,
-      freshDs(state),
-      null,
+    redraw(alone.dr, freshDs(state), {
+      prev: null,
       state,
-      0,
-      freshUi(),
-      0,
-      NO_FLASH,
-      stepRinging([own]),
-    );
+      dir: 0,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+      hint: stepRinging([own]),
+    });
     expect(hintRings(alone.ops)).toBeGreaterThan(0);
     expect(hintRings(ops)).toBeGreaterThan(hintRings(alone.ops));
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HINT_OUTLINE)).toBe(true);
 
     // With no hint, none of the hint colors appear.
     const { dr: dr2, ops: ops2 } = recordingDrawing();
-    redraw(dr2, freshDs(state), null, state, 0, freshUi(), 0, NO_FLASH);
+    redraw(dr2, freshDs(state), {
+      prev: null,
+      state,
+      dir: 0,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(ringsOf(ops2)).toEqual([]);
     expect(ops2.some((o) => "color" in o && o.color === COL_HINT_OUTLINE)).toBe(false);
   });
@@ -229,7 +273,14 @@ describe("Palisade redraw", () => {
     ui.cursor.x = 1;
     ui.cursor.y = 2; // a left-border position
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 0, ui, 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 0,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(ops.some((o) => o.op === "line" && o.color === COL_CURSOR)).toBe(true);
   });
 });

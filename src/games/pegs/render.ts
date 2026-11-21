@@ -29,8 +29,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
-import type { MarkedDeadEnd } from "../../engine/contract/hint-refusal.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { MOVE, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import {
@@ -42,7 +41,7 @@ import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawPiece, TWO_SHAPES } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
 import { HOLE, JUMP, type Marked, PEG } from "./kinds.ts";
 import {
   GRID_HOLE,
@@ -256,16 +255,9 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: PegsDrawState,
-  _prev: PegsState | null,
-  s: PegsState,
-  _dir: number,
-  ui: PegsUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<PegsMove>,
-  _mistakes?: readonly unknown[],
-  deadEnd?: MarkedDeadEnd,
+  frame: Frame<PegsState, PegsUi, PegsMove>,
 ): void {
+  const { state: s, ui, flash, hint, deadEnd } = frame;
   const { w, h } = s;
   const ts = ds.tileSize;
   const marks = stepMarks(hint ?? deadEnd);

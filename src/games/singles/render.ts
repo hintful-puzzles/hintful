@@ -26,7 +26,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -44,7 +44,7 @@ import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
 import { drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep, WIN_LEAD } from "../../engine/render/win-wave.ts";
+import { sweepStep, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { SinglesHint } from "./index.ts";
 import {
   F_BLACK,
@@ -256,15 +256,9 @@ function numberText(
 export function redraw(
   dr: GameDrawing,
   ds: SinglesDrawState,
-  _prev: SinglesState | null,
-  state: SinglesState,
-  _dir: number,
-  ui: SinglesUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SinglesMove, SinglesHint>,
-  mistakes?: readonly Point[],
+  frame: Frame<SinglesState, SinglesUi, SinglesMove, SinglesHint, Point>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h } = state;
 

@@ -31,7 +31,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -49,7 +49,6 @@ import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
-  type Flash,
   sweepStep,
   WIN_NONE,
   type WinTone,
@@ -277,15 +276,9 @@ function drawTile(
 export function redraw(
   dr: GameDrawing,
   ds: SticksDrawState,
-  _prev: SticksState | null,
-  state: SticksState,
-  _dir: number,
-  ui: SticksUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SticksMove, SticksHint>,
-  mistakes?: readonly SticksMistake[],
+  frame: Frame<SticksState, SticksUi, SticksMove, SticksHint, SticksMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const { w, h, grid, numbers } = state;
   const b = border(ts);

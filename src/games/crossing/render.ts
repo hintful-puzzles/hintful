@@ -45,7 +45,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -91,7 +91,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
+import { sweepStep } from "../../engine/render/win-wave.ts";
 import { LISTED } from "./hint-marks.ts";
 import type { CrossingMistake } from "./solver.ts";
 import {
@@ -783,15 +783,9 @@ const PENCIL_STYLE: PencilIndicatorStyle = {
 export function redraw(
   dr: GameDrawing,
   ds: CrossingDrawState,
-  _prev: CrossingState | null,
-  state: CrossingState,
-  _dir: number,
-  ui: CrossingUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<CrossingMove, CrossingHint>,
-  mistakes?: readonly CrossingMistake[],
+  frame: Frame<CrossingState, CrossingUi, CrossingMove, CrossingHint, CrossingMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const puzzle = state.puzzle;
   const { w, h, walls, numbers, runs } = puzzle;

@@ -61,7 +61,7 @@ describe("Guess redraw", () => {
     const ds = freshDs();
     const ui = freshUi(s1);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, s0, s1, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, { prev: s0, state: s1, dir: 1, ui, animTime: 0, flash: NO_FLASH });
     expect(ops.some((o) => o.op === "circle" && o.fill === COL_CORRECTPLACE)).toBe(
       true,
     );
@@ -73,7 +73,7 @@ describe("Guess redraw", () => {
     const ui = freshUi(s);
     ui.holds[0] = true;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state: s, dir: 1, ui, animTime: 0, flash: NO_FLASH });
     expect(ops.some((o) => o.op === "rect" && o.color === COL_HOLD && o.h === 2)).toBe(
       true,
     );
@@ -90,7 +90,14 @@ describe("Guess redraw", () => {
     const count = (s: typeof s0) => {
       const ds = freshDs();
       const { dr, ops } = recordingDrawing();
-      redraw(dr, ds, null, s, 1, freshUi(s), 0, NO_FLASH);
+      redraw(dr, ds, {
+        prev: null,
+        state: s,
+        dir: 1,
+        ui: freshUi(s),
+        animTime: 0,
+        flash: NO_FLASH,
+      });
       return opsOfKind(ops, "rect").filter(
         (o) => o.color === COL_1 + 3 && o.y >= ds.solny,
       ).length;
@@ -121,7 +128,14 @@ describe("Guess redraw", () => {
     const run = winFlashRun(
       (flash: Flash) => {
         const { dr } = recordingDrawing();
-        redraw(dr, freshDs(), null, won, 1, freshUi(won), 0, flash);
+        redraw(dr, freshDs(), {
+          prev: null,
+          state: won,
+          dir: 1,
+          ui: freshUi(won),
+          animTime: 0,
+          flash,
+        });
         return dr;
       },
       (dr) =>
@@ -156,7 +170,14 @@ describe("Guess redraw", () => {
     // Unsolved: no peg circles in the solution row (y >= solny).
     const dsA = freshDs();
     const { dr: drA, ops: opsA } = recordingDrawing();
-    redraw(drA, dsA, null, s0, 1, freshUi(s0), 0, NO_FLASH);
+    redraw(drA, dsA, {
+      prev: null,
+      state: s0,
+      dir: 1,
+      ui: freshUi(s0),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     /** A peg is a circle in one of the ten peg colors, wherever it is drawn. The
      * answer row paints every color there too, as square blocks, and a block
      * must never read as a revealed peg. */
@@ -178,7 +199,14 @@ describe("Guess redraw", () => {
     });
     const dsB = freshDs();
     const { dr: drB, ops: opsB } = recordingDrawing();
-    redraw(drB, dsB, s0, won, 1, freshUi(won), 0, NO_FLASH);
+    redraw(drB, dsB, {
+      prev: s0,
+      state: won,
+      dir: 1,
+      ui: freshUi(won),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(pegsBelow(opsB, dsB.solny)).toBe(true);
   });
 });
@@ -216,7 +244,15 @@ describe("Guess's check", () => {
     const ui = freshUi(wrong);
     const paint = (mistakes?: readonly { pos: number }[]) => {
       const rec = new RecordingDrawing(PALETTE);
-      redraw(rec, ds, null, wrong, 1, ui, 0, NO_FLASH, undefined, mistakes);
+      redraw(rec, ds, {
+        prev: null,
+        state: wrong,
+        dir: 1,
+        ui,
+        animTime: 0,
+        flash: NO_FLASH,
+        mistakes,
+      });
       return rec.ops;
     };
     paint();
@@ -235,7 +271,15 @@ describe("Guess's check", () => {
     ui.pencilMode = true;
     ui.cursor = { ...ui.cursor, x: 0, visible: true };
     const rec = new RecordingDrawing(PALETTE);
-    redraw(rec, freshDs(), null, wrong, 1, ui, 0, NO_FLASH, undefined, [{ pos: 0 }]);
+    redraw(rec, freshDs(), {
+      prev: null,
+      state: wrong,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes: [{ pos: 0 }],
+    });
     const last = (color: number) =>
       rec.ops.findLastIndex((o) => o.op === "rect" && o.color === color);
     expect(last(COL_INK_CURSOR)).toBeGreaterThanOrEqual(0);

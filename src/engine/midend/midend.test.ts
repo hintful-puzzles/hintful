@@ -295,7 +295,8 @@ describe("Midend completion: the status is the position's, the history is the en
     const h = harness({
       ...fakeGame,
       ...extra,
-      redraw: (_dr, _ds, _prev, _s, _dir, _ui, _animTime, flash) => {
+      redraw: (_dr, _ds, frame) => {
+        const { flash } = frame;
         frames.push({
           lit: [0, 1, 2, 3, 4].map((p) => flash.win(p) !== WIN_NONE),
           time: flash.time,
@@ -400,7 +401,7 @@ describe("Midend completion: the status is the position's, the history is the en
         button === CURSOR_SELECT
           ? UI_UPDATE
           : fakeGame.interpretMove(s, ui, ds, p, button),
-      redraw: (_dr, _ds, _prev, _s, _dir, _ui, animTime) => {
+      redraw: (_dr, _ds, { animTime }) => {
         times.push(animTime);
       },
     });
@@ -420,7 +421,7 @@ describe("Midend completion: the status is the position's, the history is the en
     const h = harness({
       ...fakeGame,
       animLength: () => 0.5,
-      redraw: (_dr, _ds, _prev, _s, _dir, _ui, animTime) => {
+      redraw: (_dr, _ds, { animTime }) => {
         times.push(animTime);
       },
     });
@@ -1590,7 +1591,7 @@ describe("Midend hint plan lifecycle", () => {
         },
       },
       redraw: (...args) => {
-        drawn.push(args[8] ?? null);
+        drawn.push(args[2].hint ?? null);
       },
     };
     return { game, drawn: () => drawn[drawn.length - 1] };
@@ -2435,8 +2436,26 @@ describe("Midend mistake overlay (findMistakes lifecycle)", () => {
   const mistakeGame: typeof fakeGame = {
     ...fakeGame,
     findMistakes: (s) => (s.count === 1 ? [{ x: 1, y: 1 }] : []),
-    redraw: (dr, ds, prev, s, dir, ui, at, ft, hint, mistakes) => {
-      fakeGame.redraw?.(dr, ds, prev, s, dir, ui, at, ft, hint);
+    redraw: (dr, ds, frame) => {
+      const {
+        prev,
+        state: s,
+        dir,
+        ui,
+        animTime: at,
+        flash: ft,
+        hint,
+        mistakes,
+      } = frame;
+      fakeGame.redraw?.(dr, ds, {
+        prev,
+        state: s,
+        dir,
+        ui,
+        animTime: at,
+        flash: ft,
+        hint,
+      });
       if (mistakes && mistakes.length > 0) {
         dr.drawCircle({ x: 0, y: 0 }, MISTAKE_SENTINEL, 0, 0);
       }

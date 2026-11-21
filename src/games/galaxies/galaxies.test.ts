@@ -257,7 +257,14 @@ describe("Galaxies rendering", () => {
     const ui = galaxiesGame.newUi(s);
     const ds = preferredDrawState(galaxiesGame, s);
     const { dr, ops } = recordingDrawing();
-    galaxiesRedraw(dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // Each tile (w*h = 9) should be clipped exactly once.
     const clips = ops.filter((o) => o.op === "clip").length;
     expect(clips).toBe(9);
@@ -271,9 +278,23 @@ describe("Galaxies rendering", () => {
     const ui = galaxiesGame.newUi(s);
     const ds = preferredDrawState(galaxiesGame, s);
     const { dr } = recordingDrawing();
-    galaxiesRedraw(dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const { dr: dr2, ops: ops2 } = recordingDrawing();
-    galaxiesRedraw(dr2, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(dr2, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     // Cache hit on every tile — no clip/unclip pairs.
     expect(ops2.some((o) => o.op === "clip")).toBe(false);
   });
@@ -295,7 +316,14 @@ describe("Galaxies rendering", () => {
       (flash: Flash) => {
         const { dr } = recordingDrawing();
         const ds = preferredDrawState(galaxiesGame, s);
-        galaxiesRedraw(dr, ds, null, s, 1, galaxiesGame.newUi(s), 0, flash);
+        galaxiesRedraw(dr, ds, {
+          prev: null,
+          state: s,
+          dir: 1,
+          ui: galaxiesGame.newUi(s),
+          animTime: 0,
+          flash,
+        });
         return dr;
       },
       (dr) =>
@@ -487,7 +515,15 @@ describe("Galaxies findMistakes", () => {
     const ui = galaxiesGame.newUi(s);
     const ds = preferredDrawState(galaxiesGame, s);
     const { dr, ops } = recordingDrawing();
-    galaxiesRedraw(dr, ds, null, s, 1, ui, 0, NO_FLASH, undefined, mistakes);
+    galaxiesRedraw(dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
     // The only COL_ERROR consumer reachable from this state is the
     // wrong-wall recolor (no tile mistakes present), so any such rect
     // proves the wall was painted in the mistake color.
@@ -508,19 +544,41 @@ describe("Galaxies findMistakes", () => {
 
     // Frame 1: the same board, no overlay — warms the per-tile cache.
     const cold = recordingDrawing();
-    galaxiesRedraw(cold.dr, ds, null, s, 1, ui, 0, NO_FLASH, undefined, undefined);
+    galaxiesRedraw(cold.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(cold.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);
 
     // Frame 2: Check & Save turns the overlay on. Nothing else changed.
     const warm = recordingDrawing();
     const mistakes = galaxiesGame.findMistakes?.(s) ?? [];
-    galaxiesRedraw(warm.dr, ds, s, s, 1, ui, 0, NO_FLASH, undefined, mistakes);
+    galaxiesRedraw(warm.dr, ds, {
+      prev: s,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
     expect(warm.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
 
     // Frame 3: the overlay clears (the player moves on) — the wall must go
     // back to COL_EDGE, which only happens if the *removal* is stale too.
     const cleared = recordingDrawing();
-    galaxiesRedraw(cleared.dr, ds, s, s, 1, ui, 0, NO_FLASH, undefined, undefined);
+    galaxiesRedraw(cleared.dr, ds, {
+      prev: s,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(cleared.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(
       false,
     );
@@ -569,7 +627,14 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
   it("paints the snapped target and its mirror in the drag color, erases both when the target moves, and leaves nothing after the drag", () => {
     const { s, ui, ds } = twoDotBoard();
     const cold = recordingDrawing();
-    galaxiesRedraw(cold.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(cold.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     // Drag from the center dot; target the left-middle tile (1,3).
     // Its 180° partner about the dot is the right-middle tile (5,3).
@@ -581,7 +646,14 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     ui.targetX = 1;
     ui.targetY = 3;
     const drag1 = recordingDrawing();
-    galaxiesRedraw(drag1.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(drag1.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const clips1 = opsOfKind(drag1.ops, "clip");
     expect(clips1.map((o) => ({ x: o.x, y: o.y }))).toEqual(
       expect.arrayContaining([tileRect(0, 1), tileRect(2, 1)]),
@@ -602,7 +674,14 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     ui.targetX = 1;
     ui.targetY = 1;
     const drag2 = recordingDrawing();
-    galaxiesRedraw(drag2.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(drag2.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const clips2 = opsOfKind(drag2.ops, "clip");
     expect(clips2.map((o) => ({ x: o.x, y: o.y }))).toEqual(
       expect.arrayContaining([
@@ -617,11 +696,25 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     // Drag ends: the preview pair repaints clean; nothing else.
     ui.dragging = false;
     const done = recordingDrawing();
-    galaxiesRedraw(done.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(done.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(done.ops.filter((o) => o.op === "clip")).toHaveLength(2);
     expect(done.ops.some((o) => o.op === "line" && o.color === COL_DRAG)).toBe(false);
     const idle = recordingDrawing();
-    galaxiesRedraw(idle.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(idle.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(idle.ops.filter((o) => o.op === "clip")).toHaveLength(0);
 
     // Across every drag frame: all paint stays inside the board (the
@@ -648,7 +741,14 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     const ui = galaxiesGame.newUi(s);
     const ds = preferredDrawState(galaxiesGame, s);
     const cold = recordingDrawing();
-    galaxiesRedraw(cold.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(cold.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     ui.dragging = true;
     ui.dotx = 1;
@@ -658,7 +758,14 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     ui.targetX = 3;
     ui.targetY = 1;
     const drag = recordingDrawing();
-    galaxiesRedraw(drag.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(drag.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(drag.ops.filter((o) => o.op === "clip")).toHaveLength(0);
     expect(drag.ops.some((o) => paintsWith(o, COL_DRAG))).toBe(false);
   });
@@ -671,7 +778,14 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     // tint of the board; it is COL_CURSOR now, and this is the guard.
     const { s, ui, ds } = twoDotBoard();
     const cold = recordingDrawing();
-    galaxiesRedraw(cold.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(cold.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     const cursorRects = (f: ReturnType<typeof recordingDrawing>) =>
       f.ops.filter((o) => o.op === "rect" && o.color === COL_CURSOR);
@@ -682,7 +796,14 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     ui.cursor.x = 2;
     ui.cursor.y = 1;
     const at1 = recordingDrawing();
-    galaxiesRedraw(at1.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(at1.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(cursorRects(at1).length).toBeGreaterThan(0);
     expect(at1.ops.filter((o) => o.op === "clip")).toHaveLength(2);
 
@@ -690,7 +811,14 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     // tiles must repaint — and that repaint must contain no cursor.
     ui.cursor.x = 6;
     const at2 = recordingDrawing();
-    galaxiesRedraw(at2.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(at2.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const vacated = [tileRect(0, 0), tileRect(1, 0)];
     const clipped2 = opsOfKind(at2.ops, "clip");
     expect(clipped2.map((o) => ({ x: o.x, y: o.y }))).toEqual(
@@ -703,11 +831,25 @@ describe("Galaxies drag preview (discrete snapped target)", () => {
     // Hide the cursor: the last pair repaints clean and nothing remains.
     ui.cursor.visible = false;
     const gone = recordingDrawing();
-    galaxiesRedraw(gone.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(gone.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(gone.ops.filter((o) => o.op === "clip")).toHaveLength(2);
     expect(cursorRects(gone)).toHaveLength(0);
     const idle = recordingDrawing();
-    galaxiesRedraw(idle.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(idle.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect([...idle.ops, ...idle.updates]).toHaveLength(0);
   });
 
@@ -1047,7 +1189,14 @@ describe("Galaxies candidate rings", () => {
     const ui = galaxiesGame.newUi(s);
     const ds = preferredDrawState(galaxiesGame, s);
     const cold = recordingDrawing();
-    galaxiesRedraw(cold.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(cold.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     return { s, ui, ds };
   }
   const rings = (f: ReturnType<typeof recordingDrawing>) =>
@@ -1073,7 +1222,14 @@ describe("Galaxies candidate rings", () => {
     const { s, ui, ds } = board();
     reverseDragOnTile01(ui);
     const drag = recordingDrawing();
-    galaxiesRedraw(drag.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(drag.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(rings(drag).length).toBeGreaterThan(0);
     // Three tiles repaint and no more: the pinned target (0,1), its 180°
     // partner (2,1) — the preview pair — and (1,1), which holds the one
@@ -1092,7 +1248,14 @@ describe("Galaxies candidate rings", () => {
     reverseDragOnTile01(ui);
     ui.showDragCandidates = false;
     const drag = recordingDrawing();
-    galaxiesRedraw(drag.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(drag.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(rings(drag)).toHaveLength(0);
     // The preview of the pair a release would commit is *not* the aid, and
     // is still drawn: the preference gates the rings alone.
@@ -1102,14 +1265,35 @@ describe("Galaxies candidate rings", () => {
   it("erases the rings when the drag ends", () => {
     const { s, ui, ds } = board();
     reverseDragOnTile01(ui);
-    galaxiesRedraw(recordingDrawing().dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(recordingDrawing().dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     ui.dragging = false;
     ui.dragToDot = false;
     const done = recordingDrawing();
-    galaxiesRedraw(done.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(done.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(rings(done)).toHaveLength(0);
     const idle = recordingDrawing();
-    galaxiesRedraw(idle.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(idle.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect([...idle.ops, ...idle.updates]).toHaveLength(0);
   });
 
@@ -1127,7 +1311,14 @@ describe("Galaxies candidate rings", () => {
     ui.dotx = -1;
     ui.doty = -1;
     const drag = recordingDrawing();
-    galaxiesRedraw(drag.dr, ds, null, s, 1, ui, 0, NO_FLASH);
+    galaxiesRedraw(drag.dr, ds, {
+      prev: null,
+      state: s,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(rings(drag)).toHaveLength(0);
     expect(drag.ops.filter((o) => o.op === "clip")).toHaveLength(0);
   });

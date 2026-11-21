@@ -73,7 +73,14 @@ describe("Mosaic redraw", () => {
     const state = newState(P3, ALL_BLACK_DESC);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
 
     // 9 cells of plain surface, holding nothing.
     expect(surfaces(ops).length).toBe(9);
@@ -93,7 +100,14 @@ describe("Mosaic redraw", () => {
     const state = newState(P3, ALL_BLACK_DESC);
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const m = Math.floor(TS / 2);
     // The margin column (x=3) draws a vertical closing line at 3*ts+margin-1.
     expect(
@@ -114,7 +128,14 @@ describe("Mosaic redraw", () => {
     state = executeMove(state, { type: "toggle", x: 0, y: 0, double: true });
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(surfaces(ops).length).toBe(8);
     expect(clearSurfaces(ops).length).toBe(1);
     expect(pieces(ops).length).toBe(1);
@@ -130,7 +151,14 @@ describe("Mosaic redraw", () => {
     let state = newState(P3, ALL_BLACK_DESC);
     state = executeMove(state, { type: "toggle", x: 1, y: 1, double: true });
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(clearSurfaces(ops).length).toBe(1);
     expect(crossStrokes(ops).length).toBe(0);
   });
@@ -144,7 +172,14 @@ describe("Mosaic redraw", () => {
     let state: MosaicState = { ...dealt, board: { ...dealt.board, clues } };
     state = executeMove(state, { type: "toggle", x: 1, y: 1, double: true });
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const surface = clearSurfaces(ops)[0];
     const strokes = crossStrokes(ops);
     if (surface?.op !== "rect" || strokes.length !== 2) throw new Error("not drawn");
@@ -164,7 +199,14 @@ describe("Mosaic redraw", () => {
     let state = newState(P3, ALL_BLACK_DESC);
     state = executeMove(state, { type: "toggle", x: 1, y: 1, double: false });
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const texts = ops.filter((o) => o.op === "text");
     expect(
       texts.filter((o) => o.color === COL_TEXT_ON_PIECE).map((o) => o.text),
@@ -181,7 +223,14 @@ describe("Mosaic redraw", () => {
     }
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const texts = ops.filter((o) => o.op === "text");
     expect(texts.length).toBe(9);
     // Every cell is shaded, so each solved number is on a piece.
@@ -196,7 +245,14 @@ describe("Mosaic redraw", () => {
       }
     }
     const { dr, ops } = recordingDrawing();
-    redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(dr, freshDs(state), {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const texts = ops.filter((o) => o.op === "text");
     expect(texts.length).toBe(9);
     expect(texts.every((o) => o.color === COL_CLEAR_MARK)).toBe(true);
@@ -210,7 +266,7 @@ describe("Mosaic redraw", () => {
     ui.cursor.x = 1;
     ui.cursor.y = 1;
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, ui, 0, NO_FLASH);
+    redraw(dr, ds, { prev: null, state, dir: 1, ui, animTime: 0, flash: NO_FLASH });
     expect(
       ops.filter((o) => "color" in o && o.color === COL_CURSOR).length,
     ).toBeGreaterThanOrEqual(4);
@@ -228,7 +284,14 @@ describe("Mosaic redraw", () => {
     }
     const paint = (flash: Flash) => {
       const { dr, ops } = recordingDrawing();
-      redraw(dr, freshDs(state), null, state, 1, freshUi(), 0, flash);
+      redraw(dr, freshDs(state), {
+        prev: null,
+        state,
+        dir: 1,
+        ui: freshUi(),
+        animTime: 0,
+        flash,
+      });
       return ops;
     };
     // The cells whose ground is the flash color, each as its index.
@@ -257,7 +320,15 @@ describe("Mosaic redraw", () => {
     state = executeMove(state, { type: "toggle", x: 1, y: 0, double: true }); // blank = wrong
     const ds = freshDs(state);
     const { dr, ops } = recordingDrawing();
-    redraw(dr, ds, null, state, 1, freshUi(), 0, NO_FLASH, undefined, [{ x: 1, y: 0 }]);
+    redraw(dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes: [{ x: 1, y: 0 }],
+    });
     const errorRects = ops.filter((o) => o.op === "rect" && o.color === COL_ERROR);
     expect(errorRects.length).toBe(4); // four outline strips
   });
@@ -266,15 +337,36 @@ describe("Mosaic redraw", () => {
     const state = newState(P3, ALL_BLACK_DESC);
     const ds = freshDs(state);
     const first = recordingDrawing();
-    redraw(first.dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(first.dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(first.ops.length).toBeGreaterThan(0);
     const second = recordingDrawing();
-    redraw(second.dr, ds, null, state, 1, freshUi(), 0, NO_FLASH);
+    redraw(second.dr, ds, {
+      prev: null,
+      state,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(second.ops.length).toBe(0);
     // One toggled cell redraws only its own tile (plus nothing else).
     const moved = executeMove(state, { type: "toggle", x: 0, y: 0, double: false });
     const third = recordingDrawing();
-    redraw(third.dr, ds, null, moved, 1, freshUi(), 0, NO_FLASH);
+    redraw(third.dr, ds, {
+      prev: null,
+      state: moved,
+      dir: 1,
+      ui: freshUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(surfaces(third.ops).length).toBe(1);
     expect(pieces(third.ops).length).toBe(1);
   });

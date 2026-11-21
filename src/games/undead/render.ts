@@ -36,7 +36,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Point, Rect, Size } from "../../engine/contract/types.ts";
 import {
@@ -63,12 +63,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import {
-  type Flash,
-  sweepStep,
-  type WinTone,
-  winSlot,
-} from "../../engine/render/win-wave.ts";
+import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import {
   CELL_MIRROR_L,
   COUNT_STYLE_PLACED_TOTAL,
@@ -738,15 +733,9 @@ const PENCIL_BOX = (ds: UndeadDrawState) =>
 export function redraw(
   dr: GameDrawing,
   ds: UndeadDrawState,
-  _prev: UndeadState | null,
-  state: UndeadState,
-  _dir: number,
-  ui: UndeadUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<UndeadMove, UndeadHint>,
-  mistakes?: readonly { x: number; y: number }[],
+  frame: Frame<UndeadState, UndeadUi, UndeadMove, UndeadHint, { x: number; y: number }>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const common = state.common;
   const w = ds.w;

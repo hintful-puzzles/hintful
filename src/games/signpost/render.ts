@@ -33,7 +33,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -480,15 +480,9 @@ function drawWinRoute(
 export function redrawSignpost(
   dr: GameDrawing,
   ds: SignpostDrawState,
-  _prev: SignpostState | null,
-  state: SignpostState,
-  _dir: number,
-  ui: SignpostUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<SignpostMove, SignpostHint>,
-  mistakes?: readonly SignpostMistake[],
+  frame: Frame<SignpostState, SignpostUi, SignpostMove, SignpostHint, SignpostMistake>,
 ): void {
+  const { state, ui, flash, hint, mistakes } = frame;
   const ts = ds.tileSize;
   const w = state.w;
 

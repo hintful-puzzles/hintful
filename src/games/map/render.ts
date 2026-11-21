@@ -19,7 +19,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -44,7 +44,7 @@ import {
 } from "../../engine/render/pencil-indicator.ts";
 import { type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
-import { type Flash, sweepRanks, WIN_LEAD } from "../../engine/render/win-wave.ts";
+import { sweepRanks, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import { REGION } from "./hint-marks.ts";
 import { BE, LE, type MapData, RE, TE } from "./map-data.ts";
 import type { MapMistake, MapMove, MapParams, MapState, MapUi } from "./state.ts";
@@ -921,15 +921,9 @@ function drawSquare(
 export function redraw(
   dr: GameDrawing,
   ds: MapDrawState,
-  _prev: MapState | null,
-  s: MapState,
-  _dir: number,
-  ui: MapUi,
-  _animTime: number,
-  flash: Flash,
-  hint?: HintStep<MapMove>,
-  mistakes?: readonly MapMistake[],
+  frame: Frame<MapState, MapUi, MapMove, unknown, MapMistake>,
 ): void {
+  const { state: s, ui, flash, hint, mistakes } = frame;
   const { w, h } = s.params;
   const n = s.params.n;
   const wh = w * h;

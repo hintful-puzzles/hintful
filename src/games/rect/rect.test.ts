@@ -661,7 +661,14 @@ describe("rect render", () => {
     const st = newState(p, desc);
     const ds = newDrawState(st, TILE);
     const dr = new RecordingDrawing(rectGame.colors(DEFAULT_BACKGROUND));
-    redraw(dr, ds, null, st, 1, rectGame.newUi(st), 0, NO_FLASH);
+    redraw(dr, ds, {
+      prev: null,
+      state: st,
+      dir: 1,
+      ui: rectGame.newUi(st),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(dr.ops.some((o) => o.op === "rect")).toBe(true);
     expect(dr.ops.some((o) => o.op === "text")).toBe(true);
   });
@@ -672,16 +679,38 @@ describe("rect render", () => {
     const ui = rectGame.newUi(st);
     const palette = rectGame.colors(DEFAULT_BACKGROUND);
     // Warm the drawstate without the overlay, then repaint with it.
-    redraw(new RecordingDrawing(palette), ds, null, st, 1, ui, 0, NO_FLASH);
+    redraw(new RecordingDrawing(palette), ds, {
+      prev: null,
+      state: st,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     const mistakes = rectGame.findMistakes?.(st) ?? [];
     expect(mistakes.length).toBeGreaterThan(0);
     const dr = new RecordingDrawing(palette);
-    redraw(dr, ds, null, st, 1, ui, 0, NO_FLASH, undefined, mistakes);
+    redraw(dr, ds, {
+      prev: null,
+      state: st,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+      mistakes,
+    });
     expect(dr.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(true);
 
     // A third frame without the overlay clears the red.
     const dr2 = new RecordingDrawing(palette);
-    redraw(dr2, ds, null, st, 1, ui, 0, NO_FLASH);
+    redraw(dr2, ds, {
+      prev: null,
+      state: st,
+      dir: 1,
+      ui,
+      animTime: 0,
+      flash: NO_FLASH,
+    });
     expect(dr2.ops.some((o) => o.op === "rect" && o.color === COL_ERROR)).toBe(false);
   });
 
