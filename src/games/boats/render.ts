@@ -25,10 +25,10 @@
  *    the player filled.
  *
  * The tile cache keys a square on the drawn segment, the live error/cursor
- * flags, the flash phase and the hint role (docs/rendering.md § "The tile
- * cache and the diff key"); the Check & Save overlay rides in an
- * `OverlaySidecar` registered with it, so it repaints a cell whose contents are otherwise
- * unchanged (the frame after the move that drew it).
+ * flags, the flash phase and what the hint's ring holds (docs/rendering.md
+ * § "The tile cache and the diff key"); the hint's marks and the Check & Save
+ * overlay ride in `OverlaySidecar`s registered with it, so they repaint a
+ * cell whose contents are otherwise unchanged.
  */
 
 import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
@@ -50,7 +50,7 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
-import type { Frame, GameDrawing, HintStep } from "../../engine/contract/game.ts";
+import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
@@ -65,7 +65,7 @@ import {
   glyphFont,
 } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import { drawCellRing, drawMarkSides } from "../../engine/render/hint-mark.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import {
   drawPiecePart,
@@ -282,7 +282,7 @@ export interface BoatsDrawState {
   h: number;
   fleet: number;
   /** Per square: the segment shape in bits 0–3, the live error/cursor flags in
-   * bits 4–7, the displayed hint step's role for this square in bits 9–12, the
+   * bits 4–7, whether the hint's ring holds a boat in bit 9, the
    * win flash's tone in bits 13–14, and the sides a segment joins the rest of
    * its boat on in bits 15–18. */
   tiles: TileCache;
@@ -290,22 +290,25 @@ export interface BoatsDrawState {
   border: TileCache;
   /** Per boat size, the count of completed boats. */
   fleetCount: TileCache;
-  /** The Check & Save mistake overlay; it must be in the diff key or it never
-   * repaints (docs/rendering.md § "Overlay sidecars"). */
+  /** The hint's marks and the Check & Save mistake overlay; both are in the
+   * diff key through the tile cache (docs/rendering.md § "Overlay sidecars"). */
+  hint: OverlaySidecar;
   wrong: OverlaySidecar;
 }
 
 export function newDrawState(state: BoatsState, tileSize: number): BoatsDrawState {
   const { w, h, fleet } = state.params;
+  const hint = new OverlaySidecar(w * h);
   const wrong = new OverlaySidecar(w * h);
   return {
     tileSize,
     w,
     h,
     fleet,
-    tiles: new TileCache(w * h, { overlays: [wrong] }),
+    tiles: new TileCache(w * h, { overlays: [hint, wrong] }),
     border: new TileCache(w + h),
     fleetCount: new TileCache(fleet),
+    hint,
     wrong,
   };
 }
@@ -501,13 +504,9 @@ function drawFleet(
 
 // --- the frame -------------------------------------------------------------
 
-// Hint bits, folded into the per-tile cache key so the overlay both paints and
-// clears: a hint bit outside the key never repaints a warm frame
-// (docs/rendering.md § "The tile cache and the diff key").
-const HINT_SHIP = 1 << 9; // a square the step asks for a boat segment on
-const HINT_WATER = 1 << 10; // …or for water
-const HINT_EVID = 1 << 11; // a square the deduction reasons over
-const HINT_LINE = 1 << 12; // a square of the line the sentence names (hatched)
+/** A ringed square the step asks for a boat segment on, not water: what the
+ * ring holds. The ring, outline and stripes are the hint sidecar's. */
+const HINT_SHIP = 1 << 9;
 /** Added to a border number's cached status when its slot is hatched: above
  * every status value, so the two never collide in `ds.border`. */
 const BORDER_HATCHED = 0x100;
@@ -521,33 +520,6 @@ function tileKey(
   joins: number,
 ): number {
   return ship | (flags << 4) | hint | (tone << 13) | (joins << 15);
-}
-
-/** The per-cell hint bits for the displayed step. */
-function hintBits(
-  step: HintStep<BoatsMove, BoatsHint> | null,
-  w: number,
-  h: number,
-): Int32Array | null {
-  if (!step) return null;
-  const marks = stepMarks(step);
-  const on = (c: Point): boolean => c.x >= 0 && c.y >= 0 && c.x < w && c.y < h;
-  const bits = new Int32Array(w * h);
-  for (const c of marks.of("outline", CELL))
-    if (on(c)) bits[c.y * w + c.x] |= HINT_EVID;
-  for (const c of marks.of("stripes", CELL))
-    if (on(c)) bits[c.y * w + c.x] |= HINT_LINE;
-  // A ringed square is drawn in the shape of what the step puts there.
-  const ship = new Set(
-    (step.highlights?.targets ?? []).filter((t) => t.ship).map((t) => t.y * w + t.x),
-  );
-  // Targets win over evidence on the same cell — the action outranks its reason.
-  for (const t of marks.of("ring", CELL))
-    if (on(t)) {
-      const i = t.y * w + t.x;
-      bits[i] = (bits[i] & ~HINT_EVID) | (ship.has(i) ? HINT_SHIP : HINT_WATER);
-    }
-  return bits;
 }
 
 /** The two tildes Boats draws for a *given* water square — reused in the hint
@@ -599,7 +571,8 @@ export function redraw(
   // The hint's hatched line runs on through its number (column slots first,
   // then rows, as `borderClues` counts them), so the slot's hatch is part of
   // its key beside the validation status.
-  const line = flash.winning ? [] : stepMarks(hint).of("stripes", CELL);
+  const marks = stepMarks(flash.winning ? null : hint);
+  const line = marks.of("stripes", CELL);
   const hatchedSlot =
     line.length === 0
       ? -1
@@ -649,7 +622,15 @@ export function redraw(
   }
 
   const drag = dragBounds(ui);
-  const hints = flash.winning ? null : hintBits(hint ?? null, w, h);
+  ds.hint.pack(marks, (x, y) => y * w + x);
+  // A ringed square is drawn in the shape of what the step puts there.
+  const shipTargets = new Set(
+    flash.winning
+      ? []
+      : (hint?.highlights?.targets ?? [])
+          .filter((t) => t.ship)
+          .map((t) => t.y * w + t.x),
+  );
 
   /** What square `i` shows: its given or its played content, or what an
    * in-progress drag would make it, previewed without committing a move. */
@@ -690,7 +671,7 @@ export function redraw(
       const ship = shown(i);
       const joins = isShip(ship) ? shipJoins(shown, w, x, y) : 0;
 
-      const hintBit = hints ? hints[i] : 0;
+      const hintBit = shipTargets.has(i) ? HINT_SHIP : 0;
       const tone = flash.win(boatStep?.get(i) ?? sweepStep(x, y));
       const key = tileKey(ship, cellFlags[i], tone, hintBit, joins);
       if (!ds.tiles.changed(i, key)) continue;
@@ -709,8 +690,7 @@ export function redraw(
               ? COL_GIVEN
               : COL_WATER;
       dr.drawRect({ x: tx, y: ty, w: ts, h: ts }, surface);
-      if (hintBit & HINT_LINE)
-        dr.drawHatch({ x: tx, y: ty, w: ts, h: ts }, hatchPeriod(ts));
+      ds.hint.drawHatch(dr, i, { x: tx, y: ty, w: ts, h: ts }, ts);
       // A square's own lines are its top and left, and the last row's and
       // column's the board's edge: a hull covers the line between two of its
       // squares, and a line both squares drew would show or not by which
@@ -737,50 +717,35 @@ export function redraw(
       const fleetText = isShip(ship) && cellFlags[i] & FE_FLEET;
       const fleetAt = fleetMarkText(tx, ty, ts);
 
+      // Evidence keeps its own color and is outlined at the cell's edge,
+      // undecided or not. A fill over water or a segment would paint over the
+      // very thing that makes the square evidence, and a fill pale enough not
+      // to is too faint to read as a mark at all (`hint-mark.ts`). The
+      // outline sits outside a segment's radius: one that crossed a round end
+      // cap read as a square drawn over it.
+      const band = {
+        box: { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
+        outer: 0,
+        inner: Math.max(2, ts >> 4),
+      };
+      drawMarkSides(dr, band, ds.hint.outlineSides(i), COL_HINT_OUTLINE);
+
       // The hint rings *where*, and shows *which action* inside the ring in
       // the game's own vocabulary, and never performs the move
       // (docs/hints-marks.md § "Highlight, never perform"): an unresolved
       // segment for a boat, the given-water waves for water.
-      if (hintBit & (HINT_SHIP | HINT_WATER))
-        dr.drawRing(
-          { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 },
+      if (ds.hint.ringed(i))
+        drawCellRing(
+          dr,
+          band,
           fleetText
             ? { enclose: [textBox(fleetAt.origin, fleetAt.options, "?")], avoid: [] }
             : NOTHING_TO_CLEAR,
-          Math.max(2, ts >> 4),
-          {
-            inside: (ink) =>
-              hintBit & HINT_SHIP
-                ? drawSegment(dr, tx, ty, ts + 1, SHIP_VAGUE, ink)
-                : drawWaves(dr, tx, ty, ts, ink),
-          },
+          (ink) =>
+            hintBit & HINT_SHIP
+              ? drawSegment(dr, tx, ty, ts + 1, SHIP_VAGUE, ink)
+              : drawWaves(dr, tx, ty, ts, ink),
         );
-
-      // Every evidence square keeps its own color and gets a ring at the cell's
-      // edge — undecided or not, one mark for one role. A fill over water or a
-      // segment would paint over the very thing that makes the square evidence,
-      // and a fill pale enough not to is too faint to read as a mark at all
-      // (`hint-mark.ts`), so neither kind of square gets one. The ring sits
-      // outside a segment's radius: one that crossed a round end cap read as a
-      // square drawn over it.
-      if (hintBit & HINT_EVID) {
-        const inset = 1;
-        drawMarkSides(
-          dr,
-          {
-            box: {
-              x: tx + inset,
-              y: ty + inset,
-              w: ts - inset * 2 + 1,
-              h: ts - inset * 2 + 1,
-            },
-            outer: 0,
-            inner: Math.max(2, ts >> 4),
-          },
-          MARK_ALL,
-          COL_HINT_OUTLINE,
-        );
-      }
 
       if (fleetText) dr.drawText(fleetAt.origin, fleetAt.options, COL_ERROR, "?");
 

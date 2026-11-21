@@ -32,7 +32,7 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -44,7 +44,11 @@ import {
   drawThickRectOutline,
   glyphFont,
 } from "../../engine/render/draw.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import {
+  drawCellRing,
+  drawMarkSides,
+  MARK_ALL,
+} from "../../engine/render/hint-mark.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
@@ -111,26 +115,28 @@ export function computeSize(p: SticksParams, ts: number): Size {
 // Cache flags above the tile bits (0..2: F_HOR | F_VER | F_BLOCK).
 const F_ERR = 1 << 8;
 const F_CUR = 1 << 9;
-// The hint overlay is part of the diff key, or an otherwise-unchanged frame
-// never repaints when a hint is shown or dismissed (docs/rendering.md § "Overlay sidecars").
+// The orientation the hint's ring holds: the ring and the outline are the
+// sidecar's, this is what the ring draws inside it.
 const F_HINT_HOR = 1 << 11;
 const F_HINT_VER = 1 << 12;
-const F_HINT_EVID = 1 << 13;
 // The win flash's tone on the cell, two bits.
 const F_FLASH_SHIFT = 14;
 
 export interface SticksDrawState {
   tileSize: number;
-  /** What each cell shows, and the mistakes on it. */
+  /** What each cell shows, the hint's marks and the mistakes on it. */
   tiles: TileCache;
+  hint: OverlaySidecar;
   mistakes: OverlaySidecar;
 }
 
 export function newDrawState(state: SticksState, tileSize: number): SticksDrawState {
+  const hint = new OverlaySidecar(state.w * state.h);
   const mistakes = new OverlaySidecar(state.w * state.h);
   return {
     tileSize,
-    tiles: new TileCache(state.w * state.h, { overlays: [mistakes] }),
+    tiles: new TileCache(state.w * state.h, { overlays: [hint, mistakes] }),
+    hint,
     mistakes,
   };
 }
@@ -147,8 +153,8 @@ interface TileVisual {
   mistake: boolean;
   /** The hint's forced orientation for this square (`F_HOR`/`F_VER`/0). */
   hintLine: number;
-  /** This square is part of the displayed hint's evidence. */
-  evidence: boolean;
+  /** The sides of this square the hint's outline runs along. */
+  outline: number;
 }
 
 /** Where the clue of the cell at `(x, y)` is written: read by the text and by
@@ -172,7 +178,7 @@ function drawTile(
   y: number,
   v: TileVisual,
 ): void {
-  const { tile, clue, error, cursor, lit, mistake, hintLine, evidence } = v;
+  const { tile, clue, error, cursor, lit, mistake, hintLine, outline } = v;
   const b = border(ts);
   const px = x * ts + b;
   const py = y * ts + b;
@@ -181,15 +187,9 @@ function drawTile(
   // A block takes its whole tile, the grid line on its right and bottom
   // included: the block's own edge is the boundary there.
   dr.drawRect({ x: px, y: py, w: ts, h: ts }, black ? COL_BLOCK : COL_GRID);
-  // Evidence is an inset **ring** on every square, block or open — one rule and
-  // one shape for one role. A fill on a block hides the very block
-  // the argument is about; on an open one it is the wash itself that loses, since
-  // a fill pale enough to leave the clue digit legible is too faint to read as a
-  // mark (`hint-mark.ts`). A white evidence square is not empty either: it
-  // carries the clue the deduction counts with, and often a line.
-  if (!black) {
-    dr.drawRect({ x: px, y: py, w: ts - 1, h: ts - 1 }, lit ? winSlot(lit) : COL_CELL);
-  }
+  const box = { x: px, y: py, w: ts - 1, h: ts - 1 };
+  const band = { box, outer: 0, inner: Math.max(2, Math.floor(ts / 10)) };
+  if (!black) dr.drawRect(box, lit ? winSlot(lit) : COL_CELL);
 
   const bar = (bits: number, color: number): void => {
     const off = Math.floor((ts * 2) / 5);
@@ -199,24 +199,26 @@ function drawTile(
   };
   bar(tile, COL_LINE);
 
-  if (evidence) {
+  // Evidence is outlined, never filled, block or open: a fill on a block hides
+  // the very block the argument is about, and on an open square a fill pale
+  // enough to leave the clue digit legible is too faint to read as a mark.
+  if (black && outline !== 0) {
+    // An outlined block is a clue the step names, never part of an area of
+    // squares, so it is a box of its own, inset from the block's edge as
+    // Lightup's wall is. The outline is close to the block's own gray in the
+    // light scheme, so a line in the digit's white parts the two.
     const m = Math.floor(ts / 12);
+    const t = band.inner;
+    const side = ts - 1 - 2 * m;
     drawMarkSides(
       dr,
-      {
-        box: { x: px + m, y: py + m, w: ts - 1 - 2 * m, h: ts - 1 - 2 * m },
-        outer: 0,
-        inner: Math.max(2, Math.floor(ts / 10)),
-      },
+      { box: { x: px + m, y: py + m, w: side, h: side }, outer: 0, inner: t },
       MARK_ALL,
       COL_HINT_OUTLINE,
     );
-    // On a block the ring is close to the block's own gray in the light scheme,
-    // so a line in the digit's white parts the two.
-    if (black) {
-      const t = m + Math.max(2, Math.floor(ts / 10));
-      drawRectOutline(dr, px + t, py + t, ts - 1 - 2 * t, ts - 1 - 2 * t, COL_NUMBER);
-    }
+    drawRectOutline(dr, px + m + t, py + m + t, side - 2 * t, side - 2 * t, COL_NUMBER);
+  } else {
+    drawMarkSides(dr, band, outline, COL_HINT_OUTLINE);
   }
 
   const clueAt = clueText(ts, x, y);
@@ -238,16 +240,16 @@ function drawTile(
   // alone could not say *which* orientation, which is the whole of the move.
   // Drawn, never placed: the player still makes the move.
   if (hintLine)
-    dr.drawRing(
-      { x: px, y: py, w: ts - 1, h: ts - 1 },
+    drawCellRing(
+      dr,
+      band,
       clue === -1
         ? NOTHING_TO_CLEAR
         : {
             enclose: [textBox(clueAt.origin, clueAt.options, String(clue))],
             avoid: [],
           },
-      Math.max(2, Math.floor(ts / 10)),
-      { inside: (ink) => bar(hintLine, ink) },
+      (ink) => bar(hintLine, ink),
     );
 
   if (mistake) {
@@ -303,13 +305,10 @@ export function redraw(
   ds.mistakes.clear();
   for (const m of mistakes ?? []) ds.mistakes.add(m.index, 1);
 
-  // The displayed hint step's forced square, which carries the forced line,
-  // and the cells its argument rests on.
-  const marks = stepMarks(hint);
-  const at = (p: Point): number => p.y * w + p.x;
-  const hintTargets = new Set(marks.of("ring", CELL).map(at));
+  // The displayed hint step's marks; its ringed square carries the forced
+  // line, in the orientation the step asks.
+  ds.hint.pack(stepMarks(hint), (x, y) => y * w + x);
   const hintBits = hint?.highlights?.targets[0].value === 1 ? F_HOR : F_VER;
-  const hintEvidence = new Set(marks.of("outline", CELL).map(at));
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -325,8 +324,7 @@ export function redraw(
       // A previewed (uncommitted) cell suppresses its error highlight — the
       // committed grid is what the error check ran on.
       const error = preview === undefined && (errorSet?.has(i) ?? false);
-      const hintLine = hintTargets.has(i) ? hintBits : 0;
-      const evidence = hintEvidence.has(i);
+      const hintLine = ds.hint.ringed(i) ? hintBits : 0;
 
       const packed =
         (tile & 0x7) |
@@ -334,8 +332,7 @@ export function redraw(
         (cursor ? F_CUR : 0) |
         (lit << F_FLASH_SHIFT) |
         (hintLine & F_HOR ? F_HINT_HOR : 0) |
-        (hintLine & F_VER ? F_HINT_VER : 0) |
-        (evidence ? F_HINT_EVID : 0);
+        (hintLine & F_VER ? F_HINT_VER : 0);
       if (ds.tiles.changed(i, packed)) {
         drawTile(dr, ts, x, y, {
           tile,
@@ -345,7 +342,7 @@ export function redraw(
           lit,
           mistake: ds.mistakes.packed[i] !== 0,
           hintLine,
-          evidence,
+          outline: ds.hint.outlineSides(i),
         });
       }
     }

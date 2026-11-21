@@ -213,6 +213,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "fleet",
       "fleetCount",
       "h",
+      "hint",
       "tileSize",
       "tiles",
       "w",
@@ -1786,6 +1787,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
+      "hint",
       "mistakes",
       "tileSize",
       "tiles",

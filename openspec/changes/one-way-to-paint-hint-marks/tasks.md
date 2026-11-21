@@ -44,8 +44,15 @@
         number is flush in the corner, and a centered ring threw "No round
         ring fits" in the app on every ringed square showing a number. No
         test drew one; `signpost-hint.test.ts` now does.
-  - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2):
-        Sticks, Boats, and the
+  - [x] Sticks: onto the sidecar. An open square takes the contour at its
+        edge (was a box inset a square); an outlined block is always a clue
+        reference of its own, so it keeps its inset box with the white line,
+        as Lightup's wall. The ring is `drawCellRing` holding the bar.
+        `sticks-hint.test.ts` no longer pins four sides a square.
+  - [x] Boats: onto the sidecar for outline, ring and stripes; the key keeps
+        one bit, whether the ring holds a boat or water. Ring and outline no
+        longer exclusive on a square.
+  - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2): the
         border grid (Palisade, Separate). Fold Range's and Slant's doubled
         "premise" outline and Lightup's dark-square ring into the one
         outline (`hints-marks.md` § "Outline the evidence": one shape for
