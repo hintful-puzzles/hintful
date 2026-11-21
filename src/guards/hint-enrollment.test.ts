@@ -217,10 +217,6 @@ const BUILDS_ITS_OWN_BOARDS: Record<string, string> = {
   "src/guards/params-declared.test.ts":
     "Labels the default params at every tier and deals no board: what it " +
     "checks is the words, which no board can change.",
-  "src/guards/upstream-descs.test.ts":
-    "Deals no board: it loads the descs upstream's generator wrote, under the " +
-    "params each fixture states, and `withTier` places a tier the fixture " +
-    "numbers where the game's params name it.",
 };
 
 describe("a cross-game sweep takes its boards from the slice", () => {
