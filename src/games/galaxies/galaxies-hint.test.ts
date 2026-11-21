@@ -12,7 +12,7 @@
  * following a hint by any of the three gestures counts as following it.
  */
 import { describe, expect, it } from "vitest";
-import type { HintStep } from "../../engine/index.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { bindingDefects } from "../../engine/testing/hint-binding.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";

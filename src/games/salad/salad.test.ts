@@ -20,7 +20,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import { clearKey } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_RIGHT,
@@ -29,6 +28,7 @@ import {
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeAbsentTiers,

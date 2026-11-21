@@ -9,10 +9,10 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
+import type { HintStep } from "../../engine/contract/game.ts";
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { type SlideMove, slidePieces } from "../../engine/hint/slide-planner.ts";
-import type { HintStep } from "../../engine/index.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { raisedBevelWidth } from "../../engine/render/draw.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";

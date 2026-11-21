@@ -6,24 +6,23 @@
  */
 
 import { MAX_CANDIDATE_VALUE } from "../../engine/board/candidate-bits.ts";
+import { fromCoord as fromCoordE } from "../../engine/board/geometry.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
+import {
+  type Game,
+  type ParamConfigItem,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/contract/game.ts";
 import type { Color, GameStatus, Point, Size } from "../../engine/contract/types.ts";
 import {
   dimensionParamConfig,
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
 import { dims, flag, paramsCodec } from "../../engine/game-id/params-codec.ts";
-import {
-  fromCoord as fromCoordE,
-  type Game,
-  type ParamConfigItem,
-  registerGame,
-  type SolveResult,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/index.ts";
 import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_SELECT,
@@ -38,6 +37,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
   DIFF_EASY,

@@ -6,27 +6,30 @@
 
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import { type DescParse, descValue } from "../../engine/contract/desc-error.ts";
+import type {
+  Game,
+  ParamConfigItem,
+  SolveResult,
+  UiUpdate,
+} from "../../engine/contract/game.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
-import { AREA_TOO_LARGE, transposeDimensions } from "../../engine/game-id/params.ts";
+import {
+  AREA_TOO_LARGE,
+  dimensionParamConfig,
+  transposeDimensions,
+} from "../../engine/game-id/params.ts";
 import { dims, letters, paramsCodec } from "../../engine/game-id/params-codec.ts";
 import { RULESET_KW, rulesetItem } from "../../engine/game-id/ruleset.ts";
-import {
-  dimensionParamConfig,
-  type Game,
-  type ParamConfigItem,
-  registerGame,
-  type SolveResult,
-  type UiUpdate,
-} from "../../engine/index.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import {
   interpretTargetVerbs,
   squareGrid,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { randomUpto } from "../../engine/random/index.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import type * as flip from "../../generated/games/flip/flip.compiled.ts";

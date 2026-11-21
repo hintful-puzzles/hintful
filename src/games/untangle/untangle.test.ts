@@ -14,10 +14,10 @@ import {
   descValue,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_SELECT,
@@ -25,6 +25,7 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { decodeSave } from "../../engine/midend/save.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

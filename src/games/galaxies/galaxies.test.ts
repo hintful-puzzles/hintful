@@ -7,9 +7,9 @@ import {
 } from "../../engine/color/roles.ts";
 import { descBadCharacter, validateDesc } from "../../engine/contract/desc-error.ts";
 import { difficultyTiers } from "../../engine/contract/difficulty.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { PuzzleButton } from "../../engine/contract/types.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
@@ -19,6 +19,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import {

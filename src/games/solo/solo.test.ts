@@ -11,7 +11,7 @@
  */
 import { describe, expect, it } from "vitest";
 import type { HintStep } from "../../engine/contract/game.ts";
-import { Midend } from "../../engine/index.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,

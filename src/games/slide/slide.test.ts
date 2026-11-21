@@ -23,7 +23,6 @@ import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { describeParams } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -34,6 +33,7 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

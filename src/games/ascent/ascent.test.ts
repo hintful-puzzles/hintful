@@ -10,7 +10,6 @@ import { validateDesc } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { describeParams } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
   LEFT_BUTTON,
@@ -19,6 +18,7 @@ import {
   MOD_NUM_KEYPAD,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import {

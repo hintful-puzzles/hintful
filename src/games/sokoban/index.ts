@@ -11,10 +11,10 @@
 import { fromCoord } from "../../engine/board/geometry.ts";
 import { rejectMove } from "../../engine/contract/assert-never.ts";
 import type { Game, SolveResult } from "../../engine/contract/game.ts";
+import { UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { transposeDimensions } from "../../engine/game-id/params.ts";
 import { solveBySearch } from "../../engine/hint/search-outcome.ts";
-import { UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
 import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   cursorDelta,

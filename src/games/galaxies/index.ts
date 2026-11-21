@@ -12,6 +12,15 @@ import {
   difficultyItem,
   noSuchTier,
 } from "../../engine/contract/difficulty.ts";
+import {
+  type Game,
+  type HintStep,
+  type HintTrackVerdict,
+  type ParamConfigItem,
+  type SolveResult,
+  UI_UPDATE,
+  type UiUpdate,
+} from "../../engine/contract/game.ts";
 import { PUZZLE_NOT_REASONABLE } from "../../engine/contract/hint-refusal.ts";
 import type { Point, Size } from "../../engine/contract/types.ts";
 import {
@@ -19,16 +28,6 @@ import {
   transposeDimensions,
 } from "../../engine/game-id/params.ts";
 import { choice, dims, paramsCodec } from "../../engine/game-id/params-codec.ts";
-import {
-  type Game,
-  type HintStep,
-  type HintTrackVerdict,
-  type ParamConfigItem,
-  registerGame,
-  type SolveResult,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/index.ts";
 import { drag, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import {
@@ -57,6 +56,7 @@ import {
   type TargetVerbs,
   verbClicks,
 } from "../../engine/input/target-verb.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import * as galaxies from "../../generated/games/galaxies/galaxies.compiled.ts";
 import { newGameDesc } from "./generator.ts";

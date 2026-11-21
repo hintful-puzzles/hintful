@@ -17,7 +17,6 @@
 import { describe, expect, it } from "vitest";
 import { COL_BACKGROUND, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import type { Color } from "../../engine/contract/types.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -26,6 +25,7 @@ import {
   LEFT_DRAG,
   LEFT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import {
   type Flash,
   NO_FLASH,

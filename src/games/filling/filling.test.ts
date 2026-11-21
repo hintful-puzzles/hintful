@@ -18,13 +18,13 @@ import {
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
   LEFT_BUTTON,
   LEFT_DRAG,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";

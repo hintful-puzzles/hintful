@@ -12,7 +12,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -21,6 +20,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { type RandomState, randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import {

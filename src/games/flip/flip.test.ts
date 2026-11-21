@@ -6,10 +6,11 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import { PuzzleButton } from "../../engine/contract/types.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend, UI_UPDATE } from "../../engine/index.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { SHOW_TIMER_PREF } from "../../engine/midend/midend-prefs.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";

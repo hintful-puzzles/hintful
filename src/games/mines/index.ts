@@ -11,16 +11,15 @@ import { fromCoord } from "../../engine/board/geometry.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import type { HintStep, HintTrackVerdict } from "../../engine/contract/game.ts";
-import { NOT_STARTED } from "../../engine/contract/solve-failure.ts";
-import type { GameStatus, Point } from "../../engine/contract/types.ts";
-import { dimensionParamConfig, parseConfigInt } from "../../engine/game-id/params.ts";
 import {
   type Game,
-  registerGame,
   type SolveResult,
   UI_UPDATE,
   type UiUpdate,
-} from "../../engine/index.ts";
+} from "../../engine/contract/game.ts";
+import { NOT_STARTED } from "../../engine/contract/solve-failure.ts";
+import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import { dimensionParamConfig, parseConfigInt } from "../../engine/game-id/params.ts";
 import {
   LEFT_BUTTON,
   LEFT_DRAG,
@@ -33,6 +32,7 @@ import {
   squareGrid,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import {
   type RandomState,
   randomStateEncode,

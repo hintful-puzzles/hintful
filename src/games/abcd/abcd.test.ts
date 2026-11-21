@@ -21,8 +21,8 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { pencilIndicatorReach } from "../../engine/render/pencil-indicator.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";

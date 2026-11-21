@@ -31,8 +31,8 @@ import {
   newUi,
 } from "../../engine/edge-clue-latin/state.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
 import { DIFF_IMPOSSIBLE } from "../../engine/solve/latin.ts";

@@ -10,13 +10,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
   CURSOR_SELECT,
   LEFT_BUTTON,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { expectRing } from "../../engine/testing/mark-shape.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";

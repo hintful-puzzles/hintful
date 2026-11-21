@@ -22,13 +22,13 @@ import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { encodeRegionWalls } from "../../engine/game-id/wall-runs.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_SELECT2,
   DELETE,
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

@@ -3,7 +3,7 @@
  * description and to a plain search, the input, and Solve to a sorted board.
  */
 import { describe, expect, it } from "vitest";
-import { UI_UPDATE } from "../../engine/index.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,

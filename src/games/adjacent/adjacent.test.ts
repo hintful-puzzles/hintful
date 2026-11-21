@@ -21,8 +21,8 @@ import {
   newUi,
 } from "../../engine/edge-clue-latin/state.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import { CURSOR_LEFT, CURSOR_RIGHT, MOD_SHFT } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { DIFF_IMPOSSIBLE } from "../../engine/solve/latin.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";

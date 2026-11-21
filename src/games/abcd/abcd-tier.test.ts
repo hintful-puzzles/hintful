@@ -14,7 +14,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
 import {

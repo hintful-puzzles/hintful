@@ -12,7 +12,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_UP,
   LEFT_BUTTON,
@@ -21,6 +20,7 @@ import {
   RIGHT_BUTTON,
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";

@@ -15,7 +15,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { describeParams } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   BORDER,
   BORDER_D,
@@ -23,6 +22,7 @@ import {
   BORDER_R,
   buildDsf,
 } from "../../engine/mechanics/border-grid.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";

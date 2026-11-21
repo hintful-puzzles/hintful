@@ -21,16 +21,11 @@
 
 import { rejectMove } from "../../engine/contract/assert-never.ts";
 import { descValue } from "../../engine/contract/desc-error.ts";
+import { type Game, UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import { NO_SOLUTION } from "../../engine/contract/solve-failure.ts";
 import type { Point, Size } from "../../engine/contract/types.ts";
 import { numberItem } from "../../engine/game-id/params.ts";
 import { paramsCodec, size } from "../../engine/game-id/params-codec.ts";
-import {
-  type Game,
-  registerGame,
-  UI_UPDATE,
-  type UiUpdate,
-} from "../../engine/index.ts";
 import { drag } from "../../engine/input/hint-gesture.ts";
 import {
   CURSOR_DOWN,
@@ -46,6 +41,7 @@ import {
   MOD_SHFT,
   stripModifiers,
 } from "../../engine/input/pointer.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { WIN_NONE, type WinTone } from "../../engine/render/win-wave.ts";
 import { nothingToDeduce } from "../../engine/solve/hint-finishes.ts";
 import { newUntangleDesc } from "./generator.ts";

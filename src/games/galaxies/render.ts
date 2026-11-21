@@ -19,13 +19,10 @@ import {
   FIRST_GAME_SLOT,
   rolePalette,
 } from "../../engine/color/roles.ts";
+import type { GameDrawing, HintStep } from "../../engine/contract/game.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color } from "../../engine/contract/types.ts";
-import {
-  drawRectOutline,
-  type GameDrawing,
-  type HintStep,
-} from "../../engine/index.ts";
+import { drawRectOutline } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";

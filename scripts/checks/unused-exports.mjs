@@ -76,7 +76,7 @@
  * **Three blind spots cost more to find than the check cost to write**, and all
  * had the same shape — a relay counted as a consumer. The `?raw` globs above,
  * and `export * from`, which is a forwarding address rather than a use: treating
- * it as one marked every module behind `src/engine/index.ts` wholly used. With
+ * it as one marked every module behind a barrel wholly used. With
  * both fixed the report went from 9 to 373, and a deliberately planted dead
  * export in `engine/render/draw.ts` — silent under both — was caught. The third was
  * `export { a } from`, counted as a use of `a` while the barrel's own name went
@@ -234,9 +234,8 @@ const wholeModuleUsed = new Set();
  * barrel -> the files it re-exports wholesale with `export * from`.
  *
  * **A star re-export is not a use, it is a forwarding address.** Treating it as
- * one marks every module behind a barrel wholly used, and `src/engine/index.ts`
- * is a barrel over most of the engine — so the check went quiet across the
- * engine while printing a clean pass. A use of `barrel::name` is resolved
+ * one marks every module behind a barrel wholly used, and the check goes
+ * quiet across all of them while printing a clean pass. A use of `barrel::name` is resolved
  * through this map to whichever module actually exports `name`, transitively,
  * which is the same "a relay is not a consumer" distinction the capability
  * audit had to make.

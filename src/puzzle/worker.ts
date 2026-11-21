@@ -10,9 +10,8 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 
 import { expose, proxy, type Remote } from "comlink";
 import type { DealtBoard, EncodedParams } from "../engine/contract/types.ts";
-import { createTsEngine } from "../engine/index.ts";
 import { dealBoard } from "../engine/midend/deal.ts";
-import { getTsGame } from "../engine/midend/registry.ts";
+import { createTsEngine, getTsGame } from "../engine/midend/registry.ts";
 import { TsWorkerPuzzle } from "./worker-adapter.ts";
 // Side-effect import: registers every game.
 import "../games/index.ts";

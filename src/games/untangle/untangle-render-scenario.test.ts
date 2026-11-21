@@ -18,8 +18,8 @@ import {
   COL_HINT_OUTLINE,
 } from "../../engine/color/roles.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
-import { Midend } from "../../engine/index.ts";
 import { LEFT_BUTTON, LEFT_DRAG } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import type { Flash } from "../../engine/render/win-wave.ts";
 import { expectRing, ringsOf } from "../../engine/testing/mark-shape.ts";

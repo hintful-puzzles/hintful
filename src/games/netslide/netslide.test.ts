@@ -31,7 +31,6 @@ import {
 import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { slidePieces } from "../../engine/hint/slide-planner.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_RIGHT,
   CURSOR_SELECT,
@@ -39,6 +38,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { offset } from "../../engine/mechanics/wires.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import type { Flash } from "../../engine/render/win-wave.ts";
 import { driveMidend } from "../../engine/testing/drive-midend.ts";

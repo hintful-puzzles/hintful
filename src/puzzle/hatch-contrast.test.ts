@@ -12,7 +12,7 @@ import { HINT_REFERENCE_COLORS } from "../engine/color/colors.ts";
 import { COL_BACKGROUND } from "../engine/color/roles.ts";
 import type { Narration } from "../engine/contract/hint-words.ts";
 import type { Color } from "../engine/contract/types.ts";
-import { Midend } from "../engine/index.ts";
+import { Midend } from "../engine/midend/midend.ts";
 import { HATCH_OPACITY } from "../engine/render/hatch.ts";
 import { beginDealt } from "../engine/testing/dealt.ts";
 import { gamesCallingMethod, REGISTERED_IDS } from "../engine/testing/enrollment.ts";

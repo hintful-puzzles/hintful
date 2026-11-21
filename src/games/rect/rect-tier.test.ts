@@ -17,7 +17,7 @@ import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import type { Rect } from "../../engine/contract/types.ts";
 import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
 import {

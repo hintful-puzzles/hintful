@@ -10,7 +10,7 @@
 import { describe, expect, it } from "vitest";
 import { resolvePalette } from "../../engine/color/color-mkhighlight.ts";
 import { COL_HINT_OUTLINE } from "../../engine/color/roles.ts";
-import { Midend } from "../../engine/index.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import {
   describeHintKindPins,

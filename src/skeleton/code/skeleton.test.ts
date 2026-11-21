@@ -6,13 +6,13 @@
 import { describe, expect, it } from "vitest";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { Midend } from "../../engine/index.ts";
 import { CLEAR_BUTTON } from "../../engine/input/key-labels.ts";
 import {
   CURSOR_SELECT,
   LEFT_BUTTON,
   PENCIL_MODE_BUTTON,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";

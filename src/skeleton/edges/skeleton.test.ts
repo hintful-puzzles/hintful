@@ -19,7 +19,6 @@ import { describe, expect, it } from "vitest";
 import { pointAtEdge, squareEdges } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -32,6 +31,7 @@ import {
   RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
 import { CROSS, LINE, OPEN } from "../../engine/mechanics/line-drawing.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";

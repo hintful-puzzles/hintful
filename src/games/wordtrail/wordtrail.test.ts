@@ -25,7 +25,6 @@ import {
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import type { Point } from "../../engine/contract/types.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -43,6 +42,7 @@ import {
   LINE,
   OPEN,
 } from "../../engine/mechanics/line-drawing.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import type { AnyGame } from "../../engine/testing/input-probe.ts";
 import { ringsOf } from "../../engine/testing/mark-shape.ts";
 import { paintsWith } from "../../engine/testing/recording-drawing.ts";

@@ -10,9 +10,9 @@
 
 import type { DifficultyContract } from "../../engine/contract/difficulty.ts";
 import type { Game, HintStep, SolveResult } from "../../engine/contract/game.ts";
+import { UI_UPDATE, type UiUpdate } from "../../engine/contract/game.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { solveBySearch } from "../../engine/hint/search-outcome.ts";
-import { registerGame, UI_UPDATE, type UiUpdate } from "../../engine/index.ts";
 import { click, type PointerAction } from "../../engine/input/hint-gesture.ts";
 import {
   cursorDelta,
@@ -25,6 +25,7 @@ import {
   type TargetVerb,
   type TargetVerbs,
 } from "../../engine/input/target-verb.ts";
+import { registerGame } from "../../engine/midend/registry.ts";
 import { newNumgameDesc } from "./generator.ts";
 import {
   hasNoSolution,

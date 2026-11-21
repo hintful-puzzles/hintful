@@ -9,7 +9,7 @@ import { DESC_NOT_DEDUCIBLE, loadVerdict } from "../../engine/contract/desc-erro
 import type { HintStep } from "../../engine/contract/game.ts";
 import { DEDUCTION_EXHAUSTED } from "../../engine/contract/hint-refusal.ts";
 import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
-import { Midend } from "../../engine/index.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { decodeSave, encodeSave } from "../../engine/midend/save.ts";
 import { randomNew, randomUpto } from "../../engine/random/index.ts";
 import type { AnyGame } from "../../engine/testing/enrollment.ts";

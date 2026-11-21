@@ -16,10 +16,10 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
 import { describeParams } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import { SYMM_ROT2, SYMM_ROT4 } from "../../engine/generate/symmetric-blacks.ts";
-import { Midend, UI_UPDATE } from "../../engine/index.ts";
 import {
   CURSOR_DOWN,
   CURSOR_RIGHT,
@@ -27,6 +27,7 @@ import {
   LEFT_BUTTON,
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
 import {
