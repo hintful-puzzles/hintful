@@ -184,7 +184,7 @@ function newLettersDesc(p: SaladParams, rs: RandomState): string {
     // Derive every border clue from the full solution.
     for (let i = 0; i < o; i++) {
       for (const s of borderScans(i, o)) {
-        borderclues[s.clue] = scanDir(gridclues, null, s.start, s.step, s.end, false);
+        borderclues[s.clue] = scanDir(gridclues, s.start, s.step, s.end);
       }
     }
 

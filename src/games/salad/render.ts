@@ -61,6 +61,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -79,14 +80,14 @@ import type { SaladHint } from "./hint.ts";
 import { CLUE } from "./kinds.ts";
 import type { SaladMistake } from "./solver.ts";
 import {
-  borderScans,
+  borderShown,
   CIRCLE,
   CROSS,
   GAMEMODE_LETTERS,
+  rules,
   type SaladMove,
   type SaladState,
   type SaladUi,
-  scanDir,
   symbolChar,
 } from "./state.ts";
 
@@ -217,9 +218,6 @@ export interface SaladDrawState {
   /** The hint target's ring and the evidence area's outline (fork additions),
    * drawn after the cell loop. See {@link markBand}. */
   marks: HintMarks;
-  /** Scratch symbol/hole counts per line, refilled each frame. */
-  rowcount: Int32Array;
-  colcount: Int32Array;
   /** Whether the pencil-mode indicator was drawn last frame (it sits in the clue
    * margin, outside the per-tile cache). */
   pencilModeShown: boolean | null;
@@ -240,8 +238,6 @@ export function newDrawState(s: SaladState, tileSize: number): SaladDrawState {
     wrong,
     hint,
     marks: new HintMarks(),
-    rowcount: new Int32Array(o2),
-    colcount: new Int32Array(o2),
     pencilModeShown: null,
   };
 }
@@ -266,8 +262,11 @@ function markBand(ts: number, x: number, y: number): MarkBand {
 
 // --- live rule errors ------------------------------------------------------
 
-/** Upstream `salad_set_drawflags`: per-cell display flags (cursor, pencil,
- * marker, live error) plus the border-clue error flags. */
+/** Upstream `salad_set_drawflags`: per-cell display flags (cursor, marker,
+ * live error) plus the border-clue error flags. The errors are where the
+ * board breaks its rules: each of two symbols alike in a line, the crosses of
+ * a line with more than it has room for, and each border clue its line can
+ * no longer show. */
 function setDrawFlags(
   ds: SaladDrawState,
   ui: SaladUi,
@@ -275,61 +274,26 @@ function setDrawFlags(
   cursorShown: boolean,
 ): void {
   const o = s.order;
-  const nums = s.nums;
-  const rowcount = ds.rowcount;
-  const colcount = ds.colcount;
-  rowcount.fill(0);
-  colcount.fill(0);
-
-  for (let x = 0; x < o; x++) {
-    for (let y = 0; y < o; y++) {
-      if (s.holes[y * o + x] === CROSS) {
-        rowcount[y + nums * o]++;
-        colcount[x + nums * o]++;
-      } else if (s.grid[y * o + x]) {
-        const d = s.grid[y * o + x] - 1;
-        rowcount[y + d * o]++;
-        colcount[x + d * o]++;
-      }
-    }
-  }
+  const live = liveErrors(rules, s);
+  const wrong = live.at.slice();
+  for (const [a, b] of live.pairs) wrong[a] = wrong[b] = 1;
 
   for (let x = 0; x < o; x++) {
     for (let y = 0; y < o; y++) {
       const i = y * o + x;
       let f = 0;
       if (cursorShown) f |= cellHighlight(ui, x, y);
-
-      const d = s.grid[i];
-      if (
-        s.holes[i] === CROSS &&
-        (rowcount[y + nums * o] > o - nums || colcount[x + nums * o] > o - nums)
-      ) {
-        f |= FD_ERROR;
-      } else if (
-        d > 0 &&
-        (rowcount[y + (d - 1) * o] > 1 || colcount[x + (d - 1) * o] > 1)
-      ) {
-        f |= FD_ERROR;
-      }
-
+      if (wrong[i]) f |= FD_ERROR;
       if (s.holes[i] === CROSS) f |= FD_CROSS;
       if (s.holes[i] === CIRCLE) f |= FD_CIRCLE;
       ds.gridfs[i] = f;
     }
   }
 
-  // Border clues: a clue is in error once the squares between it and the first
-  // *known* content disagree with it. `scanDir(direct)` returns 0 while the
-  // answer is still unknown, so an unfinished line is never flagged.
-  for (let i = 0; i < o; i++) {
-    for (const sc of borderScans(i, o)) {
-      if (!s.borderclues[sc.clue]) continue;
-      const c = scanDir(s.grid, s.holes, sc.start, sc.step, sc.end, true);
-      if (c && c !== s.borderclues[sc.clue]) ds.borderfs[sc.clue] |= FD_ERROR;
-      else ds.borderfs[sc.clue] &= ~FD_ERROR;
-    }
-  }
+  const shown = borderShown(s);
+  const broken = live.clues.get("border");
+  for (let j = 0; j < o * 4; j++) ds.borderfs[j] &= ~FD_ERROR;
+  for (const k of broken ?? []) ds.borderfs[shown[k]] |= FD_ERROR;
 }
 
 // --- tile painting ---------------------------------------------------------

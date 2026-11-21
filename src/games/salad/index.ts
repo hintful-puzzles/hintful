@@ -96,6 +96,7 @@ import {
   newState,
   newUi,
   paramConfig,
+  rules,
   type SaladEntry,
   type SaladMark,
   type SaladMove,
@@ -387,6 +388,7 @@ export const saladGame: Game<
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
+  rules,
   difficulty,
   hint: {
     plan: hint,

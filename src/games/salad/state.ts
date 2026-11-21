@@ -29,6 +29,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import {
@@ -49,6 +50,7 @@ import { type RowColRegion, rowColRegions } from "../../engine/hint/latin-hint.t
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
 import { clueList, latinSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import * as salad from "../../generated/games/salad/salad.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
@@ -565,21 +567,38 @@ function answerOf(b: SaladBoard): Uint8Array {
   );
 }
 
+/** The border clues shown, each by its index in `borderclues`, in the order
+ * the description deals them: each line's top, left, bottom and right in
+ * turn. */
+export function borderShown(b: SaladBoard): number[] {
+  const o = b.order;
+  const out: number[] = [];
+  for (let i = 0; i < o; i++)
+    for (let side = 0; side < 4; side++)
+      if (b.borderclues[side * o + i]) out.push(side * o + i);
+  return out;
+}
+
+/** The board as its rules read it: a symbol where one is placed, the empty
+ * square (`nums + 1`) where a cross is, and undecided elsewhere. */
+export const rules: RulesOf<SaladBoard> = describedRules(salad, {
+  grid: (b) =>
+    b.grid.map((d, i) =>
+      d >= 1 && d <= b.nums ? d : b.holes[i] === CROSS ? b.nums + 1 : 0,
+    ),
+  size: (b) => [b.order, b.order],
+  deals: (b) => [dealtOf(b)],
+});
+
 /** The board as its description deals it: the border letters in the order
  * the scan meets them, each line's top, left, bottom and right in turn; the
  * balls, each saying its square is not the empty one (`nums + 1`). */
 export function dealtOf(b: SaladBoard): salad.Dealt {
   const o = b.order;
-  const at: number[] = [];
-  const v: number[] = [];
   const slots = [0, 2, 1, 3];
-  for (let i = 0; i < o; i++)
-    for (let side = 0; side < 4; side++) {
-      const clue = b.borderclues[side * o + i];
-      if (!clue) continue;
-      at.push(slots[side] * o + i);
-      v.push(clue);
-    }
+  const shown = borderShown(b);
+  const at = shown.map((cd) => slots[(cd / o) | 0] * o + (cd % o));
+  const v = shown.map((cd) => b.borderclues[cd]);
   const balls: number[] = [];
   for (let c = 0; c < o * o; c++) if (b.gridclues[c] === CIRCLE) balls.push(c);
   return {
@@ -595,28 +614,18 @@ export function dealtOf(b: SaladBoard): salad.Dealt {
 
 /**
  * Upstream `salad_scan_dir`: the first symbol met walking `si → ei` in steps of
- * `di`. With `direct` set the scan gives up (returns 0) at the first square
- * that is neither filled nor a known cross — i.e. "we cannot tell yet".
+ * `di`, skipping blanks and crosses.
  */
-export function scanDir(
-  grid: Uint8Array,
-  holes: Uint8Array | null,
-  si: number,
-  di: number,
-  ei: number,
-  direct: boolean,
-): number {
-  for (let i = si; i !== ei; i += di) {
-    if (direct && grid[i] === 0 && holes?.[i] !== CROSS) return 0;
+export function scanDir(grid: Uint8Array, si: number, di: number, ei: number): number {
+  for (let i = si; i !== ei; i += di)
     if (grid[i] !== 0 && grid[i] !== CROSS) return grid[i];
-  }
   return 0;
 }
 
 /**
  * The four `(start, step, end)` scans of border-clue line `i`, in upstream's
- * clue order: top, left, bottom, right. Shared by the solver, the generator,
- * the live error check and the completion test, so a scan can never drift
+ * clue order: top, left, bottom, right. Shared by the solver, the generator
+ * and the hint, so a scan can never drift
  * between them.
  */
 export function borderScans(

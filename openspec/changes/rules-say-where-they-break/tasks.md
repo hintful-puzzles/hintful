@@ -49,7 +49,9 @@
       stops is read over each value that element's domain holds, in the
       compiler, so a digit no digit across its clue pairs with is red with
       the cell across open; `liveErrors.clueAt` says where each broken clue
-      is broken, for the clue's quarter at each cell). Run `src/guards` before a
+      is broken, for the clue's quarter at each cell). Moved: salad (a cross
+      reads as the empty square; a border clue is red once its line can no
+      longer show it first, an all-crossed line included). Run `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);

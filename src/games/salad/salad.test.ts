@@ -28,6 +28,7 @@ import {
 } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -42,6 +43,8 @@ import { saladGame } from "./index.ts";
 import { PREFERRED_TILE_SIZE } from "./render.ts";
 import { findMistakes, saladSolution, saladSolve } from "./solver.ts";
 import {
+  borderScanFor,
+  borderShown,
   CIRCLE,
   CROSS,
   DIFF_EASY,
@@ -53,6 +56,7 @@ import {
   letterChar,
   newState,
   newUi,
+  rules,
   type SaladMove,
   type SaladParams,
   type SaladState,
@@ -245,6 +249,31 @@ describe("salad description codec", () => {
     expect(validateDesc(saladGame, p, "CaCbAfBaAa,Oo")).toBe(descBadCharacter("O"));
     // The separator replaced.
     expect(validateDesc(saladGame, p, "CaCbAfBaAa;p")).toBe(descBadCharacter(";"));
+  });
+});
+
+describe("salad live errors", () => {
+  it("marks a border clue its line's first symbol disagrees with", () => {
+    const s = newState(LETTERS.p, LETTERS.desc);
+    const shown = borderShown(s);
+    const k = shown.findIndex(
+      (cd) => s.gridclues[borderScanFor(cd, s.order).start] === 0,
+    );
+    if (k < 0) throw new Error("no border clue whose first square is open");
+    const cd = shown[k];
+    s.grid[borderScanFor(cd, s.order).start] = (s.borderclues[cd] % s.nums) + 1;
+    expect([...(liveErrors(rules, s).clues.get("border") ?? [])]).toContain(k);
+  });
+
+  it("marks the crosses of a line with more than it has room for", () => {
+    // A 4-square row of 3 letters has room for one cross.
+    const s = newState(LETTERS.p, LETTERS.desc);
+    const open = [0, 1, 2, 3].filter((x) => s.gridclues[x] === 0).slice(0, 2);
+    if (open.length < 2) throw new Error("no two open squares in the top row");
+    for (const x of open) s.holes[x] = CROSS;
+    const live = liveErrors(rules, s);
+    const marked = [...live.pairs.flat(), ...[0, 1, 2, 3].filter((x) => live.at[x])];
+    expect(new Set(marked)).toEqual(new Set(open));
   });
 });
 
