@@ -363,12 +363,39 @@ stages 0–2 trim what the split causes; stage 3 removes the split. I
 recommend 0, 1 and 2 as filed changes now, and 3 as a pilot whose result
 decides 4.
 
+## Ties to the C version
+
+The owner, 2026-11-21: "I'd probably at this stage get rid of anything that
+we have that is tying us specifically to the C version and doesn't have any
+other benefit to us." Census at `017e0b32c`:
+
+| Tie | Other benefit | Verdict |
+| --- | --- | --- |
+| Byte-match differentials: 56 `*differential*` files, 4,349 lines; 49 frozen `__fixtures__/*c-reference.json`, 1.1 MB; 30 call `describeDescDifferential` | A change detector under refactoring, but one that can never be re-recorded, so it also blocks every intended generator change | Retire |
+| Solver-agreement differentials: a C board must grade at C's tier | Ties our tiers to C's definitions, which the descriptions now own | Retire |
+| The RNG-draw-order discipline: `docs/testing.md` § "Byte-match: fidelity where there is a right answer", and "byte-match critical" headers in 20 generators | None | Retire; generators become free to take derived clues (target 8) |
+| `engine/random` reproducing `random.c`, with its C-recorded `corpus.json` | Determinism, which any seeded generator gives | Keep the code; drop the constraint and the corpus test |
+| Upstream's game IDs and params strings load (`guards/upstream-descs.test.ts`, `puzzle/upstream-params.test.ts`) | A player's link from Simon Tatham's site opens here (`docs/doctrine.md` § "Upstream", best-effort) | Keep, on a slim corpus of params and descs drawn from the retired fixtures |
+| Upstream links, `licenses/`, provenance comments | Credit and license | Keep |
+
+Queries: `git ls-files '*differential*' | xargs cat | wc -l`;
+`git ls-files '*__fixtures__*' | grep -i c-ref`;
+`git grep -l describeDescDifferential -- 'src/games/*'`;
+`git grep -liE 'byte-match' -- 'src/games/*/generator.ts'`.
+
+This becomes stage 0b of the route, independent of the rest: retire the
+first four rows, re-found the upstream-ID guard on a slim corpus, and
+rewrite the guides' byte-match passages as what replaces them (the
+description's soundness check and the deal's tier gate).
+
 ## Open questions for the owner
 
 1. **Saves.** If games move onto the engine's `Edit`, should old saves load
    through a legacy reader per game (recommended, about 10–30 lines a game),
    or is a clean break acceptable?
-2. **The frozen C generator fixtures.** May they go for a generator rebuilt
-   on derived clues?
-3. **Which stages to file:** 0–2 now and 3 as a pilot (recommended), or a
-   different cut.
+2. **The frozen C generator fixtures.** Answered 2026-11-21: retire every tie
+   to the C version with no other benefit (§ "Ties to the C version").
+   Upstream's game IDs keep loading, since that serves players, unless the
+   owner says otherwise.
+3. **Which stages to file:** 0, 0b, 1 and 2 now and 3 as a pilot
+   (recommended), or a different cut.

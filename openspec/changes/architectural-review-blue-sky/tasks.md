@@ -11,6 +11,10 @@
       Penpa+, step-wise explanation research.
 - [x] 1.4 Write the target, the gap and a staged route.
 - [ ] 1.5 Deliver to the owner, and wait for their pick.
+      2026-11-21: delivered at `017e0b32c`. The owner answered the C-fixture
+      question: retire every tie to the C version with no other benefit;
+      census and verdicts in `design.md` § "Ties to the C version". Saves
+      and which stages to file are still open.
 
 ## 2. The owner's pick
 
