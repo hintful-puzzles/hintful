@@ -13,7 +13,7 @@
 
 ## 2. Migrate
 
-- [ ] 2.1 Move the games in batches by variant; each runs in the app (a
+- [x] 2.1 Move the games in batches by variant; each runs in the app (a
       hint's ring, outline and stripes, through an auto-solve) before it
       counts. Record which moved, which keep a form of their own, and why.
       A game that gains `ds.hint` changes `capability-surface.test.ts`'s
@@ -56,10 +56,10 @@
         sidecar (`packHintMarks`), and `drawBorderTile` takes the draw state
         and paints the contour and hatch from it; `F_HINT_CELL` and
         `F_HINT_REGION` are gone. A region the step outlines is one contour
-        (was a box a square). It has no cell ring: its rings are on edges. Fold Range's and Slant's doubled
-        "premise" outline and Lightup's dark-square ring into the one
-        outline (`hints-marks.md` § "Outline the evidence": one shape for
-        one role), unless the words lean on the difference.
+        (was a box a square). It has no cell ring: its rings are on edges.
+  - [x] Range's and Slant's doubled "premise" outline and Lightup's
+        dark-square ring folded into the one outline (`hints-marks.md`
+        § "Outline the evidence": one shape for one role), with their games.
   - [x] Contour packed by hand, onto `evidenceSides(words)` (D4): Path,
         Wordtrail, Rect and the edges skeleton; Pearl and Tracks, whose
         squares are a mark kind of their own, through `evidenceSidesOf`;
@@ -73,10 +73,15 @@
         Tracks here, the rest with their batches above. Signpost's square
         ring keeps `drawRing` off center, for the reason its item gives.
         Neither ring changed thickness: each band's width was its ring's.
-- [ ] 2.2 A render snapshot that moves is a look that changed: check each
-      against the variant's look, and record it. (None moved through 1.3.)
-- [ ] 2.3 The skeletons write the engine's form (grid: done in 1.3; edges:
-      with the contour batch).
+- [x] 2.2 A render snapshot that moves is a look that changed: check each
+      against the variant's look, and record it. Moved: Group and Rome in
+      1.3 and Adjacent after it (two references that touched, now two closed
+      shapes, D4); Sticks (an open square's outline moved from an inset box
+      to the contour at its edge). Range's look test was rewritten with its
+      migration. Every other migration left its snapshots as they were: their
+      pinned frames outline single squares, whose contour is all four sides.
+- [x] 2.3 The skeletons write the engine's form (grid in 1.3, edges with the
+      contour batch).
 - [ ] 2.4 Singles' corner step ("The corner's 4s need one shaded; … the
       side 4, boxing the corner in"): both cells "the corner's 4s" names
       are also named by "the side 4" and "the corner", whose colors cover
@@ -119,5 +124,6 @@
 
 - [ ] 3.1 The guides describe one way a variant (`hints-marks.md`
       § "Outline the evidence" and § "Where the band goes, and who rubs it
-      out", `rendering.md` § "A mark that crosses tiles"). Run
-      `npm run test:hint-sweeps`; commit, push, archive.
+      out", `rendering.md` § "A mark that crosses tiles"): done. Run
+      `npm run test:hint-sweeps`; commit, push, archive once 2.4, 2.5a and
+      2.6 are settled.

@@ -307,8 +307,9 @@ identity.** The choice is the game's, and there is no engine helper for
 either.
 
 - **By piece**, the tile's key says which piece of the mark it draws: a
-  side, a direction, half a bar, in the game's own geometry. Region outlines
-  are the shared case (`MarkOutlines.packed`, `engine/render/hint-mark.ts`).
+  side, a direction, half a bar, in the game's own geometry. Hint outlines
+  are the shared case: their sides are the engine's (`OverlaySidecar`,
+  `evidenceSides`, `MarkOutlines.packed`, `engine/render/hint-mark.ts`).
   Exemplars: Bridges' spans, Pearl's edges, Net's sides, Bricks' rule flags.
 - **By identity**, the tile's key names the marks crossing it, and the tile
   draws each one whole while clipped to its box. It suits a mark whose shape
@@ -326,7 +327,7 @@ turn meet in the middle. Exemplar:
 under it.** An outline band painted after the tiles covers half of every
 cross and line on the squares' sides. Draw the outline in the tile, before
 what the square holds, with its sides in the key (`drawMarkSides`,
-`outlineSides`). Exemplars: Pearl and Path.
+`evidenceSides`). Exemplars: Pearl and Path.
 
 ### Prove the overlay repaints
 

@@ -315,12 +315,22 @@ erase and repaint undo it.
   notes passes `pack` no `markBits`, and its struck notes are not asked for
   ([`starbattle/render.ts`](../src/games/starbattle/render.ts)). Exemplar:
   [`filling/render.ts`](../src/games/filling/render.ts).
+  A game that paints the marks inside its own tile, because content goes
+  over the outline or the tile animates, paints them with the same two
+  calls: `drawMarkSides(dr, band, sidecar.outlineSides(i), …)` and
+  `drawCellRing(dr, band, clear)`, which rings the band's box as `HintMarks`
+  does. Its hint bits ride the sidecar, never its own tile word. Exemplar:
+  [`singles/render.ts`](../src/games/singles/render.ts).
 - **Both**, a pixel of real gutter plus some of the cell's own edge. The
   `outer` part makes it an outside-band game, and the erase covers the inside
   part too. Exemplar: [`clusters/render.ts`](../src/games/clusters/render.ts).
 - **Inset**, inside the cell body, where the cell border is where a wall
-  lives and a mark there would read as one. Exemplar:
-  [`galaxies/render.ts`](../src/games/galaxies/render.ts).
+  lives and a mark there would read as one. Exemplars:
+  [`galaxies/render.ts`](../src/games/galaxies/render.ts), the border grid
+  ([`border-grid-render.ts`](../src/engine/mechanics/border-grid-render.ts)).
+  A wall or block a step outlines as a clue of its own is inset too, with a
+  white line inside the outline to part it from the wall's gray (Light Up,
+  Sticks).
 
 **Bound the inner reach by the content**, by arithmetic on the glyph's
 geometry and not by eye, and record the bound at the game's `markBand`
@@ -338,7 +348,8 @@ a cell.
 - **A contour is one reference's.** The app colors each reference apart, so
   two cells share an outline only when the same references name them
   (`StepMarks.together`); two references that touch are two closed shapes.
-  Take the sides from `evidenceSides(words)` or `OverlaySidecar.pack`, and
+  Take the sides from `evidenceSides(words)` (`evidenceSidesOf` where the
+  squares are a mark kind of the game's own) or `OverlaySidecar.pack`, and
   give `HintMarkStyle` the step's `words`; never `outlineSides` over the
   whole outline set.
 - **One shape for one role.** Do not outline one kind of evidence cell and
