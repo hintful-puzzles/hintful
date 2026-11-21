@@ -41,6 +41,7 @@ import {
   isComplete,
   NORINORI_RUNGS,
   type NorinoriRung,
+  rules,
   solveNorinori,
 } from "./solver.ts";
 import {
@@ -191,6 +192,7 @@ export const norinoriGame: Game<
   status,
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes: (state, mistakes) => [

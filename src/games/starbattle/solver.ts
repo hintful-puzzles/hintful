@@ -15,6 +15,7 @@
  */
 
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import { describedSpace, partition } from "../../engine/solve/describe-runtime.ts";
@@ -32,6 +33,7 @@ import {
   DIFF_TRICKY,
   STAR,
   type StarbattleMark,
+  type StarbattleState,
   touching,
 } from "./state.ts";
 
@@ -126,27 +128,10 @@ export class StarbattleBoard {
     return this.units[unit].cells.filter((i) => this.grid[i] === BLANK);
   }
 
-  /** How many more stars a unit needs. */
-  need(unit: number): number {
-    let held = 0;
-    for (const i of this.units[unit].cells) if (this.grid[i] === STAR) held++;
-    return this.stars - held;
-  }
-
   /** Whether a cell is still undecided. */
   unfinished(): boolean {
     return this.grid.includes(BLANK);
   }
-}
-
-/** Two stars that touch, as a pair of cells, the earlier first. */
-export function touchingStars(size: number, grid: Uint8Array): [number, number][] {
-  const out: [number, number][] = [];
-  grid.forEach((m, i) => {
-    if (m !== STAR) return;
-    for (const j of touching(size, i)) if (j > i && grid[j] === STAR) out.push([i, j]);
-  });
-  return out;
 }
 
 /** The board's regions and stars as the description reads them. */
@@ -156,6 +141,17 @@ function dealtOf(board: StarbattleBoard): starbattle.Dealt {
     stars: board.stars,
   };
 }
+
+/** The board as its rules read it: a blank square is undecided. */
+export const rules: RulesOf<StarbattleState> = {
+  grid: (s) => s.grid,
+  violations: (s, g) =>
+    starbattle.violations(
+      g,
+      describedSpace(starbattle.units, s.size, s.size),
+      dealtOf(new StarbattleBoard(s.size, s.stars, s.regions, s.grid)),
+    ),
+};
 
 /** Whether every row, column and region holds its stars and no two stars
  * touch, by the rules the description compiles to. A blank cell counts as

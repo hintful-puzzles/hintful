@@ -17,7 +17,12 @@
 - [ ] 2.3b Batch 1 of `design.md` § "Batches": the exclusion, count, run and
       latin games. Look at each in the app; explain each moved snapshot.
       Moved: unruly (rules drawn their own way through `byRule` and the
-      module's `RuleName`).
+      module's `RuleName`), starbattle, norinori (a cross red where its
+      unit can no longer hold its count; Norinori's boxed-in lone square).
+      Towers waits: its clue's "the tallest is still to come" (a prefix
+      showing its count with the tallest unplaced) needs a bound the
+      compiler lacks; ordering comparisons of an undecided `value` against
+      its domain's interval come first, in the compiler.
 - [ ] 2.3c Bound `connected` in the compiler (sure and possible members);
       then batch 2.
 - [ ] 2.3d Bound the loop and acyclic forms; then batch 3. Loopy's and

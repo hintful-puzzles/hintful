@@ -34,6 +34,7 @@ import {
   type MarkBand,
   type MarkCell,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import {
   drawPiecePart,
@@ -50,6 +51,7 @@ import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { NorinoriMistake } from "./index.ts";
+import { rules } from "./solver.ts";
 import {
   CROSSED,
   dominoPartner,
@@ -57,7 +59,6 @@ import {
   type NorinoriParams,
   type NorinoriState,
   type NorinoriUi,
-  neighbors,
   SHADED,
 } from "./state.ts";
 
@@ -65,8 +66,7 @@ export const PREFERRED_TILE_SIZE = 40;
 
 // --- palette ----------------------------------------------------------------
 
-// A shaded square that breaks a rule (one beside two others, or one of too
-// many in its region) is `COL_ERROR`.
+// A square where the board breaks a rule is `COL_ERROR` (`inError`).
 const COL_GRID = FIRST_GAME_SLOT;
 /** The border of a region, and of the board. */
 const COL_WALL = FIRST_GAME_SLOT + 1;
@@ -217,7 +217,7 @@ function drawTile(
     drawRuledOutCross(
       dr,
       { x: box.x + 1, y: box.y + 1, w: ts - 1, h: ts - 1 },
-      COL_RULED_OUT,
+      t.error ? COL_ERROR : COL_RULED_OUT,
     );
 
   // Inset by the wall's half, as Star Battle's: a stroke on the box's edge
@@ -250,21 +250,13 @@ function dominoJoins(state: NorinoriState): Map<number, number> {
   return out;
 }
 
-/** The shaded squares that break a rule as the board stands: each beside two
- * others or more, and every one of a region that holds more than two. */
-function shadedInError(state: NorinoriState): Set<number> {
-  const { w, h, regions, grid } = state;
-  const out = new Set<number>();
-  const held = new Map<number, number>();
-  grid.forEach((m, i) => {
-    if (m !== SHADED) return;
-    held.set(regions[i], (held.get(regions[i]) ?? 0) + 1);
-    if (neighbors(w, h, i).filter((j) => grid[j] === SHADED).length > 1) out.add(i);
-  });
-  grid.forEach((m, i) => {
-    if (m === SHADED && (held.get(regions[i]) ?? 0) > 2) out.add(i);
-  });
-  return out;
+/** The squares where the board breaks a rule: a shaded square beside two
+ * others or more, or boxed in alone; every shaded square of a region with
+ * more than two; and every cross of one too crossed to still hold two. */
+function inError(state: NorinoriState): Uint8Array {
+  const live = liveErrors(rules, state);
+  for (const [a, b] of live.pairs) live.at[a] = live.at[b] = 1;
+  return live.at;
 }
 
 export function redraw(
@@ -283,7 +275,7 @@ export function redraw(
     dr.drawRect({ x: b, y: b, w: w * ts + 1, h: h * ts + 1 }, COL_WALL);
   }
 
-  const errors = shadedInError(state);
+  const errors = inError(state);
   const joins = dominoJoins(state);
   const wrong = new Set(mistakes?.map((m) => m.y * w + m.x));
 
@@ -299,7 +291,7 @@ export function redraw(
       const tile: Tile = {
         mark: grid[i],
         join: joins.get(i) ?? 0,
-        error: errors.has(i),
+        error: errors[i] === 1,
         wrong: wrong.has(i),
         cursor: ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y,
         tone: flash.win(sweepStep(x, y)),

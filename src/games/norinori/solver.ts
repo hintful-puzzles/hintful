@@ -14,6 +14,7 @@
  */
 
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import { describedSpace, partition } from "../../engine/solve/describe-runtime.ts";
@@ -54,6 +55,13 @@ export function areasOf(regions: Int32Array): number[][] {
 function dealtOf(board: NorinoriBoard): norinori.Dealt {
   return { region: partition(areasOf(board.regions), board.grid.length) };
 }
+
+/** The board as its rules read it: a blank square is undecided. */
+export const rules: RulesOf<NorinoriBoard> = {
+  grid: (s) => s.grid,
+  violations: (s, g) =>
+    norinori.violations(g, describedSpace(norinori.units, s.w, s.h), dealtOf(s)),
+};
 
 /** The values a square may hold: shaded or clear. */
 const DOMAIN = (1 << SHADED) | (1 << CROSSED);

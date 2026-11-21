@@ -32,6 +32,7 @@ import {
   type MarkBand,
   type MarkCell,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/render/piece.ts";
 import {
@@ -44,7 +45,7 @@ import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { StarbattleMistake } from "./index.ts";
-import { StarbattleBoard, touchingStars } from "./solver.ts";
+import { rules } from "./solver.ts";
 import {
   CROSSED,
   STAR,
@@ -216,7 +217,7 @@ function drawTile(
     drawRuledOutCross(
       dr,
       { x: px + 1, y: py + 1, w: ts - 1, h: ts - 1 },
-      COL_RULED_OUT,
+      t.error ? COL_ERROR : COL_RULED_OUT,
     );
   }
 
@@ -235,16 +236,13 @@ function drawTile(
 
 // --- redraw -----------------------------------------------------------------
 
-/** The stars that break a rule as the board stands: each of two that touch,
- * and every star of a row, column or region that holds too many. */
-function starsInError(state: StarbattleState): Set<number> {
-  const { size, stars, regions, grid } = state;
-  const board = new StarbattleBoard(size, stars, regions, grid);
-  const out = new Set<number>(touchingStars(size, grid).flat());
-  board.units.forEach((unit, u) => {
-    if (board.need(u) < 0) for (const i of unit.cells) if (grid[i] === STAR) out.add(i);
-  });
-  return out;
+/** The squares where the board breaks a rule: each of two stars that touch,
+ * every star of a row, column or region with too many, and every cross of
+ * one too crossed to still hold its stars. */
+function inError(state: StarbattleState): Uint8Array {
+  const live = liveErrors(rules, state);
+  for (const [a, b] of live.pairs) live.at[a] = live.at[b] = 1;
+  return live.at;
 }
 
 export function redraw(
@@ -269,7 +267,7 @@ export function redraw(
     dr.drawRect({ x: b, y: b, w: size * ts + 1, h: size * ts + 1 }, COL_WALL);
   }
 
-  const errors = starsInError(state);
+  const errors = inError(state);
   const wrong = new Set(mistakes?.map((m) => m.y * size + m.x));
 
   // The displayed step's marks, read from its words and from nowhere else.
@@ -283,7 +281,7 @@ export function redraw(
       const i = y * size + x;
       const tile: Tile = {
         mark: grid[i],
-        error: errors.has(i),
+        error: errors[i] === 1,
         wrong: wrong.has(i),
         cursor: ui.cursor.visible && ui.cursor.x === x && ui.cursor.y === y,
         tone: flash.win(sweepStep(x, y)),

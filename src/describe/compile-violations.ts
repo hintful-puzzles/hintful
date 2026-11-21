@@ -528,7 +528,7 @@ class Check {
         e.op === "*" ? (counted(e.a) ? a : b) : e.op === "-" ? a : counted(e.a) ? a : b;
       return { lo, hi, yes: one.yes, no: one.no };
     }
-    const agg = sizeAsCount(e);
+    const agg = lastFilterOut(sizeAsCount(e));
     if (agg !== null && (agg.fn === "count" || agg.fn === "sum")) {
       const yes = Out.fresh("_yes");
       const no = Out.fresh("_no");
@@ -704,6 +704,24 @@ function sizeAsCount(e: Expr): Extract<Expr, { k: "agg" }> | null {
       term: null,
     };
   return null;
+}
+
+/** An aggregate with its last binder's filter as its own `where`, the same
+ * aggregate: a member the filter is false of is then one counted surely
+ * not, which names where a count falls short, rather than skipped. */
+function lastFilterOut(
+  agg: Extract<Expr, { k: "agg" }> | null,
+): Extract<Expr, { k: "agg" }> | null {
+  const last = agg?.binders.at(-1);
+  if (agg === null || last === undefined || last.where === null) return agg;
+  return {
+    ...agg,
+    binders: [...agg.binders.slice(0, -1), { ...last, where: null }],
+    where:
+      agg.where === null
+        ? last.where
+        : { k: "bin", op: "and", a: last.where, b: agg.where },
+  };
 }
 
 /**

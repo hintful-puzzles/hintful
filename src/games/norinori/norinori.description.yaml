@@ -9,7 +9,7 @@ help:
   controls: |-
     {{controls}}
 
-    You need not mark anything clear to finish: the puzzle is solved as soon as the shaded squares are all in place. A shaded square turns red when it touches two others, and a region turns red when it holds more than two.
+    You need not mark anything clear to finish: the puzzle is solved as soon as the shaded squares are all in place. A shaded square turns red when it touches two others or has no square left to pair with, and the shaded squares of a region turn red when it holds more than two; the crosses of a region turn red when they leave it no room for two.
 
     A domino rules out the open squares beside it, and a region's second shaded square rules out the rest of the region. {{rules-out}}
   origins: |-

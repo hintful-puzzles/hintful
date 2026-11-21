@@ -46,6 +46,7 @@ import {
 import {
   answerOf,
   isComplete,
+  rules,
   STARBATTLE_RUNGS,
   StarbattleBoard,
   type StarbattleRung,
@@ -221,6 +222,7 @@ export const starbattleGame: Game<
   status,
 
   solve,
+  rules,
   difficulty,
   findMistakes,
   clearMistakes,
