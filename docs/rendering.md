@@ -590,6 +590,11 @@ grid while a gesture is live, and paints only what they say:
   rule named by a constant typed as its module's `RuleName`, so renaming or
   moving the rule fails the typecheck (Unruly's bar along a run of three,
   its badge on an over-full line's pieces).
+- **`rules.grid` reads what one rule makes certain of every answer**, so a
+  statement read alone sees it as the player does: Light Up's lit square
+  holds no bulb, and a square beside a shaded one is clear in Range and
+  Singles (`besideHeld`), so a pocket of open squares the shading cuts off
+  breaks `connected` at once.
 - **What the rules do not say is not an error.** A game that flagged more
   (a heuristic, a "largest piece wins") flagged a guess; a game that flagged
   less now shows what its rules already make certain. Where the marks are

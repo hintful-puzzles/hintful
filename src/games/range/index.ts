@@ -57,6 +57,7 @@ import {
   isSolved,
   RANGE_RUNGS,
   type RangeRung,
+  rules,
 } from "./solver.ts";
 import {
   BLACK,
@@ -236,6 +237,7 @@ export const rangeGame: Game<
   targetVerbs,
   executeMove,
   status,
+  rules,
 
   solve,
   // Easy is what the generator's test passes: the three rules decide every

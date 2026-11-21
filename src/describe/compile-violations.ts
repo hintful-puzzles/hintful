@@ -26,7 +26,7 @@ import {
   type Scope,
   type Val,
 } from "./compile-sorts.ts";
-import { inlined, substitute } from "./compile-terms.ts";
+import { freeNames, inlined, substitute } from "./compile-terms.ts";
 import type { Binder, Expr } from "./expr.ts";
 
 /** A verdict's code: `0` false, `1` true, `2` undecided. */
@@ -267,7 +267,7 @@ class Check {
       out.close();
       return;
     }
-    if (e.k === "quant" && e.q === "forall") {
+    if (e.k === "quant" && e.q === "forall" && joinOf(e) === null) {
       // A binding a filter leaves undecided breaks nothing yet, so the
       // statement reads no further into it: Signpost's squares a given
       // number's links have not reached.
@@ -460,6 +460,55 @@ class Check {
       }
       out.emit(`if (${trueIf}) ${r} = ${T};`);
       return r;
+    }
+    if (e.k === "call" && e.fn === "connected" && e.args.length === 1) {
+      const S = this.sureAndMaybe(e.args[0], scope);
+      if (S !== null) {
+        // The sure members split among the groups the possible ones make
+        // are apart on every completion: Range's clear squares cut off.
+        const [must, may, whole] = S;
+        this.env.used.add("apart");
+        const w = Out.fresh("_ap");
+        out.emit(`const ${w} = ${whole} ? apart(sp, ${must}, ${may}) : null;`);
+        out.emit(`let ${r}: number = ${U};`);
+        out.open(`if (${w} !== null) {`);
+        out.emit(`${r} = ${F};`);
+        out.emit(`${WITNESS} = ${w};`);
+        out.close(`} else if (${whole} && ${must}.length === ${may}.length) {`);
+        out.emit(`  ${r} = ${T};`);
+        out.emit("}");
+        return r;
+      }
+    }
+    const join = e.k === "quant" ? joinOf(e) : null;
+    if (join !== null) {
+      const E = this.sureAndMaybe(join.E, scope);
+      if (E !== null) {
+        // Each sure member of A and B must reach the others through the
+        // possible members of E: Spokes' hubs joined by lines.
+        const [mustE, mayE, wholeE] = E;
+        const ends = [join.A, join.B].map((s) => this.sureAndMaybe(s, scope));
+        const [A, B] = ends as [[string, string, string], [string, string, string]];
+        this.env.used.add("apartThrough");
+        const need = Out.fresh("_nd");
+        const w = Out.fresh("_ap");
+        out.emit(
+          `const ${need} = ${A[0]}.length > 0 && ${B[0]}.length > 0 ? [...${A[0]}, ...${B[0]}] : [];`,
+        );
+        out.emit(
+          `const ${w} = ${wholeE} ? apartThrough(sp, ${need}, ${mustE}, ${mayE}) : null;`,
+        );
+        out.emit(`let ${r}: number = ${U};`);
+        out.open(`if (${w} !== null) {`);
+        out.emit(`${r} = ${F};`);
+        out.emit(`${WITNESS} = ${w};`);
+        out.close(
+          `} else if (${wholeE} && ${mustE}.length === ${mayE}.length && ${A[0]}.length === ${A[1]}.length && ${B[0]}.length === ${B[1]}.length) {`,
+        );
+        out.emit(`  ${r} = ${T};`);
+        out.emit("}");
+        return r;
+      }
     }
     if (e.k === "quant") {
       const forall = e.q === "forall";
@@ -662,6 +711,56 @@ class Check {
       // breaks is what it read (a Dominosa square's barred sides).
       return named ? { lo, hi, yes, no } : { lo, hi, yes: null, no: null };
     }
+    if (agg !== null && (agg.fn === "min" || agg.fn === "max")) {
+      // The least or greatest of the terms of the members a completion may
+      // keep, `-1` where it may keep none: Range's view stops at the first
+      // square that may be shaded at the soonest, and at the first that
+      // surely is at the latest.
+      const min = agg.fn === "min";
+      const [mayLo, mayHi, sureLo, sureHi, any] = [
+        "_mlo",
+        "_mhi",
+        "_slo",
+        "_shi",
+        "_any",
+      ].map((p) => Out.fresh(p));
+      out.emit(`let ${lo} = -Infinity;`);
+      out.emit(`let ${hi} = Infinity;`);
+      out.emit(`let ${mayLo} = Infinity;`);
+      out.emit(`let ${mayHi} = -1;`);
+      out.emit(`let ${sureLo} = -1;`);
+      out.emit(`let ${sureHi} = Infinity;`);
+      out.emit(`let ${any} = false;`);
+      const last = agg.binders.at(-1);
+      this.stoppedOr(() => {
+        this.binders(agg.binders, scope, SURE, (sc, g) => {
+          const p = agg.where === null ? null : this.verdict(agg.where, sc);
+          const sure = p === null ? g : Out.fresh("_s");
+          if (p !== null)
+            out.emit(
+              `const ${sure}: number = ${g} === ${T} && ${p} === ${T} ? ${T} : ${g} === ${F} || ${p} === ${F} ? ${F} : ${U};`,
+            );
+          out.open(`if (${sure} !== ${F}) {`);
+          const t = this.bounds(agg.term ?? nm(last?.name ?? ""), sc);
+          out.emit(`${mayLo} = Math.min(${mayLo}, ${t.lo});`);
+          out.emit(`${mayHi} = Math.max(${mayHi}, ${t.hi});`);
+          out.open(`if (${sure} === ${T}) {`);
+          out.emit(`${any} = true;`);
+          out.emit(`${sureLo} = Math.max(${sureLo}, ${t.lo});`);
+          out.emit(`${sureHi} = Math.min(${sureHi}, ${t.hi});`);
+          out.close();
+          out.close();
+        });
+        if (min) {
+          out.emit(`${lo} = ${any} ? ${mayLo} : -1;`);
+          out.emit(`${hi} = ${any} ? ${sureHi} : ${mayHi};`);
+        } else {
+          out.emit(`${lo} = ${sureLo};`);
+          out.emit(`${hi} = ${mayHi};`);
+        }
+      }, [`${lo} = -Infinity;`, `${hi} = Infinity;`]);
+      return { lo, hi, yes: null, no: null };
+    }
     const run = stretchOf(e, scope, this.env);
     const sides = run === null ? null : this.sureAndMaybe(run[2], scope);
     if (run !== null && sides !== null) {
@@ -728,7 +827,11 @@ class Check {
    * which it is not where reading the set's members stopped; `null` for any
    * other term. */
   private sureAndMaybe(e0: Expr, scope: Scope): [string, string, string] | null {
-    const e = inlined(e0, scope, this.env);
+    // A set may be named by a definition with no parameters (Range's
+    // `unshaded`).
+    const def =
+      e0.k === "name" && !scope.has(e0.name) ? this.env.defs.get(e0.name) : undefined;
+    const e = inlined(def?.params.length === 0 ? def.body : e0, scope, this.env);
     if (
       e.k !== "agg" ||
       e.fn !== "set" ||
@@ -758,6 +861,56 @@ class Check {
     out.emit(`if (!${ok}) ${must}.length = 0;`);
     return [must, may, ok];
   }
+}
+
+/**
+ * `forall L = E, a in A0 where P, b in B0 where Q: b in through(a, L)`, every
+ * member of one set reaching every member of another through a set of edges,
+ * as its three sets, each `{x in S where P}`: the form is read as one, since
+ * read a pair at a time it is a violation for each pair, and the groups it
+ * reads are the same for all of them. `null` for any other statement.
+ */
+function joinOf(
+  e: Extract<Expr, { k: "quant" }>,
+): { E: Expr; A: Expr; B: Expr } | null {
+  if (e.q !== "forall" || e.binders.length !== 3) return null;
+  const [L, a, b] = e.binders;
+  if (L.kind !== "let" || L.where !== null || a.kind !== "in" || b.kind !== "in")
+    return null;
+  const { body } = e;
+  if (
+    body.k !== "bin" ||
+    body.op !== "in" ||
+    body.a.k !== "name" ||
+    body.a.name !== b.name ||
+    body.b.k !== "call" ||
+    body.b.fn !== "through" ||
+    body.b.args.length !== 2 ||
+    body.b.args[0].k !== "name" ||
+    body.b.args[0].name !== a.name ||
+    body.b.args[1].k !== "name" ||
+    body.b.args[1].name !== L.name
+  )
+    return null;
+  const bound = [L.name, a.name];
+  if ([b.of, b.where].some((x) => x !== null && bound.some((n) => mentions(x, n))))
+    return null;
+  if ([a.of, a.where].some((x) => x !== null && mentions(x, L.name))) return null;
+  const setOf = (x: Binder): Expr => ({
+    k: "agg",
+    fn: "set",
+    binders: [{ name: x.name, kind: "in", of: x.of, where: null }],
+    where: x.where,
+    term: nm(x.name),
+  });
+  return { E: L.of, A: setOf(a), B: setOf(b) };
+}
+
+/** Whether `e` reads the name `n` without binding it. */
+function mentions(e: Expr, n: string): boolean {
+  const free = new Set<string>();
+  freeNames(e, free, new Set());
+  return free.has(n);
 }
 
 /** The answer's value that may repeat in a unit, and how often. */

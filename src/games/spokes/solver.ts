@@ -16,6 +16,7 @@
  */
 
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { spokenOf } from "../../engine/hint/described-hint.ts";
 import {
   type Answer,
@@ -31,6 +32,7 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -51,6 +53,7 @@ import {
   SPOKE_MARKED,
   type SpokesBoard,
   type SpokesSpokeRef,
+  type SpokesState,
 } from "./state.ts";
 
 /** What the description reads a link as holding. */
@@ -352,6 +355,61 @@ export function spokesSolved(board: SpokesBoard): boolean {
     if (getSpoke(board.spokes[geo.sp.edgeEnds[2 * e]], geo.dirOf[e]) === SPOKE_LINE)
       grid[e] = LINED;
   return answers(geo, dealtOf(board, geo), grid);
+}
+
+/**
+ * The links as the rules read them: a line, or none for a mark or a hidden
+ * spoke; and, where the rules make it certain of every answer, none for an
+ * open spoke a drawn diagonal crosses or one of a hub that has all its
+ * lines, so a group whose hubs are full is finished as it stands.
+ */
+function linksOf(board: SpokesBoard): Uint8Array {
+  const { sp, dirOf } = geometryOf(board.w, board.h);
+  const g = new Uint8Array(sp.edges.length);
+  const lines = new Int32Array(sp.cells.length);
+  for (const e of sp.edges) {
+    const s = getSpoke(board.spokes[sp.edgeEnds[2 * e]], dirOf[e]);
+    if (s === SPOKE_EMPTY) continue;
+    g[e] = s === SPOKE_LINE ? LINED : NONE;
+    if (s === SPOKE_LINE) {
+      lines[sp.edgeEnds[2 * e]]++;
+      lines[sp.edgeEnds[2 * e + 1]]++;
+    }
+  }
+  const full = (c: number): boolean =>
+    board.numbers[c] > 0 && lines[c] >= board.numbers[c];
+  for (const e of sp.edges) {
+    if (g[e] !== 0) continue;
+    const x = sp.crossing[e];
+    if (
+      (x >= 0 && g[x] === LINED) ||
+      full(sp.edgeEnds[2 * e]) ||
+      full(sp.edgeEnds[2 * e + 1])
+    )
+      g[e] = NONE;
+  }
+  return g;
+}
+
+export const rules: RulesOf<SpokesState> = describedRules(spokes, {
+  grid: linksOf,
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s, geometryOf(s.w, s.h))],
+});
+
+/** The rule that every hub is joined, as the live errors draw it. */
+export const JOINED: spokes.RuleName = "joined";
+/** The rule that no two lines cross. */
+export const UNCROSSED: spokes.RuleName = "uncrossed";
+
+/** The two hubs, and the spoke of the first, that link `e` joins. */
+export function spokeEnds(
+  w: number,
+  h: number,
+  e: number,
+): { a: number; b: number; dir: number } {
+  const { sp, dirOf } = geometryOf(w, h);
+  return { a: sp.edgeEnds[2 * e], b: sp.edgeEnds[2 * e + 1], dir: dirOf[e] };
 }
 
 // --- the hint's walk ---------------------------------------------------------

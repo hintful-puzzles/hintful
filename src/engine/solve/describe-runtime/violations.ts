@@ -140,6 +140,111 @@ export function unmatched(
   return [...short(sp, mustA, mayB), ...short(sp, mustB, mayA)];
 }
 
+/**
+ * `connected(S)` on a board being filled, `S` as the cells sure to be in it
+ * (`must`) and those that may be (`may`): `null` where every completion may
+ * still join the sure members, and otherwise where the set breaks, the cells
+ * surely out of it that touch two of the groups the possible members fall
+ * into, each group holding a sure member (Range's shaded squares that cut
+ * the clear ones apart). Every such group is as much to blame as the
+ * others, so where nothing surely out touches two of them, every sure
+ * member is named.
+ */
+export function apart(
+  sp: GridSpace,
+  must: readonly number[],
+  may: readonly number[],
+): number[] | null {
+  if (must.length < 2) return null;
+  const n = sp.w * sp.h;
+  const group = new Int32Array(n).fill(-2);
+  for (const c of may) group[c] = -1;
+  const queue: number[] = [];
+  for (const start of may) {
+    if (group[start] !== -1) continue;
+    group[start] = start;
+    queue.length = 0;
+    queue.push(start);
+    for (let i = 0; i < queue.length; i++)
+      for (const p of sp.adj4[queue[i]])
+        if (group[p] === -1) {
+          group[p] = start;
+          queue.push(p);
+        }
+  }
+  const held = new Set(must.map((c) => group[c]));
+  if (held.size < 2) return null;
+  const wall: number[] = [];
+  for (let c = 0; c < n; c++) {
+    if (group[c] !== -2) continue;
+    let first = -1;
+    for (const p of sp.adj4[c]) {
+      const g = group[p];
+      if (!held.has(g)) continue;
+      if (first < 0) first = g;
+      else if (g !== first) {
+        wall.push(c);
+        break;
+      }
+    }
+  }
+  return wall.length > 0 ? wall : [...must];
+}
+
+/**
+ * "Every cell of `need` reaches every other through the edges of `E`" on a
+ * board being filled, `E` as the edges sure to be in it (`mustE`) and those
+ * that may be (`mayE`): `null` where every completion may still join them,
+ * and otherwise where it breaks. A group the possible edges make that holds
+ * a cell of `need` is finished where no edge in it is undecided, and only
+ * then is it sure to be cut off as it stands (Spokes' hubs with every line
+ * drawn and the rest of the board out of reach): each finished group's
+ * edges are named, or, for a cell with none, the edges ruled out round it.
+ * Which of two unfinished groups is wrong is not certain, so they name
+ * nothing.
+ */
+export function apartThrough(
+  sp: GridSpace,
+  need: readonly number[],
+  mustE: readonly number[],
+  mayE: readonly number[],
+): number[] | null {
+  if (need.length < 2) return null;
+  const n = sp.cells.length;
+  const parent = Int32Array.from({ length: n }, (_, i) => i);
+  const root = (c: number): number => {
+    let r = c;
+    while (parent[r] !== r) r = parent[r];
+    while (parent[c] !== r) [c, parent[c]] = [parent[c], r];
+    return r;
+  };
+  for (const e of mayE) {
+    const a = root(sp.edgeEnds[2 * e]);
+    const b = root(sp.edgeEnds[2 * e + 1]);
+    if (a !== b) parent[a] = b;
+  }
+  const held = new Set(need.map(root));
+  if (held.size < 2) return null;
+  const sure = new Set(mustE);
+  const open = new Set<number>();
+  for (const e of mayE) if (!sure.has(e)) open.add(root(sp.edgeEnds[2 * e]));
+  const may = new Set(mayE);
+  const out: number[] = [];
+  for (const g of held) {
+    if (open.has(g)) continue;
+    const own = mustE.filter((e) => root(sp.edgeEnds[2 * e]) === g);
+    if (own.length > 0) {
+      out.push(...own);
+      continue;
+    }
+    for (let c = 0; c < n; c++)
+      if (root(c) === g)
+        for (const e of sp.cellEdges[c])
+          if (!may.has(e) && !out.includes(e)) out.push(e);
+  }
+  return out;
+}
+
 /** The members of `need` in each group of `need` and `give` joined by sides
  * where `need` outnumbers `give`. */
 function short(

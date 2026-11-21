@@ -9,8 +9,10 @@
  * squares the uncovered ones would fall apart without.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { besideHeld, describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -20,7 +22,7 @@ import {
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
 import * as singles from "../../generated/games/singles/singles.compiled.ts";
-import { F_BLACK, F_CIRCLE, F_ERROR, type SinglesState } from "./state.ts";
+import { F_BLACK, F_CIRCLE, type SinglesState } from "./state.ts";
 
 /** Defined here, beside the solver, rather than in `state.ts`: imported from
  * there, generation and solving ran 1.2-1.4x slower under vitest (paired
@@ -37,7 +39,7 @@ export const CLEAR = 2;
 const NORMAL = 1;
 
 /** The board as the description deals it: every square's number. */
-function dealtOf({ nums }: SinglesState): singles.Dealt {
+export function dealtOf({ nums }: SinglesState): singles.Dealt {
   return { number: cluesWhere(nums, () => true) };
 }
 
@@ -127,62 +129,10 @@ export function status(s: SinglesState): "solved" | "ongoing" {
     : "ongoing";
 }
 
-// --- the error overlay ------------------------------------------------------
-//
-// The overlay marks what is wrong on a board still being filled, which no
-// rule of the answer says: two circled copies of a number in a line, covered
-// squares side by side, and the clear squares outside the largest group.
-
-/** Mark the errors of a board still being filled in its flags. */
-export function markErrors(s: SinglesState): void {
-  const { w, h, n } = s;
-  for (let i = 0; i < n; i++) s.flags[i] &= ~F_ERROR;
-  const black = (i: number): boolean => (s.flags[i] & F_BLACK) !== 0;
-
-  // Covered squares side by side.
-  for (let i = 0; i < n; i++) {
-    if (!black(i)) continue;
-    const right = i % w < w - 1 ? i + 1 : -1;
-    const down = i + w < n ? i + w : -1;
-    for (const p of [right, down])
-      if (p >= 0 && black(p)) {
-        s.flags[i] |= F_ERROR;
-        s.flags[p] |= F_ERROR;
-      }
-  }
-
-  // Two circled copies of a number in a row or a column.
-  const line = (start: number, step: number, size: number): void => {
-    for (let a = 0, i = start; a < size; a++, i += step)
-      for (let b = a + 1, j = i + step; b < size; b++, j += step)
-        if (s.nums[i] === s.nums[j] && s.flags[i] & F_CIRCLE && s.flags[j] & F_CIRCLE) {
-          s.flags[i] |= F_ERROR;
-          s.flags[j] |= F_ERROR;
-        }
-  };
-  for (let x = 0; x < w; x++) line(x, w, h);
-  for (let y = 0; y < h; y++) line(y * w, 1, w);
-
-  // The squares not covered outside the largest group of them.
-  const group = new Int32Array(n).fill(-1);
-  const size: number[] = [];
-  for (let i = 0; i < n; i++) {
-    if (black(i) || group[i] >= 0) continue;
-    const g = size.length;
-    const queue = [i];
-    group[i] = g;
-    for (let k = 0; k < queue.length; k++) {
-      const c = queue[k];
-      const cx = c % w;
-      for (const p of [c - w, c + w, cx > 0 ? c - 1 : -1, cx < w - 1 ? c + 1 : -1])
-        if (p >= 0 && p < n && !black(p) && group[p] < 0) {
-          group[p] = g;
-          queue.push(p);
-        }
-    }
-    size.push(queue.length);
-  }
-  const largest = size.indexOf(Math.max(...size));
-  for (let i = 0; i < n; i++)
-    if (!black(i) && group[i] !== largest) s.flags[i] |= F_ERROR;
-}
+/** The squares as the rules read them: a circle or a square beside a covered
+ * one is clear, and any other square not covered is undecided. */
+export const rules: RulesOf<SinglesState> = describedRules(singles, {
+  grid: (s) => besideHeld(valuesOf(s), s.w, s.h, COVERED, CLEAR),
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s)],
+});

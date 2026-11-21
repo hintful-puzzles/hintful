@@ -14,7 +14,7 @@ it. Galaxies and Rect have no live errors (only the mistake overlay).
 | Latin / distinct | adjacent, unequal, group, keen, towers, solo, mathrax, salad, rome, seismic, signpost, ascent, subsets, crossing, boats | each repeating pair; Salad's repeated blank by count |
 | Clue between two cells, a cage's arithmetic | adjacent, unequal, subsets, mathrax, group, salad, keen, solo killer | exact once decided; keen/solo drew a full cage only, the sum's interval says more |
 | Matched | tents | Hall's condition per group: what Tents drew |
-| Connected / joined | range, singles, spokes, bridges | **none yet**: exact only once every element is decided |
+| Connected / joined | range, singles, spokes, bridges | broken where the sure members fall into two groups of the possible ones; named by the cut (`connected`) or the finished groups (through) |
 | Acyclic / one loop / one path | net, slant, tracks, bridges, rome, path, wordtrail, loopy, pearl | **none yet** |
 | Regions of size k | palisade, separate, filling | **none yet** |
 | Chain (n beside n+1) | signpost, ascent | exact once decided |
@@ -53,6 +53,17 @@ game moves, and the certain part is what the rules report.
   report nothing; at least 90% of one-value changes to an answer must be
   caught, which also shows the guard can fail. Planted: the count's upper
   bound ignoring undecided squares fails it at once.
+- **A connectivity rule is named by what is certain** (2026-11-21). Groups
+  that can no longer meet are each as much to blame, so Range's and Singles'
+  "largest group wins" goes with Loopy's. `connected(S)` names the squares
+  surely out of S that touch two groups holding sure members: the shading
+  that made the cut, shown the moment it is made. The through form names
+  each group with no undecided edge left, as Spokes and Bridges drew a
+  closed group; a group still open names nothing, since which one is wrong
+  is not known. The cut does not carry over to edges: a Bridges line runs
+  through empty squares, so two islands' groups need not share an edge. The
+  through form is matched whole rather than restated as a new function,
+  since a rule's text is in every technique's soundness fingerprint.
 - **Cost.** Tents 15×15 with half its squares undecided: 0.15 ms a call
   under the machine's usual load, once a redraw.
 
@@ -70,7 +81,8 @@ app, explain moved render snapshots.
    mathrax, salad, seismic, starbattle, norinori, unruly, magnets, map,
    mosaic, lightup, dominosa, subsets, clusters, bricks, boats, crossing,
    undead, sticks, signpost, ascent, mines.
-2. Connected bound, then range, singles, spokes, bridges.
+2. Connected bound, then range, singles, spokes.
 3. Loop/acyclic bound, then loopy, pearl, tracks, net, slant, path, wordtrail,
-   rome.
+   rome, and bridges (its "no loops", and a line it narrows without
+   deciding: `tasks.md` 2.3d).
 4. Region-size bound, then palisade, separate, filling.

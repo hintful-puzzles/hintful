@@ -157,6 +157,7 @@ export {
 } from "./describe-runtime/sets.ts";
 export {
   describedSpace,
+  type EdgeGeometry,
   type GridSpace,
   latinSpace,
   opp,
@@ -167,6 +168,8 @@ export {
   within,
 } from "./describe-runtime/space.ts";
 export {
+  apart,
+  apartThrough,
   decidedAll,
   decidedIf,
   heldIn,

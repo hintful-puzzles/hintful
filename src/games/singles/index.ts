@@ -57,7 +57,7 @@ import {
   COVERED,
   hintWalk,
   inGrid,
-  markErrors,
+  rules,
   solveSpecific,
   status,
 } from "./solver.ts";
@@ -176,7 +176,6 @@ function executeMove(state: SinglesState, move: SinglesMove): SinglesState {
     else if (value === "circle") next.flags[i] |= F_CIRCLE;
     else if (value !== "empty") assertNever(value, `singles: executeMove (${x},${y})`);
   }
-  markErrors(next);
   return next;
 }
 
@@ -315,6 +314,7 @@ export const singlesGame: Game<
   targetVerbs,
   executeMove,
   status,
+  rules,
 
   solve,
   difficulty,

@@ -21,7 +21,6 @@
  * clear, so a key-folded cursor could not be erased reliably.
  */
 
-import { Dsf } from "../../engine/board/dsf.ts";
 import { BLUE, PURPLE } from "../../engine/color/colors.ts";
 import {
   cellSurface,
@@ -47,12 +46,15 @@ import type {
   Size,
 } from "../../engine/contract/types.ts";
 import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, winSlot } from "../../engine/render/win-wave.ts";
+import { cluesWhere } from "../../engine/solve/describe-runtime.ts";
 import type { SpokesHint } from "./hint.ts";
 import { HUB, SPOKE } from "./kinds.ts";
+import { JOINED, rules, spokeEnds, UNCROSSED } from "./solver.ts";
 import {
   DIR_BOTLEFT,
   DIR_BOTRIGHT,
@@ -62,7 +64,6 @@ import {
   SPOKE_HIDDEN,
   SPOKE_LINE,
   SPOKE_MARKED,
-  type SpokesBoard,
   type SpokesMistake,
   type SpokesMove,
   type SpokesParams,
@@ -71,79 +72,41 @@ import {
   spokeCounts,
 } from "./state.ts";
 
-// --- the tallies a hub is colored by ----------------------------------------
+// --- where the board breaks a rule ------------------------------------------
 
-/** Each hub's counts and the groups its lines make, which decide how it is
- * drawn: met, over-marked, or closed off from the rest. */
-class SpokesTallies {
-  /** Placeable spokes per hub (8 less the hidden ones). */
-  readonly nodes: Int32Array;
-  /** Lines drawn per hub. */
-  readonly lines: Int32Array;
-  /** Marks per hub, a crossing a drawn diagonal blocks counted as one. */
-  readonly marked: Int32Array;
-  /** The hubs joined by lines, holes folded into the first hub's group so
-   * that a board whose hubs are joined is one group of every cell. */
-  readonly dsf: Dsf;
-  /** For each group, by its root, how many more lines it can draw out of
-   * itself: 0 is closed. */
-  readonly open: Int32Array;
+/** Per hub, where the board breaks a rule: `number` where its number can no
+ * longer be met, `rim` where its group is closed off from the other hubs
+ * with every line drawn, and `lines`, by direction, its lines that cross
+ * another. */
+interface SpokesErrors {
+  readonly number: Uint8Array;
+  readonly rim: Uint8Array;
+  readonly lines: Uint8Array;
+}
 
-  constructor(cells: number) {
-    this.nodes = new Int32Array(cells);
-    this.lines = new Int32Array(cells);
-    this.marked = new Int32Array(cells);
-    this.dsf = new Dsf(cells);
-    this.open = new Int32Array(cells);
-  }
-
-  /** Count `b` again. A drawn diagonal makes its crossing unplaceable, so the
-   * two hubs at the crossing's ends each count one more mark: a hub facing a
-   * drawn diagonal reads as over-marked by what it can still place. */
-  count(b: SpokesBoard): void {
-    const { w, h } = b;
-    const n = w * h;
-    for (let i = 0; i < n; i++) {
-      const counts = spokeCounts(b.spokes[i]);
-      this.nodes[i] = 8 - (counts & 0xff);
-      this.lines[i] = (counts >>> (SPOKE_LINE * 8)) & 0xff;
-      this.marked[i] = (counts >>> (SPOKE_MARKED * 8)) & 0xff;
+function errorsOf(state: SpokesState): SpokesErrors {
+  const { w, h } = state;
+  const live = liveErrors(rules, state);
+  const number = new Uint8Array(w * h);
+  const hubs = cluesWhere(state.numbers, (k) => k > 0);
+  for (const k of live.clues.get("number") ?? []) number[hubs.at[k]] = 1;
+  const rim = new Uint8Array(w * h);
+  for (const at of live.byRule.get(JOINED) ?? [])
+    for (const e of at) {
+      // A group closed off is named by its lines; a lone hub's ruled-out
+      // spokes name nothing its number does not already show.
+      const { a, b, dir } = spokeEnds(w, h, e);
+      if (getSpoke(state.spokes[a], dir) !== SPOKE_LINE) continue;
+      rim[a] = rim[b] = 1;
     }
-    for (let y = 0; y < h - 1; y++)
-      for (let x = 0; x < w - 1; x++) {
-        const i = y * w + x;
-        const down = getSpoke(b.spokes[i], DIR_BOTRIGHT);
-        const up = getSpoke(b.spokes[i + 1], DIR_BOTLEFT);
-        if (down === SPOKE_LINE && up === SPOKE_EMPTY) {
-          this.marked[i + 1]++;
-          this.marked[i + w]++;
-        }
-        if (up === SPOKE_LINE && down === SPOKE_EMPTY) {
-          this.marked[i]++;
-          this.marked[i + w + 1]++;
-        }
-      }
-    this.dsf.reinit();
-    if (!b.numbers[0]) {
-      const first = b.numbers.findIndex((k) => k > 0);
-      if (first > 0) this.dsf.merge(first, 0);
+  const lines = new Uint8Array(w * h);
+  for (const at of live.byRule.get(UNCROSSED) ?? [])
+    for (const e of at) {
+      const { a, b, dir } = spokeEnds(w, h, e);
+      lines[a] |= 1 << dir;
+      lines[b] |= 1 << (dir ^ 4);
     }
-    for (let i = 0; i < n; i++) {
-      if (!b.numbers[i]) {
-        this.dsf.merge(i, 0);
-        continue;
-      }
-      for (let j = 0; j < 4; j++) {
-        const x = (i % w) + SPOKE_DIRS[j].dx;
-        const y = ((i / w) | 0) + SPOKE_DIRS[j].dy;
-        if (x >= 0 && x < w && y < h && getSpoke(b.spokes[i], j) === SPOKE_LINE)
-          this.dsf.merge(i, y * w + x);
-      }
-    }
-    this.open.fill(0);
-    for (let i = 0; i < n; i++)
-      this.open[this.dsf.canonify(i)] += b.numbers[i] - this.lines[i];
-  }
+  return { number, rim, lines };
 }
 
 export const PREFERRED_TILE_SIZE = 72;
@@ -224,9 +187,6 @@ export interface SpokesDrawState {
   tileSize: number;
   w: number;
   h: number;
-  /** Recount scratch, so the renderer can color hubs by line/mark counts and
-   * by whether their group is closed off. */
-  scratch: SpokesTallies;
   /** Per cell, its packed hub and color hash (a hole is 0, 0), with the
    * {@link wrong} and {@link hint} overlays registered. */
   cells: TileCache;
@@ -320,7 +280,6 @@ export function newDrawState(state: SpokesState, tileSize: number): SpokesDrawSt
     tileSize,
     w: state.w,
     h: state.h,
-    scratch: new SpokesTallies(n),
     cells: new TileCache(n, { words: 2, overlays: [wrong, hint] }),
     corners: new TileCache(n),
     wrong,
@@ -403,12 +362,13 @@ export function redraw(
   const thick = ts <= 80 ? 2 : 4;
   const radius = ts / 3.5;
 
-  ds.scratch.count(state);
-  const connected = ds.scratch.dsf.size(0) === w * h;
+  const errors = errorsOf(state);
 
   // Mistake overlay: flag both ends of each offending spoke, so both cells
-  // repaint and both halves of the line come out red.
+  // repaint and both halves of the line come out red. Two lines crossing
+  // are red the same way.
   ds.wrong.clear();
+  for (let i = 0; i < w * h; i++) if (errors.lines[i]) ds.wrong.add(i, errors.lines[i]);
   for (const m of mistakes ?? []) {
     ds.wrong.add(m.index, 1 << m.dir);
     const nx = (m.index % w) + SPOKE_DIRS[m.dir].dx;
@@ -519,7 +479,7 @@ export function redraw(
 
       const tx = toCoord(x, ts);
       const ty = toCoord(y, ts);
-      const lines = ds.scratch.lines[i];
+      const lines = (spokeCounts(state.spokes[i]) >>> (SPOKE_LINE * 8)) & 0xff;
 
       const tone = flash.win(sweepStep(x, y));
       const fill = tone
@@ -530,16 +490,14 @@ export function redraw(
       const border =
         i === ui.dragStart || i === ui.dragEnd
           ? COL_HOLDING
-          : !connected && !ds.scratch.open[ds.scratch.dsf.canonify(i)]
+          : errors.rim[i]
             ? COL_ERROR
             : COL_BORDER;
-      const txt =
-        lines > state.numbers[i] ||
-        ds.scratch.marked[i] > ds.scratch.nodes[i] - state.numbers[i]
-          ? COL_ERROR
-          : cshow && cx === x && cy === y
-            ? COL_PURPLE_CURSOR
-            : COL_LINE;
+      const txt = errors.number[i]
+        ? COL_ERROR
+        : cshow && cx === x && cy === y
+          ? COL_PURPLE_CURSOR
+          : COL_LINE;
 
       const color = (fill << 10) | (border << 5) | txt;
       if (!ds.cells.changed(i, state.spokes[i], color)) continue;

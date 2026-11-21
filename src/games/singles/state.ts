@@ -17,7 +17,7 @@ import * as singles from "../../generated/games/singles/singles.compiled.ts";
  * parts of `singles.c`.
  *
  * Each cell carries an immutable number (`nums`, 1..max(w,h)) and a
- * mutable `flags` bitmask (black / circle / error). What a correctly
+ * mutable `flags` bitmask (black / circle). What a correctly
  * completed board is, `singles.description.yaml` states.
  */
 
@@ -44,7 +44,6 @@ function diffFromLevel(level: number): Difficulty {
 // Cell flag bits (upstream F_*).
 export const F_BLACK = 0x1;
 export const F_CIRCLE = 0x2;
-export const F_ERROR = 0x4;
 
 export interface SinglesParams {
   w: number;

@@ -17,14 +17,11 @@
  *
  * A hint walks the same ladder, one firing at a time, and says each square
  * a firing decides as a step of its own.
- *
- * The live error overlay ({@link findErrors}) stays the game's own: it judges
- * a board still being filled, which no rule of the answer says.
  */
 
-import { Dsf } from "../../engine/board/dsf.ts";
 import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { RandomState } from "../../engine/random/index.ts";
 import {
   type Answer,
@@ -36,6 +33,7 @@ import {
 } from "../../engine/solve/answer-search.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { besideHeld, describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -76,7 +74,7 @@ const CLEAR = 2;
 // --- the board as the description reads it -----------------------------------
 
 /** The board as the description deals it: the numbers. */
-function dealtOf(grid: Int8Array): range.Dealt {
+export function dealtOf(grid: Int8Array): range.Dealt {
   return { number: cluesWhere(grid, (n) => n > 0) };
 }
 
@@ -165,125 +163,14 @@ export function hintWalk(state: {
   return d === null ? null : { marks: d.m, entries: d.ladder.entries };
 }
 
-// --- the live error overlay --------------------------------------------------
-
-// Cell-state bit masks: BLACK/WHITE/EMPTY (−2/−1/0) map to bits 0/1/2
-// via `1 << (v + 2)`. `HIGH` is every bit above bit 2 — a clue cell
-// (grid > 0) is counted by a run iff the mask carries some high bit
-// (i.e. the run was built to include "positive" values).
-const MASK_BLACK = 1; // 1 << (BLACK + 2)
-const MASK_EMPTY = 4; // 1 << (EMPTY + 2)
-const HIGH = ~(MASK_BLACK | (1 << (WHITE + 2)) | MASK_EMPTY); // ~7
-/** The cells known to be white: a white mark, or a clue. */
-const MASK_KNOWN_WHITE = ~(MASK_BLACK | MASK_EMPTY);
-
-/** Length of the run of cells from (r,c) along (dr,dc) whose state
- * matches `mask`; a clue cell matches iff `mask` carries a high bit. */
-function runLength(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  r: number,
-  c: number,
-  dr: number,
-  dc: number,
-  mask: number,
-): number {
-  let sz = 0;
-  while (!outOfBounds(r, c, w, h)) {
-    const v = grid[idx(r, c, w)];
-    if (v > 0) {
-      if (!(mask & HIGH)) break;
-    } else if (!((1 << (v + 2)) & mask)) {
-      break;
-    }
-    sz++;
-    r += dr;
-    c += dc;
-  }
-  return sz;
-}
-
-/** How many cells a clue at (r, c) sees: itself plus, in each direction, the
- * run matching `mask`. */
-function seenFrom(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  r: number,
-  c: number,
-  mask: number,
-): number {
-  let seen = 1;
-  for (let j = 0; j < 4; j++) {
-    seen += runLength(grid, w, h, r + DR[j], c + DC[j], DR[j], DC[j], mask);
-  }
-  return seen;
-}
-
-/**
- * Flag in `report` each cell of a board still being filled that breaks a
- * rule: a shaded square beside another, a clue that falls short even with
- * every undecided cell clear or already sees too many with only the known
- * clear ones, and the clear cells outside the largest group of them. Port of
- * `find_errors`.
- */
-export function findErrors(
-  grid: Int8Array,
-  w: number,
-  h: number,
-  report: boolean[],
-): void {
-  const n = w * h;
-  const dsf = new Dsf(n);
-  let nblack = 0;
-  let anyWhite = -1;
-
-  for (let r = 0; r < h; r++) {
-    for (let c = 0; c < w; c++) {
-      const i = idx(r, c, w);
-      const v = grid[i];
-      if (v === BLACK) {
-        nblack++;
-        for (let j = 0; j < 4; j++) {
-          const rr = r + DR[j];
-          const cc = c + DC[j];
-          if (outOfBounds(rr, cc, w, h)) continue;
-          if (grid[idx(rr, cc, w)] !== BLACK) continue;
-          report[i] = true;
-          break;
-        }
-        continue;
-      }
-      if (
-        v > 0 &&
-        (seenFrom(grid, w, h, r, c, ~MASK_BLACK) < v ||
-          seenFrom(grid, w, h, r, c, MASK_KNOWN_WHITE) > v)
-      )
-        report[i] = true;
-      anyWhite = i;
-      if (r + 1 < h && grid[i + w] !== BLACK) dsf.merge(i, i + w);
-      if (c + 1 < w && grid[i + 1] !== BLACK) dsf.merge(i, i + 1);
-    }
-  }
-
-  if (anyWhite === -1 || nblack + dsf.size(anyWhite) >= n) return;
-  // Pick the largest component as canonical; flag every cell outside it.
-  let canonical = -1;
-  let biggest = 0;
-  for (let i = 0; i < n; i++) {
-    if (grid[i] !== BLACK) {
-      const size = dsf.size(i);
-      if (size > biggest) {
-        biggest = size;
-        canonical = dsf.canonify(i);
-      }
-    }
-  }
-  for (let i = 0; i < n; i++) {
-    if (grid[i] !== BLACK && dsf.canonify(i) !== canonical) report[i] = true;
-  }
-}
+/** The squares as the rules read them: a cross, a number or a square beside
+ * a shaded one is clear, and any other square with no shading is
+ * undecided. */
+export const rules: RulesOf<RangeState> = describedRules(range, {
+  grid: (s) => besideHeld(valuesOf(s.grid), s.w, s.h, SHADED, CLEAR),
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s.grid)],
+});
 
 // --- the answer (Solve command + findMistakes + the Unreasonable tier) -----
 

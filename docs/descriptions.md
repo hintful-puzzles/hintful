@@ -1053,10 +1053,15 @@ says how each form is read; what a description's author acts on:
   (a Boats boat walled in by water), a quantifier over `stretch(L, c, S)` as
   ranging over the run S's possible members make, surely over its sure
   ones' (Sticks' line walled in by another number), `matched` by Hall's condition
-  on each group, and `latin`/`distinct` as each pair that repeats. A form
-  that reads only decided elements needs nothing: a connectivity or loop rule
-  is reported once its elements are decided, and bounding it earlier is that
-  form's work in the compiler, never a game's.
+  on each group, `latin`/`distinct` as each pair that repeats, `min` and
+  `max` as the least and greatest a completion may keep (Range's view stops
+  at the first square that may be shaded at the soonest), `connected(S)` as
+  broken where S's sure members fall into two of the groups its possible ones
+  make, and `forall L = E, a in A, b in B: b in through(a, L)` read as one
+  statement the same way, over the groups E's possible edges make. A form
+  that reads only decided elements needs nothing: a loop rule is reported
+  once its elements are decided, and bounding it earlier is that form's work
+  in the compiler, never a game's.
 - **Where is the statement's leading `forall`s and `and`s.** Each binding
   whose body is false is one violation, at the elements of the answer's sort
   it binds (two tents touching); where it binds none, at what its deciding
@@ -1064,7 +1069,13 @@ says how each form is read; what a description's author acts on:
   what it read. A clue's violation is the clue. So a rule written as
   `forall L in lines: count(...) = k` marks each line it breaks, and the same
   rule written as one `count` over the board marks nothing finer than the
-  board: write the quantifier where the place is worth showing.
+  board: write the quantifier where the place is worth showing. Groups that
+  can no longer meet are each as much to blame, so a connectivity rule names
+  what is certain instead: `connected` the squares surely out of the set
+  that touch two of the groups (Range's shading that cuts the clear squares
+  apart), and the through form each group with no undecided edge left, by
+  its edges (Spokes' hubs with every line drawn and the rest out of reach).
+  The largest group is never taken to be the right one.
   Each statement is read alone, so an `exists` over squares still open
   stays undecided even where another rule has already placed what it looks
   for. Where a value is placed once, say it of the square that holds it:

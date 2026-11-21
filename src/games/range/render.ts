@@ -4,10 +4,8 @@
  * and filled in the flash color where the win flash is on it; a shaded
  * cell holds the shaded piece, a cell marked clear holds the ruled-out cross,
  * and a clue holds its number. The keyboard cursor is corner brackets, out at
- * the cell's corners. Rule violations are
- * recomputed every frame via `findErrors` and framed in the error color —
- * Range highlights errors live, which is upstream behavior, not the fork's
- * Check & Save.
+ * the cell's corners. Where the board breaks its rules is framed in the
+ * error color, read off the rules each frame.
  */
 
 import {
@@ -40,6 +38,7 @@ import {
   glyphFont,
 } from "../../engine/render/draw.ts";
 import { drawCellRing, drawMarkSides } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import {
   drawPiece,
@@ -51,7 +50,7 @@ import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { RangeHint } from "./hint.ts";
 import { CLUE } from "./kinds.ts";
-import { findErrors } from "./solver.ts";
+import { dealtOf, rules } from "./solver.ts";
 import {
   BLACK,
   type Cell,
@@ -212,6 +211,18 @@ function clueText(
   return { origin: { x: tx, y: ty }, options: glyphFont(Math.floor((ts * 3) / 5)) };
 }
 
+/** Where the board breaks a rule, per square: two shaded squares touching,
+ * a number that can no longer see its count, and the shaded squares that
+ * cut the clear ones apart. */
+function errorsOf(state: RangeState): Uint8Array {
+  const live = liveErrors(rules, state);
+  const out = Uint8Array.from(live.at);
+  for (const [a, b] of live.pairs) out[a] = out[b] = 1;
+  const { number } = dealtOf(state.grid);
+  for (const k of live.clues.get("number") ?? []) out[number.at[k]] = 1;
+  return out;
+}
+
 // --- redraw ----------------------------------------------------------------
 
 export function redraw(
@@ -223,8 +234,7 @@ export function redraw(
   const ts = ds.tileSize;
   const { w, h, grid } = state;
 
-  const errors: boolean[] = new Array(w * h).fill(false);
-  findErrors(grid, w, h, errors);
+  const errors = errorsOf(state);
 
   // Check & Save mistakes (cells contradicting the unique solution) are
   // highlighted the same red as live rule violations.
@@ -238,7 +248,7 @@ export function redraw(
     for (let c = 0; c < w; c++) {
       const i = idx(r, c, w);
       const value = grid[i];
-      const error = errors[i];
+      const error = errors[i] === 1;
       const mistake = mistakeSet?.has(i) ?? false;
       const cursor = ui.cursor.visible && r === ui.cursor.y && c === ui.cursor.x;
       const clueRef = hintClue.has(i);

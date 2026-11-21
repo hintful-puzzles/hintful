@@ -40,16 +40,17 @@ import {
   glyphFont,
 } from "../../engine/render/draw.ts";
 import { drawCellRing, drawMarkSides } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { drawPiece, SHADED_SHAPE } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { SinglesHint } from "./index.ts";
+import { dealtOf, rules } from "./solver.ts";
 import {
   F_BLACK,
   F_CIRCLE,
-  F_ERROR,
   type SinglesMove,
   type SinglesState,
   type SinglesUi,
@@ -251,6 +252,18 @@ function numberText(
   return { options: glyphFont(shaded ? Math.floor((full * 3) / 4) : full), text };
 }
 
+/** Where the board breaks a rule, per square: two covered squares touching,
+ * a number repeated among the squares left clear, and the covered squares
+ * that cut the clear ones apart. */
+function errorsOf(state: SinglesState): Uint8Array {
+  const live = liveErrors(rules, state);
+  const out = Uint8Array.from(live.at);
+  for (const [a, b] of live.pairs) out[a] = out[b] = 1;
+  const { number } = dealtOf(state);
+  for (const k of live.clues.get("number") ?? []) out[number.at[k]] = 1;
+  return out;
+}
+
 // --- redraw ----------------------------------------------------------------
 
 export function redraw(
@@ -264,6 +277,7 @@ export function redraw(
 
   ds.hint.pack(stepMarks(hint), (x, y) => y * w + x);
   const mistakeSet = new Set(mistakes?.map((m) => m.y * w + m.x));
+  const errors = errorsOf(state);
 
   // The frame closes the grid on its top and left, where no tile draws a
   // line, and is no heavier than a grid line, whose color it takes.
@@ -287,7 +301,7 @@ export function redraw(
       const tone = flash.win(sweepStep(x, y));
       if (tone) f |= tone === WIN_LEAD ? DS_FLASH_LEAD : DS_FLASH;
       if (state.flags[i] & F_CIRCLE) f |= DS_CIRCLE;
-      if (state.flags[i] & F_ERROR) f |= DS_ERROR;
+      if (errors[i]) f |= DS_ERROR;
       if (mistakeSet.has(i)) f |= DS_MISTAKE;
 
       if (ds.tiles.changed(i, f))

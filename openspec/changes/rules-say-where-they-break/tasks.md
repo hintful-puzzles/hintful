@@ -113,10 +113,28 @@
       so in play it shows a number off its arrow from the next).
       Run `src/guards` before a push: `capability-surface` records each
       game that declares `rules`, and only CI runs it.
-- [ ] 2.3c Bound `connected` in the compiler (sure and possible members);
-      then batch 2.
+- [x] 2.3c Bound `connected` in the compiler (sure and possible members);
+      then batch 2. Bound: `connected(S)` and the through form
+      (`design.md` § "Decisions"), and `min`/`max`. Moved: range (a number
+      that can no longer see its count, or already sees more, as before; the
+      shading that cuts the clear squares apart, where it drew the squares
+      outside the largest group; a square beside a shaded one reads as clear,
+      `besideHeld`), singles (the same cut and reading, so two copies of a
+      number both forced clear beside covered squares are red; its
+      `F_ERROR` flag goes), spokes (its marks unchanged: a closed group's
+      rims and a number that can no longer be met; an open spoke a drawn
+      diagonal crosses, or of a full hub, reads as no line; two crossing
+      lines are red, where nothing was; its tallies go). Bridges moves with
+      batch 3, 2.3d.
 - [ ] 2.3d Bound the loop and acyclic forms; then batch 3. Loopy's and
-      Pearl's "largest piece" guess goes (`design.md` § "Census").
+      Pearl's "largest piece" guess goes (`design.md` § "Census"). Bridges
+      first needs its rules to read a line it narrows without deciding: one
+      bridge drawn where two may go, a ≤1 limit, the most its run allows.
+      A value per element cannot hold that, and its old check used it (an
+      island that can no longer reach its count through its lines' limits).
+      Proposed: `violations` takes an optional mask per element of the values
+      the player's marks still allow, read wherever the check reads a
+      domain, and the guard checks each mask holds the answer's value.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
 - [ ] 2.4 Plant a broken rule and see its mark appear in a game that wrote

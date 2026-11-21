@@ -63,6 +63,7 @@ import {
   toCoord,
 } from "./render.ts";
 import {
+  rules,
   SPOKES_RUNGS,
   type SpokesRung,
   spokesAnswer,
@@ -470,6 +471,7 @@ export const spokesGame: Game<
   interpretMove,
   executeMove,
   status: (s): GameStatus => (spokesSolved(s) ? "solved" : "ongoing"),
+  rules,
 
   solve,
   difficulty,
