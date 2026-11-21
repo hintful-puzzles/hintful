@@ -188,6 +188,8 @@ is one to weigh against a pointer.
 
 - [`hints-search.md`](./hints-search.md): its opening, and the sections its
   table sends your game to.
+- `descriptions.md` § "A planning game's position and moves": every planning
+  game describes its position, moves and finish.
 - `input.md` § "Drag models" and `input.md` § "Giving a drag game a
   keyboard", where pieces are dragged.
 - `rendering.md` § "Animation and flash"; `rendering.md` § "Drag previews and

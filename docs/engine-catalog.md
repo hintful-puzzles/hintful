@@ -199,7 +199,8 @@ text, and three different things look the same to it:
 
 Put a promoted helper in the directory of what it is for: each section
 below is one, and its entry goes in that section. Nothing sits at the top of
-`src/engine/`.
+`src/engine/`. A module that moves is moved with `scripts/move-modules.mjs`,
+which repoints whatever names it.
 
 - **The directories are layered.** `src/engine/testing/engine-directories.ts`
   lists them bottom to top, and a module imports at run time only from its

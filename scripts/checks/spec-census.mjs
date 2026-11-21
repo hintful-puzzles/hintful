@@ -2,7 +2,7 @@
 /**
  * A census of `openspec/specs/`: how large each group of capabilities is, what
  * a requirement's body holds besides its rule, and how the specs are used.
- * It is a diagnostic and gates nothing; `spec-size.mjs` is what holds a bound.
+ * It is a diagnostic and gates nothing; `spec-form.mjs` is what holds a bound.
  *
  *   node scripts/checks/spec-census.mjs              the three tables
  *   node scripts/checks/spec-census.mjs --each       one row a capability as well
