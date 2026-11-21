@@ -1,0 +1,4 @@
+# Drop skip_specs and add the deltas once the census says which looks change.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true

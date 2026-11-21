@@ -1,0 +1,4 @@
+# A guard's population, derived.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true

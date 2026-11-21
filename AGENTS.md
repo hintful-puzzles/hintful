@@ -45,8 +45,9 @@ incident only what a later session acts on: the rule, and the shape to look for.
   and never deferred, without the owner's approval.
 - **Ask before changing what a player or their data can see**: save and game-ID
   formats, preference keys, shared links, how a control behaves. State the
-  cost. Breaking compatibility is allowed, and it is the owner's call. An
-  internal design decision is yours: change it and record the reason.
+  cost. Breaking compatibility is allowed, and it is the owner's call.
+  Making games consistent with each other needs no ask. An internal design
+  decision is yours: change it and record the reason.
 - **Own everything in the repo.** Never call a problem "pre-existing",
   "unrelated" or "out of scope". Fix it, or raise it with a recommendation.
 - **A session never halts, except for an issue that genuinely needs the owner.** Every turn ends in one of two ways: work goes on in this session, or a fresh session is started on the rest (`mcp__continue-session__continueInNewSession`, last action of the turn). A summary that lists what is "still open" and stops is the halt, whether the open part is large, a browser look, a follow-up or a doubt you could settle yourself. Size is no reason: wrap up a part and hand the rest on. The only reasons to stop are the owner asking, or a real decision (a trade-off with no clear winner, two readings, something irreversible), named in the reply. **A turn never ends on "I'll report when it finishes"**: a running gate or push is waited on with a Monitor, and the next step starts meanwhile or at once after. A queued CI run does not hold the handoff; the next session checks it.

@@ -259,10 +259,8 @@ same holds inside the describe compiler.
 
 ## Which go ahead without the owner's pick
 
-None yet. The first review's owner instruction (proceed with the obvious
-ones) was for that list. Items 1–5 and 8 have no player-visible effect and a
-clear payoff; item 7 is player-visible; item 1 may raise a budget the owner
-set. The owner picks.
+The owner picked every item on 2026-11-21, item 7 included; each is its own
+change, filed in rank order (`tasks.md` 2.1).
 
 ## Risks / Trade-offs
 

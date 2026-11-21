@@ -1,0 +1,5 @@
+# Drop skip_specs and add a build-pipeline delta once the sharded budget is
+# chosen, if that requirement states it.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true

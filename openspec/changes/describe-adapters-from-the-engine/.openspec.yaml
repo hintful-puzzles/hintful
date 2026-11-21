@@ -1,0 +1,4 @@
+# Engine helpers and their adoption; a delta only if the declared form lands.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true

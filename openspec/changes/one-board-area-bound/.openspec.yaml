@@ -1,0 +1,5 @@
+# Drop skip_specs and add the engine-params and game deltas once the bound is
+# measured (tasks 2.2): this change does alter requirements.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true

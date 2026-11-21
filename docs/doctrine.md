@@ -110,6 +110,9 @@ breaking an earlier assumption would simplify it, consider that actively.
   cost stated: save and game-ID formats, preference keys, shared links, a
   control that behaves differently. Breaking compatibility is on the table,
   and it is the owner's call.
+- **A change that makes games consistent with each other needs no ask**,
+  even where a player sees it (owner, 2026-11-21). The change states what
+  a player will see differently; a compatibility break is still named.
 
 A simplification states its benefit, and a significant simplification that
 makes the code easier to maintain is a benefit in its own right (owner,

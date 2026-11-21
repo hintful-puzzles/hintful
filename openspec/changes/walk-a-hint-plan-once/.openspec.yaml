@@ -1,0 +1,4 @@
+# A test helper and its adoption.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true

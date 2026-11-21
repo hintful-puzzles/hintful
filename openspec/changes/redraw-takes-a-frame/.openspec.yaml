@@ -1,0 +1,4 @@
+# A signature change; the requirements say what a frame shows, which does not move.
+schema: spec-driven
+created: 2026-11-21
+skip_specs: true
