@@ -53,6 +53,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -67,21 +68,83 @@ import {
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
+import type * as group from "../../generated/games/group/group.compiled.ts";
 import type { GroupMove } from "./state.ts";
 import {
-  EF_DIGIT_MASK,
-  EF_DIGIT_SHIFT,
-  EF_LATIN,
-  EF_LEFT_MASK,
-  EF_LEFT_SHIFT,
-  EF_RIGHT_MASK,
-  EF_RIGHT_SHIFT,
   type GroupState,
   type GroupUi,
-  markErrors,
   moveInSequence,
+  rules,
   toChar,
 } from "./state.ts";
+
+// --- live errors -------------------------------------------------------------
+// Per-cell error bits, packed to fit a signed Int32:
+//   EF_LATIN (bit 30)   — cell's digit duplicates within its row or column.
+//   EF_LEFT  (bits 0-14) — three 5-bit digits (a,b,c) of a failed (ab)c on this
+//                          cell (the "(ab)c" side of an associativity failure).
+//   EF_RIGHT (bits 15-29) — the same triple on the "a(bc)" side.
+
+const EF_DIGIT_SHIFT = 5;
+const EF_DIGIT_MASK = (1 << EF_DIGIT_SHIFT) - 1;
+const EF_LEFT_SHIFT = 0;
+const EF_RIGHT_SHIFT = 3 * EF_DIGIT_SHIFT;
+const EF_LEFT_MASK = (1 << (3 * EF_DIGIT_SHIFT)) - 1;
+const EF_RIGHT_MASK = EF_LEFT_MASK << EF_RIGHT_SHIFT;
+const EF_LATIN = 1 << (6 * EF_DIGIT_SHIFT);
+
+const ASSOCIATIVE: group.RuleName = "associative";
+
+/** The failed product `(ab)c ≠ a(bc)` whose four squares a violation names:
+ * `ab` at row a, column b; `bc`; and the two sides. */
+function failedTriple(
+  w: number,
+  g: ArrayLike<number>,
+  at: readonly number[],
+): { a: number; b: number; c: number; left: number; right: number } | null {
+  for (const p of at) {
+    const a = ((p / w) | 0) + 1;
+    const b = (p % w) + 1;
+    for (const q of at) {
+      if (((q / w) | 0) + 1 !== b || !g[p] || !g[q]) continue;
+      const c = (q % w) + 1;
+      const left = (g[p] - 1) * w + c - 1;
+      const right = (a - 1) * w + g[q] - 1;
+      if (
+        at.includes(left) &&
+        at.includes(right) &&
+        g[left] &&
+        g[right] &&
+        g[left] !== g[right]
+      )
+        return { a, b, c, left, right };
+    }
+  }
+  return null;
+}
+
+/** Where the board breaks a rule (`Game.rules`), grid-indexed: each repeated
+ * element, and each failed product's triple on its two sides. */
+function errorFlags(state: GroupState): Int32Array {
+  const w = state.w;
+  const out = new Int32Array(w * w);
+  const live = liveErrors(rules, state);
+  for (const [p, q] of live.pairs) {
+    out[p] |= EF_LATIN;
+    out[q] |= EF_LATIN;
+  }
+  for (const at of live.byRule.get(ASSOCIATIVE) ?? []) {
+    const t = failedTriple(w, state.grid, at);
+    if (t === null)
+      throw new Error("an associativity violation names no failed product");
+    // One square shows one failure on each side.
+    if (out[t.left] & EF_LEFT_MASK || out[t.right] & EF_RIGHT_MASK) continue;
+    const abc = (((t.a << EF_DIGIT_SHIFT) | t.b) << EF_DIGIT_SHIFT) | t.c;
+    out[t.left] |= abc << EF_LEFT_SHIFT;
+    out[t.right] |= abc << EF_RIGHT_SHIFT;
+  }
+  return out;
+}
 
 // --- palette (game_colours) ------------------------------------------------
 
@@ -199,7 +262,7 @@ export interface GroupDrawState {
   marks: HintMarks;
   /** Scratch: the drag-modified display sequence, rebuilt each redraw. */
   sequence: Uint8Array;
-  /** Scratch: grid-indexed error overlay from `markErrors`. */
+  /** Scratch: grid-indexed live errors, from {@link errorFlags}. */
   errtmp: Int32Array;
   /** Whether the pencil-mode indicator was on last frame. */
   pencilModeShown: boolean | null;
@@ -488,7 +551,7 @@ export function redraw(
     ds.marks.reset(); // the backing rect just erased every gutter
   }
 
-  markErrors(state, ds.errtmp);
+  ds.errtmp.set(errorFlags(state));
 
   // The display sequence, with a header being dragged shown where it is now.
   if (ui.drag) moveInSequence(state.sequence, ui.dragnum, ui.dragpos, ds.sequence);

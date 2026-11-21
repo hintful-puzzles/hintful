@@ -578,6 +578,30 @@ class Check {
     out.emit(`let ${lo} = -Infinity;`);
     out.emit(`let ${hi} = Infinity;`);
     out.open("try {");
+    if (
+      e.k === "call" &&
+      e.fn === "value" &&
+      e.args.length === 1 &&
+      this.domainOf !== null
+    ) {
+      // An undecided element's value lies within its domain: a Keen cage's
+      // empty square adds at least 1 to its sum.
+      const xs = once(compileExpr(e.args[0], scope, this.env, out), out).code;
+      const mask = Out.fresh("_dm");
+      out.open(`if (${xs} < 0 || g[${xs}] > 0) {`);
+      out.emit(`if (${xs} >= 0) ${READ}.push(${xs});`);
+      out.emit(`${lo} = ${hi} = ${xs} < 0 ? -1 : g[${xs}];`);
+      out.close("} else {");
+      out.emit(`  const ${mask} = ${this.domainOf(xs)};`);
+      out.emit(
+        `  if (${mask} !== 0) { ${lo} = 31 - Math.clz32(${mask} & -${mask}); ${hi} = 31 - Math.clz32(${mask}); }`,
+      );
+      out.emit("}");
+      out.close("} catch (e) {");
+      out.emit("  undecided(e);");
+      out.emit("}");
+      return { lo, hi, yes: null, no: null };
+    }
     const v = compileExpr(e, scope, this.env, out);
     expect(v, "num", "a bound");
     out.emit(`${lo} = ${hi} = ${v.code};`);

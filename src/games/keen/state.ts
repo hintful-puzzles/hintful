@@ -12,7 +12,6 @@
  * starts blank.
  */
 
-import { valuesOneTo } from "../../engine/board/candidate-bits.ts";
 import { Dsf } from "../../engine/board/dsf.ts";
 import {
   DESC_TOO_LONG,
@@ -22,6 +21,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem } from "../../engine/contract/game.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { isDigit } from "../../engine/game-id/decimal.ts";
 import { type DescReader, readDesc } from "../../engine/game-id/desc-reader.ts";
 import { numberItem, squareSize } from "../../engine/game-id/params.ts";
@@ -35,9 +35,9 @@ import { newCursor } from "../../engine/input/pointer.ts";
 import {
   type ClueList,
   clueList,
-  latinSpace,
   partition,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import * as keen from "../../generated/games/keen/keen.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
@@ -83,13 +83,6 @@ export function clueVal(clue: number): number {
 
 /** Maximum cage area (upstream `MAXBLK`). */
 export const MAXBLK = 6;
-
-// --- error flags (written by markErrors; mapped to draw flags in render) ---
-
-/** A cage whose filled digits violate its clue. */
-export const ERR_CLUE = 1;
-/** A duplicate digit in a row or column. */
-export const ERR_LATIN = 2;
 
 // --- params ----------------------------------------------------------------
 
@@ -346,83 +339,18 @@ export function newState(p: KeenParams, desc: string): KeenState {
   };
 }
 
-// --- error checking (check_errors) -----------------------------------------
-
-/**
- * Mark every cell currently in error into `errors` (an `a`-length array) with
- * {@link ERR_CLUE}/{@link ERR_LATIN} bits: the error overlay, from
- * `check_errors`. Whether a board is solved is the compiled answer check's.
- */
-export function markErrors(state: KeenState, errors: Int32Array): void {
-  const w = state.params.w;
-  const a = w * w;
-  const { minimal, clues } = state.clues;
-  const grid = state.grid;
-
-  const cluevals = new Int32Array(a);
-  const full = new Uint8Array(a).fill(1); // per-cage "no empty cell" flag
-  errors.fill(0);
-
-  for (let i = 0; i < a; i++) {
-    const j = minimal[i];
-    if (j === i) {
-      cluevals[i] = grid[i];
-    } else {
-      const op = clueOp(clues[j]);
-      switch (op) {
-        case C_ADD:
-          cluevals[j] += grid[i];
-          break;
-        case C_MUL:
-          cluevals[j] *= grid[i];
-          break;
-        case C_SUB:
-          cluevals[j] = Math.abs(cluevals[j] - grid[i]);
-          break;
-        case C_DIV: {
-          const d1 = Math.min(cluevals[j], grid[i]);
-          const d2 = Math.max(cluevals[j], grid[i]);
-          cluevals[j] = d1 === 0 || d2 % d1 !== 0 ? 0 : (d2 / d1) | 0;
-          break;
-        }
-      }
-    }
-    if (!grid[i]) full[j] = 0;
-  }
-
-  for (let i = 0; i < a; i++) {
-    if (minimal[i] === i && full[i] && clueVal(clues[i]) !== cluevals[i])
-      errors[i] |= ERR_CLUE;
-  }
-
-  // Each row, then each column; `cellOf(line, k)` is the line's k-th cell.
-  const cellOf = (line: number, k: number): number =>
-    line < w ? line * w + k : k * w + line - w;
-  const fullMask = valuesOneTo(w);
-  for (let line = 0; line < 2 * w; line++) {
-    let mask = 0;
-    let errmask = 0;
-    for (let k = 0; k < w; k++) {
-      const bit = 1 << grid[cellOf(line, k)];
-      errmask |= mask & bit;
-      mask |= bit;
-    }
-    if (mask === fullMask) continue;
-    errmask &= ~1;
-    for (let k = 0; k < w; k++) {
-      const cell = cellOf(line, k);
-      if (errmask & (1 << grid[cell])) errors[cell] |= ERR_LATIN;
-    }
-  }
-}
-
 // --- status ----------------------------------------------------------------
 
+/** The board as its rules read it: a digit is its value, a blank square
+ * undecided. */
+export const rules: RulesOf<KeenState> = describedRules(keen, {
+  grid: (s) => Uint8Array.from(s.grid),
+  size: (s) => [s.params.w, s.params.w],
+  deals: (s) => [dealtOf(cagesOf(s.params.w, s.clues))],
+});
+
 export function status(s: KeenState): "solved" | "ongoing" {
-  const w = s.params.w;
-  return keen.isAnswer(s.grid, latinSpace(w), dealtOf(cagesOf(w, s.clues)))
-    ? "solved"
-    : "ongoing";
+  return rules.isAnswer(s, s.grid) ? "solved" : "ongoing";
 }
 
 // --- the board as its description deals it ---------------------------------

@@ -21,6 +21,7 @@ import type { HintStep } from "../../engine/contract/game.ts";
 import { paramsError, UnreadableParams } from "../../engine/game-id/params.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   describeAbsentTiers,
   describeDealtTiers,
@@ -85,13 +86,16 @@ import {
   C_DIV,
   C_SUB,
   CMASK,
+  cagesOf,
   cloneState,
   clueOp,
+  clueVal,
   DIFF_EASY,
   DIFF_HARD,
   DIFF_NORMAL,
   DIFF_TRICKY,
   DIFF_UNREASONABLE,
+  dealtOf,
   decodeParams,
   diffToLevel,
   encodeParams,
@@ -100,6 +104,7 @@ import {
   type KeenState,
   newState,
   newUi,
+  rules,
 } from "./state.ts";
 
 function gen(p: KeenParams, seed: string) {
@@ -289,6 +294,32 @@ describe("keen solver", () => {
       expect(row.size).toBe(4);
       expect(col.size).toBe(4);
     }
+  });
+});
+
+describe("keen live errors", () => {
+  it("a sum cage is broken once a digit overshoots it, its other squares still open", () => {
+    // An open square adds at least 1, so a digit greater than the clue less
+    // one per other square already breaks the cage.
+    const w = 5;
+    const overshot = (st: KeenState) => {
+      const cages = cagesOf(w, st.clues);
+      const sums = dealtOf(cages).sum;
+      const k = sums.at.findIndex(
+        (r) =>
+          cages.cells[r].length > 1 &&
+          w + cages.cells[r].length - 1 > clueVal(cages.clues[r]),
+      );
+      return k < 0 ? null : { k, cell: cages.cells[sums.at[k]][0] };
+    };
+    const found = Array.from({ length: 20 }, (_, i) => gen({ ...P4, w }, `kle-${i}`).st)
+      .map((st) => ({ st, hit: overshot(st) }))
+      .find((b) => b.hit !== null);
+    if (found?.hit == null)
+      throw new Error("no sum cage a digit overshoots in 20 boards");
+    const s = cloneState(found.st);
+    s.grid[found.hit.cell] = w;
+    expect([...(liveErrors(rules, s).clues.get("sum") ?? [])]).toEqual([found.hit.k]);
   });
 });
 

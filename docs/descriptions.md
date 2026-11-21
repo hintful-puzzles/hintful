@@ -1038,7 +1038,9 @@ says how each form is read; what a description's author acts on:
   exactly where `isAnswer` holds. The check says more than "decided and
   wrong" only where it bounds the form: Kleene's logic over the
   connectives and quantifiers, the interval a count or a sum can still
-  reach, `value(x) = k` against `x`'s domain, `matched` by Hall's condition
+  reach, an undecided `value(x)` in a sum or product as its domain's least
+  and greatest (Keen's open square adds at least 1), `value(x) = k`
+  against `x`'s domain, `matched` by Hall's condition
   on each group, and `latin`/`distinct` as each pair that repeats. A form
   that reads only decided elements needs nothing: a connectivity or loop rule
   is reported once its elements are decided, and bounding it earlier is that

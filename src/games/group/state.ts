@@ -4,8 +4,7 @@
  *
  * A board is a `w × w` Cayley table of a group: a Latin square (each element
  * `1..w` once per row and column) that is additionally **associative**
- * (`(ab)c = a(bc)`), from which the group identity and inverses follow (the
- * proof is in {@link markErrors}). The player fills the table; a few cells are
+ * (`(ab)c = a(bc)`), from which the group identity and inverses follow. The player fills the table; a few cells are
  * given (`immutable`, shared by reference). Each empty cell may instead hold a
  * bitmap of pencil marks.
  *
@@ -28,6 +27,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { PresetBoards } from "../../engine/contract/game.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { GameStatus, Point } from "../../engine/contract/types.ts";
 import { parseLeadingInt } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
@@ -36,7 +36,7 @@ import type { CandidateReading } from "../../engine/hint/candidate-hint.ts";
 import type { EntryMistakeKind } from "../../engine/hint/entry-mistakes.ts";
 import type { GridCursor } from "../../engine/input/pointer.ts";
 import { newCursor } from "../../engine/input/pointer.ts";
-import { latinSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import * as group from "../../generated/games/group/group.compiled.ts";
 
 // --- difficulty ------------------------------------------------------------
@@ -402,79 +402,6 @@ export function newState(p: GroupParams, desc: string): GroupState {
   };
 }
 
-// --- error checking (check_errors) -----------------------------------------
-// Per-cell error bits, packed to fit a signed Int32:
-//   EF_LATIN (bit 30)   — cell's digit duplicates within its row or column.
-//   EF_LEFT  (bits 0-14) — three 5-bit digits (a,b,c) of a failed (ab)c on this
-//                          cell (the "(ab)c" side of an associativity failure).
-//   EF_RIGHT (bits 15-29) — the same triple on the "a(bc)" side.
-
-export const EF_DIGIT_SHIFT = 5;
-export const EF_DIGIT_MASK = (1 << EF_DIGIT_SHIFT) - 1;
-export const EF_LEFT_SHIFT = 0;
-export const EF_RIGHT_SHIFT = 3 * EF_DIGIT_SHIFT;
-export const EF_LEFT_MASK = (1 << (3 * EF_DIGIT_SHIFT)) - 1;
-export const EF_RIGHT_MASK = EF_LEFT_MASK << EF_RIGHT_SHIFT;
-export const EF_LATIN = 1 << (6 * EF_DIGIT_SHIFT);
-
-/**
- * Compute the render-time error overlay for the *current* grid: Latin-square
- * duplicates and associativity failures, packed per cell into `errors` (an
- * `w²` Int32Array). This is self-consistency ("is the board a valid group
- * table so far?"), distinct from mistake-checking against the unique solution,
- * and whether a board is solved is the compiled answer check's.
- *
- * It suffices to check Latin-square-hood and associativity: all other group
- * axioms follow (identity and inverses are derivable — see the C proof).
- */
-export function markErrors(state: GroupState, errors: Int32Array): void {
-  const w = state.w;
-  const grid = state.grid;
-
-  errors.fill(0);
-
-  // Latin check, rows then columns: cell k of line l is at l·lineStep + k·cellStep.
-  for (const [lineStep, cellStep] of [
-    [w, 1],
-    [1, w],
-  ] as const) {
-    for (let l = 0; l < w; l++) {
-      let mask = 0;
-      let errmask = 0;
-      for (let k = 0; k < w; k++) {
-        const bit = 1 << grid[l * lineStep + k * cellStep];
-        errmask |= mask & bit;
-        mask |= bit;
-      }
-      errmask &= ~1;
-      for (let k = 0; k < w; k++) {
-        const i = l * lineStep + k * cellStep;
-        if (errmask & (1 << grid[i])) errors[i] |= EF_LATIN;
-      }
-    }
-  }
-
-  // Associativity check: (ab)c must equal a(bc) wherever all four are known.
-  for (let i = 1; i < w; i++)
-    for (let j = 1; j < w; j++)
-      for (let k = 1; k < w; k++) {
-        const ab = grid[i * w + j];
-        const bc = grid[j * w + k];
-        if (!ab || !bc) continue;
-        const left = (ab - 1) * w + k; // the (ab)c cell
-        const right = i * w + (bc - 1); // the a(bc) cell
-        if (!grid[left] || !grid[right] || grid[left] === grid[right]) continue;
-        // Skip if either slot is already used, so one square shows one error.
-        if (!(errors[left] & EF_LEFT_MASK) && !(errors[right] & EF_RIGHT_MASK)) {
-          let err = i + 1;
-          err = (err << EF_DIGIT_SHIFT) | (j + 1);
-          err = (err << EF_DIGIT_SHIFT) | (k + 1);
-          errors[left] |= err << EF_LEFT_SHIFT;
-          errors[right] |= err << EF_RIGHT_SHIFT;
-        }
-      }
-}
-
 /** Write `seq` into `out` with element `num` moved to display position `pos`:
  * a row/column reorder, and the live preview of one being dragged. */
 export function moveInSequence(
@@ -495,8 +422,16 @@ export function moveInSequence(
 
 // --- status / text ---------------------------------------------------------
 
+/** The board as its rules read it: an element is its value, a blank square
+ * undecided. */
+export const rules: RulesOf<GroupState> = describedRules(group, {
+  grid: (s) => Uint8Array.from(s.grid),
+  size: (s) => [s.w, s.w],
+  deals: () => [],
+});
+
 export function status(s: GroupState): GameStatus {
-  return group.isAnswer(s.grid, latinSpace(s.w)) ? "solved" : "ongoing";
+  return rules.isAnswer(s, s.grid) ? "solved" : "ongoing";
 }
 
 /** ASCII grid of display chars (`.` for blank), matching `game_text_format`. */

@@ -133,6 +133,7 @@ import {
   newState,
   newUi,
   paramConfig,
+  rules,
   status,
   validateParams,
 } from "./state.ts";
@@ -500,6 +501,7 @@ export const keenGame: Game<
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
+  rules,
   difficulty,
   hint: {
     plan: (state, _aux, ui) => candidateHint(state, ui ?? newUi(state), buildSteps),

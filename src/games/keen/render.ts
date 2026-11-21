@@ -56,6 +56,7 @@ import {
   type MarkCell,
   ringTextBox,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   HINT_AREA,
   HINT_TARGET,
@@ -75,14 +76,14 @@ import {
   C_DIV,
   C_MUL,
   C_SUB,
+  cagesOf,
   clueOp,
   clueVal,
-  ERR_CLUE,
-  ERR_LATIN,
+  dealtOf,
   type KeenMove,
   type KeenState,
   type KeenUi,
-  markErrors,
+  rules,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 48;
@@ -168,8 +169,6 @@ export interface KeenDrawState {
   /** What each of the `w²` cells shows, and the hint and mistake overlays on
    * it. */
   tiles: TileCache;
-  /** `w²` scratch error flags, refilled each redraw by `markErrors`. */
-  errors: Int32Array;
   /** `w²` hint-overlay sidecar (fork addition): bit 0 = target cell, bit 1 =
    * evidence, struck candidates at `valueBit(n)` in its `struck` lane. Owns the
    * repack/stale/commit dance that keeps the overlay in the cache diff key
@@ -187,6 +186,23 @@ export interface KeenDrawState {
   marks: HintMarks;
 }
 
+/** Where the board breaks a rule, as each cell's draw flags: `DF_ERR_LATIN`
+ * on each of two digits alike in a row or column, and `DF_ERR_CLUE` on the
+ * cell a cage's clue is drawn in, where its digits can no longer make it. */
+function errorFlags(state: KeenState): Int32Array {
+  const w = state.params.w;
+  const out = new Int32Array(w * w);
+  const live = liveErrors(rules, state);
+  for (const [a, b] of live.pairs) out[a] = out[b] = DF_ERR_LATIN;
+  const cages = cagesOf(w, state.clues);
+  const dealt = dealtOf(cages);
+  for (const [kind, ks] of live.clues) {
+    const list = dealt[kind as Exclude<keyof typeof dealt, "cage">];
+    for (const k of ks) out[cages.cells[list.at[k]][0]] |= DF_ERR_CLUE;
+  }
+  return out;
+}
+
 export function newDrawState(state: KeenState, tileSize: number): KeenDrawState {
   const a = state.params.w * state.params.w;
   const hint = new OverlaySidecar(a);
@@ -195,7 +211,6 @@ export function newDrawState(state: KeenState, tileSize: number): KeenDrawState 
     tileSize,
     w: state.params.w,
     tiles: new TileCache(a, { overlays: [hint, wrong] }),
-    errors: new Int32Array(a),
     hint,
     wrong,
     pencilModeShown: null,
@@ -502,7 +517,7 @@ export function redraw(
     ds.marks.reset(); // the backing rect just erased every gutter
   }
 
-  markErrors(state, ds.errors);
+  const errors = errorFlags(state);
 
   // Pack both overlays per cell.
   const index = (x: number, y: number) => y * w + x;
@@ -536,8 +551,7 @@ export function redraw(
       tile |=
         (winHighlight(flash.win(sweepStep(x, y))) ?? cellHighlight(ui, x, y)) <<
         DF_HIGHLIGHT_SHIFT;
-      if (ds.errors[i] & ERR_LATIN) tile |= DF_ERR_LATIN;
-      if (ds.errors[i] & ERR_CLUE) tile |= DF_ERR_CLUE;
+      tile |= errors[i];
 
       if (ds.tiles.changed(i, tile)) drawTile(dr, ds, state, x, y, tile);
     }

@@ -65,6 +65,21 @@ const pinned = describeHintKindPins({
 });
 
 describe("group render scenarios", () => {
+  it("a failed product shows its triple on both sides", () => {
+    // Elements 2, 3, 4: 2·3 = 4 and 3·4 = 6, then (2·3)·4 = 4·4 = 2 but
+    // 2·(3·4) = 2·6 = 3. Each square is blank in the fixture.
+    const set = (x: number, y: number, n: number): GroupMove => ({
+      type: "set",
+      cells: [{ x, y }],
+      n,
+    });
+    const moves = [set(2, 1, 4), set(3, 2, 6), set(3, 3, 2), set(5, 1, 3)];
+    const { recording } = renderScenario({ game: groupGame, id: ID, moves });
+    const texts = recording.ops.flatMap((o) => (o.op === "text" ? [o.text] : []));
+    expect(texts.filter((t) => /^\(..\).$/.test(t))).toHaveLength(1);
+    expect(texts.filter((t) => /^.\(..\)$/.test(t))).toHaveLength(1);
+  });
+
   it("opener frame draws the legend, the stroked diagonal, and digits", () => {
     const { recording } = renderScenario({ game: groupGame, id: ID });
     const ops = recording.ops;

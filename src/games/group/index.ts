@@ -140,6 +140,7 @@ import {
   moveInSequence,
   newState,
   newUi,
+  rules,
   status,
   textFormat,
   toChar,
@@ -863,6 +864,7 @@ export const groupGame: Game<
   notApplicable: { transposeParams: SQUARE_GRID },
 
   solve,
+  rules,
   difficulty,
   hint: {
     plan: hint,
