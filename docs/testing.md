@@ -849,9 +849,9 @@ reads; no list is edited. What each asks of the game's author:
   [`module-layering.test.ts`](../src/module-layering.test.ts) also holds
   runtime import cycles at zero.
 - **Mistake overlay**: the game's test paints it and asserts what it drew.
-  Its repaint on a warm frame is `warm-repaint.test.ts`'s, which a game
-  whose seeded run checks no wrong board feeds a `WRONG` pin
-  ([`rendering.md`](./rendering.md) § "Prove the overlay repaints").
+  Its repaint on a warm frame is `warm-repaint.test.ts`'s, which finds a
+  wrong board itself ([`rendering.md`](./rendering.md) § "Prove the overlay
+  repaints").
 - **A new `Ui` or draw-state field**, or a new optional `Game` method, moves
   [`capability-surface.test.ts`](../src/guards/capability-surface.test.ts)'s
   snapshot. Re-baseline with `vitest run <path> -u` and say so in the change.

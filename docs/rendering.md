@@ -293,12 +293,10 @@ and thick lines.
 **A game that finds mistakes must have painted its mistake overlay on a warm
 frame.** The run's check puts the overlay on a board already painted, and
 the next event takes it off: the two frames a key without the overlay gets
-wrong. Where the seeded run never checks a wrong board, name one in the
-test's `WRONG`, the board and the moves that make it wrong, since no desc
-holds a player's mistake. Find the moves by playing seeded input on the
-run's own deal until `findMistakes` flags the board, then drop each move the
-mistake does not need. A pin the seeded run has caught up with fails and is
-removed.
+wrong. Where the seeded run never checks a wrong board, a second run plays
+input on the same deal until the check finds a mistake, up to
+`SEEK_EVENTS`, so no game pins one. A game whose input reaches no mistake
+within the bound fails: raise the bound if more input would reach one.
 
 ### A mark that crosses tiles
 
@@ -340,8 +338,8 @@ misses the cache, so an overlay missing from the diff test still paints.
 - **The mistake overlay is guarded for every game that finds mistakes** by
   `warm-repaint.test.ts`, which compares a warm mistaken frame, and the frame
   that takes the overlay off, with a fresh paint (§ "A warm frame must match
-  a fresh one"). A game owes it at most a `WRONG` pin, whether the flag rides
-  a sidecar or the tile key.
+  a fresh one"). A game owes it nothing, whether the flag rides a sidecar or
+  the tile key.
 - **What the game's own test owes is the look.**
   `src/guards/mistake-overlay-coverage.test.ts` requires a test that paints the
   overlay and asserts what it drew; a `renderScenario` `showMistakes` frame

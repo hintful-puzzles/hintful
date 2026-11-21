@@ -416,10 +416,23 @@ warm frame.
 
 #### Scenario: A game that finds mistakes is never shown one
 
-- **WHEN** neither the seeded run nor a pinned wrong board paints a frame with
-  a mistake overlay, for a game that finds mistakes
+- **WHEN** neither the seeded run nor the run that seeks a mistake paints a
+  frame with a mistake overlay, for a game that finds mistakes
 - **THEN** the test fails for that game, rather than passing over an overlay it
   never painted
+
+### Requirement: A wrong board the seeded run never checks is sought on its deal
+
+Where a game finds mistakes and its seeded run checks no wrong board, a second
+run SHALL play input on the same deal, up to a bound, until the check finds a
+mistake. No game SHALL pin a wrong board by hand.
+
+#### Scenario: A change moves the seeded deal off its mistake
+
+- **WHEN** a change to shared data moves which board a game's seed deals, and
+  the seeded run no longer checks a wrong board
+- **THEN** the run that seeks a mistake finds one on the new deal, and no
+  board or move is pinned by hand
 
 ### Requirement: The comparison shows a hint and walks its plan to the end
 
@@ -546,14 +559,13 @@ the move it belongs to still stands.
 - **THEN** the animation carries on from where it was, with the cursor painted
   in its new place
 
-### Requirement: A mark the seeded run does not paint is found by a bounded search
+### Requirement: A hint mark the seeded run does not paint is found by a bounded search
 
-The comparison SHALL accept a game id to start from in place of a seeded deal,
-and moves to play on it. A hint mark no earlier run painted SHALL be sought
-over the boards every sweep deals, in a fixed order and up to a bound, and the
-test SHALL print which board painted it. A game whose seeded run checks no
-wrong board SHALL pin one as a board and the moves making it wrong. A
-cross-tile mark that is not a hint mark SHALL be pinned in the game's tests.
+The comparison SHALL accept a game id to start from in place of a seeded deal.
+A hint mark no earlier run painted SHALL be sought over the boards every sweep
+deals, in a fixed order and up to a bound, and the test SHALL print which
+board painted it. A cross-tile mark that is not a hint mark SHALL be pinned in
+the game's tests.
 
 #### Scenario: A change moves the seeded deal
 
@@ -567,12 +579,6 @@ cross-tile mark that is not a hint mark SHALL be pinned in the game's tests.
   renderer asks for
 - **THEN** the test fails for that game, naming the mark and how many boards
   were searched
-
-#### Scenario: A wrong-board pin the seeded run has caught up with
-
-- **WHEN** a game's seeded run paints a mistake overlay, and the game also
-  pins a wrong board
-- **THEN** the test fails for that game, so the pin is removed
 
 #### Scenario: A mark drawn across tiles outlives its flag
 

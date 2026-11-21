@@ -380,6 +380,10 @@ const TICK_S = 0.05;
 const MAX_TICKS = 120;
 /** Hint steps the walk plays before it stops, solved or not. */
 const WALK_STEPS = 200;
+/** The kinds of event a run plays, and how many of them come first as a
+ * player's input to the board. */
+const EVENT_KINDS = 12;
+const INPUT_KINDS = 8;
 
 /**
  * Drive `game` through `events` seeded input events, comparing every frame
@@ -389,16 +393,20 @@ const WALK_STEPS = 200;
  * The board is dealt from `seed` at the default params, or is `board` (a game
  * id, `params:desc`) when a frame the run must reach needs a position the
  * seeded deal does not give: the seeded run reaches what is common, and
- * another board puts a game's rarer marks in front of it. `moves` are played on the
- * board before the run, and the board they leave is checked as Check & save
- * checks it: they are how a run reaches a mistake, which no desc can hold.
+ * another board puts a game's rarer marks in front of it.
+ *
+ * With `seek`, the run first plays up to that many input events, checking the
+ * board as Check & save checks it after each, until the check finds a
+ * mistake; `reached.mistaken` says whether one did. A desc cannot hold a
+ * player's mistake, and moves pinned by hand to make one had to be found again
+ * whenever the deal moved, so the run finds its own.
  */
 export function repaintDifferential(
   game: AnyGame,
   seed: string,
   events: number,
   board?: string,
-  moves: readonly unknown[] = [],
+  seek = 0,
 ): RepaintRun {
   const params = board
     ? game.decodeParams(board.slice(0, board.indexOf(":")))
@@ -494,7 +502,6 @@ export function repaintDifferential(
     );
     const error = m.newGameFromId(id);
     if (error !== null) throw new Error(`${id}: ${error}`);
-    m.playMoves(moves);
     const paint = () => {
       m.redraw(sink);
       sink.ops.length = 0;
@@ -527,35 +534,6 @@ export function repaintDifferential(
   };
   const { m, paint, settle } = begin();
 
-  // The overlay goes on a board already painted, and the next event takes it
-  // off: the two frames a cache that leaves the overlay out of its key gets
-  // wrong.
-  if (moves.length > 0) {
-    lastEvent = "check after the pinned moves";
-    m.check();
-    settle();
-  }
-
-  // A hinted game first shows its hint and plays a few of its steps: a random
-  // run on an empty board rarely asks for one, and once its moves have made
-  // the board wrong the hint only refuses, so most hinted games never showed
-  // a hint frame at all.
-  if (hasHint(game)) {
-    // As the app asks: where to look first, painted warm over the bare board,
-    // then the whole step.
-    lastEvent = "hint, where to look";
-    m.hint(true);
-    settle();
-    lastEvent = "explain the hint";
-    m.explainHint();
-    settle();
-    for (let s = 0; s < 3; s++) {
-      lastEvent = "next hint step";
-      m.executeHint();
-      settle();
-    }
-  }
-
   const rs = randomNew(`repaint-events-${seed}`);
   const pick = (n: number) => randomUpto(rs, n);
   const point = () => ({ x: pick(size.w), y: pick(size.h) });
@@ -564,8 +542,9 @@ export function repaintDifferential(
   );
   const CURSORS = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT];
 
-  for (let e = 0; e < events && mismatch === null; e++) {
-    const kind = pick(12);
+  /** Play one event of `kind`, below {@link EVENT_KINDS}; the kinds below
+   * {@link INPUT_KINDS} are a player's input to the board. */
+  const play = (kind: number) => {
     const p = point();
     switch (kind) {
       case 0:
@@ -631,7 +610,41 @@ export function repaintDifferential(
         break;
     }
     settle();
+  };
+
+  // The overlay goes on a board already painted, and the next event takes it
+  // off: the two frames a cache that leaves the overlay out of its key gets
+  // wrong. Only the mistake half of the check is asked after each input: a
+  // board with none would otherwise ask the hint for a dead end every time.
+  for (let e = 0; e < seek && mismatch === null; e++) {
+    play(pick(INPUT_KINDS));
+    if (m.findMistakes() === 0) continue;
+    lastEvent = "check after the sought mistake";
+    settle();
+    break;
   }
+
+  // A hinted game first shows its hint and plays a few of its steps: a random
+  // run on an empty board rarely asks for one, and once its moves have made
+  // the board wrong the hint only refuses, so most hinted games never showed
+  // a hint frame at all.
+  if (hasHint(game)) {
+    // As the app asks: where to look first, painted warm over the bare board,
+    // then the whole step.
+    lastEvent = "hint, where to look";
+    m.hint(true);
+    settle();
+    lastEvent = "explain the hint";
+    m.explainHint();
+    settle();
+    for (let s = 0; s < 3; s++) {
+      lastEvent = "next hint step";
+      m.executeHint();
+      settle();
+    }
+  }
+
+  for (let e = 0; e < events && mismatch === null; e++) play(pick(EVENT_KINDS));
 
   // The walk: the hint's own plan followed from the deal to its end, on a
   // draw state of its own, then a check of where it stopped. The opening
