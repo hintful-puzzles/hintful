@@ -36,7 +36,7 @@ import {
   rolePalette,
 } from "../../engine/color/roles.ts";
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
-import { CELL, stepMarks } from "../../engine/contract/hint-words.ts";
+import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type {
   Color,
   DrawTextOptions,
@@ -45,7 +45,12 @@ import type {
   Size,
 } from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
-import { drawMarkSides, MARK_ALL } from "../../engine/render/hint-mark.ts";
+import {
+  drawCellRing,
+  drawMarkSides,
+  MARK_ALL,
+} from "../../engine/render/hint-mark.ts";
+import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import {
   type PencilIndicatorCache,
   type PencilIndicatorStyle,
@@ -125,12 +130,9 @@ const CURSOR = 0x00040000;
 const GROUNDED = 0x00080000;
 // Our findMistakes overlay bit (no upstream analog): an inset red outline.
 const MISTAKE = 0x00100000;
-// Fork hint overlay bits (no upstream analog). Target/evidence/ring are
-// per-square; the four HINT_* corner bits recolor a driving clue's digit in
-// the four tiles that draw it (mirroring the ERR_TL/TR/BL/BR clue pattern).
-const HINT_TARGET = 0x00200000;
-const HINT_EVID = 0x00400000;
-const HINT_REF = 0x00800000;
+// Fork hint overlay bits (no upstream analog): the four HINT_* corner bits
+// recolor a driving clue's digit in the four tiles that draw it (mirroring the
+// ERR_TL/TR/BL/BR clue pattern). A square's ring and outline ride `ds.hint`.
 const HINT_TL = 0x01000000;
 const HINT_TR = 0x02000000;
 const HINT_BL = 0x04000000;
@@ -178,6 +180,8 @@ export interface SlantDrawState extends PencilIndicatorCache {
   /** Per tile of the (w+2)×(h+2) ring-extended grid, its packed word and its
    * side key (its same-slant marks and pin; see `MARK_PLAYER`). */
   tiles: TileCache;
+  /** The hint's marks on the squares, by the same tile index. */
+  hint: OverlaySidecar;
   /** Scratch for the frame being built (upstream `todraw`), and its side
    * keys. */
   todraw: Int32Array;
@@ -186,9 +190,11 @@ export interface SlantDrawState extends PencilIndicatorCache {
 
 export function newDrawState(state: SlantState, tileSize: number): SlantDrawState {
   const n = (state.w + 2) * (state.h + 2);
+  const hint = new OverlaySidecar(n);
   return {
     tileSize,
-    tiles: new TileCache(n, { words: 2 }),
+    tiles: new TileCache(n, { words: 2, overlays: [hint] }),
+    hint,
     todraw: new Int32Array(n),
     todrawSideKeys: new Int32Array(n),
     pencilModeShown: null,
@@ -265,6 +271,8 @@ function drawTile(
   y: number,
   v: number,
   marks: number,
+  hint: OverlaySidecar,
+  i: number,
 ): void {
   const W = w + 1;
 
@@ -369,23 +377,6 @@ function drawTile(
     );
   }
 
-  // Hint anchor: a doubled ring on a cited already-filled square (the
-  // "share a fate" premise of an equivalence firing), drawn over its slash.
-  if (v & HINT_REF) {
-    const inset = Math.max(1, Math.floor(ts / 12));
-    const sx = coord(x, ts) + inset;
-    const sy = coord(y, ts) + inset;
-    const span = ts - 2 * inset;
-    dr.drawRect({ x: sx, y: sy, w: span, h: 1 }, COL_HINT_OUTLINE);
-    dr.drawRect({ x: sx, y: sy + span - 1, w: span, h: 1 }, COL_HINT_OUTLINE);
-    dr.drawRect({ x: sx, y: sy, w: 1, h: span }, COL_HINT_OUTLINE);
-    dr.drawRect({ x: sx + span - 1, y: sy, w: 1, h: span }, COL_HINT_OUTLINE);
-    dr.drawRect({ x: sx + 1, y: sy + 1, w: span - 2, h: 1 }, COL_HINT_OUTLINE);
-    dr.drawRect({ x: sx + 1, y: sy + span - 2, w: span - 2, h: 1 }, COL_HINT_OUTLINE);
-    dr.drawRect({ x: sx + 1, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_OUTLINE);
-    dr.drawRect({ x: sx + span - 2, y: sy + 1, w: 1, h: span - 2 }, COL_HINT_OUTLINE);
-  }
-
   // The evidence region's outline, on the square's own border, over the grid
   // line rather than over the slash, and the acted-on square's ring, round as
   // the clues in its corners allow. Drawn before the mistake overlay and the
@@ -394,13 +385,9 @@ function drawTile(
   {
     const box = { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts };
     const band = { box, outer: 0, inner: Math.max(2, ts >> 4) };
-    if (v & HINT_EVID) drawMarkSides(dr, band, MARK_ALL, COL_HINT_OUTLINE);
-    if (v & HINT_TARGET)
-      dr.drawRing(
-        box,
-        { enclose: [], avoid: cornerClues(ts, W, clues, x, y) },
-        Math.max(2, ts >> 4),
-      );
+    drawMarkSides(dr, band, hint.outlineSides(i), COL_HINT_OUTLINE);
+    if (hint.ringed(i))
+      drawCellRing(dr, band, { enclose: [], avoid: cornerClues(ts, W, clues, x, y) });
   }
 
   // findMistakes overlay: an inset red outline (the fork's cross-game
@@ -632,16 +619,10 @@ export function redraw(
     else keyMark(marks, ti, { x: m.x, y: m.y, dir: m.dir }, MARK_MISTAKE);
   }
 
-  // Hint overlay: target square(s) ringed, evidence outlined, anchor
-  // double-ringed, the driving clue's digit recolored in the four tiles that
-  // draw it. The anchor is an outlined square the words name; `ref` says
-  // which one takes the doubled ring.
+  // Hint overlay: target square(s) ringed, evidence outlined, the driving
+  // clue's digit recolored in the four tiles that draw it.
   const said = stepMarks(hint);
-  const ref = hint?.highlights?.ref;
-  for (const s of said.of("ring", CELL)) todraw[ti(s.x, s.y)] |= HINT_TARGET;
-  for (const a of said.of("outline", CELL))
-    todraw[ti(a.x, a.y)] |=
-      ref && a.x === ref.x && a.y === ref.y ? HINT_REF : HINT_EVID;
+  ds.hint.pack(said, ti);
   for (const { x: cx, y: cy } of said.of("outline", CLUE)) {
     todraw[cy * stride + cx] |= HINT_BR;
     todraw[cy * stride + (cx + 1)] |= HINT_BL;
@@ -656,7 +637,7 @@ export function redraw(
     for (let x = -1; x <= w; x++) {
       const i = ti(x, y);
       if (ds.tiles.changed(i, todraw[i], marks[i])) {
-        drawTile(dr, ts, w, h, clues, x, y, todraw[i], marks[i]);
+        drawTile(dr, ts, w, h, clues, x, y, todraw[i], marks[i], ds.hint, i);
         // The top-right ring tile paints over the pencil's corner.
         if (x === w && y === -1) ds.pencilModeShown = null;
       }

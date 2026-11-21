@@ -34,8 +34,12 @@
         a square), the shaded premise's doubled outline folds into the one
         outline, ring and outline no longer exclusive; the clue keeps its
         digit in the hint color (a `CLUE` mark, its own word bit).
+  - [x] Slant: onto the sidecar (indexed by its ring-extended tile). A
+        clue's outlined squares are one contour; the equivalence anchor's
+        doubled ring folds into the one outline (a reference of its own, so
+        a shape apart; the words name it by noun, not by glyph).
   - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2):
-        Slant, Signpost, Sticks, Boats, and the
+        Signpost, Sticks, Boats, and the
         border grid (Palisade, Separate). Fold Range's and Slant's doubled
         "premise" outline and Lightup's dark-square ring into the one
         outline (`hints-marks.md` § "Outline the evidence": one shape for

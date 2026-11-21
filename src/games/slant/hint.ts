@@ -50,8 +50,8 @@ export interface SlantMark {
  * a step places, ringed with its bars inside. `area` is the
  * deduction's evidence to outline (a clue's decided neighbors, a loop chain,
  * the trapped dead-end components, the pairs a v-shape argument reads);
- * `marks` are the marks it cites; `ref` is a cited already-filled square,
- * drawn as a doubled ring in the evidence color; `clues` recolors the clues it
+ * `marks` are the marks it cites; `ref` is a cited already-filled square
+ * the sentence ties the target to; `clues` recolors the clues it
  * reads. All but the target, its siblings and `mark` are evidence, outlined in
  * the words (`hint-marks.ts`). */
 export interface SlantHint {
