@@ -136,7 +136,7 @@ if ! grep -q "^export const ${GAME_OBJECT}:" "${INDEX}"; then
 fi
 # The import goes before the first one, below the file's header comment.
 {
-  awk '!done && /^import / { print "import { registerGame } from \"../../engine/registry.ts\";"; done = 1 } { print }' "${INDEX}"
+  awk '!done && /^import / { print "import { registerGame } from \"../../engine/midend/registry.ts\";"; done = 1 } { print }' "${INDEX}"
   echo ""
   echo "registerGame(${GAME_OBJECT});"
 } > "${INDEX}.new"

@@ -39,7 +39,7 @@ if (existsSync(catalogPath)) {
 writeFileSync(
   catalogPath,
   [
-    'import type { PuzzleData } from "../../engine/catalog.ts";',
+    'import type { PuzzleData } from "../../engine/contract/catalog.ts";',
     "",
     "export const entry: PuzzleData = {",
     `  name: ${JSON.stringify(game[0].toUpperCase() + game.slice(1))},`,
