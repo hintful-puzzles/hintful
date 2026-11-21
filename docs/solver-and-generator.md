@@ -1014,25 +1014,16 @@ Exemplar: `newSkeletonDesc` in
 
 **The gate holds the rule in its fast pass**, in
 [`retry-bound.test.ts`](../src/guards/retry-bound.test.ts), whose header
-says which loops it reads. Each open loop that draws from the RNG must call a
-`retryLimit` guard in its own body, or have a line in the test's
-`BOUNDED_OTHERWISE` ledger saying what ends it, and a `throw` straight after
-a loop that draws must throw `RetryLimitExceeded`. What a new generator owes
-it:
+says which loops it reads. What a new generator owes it:
 
 - **A loop that deals a whole board again until one is good takes a guard**,
-  however seldom it fails. A generator needs no such loop for a board that
-  comes out solved: the engine's `generate` asks the game for the board's
-  status and deals again.
-- **A loop that uses something up each pass** (a frontier, a counter, free
-  cells) takes a ledger line naming what.
-- **Rejection sampling for one item** (a free square, an unused color) takes
-  a ledger line saying what keeps an acceptable draw on offer, usually a
-  `validateParams` bound. Do not give it a guard with no count: called
-  directly, that gives up at `MAX_REGENERATE` draws and would throw on a
-  legal board.
-- **A hand-rolled counter inside an open loop needs a ledger line**, and a
-  counting `for` header needs nothing.
+  however seldom it fails. A board that comes out solved needs no such loop:
+  the engine's `generate` deals again.
+- **A loop that uses something up each pass** (a frontier, free cells), or
+  **rejection sampling for one item** kept on offer by a `validateParams`
+  bound, takes a line in the test's `BOUNDED_OTHERWISE` ledger naming what
+  ends it. Do not give rejection sampling a guard with no count: called
+  directly, that gives up at `MAX_REGENERATE` draws on a legal board.
 
 **A game ID whose board is already solved opens** (`ts-engine`, "A game ID
 whose board is already solved opens"). Dealing again is a rule about dealing
@@ -1259,21 +1250,15 @@ long.
 
 **The instrument past the menu is the deal walk**, `npm run deal-walk`
 ([`scripts/deal-walk.ts`](../scripts/deal-walk.ts)), whose header says what
-it deals, how it watches a deal that never returns, and its settings. Expect
-a ladder to pass ten seconds a board somewhere between 1.5 and 4 times the
-menu's largest. A cell it lists is a few deals, enough to find where a ladder
-leaves a second and not enough to place a line; count the sizes each side of
-a bound before writing it.
-
-**The census of a generator you are writing is the same tool with the cells
-named** (`DEAL_WALK_CELLS`, `DEAL_WALK_SEEDS`, or `DEAL_WALK_CELLS=presets`):
-it prints each cell's time, its deals' tries at the outermost retry loop,
-its boards by the easiest tier that finishes each, the draws thrown away by
-stage, and how each mend ended with the fewest squares it left open. A stage
-is named where the draw is thrown away, with `drawRejected`
-([`deal-census.ts`](../src/engine/contract/deal-census.ts)). The game must be
-registered. Do not write a throwaway test, a debug export or a log file:
-name the stage and run the census.
+it deals, what it prints and its settings. Expect a ladder to pass ten
+seconds a board somewhere between 1.5 and 4 times the menu's largest; count
+the sizes each side of a bound before writing it. **The census of a
+generator you are writing is the same tool with the cells named**
+(`DEAL_WALK_CELLS=presets`): it says why each draw was thrown away, by the
+stage named with `drawRejected`
+([`deal-census.ts`](../src/engine/contract/deal-census.ts)). Do not write a
+throwaway test, a debug export or a log file: name the stage and run the
+census.
 
 ### A Custom size is not refused for its wait
 
