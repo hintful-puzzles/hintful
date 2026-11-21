@@ -12,6 +12,7 @@
  * its steps.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { WideCellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
@@ -19,6 +20,7 @@ import {
   describedSpace,
   PLACE,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   compiledRung,
   describedLadder,
@@ -189,6 +191,29 @@ export function ascentSolve(
       ascent.isAnswer(values, sp, dealtOf(puzzle, mode)),
   };
 }
+
+/** The board `s` deals: its given squares, the numbers the player placed
+ * taken off. */
+const givenOf = (s: AscentState): Int16Array =>
+  Int16Array.from(s.grid, (v, i) => (s.immutable[i] || v < 0 ? v : NUMBER_EMPTY));
+
+/** The board as its rules read it: each number on the path counted from 1,
+ * each wall and arrow past the last, and 0 on a square still empty. */
+export const rules: RulesOf<AscentState> = describedRules(ascent, {
+  grid: (s) => Uint16Array.from(describedValues(s.grid, dealtOf(s.grid, s.mode).top)),
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(givenOf(s), s.mode)],
+});
+
+/** The rules a placed number breaks: the next placed away from it, at the
+ * pair; a number placed twice, at each; and an arrow its number is placed
+ * off the line of. */
+export const NEXT_BESIDE: ascent.RuleName = "shape.0";
+export const ONCE: ascent.RuleName = "shape.1";
+
+/** Each arrow's square, by its place in the description's `arrow` clues. */
+export const arrowsOf = (s: AscentState): ArrayLike<number> =>
+  dealtOf(givenOf(s), s.mode).arrow.at;
 
 /** Whether the board is solved: its numbers are the answer, by the
  * description's rules. */

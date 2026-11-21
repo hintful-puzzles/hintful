@@ -8,8 +8,9 @@ import type { Violation } from "../solve/describe-runtime.ts";
 
 export interface RulesOf<State> {
   /** The answer's elements' values as the description reads them, 0 where
-   * the player has decided none. */
-  grid(state: State): Uint8Array;
+   * the player has decided none: 16 bits wide where a value may pass 255
+   * (Ascent's path numbers on a board of any size). */
+  grid(state: State): Uint8Array | Uint16Array;
   /** Each statement `g`, `grid(state)` or the same board with values
    * changed, already breaks: the compiled module's `violations` over the
    * board `state` deals. */

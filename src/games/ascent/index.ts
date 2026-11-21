@@ -49,7 +49,7 @@ import {
   newAscentDrawState,
   redrawAscent,
 } from "./render.ts";
-import { ascentSolve, isSolved } from "./solver.ts";
+import { ascentSolve, isSolved, rules } from "./solver.ts";
 import {
   ASCENT_DIFFCHARS,
   ASCENT_DIFFNAMES,
@@ -605,6 +605,7 @@ export const ascentGame: Game<
   requestKeys: numberKeys,
 
   solve,
+  rules,
   findMistakes,
   clearMistakes: (_state, mistakes) =>
     mistakes.map(({ cell }) => ({ kind: "clear", cell })),

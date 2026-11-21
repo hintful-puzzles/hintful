@@ -82,7 +82,21 @@
       Moved: mines (a flag reads as a mine and an opened square as safe; its
       marks are unchanged, a number with more flags round it than it counts;
       the guard lays a board out by the hint's first move, as the other
-      cross-game guards do, where Solve says it is not started). Run
+      cross-game guards do, where Solve says it is not started). Moved:
+      ascent (its step rule is said of the square the next number is on,
+      and its arrow of the square its number is on, both equivalent on a
+      whole board since every number is placed once, so a number and the
+      next placed apart break as a pair and an arrow breaks once its number
+      is off its line, the marks it drew; `RulesOf.grid` may be 16 bits wide
+      for its numbers past 255).
+      Sticks waits: a stick too short that can no longer reach its number
+      because another number's stick is in the way breaks the length clue
+      only read together with "one number a stick", and each statement is
+      read alone; the length clue restated over the squares a stick can
+      still take (as its `reach` does), or a compiler reading of the two
+      together, comes first. Signpost waits: its numbers follow from chains
+      of links, and a chain is read only once every link of it is decided;
+      a bound on `chain` over the links decided so far comes first. Run
       `src/guards` before a
       push: `capability-surface` records each game that declares `rules`,
       and only CI runs it.

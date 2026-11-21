@@ -42,12 +42,14 @@ import {
   strokeScaledPolygon,
 } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { drawPathArrow, drawPathStart } from "../../engine/render/path-arrow.ts";
 import { ringContentBox, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { WIN_NONE, winSlot } from "../../engine/render/win-wave.ts";
 import type { AscentHighlights } from "./hint.ts";
 import { PATH, SQUARE } from "./hint-marks.ts";
+import { arrowsOf, NEXT_BESIDE, ONCE, rules } from "./solver.ts";
 import {
   type AscentMistake,
   type AscentMove,
@@ -622,18 +624,27 @@ export function redrawAscent(
     routeBits[q] |= 1 << findDirection(q, p, w, movement);
   }
 
+  /* Where the board breaks its rules: a number and the next placed apart,
+   * each struck through; a number placed twice, in red; an arrow whose
+   * number is off its line, in red. */
+  const live = liveErrors(rules, state);
+  const apart = new Set((live.byRule.get(NEXT_BESIDE) ?? []).flat());
+  const twice = new Set((live.byRule.get(ONCE) ?? []).flat());
+  const arrows = arrowsOf(state);
+  const offLine = new Set([...(live.clues.get("arrow") ?? [])].map((k) => arrows[k]));
+
   /* Build the render path for every cell. */
   for (let i = 0; i < w * h; i++) {
     let pathline = state.path ? state.path[i] : 0;
     let lines = 0;
     const n = state.grid[i];
     const single = n >= 0 && positions[n] !== CELL_MULTIPLE;
+    if (apart.has(i)) pathline |= FLAG_ERROR;
 
     if (single && n > 0 && positions[n - 1] >= 0) {
       const i2 = positions[n - 1];
       if (isNear(i, i2, w, state.mode))
         pathline |= 1 << findDirection(i, i2, w, movement);
-      else pathline |= FLAG_ERROR;
       lines++;
     }
     let out = 0;
@@ -642,7 +653,7 @@ export function redrawAscent(
       if (isNear(i, i2, w, state.mode)) {
         out = 1 << findDirection(i, i2, w, movement);
         pathline |= out;
-      } else pathline |= FLAG_ERROR;
+      }
       lines++;
     }
     if (n === 0 || n === state.last) lines++;
@@ -1070,7 +1081,7 @@ export function redrawAscent(
               color === COL_TARGET
               ? COL_BORDER
               : COL_OFFERED
-            : sn <= state.last && positions[sn] === -2 && ui.typingCell !== i
+            : twice.has(i) && ui.typingCell !== i
               ? COL_ERROR
               : COL_LINE,
         String(sn + 1),
@@ -1087,7 +1098,7 @@ export function redrawAscent(
         );
     } else if (isNumberEdge(sn)) {
       const i2 = positions[fromNumberEdge(sn)];
-      const error = i2 >= 0 && !isEdgeValid(i, i2, w, h);
+      const error = offLine.has(i);
       drawArrow(dr, i, w, h, tx1, ty1, COL_ARROW, COL_BORDER, tileSize);
       dr.drawText(
         number.origin,

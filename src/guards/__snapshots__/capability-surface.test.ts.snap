@@ -117,6 +117,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint.gesture",
       "prefs",
       "requestKeys",
+      "rules",
       "textFormat",
       "transposeParams",
       "uiCodec",

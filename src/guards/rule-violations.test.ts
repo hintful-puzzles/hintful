@@ -68,7 +68,7 @@ for (const [id, game] of RULED) {
       };
       for (let i = 0; i < PARTIALS; i++) {
         const keep = next();
-        const g = Uint8Array.from(full, (v) => (next() < keep ? v : 0));
+        const g = Uint16Array.from(full, (v) => (next() < keep ? v : 0));
         const found = rules.violations(answer, g);
         expect(
           found,
@@ -81,7 +81,7 @@ for (const [id, game] of RULED) {
         if (full[x] === 0) continue;
         for (let v = 1; v <= top; v++) {
           if (v === full[x]) continue;
-          const g = Uint8Array.from(full);
+          const g = Uint16Array.from(full);
           g[x] = v;
           // A whole board breaks a rule exactly where it is no answer; one
           // value changed may leave an answer where the rules alone do not
@@ -109,9 +109,9 @@ for (const [id, game] of RULED) {
     const rules = game.rules as NonNullable<AnyGame["rules"]>;
     // The answer, read once the board is laid out: a board laid out by its
     // first move (Mines) has none before the walk's first step.
-    let full: Uint8Array | null = null;
+    let full: ArrayLike<number> | null = null;
     let checked = 0;
-    const answerOf = (b: WalkBoard): Uint8Array => {
+    const answerOf = (b: WalkBoard): ArrayLike<number> => {
       if (full !== null) return full;
       const start = stateOf(b.midend);
       const solved = game.solve(start, start);

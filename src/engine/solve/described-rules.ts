@@ -20,7 +20,7 @@ export interface RulesModule<Deals extends readonly unknown[]> {
 /** How a game's state reads as its description's board. */
 export interface RulesReading<State, Deals extends readonly unknown[]> {
   /** The values, 0 where undecided ({@link RulesOf.grid}). */
-  grid(state: State): Uint8Array;
+  grid(state: State): Uint8Array | Uint16Array;
   /** The space's width and height, and the regions a space of dealt blocks
    * has (Solo's jigsaw), as `describedSpace` takes them. */
   size(state: State): readonly [number, number, (readonly (readonly number[])[])?];

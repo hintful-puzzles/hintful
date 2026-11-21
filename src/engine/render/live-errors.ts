@@ -62,7 +62,7 @@ function liveErrorsOf(violations: readonly Violation[], n: number): LiveErrors {
 export function liveErrors<State>(
   rules: RulesOf<State>,
   state: State,
-  g: Uint8Array = rules.grid(state),
+  g: ArrayLike<number> = rules.grid(state),
 ): LiveErrors {
   return liveErrorsOf(rules.violations(state, g), g.length);
 }

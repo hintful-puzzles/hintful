@@ -57,8 +57,10 @@ define:
     or ((y(a) = 0 or y(a) = h - 1) and (x(a) = 0 or x(a) = w - 1)
     and abs(x(p) - x(a)) = abs(y(p) - y(a)))
 shape:
-  # Every number of the path but the last has the next beside it.
-  - "forall c in cells where value(c) < top: exists p in nbr(c): value(p) = value(c) + 1"
+  # Every number of the path but the last has the next beside it. Each number
+  # is on the path once (below), so it is said of the square the next is on:
+  # a number and the next, both placed apart, break it as a pair.
+  - "forall c in cells where value(c) < top, p in cells where value(p) = value(c) + 1: p in nbr(c)"
   # No number is on the path twice.
   - "forall c in cells where value(c) <= top: count(x in cells where value(x) = value(c)) = 1"
 rules:
@@ -89,9 +91,12 @@ variations:
         arrow:
           at: cell
           value: "range(1, w * h)"
+          # Said of the square its number is on, which every number has
+          # once, so the arrow breaks as soon as its number is placed off
+          # its line.
           means: >-
             value(at) = top + 1
-            and (exists p in cells where open(p) and online(at, p): value(p) = v)
+            and (forall p in cells where value(p) = v: online(at, p))
       techniques:
         # A number is on its arrow's line.
         - id: onLine

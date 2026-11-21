@@ -1059,6 +1059,13 @@ says how each form is read; what a description's author acts on:
   `forall L in lines: count(...) = k` marks each line it breaks, and the same
   rule written as one `count` over the board marks nothing finer than the
   board: write the quantifier where the place is worth showing.
+  Each statement is read alone, so an `exists` over squares still open
+  stays undecided even where another rule has already placed what it looks
+  for. Where a value is placed once, say it of the square that holds it:
+  Ascent's "the next number is beside this one" as `forall c, p where
+  value(p) = value(c) + 1: p in nbr(c)` breaks as a pair once both are
+  placed, and its arrow's "my number is on my line" once its number is
+  placed off it.
 - **The rule's name is the violation's** (`shape.<i>` for a shape entry),
   as the answer check reports it.
 
