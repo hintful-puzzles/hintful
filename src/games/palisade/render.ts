@@ -37,10 +37,10 @@ import {
   F_CORRECT,
   F_GIVEN,
   flashFlag,
-  hintTileBits,
   invalidateDanglingRegions,
   mistakeEdgeBits,
   newBorderGridDrawState,
+  packHintMarks,
 } from "../../engine/mechanics/border-grid-render.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
@@ -118,7 +118,7 @@ export function redraw(
   const { w, h, k, clues, borders } = state;
   const wh = w * h;
 
-  const hinted = hintTileBits(w, h, stepMarks(hint));
+  const edgeHints = packHintMarks(ds, stepMarks(hint));
 
   if (ds.tiles.firstFrame()) drawBorderGridBackground(dr, ts, w, h, PALETTE);
 
@@ -147,7 +147,7 @@ export function redraw(
     for (let c = 0; c < w; c++) {
       const i = r * w + c;
       const clue = clues[i];
-      let flags = borders[i] | mistakeMask[i] | hinted.cells[i];
+      let flags = borders[i] | mistakeMask[i];
 
       if (validRoot.get(blackDsf.canonify(i))) flags |= F_CORRECT;
       if (clue !== EMPTY) flags |= F_GIVEN;
@@ -160,10 +160,10 @@ export function redraw(
       flags |= cursorBits(ui.cursor, c, r);
       flags |= borderErrorBits(c, r, w, h, k, borders, blackDsf, yellowDsf);
 
-      if (ds.tiles.changed(i, flags, hinted.edges[i])) {
+      if (ds.tiles.changed(i, flags, edgeHints[i])) {
         drawBorderTile(
           dr,
-          ts,
+          ds,
           r,
           c,
           flags,
@@ -178,7 +178,7 @@ export function redraw(
               );
             }
           },
-          hinted.edges[i],
+          edgeHints[i],
         );
       }
     }

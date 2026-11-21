@@ -39,11 +39,10 @@ import {
   F_FLASH,
   F_FLASH_LEAD,
   F_GIVEN,
-  F_HINT_CELL,
-  F_HINT_REGION,
   flashFlag,
-  hintTileBits,
   mistakeEdgeBits,
+  newBorderGridDrawState,
+  packHintMarks,
   tileWidth,
 } from "./border-grid-render.ts";
 
@@ -116,8 +115,6 @@ describe("the packed flags do not collide", () => {
     F_FLASH_LEAD,
     CONTAINS_CURSOR: CONTAINS_CURSOR(0x1ff),
     F_CORRECT,
-    F_HINT_CELL,
-    F_HINT_REGION,
     F_GIVEN,
   };
 
@@ -168,9 +165,10 @@ describe("an edge the hint decides is ringed, with what it must become inside", 
   const ringInk = (kind: ForcedBorderEdge["kind"]) => {
     const edge: ForcedBorderEdge = { x: 0, y: 0, dir: 1, kind };
     const step = { words: phrase`${mark.as("ring", EDGE, [edge], "edge")}` };
-    const { cells, edges } = hintTileBits(2, 2, stepMarks(step));
+    const ds = newBorderGridDrawState(2, 2, ts);
+    const edges = packHintMarks(ds, stepMarks(step));
     const dr = new RecordingDrawing(Array.from({ length: RING }, () => [0, 0, 0]));
-    drawBorderTile(dr, ts, 0, 0, cells[0], colors, undefined, edges[0]);
+    drawBorderTile(dr, ds, 0, 0, 0, colors, undefined, edges[0]);
     return dr.ops.filter((o) => "color" in o && o.color === RING);
   };
 

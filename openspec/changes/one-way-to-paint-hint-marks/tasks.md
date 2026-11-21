@@ -52,8 +52,11 @@
   - [x] Boats: onto the sidecar for outline, ring and stripes; the key keeps
         one bit, whether the ring holds a boat or water. Ring and outline no
         longer exclusive on a square.
-  - [ ] A box a cell, onto the sidecar's sides and `drawCellRing` (D2): the
-        border grid (Palisade, Separate). Fold Range's and Slant's doubled
+  - [x] The border grid (Palisade, Separate): its draw state owns the hint
+        sidecar (`packHintMarks`), and `drawBorderTile` takes the draw state
+        and paints the contour and hatch from it; `F_HINT_CELL` and
+        `F_HINT_REGION` are gone. A region the step outlines is one contour
+        (was a box a square). It has no cell ring: its rings are on edges. Fold Range's and Slant's doubled
         "premise" outline and Lightup's dark-square ring into the one
         outline (`hints-marks.md` § "Outline the evidence": one shape for
         one role), unless the words lean on the difference.

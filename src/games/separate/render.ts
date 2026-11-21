@@ -36,10 +36,10 @@ import {
   F_CLUE_ERROR,
   F_CORRECT,
   flashFlag,
-  hintTileBits,
   invalidateDanglingRegions,
   mistakeEdgeBits,
   newBorderGridDrawState,
+  packHintMarks,
 } from "../../engine/mechanics/border-grid-render.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
@@ -147,12 +147,12 @@ export function redraw(
   invalidateDanglingRegions(w, h, borders, blackDsf, validRoot);
 
   const mistakeMask = mistakeEdgeBits(w, h, mistakes);
-  const hinted = hintTileBits(w, h, stepMarks(hint));
+  const edgeHints = packHintMarks(ds, stepMarks(hint));
 
   for (let r = 0; r < h; r++) {
     for (let c = 0; c < w; c++) {
       const i = r * w + c;
-      let flags = borders[i] | mistakeMask[i] | hinted.cells[i];
+      let flags = borders[i] | mistakeMask[i];
 
       flags |= flashFlag(flash.win(sweepStep(c, r)));
 
@@ -165,10 +165,10 @@ export function redraw(
       flags |= cursorBits(ui.cursor, c, r);
       flags |= borderErrorBits(c, r, w, h, k, borders, blackDsf, yellowDsf);
 
-      if (ds.tiles.changed(i, flags, hinted.edges[i])) {
+      if (ds.tiles.changed(i, flags, edgeHints[i])) {
         drawBorderTile(
           dr,
-          ts,
+          ds,
           r,
           c,
           flags,
@@ -181,7 +181,7 @@ export function redraw(
               String.fromCharCode(A + letters[i]),
             );
           },
-          hinted.edges[i],
+          edgeHints[i],
         );
       }
     }

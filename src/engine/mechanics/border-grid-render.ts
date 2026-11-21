@@ -34,12 +34,12 @@ import {
   COL_HINT_OUTLINE,
 } from "../color/roles.ts";
 import type { GameDrawing } from "../contract/game.ts";
-import { CELL, type StepMarks } from "../contract/hint-words.ts";
+import type { StepMarks } from "../contract/hint-words.ts";
 import type { Rect, Size } from "../contract/types.ts";
 import type { GridCursor } from "../input/pointer.ts";
 import { glyphFont } from "../render/draw.ts";
-import { hatchPeriod } from "../render/hatch.ts";
-import { drawMarkSides, MARK_ALL } from "../render/hint-mark.ts";
+import { drawMarkSides } from "../render/hint-mark.ts";
+import { OverlaySidecar } from "../render/overlay-sidecar.ts";
 import { textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { WIN_BODY, WIN_LEAD, type WinTone } from "../render/win-wave.ts";
@@ -100,11 +100,6 @@ export const F_FLASH = 1 << 13;
 export const CONTAINS_CURSOR = (x: number): number => x << 14;
 /** This cell is in a region the game considers finished and correct. */
 export const F_CORRECT = 1 << 23;
-/** A square the displayed hint's sentence cites, outlined (a clue, one of two
- * regions). */
-export const F_HINT_CELL = 1 << 28;
-/** A square of the one region the displayed hint's sentence is about, hatched. */
-export const F_HINT_REGION = 1 << 29;
 /** The puzzle put this cell's content here, so it sits on the lifted surface
  * of a given. */
 export const F_GIVEN = 1 << 30;
@@ -143,6 +138,8 @@ export interface BorderGridDrawState {
   h: number;
   /** Per cell, its packed tile flags and its `edge-hint.ts` word. */
   tiles: TileCache;
+  /** The hint's outlined squares and hatched region, in the tiles' key. */
+  hint: OverlaySidecar;
 }
 
 export function newBorderGridDrawState(
@@ -150,7 +147,14 @@ export function newBorderGridDrawState(
   h: number,
   tileSize: number,
 ): BorderGridDrawState {
-  return { tileSize, w, h, tiles: new TileCache(w * h, { words: 2 }) };
+  const hint = new OverlaySidecar(w * h);
+  return {
+    tileSize,
+    w,
+    h,
+    tiles: new TileCache(w * h, { words: 2, overlays: [hint] }),
+    hint,
+  };
 }
 
 // --- the flags a frame computes ----------------------------------------------
@@ -210,21 +214,14 @@ export function mistakeEdgeBits(
 }
 
 /**
- * The displayed hint step's marks, per cell: in `cells`, the flags of the
- * outlined squares and the striped region; in `edges`, the `edge-hint.ts` word
- * for each ringed edge, drawn as what it must become.
+ * Pack the displayed hint step's marks for this frame: the outlined squares
+ * and the striped region onto `ds.hint`, and, returned, each cell's
+ * `edge-hint.ts` word for the edges it rings, drawn as what they must become.
  */
-export function hintTileBits(
-  w: number,
-  h: number,
-  marks: StepMarks,
-): { cells: Int32Array; edges: Int32Array } {
-  const cells = new Int32Array(w * h);
-  for (const cell of marks.of("outline", CELL))
-    cells[cell.y * w + cell.x] |= F_HINT_CELL;
-  for (const cell of marks.of("stripes", CELL))
-    cells[cell.y * w + cell.x] |= F_HINT_REGION;
-  const edges = edgeHintWords(
+export function packHintMarks(ds: BorderGridDrawState, marks: StepMarks): Int32Array {
+  const { w, h } = ds;
+  ds.hint.pack(marks, (x, y) => y * w + x);
+  return edgeHintWords(
     squareEdges(w, h),
     marks.of("ring", EDGE).map(
       (e): EdgeHint => ({
@@ -234,7 +231,6 @@ export function hintTileBits(
       }),
     ),
   );
-  return { cells, edges };
 }
 
 /** The cursor-containment bits for this tile — see {@link CONTAINS_CURSOR}. */
@@ -316,7 +312,7 @@ export function drawBorderGridBackground(
  */
 export function drawBorderTile(
   dr: GameDrawing,
-  ts: number,
+  ds: BorderGridDrawState,
   r: number,
   c: number,
   flags: number,
@@ -324,6 +320,8 @@ export function drawBorderTile(
   drawContent?: (body: Rect, origin: { x: number; y: number }) => void,
   edgeHint = 0,
 ): void {
+  const ts = ds.tileSize;
+  const i = r * ds.w + c;
   const w = tileWidth(ts);
   const x = margin(ts) + ts * c;
   const y = margin(ts) + ts * r;
@@ -349,15 +347,13 @@ export function drawBorderTile(
   // glyph the deduction reads and the `F_CORRECT` shade that shows a region is
   // finished. The outline is inset in the body because the square's border is
   // where the hint's own forced edges are drawn.
-  if (flags & F_HINT_REGION) dr.drawHatch(body, hatchPeriod(ts));
-  if (flags & F_HINT_CELL) {
-    drawMarkSides(
-      dr,
-      { box: body, outer: 0, inner: Math.max(2, ts >> 4) },
-      MARK_ALL,
-      COL_HINT_OUTLINE,
-    );
-  }
+  ds.hint.drawHatch(dr, i, body, ts);
+  drawMarkSides(
+    dr,
+    { box: body, outer: 0, inner: Math.max(2, ts >> 4) },
+    ds.hint.outlineSides(i),
+    COL_HINT_OUTLINE,
+  );
 
   drawContent?.(body, { x, y });
 
