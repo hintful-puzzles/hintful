@@ -160,7 +160,61 @@ flip records what it actually added.
 - **Unreasonable.** The fill hint stops where the ladder does, as Mosaic's
   does; the search certifies the deal only.
 
+## The figures (3.1)
+
+Measured 2026-11-22, the working tree after `9eec2a59c` against
+`1057f5dc4`, the parent of the change's first commit.
+
+**Lines.** The hand-written TypeScript removed, against what
+`src/engine/` and `src/describe/` gained net, tests excluded: Unruly
+1,160 against 490; Mosaic 1,617 against 822; Norinori 1,291 against 654.
+
+**Capabilities**, as each flip recorded them in tasks.md: Unruly 8,
+Mosaic 6, Norinori 8. They do not fall from game to game. Norinori's
+partition, grown deal and domino painter are new kinds of work, as
+Mosaic's cell numbers and search tier were. They are not rework of
+Unruly's.
+
+**Time.** The method:
+
+- The boards: 240 dealt at the baseline, 10 a menu board of 36 to 100
+  cells (Unruly 90, Mosaic 30, Norinori 120). The same IDs are loaded in
+  both trees.
+- The walk: each board walked by `hint` and `executeHint` to the end.
+- The frames: a cold frame on load, and a warm frame after each step.
+- The clock: process CPU time, five rounds with the first dropped, six
+  runs a tree interleaved. Wall time swung up to 2x between runs on this
+  busy machine; CPU time held within 10%.
+
+The born tree's medians of the six against the baseline's:
+
+| Game | Hint walk | Cold frame | Warm frame |
+|---|---|---|---|
+| Unruly | +29% | +13% | +12% |
+| Mosaic | +10% | −15% | −2% |
+| Norinori | −2% | +16% | −2% |
+
+The 29% is 0.03 ms a step (0.113 against 0.083), or about 2 ms over a
+whole 8x12 game. A cold frame is drawn once a board, at 0.2 ms. Step
+counts agree, except that Unruly's born walk takes 5% fewer steps (a
+firing that settles several cells is one step). Two costs were found and
+cut on the way:
+
+- The mistake check solved the whole board again after every move. The
+  ladder's answer is now cached per deal, as the search's was.
+- The gesture planner tried the second button after the first had
+  completed the step.
+
+Neither moved the walk measurably. The rest is the described firing hint
+itself against Unruly's hand-written one.
+
+**Verdict.** As written, the pilot does not hold: the capabilities do
+not fall, Unruly's walk and frames are over 10%, and so is Norinori's
+cold frame. No player sees any of it. Whether to file the plain-cell
+family's migration on these figures is the owner's call (3.3).
+
 ## Open questions
 
-None. Both of 1.2's were answered by the owner on 2026-11-22: the saves
-break, and all three games move.
+Both of 1.2's were answered by the owner on 2026-11-22: the saves break,
+and all three games move. One is open: whether the pilot holds on the
+figures above (3.3).

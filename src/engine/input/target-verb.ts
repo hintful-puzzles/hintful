@@ -748,14 +748,10 @@ export function verbClicks<S, U, D, T, M, H>(
       const trial = { ...judged, move: structuredClone(judged.move) };
       const verdict = rules.keepTrack(move, trial, board);
       if (verdict === "off") continue;
+      // Nothing outranks a click that completes the step.
+      if (verdict === "completed") return { button, move, trial, verdict, rank: 0 };
       const shrunk = JSON.stringify(trial.move) !== JSON.stringify(judged.move);
-      found.push({
-        button,
-        move,
-        trial,
-        verdict,
-        rank: verdict === "completed" ? 0 : shrunk ? 1 : 2,
-      });
+      found.push({ button, move, trial, verdict, rank: shrunk ? 1 : 2 });
     }
     return found.reduce<(typeof found)[number] | null>(
       (best, f) => (best === null || f.rank < best.rank ? f : best),

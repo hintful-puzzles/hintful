@@ -91,9 +91,17 @@ Norinori's partition is its own.
 
 ## 3. Finish
 
-- [ ] 3.1 Figures against the change's first commit's parent: lines,
+- [x] 3.1 Figures against the change's first commit's parent: lines,
       frame time, hint-walk time, capabilities added per game. The pilot
       holds if they fall from game to game and time is within 10%.
-- [ ] 3.2 Spec deltas; lower the `game-lines` ceiling with each flip.
+      Recorded in design.md § "The figures (3.1)", 2026-11-22. As written
+      it does not hold: capabilities 8, 6 and 8, and Unruly's hint walk
+      +29% in CPU time (0.03 ms a step), its frames and Norinori's cold
+      frame 12-16% over. On the way, the ladder's answer is cached per
+      deal for the mistake check, and the gesture planner stops at a
+      click that completes the step.
+- [x] 3.2 Spec deltas; lower the `game-lines` ceiling with each flip.
 - [ ] 3.3 Commit, push, archive. File the plain-cell family's migration if
-      it holds; if not, record why in the doctrine.
+      it holds; if not, record why in the doctrine. Asked the owner
+      (2026-11-22) whether the pilot holds on 3.1's figures. The answer
+      decides between filing the migration and writing the doctrine.

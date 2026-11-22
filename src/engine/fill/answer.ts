@@ -11,7 +11,7 @@ import { PUZZLE_NOT_REASONABLE } from "../contract/hint-refusal.ts";
 import type { RulesOf } from "../contract/rules.ts";
 import { NO_SOLUTION } from "../contract/solve-failure.ts";
 import type { GameStatus } from "../contract/types.ts";
-import { solveFromAnswer } from "../solve/answer-search.ts";
+import { type Answer, answerCache, solveFromAnswer } from "../solve/answer-search.ts";
 import { clueAt, type Partition } from "../solve/describe-runtime.ts";
 import { describedRules } from "../solve/described-rules.ts";
 import {
@@ -62,9 +62,18 @@ export function answerOf<C>(
     const found = answerSearched(module, board);
     return found.kind === "one" ? found.solution : null;
   }
-  const got = solveBoard(module, asDealt(board), module.tiers.length - 1);
-  return got.verdict === "solved" ? got.values : null;
+  const found = reached(board.dealt as object, (): Answer<Uint8Array> => {
+    const got = solveBoard(module, asDealt(board), module.tiers.length - 1);
+    return got.verdict === "solved"
+      ? { kind: "one", solution: got.values }
+      : { kind: "none" };
+  });
+  return found.kind === "one" ? found.solution : null;
 }
+
+/** The answer the ladder reaches, keyed on a board's clues, which every state
+ * of one game shares: the mistake check asks after every move. */
+const reached = answerCache<object, Uint8Array>();
 
 /** The answer a deal's `aux` holds: a base-36 digit a cell. */
 export const encodeAnswer = (values: ArrayLike<number>): string =>
