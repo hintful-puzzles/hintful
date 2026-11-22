@@ -118,9 +118,17 @@ interface FillBoard {
   readonly dealt: Dealt;            // the compiled module's, by clue kind
   readonly values: Int8Array;       // the description's values, 0 open
   readonly fixed: Uint8Array;       // 1 where the domain allows one value
-  readonly marks: Readonly<Record<string, Int32Array>>; // per mark kind, -1 none
+  readonly mark: Int32Array;        // the element each cell's mark names, -1 none
 }
 ```
+
+- **One mark a cell.** The ladder's `CellMarks` holds one cell mark
+  (`marked`), so the board holds one too. The first game with two kinds of
+  cell mark widens both.
+- **Open is not always undecided.** `play.blank` names the value an open
+  cell reads as for the answer check, where the answer is the other values
+  alone: Tents' grass, Kakurasu's unshaded. The live rules still read an
+  open cell as undecided.
 
 - **One encoding.** The values are the description's (Tents: 1 tent, 2
   grass, 3 tree). `GAME_VALUE`/`DESC_VALUE` and every index-order adapter
@@ -138,8 +146,8 @@ interface FillBoard {
 
 ```ts
 type Edit = {
-  readonly set?: readonly number[];   // element, value, element, value, ...
-  readonly mark?: Readonly<Record<string, readonly number[]>>; // element, q, ...
+  readonly set?: readonly number[];   // cell, value, cell, value, ...
+  readonly mark?: readonly number[];  // cell, element, ... (-1 clears)
 };
 ```
 
@@ -195,8 +203,10 @@ play:
   - the `difficulty` contract.
 - **A mark is a mistake** where `marksHold` fails with the answer and the
   marks before it in reading order. That generalizes Tents' `badLinks`.
-  Where `marksHold` cannot say, the compiler gains it for the mark's
-  `means`.
+  The marks reach `marksHold` as its last argument, after the clues, as
+  Bridges' and Tracks' candidates already do. Tents' module has no
+  `marksHold` yet: the compiler gains one for a cell mark's `means`
+  (task 3.2).
 
 ### 6. Render by layers
 

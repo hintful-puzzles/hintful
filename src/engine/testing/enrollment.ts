@@ -300,11 +300,14 @@ export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() =
   // A glob is a literal, so each family is named; the count below fails when
   // a declared family is missing from it. A wider glob would make every guard
   // that enrolls games read, and so be selected by, every engine module.
-  const engineDirs = import.meta.glob<string>(["../edge-clue-latin/*.ts"], {
-    query: "?raw",
-    import: "default",
-    eager: true,
-  });
+  const engineDirs = import.meta.glob<string>(
+    ["../edge-clue-latin/*.ts", "../fill/*.ts"],
+    {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    },
+  );
   const familyDirs = new Set(
     ENGINE_DIRECTORIES.filter((d) => d.kind === "family").map((d) => d.dir),
   );

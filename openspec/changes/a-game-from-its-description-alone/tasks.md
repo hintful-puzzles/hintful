@@ -10,21 +10,23 @@
 
 ## 2. The engine
 
-The baseline for 3.3 is the parent of this change's first engine commit:
-note its hash here when that commit lands.
+The baseline for 3.3 is `06662e01f`, the parent of this change's first
+engine commit.
 
-- [ ] 2.1 `engine/fill/`: the board, `Edit`, `FillUi`, and the hooks built
-      from them (`executeMove` with marks' `while`, `status`, `solve`,
+- [x] 2.1 `engine/fill/`: the board, `Edit` (with a mark's `while`), and
+      the hooks that judge a board (`status`, `solve`,
       `findMistakes`/`clearMistakes`/`revealOne`, `textFormat`, `rules`,
-      `difficulty`); unit tests on a hand-built board.
+      the difficulty verdict), tested on Tents' compiled module against
+      Tents' own solver and text format. `FillUi` moved to 2.4, with the
+      input that is its only reader.
 - [ ] 2.2 The compiler: `play:`, `catalog:`, `id:`, `tierLetters:`,
       `deal.sample:`, a mark's `while:`, `labels:`; `clueHolds_<kind>` and
       `deriveClues`; the generated `<id>.game.ts`. Schema and lint.
 - [ ] 2.3 `src/games/catalog.ts` as the one way to the catalog, every
       reader of `src/games/*/catalog.ts` moved to it; `src/games/index.ts`
       registers the generated games.
-- [ ] 2.4 Input from `play` (verbs, keys, Shift/Ctrl painting, `stroke`,
-      `links`).
+- [ ] 2.4 `FillUi`, `newUi`, `changedState`, and input from `play` (verbs,
+      keys, Shift/Ctrl painting, `stroke`, `links`).
 - [ ] 2.5 Render by layers: the engine walk, painters in
       `engine/render/pieces/`, margins, labels.
 - [ ] 2.6 The deal: `scatter`/`partner` samplers, the tier gate, the codec
@@ -48,7 +50,8 @@ note its hash here when that commit lands.
 
 - [ ] 4.1 The ratchet on TypeScript lines under `src/games/`; see it fail
       on a planted line.
-- [ ] 4.2 Spec deltas (`engine-*`, `tents`, a new `kakurasu`);
+- [ ] 4.2 Spec deltas (`engine-*`, `tents`, a new `kakurasu`), with
+      `skip_specs` dropped from `.openspec.yaml`;
       `docs/new-game.md` gains the route for a game born from its
       description.
 - [ ] 4.3 Commit, push, archive. File the migration batches (review stage

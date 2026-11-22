@@ -38,6 +38,7 @@ export const ENGINE_DIRECTORIES: readonly {
   { dir: "solve", kind: "concern" },
   { dir: "hint", kind: "concern" },
   { dir: "edge-clue-latin", kind: "family" },
+  { dir: "fill", kind: "family" },
   { dir: "midend", kind: "concern" },
   { dir: "testing", kind: "harness" },
 ];

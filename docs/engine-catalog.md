@@ -101,6 +101,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `code-rows.ts` — the code-breaking mechanic |
 | – `wires.ts` — the Net/Netslide wire model |
 | – `edge-clue-latin/` — the board Unequal and Adjacent share |
+| – `fill/` — the board of a fill game, laid out from its description |
 | – `edge-hint.ts` — a hint on an edge between squares |
 | `generate/` — random partitions, tilings and placements |
 | – `divvy.ts` — random equal-omino partition |
@@ -1126,6 +1127,16 @@ spent-clue drag, the cell drawing, the solver's driver and the generator
 says, whether every true one is dealt, whether both ends flag it, its
 compiled ladder and rules, its drawing and its text glyph) and writes its own `Game`,
 its reasons and its hint's sentences. Exemplars: `unequal/`, `adjacent/`.
+
+### `fill/` — the board of a fill game, laid out from its description
+
+Being built by `openspec/changes/a-game-from-its-description-alone`, whose
+`design.md` is its plan. The board (`board.ts`) holds the description's own
+values in the space's own order, one mark a cell and the dealt clues, so
+the ladder reads it with no adapter. `edit.ts` is the one move, and
+`answer.ts` the hooks that judge a board against its answer and its rules.
+A game reaches them through `fillGame` once that lands; until then no game
+uses them.
 
 ### `edge-hint.ts` — a hint on an edge between squares
 
