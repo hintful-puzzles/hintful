@@ -61,10 +61,13 @@ help:
     pairs apart. A pair's two discs fill with its color once a line joins them.
 
     In both, a line that reaches no number yet has no color. A line turns red
-    when it breaks the rules already: when it closes into a loop, or joins two
-    numbers that may not meet. In {{choice:ruleset:0}} that is two that are not
-    one apart, such as a line from the 3 that reaches the 5 before the 4, and in
-    {{choice:ruleset:1}} two different numbers.
+    when it breaks the rules already: when it closes into a loop, joins two
+    numbers that may not meet, or ends at a square that can take no further
+    line, each of its other sides crossed out or leading to a square that has
+    all its lines. In {{choice:ruleset:0}} two
+    numbers that may not meet are two that are not one apart, such as a line
+    from the 3 that reaches the 5 before the 4, and in {{choice:ruleset:1}} two
+    different numbers.
   sections:
     - heading: When it is solved
       body: |-
@@ -214,6 +217,13 @@ rules:
     and (forall x in cells where numbered(x):
     count(y in cells where clue(number, y) = clue(number, x)) = 2 - step
     and (clue(number, x) = 1 or exists y in cells: clue(number, y) = clue(number, x) - 1))
+implied:
+  # No line closes a loop: the squares it joins are joined by no other way,
+  # as a number takes one line and a loop with none breaks the shape. Said
+  # of each line, so a loop's lines are where it breaks.
+  noLoop: >-
+    forall e in edges where value(e) = 1:
+    end2(e) not in through(end1(e), {x in edges where value(x) = 1 and x != e})
 clues:
   # A square's number: each line from it leads to a number it may meet.
   number:

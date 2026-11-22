@@ -22,6 +22,7 @@ import {
   squareEdges,
 } from "../../engine/board/square-edges.ts";
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { spokenOf } from "../../engine/hint/described-hint.ts";
 import {
   CROSS,
@@ -44,6 +45,7 @@ import {
   type GridSpace,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -269,6 +271,41 @@ export function isComplete(puzzle: PathPuzzle, edges: ArrayLike<number>): boolea
   for (let e = 0; e < geo.g.edgeCount; e++)
     if (edges[e] === LINE) g[geo.toSp[e]] = LINED;
   return path.isAnswer(g, geo.sp, dealtOf(puzzle, geo));
+}
+
+/**
+ * The edges as the rules read them: a line, none for a cross, and none too
+ * for an open edge at a square that already has every line it takes, as on
+ * every answer. So a line run into squares with no line left to give is
+ * seen to end there.
+ */
+export function rulesGrid(puzzle: PathPuzzle, edges: ArrayLike<number>): Uint8Array {
+  const geo = geometryOf(puzzle.w, puzzle.h);
+  const { g, toSp } = geo;
+  const lines = new Uint8Array(g.cells);
+  for (let e = 0; e < g.edgeCount; e++)
+    if (edges[e] === LINE) {
+      lines[g.a[e]]++;
+      lines[g.b[e]]++;
+    }
+  const out = new Uint8Array(geo.sp.edges.length);
+  for (let e = 0; e < g.edgeCount; e++) {
+    const full =
+      lines[g.a[e]] >= puzzle.takes[g.a[e]] || lines[g.b[e]] >= puzzle.takes[g.b[e]];
+    out[toSp[e]] = edges[e] === LINE ? LINED : edges[e] === CROSS || full ? NONE : 0;
+  }
+  return out;
+}
+
+export const rules: RulesOf<PathState> = describedRules(path, {
+  grid: (s) => rulesGrid(s, s.edges),
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s, geometryOf(s.w, s.h))],
+});
+
+/** The edge of the game's numbering that the rules' edge `e` is. */
+export function gameEdge(puzzle: PathPuzzle, e: number): number {
+  return geometryOf(puzzle.w, puzzle.h).toGame[e];
 }
 
 /** How many positions {@link searchAnswer} may try. A board below

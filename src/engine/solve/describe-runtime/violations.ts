@@ -245,6 +245,65 @@ export function apartThrough(
   return out;
 }
 
+/**
+ * The edges of `E` that lie on a cycle of `E`'s edges: each joins two cells
+ * the rest of `E` joins too, so "no edge of E closes a loop" breaks at each
+ * (Path's loop, every line of it). Every edge that is not a bridge of the
+ * graph `E` makes, by one depth-first walk (Tarjan's bridges).
+ */
+export function cycleEdges(sp: GridSpace, E: readonly number[]): number[] {
+  const n = sp.cells.length;
+  const inE = new Uint8Array(sp.edgeEnds.length / 2);
+  for (const e of E) inE[e] = 1;
+  const order = new Int32Array(n).fill(-1);
+  const low = new Int32Array(n);
+  const bridge = new Uint8Array(inE.length);
+  let time = 0;
+  // Each frame: the cell, the edge it was entered by, and how far through
+  // its edges the walk is.
+  const cell: number[] = [];
+  const by: number[] = [];
+  const at: number[] = [];
+  for (const e0 of E) {
+    const root = sp.edgeEnds[2 * e0];
+    if (order[root] >= 0) continue;
+    order[root] = low[root] = time++;
+    cell.push(root);
+    by.push(-1);
+    at.push(0);
+    while (cell.length > 0) {
+      const top = cell.length - 1;
+      const c = cell[top];
+      const edges = sp.cellEdges[c];
+      if (at[top] < edges.length) {
+        const e = edges[at[top]++];
+        // The edge walked in by is not a way back, though another edge
+        // between the same two cells is.
+        if (!inE[e] || e === by[top]) continue;
+        const d =
+          sp.edgeEnds[2 * e] === c ? sp.edgeEnds[2 * e + 1] : sp.edgeEnds[2 * e];
+        if (order[d] >= 0) {
+          low[c] = Math.min(low[c], order[d]);
+          continue;
+        }
+        order[d] = low[d] = time++;
+        cell.push(d);
+        by.push(e);
+        at.push(0);
+        continue;
+      }
+      cell.pop();
+      const e = by.pop() as number;
+      at.pop();
+      if (cell.length === 0) continue;
+      const parent = cell[cell.length - 1];
+      low[parent] = Math.min(low[parent], low[c]);
+      if (low[c] > order[parent]) bridge[e] = 1;
+    }
+  }
+  return E.filter((e) => !bridge[e]);
+}
+
 /** The members of `need` in each group of `need` and `give` joined by sides
  * where `need` outnumbers `give`. */
 function short(

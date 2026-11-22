@@ -37,6 +37,7 @@ import {
   isComplete,
   PATH_RUNGS,
   type PathRung,
+  rules,
   solvePath,
 } from "./solver.ts";
 import {
@@ -121,6 +122,7 @@ export const pathGame: Game<
   interpretMove: input.interpretMove,
   executeMove,
   status,
+  rules,
 
   solve,
   difficulty,

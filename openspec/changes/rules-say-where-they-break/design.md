@@ -15,7 +15,7 @@ it. Galaxies and Rect have no live errors (only the mistake overlay).
 | Clue between two cells, a cage's arithmetic | adjacent, unequal, subsets, mathrax, group, salad, keen, solo killer | exact once decided; keen/solo drew a full cage only, the sum's interval says more |
 | Matched | tents | Hall's condition per group: what Tents drew |
 | Connected / joined | range, singles, spokes, bridges | broken where the sure members fall into two groups of the possible ones; named by the cut (`connected`) or the finished groups (through) |
-| Acyclic / one loop / one path | net, slant, tracks, bridges, rome, path, wordtrail, loopy, pearl | **none yet** |
+| Acyclic / one loop / one path | net, slant, tracks, bridges, rome, path, wordtrail, loopy, pearl | the cycle form: each sure line on a cycle of sure lines (2026-11-22) |
 | Regions of size k | palisade, separate, filling | **none yet** |
 | Chain (n beside n+1) | signpost, ascent | exact once decided |
 

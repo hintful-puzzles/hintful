@@ -20,6 +20,7 @@ import {
   type ClueKind,
   CompileError,
   type Env,
+  elem,
   expect,
   Out,
   once,
@@ -138,9 +139,28 @@ export function violationCheck(
         : () => domain.mask,
   );
   for (const s of statements) {
+    const from = out.entries.length;
+    const hoisted = scratch.length;
     if (s.on !== null) out.open(`if (variations.includes(${JSON.stringify(s.on)})) {`);
     c.statement(s.name, "-1", s.expr, base);
     if (s.on !== null) out.close();
+    // A statement whose code reads nothing of the board `g` is the same of
+    // every board the deal makes: it says whether the board was dealt
+    // right, which the deal and the answer check settle, and never where a
+    // player's board breaks: Path's numbers, counted over every square for
+    // every number, at every redraw. `overDomain` takes
+    // the board only once a read of it has stopped a term, and a read may
+    // be hoisted ahead of the statements (Slant's `linked`).
+    const text = [
+      ...out.entries.slice(from).map((l) => ("text" in l ? l.text : "")),
+      ...scratch.slice(hoisted),
+    ]
+      .join("\n")
+      .replaceAll("overDomain(g,", "");
+    if (!/\bg\b/.test(text)) {
+      out.entries.splice(from);
+      scratch.splice(hoisted);
+    }
   }
   for (const m of clueMeanings) {
     readsClues.yes = true;
@@ -267,6 +287,34 @@ class Check {
       out.close();
       return;
     }
+    const cycle = e.k === "quant" && this.env.answerSort === "edge" ? cycleOf(e) : null;
+    if (cycle !== null) {
+      // Read as one: the sure edges, and each of them on a cycle of the
+      // others, found together rather than by a walk from each.
+      const sure = Out.fresh("_se");
+      out.emit(`const ${sure}: number[] = [];`);
+      this.stopped(() =>
+        this.binders(
+          cycle,
+          scope,
+          guard,
+          (sc, g) =>
+            out.emit(
+              `if (${g} === ${T}) ${sure}.push(${(sc.get(cycle[0].name) as Val).code});`,
+            ),
+          [],
+          true,
+        ),
+      );
+      this.env.used.add("cycleEdges");
+      const x = Out.fresh("_cy");
+      out.open(`for (const ${x} of cycleEdges(sp, ${sure})) {`);
+      out.emit(
+        `_out.push({ rule: ${JSON.stringify(rule)}, clue: ${clue}, at: [${[...bound, x].join(", ")}] });`,
+      );
+      out.close();
+      return;
+    }
     if (e.k === "quant" && e.q === "forall" && joinOf(e) === null) {
       // A binding a filter leaves undecided breaks nothing yet, so the
       // statement reads no further into it: Signpost's squares a given
@@ -348,6 +396,42 @@ class Check {
         c.sort.k === "elem" && c.sort.e === env.answerSort ? [...names, v] : names;
       const g = Out.fresh("_gd");
       out.emit(`const ${g}: number = ${sure}.includes(${v}) ? ${guard} : ${U};`);
+      if (sureOnly) out.emit(`if (${g} !== ${T}) continue;`);
+      if (first.where === null) inner(sc, g, own);
+      else {
+        const w = this.verdict(first.where, sc);
+        out.open(`if (${enter(w)}) {`);
+        const g2 = Out.fresh("_gd");
+        out.emit(`const ${g2}: number = ${w} === ${T} ? ${g} : ${U};`);
+        inner(sc, g2, own);
+        out.close();
+      }
+      out.close();
+      return;
+    }
+    if (first.kind === "in" && heldSet(first.of, scope, env)) {
+      // A set read from the answer ranges over its possible members, surely
+      // over its sure ones: the numbers a Path line surely reaches.
+      const [must, may, whole] =
+        this.premade.get(first.of) ?? this.members(first.of, scope);
+      // Its sort, from code compiled only to learn it.
+      const sort = compileExpr(
+        first.of,
+        scope,
+        { ...env, scratch: [], used: new Set(), readsClues: { yes: false } },
+        new Out(0),
+      ).sort;
+      const of = sort.k === "set" ? sort.of : sort;
+      env.used.add("decidedIf");
+      out.emit(`decidedIf(${whole});`);
+      const sure = Out.fresh("_ms");
+      out.emit(`const ${sure} = new Set(${must});`);
+      const v = Out.fresh(`v_${first.name}`);
+      out.open(`for (const ${v} of ${may}) {`);
+      const sc = new Map(scope).set(first.name, { code: v, sort: of });
+      const own = of.k === "elem" && of.e === env.answerSort ? [...names, v] : names;
+      const g = Out.fresh("_gd");
+      out.emit(`const ${g}: number = ${sure}.has(${v}) ? ${guard} : ${U};`);
       if (sureOnly) out.emit(`if (${g} !== ${T}) continue;`);
       if (first.where === null) inner(sc, g, own);
       else {
@@ -533,6 +617,26 @@ class Check {
         [`${r} = ${U};`],
       );
       out.close();
+      return r;
+    }
+    if (
+      e.k === "bin" &&
+      (e.op === "in" || e.op === "notin") &&
+      !readsHeld(e.a) &&
+      heldSet(e.b, scope, this.env)
+    ) {
+      // In where a sure member, out where no possible one: a square a Path
+      // line's sure links reach is on its piece.
+      const x = once(compileExpr(e.a, scope, this.env, out), out).code;
+      const [must, may, whole] = this.members(
+        e.b,
+        scope,
+        (m) => `!${m}.includes(${x})`,
+      );
+      const [yes, no] = e.op === "in" ? [T, F] : [F, T];
+      out.emit(
+        `const ${r}: number = ${must}.includes(${x}) ? ${yes} : ${whole} && !${may}.includes(${x}) ? ${no} : ${U};`,
+      );
       return r;
     }
     const held = e.k === "bin" && (e.op === "=" || e.op === "!=") ? heldIs(e) : null;
@@ -761,6 +865,13 @@ class Check {
       }, [`${lo} = -Infinity;`, `${hi} = Infinity;`]);
       return { lo, hi, yes: null, no: null };
     }
+    if (e.k === "size" && heldSet(e.of, scope, this.env)) {
+      // A set holds its sure members at least and its possible ones at most.
+      const [must, may, whole] = this.members(e.of, scope);
+      out.emit(`const ${lo} = ${must}.length;`);
+      out.emit(`const ${hi} = ${whole} ? ${may}.length : Infinity;`);
+      return { lo, hi, yes: null, no: null };
+    }
     const run = stretchOf(e, scope, this.env);
     const sides = run === null ? null : this.sureAndMaybe(run[2], scope);
     if (run !== null && sides !== null) {
@@ -822,45 +933,336 @@ class Check {
     out.emit("}");
   }
 
-  /** A set `{x in S where P}` of the answer's elements as two arrays, those
-   * surely in it and those that may be, and whether the second is whole,
-   * which it is not where reading the set's members stopped; `null` for any
-   * other term. */
+  /** A set of elements as two arrays, those surely in it and those that may
+   * be, and whether the second is whole, which it is not where reading the
+   * set's members stopped: for `{x in S where P}`, and for any set
+   * {@link heldSet} reads; `null` for any other term. */
   private sureAndMaybe(e0: Expr, scope: Scope): [string, string, string] | null {
-    // A set may be named by a definition with no parameters (Range's
-    // `unshaded`).
+    const e = this.resolved(e0, scope);
+    const filtered =
+      e.k === "agg" &&
+      e.fn === "set" &&
+      e.binders.length === 1 &&
+      e.term?.k === "name" &&
+      e.term.name === e.binders[0].name;
+    if (!filtered && !heldSet(e, scope, this.env)) return null;
+    return this.members(e, scope);
+  }
+
+  /** The walks made of each `through` set that reads nothing a statement
+   * binds, by the set's text: per square, the sure walk that reached it
+   * and what that walk read, and the possible walk. */
+  private readonly walks = new Map<string, { sure: string; may: string }>();
+
+  /** The arrays {@link members} keeps a `through`'s walks of its set in, or
+   * `null` where its set reads a name `scope` binds (the line Path's loop
+   * rule leaves out), so that the walks differ from binding to binding. */
+  private walkCache(e: Expr, scope: Scope): { sure: string; may: string } | null {
+    if (e.k !== "call") return null;
+    const free = new Set<string>();
+    freeNames(e.args[1], free, new Set());
+    if ([...free].some((n) => scope.has(n))) return null;
+    const key = JSON.stringify(inlined(e.args[1], scope, this.env));
+    let made = this.walks.get(key);
+    if (made === undefined) {
+      made = { sure: Out.fresh("_ws"), may: Out.fresh("_wm") };
+      this.env.scratch?.push(
+        `const ${made.sure}: ({ m: number[]; r: number[] } | undefined)[] = [];`,
+        `const ${made.may}: (number[] | undefined)[] = [];`,
+      );
+      this.walks.set(key, made);
+    }
+    return made;
+  }
+
+  /** `e` inlined, a definition with no parameters read as its body: a set
+   * may be named by one (Range's `unshaded`). */
+  private resolved(e0: Expr, scope: Scope): Expr {
     const def =
       e0.k === "name" && !scope.has(e0.name) ? this.env.defs.get(e0.name) : undefined;
-    const e = inlined(def?.params.length === 0 ? def.body : e0, scope, this.env);
-    if (
-      e.k !== "agg" ||
-      e.fn !== "set" ||
-      e.binders.length !== 1 ||
-      e.term?.k !== "name" ||
-      e.term.name !== e.binders[0].name
-    )
-      return null;
-    const { out } = this;
+    return inlined(def?.params.length === 0 ? def.body : e0, scope, this.env);
+  }
+
+  /**
+   * The set `e` as {@link sureAndMaybe}'s three names. A set of the board's
+   * elements read from the answer (`heldSet`) is bounded by its form:
+   * `through(c, {e in edges where P})` reaches surely across the edges P is
+   * true of and at most across those it is not false of (Path's line from a
+   * square, the numbers at its ends known once its sure lines reach them);
+   * a union by its two sides; and a set over binders by each binding a
+   * filter or a binder's own set leaves sure or possible. Any other set is
+   * evaluated as the answer check would, whole where nothing it read was
+   * undecided. Where `needMay`, given the sure members' name, is false, a
+   * `through`'s possible members are left unread and empty: a membership
+   * its sure ones settle needs no walk over the board.
+   */
+  private members(
+    e0: Expr,
+    scope: Scope,
+    needMay: ((must: string) => string) | null = null,
+  ): [string, string, string] {
+    const e = this.resolved(e0, scope);
+    const { out, env } = this;
     const must = Out.fresh("_must");
     const may = Out.fresh("_may");
-    out.emit(`const ${must}: number[] = [];`);
-    out.emit(`const ${may}: number[] = [];`);
     const ok = Out.fresh("_ok");
+    const walked = throughSet(e, scope, env);
+    if (walked !== null) {
+      const [cArg, bnd] = walked;
+      const c = once(compileExpr(cArg, scope, env, out), out).code;
+      const x = Out.fresh("_ce");
+      const crosses = Out.fresh("_cr");
+      out.open(`const ${crosses} = (${x}: number): number => {`);
+      const p =
+        bnd.where === null
+          ? `${T}`
+          : this.verdict(
+              bnd.where,
+              new Map(scope).set(bnd.name, { code: x, sort: elem("edge") }),
+            );
+      out.emit(`return ${p};`);
+      out.close("};");
+      env.used.add("throughWhere");
+      const sureWalk = `[...throughWhere(sp, ${c}, (x) => ${crosses}(x) === ${T})]`;
+      const mayWalk = `[...throughWhere(sp, ${c}, (x) => ${crosses}(x) !== ${F})]`;
+      const n = Out.fresh("_n");
+      const cache = this.walkCache(e, scope);
+      if (cache === null) {
+        out.emit(`const ${must}: number[] = ${sureWalk};`);
+        // What the possible members were read from names nothing: a walk
+        // over them may cross the whole board.
+        out.emit(`const ${n} = ${READ}.length;`);
+        out.emit(
+          `const ${may}: number[] = ${needMay === null ? mayWalk : `${needMay(must)} ? ${mayWalk} : []`};`,
+        );
+        out.emit(`${READ}.length = ${n};`);
+      } else {
+        // A set that reads nothing the statement binds is the same set from
+        // every square, so a walk from one square is every square's it
+        // reaches: Path's piece is walked once, not once a square of it.
+        const hit = Out.fresh("_hit");
+        out.emit(`let ${must}: number[];`);
+        out.emit(`const ${hit} = ${cache.sure}[${c}];`);
+        out.open(`if (${hit} !== undefined) {`);
+        out.emit(`${must} = ${hit}.m;`);
+        out.emit(`${READ}.push(...${hit}.r);`);
+        out.close("} else {");
+        out.emit(`  const ${n} = ${READ}.length;`);
+        out.emit(`  ${must} = ${sureWalk};`);
+        out.emit(`  const _made = { m: ${must}, r: ${READ}.slice(${n}) };`);
+        out.emit(`  for (const y of ${must}) ${cache.sure}[y] = _made;`);
+        out.emit("}");
+        out.emit(`let ${may}: number[] = [];`);
+        out.open(`if (${needMay === null ? "true" : needMay(must)}) {`);
+        out.emit(`const ${hit}m = ${cache.may}[${c}];`);
+        out.open(`if (${hit}m !== undefined) {`);
+        out.emit(`${may} = ${hit}m;`);
+        out.close("} else {");
+        out.emit(`  const ${n}m = ${READ}.length;`);
+        out.emit(`  ${may} = ${mayWalk};`);
+        out.emit(`  ${READ}.length = ${n}m;`);
+        out.emit(`  for (const y of ${may}) ${cache.may}[y] = ${may};`);
+        out.emit("}");
+        out.close();
+      }
+      out.emit(`const ${ok} = true;`);
+      return [must, may, ok];
+    }
+    if (e.k === "bin" && e.op === "+") {
+      const [A, B] = [e.a, e.b].map((s) =>
+        heldSet(s, scope, env) ? this.members(s, scope) : this.evaluated(s, scope),
+      );
+      out.emit(`const ${must}: number[] = [...new Set([...${A[0]}, ...${B[0]}])];`);
+      out.emit(`const ${may}: number[] = [...new Set([...${A[1]}, ...${B[1]}])];`);
+      out.emit(`const ${ok} = ${A[2]} && ${B[2]};`);
+      return [must, may, ok];
+    }
+    if (e.k !== "agg" || e.fn !== "set") return this.evaluated(e, scope);
+    out.emit(`let ${must}: number[] = [];`);
+    out.emit(`let ${may}: number[] = [];`);
     out.emit(`let ${ok} = true;`);
+    const memo = this.overWalk(e, scope);
+    if (memo === null) {
+      this.setLoop(e, scope, must, may, ok);
+      return [must, may, ok];
+    }
+    // Made once a walk: Path's numbers at the ends of a piece, the same
+    // from every square of it. The sure members are made over the sure
+    // walk and the possible ones over the possible walk, each kept by its
+    // own, since an open square is a sure walk of its own in an open
+    // region that is one possible walk.
+    const [wm, wy, wok] = memo.walk;
+    const [hitM, hitY, okY, scrap] = ["_hit", "_hit", "_ok", "_scrap"].map((p) =>
+      Out.fresh(p),
+    );
+    out.emit(`const ${hitM} = ${memo.sure}.get(${wm});`);
+    out.open(`if (${hitM} !== undefined) {`);
+    out.emit(`${must} = ${hitM}.m;`);
+    out.emit(`${ok} = ${hitM}.ok;`);
+    out.emit(`${READ}.push(...${hitM}.r);`);
+    out.close();
+    out.open("else {");
+    const n0 = Out.fresh("_n");
+    out.emit(`const ${n0} = ${READ}.length;`);
+    out.emit(`const ${scrap}: number[] = [];`);
+    this.premade.set(memo.of, [wm, wm, wok]);
+    this.setLoop(e, scope, must, scrap, ok);
+    out.emit(
+      `${memo.sure}.set(${wm}, { m: ${must}, ok: ${ok}, r: ${READ}.slice(${n0}) });`,
+    );
+    out.close();
+    out.emit(`let ${okY} = true;`);
+    out.emit(`const ${hitY} = ${memo.may}.get(${wy});`);
+    out.open(`if (${hitY} !== undefined) {`);
+    out.emit(`${may} = ${hitY}.p;`);
+    out.emit(`${okY} = ${hitY}.ok;`);
+    out.close();
+    out.open("else {");
+    const n1 = Out.fresh("_n");
+    out.emit(`const ${n1} = ${READ}.length;`);
+    out.emit(`const ${scrap}: number[] = [];`);
+    this.premade.set(memo.of, ["([] as number[])", wy, wok]);
+    this.setLoop(e, scope, scrap, may, okY);
+    out.emit(`${READ}.length = ${n1};`);
+    out.emit(`${memo.may}.set(${wy}, { p: ${may}, ok: ${okY} });`);
+    out.close();
+    this.premade.delete(memo.of);
+    out.emit(`${ok} = ${ok} && ${okY};`);
+    out.emit(`if (!${ok}) ${must} = [];`);
+    return [must, may, ok];
+  }
+
+  /** The loop that fills `must` and `may`, both fresh arrays, with the set
+   * over binders `e`'s sure and possible members, `ok` false where reading
+   * them stopped. */
+  private setLoop(
+    e: Extract<Expr, { k: "agg" }>,
+    scope: Scope,
+    must: string,
+    may: string,
+    ok: string,
+  ): void {
+    const { out, env } = this;
+    const own =
+      e.binders.length === 1 &&
+      e.term?.k === "name" &&
+      e.term.name === e.binders[0].name;
     this.stoppedOr(
       () =>
         this.binders(e.binders, scope, SURE, (sc, g) => {
-          const x = sc.get(e.binders[0].name) as Val;
+          const n = Out.fresh("_n");
+          out.emit(`const ${n} = ${READ}.length;`);
+          const x = own
+            ? (sc.get(e.binders[0].name) as Val).code
+            : once(compileExpr(e.term ?? nm(""), sc, env, out), out).code;
           const p = e.where === null ? g : this.verdict(e.where, sc);
-          out.emit(`if (${p} === ${T} && ${g} === ${T}) ${must}.push(${x.code});`);
-          out.emit(`if (${p} !== ${F}) ${may}.push(${x.code});`);
+          out.open(`if (${p} === ${T} && ${g} === ${T}) {`);
+          out.emit(`${must}.push(${x});`);
+          // Only a sure member's reads name where the set stands.
+          out.close(`} else ${READ}.length = ${n};`);
+          out.emit(`if (${p} !== ${F} && ${g} !== ${F}) ${may}.push(${x});`);
         }),
       [`${ok} = false;`],
     );
     // A set whose members are themselves undecided says nothing.
     out.emit(`if (!${ok}) ${must}.length = 0;`);
-    return [must, may, ok];
+    if (!own) {
+      out.emit(`${must}.splice(0, ${must}.length, ...new Set(${must}));`);
+      out.emit(`${may}.splice(0, ${may}.length, ...new Set(${may}));`);
+    }
   }
+
+  /** A `through`'s walks already made, by the binder set they are of, for
+   * {@link binders} to range over. */
+  private readonly premade = new Map<Expr, [string, string, string]>();
+
+  /**
+   * For a set over binders whose first ranges over a `through` whose walks
+   * are kept ({@link walkCache}), and whose rest reads nothing else the
+   * statement binds: the walks, made here, and the store that keeps the set
+   * by them. `null` for any other set.
+   */
+  private overWalk(
+    e: Extract<Expr, { k: "agg" }>,
+    scope: Scope,
+  ): { of: Expr; walk: [string, string, string]; sure: string; may: string } | null {
+    const [first, ...rest] = e.binders;
+    if (first?.kind !== "in") return null;
+    const of = this.resolved(first.of, scope);
+    if (throughSet(of, scope, this.env) === null || this.walkCache(of, scope) === null)
+      return null;
+    const free = new Set<string>();
+    freeNames(
+      { ...e, binders: [{ ...first, of: nm("cells") }, ...rest] },
+      free,
+      new Set(),
+    );
+    if ([...free].some((n) => scope.has(n))) return null;
+    const walk = this.members(first.of, scope);
+    const sure = Out.fresh("_sms");
+    const may = Out.fresh("_smm");
+    this.env.scratch?.push(
+      `const ${sure} = new WeakMap<number[], { m: number[]; ok: boolean; r: number[] }>();`,
+      `const ${may} = new WeakMap<number[], { p: number[]; ok: boolean }>();`,
+    );
+    return { of: first.of, walk, sure, may };
+  }
+
+  /** A set as the answer check reads it, in {@link members}' three names:
+   * its members both sure and possible, whole where no read stopped it. */
+  private evaluated(e: Expr, scope: Scope): [string, string, string] {
+    const { out } = this;
+    const must = Out.fresh("_must");
+    const ok = Out.fresh("_ok");
+    out.emit(`let ${must}: number[] = [];`);
+    out.emit(`let ${ok} = true;`);
+    this.stoppedOr(() => {
+      const v = compileExpr(e, scope, this.env, out);
+      out.emit(`${must} = [...${v.code}];`);
+    }, [`${ok} = false;`]);
+    return [must, must, ok];
+  }
+}
+
+/** `through(c, {e in edges where P})`, its set stated in place and its cell
+ * reading no value of the answer, as the cell and the set's binder; `null`
+ * for any other term. */
+function throughSet(e: Expr, scope: Scope, env: Env): [Expr, Binder] | null {
+  if (e.k !== "call" || e.fn !== "through" || e.args.length !== 2) return null;
+  const [c, S0] = e.args;
+  const S = inlined(S0, scope, env);
+  if (readsHeld(c) || S.k !== "agg" || S.fn !== "set" || S.where !== null) return null;
+  const [bnd, ...more] = S.binders;
+  if (bnd === undefined || more.length > 0 || bnd.kind !== "in") return null;
+  if (bnd.of.k !== "name" || bnd.of.name !== "edges" || scope.has("edges")) return null;
+  if (S.term?.k !== "name" || S.term.name !== bnd.name) return null;
+  return [c, bnd];
+}
+
+/**
+ * Whether `e` is a set of elements the check reads as its sure and possible
+ * members (`Check.members`): a `through` stated in place, a union with such
+ * a set on a side, or a set over binders one of whose sets is such a set or
+ * whose filters or term read the answer. A set that reads no value of the
+ * answer is evaluated as it is.
+ */
+function heldSet(e0: Expr, scope: Scope, env: Env): boolean {
+  const def =
+    e0.k === "name" && !scope.has(e0.name) ? env.defs.get(e0.name) : undefined;
+  const e = inlined(def?.params.length === 0 ? def.body : e0, scope, env);
+  if (throughSet(e, scope, env) !== null) return true;
+  if (e.k === "bin" && e.op === "+")
+    return heldSet(e.a, scope, env) || heldSet(e.b, scope, env);
+  if (e.k !== "agg" || e.fn !== "set") return false;
+  return (
+    e.binders.some(
+      (b) =>
+        (b.kind === "in" && heldSet(b.of, scope, env)) ||
+        (b.where !== null && readsHeld(b.where)),
+    ) ||
+    (e.where !== null && readsHeld(e.where)) ||
+    (e.term !== null && readsHeld(e.term))
+  );
 }
 
 /**
@@ -904,6 +1306,52 @@ function joinOf(
     term: nm(x.name),
   });
   return { E: L.of, A: setOf(a), B: setOf(b) };
+}
+
+/**
+ * `forall e in edges where W: end2(e) not in through(end1(e), {x in edges
+ * where W' and x != e})`, `W'` being `W` said of `x` (either end may come
+ * first): no edge W holds of closes a loop of such edges. Its binder, or
+ * `null` for any other statement.
+ */
+function cycleOf(e: Extract<Expr, { k: "quant" }>): Binder[] | null {
+  if (e.q !== "forall" || e.binders.length !== 1) return null;
+  const [b] = e.binders;
+  if (b.kind !== "in" || b.of.k !== "name" || b.of.name !== "edges" || b.where === null)
+    return null;
+  const { body } = e;
+  if (body.k !== "bin" || body.op !== "notin") return null;
+  const end = (x: Expr, fn: string) =>
+    x.k === "call" &&
+    x.fn === fn &&
+    x.args.length === 1 &&
+    x.args[0].k === "name" &&
+    x.args[0].name === b.name;
+  const walk = body.b;
+  if (walk.k !== "call" || walk.fn !== "through" || walk.args.length !== 2) return null;
+  const [from, S] = walk.args;
+  if (
+    !(end(body.a, "end2") && end(from, "end1")) &&
+    !(end(body.a, "end1") && end(from, "end2"))
+  )
+    return null;
+  if (S.k !== "agg" || S.fn !== "set" || S.where !== null || S.binders.length !== 1)
+    return null;
+  const [x] = S.binders;
+  if (x.kind !== "in" || x.of.k !== "name" || x.of.name !== "edges" || x.where === null)
+    return null;
+  if (S.term?.k !== "name" || S.term.name !== x.name) return null;
+  const w = x.where;
+  const same = substitute(b.where, new Map([[b.name, nm(x.name)]]), new Set());
+  const apart: Expr = { k: "bin", op: "!=", a: nm(x.name), b: nm(b.name) };
+  if (
+    w.k !== "bin" ||
+    w.op !== "and" ||
+    JSON.stringify(w.a) !== JSON.stringify(same) ||
+    JSON.stringify(w.b) !== JSON.stringify(apart)
+  )
+    return null;
+  return [b];
 }
 
 /** Whether `e` reads the name `n` without binding it. */
@@ -979,6 +1427,7 @@ function counted(e0: Expr, scope: Scope, env: Env): boolean {
   const a = sizeAsCount(e);
   if (a !== null) return a.fn === "count" || a.fn === "sum";
   if (stretchOf(e, scope, env) !== null) return true;
+  if (e.k === "size" && heldSet(e.of, scope, env)) return true;
   return (
     e.k === "bin" &&
     (e.op === "+" || e.op === "-" || e.op === "*") &&

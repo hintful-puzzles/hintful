@@ -495,6 +495,20 @@ describe("path frame", () => {
     expect(red([set(0, LINE)])).toBe(true);
   });
 
+  it("draws a loop red once it closes, and a line red once it can go no further", () => {
+    const red = (moves: PathMove[]): boolean =>
+      renderScenario({ game: pathGame, id: ID, moves }).recording.ops.some((op) =>
+        paintsWith(op, COL_ERROR),
+      );
+    // The four squares at the bottom left but the corner's: 4, 5, 8 and 9.
+    const three = [set(3, LINE), set(13, LINE), set(14, LINE)];
+    expect(red(three)).toBe(false);
+    expect(red([...three, set(6, LINE)])).toBe(true);
+    // The corner square 8 takes two lines, from 4 above and 9 beside it.
+    expect(red([set(13, LINE)])).toBe(false);
+    expect(red([set(13, LINE), set(6, CROSS)])).toBe(true);
+  });
+
   it("draws a mistake red, and rings a hint's edges", () => {
     const wrong = renderScenario({
       game: pathGame,
@@ -716,5 +730,19 @@ describe("path, the one-line ruleset", () => {
     expect(red([set(9, LINE)])).toBe(false);
     // Down from the 1 to the 3, which skips the 2.
     expect(red([set(9, LINE), set(13, LINE)])).toBe(true);
+  });
+
+  it("draws a loop red once it closes, though its numbers are in order", () => {
+    const red = (edges: readonly number[]): boolean =>
+      renderScenario({
+        game: pathGame,
+        id: `${encodeParams(Z, true)}:${ONE_PATH}`,
+        moves: edges.map((edge) => set(edge, LINE)),
+      }).recording.ops.some((op) => paintsWith(op, COL_ERROR));
+    // From the 2 up and along the top row, down and back along the middle
+    // one to the 3, and back to the 2 along the bottom row and up.
+    const loop = [12, 2, 1, 10, 3, 13, 6, 7, 15, 5];
+    expect(red(loop.slice(0, -1))).toBe(false);
+    expect(red(loop)).toBe(true);
   });
 });

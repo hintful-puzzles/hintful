@@ -1058,10 +1058,29 @@ says how each form is read; what a description's author acts on:
   at the first square that may be shaded at the soonest), `connected(S)` as
   broken where S's sure members fall into two of the groups its possible ones
   make, and `forall L = E, a in A, b in B: b in through(a, L)` read as one
-  statement the same way, over the groups E's possible edges make. A form
-  that reads only decided elements needs nothing: a loop rule is reported
-  once its elements are decided, and bounding it earlier is that form's work
-  in the compiler, never a game's.
+  statement the same way, over the groups E's possible edges make. A set
+  read from the answer, `through(c, {e in edges where P})`, a union with
+  one on a side, or a set over binders one of whose sets is one or whose
+  filters read the answer, is read as its sure and possible members
+  wherever it is ranged over, tested for a member or sized: `through`
+  walks surely across the edges P is true of and at most across those it
+  is not false of (the numbers at the ends of Path's piece of line, known
+  once its sure lines reach them). A `through` whose set reads nothing the
+  statement binds is walked once a group, not once a square, and a set
+  over such a walk once a walk: walked once a square, Path's shape visits
+  each square once for every square of its piece, which grows with the
+  square of a piece's length. `forall e in edges where
+  W: end2(e) not in through(end1(e), {x in edges where W' and x != e})`,
+  W' being W said of x, is read as one, "no line closes a loop": each sure
+  edge on a cycle of sure edges, found in one walk. A form that reads only
+  decided elements needs nothing: a rule is reported once its elements are
+  decided, and bounding it earlier is that form's work in the compiler,
+  never a game's.
+- **A statement that reads nothing of the board is left out**: it is the
+  same of every board the deal makes, so it says whether the board was
+  dealt right, which the deal and the answer check settle, and never where
+  a player's board breaks (Path's numbers, counted over every square for
+  every number).
 - **Where is the statement's leading `forall`s and `and`s.** Each binding
   whose body is false is one violation, at the elements of the answer's sort
   it binds (two tents touching); where it binds none, at what its deciding
@@ -1091,7 +1110,11 @@ says how each form is read; what a description's author acts on:
   being empty, where `|stick(at)|` would mark nothing until the line closed.
   A dot's shape said of each line at it names the lines where it breaks,
   where said of the dot it names what its count read, crosses included:
-  Loopy's and Pearl's `meets`, implied.
+  Loopy's and Pearl's `meets`, implied. A rule that no line closes a loop,
+  where the rules make it so only through a count or a shape, is said of
+  each line in the cycle form above, so a loop's lines are where it breaks:
+  Path's `noLoop`, implied, where a loop through numbers in order breaks no
+  other statement.
   A number counted along a chain is said between two given numbers, counted
   from each end with `onward`: Signpost's square some numbers on from one
   given must be the square as many short of the next, so two runs that

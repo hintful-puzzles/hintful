@@ -67,12 +67,14 @@ import {
 } from "../../engine/mechanics/line-drawing.ts";
 import { drawRectCorners, glyphFont } from "../../engine/render/draw.ts";
 import { drawMarkSides, evidenceSides } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { textBox } from "../../engine/render/ring.ts";
 import { type PieceBox, spreadColors } from "../../engine/render/spread-colors.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { PathHighlights } from "./hint.ts";
 import { pathLines, withChanges } from "./moves.ts";
+import { gameEdge, rules, rulesGrid } from "./solver.ts";
 import {
   MODE_PATH,
   NO_END,
@@ -463,55 +465,60 @@ function drawTile(
 
 // --- redraw -----------------------------------------------------------------
 
-/** The pieces of line: `broken`, the edges of every piece that breaks a
- * rule, one that closes a loop or joins two different numbers; and `reach`,
- * the number each square's piece reaches, or {@link NO_END} where it reaches
- * none or is broken. */
+/**
+ * The pieces of line the rules say break already (`docs/rendering.md` §
+ * "Live errors are the rules'"): each square of a piece with a line some
+ * violation is at, or a number whose clue is broken. A piece is drawn red
+ * whole, wherever on it the rule breaks: a loop, a square with three lines
+ * or none left to take, or two numbers that may not meet.
+ */
+function brokenSquares(state: PathState, edges: Uint8Array): Uint8Array {
+  const g = squareEdges(state.w, state.h);
+  const live = liveErrors(rules, state, rulesGrid(state, edges));
+  const out = new Uint8Array(g.cells);
+  const from: number[] = [];
+  for (const [, list] of live.byRule)
+    for (const at of list)
+      for (const x of at) {
+        const e = gameEdge(state, x);
+        if (edges[e] === LINE) from.push(g.a[e]);
+      }
+  const broken = live.clues.get("number");
+  if (broken !== undefined) {
+    // A clue's index is its square's among the numbered ones.
+    const numbered = [...state.ends.keys()].filter((i) => state.ends[i] !== NO_END);
+    for (const k of broken) from.push(numbered[k]);
+  }
+  for (const i of from)
+    if (!out[i])
+      for (const j of pieceThrough(g, (e) => edges[e] === LINE, i)) out[j] = 1;
+  return out;
+}
+
+/** The pieces of line: `broken`, the edges of every piece the rules say
+ * breaks; and `reach`, the number each square's piece reaches, or
+ * {@link NO_END} where it reaches none or is broken. */
 function pieces(
   state: PathState,
   edges: Uint8Array,
 ): { broken: Uint8Array; reach: Uint8Array } {
   const { ends } = state;
   const g = squareEdges(state.w, state.h);
-  // Each piece, walked from a square of it, by the squares it passes.
-  const piece = new Int32Array(g.cells).fill(-1);
-  const numbers: number[][] = [];
-  const looped: boolean[] = [];
-  for (let start = 0; start < g.cells; start++) {
-    if (piece[start] >= 0) continue;
-    const id = numbers.length;
-    numbers.push([]);
-    looped.push(false);
-    const stack = [start];
-    piece[start] = id;
-    let squares = 0;
-    let links = 0;
-    while (stack.length > 0) {
-      const i = stack.pop() as number;
-      squares++;
-      if (ends[i] !== NO_END) numbers[id].push(ends[i]);
-      for (let k = 0; k < 4; k++) {
-        const e = g.around[i * 4 + k];
-        if (e < 0 || edges[e] !== LINE) continue;
-        links++;
-        const j = g.a[e] === i ? g.b[e] : g.a[e];
-        if (piece[j] < 0) {
-          piece[j] = id;
-          stack.push(j);
-        }
-      }
-    }
-    // Every link was counted from both its squares.
-    looped[id] = links / 2 >= squares;
-  }
-  const isBroken = (id: number): boolean =>
-    looped[id] || numbers[id].some((v) => v !== numbers[id][0]);
+  const bad = brokenSquares(state, edges);
   const broken = new Uint8Array(g.edgeCount);
   for (let e = 0; e < g.edgeCount; e++)
-    if (edges[e] === LINE && isBroken(piece[g.a[e]])) broken[e] = 1;
+    if (edges[e] === LINE && bad[g.a[e]]) broken[e] = 1;
   const reach = new Uint8Array(g.cells);
-  for (let i = 0; i < g.cells; i++)
-    if (!isBroken(piece[i])) reach[i] = numbers[piece[i]][0] ?? NO_END;
+  const seen = new Uint8Array(g.cells);
+  for (let start = 0; start < g.cells; start++) {
+    if (seen[start] || bad[start]) continue;
+    const piece = pieceThrough(g, (e) => edges[e] === LINE, start);
+    const number = piece.map((i) => ends[i]).find((v) => v !== NO_END) ?? NO_END;
+    for (const i of piece) {
+      seen[i] = 1;
+      reach[i] = number;
+    }
+  }
   return { broken, reach };
 }
 
@@ -647,9 +654,8 @@ function noArrivals(cells: number): Pick<LineLook, "arrives" | "arrivesFrom"> {
 /**
  * Path's pieces of line, as {@link pieces} gives Pairs', and `done`, the
  * numbers whose line reaches the number before them and the one after (or
- * only one of those, for the 1 and the highest). A piece is broken where it
- * closes a loop or passes two numbers one after the other that are not one
- * apart. Along an unbroken piece, a square's color is that of the line from
+ * only one of those, for the 1 and the highest). A piece is broken where the
+ * rules say ({@link brokenSquares}). Along an unbroken piece, a square's color is that of the line from
  * the number behind it, the one it passed last going up: on a number's own
  * square, that number, but for the half of its line that arrives from the
  * number before. Before a piece's first number it is the line into that
@@ -668,17 +674,20 @@ function onePathPieces(state: PathState, edges: Uint8Array): LineLook {
     }
     return out;
   };
+  const bad = brokenSquares(state, edges);
   const broken = new Uint8Array(g.edgeCount);
+  for (let e = 0; e < g.edgeCount; e++)
+    if (edges[e] === LINE && bad[g.a[e]]) broken[e] = 1;
   const reach = new Uint8Array(g.cells);
   const done = new Set<number>();
   const { arrives, arrivesFrom } = noArrivals(g.cells);
   const seen = new Uint8Array(g.cells);
   for (let start = 0; start < g.cells; start++) {
-    if (seen[start]) continue;
+    if (seen[start] || bad[start]) continue;
     const piece = pieceThrough(g, (e) => edges[e] === LINE, start);
     for (const i of piece) seen[i] = 1;
-    // A piece with no square at its end is a loop; one with a square of
-    // three lines, which no move makes, is broken too.
+    // A piece the rules let stand is a run from one end to the other; one
+    // that is not, or whose numbers are out of order, takes no color.
     const end = piece.find((i) => linked(i).length < 2);
     const walk: number[] = [];
     if (end !== undefined && piece.every((i) => linked(i).length <= 2))
@@ -692,15 +701,7 @@ function onePathPieces(state: PathState, edges: Uint8Array): LineLook {
     const ordered = numbers.every(
       (v, k) => k === 0 || Math.abs(v - numbers[k - 1]) === 1,
     );
-    if (walk.length < piece.length || !ordered) {
-      for (const i of piece)
-        for (let k = 0; k < 4; k++) {
-          const e = g.around[i * 4 + k];
-          if (e >= 0 && edges[e] === LINE) broken[e] = 1;
-        }
-      continue;
-    }
-    if (numbers.length === 0) continue;
+    if (walk.length < piece.length || !ordered || numbers.length === 0) continue;
     if (numbers.length > 1 && numbers[0] > numbers[1]) {
       walk.reverse();
       numbers.reverse();
