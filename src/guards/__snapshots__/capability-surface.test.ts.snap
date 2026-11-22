@@ -301,22 +301,22 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "h",
-      "hint",
+      "clues",
       "marks",
+      "parts",
       "tileSize",
       "tiles",
-      "w",
     ],
     "id": "clusters",
     "members": [
+      "animLength",
       "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
+      "hint.gesture",
       "hint.judgeMove",
       "hint.refreshStep",
-      "hint.targets",
       "revealOne",
       "rules",
       "targetVerbs",
@@ -327,7 +327,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "ui": [
       "cursor",
       "drag",
-      "dragType",
+      "dragButton",
+      "dragOk",
+      "linkArmed",
     ],
   },
   {

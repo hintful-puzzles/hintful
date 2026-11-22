@@ -202,7 +202,7 @@ research tools all read through it; the app never does.
   gives every cell the board's domain. A step's line is its `stripes`,
   which hatch the line's clue in the margin too.
 - **A fill game born from its description declares the rest of a game**
-  (Kakurasu, Mosaic, Norinori, Range, Star Battle, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
+  (Clusters, Kakurasu, Mosaic, Norinori, Range, Star Battle, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
   (the first the default unless `default:` names another, `boardTiers:` a
   board that stops short of a tier, `variants:` the boards after the grid),
   `play.hintMarks` its legend, `id:` its game ID's grammar and
@@ -221,7 +221,9 @@ research tools all read through it; the app never does.
   gives it after its `WxH` (`8x8s2`). A grid as high as it is wide
   (`grid: { w: w, h: w }`) has one size field and a bare-number ID. `play.dealt` names a
   clue kind meaning `value(at) = v` that the cell is dealt holding (Unruly's
-  givens, which `id:` writes as `dots`). `play.click: cycle` goes round
+  givens, which `id:` writes as `dots`); one whose meaning goes on after an
+  `and` (Clusters' dot, which also counts its like neighbors) is drawn with a
+  dot on its piece. `play.click: cycle` goes round
   empty and both buttons' values. The right button rules out unless its
   value's painter is one of a pair of alike pieces (Unruly's disc), which
   is a placement and not a ruling out. `deal.sample` draws the answer: `build`, a random
@@ -233,7 +235,15 @@ research tools all read through it; the app never does.
   takes the value at the share's odds and the count varies (a small board
   then draws from every picture), `scatter.tried` where the share is of the
   cells tried, each taken where it may be, and `scatter.joinedRest` where
-  the cells not taken stay one group (Range's). A region the space deals (`regions:
+  the cells not taken stay one group (Range's). A scatter of `each` may
+  `mend`, turning each cell a rule breaks at, as its derived clues read it,
+  to the other value until none breaks, and `climb`, a draw after a refused
+  one keeping what the ladder decided on it and a board too easy having a
+  cell turned (Clusters', upstream's hill climb, five to seven times quicker
+  to a Normal board than fresh draws); `deal.unpair` takes off two alike
+  clues side by side, so the answer is the ladder's and not the sample, and
+  a climb's search tier hides nothing (`engine/fill/deal.ts`, `climbFill`).
+  A region the space deals (`regions:
   { r: dealt }`) is a partition: `id:`'s `walls` writes it as upstream's
   wall runs, the board draws it as walls and fills, a rule over its parts
   breaks on the squares it counts, never as a run, and `deal.grow` grows it

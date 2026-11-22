@@ -312,7 +312,9 @@ export interface ThoroughJson {
  * value on a share of the cells, optionally none within `apart`
  * of another; `partner`'s value beside each, along `along`, the two matched;
  * and `rest` on every other cell. With `noBareLine`, an answer with a row or
- * column all `rest` is drawn again. */
+ * column all `rest` is drawn again; with `mend`, a cell a rule breaks at takes
+ * the other value until none does; with `climb`, a draw after a refused one
+ * keeps what the ladder decided on it. */
 export type SampleJson =
   | { build: true }
   | { dominoes: { value: number }; rest: number }
@@ -332,6 +334,8 @@ export type SampleJson =
       partner?: { value: number; along: "adj4" | "adj8" };
       rest: number;
       noBareLine?: boolean;
+      mend?: true;
+      climb?: true;
     };
 
 /** A game's nouns, compiled into its module as `WORDS`: the engine's

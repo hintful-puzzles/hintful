@@ -1,6 +1,13 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: clusters
+catalog:
+  name: Clusters
+  description: Two-piece cluster puzzle
+  objective: Fill the grid with clusters of blocks and discs, with every dead end given.
+  collection: unreleased
+  family: shading
+  similar: Kurasuta (クラスター)
 help:
   rules: |-
     You're given a grid, with several dotted pieces on lighter squares. Your objective is to fill every empty space with one of two pieces, a {{pair:0}} or a {{pair:1}}, while following these rules:
@@ -10,7 +17,7 @@ help:
   controls: |-
     {{controls}}
 
-    Drag from a square to fill every square you pass over with the piece the press gave the first one. Hold Shift while moving the cursor to put a {{pair:1}} in the squares it passes over, Ctrl to put a {{pair:0}} in them, or both to clear them.
+    Clicking a filled square again moves it on round {{pair:0}}, {{pair:1}} and empty, and a right-click goes round the other way. You can also press 1 for a {{pair:0}}, and 0 or 2 for a {{pair:1}}.
   origins: |-
     This puzzle type was invented by Inaba Naoki under the name *クラスター*, or literally *Kurasuta*, which Google Translate names 'Cluster'. The original puzzles are available here: http://www.inabapuzzle.com/honkaku/kura.html
   hints: |-
@@ -24,7 +31,7 @@ help:
 
     The rules a step shows breaking are the ones the puzzle states: a dot touches exactly one square of its own kind, and every other square touches at least two. A square whose neighbors all hold the other piece, or that can only ever match one of them, can't hold that piece.
 
-    If a square you filled holds the wrong piece, the hint asks you to fix the highlighted mistakes first, and the square's background turns red, as it does for **Check & save**, whether or not it breaks a rule yet. The red frame is a different mark: it is drawn as you play, round a square or dot whose rule is broken, and that one may itself be right.
+    If a square you filled holds the wrong piece, the hint asks you to fix the highlighted mistakes first, and the square is outlined, as it is for **Check & save**, whether or not it breaks a rule yet. The red mark on a piece is a different one: it is drawn as you play, on a piece or dot whose rule is broken, and that one may itself be right.
   parameters:
     after: |-
       Normal needs a board with room for the deeper reasoning, so it is not offered on very small grids.
@@ -69,9 +76,60 @@ shape:
   # Every tile without a dot touches at least two of its own color.
   - "forall c in cells where clue(dot, c) = none: count(m in adj4(c) where value(m) = value(c)) >= 2"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: put a block in it, key: "1", glyph: " 1 ", paint: block }
+    2: { does: put a disc in it, key: ["0", "2"], glyph: " 0 ", paint: disc }
+  primary: 1
+  secondary: 2
+  # A click goes round empty, the button's piece and the other one.
+  click: cycle
+  stroke: sweep
+  dealt: dot
+  boards: [7x7, 6x8, 9x9, 9x11]
+  # A Normal deal's tail is long from about fifty squares up: of eight deals,
+  # the slowest 9x9 took 0.9 s, 8x10 2.1 s and 9x11 1.9 s, and one 10x10 of
+  # six took 10 s (2026-10-27).
+  boardTiers: { 9x11: [Easy, Easy] }
+  bounds:
+    area: { min: 2 }
+    # 1x2 and 2x2 have no board: every coloring of them leaves a tile with
+    # none of its own beside it, or dots that unpair to none.
+    longer: { min: 3 }
+    # Normal binds on every shape of twelve squares and more, two wide, and on
+    # none below, ten seeds a shape of 10,000 draws each; a one-wide strip's
+    # tile has two neighbors, so the first rule decides it or nothing does.
+    tiers: { Normal: { area: { min: 12 }, shorter: { min: 2 } } }
+  hintMarks:
+    ring: >-
+      the square the step fills. It is drawn empty: the sentence says which
+      piece it must hold.
+    outline: >-
+      the squares the step reasons from: the dot or square where the other
+      piece would break a rule, or, on Normal boards, the two whose counts the
+      step reads.
 deal:
-  dot: which squares carry a dot, and their colors
-  tier: one of the tiers
+  answer: >-
+    a block or a disc on each square at random, a square with none of its own
+    beside it turned to the other until none is left; after a board the deal
+    refused, the squares the ladder decided on it are kept and the rest drawn
+  dot: >-
+    on every square beside exactly one of its own, then two alike side by side
+    both taken off, so the answer is the one the ladder finds
+  tier: >-
+    one of the tiers, the board finished at it and not at the tier below; one
+    the tier below finishes has a square turned, and is drawn again
+  sample:
+    scatter: { value: 1, share: 0.5, each: true }
+    rest: 2
+    mend: true
+    climb: true
+  unpair: dot
+# Upstream's game ID: the dots as dot runs, a block's letter uppercase.
+id:
+  - dots: dot
+    cases: [2, 1]
+tierLetters: etu
 tiers: [Easy, Normal, Unreasonable]
 phrases:
   # The two tiles a count step reads, by piece and dot.

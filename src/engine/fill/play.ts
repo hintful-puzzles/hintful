@@ -79,6 +79,9 @@ export interface FillPlay {
   readonly click?: "toggle" | "cycle";
   /** The clue kind at a cell that the cell is dealt holding, fixed. */
   readonly dealt?: string;
+  /** Whether a dealt cell is drawn with a dot on its piece, where its kind
+   * says more than its value (Clusters' dot, which also counts). */
+  readonly dotted?: true;
   /** The value an open cell reads as for the answer check, where the answer is
    * the other values alone; absent where every cell must be filled. */
   readonly blank?: number;

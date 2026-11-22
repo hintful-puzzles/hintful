@@ -1,576 +1,187 @@
 /**
- * Behavioral tests for the Clusters port (tier 1 logic + tier 2.5 render): the
- * generator's tier property ("difficulty tiers"), the paint/keyboard input,
- * executeMove's completion, Solve through a real Midend, findMistakes, and a
- * render frame.
+ * Clusters, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is a position for every
+ * kind of step its hint takes, upstream's dots read as the right pieces, the
+ * sizes each tier refuses, the dots drawn, and a wrong piece outlined.
  */
+
 import { describe, expect, it } from "vitest";
-import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
-import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  descBadCharacter,
-  validateDesc,
-} from "../../engine/contract/desc-error.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
+import { CELL } from "../../engine/contract/hint-words.ts";
 import type { Point } from "../../engine/contract/types.ts";
-import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import {
-  CURSOR_SELECT,
-  LEFT_BUTTON,
-  LEFT_RELEASE,
-  newCursor,
-  RIGHT_BUTTON,
-  RIGHT_RELEASE,
-} from "../../engine/input/pointer.ts";
-import { randomNew } from "../../engine/random/index.ts";
-import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
-import { driveMidend } from "../../engine/testing/drive-midend.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import {
-  DEFAULT_BACKGROUND,
-  renderScenario,
-} from "../../engine/testing/render-scenario.ts";
-import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { newClustersDesc } from "./generator.ts";
-import { clustersGame } from "./index.ts";
-import { COL_WRONG, PREFERRED_TILE_SIZE } from "./render.ts";
-import {
-  COMPLETE,
-  clustersStatus,
-  findErrors,
-  INVALID,
-  solveGame,
-  UNFINISHED,
-} from "./solver.ts";
-import {
-  type ClustersFill,
-  type ClustersMove,
-  type ClustersParams,
-  type ClustersState,
-  type ClustersUi,
-  COLMASK,
-  DIFF_EASY,
-  DIFF_NAMES,
-  DIFF_NORMAL,
-  decodeParams,
-  encodeDesc,
-  encodeParams,
-  F_COLOR_0,
-  F_COLOR_1,
-  F_SINGLE,
-  newState,
-  opposite,
-  textFormat,
-} from "./state.ts";
+import { statedSentence } from "../../engine/hint/stated.ts";
+import { PAIR_NAMES } from "../../engine/render/piece.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { STATED } from "../../generated/games/clusters/clusters.compiled.ts";
+import { game } from "../../generated/games/clusters/clusters.game.ts";
 
-const check = (p: ClustersParams, full: boolean) => paramsError(clustersGame, p, full);
+const BLOCK = 1;
+const DISC = 2;
 
-const TS = 32;
-const BORDER = Math.floor(TS / 10);
-const ds = { tileSize: TS } as never;
-
-function cellPoint(r: number, c: number): Point {
-  return {
-    x: BORDER + TS * c + Math.floor(TS / 2),
-    y: BORDER + TS * r + Math.floor(TS / 2),
-  };
-}
-
-function makeState(w: number, h: number, grid: number[]): ClustersState {
-  return { w, h, grid: Uint8Array.from(grid) };
-}
-
-function newUi(): ClustersUi {
-  return { cursor: newCursor(), dragType: -1, drag: [] };
-}
-
-/** Simulate a full mouse click (press then release) and return the committed
- * move, or null if nothing was committed. */
-function clickMove(
-  state: ClustersState,
-  ui: ClustersUi,
-  r: number,
-  c: number,
-  down: number,
-  up: number,
-): ClustersMove | null {
-  clustersGame.interpretMove(state, ui, ds, cellPoint(r, c), down);
-  const res = clustersGame.interpretMove(state, ui, ds, cellPoint(r, c), up);
-  return typeof res === "object" && res !== null ? (res as ClustersMove) : null;
-}
-
-/** As {@link clickMove}, asserting a move was committed (throws otherwise). */
-function click(
-  state: ClustersState,
-  ui: ClustersUi,
-  r: number,
-  c: number,
-  down: number,
-  up: number,
-): ClustersMove {
-  const move = clickMove(state, ui, r, c, down, up);
-  if (!move) throw new Error("expected a committed move");
-  return move;
-}
-
-describe("params", () => {
-  it("round-trips presets and the bare-width form", () => {
-    expect(encodeParams({ w: 9, h: 7, diff: DIFF_NORMAL }, true)).toBe("9x7dt");
-    expect(encodeParams({ w: 9, h: 7, diff: DIFF_EASY }, true)).toBe("9x7de");
-    // The non-full form is the size alone (the preset-menu label's params).
-    expect(encodeParams({ w: 9, h: 7, diff: DIFF_NORMAL }, false)).toBe("9x7");
-    expect(decodeParams("9x7dt")).toEqual({ w: 9, h: 7, diff: DIFF_NORMAL });
-    expect(decodeParams("8de")).toEqual({ w: 8, h: 8, diff: DIFF_EASY });
-  });
-
-  it("reads a pre-tier game ID as Easy", () => {
-    // Every ID shared before the difficulty existed carries no `d` at all.
-    expect(decodeParams("9x7")).toEqual({ w: 9, h: 7, diff: DIFF_EASY });
-    expect(decodeParams("8")).toEqual({ w: 8, h: 8, diff: DIFF_EASY });
-  });
-
-  it("rejects too-large then too-small (upstream order)", () => {
-    const easy = (w: number, h: number) => ({ w, h, diff: DIFF_EASY });
-    expect(check(easy(101, 100), true)).toBe(
-      "Width times height must be at most 10000.",
-    );
-    expect(check(easy(1, 1), true)).toBe("Width times height must be at least 2.");
-    expect(check(easy(7, 7), true)).toBeNull();
-  });
-
-  it("rejects the two shapes that have no puzzle at any difficulty", () => {
-    // 1x2 and 2x2 pass upstream's area check and generate nothing.
-    const easy = (w: number, h: number) => ({ w, h, diff: DIFF_EASY });
-    const tooThin = "Width or height must be at least three.";
-    expect(check(easy(1, 2), true)).toBe(tooThin);
-    expect(check(easy(2, 1), true)).toBe(tooThin);
-    expect(check(easy(2, 2), true)).toBe(tooThin);
-    // Their immediate neighbors do have puzzles and must stay playable.
-    expect(check(easy(1, 3), true)).toBeNull();
-    expect(check(easy(2, 3), true)).toBeNull();
-  });
-
-  it("refuses Normal below the size where it binds — for generation only", () => {
-    const refusal = "Normal needs a board of at least 12 squares, at least two wide.";
-    const normal = (w: number, h: number) => ({ w, h, diff: DIFF_NORMAL });
-    expect(check(normal(2, 5), true)).toBe(refusal); // 10 squares
-    expect(check(normal(3, 3), true)).toBe(refusal); // 9 squares
-    // A one-wide strip never binds however long it is: a cell there has at most
-    // two neighbors, so there is no second tile for a count to read.
-    expect(check(normal(1, 20), true)).toBe(refusal);
-    // A saved game or a game ID carrying its own description still loads.
-    expect(check(normal(3, 3), false)).toBeNull();
-    // The measured boundary, in both of its shapes.
-    expect(check(normal(2, 6), true)).toBeNull();
-    expect(check(normal(3, 4), true)).toBeNull();
-    // …and a refused size is fine at Easy.
-    expect(check({ w: 3, h: 3, diff: DIFF_EASY }, true)).toBeNull();
-  });
+/** A position for every kind of step. */
+describeHintPins({
+  game,
+  params: [
+    { w: 7, h: 7, diff: 0 },
+    { w: 9, h: 9, diff: 1 },
+  ],
+  unreached: {
+    "countShort.same":
+      "countShort's group asks that its first tile have an empty neighbor the " +
+      "other does not touch, which is the kind's own squares of that tile, so " +
+      "the arm for none of them never holds.",
+  },
+  pins: {
+    /** Held on 729 of 1112 positions walked. */
+    "refute.selfSurrounded": "7x7de:AabAbcDaddAaAhAFaCe",
+    /** Held on 1063 of 1112 positions walked. */
+    "refute.selfReach": "7x7de:cbJacAaceeAchd",
+    /** Held on 836 of 1112 positions walked. */
+    "refute.nearSurrounded": "7x7de:AFafCFadDbAAHCc",
+    /** Held on 973 of 1112 positions walked. */
+    "refute.nearReach": {
+      id: "9x9dt:jCCaAiFCAafbdFebbAGcAabAa",
+      moves: [{ set: [0, 2] }],
+    },
+    /** Held on 1032 of 1112 positions walked. */
+    "refute.dotOvercount": { id: "7x7de:cbJacAaceeAchd", moves: [{ set: [3, 2] }] },
+    /** Held on 343 of 1112 positions walked. */
+    "countFull.more": {
+      id: "9x9dt:jCCaAiFCAafbdFebbAGcAabAa",
+      moves:
+        '[{"set":[0,2]},{"set":[1,2]},{"set":[8,1]},{"set":[7,1]},{"set":[6,1]},{"set":[10,1]},{"set":[2,2]},{"set":[11,1]},{"set":[3,2]},{"set":[4,2]},{"set":[13,2]},{"set":[14,2]},{"set":[5,2]},{"set":[18,1]},{"set":[19,1]},{"set":[21,2]},{"set":[24,2]},{"set":[25,2]},{"set":[27,1]},{"set":[67,1]},{"set":[71,1]},{"set":[70,1]},{"set":[78,2]},{"set":[68,1]},{"set":[52,1]},{"set":[42,1]}]',
+    },
+    /** Held on 240 of 1112 positions walked. */
+    "countFull.same": {
+      id: "9x9dt:jCCaAiFCAafbdFebbAGcAabAa",
+      moves:
+        '[{"set":[0,2]},{"set":[1,2]},{"set":[8,1]},{"set":[7,1]},{"set":[6,1]},{"set":[10,1]},{"set":[2,2]},{"set":[11,1]},{"set":[3,2]},{"set":[4,2]},{"set":[13,2]},{"set":[14,2]},{"set":[5,2]},{"set":[18,1]},{"set":[19,1]},{"set":[21,2]},{"set":[24,2]},{"set":[25,2]},{"set":[27,1]},{"set":[67,1]},{"set":[71,1]},{"set":[70,1]},{"set":[78,2]},{"set":[68,1]}]',
+    },
+    /** Held on 42 of 1112 positions walked. */
+    "countShort.more": {
+      id: "9x9dt:dAbAaJFaeACjDfcBCEei",
+      moves:
+        '[{"set":[16,1]},{"set":[17,2]},{"set":[15,1]},{"set":[5,2]},{"set":[13,1]},{"set":[14,2]},{"set":[23,2]},{"set":[26,2]},{"set":[33,2]},{"set":[32,2]},{"set":[35,2]},{"set":[42,2]},{"set":[43,1]},{"set":[52,1]},{"set":[53,1]},{"set":[61,2]},{"set":[60,2]},{"set":[63,2]},{"set":[45,1]},{"set":[36,1]},{"set":[27,1]},{"set":[9,2]},{"set":[0,2]},{"set":[1,2]},{"set":[2,2]},{"set":[10,2]},{"set":[12,1]},{"set":[19,2]},{"set":[46,1]},{"set":[55,1]},{"set":[70,2]},{"set":[71,2]},{"set":[73,1]},{"set":[64,1]},{"set":[74,1]},{"set":[80,2]},{"set":[79,2]},{"set":[68,2]},{"set":[69,2]},{"set":[77,2]},{"set":[78,2]},{"set":[76,2]},{"set":[75,2]},{"set":[65,1]},{"set":[66,2]},{"set":[56,1]},{"set":[47,1]},{"set":[39,2]},{"set":[21,1]},{"set":[22,1]},{"set":[29,1]},{"set":[40,2]},{"set":[41,2]},{"set":[49,2]},{"set":[58,1]},{"set":[50,2]},{"set":[51,2]}]',
+    },
+  },
 });
 
-describe("difficulty tiers", () => {
-  // The property that makes a tier mean something is *exactly* these two
-  // assertions.
-  const SIZES = [
-    [7, 7],
-    [9, 9],
-  ] as const;
-
-  it("an Easy board is finished by the single-cell rule alone", () => {
-    for (const [w, h] of SIZES) {
-      const p = { w, h, diff: DIFF_EASY };
-      const { desc } = newClustersDesc(p, randomNew(`clusters-easy-${w}`));
-      expect(solveGame(newState(p, desc).grid, w, h, 0)).toBe(COMPLETE);
-    }
+describe("clusters", () => {
+  it("reads upstream's dots as pieces fixed on the board", () => {
+    // Upstream's dot runs: a block's letter is uppercase and a disc's
+    // lowercase, its offset from `a` the run of empty squares before it.
+    const board = game.newState(game.decodeParams("7x7"), "ccACCcdfAbbBCacIa");
+    const pieces = Array.from(board.values, (v, c) => (board.fixed[c] ? v : 0));
+    expect(pieces.slice(0, 10)).toEqual([0, 0, DISC, 0, 0, DISC, BLOCK, 0, 0, BLOCK]);
+    expect(pieces.filter((v) => v !== 0)).toHaveLength(16);
   });
 
-  it("a Normal board needs the count: unsolvable at level 0, solved at 1", () => {
-    for (const [w, h] of SIZES) {
-      const p = { w, h, diff: DIFF_NORMAL };
-      const { desc } = newClustersDesc(p, randomNew(`clusters-tricky-${w}`));
-      expect(solveGame(newState(p, desc).grid, w, h, 0)).not.toBe(COMPLETE);
-      expect(solveGame(newState(p, desc).grid, w, h, 1)).toBe(COMPLETE);
-    }
+  it("refuses the boards that have no puzzle, and Normal's only when dealing", () => {
+    const check = (w: number, h: number, diff: number, full: boolean) =>
+      paramsError(game, { w, h, diff }, full);
+    expect(check(1, 1, 0, true)).not.toBeNull();
+    expect(check(2, 2, 0, true)).not.toBeNull();
+    expect(check(1, 3, 0, true)).toBeNull();
+    // Normal binds from twelve squares, two wide.
+    expect(check(3, 3, 1, true)).not.toBeNull();
+    expect(check(1, 20, 1, true)).not.toBeNull();
+    expect(check(3, 4, 1, true)).toBeNull();
+    // A game ID carries its board, which loads at any size.
+    expect(check(3, 3, 1, false)).toBeNull();
   });
 
-  it("every preset generates a board at exactly the tier it names", () => {
-    const menu = presetMenu(clustersGame).submenu ?? [];
-    expect(menu.length).toBe(10);
-    for (const entry of menu) {
-      const p = entry.params;
-      if (!p) throw new Error("preset menu entry without params");
-      expect(check(p, true)).toBeNull();
-      // Read the game's own tier list rather than restating the words: the
-      // property is "the preset title carries the tier it generates at", and a
-      // literal here would just be a second copy of the tier names to rot.
-      expect(entry.title).toContain(DIFF_NAMES[p.diff]);
-    }
-  });
-});
-
-describe("desc codec", () => {
-  it("round-trips a hand-built dot grid (color asymmetry)", () => {
-    // 3x3: a red dot (F_COLOR_0|F_SINGLE) at 0, a blue dot at 4.
-    const grid = new Uint8Array(9);
-    grid[0] = F_COLOR_0 | F_SINGLE;
-    grid[4] = F_COLOR_1 | F_SINGLE;
-    const desc = encodeDesc(grid, 3, 3);
-    const p = { w: 3, h: 3, diff: DIFF_EASY };
-    expect(validateDesc(clustersGame, p, desc)).toBeNull();
-    const st = newState(p, desc);
-    expect(Array.from(st.grid)).toEqual(Array.from(grid));
-    expect(encodeDesc(st.grid, 3, 3)).toBe(desc);
+  it("reads a game ID from before the tiers as Easy", () => {
+    expect(game.decodeParams("7x7").diff).toBe(0);
+    expect(game.encodeParams(game.decodeParams("7x7dt"), true)).toBe("7x7dt");
   });
 
-  it("chains z/Z skips for a run longer than 24", () => {
-    // A single red dot at position 30 (needs a 'z' skip of 25 then 'f').
-    const grid = new Uint8Array(36);
-    grid[30] = F_COLOR_0 | F_SINGLE;
-    const desc = encodeDesc(grid, 6, 6);
-    // 30 blanks → 'z'(skip 25) + 'f'('a'+5) for the dot; then 5 trailing
-    // blanks → 'f' terminator.
-    expect(desc).toBe("zff");
-    const st = newState({ w: 6, h: 6, diff: DIFF_EASY }, desc);
-    expect(st.grid[30]).toBe(F_COLOR_0 | F_SINGLE);
-  });
-
-  it("rejects too-short / too-long / invalid descs", () => {
-    const p = { w: 3, h: 3, diff: DIFF_EASY }; // s = 9, positions must sum to 10
-    expect(validateDesc(clustersGame, p, "j")).toBeNull(); // 'j' = skip 10 = s+1
-    expect(validateDesc(clustersGame, p, "i")).toBe(DESC_TOO_SHORT); // skip 9
-    expect(validateDesc(clustersGame, p, "k")).toBe(DESC_TOO_LONG); // skip 11
-    expect(validateDesc(clustersGame, p, "2")).toBe(descBadCharacter("2"));
-  });
-
-  it("reads only the run letters encodeDesc writes", () => {
-    const p = { w: 6, h: 6, diff: DIFF_EASY };
-    expect(validateDesc(clustersGame, p, "zff")).toBeNull();
-    // A `z` run takes the case of the dot that ends it.
-    expect(validateDesc(clustersGame, p, "Zff")).toBe(descBadCharacter("f"));
-    expect(validateDesc(clustersGame, p, "zFf")).toBe(descBadCharacter("F"));
-    expect(validateDesc(clustersGame, p, "ZFf")).toBeNull();
-    // The terminator is lowercase, and lands exactly past the grid.
-    expect(validateDesc(clustersGame, p, "zfF")).toBe(descBadCharacter("F"));
-    expect(validateDesc(clustersGame, p, "zfg")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(clustersGame, p, "zffa")).toBe(DESC_TOO_LONG);
-  });
-});
-
-describe("solver classification", () => {
-  it("classifies empty / complete / invalid boards", () => {
-    // all-empty → UNFINISHED
-    expect(clustersStatus(new Uint8Array(4), 2, 2)).toBe(UNFINISHED);
-    // 2x2 all red: every cell touches 2 same-color neighbors → COMPLETE
-    expect(clustersStatus(Uint8Array.from([1, 1, 1, 1]), 2, 2)).toBe(COMPLETE);
-    // 1x2 red|blue: the red cell is wholly surrounded by the other color
-    expect(clustersStatus(Uint8Array.from([F_COLOR_0, F_COLOR_1]), 2, 1)).toBe(INVALID);
-  });
-
-  it("findErrors lists the offending cells and leaves the grid as it was", () => {
-    const grid = Uint8Array.from([F_COLOR_0, F_COLOR_1]);
-    const errs = findErrors(grid, 2, 1);
-    expect(errs.sort()).toEqual([0, 1]);
-    expect(Array.from(grid)).toEqual([F_COLOR_0, F_COLOR_1]);
-  });
-
-  it("findErrors marks a dot touching two of its color at the dot", () => {
-    // A red dot touching three reds, each of which still has an open square
-    // beside it: only the dot breaks its rule.
-    const dot = F_COLOR_0 | F_SINGLE;
-    expect(
-      findErrors(Uint8Array.from([0, F_COLOR_0, 0, F_COLOR_0, dot, F_COLOR_0]), 3, 2),
-    ).toEqual([4]);
-    // An open square beside it leaves the dot unbroken.
-    expect(findErrors(Uint8Array.from([0, 0, 0, F_COLOR_0, dot, 0]), 3, 2)).toEqual([]);
-  });
-
-  it("solves every preset's generated board to a unique completion", () => {
-    for (const [w, h] of [
-      [7, 7],
-      [8, 8],
-      [9, 9],
-      [10, 10],
-    ] as const) {
-      const { desc } = newClustersDesc(
-        { w, h, diff: DIFF_NORMAL },
-        randomNew(`clusters-solve-${w}`),
-      );
-      const grid = newState({ w, h, diff: DIFF_NORMAL }, desc).grid.slice();
-      expect(solveGame(grid, w, h, 1)).toBe(COMPLETE);
-    }
-  });
-});
-
-describe("interpretMove", () => {
-  it("left-click paints blue, cycles blue→red→clear; right-click paints red", () => {
-    let st = makeState(2, 1, [0, 0]);
-    const ui = newUi();
-    // empty → blue
-    st = clustersGame.executeMove(st, click(st, ui, 0, 0, LEFT_BUTTON, LEFT_RELEASE));
-    expect(st.grid[0]).toBe(F_COLOR_1);
-    // blue → red
-    st = clustersGame.executeMove(st, click(st, ui, 0, 0, LEFT_BUTTON, LEFT_RELEASE));
-    expect(st.grid[0]).toBe(F_COLOR_0);
-    // red → clear
-    st = clustersGame.executeMove(st, click(st, ui, 0, 0, LEFT_BUTTON, LEFT_RELEASE));
-    expect(st.grid[0]).toBe(0);
-    // right-click empty → red
-    st = clustersGame.executeMove(st, click(st, ui, 0, 0, RIGHT_BUTTON, RIGHT_RELEASE));
-    expect(st.grid[0]).toBe(F_COLOR_0);
-  });
-
-  it("never overwrites a given dot", () => {
-    const st = makeState(2, 1, [F_COLOR_0 | F_SINGLE, 0]);
-    const ui = newUi();
-    // A press on the given picks a dragType but the release skips givens.
-    const move = clickMove(st, ui, 0, 0, LEFT_BUTTON, LEFT_RELEASE);
-    // Either no move, or a move that changes nothing on the given.
-    const next = move ? clustersGame.executeMove(st, move) : st;
-    expect(next.grid[0]).toBe(F_COLOR_0 | F_SINGLE);
-  });
-
-  it("accretes a multi-cell drag into one paint move", () => {
-    const st = makeState(3, 1, [0, 0, 0]);
-    const ui = newUi();
-    clustersGame.interpretMove(st, ui, ds, cellPoint(0, 0), LEFT_BUTTON); // press cell 0 → blue
-    clustersGame.interpretMove(st, ui, ds, cellPoint(0, 1), 0x0203); // LEFT_DRAG to cell 1
-    clustersGame.interpretMove(st, ui, ds, cellPoint(0, 2), 0x0203); // LEFT_DRAG to cell 2
-    const res = clustersGame.interpretMove(st, ui, ds, cellPoint(0, 2), LEFT_RELEASE);
-    expect(res).toMatchObject({ kind: "paint" });
-    const move = res as ClustersMove;
-    if (move.kind !== "paint") throw new Error("expected paint");
-    expect(move.cells.map((c) => c.index).sort()).toEqual([0, 1, 2]);
-    expect(move.cells.every((c) => c.fill === F_COLOR_1)).toBe(true);
-  });
-
-  it("keyboard cursor places a color and suppresses a no-op", () => {
-    const st = makeState(2, 1, [0, 0]);
-    const ui = newUi();
-    // Reveal the cursor with a move, then Enter cycles empty→blue.
-    clustersGame.interpretMove(st, ui, ds, { x: 0, y: 0 }, 0x020c); // CURSOR_RIGHT
-    const res = clustersGame.interpretMove(st, ui, ds, { x: 0, y: 0 }, CURSOR_SELECT);
-    expect(res).toMatchObject({ kind: "paint" });
-    // '1' on the now-blue cell changes nothing, so no move reaches the undo chain.
-    const blue = clustersGame.executeMove(st, res as ClustersMove);
-    const one = "1".charCodeAt(0);
-    expect(clustersGame.interpretMove(blue, ui, ds, { x: 0, y: 0 }, one)).toBeNull();
-  });
-});
-
-describe("executeMove + completion", () => {
-  it("is solved from the last correct fill, and the win flash sweeps the board", () => {
-    // 2x2, no givens: fill all red → COMPLETE.
-    let st = makeState(2, 2, [0, 0, 0, 0]);
-    const paint = (i: number, fill: ClustersFill): ClustersMove => ({
-      kind: "paint",
-      cells: [{ index: i, fill }],
-    });
-    for (const i of [0, 1, 2]) st = clustersGame.executeMove(st, paint(i, F_COLOR_0));
-    expect(clustersGame.status(st)).toBe("ongoing");
-    st = clustersGame.executeMove(st, paint(3, F_COLOR_0));
-    expect(clustersGame.status(st)).toBe("solved");
-
-    // A solved board with givens: each row is one color, and its two ends
-    // touch one cell of it, which is what a given does.
-    const R = F_COLOR_0;
-    const B = F_COLOR_1;
-    const won = makeState(3, 2, [
-      R | F_SINGLE,
-      R,
-      R | F_SINGLE,
-      B | F_SINGLE,
-      B,
-      B | F_SINGLE,
-    ]);
-    expect(clustersGame.status(won)).toBe("solved");
-    // The cells filled in the flash's color, as their origins: a given lights
-    // like any other. Lit is either tone of the flash.
-    const tones = new Set<number>();
-    const isLit = (color: number): boolean => {
-      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
-      tones.add(color);
-      return true;
+  it("draws a dot on each dealt piece, and none on a piece placed", () => {
+    const id = "7x7de:ccACCcdfAbbBCacIa";
+    // A dot is the smallest circle drawn; a disc is larger.
+    const dots = (r: ReturnType<typeof renderScenario>) => {
+      const radii = r.recording.ops.flatMap((o) => (o.op === "circle" ? [o.r] : []));
+      return radii.filter((x) => x === Math.min(...radii)).length;
     };
-    const palette = clustersGame.colors([0.9, 0.9, 0.9]);
-    const frame = (flash: Flash): string[] => {
-      const dr = new RecordingDrawing(palette);
-      const ds = clustersGame.newDrawState(won, PREFERRED_TILE_SIZE);
-      clustersGame.redraw(dr, ds, {
-        prev: null,
-        state: won,
-        dir: 1,
-        ui: newUi(),
-        animTime: 0,
-        flash,
-      });
-      return dr.ops.flatMap((o) =>
-        o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
+    const fresh = dots(renderScenario({ game, id }));
+    expect(fresh).toBe(16);
+    expect(dots(renderScenario({ game, id, moves: [{ set: [0, BLOCK] }] }))).toBe(16);
+  });
+
+  // The count's wordings name each tile by piece and dot; the walk meets only
+  // some of them (a `most` of none, and tiles of one kind, are rare).
+  describe("a count's wordings", () => {
+    const at = (c: number): Point => ({ x: c % 3, y: (c / 3) | 0 });
+    const words = (wording: number, terms: Record<string, number | boolean>): string =>
+      statedSentence(STATED["countShort.more"].step[wording], {
+        kind: CELL,
+        at,
+        ring: [at(8)],
+        marks: { outline: [at(0), at(4)] },
+        terms: {
+          one: 0,
+          two: 4,
+          oneValue: BLOCK,
+          oneDot: 1,
+          twoValue: BLOCK,
+          twoDot: 1,
+          v: BLOCK,
+          w: DISC,
+          least: 2,
+          most: 1,
+          none: false,
+          alike: true,
+          own: true,
+          ...terms,
+        },
+        value: String,
+        piece: (v) => (v === BLOCK ? 0 : 1),
+      }).text;
+    const [first, second] = PAIR_NAMES;
+
+    it("tells two tiles of one kind apart as one and the other", () => {
+      expect(words(0, {})).toBe(
+        `One outlined dotted ${first} must touch two more ${first}s, and the other outlined dotted ${first} allows at most one ${first} beside it, so this square, beside only the first, must hold a ${first}.`,
       );
-    };
-    expect(frame(NO_FLASH)).toEqual([]);
-    // A cell's place in the sweep is its x less its y.
-    expectWinFlashTravels(
-      winFlashRun(frame, (cells) => cells),
-      6,
-      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
-    );
-    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
-  });
-});
-
-// --- Midend integration ----------------------------------------------------
-
-function harness() {
-  const h = driveMidend(clustersGame);
-  const status = () => h.last("game-state-change")?.status ?? null;
-  return { m: h.midend, status };
-}
-
-/** A 7x7 game and moves that break a rule: its first non-given cell painted
- * red, and every non-given neighbor of it blue. */
-function violation(): { desc: string; target: number; moves: ClustersMove[] } {
-  const params = decodeParams("7x7");
-  const { desc } = newClustersDesc(params, randomNew("clusters-mistake"));
-  const { grid } = newState(params, desc);
-  const target = grid.findIndex((cell) => !(cell & F_SINGLE));
-  const moves: ClustersMove[] = [
-    { kind: "paint", cells: [{ index: target, fill: F_COLOR_0 }] },
-  ];
-  for (const nb of [target - 1, target + 1, target - params.w, target + params.w]) {
-    if (nb >= 0 && nb < grid.length && !(grid[nb] & F_SINGLE)) {
-      moves.push({ kind: "paint", cells: [{ index: nb, fill: F_COLOR_1 }] });
-    }
-  }
-  return { desc, target, moves };
-}
-
-describe("midend integration", () => {
-  it("Solve finishes with help; playing the solution wins plainly", () => {
-    const params = decodeParams("7x7");
-    const { desc } = newClustersDesc(params, randomNew("clusters-mid"));
-
-    // (a) Solve command → solved-with-help.
-    const solveH = harness();
-    expect(solveH.m.newGameFromId(`7x7:${desc}`)).toBeNull();
-    expect(solveH.status()).toBe("ongoing");
-    expect(solveH.m.solve()).toBeNull();
-    expect(solveH.status()).toBe("solved-with-help");
-
-    // (b) Play the solution's own fills → plain solved (no cheat).
-    const grid = newState(params, desc).grid.slice();
-    expect(solveGame(grid, params.w, params.h, 1)).toBe(COMPLETE);
-    const moves: ClustersMove[] = [];
-    for (let i = 0; i < grid.length; i++) {
-      if (grid[i] & F_SINGLE) continue; // givens already placed
-      moves.push({
-        kind: "paint",
-        cells: [{ index: i, fill: (grid[i] & COLMASK) as ClustersFill }],
-      });
-    }
-    const playH = harness();
-    expect(playH.m.newGameFromId(`7x7:${desc}`)).toBeNull();
-    playH.m.playMoves(moves);
-    expect(playH.status()).toBe("solved");
-  });
-
-  it("findMistakes counts each tile the answer contradicts, rule broken or not", () => {
-    const { desc, target, moves } = violation();
-    const { m } = harness();
-    expect(m.newGameFromId(`7x7:${desc}`)).toBeNull();
-    expect(m.findMistakes()).toBe(0);
-    m.playMoves(moves);
-    expect(m.findMistakes()).toBeGreaterThan(0);
-    for (let n = moves.length; n > 0; n--) m.undo();
-
-    // One tile alone, each way: it breaks no rule, and one way is wrong.
-    const params = decodeParams("7x7");
-    const answer = newState(params, desc).grid.slice();
-    expect(solveGame(answer, params.w, params.h, 1)).toBe(COMPLETE);
-    const right = (answer[target] & COLMASK) as ClustersFill;
-    const paint = (fill: ClustersFill): ClustersMove => ({
-      kind: "paint",
-      cells: [{ index: target, fill }],
     });
-    m.playMoves([paint(opposite(right))]);
-    expect(m.check()).toEqual({ kind: "mistakes", count: 1 });
-    // A second wrong tile, far from the first, is counted beside it.
-    const far = answer.findLastIndex((tile) => !(tile & F_SINGLE));
-    const farWrong = opposite((answer[far] & COLMASK) as ClustersFill);
-    m.playMoves([{ kind: "paint", cells: [{ index: far, fill: farWrong }] }]);
-    expect(m.check()).toEqual({ kind: "mistakes", count: 2 });
-    m.undo();
-    m.playMoves([paint(right)]);
-    expect(m.findMistakes()).toBe(0);
-  });
 
-  it("Check & Save path: a wrong tile's surface repaints on a board already drawn", () => {
-    const { desc, target } = violation();
-    const params = decodeParams("7x7");
-    const answer = newState(params, desc).grid.slice();
-    solveGame(answer, params.w, params.h, 1);
-    const wrong = opposite((answer[target] & COLMASK) as ClustersFill);
-    const { midend } = renderScenario({
-      game: clustersGame,
-      id: `7x7:${desc}`,
-      moves: [{ kind: "paint", cells: [{ index: target, fill: wrong }] }],
-    });
-    const frame = () => {
-      const recording = new RecordingDrawing(
-        midend.getColorPalette(DEFAULT_BACKGROUND),
+    it("names each tile by its piece and dot, and the square the other's own", () => {
+      expect(
+        words(1, { twoValue: DISC, twoDot: 0, alike: false, own: false, least: 1 }),
+      ).toBe(
+        `The outlined dotted ${first} must touch one more ${first}, and the outlined ${second} allows at most one ${first} beside it, so this square, beside only the ${second}, must hold a ${second}.`,
       );
-      midend.redraw(recording);
-      return recording.ops;
-    };
-    // Nothing is left to paint, and no rule is broken, so nothing is red.
-    expect(frame()).toEqual([]);
-    midend.check();
-    const washed = frame().filter((o) => o.op === "rect" && o.color === COL_WRONG);
-    expect(washed).toHaveLength(1);
-    // The next move puts the overlay away, and the surface goes back.
-    midend.playMoves([{ kind: "paint", cells: [{ index: target, fill: wrong }] }]);
-    const after = frame();
-    expect(after.length).toBeGreaterThan(0);
-    expect(after.filter((o) => o.op === "rect" && o.color === COL_WRONG)).toEqual([]);
-  });
-
-  it("Check & Save path: the mistake overlay is actually painted", () => {
-    // The test above proves `findMistakes` *finds* the violation; this one
-    // proves the frame *draws* it (`src/guards/mistake-overlay-coverage.test.ts`). The
-    // inset error frame is shared engine code, so this is also one of the few
-    // tests that fail when `drawThickRectOutline` loses a side.
-    const { desc, moves } = violation();
-    const { recording, mistakeCount } = renderScenario({
-      game: clustersGame,
-      id: `7x7:${desc}`,
-      moves,
-      showMistakes: true,
     });
 
-    expect(mistakeCount).toBeGreaterThan(0);
-    // Four inset error-colored bands — the shared thick-rect frame.
-    const bands = recording.ops.filter((o) => o.op === "rect" && o.color === COL_ERROR);
-    expect(bands.length).toBeGreaterThanOrEqual(4);
+    it("says a tile that allows none", () => {
+      expect(
+        words(1, { twoValue: DISC, twoDot: 0, alike: false, none: true, most: 0 }),
+      ).toBe(
+        `The outlined dotted ${first} must touch two more ${first}s, and the outlined ${second} allows no ${first}s beside it, so this square, beside only the dotted ${first}, must hold a ${first}.`,
+      );
+    });
   });
-});
 
-describe("text format", () => {
-  it("renders r/b/. with uppercase givens", () => {
-    const st = makeState(2, 2, [F_COLOR_0 | F_SINGLE, F_COLOR_1, 0, F_COLOR_0]);
-    expect(textFormat(st)).toBe("R b \n. r \n");
-  });
-});
-
-describe("render (tier 2.5)", () => {
-  it("draws the opening frame with dots and grid, stable snapshot", () => {
-    // The tier is spelled out: a bare "7x7" would pin this snapshot to whatever
-    // the default difficulty happens to be, and the board is what is snapshotted.
-    const result = renderScenario({ game: clustersGame, id: "7x7de#clusters-render" });
-    const { ops } = result.recording;
-    // Some tile rects were drawn.
-    expect(ops.some((o) => o.op === "rect")).toBe(true);
-    // At least one dot circle (givens are dots).
-    expect(ops.some((o) => o.op === "circle")).toBe(true);
-    expect(ops).toMatchSnapshot();
+  it("outlines a piece Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = "7x7de:ccACCcdfAbbBCacIa";
+    const fresh = game.newState(game.decodeParams("7x7de"), id.split(":")[1]);
+    const solved = game.solve(fresh, fresh);
+    if (!solved.ok) throw new Error("no answer");
+    const answer = game.executeMove(fresh, solved.move).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < answer.length; c++) {
+      if (fresh.fixed[c]) continue;
+      const moves = [{ set: [c, answer[c] === BLOCK ? DISC : BLOCK] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
+    }
+    throw new Error("no wrong piece that breaks no rule");
   });
 });

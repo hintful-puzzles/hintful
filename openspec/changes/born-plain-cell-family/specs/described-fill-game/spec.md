@@ -106,6 +106,45 @@ refused.
 - **THEN** its answer holds two stars in every row, column and region, none
   touching another, and a desc naming a region for every square is refused
 
+### Requirement: A born game's dealt kind may say more than its value
+
+`play.dealt` SHALL name a clue kind at a cell meaning `value(at) = v`, alone
+or before an `and`. Where its meaning says more, the cell SHALL be drawn with
+a dot on its piece, light on a dark piece and dark on a light one.
+
+#### Scenario: Clusters' dots
+
+- **WHEN** a Clusters board is drawn
+- **THEN** each given piece carries a dot, and a piece the player placed none
+
+### Requirement: A born game's sample may be mended
+
+A scatter drawn a cell at a time (`each`) MAY `mend`: each cell a rule breaks
+at, its clues derived from the sample, SHALL take the other value, the first
+in reading order at a time, until none does.
+
+#### Scenario: Clusters' sample
+
+- **WHEN** a Clusters answer is sampled
+- **THEN** no square of it is without one of its own piece beside it
+
+### Requirement: A born game's deal may climb toward its tier
+
+A scatter drawn a cell at a time MAY `climb`: a draw after one the deal
+refused SHALL keep the cells the ladder decided on it and sample the rest,
+one draw in a hundred sampling every cell, and a board the tier below
+finishes SHALL have one cell turned. `deal.unpair` SHALL take off each two
+clues of its kind side by side and alike, the answer then the ladder's or
+the search's. A search tier with no hide SHALL keep a board the ladder stops
+short of where the search proves one answer.
+
+#### Scenario: Clusters' deal
+
+- **WHEN** a Clusters board is dealt at any tier
+- **THEN** no two dots side by side are alike, and the board finishes at its
+  tier and not below, or at Unreasonable has one answer the ladder does not
+  reach
+
 ## MODIFIED Requirements
 
 ### Requirement: A fill game is born from its description

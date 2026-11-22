@@ -48,7 +48,21 @@ order.
       games: `S` and `X` keys; two touching stars take a diamond where they
       meet, not a red star each; a star grows as it is placed; the refusal
       of a small grid names the ruleset.
-- [ ] 2.3 Clusters born.
+- [x] 2.3 Clusters born. Done 2026-11-22, 1,506 hand-written lines gone.
+      Added, each the engine's: `play.dealt` of a kind whose meaning goes
+      on after `value(at) = v and`, drawn with a dot on its piece (`dotted`;
+      the block painter is `dark`); `sample.mend`, a cell a rule breaks at
+      turned until none does; `sample.climb`, upstream's hill climb, and a
+      search tier that hides nothing; `deal.unpair`. Deals at every preset
+      and tier take under half a second, eight seeds each, below the
+      hand-written generator's slowest. The menu's Normal cap, the size
+      refusals and the `etu` letters are the description's. Differences a
+      player sees, for consistency with the born games: a drag paints only
+      the squares that held what the pressed one held, a move a square;
+      Shift-arrow puts a disc in an empty square and Ctrl-arrow a disc over
+      a block too, where Shift was red, Ctrl blue and both cleared; a broken
+      piece takes the red badge, not a red frame; a mistake is outlined, not
+      washed red; the catalog says blocks and discs, not red and blue.
 - [ ] 2.4 Light Up born.
 - [ ] 2.5 Sticks born.
 - [ ] 2.6 Bricks born.

@@ -24,7 +24,7 @@
  * it, and each line's fixed label (`labels:`) before its start.
  */
 
-import { GRAY_WASH, REGION_FILLS, WHITE } from "../color/colors.ts";
+import { BLACK, GRAY_WASH, REGION_FILLS, WHITE } from "../color/colors.ts";
 import {
   CLEAR_MARK,
   cellSurface,
@@ -405,6 +405,11 @@ export function fillRender<C extends Clues<C>>(
    * numbers' slots, where the board fills them, so a palette has no hole. */
   const COL_WALL = numbers.length > 0 ? COL_GIVEN + 4 : COL_GIVEN + 1;
   const COL_REGION = COL_WALL + 1;
+  /** A dealt cell's dot (`play.dotted`): dark on a light piece, light on a
+   * dark one, after the walls and the regions' fills where the board has
+   * them, so a palette has no hole. */
+  const COL_DOT = walled === undefined ? COL_WALL : COL_REGION + REGION_SURFACES.length;
+  const COL_DOT_LIGHT = COL_DOT + 1;
 
   const start = (ts: number): number => (labelStart === undefined ? 1 : ts);
   const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : 1);
@@ -431,6 +436,12 @@ export function fillRender<C extends Clues<C>>(
       REGION_SURFACES.forEach((fill, k) => {
         out[COL_REGION + k] = fill;
       });
+    }
+    if (play.dotted === true) {
+      // Pinned and not ink or paper: each dot is read against a piece whose
+      // own lightness barely moves between the schemes.
+      out[COL_DOT] = BLACK;
+      out[COL_DOT_LIGHT] = WHITE;
     }
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
@@ -582,6 +593,17 @@ export function fillRender<C extends Clues<C>>(
       occupied,
       (lineWord >> JOIN_SHIFT) & 0xf,
     );
+    // A broken piece's badge takes the middle, where the dot would be.
+    if (
+      play.dotted === true &&
+      piece !== undefined &&
+      word & FIXED &&
+      !(word & ERR_AT)
+    ) {
+      const dot = piece.painter.dark === true ? COL_DOT_LIGHT : COL_DOT;
+      const at = { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) };
+      dr.drawCircle(at, Math.floor(ts / 7), dot, dot);
+    }
 
     // A run's bar reaches half a tile toward each end it continues to, the
     // clip keeping each tile to its own part.

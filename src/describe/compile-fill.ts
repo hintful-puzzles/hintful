@@ -100,6 +100,22 @@ export function markWhileOf(
   ];
 }
 
+/** Whether `e` is `value(at) = v`. */
+const isValueAt = (e: Expr): boolean =>
+  e.k === "bin" &&
+  e.op === "=" &&
+  e.a.k === "call" &&
+  e.a.fn === "value" &&
+  e.a.args.length === 1 &&
+  e.a.args[0].k === "name" &&
+  e.a.args[0].name === "at" &&
+  e.b.k === "name" &&
+  e.b.name === "v";
+
+/** Whether `e` is `value(at) = v`, alone or as the first of a conjunction. */
+const fixesItsValue = (e: Expr): boolean =>
+  isValueAt(e) || (e.k === "bin" && e.op === "and" && fixesItsValue(e.a));
+
 /**
  * `play`, the engine's `FillPlay`, from the description's `play:`: its link
  * named by the clue kind the cell mark names. Nothing where there is no
@@ -126,12 +142,18 @@ export function playOf(
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,
     );
+  // A dealt kind whose meaning says more than its cell's value is drawn
+  // with a dot on the piece (Clusters' dot, which also counts its like
+  // neighbors).
+  let dotted = false;
   if (p.dealt !== undefined) {
     const kind = json.clues?.[p.dealt];
-    if (kind?.at !== "cell" || kind.means.replace(/\s+/g, "") !== "value(at)=v")
+    const means = kind === undefined ? null : parse(kind.means);
+    if (kind?.at !== "cell" || means === null || !fixesItsValue(means))
       throw new CompileError(
-        `play dealt: ${p.dealt} is not a clue at a cell meaning \`value(at) = v\``,
+        `play dealt: ${p.dealt} is not a clue at a cell meaning \`value(at) = v\`, alone or before an \`and\``,
       );
+    dotted = !isValueAt(means);
   }
   const {
     links,
@@ -166,11 +188,12 @@ export function playOf(
   for (const id of askBefore ?? [])
     if (glance?.includes(id))
       throw new CompileError(`play askBefore: ${id} is read at a glance`);
+  const plainPlay = dotted ? { ...rest, dotted } : rest;
   const play =
     links === undefined
-      ? rest
+      ? plainPlay
       : {
-          ...rest,
+          ...plainPlay,
           links: {
             clue: env.cellMark?.kind,
             ...(glance === undefined ? {} : { glance, askBefore: askBefore ?? [] }),
@@ -510,12 +533,37 @@ export function dealOf(
     if (typeof count === "string" && !settings.some((s) => s.size === count))
       throw new CompileError(`deal sample: ${count} is no size the params give`);
   }
+  const unpair = json.deal?.["unpair"];
+  if (unpair !== undefined) {
+    if (typeof unpair !== "string" || d.clueKinds.get(unpair)?.at !== "cell")
+      throw new CompileError(
+        `deal unpair: ${String(unpair)} is no clue kind at a cell`,
+      );
+    if (typeof hide === "string")
+      throw new CompileError(
+        "deal unpair: a board's answer is the ladder's, and a hide",
+      );
+    const s = sampleOf(json);
+    if (s === null || !("scatter" in s) || s.climb !== true)
+      throw new CompileError("deal unpair: a board unpaired is graded by a climb");
+  }
+  if (sample !== null && "scatter" in sample) {
+    if ((sample.mend === true || sample.climb === true) && sample.scatter.each !== true)
+      throw new CompileError(
+        "deal sample: a mend and a climb redraw a cell at a time, so take `each`",
+      );
+    if (sample.climb === true && typeof hide === "string")
+      throw new CompileError(
+        "deal sample: a climb keeps what the ladder decided, and a hide",
+      );
+  }
   const { grid } = json.space;
   const deal = {
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
     ...(settings.length === 0 ? {} : { settings }),
     sample,
     ...(typeof hide === "string" ? { hide } : {}),
+    ...(typeof unpair === "string" ? { unpair } : {}),
     ...(symmetric === undefined ? {} : { symmetric }),
     ...(thorough === null ? {} : { thorough }),
     ...(grow === null

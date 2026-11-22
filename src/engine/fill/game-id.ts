@@ -84,6 +84,9 @@ export interface FillDeal {
   readonly sample: Sample | null;
   /** The clue kind the deal hides while the board still finishes. */
   readonly hide?: string;
+  /** The clue kind at a cell of which two side by side and alike are both
+   * taken off, so the answer is the ladder's and not the sample. */
+  readonly unpair?: string;
   /** The symmetry the clues it leaves keep: a clue and its partner under a
    * half turn are hidden together. */
   readonly symmetric?: "halfTurn";

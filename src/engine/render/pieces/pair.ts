@@ -27,6 +27,8 @@ const pairPiece = (i: PairIndex): Painter => ({
   surface: null,
   pair: i,
   grows: true,
+  // The purple block is the darker of the pair in both schemes.
+  dark: i === 0,
   paint(dr, tile, slot, error, grown = 1) {
     drawPiece(dr, surfaceOf(tile), TWO_SHAPES[i], slot[0], grown);
     if (error) drawBadge(dr, tile, slot[1]);

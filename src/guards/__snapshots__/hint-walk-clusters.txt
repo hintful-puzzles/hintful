@@ -1,4 +1,4 @@
-7x7 Easy #0: 34 steps, solved, 5aca45d47b5c92f4 [refute.dotOvercount:12 refute.nearReach:8 refute.nearSurrounded:2 refute.selfReach:11 refute.selfSurrounded:1]
-7x7 Normal #0: 37 steps, solved, 682f4c9a3bfaa5f0 [countFull.same:1 refute.dotOvercount:11 refute.nearReach:11 refute.nearSurrounded:2 refute.selfReach:10 refute.selfSurrounded:2]
-7x7 Unreasonable #0: 32 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 8cba824f3c0e2753 [countFull.same:2 refute.dotOvercount:9 refute.nearReach:9 refute.nearSurrounded:2 refute.selfReach:10]
-6x8 Easy #0: 29 steps, solved, 4102e1d76e877a7d [refute.dotOvercount:11 refute.nearReach:8 refute.nearSurrounded:2 refute.selfReach:7 refute.selfSurrounded:1]
+7x7 Easy #0: 34 steps, solved, 67a9e8855f8fde75 [refute.dotOvercount:12 refute.nearReach:8 refute.nearSurrounded:3 refute.selfReach:9 refute.selfSurrounded:2]
+7x7 Normal #0: 36 steps, solved, 065981d2234a2ba4 [countFull.more:4 refute.dotOvercount:10 refute.nearReach:9 refute.nearSurrounded:5 refute.selfReach:6 refute.selfSurrounded:2]
+7x7 Unreasonable #0: 22 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., ac66b24f5bb16749 [refute.dotOvercount:7 refute.nearReach:6 refute.nearSurrounded:4 refute.selfReach:3 refute.selfSurrounded:2]
+6x8 Easy #0: 39 steps, solved, f55972142f097332 [refute.dotOvercount:10 refute.nearReach:13 refute.nearSurrounded:2 refute.selfReach:13 refute.selfSurrounded:1]

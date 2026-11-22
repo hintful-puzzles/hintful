@@ -47,7 +47,6 @@ const MAKES_AN_UNCHANGED_MOVE = [
  * list, and the list is never left empty.
  */
 const ANSWERS_NOTHING_AND_CHANGES_THE_FRAME: Record<string, string> = {
-  clusters: "a drag that hides the cursor",
   crossing: "a key that puts the held number down",
   group: "a drag along the legend",
   signpost: "a press that hides the cursor",

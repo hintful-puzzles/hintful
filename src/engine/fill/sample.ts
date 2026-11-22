@@ -67,6 +67,12 @@ export interface ScatterSample {
   /** Whether a row or column holding nothing but `rest` is refused: upstream's
    * Tents rejects one as giving nothing away. */
   readonly noBareLine?: boolean;
+  /** Whether a cell a rule breaks at takes the other value, until none does
+   * (`deal.ts`, `mended`). */
+  readonly mend?: true;
+  /** Whether a draw after a refused one keeps what the ladder decided on it
+   * (`deal.ts`, `climbFill`). */
+  readonly climb?: true;
 }
 
 /** How many cells a share of `n` is: rounded down, a share written as a
@@ -75,11 +81,13 @@ const shareOf = (share: number, n: number): number => Math.floor(share * n + 1e-
 
 /** An answer as `sample` draws it on `sp`, or `null` where this draw found no
  * room for every scattered cell or no partner for each, or left a line bare
- * that `noBareLine` refuses. */
+ * that `noBareLine` refuses. Where each cell is drawn alone, a cell `kept`
+ * holds a value keeps it. */
 export function sampleAnswer(
   sample: ScatterSample,
   sp: GridSpace,
   rs: RandomState,
+  kept: Uint8Array | null = null,
 ): Uint8Array | null {
   const n = sp.cells.length;
   const { scatter, partner } = sample;
@@ -90,9 +98,15 @@ export function sampleAnswer(
     // A chance in 2^16, the share's own where it is a half.
     const odds = Math.round(scatter.share * 65536);
     for (const c of sp.cells)
-      g[c] = randomBits(rs, 16) < odds ? scatter.value : sample.rest;
+      g[c] =
+        kept !== null && kept[c] !== 0
+          ? kept[c]
+          : randomBits(rs, 16) < odds
+            ? scatter.value
+            : sample.rest;
     return g;
   }
+  if (kept !== null) throw new Error("sample: only a cell drawn alone is kept");
   const order = Int32Array.from(sp.cells);
   const share = shareOf(scatter.share, n);
   // Tried, the share is of the cells tried, and none need be taken.
