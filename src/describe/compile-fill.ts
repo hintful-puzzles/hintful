@@ -526,6 +526,13 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
             `id: digits of ${k} after ${letter}, which is not a cell's clue of the values 0 to 9`,
           );
       }
+      // A number another kind is written as is past every one of the
+      // segment's own.
+      for (const n of Object.keys(seg.also ?? {}))
+        if (values === null || Number(n) <= values[1])
+          throw new CompileError(
+            `id: ${n} written for another kind, which a clue of ${kind} may be`,
+          );
     }
     // A dot run's case is its value, one of two.
     if (
@@ -562,6 +569,52 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
  * its `value: range(lo, hi)`, which bounds what a game ID may say. Nothing
  * where there is no `play:`.
  */
+/** The grid's hexagon, its outside kind held to be a cell's marker. */
+function hexagonOf(
+  json: DescriptionJson,
+  isMarker: (kind: string) => boolean,
+): { outside: string } | null {
+  const hexagon = json.space.grid?.hexagon;
+  if (hexagon === undefined) return null;
+  if (!isMarker(hexagon.outside))
+    throw new CompileError(
+      `space hexagon: outside ${hexagon.outside}, which is not a cell's one-valued marker`,
+    );
+  return hexagon;
+}
+
+/** Refuses an ID that names a clue kind or partition other than once. A
+ * hexagon's corners hold its `outside` kind unwritten, so the ID may name it
+ * nowhere. */
+function checkNamed(
+  id: readonly IdSegmentJson[],
+  kinds: readonly string[],
+  outside: string | null,
+): void {
+  const named = id.flatMap(segmentKinds);
+  for (const kind of kinds) {
+    const n = named.filter((k) => k === kind).length;
+    if (n !== 1 && !(n === 0 && kind === outside))
+      throw new CompileError(`id: clue kind or partition ${kind} is not named once`);
+  }
+}
+
+/** The retired tier letters, each the index of the tier it reads as. */
+function tierAliasesOf(
+  json: DescriptionJson,
+  tiers: readonly string[],
+  tierLetters: string,
+): Record<string, number> | null {
+  if (json.tierAliases === undefined) return null;
+  return Object.fromEntries(
+    Object.entries(json.tierAliases).map(([letter, tier]) => {
+      if (tierLetters.includes(letter))
+        throw new CompileError(`tierAliases: ${letter} is a tier's own letter`);
+      return [letter, tierIndex(tiers, tier, "tierAliases")];
+    }),
+  );
+}
+
 export function dealOf(
   json: DescriptionJson,
   d: Description,
@@ -573,11 +626,9 @@ export function dealOf(
   const partitions = [...env.regions];
   const id =
     json.id ?? kinds.map((k, i) => ({ numbers: k, ...(i > 0 ? { before: "," } : {}) }));
-  const named = id.flatMap(segmentKinds);
-  for (const kind of [...kinds, ...partitions])
-    if (named.filter((k) => k === kind).length !== 1)
-      throw new CompileError(`id: clue kind or partition ${kind} is not named once`);
   const isMarker = (kind: string): boolean => markerKind(d, kind);
+  const hexagon = hexagonOf(json, isMarker);
+  checkNamed(id, [...kinds, ...partitions], hexagon?.outside ?? null);
   checkSegments(id, d, env);
   const hideJson = json.deal?.["hide"];
   // One kind, or several hidden in one random order.
@@ -720,9 +771,11 @@ export function dealOf(
     [...Object.values(options).map((o) => o.letter), "d"].includes(tierFlag.letter)
   )
     throw new CompileError(`tierFlag: the letter ${tierFlag.letter} is taken`);
+  const tierAliases = tierAliasesOf(json, tiers, tierLetters);
   const { grid } = json.space;
   const deal = {
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
+    ...(hexagon === null ? {} : { hexagon }),
     ...(settings.length === 0 ? {} : { settings }),
     ...(Object.keys(options).length === 0 ? {} : { options }),
     sample,
@@ -730,6 +783,7 @@ export function dealOf(
     ...(stripFrom === undefined ? {} : { stripFrom }),
     ...(typeof leaves === "string" ? { leaves } : {}),
     ...(tierFlag === null ? {} : { tierFlag }),
+    ...(tierAliases === null ? {} : { tierAliases }),
     ...(typeof unpair === "string" ? { unpair } : {}),
     ...(symmetric === undefined ? {} : { symmetric }),
     ...(thorough === null ? {} : { thorough }),
@@ -1201,7 +1255,19 @@ export function derivedClues(
       throw new CompileError(`deal oneIn: ${k} is no clue kind at a cell`);
   /** The kinds dealt one in each group, after the rest. */
   const once = new Out(1);
+  const outside = json.space.grid?.hexagon?.outside;
   for (const [kind, c] of d.clueKinds) {
+    // A hexagon's corners hold its outside kind, and no other cell does.
+    if (kind === outside) {
+      derive.emit(
+        `const ${kind}_at = sp.cells.filter((c) => !inHexagon(sp.w, sp.h, c % sp.w, Math.floor(c / sp.w)));`,
+      );
+      dealt.push(
+        `${kind}: clueList(${kind}_at, ${kind}_at.map(() => 0), sp.cells.length)`,
+      );
+      env.used.add("inHexagon");
+      continue;
+    }
     const sorts = env.clues.get(kind) as ClueKind;
     const universe = UNIVERSE[c.at];
     if (c.value === null || sorts.per || sorts.list || universe === undefined)
@@ -1269,8 +1335,13 @@ export function derivedClues(
       (sc) => {
         const a = (sc.get("at") as Val).code;
         const v = (sc.get("v") as Val).code;
+        // No clue of another kind sits outside a hexagon.
+        const within =
+          outside !== undefined && universe === "cells"
+            ? `inHexagon(sp.w, sp.h, ${a} % sp.w, Math.floor(${a} / sp.w)) && `
+            : "";
         derive.emit(
-          `if (${at}.at(-1) !== ${a} && clueHolds_${kind}(g, sp, ${a}, ${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
+          `if (${within}${at}.at(-1) !== ${a} && clueHolds_${kind}(g, sp, ${a}, ${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
         );
       },
     );

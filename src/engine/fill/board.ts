@@ -12,6 +12,7 @@ import {
   type ClueList,
   describedSpace,
   type GridSpace,
+  hexStore,
   type Partition,
   type Violation,
 } from "../solve/describe-runtime.ts";
@@ -72,7 +73,18 @@ export interface FillModule<C> {
   /** Whether cell `c` is washed on the values `g` (`play.wash`): an open one
    * then reads as the secondary value, which a piece there would break. */
   washed?(g: ArrayLike<number>, sp: GridSpace, cl: C, c: number): boolean;
+  /** Where the board is a hexagon (`describe-runtime/hexagon.ts`): the clue kind
+   * every cell of the store outside it holds. */
+  readonly hexagon?: { readonly outside: string };
 }
+
+/** The stored grid of a board of `module`'s that the params `p` ask for:
+ * the params' own size, or a hexagon's store. */
+export const boardSizeOf = <C>(
+  module: FillModule<C>,
+  p: { w: number; h: number },
+): { w: number; h: number } =>
+  module.hexagon === undefined ? { w: p.w, h: p.h } : hexStore(p.w, p.h);
 
 /** The board's values with each open washed cell read as the secondary
  * value, as the rules and the live errors read them; the values themselves

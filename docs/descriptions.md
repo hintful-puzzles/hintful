@@ -300,6 +300,16 @@ research tools all read through it; the app never does.
   names an axis, which makes a drag run along its row or column and an
   arrow with Ctrl or Shift stroke a line along or across the move; `{each}`
   in a step is the number its square shows, of the first kind in `numbers`.
+  `space.grid.hexagon: { outside: kind }` holds a hexagon in a sheared store
+  ⌈h/2⌉ − 1 wider (Bricks): the corners deal `outside`, a one-valued marker
+  that forces them clear, and are never drawn, targeted or written, and a
+  rule bound by a cell reads the store's six neighbors through `around`.
+  State a rule over a row's run by the row and a place along it, not by its
+  cell, so a break is drawn as one bar ("Where a rule breaks"). A build's
+  `order: upward`, `share` and `least` lay the value bottom row first at a
+  chance, drawing again below a least share; `digits`' `also: { "7": kind }`
+  reads a number past the segment's range as another kind's clue, and
+  `tierAliases` a retired tier letter.
   The compiler writes `<id>.game.ts`, `fillGame` of the module, and
   `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One

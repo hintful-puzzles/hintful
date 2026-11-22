@@ -1087,17 +1087,20 @@ grid shapes in one game. The draw side is [`rendering.md`](./rendering.md).
 A game may store an odd-shaped board in a padded rectangle and shear it on
 draw: the backing array is wider than the user's size, the unused corners
 hold an out-of-bounds sentinel, and each row is drawn offset by half a tile
-a row. Exemplars: [`bricks/render.ts`](../src/games/bricks/render.ts) and
-[`bricks/index.ts`](../src/games/bricks/index.ts).
+a row. A fill game declares it as `space.grid.hexagon` (Bricks): the store,
+the mask and the shift are
+[`describe-runtime/hexagon.ts`](../src/engine/solve/describe-runtime/hexagon.ts),
+the corners a clue kind that forces them clear.
 
 - **The mask and the neighbor table are logic, not display.** They decide
   how many playable cells the desc encodes and drive validity, so a bug
   there desyncs the codec and the solver. The shear offset, bevels and
   origin are display.
-- **`interpretMove` inverts the exact draw transform, in the same order**:
+- **The pointer inverts the exact draw transform, in the same order**:
   undo the origin, floor to a row, then subtract that row's shear before
-  flooring to a column. Share the offset helper between `render.ts` and
-  `index.ts` (`offsets(h, ts)`).
+  flooring to a column. The draw and the geometry call one shift
+  (`hexShift`; `hexGrid` in
+  [`target-verb.ts`](../src/engine/input/target-verb.ts)).
 - **The tile size and checking the shear are the draw side's**
   ([`rendering.md`](./rendering.md) § "Bespoke board geometry, draw side").
 
@@ -1115,8 +1118,8 @@ would do. Exemplar: `layoutNumbers` and `runForNumber` in
   and then a click lands on a cell other than the one highlighted, with the
   suite green because nothing drives paint and input against each other.
   One function needs no test. Exemplars: `borderFor` in
-  [`mines/render.ts`](../src/games/mines/render.ts) and `offsets` in
-  [`bricks/render.ts`](../src/games/bricks/render.ts).
+  [`mines/render.ts`](../src/games/mines/render.ts) and `hexShift` in
+  [`describe-runtime/hexagon.ts`](../src/engine/solve/describe-runtime/hexagon.ts).
 - **Read the game for the two tells; no scan finds them**
   ([`method.md`](./method.md) § "A scan that keys on a name"): an input
   path that cites the render module in a comment and does not import from

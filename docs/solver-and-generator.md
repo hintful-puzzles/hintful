@@ -406,7 +406,7 @@ The budget and the order:
   nothing is refuted is one split. Splitting on the first open square alone
   took HEAD's 15×15 Bricks boards up to 611,629 positions, where the
   lookahead takes 45 and deals upstream's boards
-  ([`bricks/solver.ts`](../src/games/bricks/solver.ts)). Measure the budget
+  ([`fill/search.ts`](../src/engine/fill/search.ts)). Measure the budget
   on boards the old generator dealt beyond the presets.
 - **Start each position's deduction from the assumed thing** where the
   deduction can, and not from scratch: a position is one assumption on from a
@@ -1331,8 +1331,9 @@ the boards a seed deals move").
 - **The unchecked start.** A stripping loop keeps a removal only while the
   board still solves, so it preserves a solvable board and cannot make one.
   Any step that edits the answer after it was built owes a solve before the
-  stripping. Exemplar:
-  [`bricks/generator.ts`](../src/games/bricks/generator.ts).
+  stripping. Exemplar: the fill deal, which holds every answer it samples to
+  the rules with its derived clues before it hides one
+  ([`fill/deal.ts`](../src/engine/fill/deal.ts)).
 - **The mutating validator.** A C-descended `validate` that returns a
   verdict and also writes a flag into the board is a hazard once a later
   whole-cell comparison reads that byte. Where the generator depends on it,
@@ -1544,8 +1545,8 @@ no rule yet passes it, and Check & Save then has nothing to point at.
 [`wrong-entry-check.test.ts`](../src/guards/wrong-entry-check.test.ts) looks
 for the gap in every game by entering things blind and asking whether Check
 & Save can name what the answer contradicts. Exemplars: `findMistakes` in
-[`bricks/solver.ts`](../src/games/bricks/solver.ts), which keeps the rule
-pass's flags and adds one for a cell the answer contradicts, and
+[`fill/answer.ts`](../src/engine/fill/answer.ts), which names each cell the
+answer contradicts, and
 [`subsets/solver.ts`](../src/games/subsets/solver.ts).
 
 ## The Latin family

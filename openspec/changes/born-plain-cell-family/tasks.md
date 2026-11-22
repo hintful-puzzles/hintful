@@ -103,7 +103,23 @@ order.
       by column; a share of blocks outside 5 to 100 is refused in any ID;
       an Unreasonable 2x3 is dealt, which the hand-written generator gave up
       on; saves of the hand-written game are not read.
-- [ ] 2.6 Bricks born.
+- [x] 2.6 Bricks born. Done 2026-11-22, 1,838 hand-written lines gone.
+      Added, each the engine's: `space.grid.hexagon`, a hexagon in a
+      sheared store whose corners deal a clear kind, never drawn, targeted
+      or written, a run of letters ending at each as upstream writes it;
+      the sheared draw, an outline joining cells along a row alone, and no
+      turned form; `hexGrid`, the pointer undoing the shear and the cursor
+      starting on the board and stepping by `shearedHexStep` on the arrows
+      and the number pad; a build's `order: upward`, `share` and `least`;
+      `digits`' `also`; `tierAliases`. Deals measured 2026-11-22: 8x10
+      Unreasonable median 28 ms, max 73 ms over 20. Differences a player
+      sees: a brick with nothing to rest on is drawn red where a diamond
+      sat under it; Shift with a move marks clear the empty cells and Ctrl
+      the shaded ones too, where Ctrl shaded, Shift cleared and both
+      emptied; a 7 in an ID is a given clear cell, not a `?`; an ID or
+      params string with upstream's `t` deals and opens as Unreasonable,
+      where generating was refused; the drag paints with the engine's
+      sweep; saves of the hand-written game are not read.
 - [ ] 2.7 Pattern born.
 - [ ] 2.8 Singles born.
 - [ ] 2.9 Boats born.

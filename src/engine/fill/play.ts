@@ -25,6 +25,7 @@ import {
   moveDrag,
   newCursor,
   newDrag,
+  numpadDirection,
   RIGHT_BUTTON,
   startDrag,
   stripModifiers,
@@ -33,6 +34,7 @@ import {
   buttonVerb,
   digitKey,
   ERASE_KEYS,
+  hexGrid,
   interpretTargetVerbs,
   type KeyOnlyVerb,
   letterKey,
@@ -44,7 +46,12 @@ import {
   type VerbKey,
 } from "../input/target-verb.ts";
 import { PAINTERS } from "../render/pieces/index.ts";
-import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
+import {
+  type ClueList,
+  clueAt,
+  hexShift,
+  inHexagon,
+} from "../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, type FillModule, listOf } from "./board.ts";
 
 import { applyEdit, type Edit } from "./edit.ts";
@@ -195,6 +202,21 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   const { primary, secondary } = play;
   const axes = axesOf(play);
   type Verb = TargetVerb<FillBoard<C>, FillUi, Point, Edit>;
+  const geometry =
+    module.hexagon === undefined
+      ? squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin })
+      : hexGrid<FillBoard<C>, D>({
+          size: (b) => b,
+          border: origin,
+          shift: (y, ts, b) => hexShift(y, b.h, ts),
+          onBoard: (b, x, y) => inHexagon(b.w, b.h, x, y),
+        });
+  /** A key that moves the cursor: an arrow, or on a hexagon a number pad
+   * direction, which there is a move before it is a digit. */
+  const movesCursor = (raw: number): boolean =>
+    isCursorMove(stripModifiers(raw)) ||
+    (module.hexagon !== undefined &&
+      numpadDirection(raw & ~(MOD_SHFT | MOD_CTRL)) !== null);
 
   /** A verb that sets a cell to `to(v)` from `v`, or means nothing on a fixed
    * cell or where it would leave the cell as it is. */
@@ -241,7 +263,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
     },
   ];
   const targetVerbs: TargetVerbs<FillBoard<C>, FillUi, D, Point, Edit> = {
-    geometry: squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin }),
+    geometry,
     primary: clicking(primary, secondary),
     // One of a pair of alike pieces (Unruly's block and disc), or of two
     // lines (Sticks'), is placed as the other is, and rules nothing out.
@@ -436,7 +458,11 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   function strokeKey(b: FillBoard<C>, ui: FillUi, raw: number): Edit | UiUpdate | null {
     const c0 = ui.cursor.y * b.w + ui.cursor.x;
     const delta = cursorDelta(stripModifiers(raw));
-    const moved = moveCursor(ui.cursor, stripModifiers(raw), b.w, b.h);
+    const moved = geometry.moveCursor(
+      b,
+      ui,
+      module.hexagon === undefined ? stripModifiers(raw) : raw & ~(MOD_SHFT | MOD_CTRL),
+    );
     const c1 = ui.cursor.y * b.w + ui.cursor.x;
     const set: number[] = [];
     // Where the values are lines, Ctrl draws the line along the way the
@@ -482,8 +508,9 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
       }
       const linked = linkKey(b, ui, button);
       if (linked !== PASS) return linked;
-      if (isCursorMove(button) && raw & (MOD_SHFT | MOD_CTRL))
-        return strokeKey(b, ui, raw);
+      if (movesCursor(raw) && raw & (MOD_SHFT | MOD_CTRL)) return strokeKey(b, ui, raw);
+      if (movesCursor(raw) && !isCursorMove(button))
+        return geometry.moveCursor(b, ui, raw) ? UI_UPDATE : null;
       return interpretTargetVerbs(targetVerbs, b, ui, ds, p, raw);
     },
   };

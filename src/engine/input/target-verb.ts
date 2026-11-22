@@ -40,6 +40,7 @@ import {
   BACKSPACE,
   CURSOR_SELECT,
   CURSOR_SELECT2,
+  cursorDelta,
   DELETE,
   type GridCursor,
   isCursorMove,
@@ -49,9 +50,11 @@ import {
   LEFT_BUTTON,
   LEFT_RELEASE,
   moveCursor,
+  numpadDirection,
   PENCIL_MODE_BUTTON,
   RIGHT_BUTTON,
   RIGHT_RELEASE,
+  shearedHexStep,
   stripModifiers,
 } from "./pointer.ts";
 
@@ -290,6 +293,69 @@ export function squareGrid<
     moveCursor(s, ui, button) {
       const { w, h } = options.size(s);
       return moveCursor(ui.cursor, button, w, h, options.wrap ?? false);
+    },
+  };
+}
+
+/**
+ * A hexagonal board held as a sheared grid ({@link shearedHexStep}): row `y`
+ * is drawn `shift` pixels right, and only the cells `onBoard` are targets.
+ * The cursor steps by the arrows and the number pad's eight directions, and
+ * stays on the board.
+ */
+export function hexGrid<
+  State,
+  DrawState extends { readonly tileSize: number },
+>(options: {
+  size: (state: State) => Size;
+  border: (tileSize: number, state: State) => number;
+  shift: (y: number, tileSize: number, state: State) => number;
+  onBoard: (state: State, x: number, y: number) => boolean;
+}): TargetGeometry<State, { cursor: GridCursor }, DrawState, Point> {
+  return {
+    noun: "cell",
+    // Undo the shear, then floor to a cell; a row off the board shears by a
+    // row that is not there, and `onBoard` turns it away.
+    pointerTarget(s, ds, p) {
+      const ts = ds.tileSize;
+      const b = options.border(ts, s);
+      const y = fromCoord(p.y, ts, b);
+      const x = fromCoord(p.x - options.shift(y, ts, s), ts, b);
+      return options.onBoard(s, x, y) ? { x, y } : null;
+    },
+    pointAt(s, ds, t) {
+      const ts = ds.tileSize;
+      const b = options.border(ts, s);
+      const half = Math.floor(ts / 2);
+      return {
+        x: b + options.shift(t.y, ts, s) + t.x * ts + half,
+        y: b + t.y * ts + half,
+      };
+    },
+    cursorTarget(s, ui) {
+      const { x, y } = ui.cursor;
+      return options.onBoard(s, x, y) ? { x, y } : null;
+    },
+    parkCursor(ui, t) {
+      ui.cursor.x = t.x;
+      ui.cursor.y = t.y;
+    },
+    moveCursor(s, ui, button) {
+      const key = numpadDirection(button) ?? cursorDelta(stripModifiers(button));
+      if (key === null) return false;
+      const { w, h } = options.size(s);
+      const { x: x0, y: y0, visible } = ui.cursor;
+      const step = shearedHexStep(key, y0, h);
+      const y = Math.max(0, Math.min(y0 + step.dy, h - 1));
+      // Into the row's own span, whose ends the shear leaves ragged.
+      const row = Array.from({ length: w }, (_, x) => x).filter((x) =>
+        options.onBoard(s, x, y),
+      );
+      const x = Math.max(row[0], Math.min(x0 + step.dx, row[row.length - 1]));
+      ui.cursor.visible = true;
+      ui.cursor.x = x;
+      ui.cursor.y = y;
+      return !visible || x !== x0 || y !== y0;
     },
   };
 }

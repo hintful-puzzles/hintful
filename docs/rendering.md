@@ -258,7 +258,7 @@ names a game, the cause is one of these, and each is a rule:
   the mark lands on belongs to one of those squares.** Each tile clips to
   what it owns, and a tile on the board's edge owns the ground beside it
   that the mark reaches. Exemplar:
-  [`bricks/render.ts`](../src/games/bricks/render.ts).
+  [`fill/render.ts`](../src/engine/fill/render.ts).
 - **A tile that repaints over a decoration forgets what the decoration
   showed.** A decoration inside a tile's box that repaints only on its own
   change (the pencil indicator in a clue ring's corner) is otherwise filled
@@ -564,8 +564,13 @@ geometry". On the draw side:
   rasterize it ([`testing.md`](./testing.md)). A wrong offset shows as a
   staircase.
 
-Exemplar: [`bricks/render.ts`](../src/games/bricks/render.ts) and
-[`bricks/index.ts`](../src/games/bricks/index.ts) (shared `offsets`).
+- **On a sheared board only a row's cells share a whole side**, so an
+  outline joins cells along a row alone (`joinEvidence`), and a block that
+  counts the corners leaves them out.
+
+Exemplar: a fill game's hexagon in
+[`fill/render.ts`](../src/engine/fill/render.ts), the shift shared with the
+pointer (`hexShift`).
 
 ## A rule that input and display both need
 

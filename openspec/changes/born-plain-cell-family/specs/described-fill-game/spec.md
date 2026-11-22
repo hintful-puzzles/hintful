@@ -254,6 +254,67 @@ first kind in `numbers` with a clue there.
   horizontal
 - **THEN** it says that this 3 must be horizontal
 
+### Requirement: A born game's grid may be a hexagon
+
+`space.grid.hexagon` MAY hold a w by h hexagon in a store ⌈h/2⌉ − 1 wider,
+each row drawn half a tile right of the one above. Its corners SHALL hold
+the named outside kind, which forces them clear, and SHALL be neither drawn,
+targeted nor written in an ID, where a run of letters ends at one. An
+outline SHALL join cells along a row alone, and the board SHALL have no
+turned form.
+
+#### Scenario: Bricks' 4×4
+
+- **WHEN** `4x4:2b1c0c2_2b1` is opened
+- **THEN** its store is five cells wide, its four corners are holes, and a
+  press a tile left of a row's first cell takes no cell
+
+### Requirement: A born game's hexagon cursor steps to six neighbors
+
+On a hexagon the cursor SHALL start on the board and stay on it, and SHALL
+step by `shearedHexStep`: the arrows, Up and Down zigzagging down the column
+it is drawn in, and the number pad's eight directions, which a digit key on
+the pad never reaches as a digit.
+
+#### Scenario: The pad's 7 and 3
+
+- **WHEN** the pad's 3 and then its 7 are pressed on a Bricks board
+- **THEN** the cursor steps to the cell below and right, and back
+
+### Requirement: A born game's build may lay its value in order, at a share
+
+A build MAY take its cells in `order: upward`, rows from the bottom, each
+from the left, and lay its value at the chance `share` where the marks allow
+it and another value otherwise. A build whose value holds fewer than `least`
+of the cells no clue fixes SHALL be drawn again.
+
+#### Scenario: Bricks' wall
+
+- **WHEN** a Bricks board is dealt
+- **THEN** at least two in five of its cells are bricks
+
+### Requirement: A born game's run code may write another kind as a number
+
+A digits segment's `also` MAY name a number, past the segment kind's
+largest, that SHALL be read as a clue of another kind at its cell, and
+written for one there.
+
+#### Scenario: Bricks' 7
+
+- **WHEN** `4x4:2b1c7c2_2b1` is read
+- **THEN** the cell the 7 stands on is a hole, clear and fixed, and holds no
+  number
+
+### Requirement: A born game may read a retired tier letter
+
+`tierAliases` MAY name a letter that SHALL be read after `d` as the tier it
+names, and never written.
+
+#### Scenario: Bricks' Tricky
+
+- **WHEN** `7x6dt` is read
+- **THEN** it is the 7×6 Unreasonable board, written `7x6dn`
+
 ## MODIFIED Requirements
 
 ### Requirement: A fill game is born from its description

@@ -26,6 +26,7 @@ import {
 } from "../solve/ladder-runtime.ts";
 import { encodeAnswer } from "./answer.ts";
 import {
+  boardSizeOf,
   type Clues,
   type FillBoard,
   marksOf,
@@ -124,11 +125,11 @@ export function dealFill<C extends Clues<C>>(
   if (sample === null) throw new Error("deal: the description samples no answer");
   if ("scatter" in sample && sample.climb === true)
     return climbFill(module, deal, sample, p, rs);
-  const sp = spaceOf(module, p);
+  const sp = spaceOf(module, boardSizeOf(module, p));
   const variations = variationsOf(p);
   const sizes = sizesOf(p);
   const board = (clues: C): FillBoard<C> =>
-    newBoard(module, p.w, p.h, clues, variations);
+    newBoard(module, sp.w, sp.h, clues, variations);
   const finishes = (clues: C, cap: number): boolean =>
     solveBoard(module, board(clues), cap).verdict === "solved";
   const thorough = p.thorough ?? true;
@@ -387,11 +388,11 @@ function climbFill<C extends Clues<C>>(
   rs: RandomState,
 ): { desc: string; aux: string } {
   if (deal.grow !== undefined) throw new Error("deal: a climb grows no partition");
-  const sp = spaceOf(module, p);
+  const sp = spaceOf(module, boardSizeOf(module, p));
   const variations = variationsOf(p);
   const sizes = sizesOf(p);
   const board = (clues: C): FillBoard<C> =>
-    newBoard(module, p.w, p.h, clues, variations);
+    newBoard(module, sp.w, sp.h, clues, variations);
   const { value, share } = sample.scatter;
   if (share <= 0) throw new Error("deal: a climb samples no cell");
   const other = (v: number): number => (v === value ? sample.rest : value);
@@ -694,14 +695,14 @@ function buildAnswer<C extends Clues<C>>(
   const { first } = sample;
   const start =
     first === undefined
-      ? new Uint8Array(p.w * p.h)
+      ? new Uint8Array(sp.cells.length)
       : firstLaid(first, deal, p, rs, draw);
   const derived = module.deriveClues(start, sp, {}, sizesOf(p));
   const blank =
     first === undefined || deal.hide === undefined
       ? derived
       : keepingAll(derived, deal, sp, []);
-  const board = newBoard(module, p.w, p.h, blank, variationsOf(p));
+  const board = newBoard(module, sp.w, sp.h, blank, variationsOf(p));
   // One set of marks the whole build, the ladder run again after each
   // placement: a fresh solve each time cost a 12x16 Light Up deal seconds.
   const { marks, ok, entries } = marksOf(module, board);
@@ -713,9 +714,15 @@ function buildAnswer<C extends Clues<C>>(
     {},
   );
   if (runLadder(marks, ladder)) return null;
+  const build = sample.build === true ? null : sample.build;
   const order = Array.from(sp.cells);
-  shuffle(order, rs);
-  const only = sample.build === true ? null : sample.build.value;
+  if (build?.order === "upward")
+    order.sort((a, b) => Math.floor(b / sp.w) - Math.floor(a / sp.w) || a - b);
+  else shuffle(order, rs);
+  const open = order.filter((c) => board.fixed[c] === 0);
+  // With a share, each cell in turn takes the build's value at that chance
+  // where it may, and another value otherwise; without, the value alone.
+  const only = build === null || build.share !== undefined ? null : build.value;
   for (const c of order) {
     if (marks.grid[c] !== 0) continue;
     const values: number[] = [];
@@ -727,8 +734,34 @@ function buildAnswer<C extends Clues<C>>(
       if (only === null) return null;
       continue;
     }
-    marks.place(c, values[randomUpto(rs, values.length)]);
+    marks.place(c, pickValue(values, build, rs));
     if (runLadder(marks, ladder)) return null;
   }
+  const least = build?.least;
+  if (
+    least !== undefined &&
+    open.filter((c) => marks.grid[c] === build?.value).length < least * open.length
+  )
+    return null;
   return Uint8Array.from(marks.grid);
 }
+
+/** The value a build lays on a cell that may hold `values`: with a share,
+ * the build's own at that chance and another otherwise; else one at random. */
+function pickValue(
+  values: readonly number[],
+  build: Exclude<BuiltSample["build"], true> | null,
+  rs: RandomState,
+): number {
+  const share = build?.share;
+  if (build === null || share === undefined)
+    return values[randomUpto(rs, values.length)];
+  const others = values.filter((v) => v !== build.value);
+  if (others.length === 0) return build.value;
+  if (values.includes(build.value) && randomUpto(rs, CHANCE) < share * CHANCE)
+    return build.value;
+  return others[randomUpto(rs, others.length)];
+}
+
+/** The resolution a build's share is drawn at. */
+const CHANCE = 1 << 20;

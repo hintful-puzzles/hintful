@@ -40,7 +40,19 @@ export interface FirstCells {
 /** An answer the ladder builds: any value of a cell's domain, or `value`
  * alone, placed at random and the rest decided, after the `first` cells. */
 export interface BuiltSample {
-  readonly build: true | { readonly value: number };
+  readonly build:
+    | true
+    | {
+        readonly value: number;
+        /** The cells in turn, the rows from the bottom, each from the left;
+         * at random where absent. */
+        readonly order?: "upward";
+        /** The chance a cell that may hold `value` takes it, every cell then
+         * decided in turn; absent, `value` alone is laid. */
+        readonly share?: number;
+        /** The least share of the open cells the answer gives `value`. */
+        readonly least?: number;
+      };
   readonly first?: FirstCells;
 }
 

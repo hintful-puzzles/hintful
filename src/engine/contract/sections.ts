@@ -55,6 +55,10 @@ export type NotApplicableReasons = { readonly [S in NotApplicableSection]?: stri
 export const SQUARE_GRID =
   "The grid is square, so it is the same shape either way round.";
 
+/** The `transposeParams` reason of a game played on a hexagon of rows. */
+export const HEXAGON =
+  "The grid is a hexagon whose rows lie across it, so turned on its side it would be a different shape.";
+
 export type SectionState =
   | { readonly kind: "implemented" }
   | { readonly kind: "notApplicable"; readonly reason: string }

@@ -1,20 +1,19 @@
 /**
- * Bricks behavioral tests (tiers 1 and 2.5): the generator and its tier gate, the
- * hex geometry, the input mapping (the one place a shear-coordinate bug hides),
- * completion/solve through a real `Midend`, findMistakes, and the render frames.
+ * Bricks, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is upstream's IDs read on
+ * the hexagon, its retired tier letter, the tiers a board opens at, the
+ * shear a press and the cursor undo, and a wrong brick outlined by Check &
+ * Save.
  */
+
 import { describe, expect, it } from "vitest";
-import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
-import {
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  descBadCharacter,
-  validateDesc,
-} from "../../engine/contract/desc-error.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
+import { DESC_NOT_UNIQUE } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import type { Point } from "../../engine/contract/types.ts";
-import { presetMenu } from "../../engine/game-id/param-label.ts";
+import { spaceOf } from "../../engine/fill/board.ts";
+import { encodeDesc } from "../../engine/fill/game-id.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
 import {
   CURSOR_DOWN,
@@ -22,687 +21,289 @@ import {
   CURSOR_RIGHT,
   CURSOR_UP,
   LEFT_BUTTON,
-  LEFT_DRAG,
   LEFT_RELEASE,
   MOD_CTRL,
   MOD_NUM_KEYPAD,
-  MOD_SHFT,
 } from "../../engine/input/pointer.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
-import {
-  describeAbsentTiers,
-  describeDealtTiers,
-} from "../../engine/testing/absent-tiers.ts";
-import { driveMidend } from "../../engine/testing/drive-midend.ts";
-import type { AnyGame } from "../../engine/testing/input-probe.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import {
-  DEFAULT_BACKGROUND,
-  renderScenario,
-} from "../../engine/testing/render-scenario.ts";
-import { repaintDifferential } from "../../engine/testing/repaint-differential.ts";
-import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { newBricksDesc } from "./generator.ts";
-import { bricksGame } from "./index.ts";
-import { COL_CLEAR, COL_CLEAR_MARK, offsets, PREFERRED_TILE_SIZE } from "./render.ts";
-import {
-  answerColors,
-  answerOf,
-  bricksValidate,
-  deductionFinishes,
-  findMistakes,
-  searchAnswers,
-} from "./solver.ts";
-import {
-  applyBounds,
-  type BricksMove,
-  type BricksParams,
-  type BricksState,
-  type BricksUi,
-  COL_MASK,
-  DIFF_RETIRED,
-  DIFF_UNREASONABLE,
-  decodeParams,
-  encodeDesc,
-  encodeParams,
-  F_BOUND,
-  F_EMPTY,
-  F_SHADE,
-  F_UNSHADE,
-  FE_ERROR,
-  gridSize,
-  newState,
-} from "./state.ts";
+import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import * as bricks from "../../generated/games/bricks/bricks.compiled.ts";
+import { game } from "../../generated/games/bricks/bricks.game.ts";
 
-interface Board {
-  w: number;
-  h: number;
-  diff: number;
-  desc: string;
-}
-/** Boards upstream's generator dealt, as [w, h, diff, desc]. */
-const boards: Board[] = (
-  [
-    [7, 6, 0, "2c1_3ab0c2_3fb2_2a5a3fb2a2a2"],
-    [7, 6, 1, "c3c4fd4bb4b2a3fb2_2b1"],
-    [7, 6, 2, "ga6c3ac3a2af3_0_3b2_4ag"],
-    [10, 8, 0, "a4c1dc2_1b3_0a3d3de3b2ab2c2ca2c2c0_2a2c3b3_2a2b3d"],
-    [10, 8, 1, "f1b1b5b3_3cj0c3b3bh2aa4b2c1a1b5e2c3a3d"],
-    [10, 8, 2, "c3b2c2b4b2a2_1ja3a2f1c3a5ce4c0_3a4b3b3aa3f2a"],
-    [4, 4, 0, "2b1c0c2_2b1"],
-    [5, 5, 1, "2b3ab4a3_3da4ca3b2"],
-    [8, 5, 2, "2c3cb5d3a6fd2_3b2a3d2"],
-    [6, 7, 1, "1b1bd3a3a3a1afa6db3_2a2_2e"],
-    [9, 6, 0, "2c2c1b3_2b3b3b2c2ae4_1b2b2c4ac2e"],
-    [12, 8, 2, "g2_1cb4a2b3c2a1i4_2d1b2cd4a2b2bb3b3f2b3b4d4i2b"],
-  ] as [number, number, number, string][]
-).map(([w, h, diff, desc]) => ({ w, h, diff, desc }));
-const FIX = boards[0]; // 7x6 Easy
-const FIX_PARAMS: BricksParams = { w: FIX.w, h: FIX.h, diff: FIX.diff };
-const FIX_ID = `${encodeParams(FIX_PARAMS, true)}:${FIX.desc}`;
+const SHADED = 1;
+const CLEAR = 2;
 
-const TS = 48; // PREFERRED_TILE_SIZE, already even
+/** Boards upstream's generator dealt, by their game IDs; `t` its Tricky. */
+const UPSTREAM = [
+  "7x6de:2c1_3ab0c2_3fb2_2a5a3fb2a2a2",
+  "7x6dn:c3c4fd4bb4b2a3fb2_2b1",
+  "7x6dt:ga6c3ac3a2af3_0_3b2_4ag",
+  "10x8de:a4c1dc2_1b3_0a3d3de3b2ab2c2ca2c2c0_2a2c3b3_2a2b3d",
+  "10x8dn:f1b1b5b3_3cj0c3b3bh2aa4b2c1a1b5e2c3a3d",
+  "10x8dt:c3b2c2b4b2a2_1ja3a2f1c3a5ce4c0_3a4b3b3aa3f2a",
+  "4x4de:2b1c0c2_2b1",
+  "5x5dn:2b3ab4a3_3da4ca3b2",
+  "8x5dt:2c3cb5d3a6fd2_3b2a3d2",
+  "6x7dn:1b1bd3a3a3a1afa6db3_2a2_2e",
+  "9x6de:2c2c1b3_2b3b3b2c2ae4_1b2b2c4ac2e",
+  "12x8dt:g2_1cb4a2b3c2a1i4_2d1b2cd4a2b2bb3b3f2b3b4d4i2b",
+];
 
-/** Pixel center of padded-grid cell (col, row) at the default tile size. */
-function center(state: BricksState, col: number, row: number): Point {
-  const { ox, oy } = offsets(state.h, TS);
-  const tx = col * TS + ox + row * (TS >> 1);
-  const ty = row * TS + oy;
-  return { x: tx + TS / 2, y: ty + TS / 2 };
-}
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
+};
 
-function press(
-  state: BricksState,
-  ui: BricksUi,
-  button: number,
-  x: number,
-  y: number,
-): BricksMove | null | typeof UI_UPDATE {
-  return bricksGame.interpretMove(
-    state,
-    ui,
-    preferredDrawState(bricksGame, state),
-    { x, y },
-    button,
+/** The store's cells inside the hexagon, by row. */
+const rowsOf = (b: { w: number; h: number; fixed: Uint8Array }, outside: Set<number>) =>
+  Array.from({ length: b.h }, (_, y) =>
+    Array.from({ length: b.w }, (_, x) => y * b.w + x).filter((c) => !outside.has(c)),
   );
-}
 
-function harness() {
-  const h = driveMidend(bricksGame);
-  const status = () => h.last("game-state-change")?.status ?? null;
-  return { m: h.midend, status };
-}
-
-describe("bricks params", () => {
-  it("encodes and decodes round-trip with difficulty", () => {
-    const p = decodeParams("10x8dt");
-    expect(p).toEqual({ w: 10, h: 8, diff: 2 });
-    expect(encodeParams(p, true)).toBe("10x8dt");
-    expect(encodeParams(p, false)).toBe("10x8");
+describe("bricks", () => {
+  it("holds a w by h hexagon in a store ⌈h/2⌉ − 1 wider, its corners holes", () => {
+    const board = loaded("4x4de:2b1c0c2_2b1");
+    expect([board.w, board.h]).toEqual([5, 4]);
+    const holes = new Set(board.dealt.hole.at);
+    // Each row holds the hexagon's four cells, the corners sheared off.
+    expect(rowsOf(board, holes).map((r) => r.length)).toEqual([4, 4, 4, 4]);
+    // The rows start at 1, 1, 0 and 0, each drawn half a tile right of the
+    // one above, so the left edge zigzags as a wall's does.
+    expect([...holes].sort((a, b) => a - b)).toEqual([0, 5, 14, 19]);
+    for (const c of holes)
+      expect([board.fixed[c], board.values[c]]).toEqual([1, CLEAR]);
+    // The numbers sit on the hexagon's cells, in reading order.
+    expect(Array.from(board.dealt.number.at)).toEqual([1, 4, 9, 13, 15, 18]);
+    expect(Array.from(board.dealt.number.v)).toEqual([2, 1, 0, 2, 2, 1]);
   });
 
-  it("reads a single dimension as square (upstream lenience)", () => {
-    expect(decodeParams("9")).toMatchObject({ w: 9, h: 9 });
-  });
-
-  describeAbsentTiers(bricksGame, ["2x2dn"]);
-
-  // Boards of six squares, which the tier gate once skipped.
-  describeDealtTiers(bricksGame, ["2x3dn", "3x2dn"], { deals: 20 });
-
-  // Two wide and tall, where a board once came out with no solution.
-  describeDealtTiers(bricksGame, ["2x4dn", "2x10de", "2x10dn"], { deals: 20 });
-});
-
-describe("bricks hex geometry", () => {
-  it("pads the width to w + ceil(h/2) - 1 and masks a w*h hexagon", () => {
-    const { w, h } = gridSize(FIX_PARAMS); // 7 + ceil(6/2) - 1 = 9
-    expect(w).toBe(9);
-    expect(h).toBe(6);
-    const grid = new Uint16Array(w * h);
-    applyBounds(w, h, grid);
-    const playable = grid.reduce((n, c) => n + (c & F_BOUND ? 0 : 1), 0);
-    expect(playable).toBe(FIX_PARAMS.w * FIX_PARAMS.h); // exactly 42
-  });
-});
-
-describe("bricks desc codec", () => {
-  it("validates and round-trips every sample desc", () => {
-    for (const f of boards) {
-      const p: BricksParams = { w: f.w, h: f.h, diff: f.diff };
-      expect(validateDesc(bricksGame, p, f.desc)).toBeNull();
-      const st = newState(p, f.desc);
-      expect(encodeDesc(st.grid, st.w, st.h)).toBe(f.desc);
-    }
-  });
-
-  it("rejects a clue out of range and a wrong cell count", () => {
-    expect(validateDesc(bricksGame, FIX_PARAMS, "8a")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(bricksGame, FIX_PARAMS, "a")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(bricksGame, { w: 2, h: 2, diff: 0 }, "zzzz")).toBe(
-      DESC_TOO_LONG,
-    );
-  });
-
-  it("refuses what encodeDesc never writes", () => {
-    const p: BricksParams = { w: 2, h: 2, diff: 0 };
-    expect(validateDesc(bricksGame, p, "1_0b")).toBeNull();
-    expect(Array.from(newState(p, "1_0b").grid.slice(0, 2))).toEqual([1, 0]);
-    // Characters the encoder never writes, anywhere.
-    expect(validateDesc(bricksGame, p, "1_0Ab")).toBe(descBadCharacter("A"));
-    expect(validateDesc(bricksGame, p, "^1_0b")).toBe(descBadCharacter("^"));
-    // A `_` anywhere but between two adjacent clues.
-    expect(validateDesc(bricksGame, p, "_1_0b")).toBe(descBadCharacter("_"));
-    expect(validateDesc(bricksGame, p, "1a_0a")).toBe(descBadCharacter("_"));
-    expect(validateDesc(bricksGame, p, "1_0b_")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(bricksGame, p, "1_0b,x")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(bricksGame, p, "10b")).toBe(DESC_OUT_OF_RANGE);
-  });
-});
-
-/** A state's one answer, as the colors a solve paints. */
-function solvedColors(st: BricksState): ReturnType<typeof answerColors> {
-  const answer = answerOf(st);
-  if (answer.kind !== "one") throw new Error(`bricks: ${answer.kind} answers`);
-  return answerColors(answer.solution);
-}
-
-describe("bricks solver", () => {
-  it("finds every decoded sample board its one answer", () => {
-    for (const f of boards) {
-      const st = newState({ w: f.w, h: f.h, diff: f.diff }, f.desc);
-      expect(answerOf(st).kind, f.desc).toBe("one");
-    }
-  });
-
-  // The lookahead `assume` makes is what keeps a board upstream's Normal
-  // dealt inside the budget: splitting on the first open square alone takes
-  // this one 47 positions.
-  it("searches upstream's 7x6 Normal board in 13 positions", () => {
-    const f = boards.find((x) => x.w === 7 && x.h === 6 && x.diff === 1);
-    if (!f) throw new Error("no 7x6 Normal board");
-    const st = newState({ w: f.w, h: f.h, diff: f.diff }, f.desc);
-    expect(searchAnswers(st, 13).kind).toBe("one");
-    expect(searchAnswers(st, 12).kind).toBe("out-of-reach");
-  });
-
-  it("a tricky board is not finished by the ladder alone", () => {
-    const tricky = boards.find((f) => f.diff === 2 && f.w * f.h > 6);
-    if (!tricky) throw new Error("no tricky board");
-    const st = newState({ w: tricky.w, h: tricky.h, diff: tricky.diff }, tricky.desc);
-    expect(deductionFinishes(st)).toBe(false);
-    expect(answerOf(st).kind).toBe("one");
-  });
-
-  it("flags three shaded in a horizontal row as invalid", () => {
-    const st = newState(FIX_PARAMS, FIX.desc);
-    // Bottom row (gravity-exempt): three consecutive playable cells.
-    const base = (st.h - 1) * st.w;
-    st.grid[base + 2] = F_SHADE;
-    st.grid[base + 3] = F_SHADE;
-    st.grid[base + 4] = F_SHADE;
-    expect(bricksValidate(st.grid, st.w, st.h)).toBe("invalid");
-  });
-
-  it("marks a brick resting on nothing only once neither square beneath can hold one", () => {
-    const st = newState(FIX_PARAMS, FIX.desc);
-    const { w, h, grid } = st;
-    // A playable square whose two squares beneath are playable too.
-    const playable = (i: number) => (grid[i] & COL_MASK) !== 0;
-    let c = -1;
-    for (let i = w; i < (h - 1) * w && c < 0; i++)
-      if (i % w > 0 && playable(i) && playable(i + w - 1) && playable(i + w)) c = i;
-    expect(c).toBeGreaterThan(-1);
-    grid[c] = F_SHADE;
-    grid[c + w - 1] = F_UNSHADE;
-    const errors = new Uint16Array(w * h);
-    bricksValidate(grid, w, h, errors);
-    expect(errors[c] & FE_ERROR).toBe(0);
-    grid[c + w] = F_UNSHADE;
-    bricksValidate(grid, w, h, errors);
-    expect(errors[c] & FE_ERROR).toBe(FE_ERROR);
-  });
-});
-
-describe("bricks findMistakes", () => {
-  it("flags a three-in-a-row and leaves a clean partial board clean", () => {
-    const clean = newState(FIX_PARAMS, FIX.desc);
-    expect(findMistakes(clean)).toEqual([]);
-
-    const bad = newState(FIX_PARAMS, FIX.desc);
-    const base = (bad.h - 1) * bad.w;
-    bad.grid[base + 2] = F_SHADE;
-    bad.grid[base + 3] = F_SHADE;
-    bad.grid[base + 4] = F_SHADE;
-    const flagged = new Set(findMistakes(bad).map((m) => m.index));
-    expect(flagged.has(base + 2)).toBe(true);
-    expect(flagged.has(base + 3)).toBe(true);
-    expect(flagged.has(base + 4)).toBe(true);
-  });
-});
-
-describe("bricks input", () => {
-  const firstBlank = (state: BricksState): { col: number; row: number; i: number } => {
-    for (let i = 0; i < state.w * state.h; i++) {
-      if ((state.grid[i] & COL_MASK) === F_EMPTY)
-        return { col: i % state.w, row: (i / state.w) | 0, i };
-    }
-    throw new Error("no blank cell");
-  };
-
-  it("left-click cycles a blank cell to shaded", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const ui = bricksGame.newUi(state);
-    const { col, row, i } = firstBlank(state);
-    const c = center(state, col, row);
-    expect(press(state, ui, LEFT_BUTTON, c.x, c.y)).toBe(UI_UPDATE);
-    const move = press(state, ui, LEFT_RELEASE, c.x, c.y);
-    expect(move).toMatchObject({ kind: "paint", cells: [{ index: i, to: "shade" }] });
-    const next = bricksGame.executeMove(state, move as BricksMove);
-    expect(next.grid[i]).toBe(F_SHADE);
-  });
-
-  it("a drag paints every crossed cell with one color", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const ui = bricksGame.newUi(state);
-    // Find two horizontally-adjacent blank cells.
-    let a = -1;
-    for (let i = 0; i < state.w * state.h - 1; i++) {
-      if (
-        (state.grid[i] & COL_MASK) === F_EMPTY &&
-        (state.grid[i + 1] & COL_MASK) === F_EMPTY &&
-        i % state.w < state.w - 1
-      ) {
-        a = i;
-        break;
-      }
-    }
-    expect(a).toBeGreaterThanOrEqual(0);
-    const ca = center(state, a % state.w, (a / state.w) | 0);
-    const cb = center(state, (a + 1) % state.w, (a / state.w) | 0);
-    press(state, ui, LEFT_BUTTON, ca.x, ca.y);
-    press(state, ui, LEFT_DRAG, cb.x, cb.y);
-    const move = press(state, ui, LEFT_RELEASE, cb.x, cb.y) as BricksMove;
-    expect(move.kind).toBe("paint");
-    if (move.kind !== "paint") throw new Error();
-    expect(move.cells.map((c) => c.index).sort((x, y) => x - y)).toEqual([a, a + 1]);
-    expect(move.cells.every((c) => c.to === "shade")).toBe(true);
-  });
-
-  it("keyboard place sets the cursor cell (no-op moves suppressed)", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const ui = bricksGame.newUi(state);
-    const { col, row, i } = firstBlank(state);
-    ui.cursor.visible = true;
-    ui.cursor.x = col;
-    ui.cursor.y = row;
-    const move = press(state, ui, 49 /* '1' */, 0, 0); // shade
-    expect(move).toMatchObject({ kind: "paint", cells: [{ index: i, to: "shade" }] });
-    // A '1' on an already-shaded cell is a no-op.
-    const shaded = bricksGame.executeMove(state, move as BricksMove);
-    expect(press(shaded, ui, 49, 0, 0)).toBeNull();
-  });
-
-  const playable = (state: BricksState, x: number, y: number) =>
-    x >= 0 &&
-    x < state.w &&
-    y >= 0 &&
-    y < state.h &&
-    (state.grid[y * state.w + x] & F_BOUND) === 0;
-
-  it("the number pad steps to each of a cell's six neighbors", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const pad = (digit: number) => MOD_NUM_KEYPAD | ("0".charCodeAt(0) + digit);
-    // Up and down have two neighbors each to choose from, and take the one
-    // that keeps the zigzag in its column: which one turns on the row.
-    const steps = (odd: boolean): [number, number, number][] => [
-      [8, odd ? 0 : 1, -1],
-      [2, odd ? -1 : 0, 1],
-      [4, -1, 0],
-      [6, 1, 0],
-      [7, 0, -1],
-      [9, 1, -1],
-      [1, -1, 1],
-      [3, 0, 1],
-    ];
-    const rows = new Set<number>();
-    for (let y = 1; y < state.h - 1; y++)
-      for (let x = 0; x < state.w; x++) {
-        if (rows.has(y & 1)) continue;
-        const moves = steps((y & 1) === 1);
-        if (!moves.every(([, dx, dy]) => playable(state, x + dx, y + dy))) continue;
-        rows.add(y & 1);
-        for (const [digit, dx, dy] of moves) {
-          const ui = bricksGame.newUi(state);
-          Object.assign(ui.cursor, { x, y, visible: true });
-          expect(press(state, ui, pad(digit), 0, 0), `the pad's ${digit}`).toBe(
-            UI_UPDATE,
-          );
-          expect({ x: ui.cursor.x, y: ui.cursor.y }, `the pad's ${digit}`).toEqual({
-            x: x + dx,
-            y: y + dy,
-          });
-        }
-      }
-    expect([...rows].sort()).toEqual([0, 1]);
-  });
-
-  it("Ctrl or Shift with a move never names a numbered cell", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const arrows = [CURSOR_UP, CURSOR_DOWN, CURSOR_LEFT, CURSOR_RIGHT];
-    let declined = 0;
-    let painted = 0;
-    for (let i = 0; i < state.w * state.h; i++) {
-      if (state.grid[i] & (F_BOUND | COL_MASK)) continue;
-      for (const mod of [MOD_CTRL, MOD_SHFT])
-        for (const arrow of arrows) {
-          const ui = bricksGame.newUi(state);
-          const from = { x: i % state.w, y: (i / state.w) | 0 };
-          Object.assign(ui.cursor, from, { visible: true });
-          const answer = press(state, ui, mod | arrow, 0, 0);
-          const stayed = ui.cursor.x === from.x && ui.cursor.y === from.y;
-          if (answer === null) {
-            // Nothing to paint and nowhere to go: the key is not the game's.
-            expect(stayed).toBe(true);
-            declined++;
-            continue;
-          }
-          if (answer === UI_UPDATE) continue;
-          if (answer.kind !== "paint") throw new Error("not a paint move");
-          expect(answer.cells.map((c) => state.grid[c.index] & COL_MASK)).not.toContain(
-            0,
-          );
-          painted++;
-        }
-    }
-    // Both arms were reached: a numbered cell at the board's edge, and one
-    // with an empty cell beside it.
-    expect({ declined: declined > 0, painted: painted > 0 }).toEqual({
-      declined: true,
-      painted: true,
-    });
-  });
-});
-
-describe("bricks completion and solve (through a real Midend)", () => {
-  it("Solve completes the board as solved-with-help", () => {
-    const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeNull();
-    expect(m.solve()).toBeNull();
-    expect(status()).toBe("solved-with-help");
-    const text = m.formatAsText();
-    expect(typeof text).toBe("string");
-    expect(text).not.toContain("."); // no cell left empty
-  });
-
-  it("manually filling the solution completes the board, and the win flash sweeps it", () => {
-    const st = newState(FIX_PARAMS, FIX.desc);
-    const colors = solvedColors(st);
-    const cells = [];
-    for (let i = 0; i < st.w * st.h; i++) {
-      if (!(st.grid[i] & COL_MASK)) continue;
-      cells.push({ index: i, to: colors[i] });
-    }
-    const done = bricksGame.executeMove(st, { kind: "paint", cells });
-    expect(bricksGame.status(st)).toBe("ongoing");
-    expect(bricksGame.status(done)).toBe("solved");
-
-    // The cells filled in the flash's color, as their origins: a clue's cell
-    // lights like any other. Lit is either tone of the flash.
-    const tones = new Set<number>();
-    const isLit = (color: number): boolean => {
-      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
-      tones.add(color);
-      return true;
-    };
-    const palette = bricksGame.colors([0.9, 0.9, 0.9]);
-    const paint = (flash: Flash): string[] => {
-      const dr = new RecordingDrawing(palette);
-      const ds = bricksGame.newDrawState(done, PREFERRED_TILE_SIZE);
-      bricksGame.redraw(dr, ds, {
-        prev: null,
-        state: done,
-        dir: 1,
-        ui: bricksGame.newUi(done),
-        animTime: 0,
-        flash,
-      });
-      return dr.ops.flatMap((o) =>
-        o.op === "rect" && isLit(o.color) ? [`${o.x},${o.y}`] : [],
+  it("reads every upstream board, Tricky's as Unreasonable, and writes its desc back", () => {
+    for (const id of UPSTREAM) {
+      const me = new Midend(game);
+      expect(me.newGameFromId(id), id).toBeNull();
+      const [params, desc] = id.split(":");
+      expect(me.getParams(), id).toMatch(/d[en]$/);
+      expect(game.encodeParams(game.decodeParams(params), true)).toBe(
+        params.replace(/dt$/, "dn"),
       );
-    };
-    expect(paint(NO_FLASH)).toEqual([]);
-    const clues = done.grid.filter((c) => !(c & (COL_MASK | F_BOUND))).length;
-    expect(clues).toBeGreaterThan(0);
-    const run = winFlashRun(paint, (lit) => lit);
-    // A cell's place in the sweep is its drawn origin's, x less y: the rows
-    // are sheared, so it is not the grid's.
-    expectWinFlashTravels(
-      run,
-      cells.length + clues,
-      (c) => Number(c.split(",")[0]) - Number(c.split(",")[1]),
-    );
-    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
-  });
-});
-
-describe("bricks generator", () => {
-  it("produces a uniquely-solvable board for each preset", () => {
-    for (const p of [
-      { w: 7, h: 6, diff: 0 },
-      { w: 7, h: 6, diff: 1 },
-    ] as BricksParams[]) {
-      const { desc } = newBricksDesc(p, randomNew(`bricks-unit-${p.diff}`));
-      expect(validateDesc(bricksGame, p, desc)).toBeNull();
-      expect(answerOf(newState(p, desc)).kind).toBe("one");
+      const board = loaded(id);
+      const solved = game.solve(board, board);
+      if (!solved.ok) throw new Error(`${id}: ${solved.error}`);
+      expect(game.status(game.executeMove(board, solved.move)), id).toBe("solved");
+      expect(encodeDesc(bricks.deal, spaceOf(bricks, board), board.dealt)).toBe(desc);
     }
   });
 
-  // A board two squares wide and four or more tall once came out with no
-  // solution about half the time, and its own ID was then refused.
-  describe("a board at the smallest width or height loads from its ID", () => {
-    const DEALS = 25;
-    it.each([
-      "2x2de",
+  it("deals each tier, the smallest boards included, and opens each at its tier", () => {
+    for (const id of [
+      "6x7de",
+      "6x7dn",
+      "8x10de",
       "2x3dn",
-      "2x4de",
-      "2x4dn",
-      "2x5dn",
-      "2x7dn",
+      "3x2dn",
       "2x10de",
-      "2x10dn",
-      "4x2dn",
-      "10x2de",
-    ])(`%s, ${DEALS} deals`, (cell) => {
-      const p = decodeParams(cell);
-      const { m } = harness();
-      for (let seed = 0; seed < DEALS; seed++) {
-        const { desc } = newBricksDesc(p, randomNew(`bricks-narrow-${cell}-${seed}`));
-        expect(m.newGameFromId(`${cell}:${desc}`), desc).toBeNull();
-      }
-    });
-  });
-
-  // The tier gate. Upstream probed at Easy whatever tier was asked for, so
-  // Normal was gated correctly by accident and Tricky not at all.
-  describe("difficulty tiers bind", () => {
-    for (const [w, h] of [
-      [7, 6],
-      [10, 8],
+      "2x4dn",
     ]) {
-      it(`${w}x${h} Unreasonable needs the search, not the ladder`, () => {
-        const p: BricksParams = { w, h, diff: DIFF_UNREASONABLE };
-        const { desc } = newBricksDesc(p, randomNew(`bricks-tier-${w}x${h}`));
-        const st = newState(p, desc);
-        expect(answerOf(st).kind).toBe("one");
-        expect(deductionFinishes(st)).toBe(false);
-      });
-    }
-
-    it("refuses to generate Tricky, for which no board exists", () => {
-      const p: BricksParams = { w: 7, h: 6, diff: DIFF_RETIRED };
-      expect(paramsError(bricksGame, p, true)).toBe(
-        "Difficulty must be one of Easy, Unreasonable.",
-      );
-      // Loading an existing Tricky description still works.
-      expect(paramsError(bricksGame, p, false)).toBeNull();
-      // And the generator refuses immediately rather than spinning its retry
-      // budget on a tier that can never be satisfied.
-      expect(() => newBricksDesc(p, randomNew("bricks-tricky"))).toThrow(
-        /no board requires difficulty/,
-      );
-    });
-
-    it("offers only the difficulties it can generate", () => {
-      const titles = (presetMenu(bricksGame).submenu ?? []).map((e) => e.title);
-      expect(titles).toEqual([
-        "6x7 Easy",
-        "6x7 Unreasonable",
-        "8x10 Easy",
-        "8x10 Unreasonable",
-      ]);
-    });
-
-    // `DIFF_NAMES` does not name upstream's third tier, so
-    // `difficulty-contract.test.ts`, which iterates the declared tiers, does
-    // not cover it. This does: the difficulty character still round-trips, so
-    // no game ID or saved game changes meaning.
-    it("still round-trips the unnamed third tier through a game ID", () => {
-      const p = decodeParams("10x8dt");
-      expect(p.diff).toBe(DIFF_RETIRED);
-      expect(encodeParams(p, true)).toBe("10x8dt");
-    });
-  });
-});
-
-// A game ID or a save written while upstream's Tricky was a tier carries `dt`.
-// The tier is retired and has no name, so a board left at it is one the midend
-// takes to permit no search, and its hint throws where it should say that
-// deduction has run out.
-describe("a bricks board loaded under the retired tier letter", () => {
-  it.each([
-    "6x7de",
-    "6x7dn",
-  ])("takes the tier it needs, as a %s board does", (dealt) => {
-    const { desc } = newBricksDesc(
-      decodeParams(dealt),
-      randomNew(`bricks-retired-${dealt}`),
-    );
-    const m = new Midend(bricksGame);
-    expect(m.newGameFromId(`6x7dt:${desc}`)).toBeNull();
-    expect(m.getParams()).toBe(dealt);
-  });
-});
-
-describe("bricks rendering (tier 2.5)", () => {
-  it("draws the opening frame with clue numbers", () => {
-    const result = renderScenario({ game: bricksGame, id: FIX_ID });
-    const ops = result.recording.ops;
-    expect(ops.length).toBeGreaterThan(0);
-    expect(ops.some((o) => o.op === "text")).toBe(true);
-    expect(ops).toMatchSnapshot();
-  });
-
-  it("shows a red error overlay for a three-in-a-row via Check & Save", () => {
-    // Three consecutive *playable* cells in one row, shaded — findMistakes
-    // reports the violation and the overlay reds those cells.
-    const st = newState(FIX_PARAMS, FIX.desc);
-    let run3 = -1;
-    for (let i = 0; i < st.w * st.h - 2 && run3 < 0; i++) {
-      const col = i % st.w;
-      if (
-        col <= st.w - 3 &&
-        (st.grid[i] & COL_MASK) === F_EMPTY &&
-        (st.grid[i + 1] & COL_MASK) === F_EMPTY &&
-        (st.grid[i + 2] & COL_MASK) === F_EMPTY
-      ) {
-        run3 = i;
+      const p = game.decodeParams(id);
+      for (const seed of ["a", "b"]) {
+        const { desc } = game.newDesc(p, randomNew(`bricks-${id}-${seed}`));
+        const board = game.newState(p, desc);
+        const solved = game.solve(board, board);
+        if (!solved.ok) throw new Error(`${id}:${desc}: ${solved.error}`);
+        const done = game.executeMove(board, solved.move);
+        expect(game.status(done), `${id}:${desc}`).toBe("solved");
+        // At least two squares in five of the hexagon are bricks.
+        const bricks = Array.from(done.values).filter((v) => v === SHADED).length;
+        expect(bricks, `${id}:${desc}`).toBeGreaterThanOrEqual(0.4 * p.w * p.h);
+        const me = new Midend(game);
+        expect(me.newGameFromId(`${id.slice(0, -2)}:${desc}`)).toBeNull();
+        expect(me.getParams(), desc).toBe(id);
       }
     }
-    expect(run3).toBeGreaterThanOrEqual(0);
-    const moves: BricksMove[] = [
-      {
-        kind: "paint",
-        cells: [
-          { index: run3, to: "shade" },
-          { index: run3 + 1, to: "shade" },
-          { index: run3 + 2, to: "shade" },
-        ],
-      },
-    ];
-    const result = renderScenario({
-      game: bricksGame,
-      id: FIX_ID,
-      moves,
-      showMistakes: true,
-    });
-    expect(result.mistakeCount).toBeGreaterThan(0);
-    expect(
-      result.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
-    ).toBe(true);
   });
 
-  it("draws a cell made clear as the clear square, a faint cross on a surface of its own", () => {
-    const st = newState(FIX_PARAMS, FIX.desc);
-    const cell = st.grid.findIndex((c) => (c & COL_MASK) === F_EMPTY);
-    const { recording } = renderScenario({
-      game: bricksGame,
-      id: FIX_ID,
-      moves: [{ kind: "paint", cells: [{ index: cell, to: "unshade" }] }],
-    });
-    const { ops } = recording;
-    expect(ops.filter((o) => o.op === "rect" && o.color === COL_CLEAR)).toHaveLength(1);
-    expect(
-      ops.filter((o) => o.op === "line" && o.color === COL_CLEAR_MARK),
-    ).toHaveLength(2);
+  it("refuses only the 2x2 Unreasonable board, which no deal has, and one with several answers", () => {
+    const refused = (s: string) => paramsError(game, game.decodeParams(s), true);
+    expect(refused("2x2de")).toBeNull();
+    expect(refused("2x2dn")).toMatch(/is Unreasonable/);
+    expect(refused("2x3dn")).toBeNull();
+    expect(new Midend(game).newGameFromId("4x4:p")).toBe(DESC_NOT_UNIQUE);
   });
 
-  it("draws a brick and a cross the answer contradicts in the error color, on a board already drawn", () => {
-    const st = newState(FIX_PARAMS, FIX.desc);
-    // The first undecided cell, entered each way: one way is right.
-    const cell = st.grid.findIndex((c) => (c & COL_MASK) === F_EMPTY);
-    const shaded = solvedColors(st)[cell] === "shade";
-    const errorOps = (to: "shade" | "unshade"): string[] => {
-      const { midend } = renderScenario({
-        game: bricksGame,
-        id: FIX_ID,
-        moves: [{ kind: "paint", cells: [{ index: cell, to }] }],
-      });
-      // The board is on screen with nothing red, then the check runs, so the
-      // overlay has to repaint a cell whose own value did not change.
-      const settled = new RecordingDrawing(midend.getColorPalette(DEFAULT_BACKGROUND));
-      midend.redraw(settled);
-      expect(settled.ops).toEqual([]);
-      midend.check();
-      const checked = new RecordingDrawing(midend.getColorPalette(DEFAULT_BACKGROUND));
-      midend.redraw(checked);
-      return checked.ops
-        .filter((o) => "color" in o && o.color === COL_ERROR)
-        .map((o) => o.op);
+  it("undoes the shear: a press lands on the cell drawn under it, and a corner takes none", () => {
+    let board = loaded("4x4de:2b1c0c2_2b1");
+    const ui = game.newUi(board);
+    const ds = preferredDrawState(game, board);
+    const press = (x: number, y: number) => {
+      const p = game.targetVerbs?.geometry.pointAt(board, ds, { x, y }, ui);
+      if (p === undefined) throw new Error("no geometry");
+      const m = game.interpretMove(board, ui, ds, p, LEFT_BUTTON);
+      game.interpretMove(board, ui, ds, p, LEFT_RELEASE);
+      if (m !== null && m !== UI_UPDATE) board = game.executeMove(board, m);
     };
-    expect(errorOps(shaded ? "shade" : "unshade")).toEqual([]);
-    // A cross is two strokes, and a brick is whatever the shared piece draws.
-    // A clue the entry starves or overfills may turn red beside it.
-    const marks = errorOps(shaded ? "unshade" : "shade");
-    if (shaded) expect(marks.filter((op) => op === "line")).toHaveLength(2);
-    else expect(marks.filter((op) => op !== "text").length).toBeGreaterThan(0);
+    // Row 2's first cell is the store's first, row 0's third its fourth;
+    // neither holds a number.
+    press(0, 2);
+    press(3, 0);
+    expect(board.values[2 * 5]).toBe(SHADED);
+    expect(board.values[3]).toBe(SHADED);
+    const ts = ds.tileSize;
+    const at = (x: number, y: number) => {
+      const p = game.targetVerbs?.geometry.pointAt(board, ds, { x, y }, ui);
+      if (p === undefined) throw new Error("no geometry");
+      return p;
+    };
+    // A tile left of row 2's first cell is no cell: the hexagon's edge.
+    const edge = at(0, 2);
+    expect(
+      game.targetVerbs?.geometry.pointerTarget(
+        board,
+        ds,
+        { x: edge.x - ts, y: edge.y },
+        ui,
+      ),
+    ).toBeNull();
+    // Each row is drawn half a tile right of the one above.
+    expect(at(1, 1).x - at(1, 0).x).toBe(ts >> 1);
   });
 
-  // A gravity diamond on the board's left edge lands a quarter on the ground
-  // beside it, which only the edge square repaints. The collection-wide run's
-  // own deal never puts one there, so this board and event stream do: with
-  // the ground repaint gone, 171 px of diamond outlive their flag.
-  it("takes an edge diamond away whole, ground included", () => {
-    const run = repaintDifferential(
-      bricksGame as unknown as AnyGame,
-      "bricks-0",
-      60,
-      "6x7de:2b4ba5b3_0_3eb3b2c2b3d2b2c",
-    );
-    expect(run.mismatch, JSON.stringify(run.mismatch)).toBeNull();
-    expect(run.frames).toBeGreaterThan(60);
+  it("steps the cursor round a cell's six neighbors and keeps it on the hexagon", () => {
+    const board = loaded("4x4de:2b1c0c2_2b1");
+    const ui = game.newUi(board);
+    const ds = preferredDrawState(game, board);
+    const key = (button: number) => {
+      game.interpretMove(board, ui, ds, { x: -1, y: -1 }, button);
+      return [ui.cursor.x, ui.cursor.y];
+    };
+    const pad = (d: number) => key(MOD_NUM_KEYPAD | (48 + d));
+    // The first key shows the cursor; park it on (2, 1).
+    ui.cursor = { x: 2, y: 1, visible: true };
+    expect(pad(6)).toEqual([3, 1]);
+    expect(pad(4)).toEqual([2, 1]);
+    // 7 and 3 are straight up and down in the store; 9 and 1 the diagonals
+    // across the shear.
+    expect(pad(3)).toEqual([2, 2]);
+    expect(pad(7)).toEqual([2, 1]);
+    expect(pad(1)).toEqual([1, 2]);
+    expect(pad(9)).toEqual([2, 1]);
+    // Up and Down zigzag in the column the cursor is drawn in.
+    expect(key(CURSOR_DOWN)).toEqual([1, 2]);
+    expect(key(CURSOR_UP)).toEqual([2, 1]);
+    // Left stops at the row's first cell, which the shear moves.
+    ui.cursor = { x: 1, y: 0, visible: true };
+    expect(key(CURSOR_LEFT)).toEqual([1, 0]);
+    ui.cursor = { x: 3, y: 3, visible: true };
+    expect(key(CURSOR_RIGHT)).toEqual([3, 3]);
   });
+
+  it("strokes along a number pad step, and a digit off the pad still paints", () => {
+    let board = loaded("4x4de:2b1c0c2_2b1");
+    const ui = game.newUi(board);
+    const ds = preferredDrawState(game, board);
+    const send = (button: number) => {
+      const m = game.interpretMove(board, ui, ds, { x: -1, y: -1 }, button);
+      if (m !== null && m !== UI_UPDATE) board = game.executeMove(board, m);
+    };
+    ui.cursor = { x: 2, y: 3, visible: true };
+    // Ctrl with the pad's 7 steps straight up, and clears the cells it
+    // leaves and enters.
+    send(MOD_NUM_KEYPAD | MOD_CTRL | 55);
+    expect([ui.cursor.x, ui.cursor.y]).toEqual([2, 2]);
+    expect([board.values[3 * 5 + 2], board.values[2 * 5 + 2]]).toEqual([CLEAR, CLEAR]);
+    // The main row's 1 shades, where the pad's 1 would have moved.
+    send(49);
+    expect(board.values[2 * 5 + 2]).toBe(SHADED);
+    expect([ui.cursor.x, ui.cursor.y]).toEqual([2, 2]);
+  });
+
+  it("reads a run however it is split, and refuses a number past 7", () => {
+    const board = loaded("6x7:a1b2ad2a0a4b3fa3b4ab5a5a1e");
+    const top = rowsOf(board, new Set(board.dealt.hole.at))[0];
+    expect(top.map((c) => board.dealt.number.valueAt[c])).toEqual([
+      -1, 1, -1, -1, 2, -1,
+    ]);
+    expect(new Midend(game).newGameFromId("6x7:a8b2ad2a0a4b3fa3b4ab5a5a1e")).toMatch(
+      /range/,
+    );
+  });
+
+  it("reads a 7 as a hole inside the hexagon: a clear cell that counts nothing", () => {
+    const board = loaded("4x4de:2b1c7c2_2b1");
+    expect(Array.from(board.dealt.number.at)).toEqual([1, 4, 13, 15, 18]);
+    expect(board.dealt.hole.at).toContain(9);
+    expect([board.fixed[9], board.values[9]]).toEqual([1, CLEAR]);
+  });
+
+  it("carries the hint on from the 2 it began with", () => {
+    const plan = game.hint.plan(loaded("4x4de:2b1c0c2_2b1"));
+    if (!plan?.ok) throw new Error("no hint");
+    expect(plan.steps.slice(0, 2).map((s) => [s.rung, s.move.set])).toEqual([
+      ["undercount", [2, SHADED]],
+      ["undercount", [6, SHADED]],
+    ]);
+    expect(plan.steps[0].explanation).toMatch(/^The outlined 2 beside this cell/);
+  });
+
+  it("counts the numbers left", () => {
+    const board = loaded(UPSTREAM[0]);
+    expect(game.statusbarText?.(board, game.newUi(board))).toBe("Clues left: 13");
+    const solved = game.solve(board, board);
+    if (!solved.ok) throw new Error("no answer");
+    const done = game.executeMove(board, solved.move);
+    expect(game.statusbarText?.(done, game.newUi(done))).toBe("");
+  });
+
+  it("starts the cursor on the hexagon's first cell", () => {
+    const ui = game.newUi(loaded("4x4de:2b1c0c2_2b1"));
+    expect([ui.cursor.x, ui.cursor.y]).toEqual([1, 0]);
+  });
+
+  it("outlines a brick Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = UPSTREAM[0];
+    const fresh = loaded(id);
+    const solved = game.solve(fresh, fresh);
+    if (!solved.ok) throw new Error("no answer");
+    const answer = game.executeMove(fresh, solved.move).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < answer.length; c++) {
+      if (fresh.fixed[c]) continue;
+      const moves = [{ set: [c, answer[c] === SHADED ? CLEAR : SHADED] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
+    }
+    throw new Error("no wrong brick that breaks no rule");
+  });
+});
+
+/** A position for every kind of step. */
+describeHintPins({
+  game,
+  params: [game.decodeParams("6x7de"), game.decodeParams("8x10de")],
+  pins: {
+    /** Held on 1006 of 1111 positions walked. */
+    strandSupport: { id: "6x7de:e3fc2ba2c3c4b4a4b2f", moves: [{ set: [17, 1] }] },
+    /** Held on 1071 of 1111 positions walked. */
+    undercount: "6x7de:e3fc2ba2c3c4b4a4b2f",
+    /** Held on 771 of 1111 positions walked. */
+    three: {
+      id: "6x7de:1_3b2aff3b3a0e3_3a3c1b2b",
+      moves: [{ set: [12, 1] }, { set: [5, 1] }, { set: [13, 1] }, { set: [55, 1] }],
+    },
+    /** Held on 957 of 1111 positions walked. */
+    unsupported: "6x7de:fa2a3bd2a2_3b2ae3a5a5bf",
+    /** Held on 986 of 1111 positions walked. */
+    overcount: {
+      id: "6x7de:1_3b2aff3b3a0e3_3a3c1b2b",
+      moves:
+        '[{"set":[12,1]},{"set":[5,1]},{"set":[13,1]},{"set":[55,1]},{"set":[14,2]},{"set":[20,2]},{"set":[21,1]},{"set":[30,1]},{"set":[37,2]},{"set":[38,1]},{"set":[47,1]}]',
+    },
+  },
 });

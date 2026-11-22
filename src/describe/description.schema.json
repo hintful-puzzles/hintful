@@ -337,7 +337,19 @@
           "additionalProperties": false,
           "properties": {
             "w": { "$ref": "#/$defs/formula" },
-            "h": { "$ref": "#/$defs/formula" }
+            "h": { "$ref": "#/$defs/formula" },
+            "hexagon": {
+              "type": "object",
+              "required": ["outside"],
+              "additionalProperties": false,
+              "properties": {
+                "outside": {
+                  "type": "string",
+                  "description": "The one-valued clue kind at a cell that each cell of the store outside the hexagon holds: dealt there and nowhere else, and never written in the desc."
+                }
+              },
+              "description": "The board is a hexagon `w` cells wide and `h` high, each row half a cell right of the one below, stored as upstream's unreleased bricks.c does: a grid half its height wider, its two corners outside. It is drawn sheared, the pointer and the arrows read it so, and the numpad's 7, 9, 1 and 3 step along its diagonals."
+            }
           }
         },
         "slots": {
@@ -1103,6 +1115,12 @@
                     "type": "object",
                     "propertyNames": { "pattern": "^[A-Z]$" },
                     "additionalProperties": { "type": "string" }
+                  },
+                  "also": {
+                    "description": "By number, a one-valued clue kind at a cell written as that number, past the segment's own kind's largest (Bricks' unknown number, `7`).",
+                    "type": "object",
+                    "propertyNames": { "pattern": "^[0-9]+$" },
+                    "additionalProperties": { "type": "string" }
                   }
                 }
               },
@@ -1132,6 +1150,12 @@
             "letter": { "type": "string", "pattern": "^[a-z]$" },
             "tier": { "type": "string" }
           }
+        },
+        "tierAliases": {
+          "type": "object",
+          "description": "Retired tier letters older game IDs write after `d`, each read as the tier it names and never written (Bricks' `t`, upstream's Tricky, which dealt only Normal boards).",
+          "propertyNames": { "pattern": "^[a-z]$" },
+          "additionalProperties": { "type": "string" }
         },
         "deal": {
           "type": "object",
@@ -1285,7 +1309,25 @@
                           "type": "object",
                           "required": ["value"],
                           "additionalProperties": false,
-                          "properties": { "value": { "type": "integer", "minimum": 1 } }
+                          "properties": {
+                            "value": { "type": "integer", "minimum": 1 },
+                            "order": {
+                              "enum": ["upward"],
+                              "description": "The cells taken in turn, and not at random: the rows from the bottom, each from the left (Bricks' wall, laid on what is below it)."
+                            },
+                            "share": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 1,
+                              "description": "The chance a cell that may still hold `value` takes it; otherwise it takes another value it may hold, and every cell is decided in turn."
+                            },
+                            "least": {
+                              "type": "number",
+                              "exclusiveMinimum": 0,
+                              "maximum": 1,
+                              "description": "The least share of the cells no clue fixes that the answer gives `value`: a sample short of it is drawn again."
+                            }
+                          }
                         }
                       ]
                     },

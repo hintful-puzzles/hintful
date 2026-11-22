@@ -69,7 +69,12 @@ import {
 import { NOTHING_TO_CLEAR, textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../render/win-wave.ts";
-import { clueAt, type Partition } from "../solve/describe-runtime.ts";
+import {
+  clueAt,
+  hexShift,
+  inHexagon,
+  type Partition,
+} from "../solve/describe-runtime.ts";
 import { type FillMistake, rulesOf } from "./answer.ts";
 import {
   type Clues,
@@ -437,6 +442,22 @@ export function fillRender<C extends Clues<C>>(
   const start = (ts: number): number => (labelStart === undefined ? 1 : ts);
   const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : 1);
   const coord = (n: number, ts: number): number => n * ts + start(ts);
+  // A hexagon's rows are drawn sheared, each half a tile right of the one
+  // above, its store's corners not at all.
+  const hexagon = module.hexagon !== undefined;
+  /** The left of cell `(x, y)` on a board `h` high. */
+  const cellX = (x: number, y: number, h: number, ts: number): number =>
+    coord(x, ts) + (hexagon ? hexShift(y, h, ts) : 0);
+  const drawn = (b: { w: number; h: number }, x: number, y: number): boolean =>
+    !hexagon || inHexagon(b.w, b.h, x, y);
+  /** Which outlined cells share a side: on a hexagon only a row's, since a
+   * cell overlaps those above and below it by half. */
+  const sides = hexagon
+    ? { joinEvidence: (a: { y: number }, b: { y: number }) => a.y === b.y }
+    : {};
+  /** The tile size a board is drawn at: even on a hexagon, so its rows shift
+   * by exactly half a tile. */
+  const tileOf = (ts: number): number => (hexagon ? ts & ~1 : ts);
 
   function colors(bg: Color): Color[] {
     const out = rolePalette(bg);
@@ -559,8 +580,8 @@ export function fillRender<C extends Clues<C>>(
   function drawTile(
     dr: GameDrawing,
     ts: number,
-    x: number,
-    y: number,
+    // The cell, on a board `h` high.
+    [x, y, h]: readonly [number, number, number],
     word: number,
     hintWord: number,
     lineWord: number,
@@ -573,7 +594,7 @@ export function fillRender<C extends Clues<C>>(
     anim: { readonly from: number; readonly frac: number } | null = null,
   ): void {
     const v = word & 0xff;
-    const tx = coord(x, ts);
+    const tx = cellX(x, y, h, ts);
     const ty = coord(y, ts);
     const tile = { x: tx, y: ty, w: ts, h: ts };
     const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
@@ -692,7 +713,7 @@ export function fillRender<C extends Clues<C>>(
     // it shows on a cell the step also rings. On a dark piece the circle
     // takes the number's own ink: the evidence color against it is a
     // difference of hue with little of lightness.
-    const band = markBand(ts, x, y, part?.walls ?? null);
+    const band = markBand(ts, [x, y, h], part?.walls ?? null);
     drawMarkSides(dr, band, (hintWord >> BLOCK_SHIFT) & MARK_ALL, COL_HINT_OUTLINE);
     if (hintWord & HINT_NUMBER) {
       const center = numberText(ts, tx, ty).origin;
@@ -734,11 +755,10 @@ export function fillRender<C extends Clues<C>>(
    * the line between two cells would read as a wall. */
   const markBand = (
     ts: number,
-    x: number,
-    y: number,
+    [x, y, h]: readonly [number, number, number],
     walls: number | null,
   ): MarkBand => {
-    const box = { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts };
+    const box = { x: cellX(x, y, h, ts), y: coord(y, ts), w: ts, h: ts };
     return {
       box: walls === null ? box : walledBoxes(ts, box.x, box.y, walls)[1],
       outer: 0,
@@ -777,7 +797,7 @@ export function fillRender<C extends Clues<C>>(
         ? { x: mx - long / 2, y: my - short / 2, w: long, h: short }
         : { x: mx - short / 2, y: my - long / 2, w: short, h: long };
     // Its width alone, which walls do not change.
-    const band = markBand(ts, x, y, null);
+    const band = markBand(ts, [x, y, 0], null);
     dr.drawRing(box, NOTHING_TO_CLEAR, Math.max(2, band.outer + band.inner), {
       room,
       inside: (ink) => {
@@ -853,11 +873,21 @@ export function fillRender<C extends Clues<C>>(
 
     if (ds.tiles.firstFrame()) {
       // A walled board's frame is a wall: each cell paints its own top and
-      // left, so this is the bottom and right of the last row and column.
-      dr.drawRect(
-        { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
-        ds.parts === null ? COL_GRID : COL_WALL,
-      );
+      // left, so this is the bottom and right of the last row and column. A
+      // hexagon's edge is each of its cells' own.
+      if (hexagon) {
+        for (let y = 0; y < h; y++)
+          for (let x = 0; x < w; x++)
+            if (drawn(state, x, y))
+              dr.drawRect(
+                { x: cellX(x, y, h, ts), y: coord(y, ts), w: ts + 1, h: ts + 1 },
+                COL_GRID,
+              );
+      } else
+        dr.drawRect(
+          { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
+          ds.parts === null ? COL_GRID : COL_WALL,
+        );
       if (labelStart !== undefined) {
         const size = Math.floor((ts * 2) / 5);
         const font = {
@@ -934,25 +964,28 @@ export function fillRender<C extends Clues<C>>(
         const at = c.y * w + c.x;
         const { kind } = numberAt(state, at) as { kind: keyof C & string };
         hintWord[at] |= HINT_NUMBER;
-        const cells = (clueCells[kind] ?? (() => []))(sp, at);
+        // A hexagon's corners are no cells a number counts on the board.
+        const cells = (clueCells[kind] ?? (() => []))(sp, at).filter((d) =>
+          drawn(state, d % w, Math.floor(d / w)),
+        );
         const block = new MarkOutlines(
           [],
           cells.map((d) => ({ x: d % w, y: Math.floor(d / w) })),
-          {},
+          sides,
         );
         for (const d of cells)
           hintWord[d] |= block.evidenceSides(d % w, Math.floor(d / w)) << BLOCK_SHIFT;
       }
     }
     const markStyle: HintMarkStyle = {
-      band: (x, y) => markBand(ts, x, y, ds.parts?.walls[y * w + x] ?? null),
+      band: (x, y) => markBand(ts, [x, y, h], ds.parts?.walls[y * w + x] ?? null),
       // A ring keeps its cell's number inside it and its neighbors' outside;
       // the line clues lie past any ring's reach.
       text: (x, y) => {
         if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
         const n = numberAt(state, y * w + x);
         if (n === null) return NOTHING_TO_CLEAR;
-        const text = numberText(ts, coord(x, ts), coord(y, ts));
+        const text = numberText(ts, cellX(x, y, h, ts), coord(y, ts));
         return {
           enclose: [
             textBox(
@@ -966,6 +999,7 @@ export function fillRender<C extends Clues<C>>(
       },
       words: marks,
       evidenceColor: COL_HINT_OUTLINE,
+      ...sides,
     };
     const outlines = new MarkOutlines(targets, area, markStyle);
     const ringed = new Set(targets.map((c) => c.y * w + c.x));
@@ -996,6 +1030,7 @@ export function fillRender<C extends Clues<C>>(
     const { parts } = ds;
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
+        if (!drawn(state, x, y)) continue;
         const i = y * w + x;
         let k = word[i] | shown.values[i] | (state.fixed[i] ? FIXED : 0);
         if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
@@ -1010,9 +1045,9 @@ export function fillRender<C extends Clues<C>>(
         // A growing piece is no key's: its tile is drawn every frame.
         if (before !== null && before[i] !== shown.values[i]) {
           ds.tiles.forget(i);
-          drawTile(dr, ts, x, y, k, hk, lk, n, part, { from: before[i], frac });
+          drawTile(dr, ts, [x, y, h], k, hk, lk, n, part, { from: before[i], frac });
         } else if (ds.tiles.changed(i, k, hk, lk))
-          drawTile(dr, ts, x, y, k, hk, lk, n, part);
+          drawTile(dr, ts, [x, y, h], k, hk, lk, n, part);
       }
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
@@ -1054,13 +1089,17 @@ export function fillRender<C extends Clues<C>>(
   return {
     preferredTileSize: PREFERRED_TILE_SIZE,
     origin: start,
-    computeSize: ({ w, h }, ts) => ({
-      w: start(ts) + end(ts) + ts * w,
-      h: start(ts) + end(ts) + ts * h,
-    }),
+    // A hexagon's rows reach half a tile past its width.
+    computeSize: ({ w, h }, size) => {
+      const ts = tileOf(size);
+      return {
+        w: start(ts) + end(ts) + ts * w + (hexagon ? ts >> 1 : 0),
+        h: start(ts) + end(ts) + ts * h,
+      };
+    },
     colors,
     newDrawState: (b, tileSize) => ({
-      tileSize,
+      tileSize: tileOf(tileSize),
       parts: partsOf(b),
       tiles: new TileCache(b.w * b.h, { words: 3 }),
       clues: new TileCache(b.w + b.h),

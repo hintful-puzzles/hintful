@@ -57,6 +57,11 @@ export {
   sameList,
 } from "./describe-runtime/clues.ts";
 export {
+  hexShift,
+  hexStore,
+  inHexagon,
+} from "./describe-runtime/hexagon.ts";
+export {
   cellsValued,
   type EdgeGroups,
   type EdgeHolds,

@@ -673,7 +673,7 @@ the time to weigh one against the two exemplars.
 Preview the drag by recoloring the gathered cells, and put the recoloring in
 the diff key ([`rendering.md`](./rendering.md) § "The tile cache and the diff
 key"). Exemplars: [`clusters/index.ts`](../src/games/clusters/index.ts);
-[`bricks/index.ts`](../src/games/bricks/index.ts).
+a fill game's `stroke: sweep` ([`fill/play.ts`](../src/engine/fill/play.ts)).
 
 ### A line-fill drag picks a transformation
 

@@ -417,6 +417,13 @@ export function compileGame(
     " * engine builds the space from them. */",
     `export const units: readonly string[] = ${JSON.stringify(space.units)};`,
     "",
+    ...(space.grid?.hexagon === undefined
+      ? []
+      : [
+          "/** The board is a hexagon, its store's corners holding this kind. */",
+          `export const hexagon = ${JSON.stringify(space.grid.hexagon)} as const;`,
+          "",
+        ]),
     ...(space.edges === "king"
       ? [
           "/** A diagonal neighbor is across an edge too: the engine builds the",

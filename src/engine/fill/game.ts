@@ -9,13 +9,14 @@
 import { descValue } from "../contract/desc-error.ts";
 import type { Game, PresetBoards } from "../contract/game.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
-import { SQUARE_GRID } from "../contract/sections.ts";
+import { HEXAGON, SQUARE_GRID } from "../contract/sections.ts";
 import type { Point } from "../contract/types.ts";
 import { transposeDimensions } from "../game-id/params.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
 import { verbClicks } from "../input/target-verb.ts";
 import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import { searchTiers } from "../solve/answer-search.ts";
+import { inHexagon } from "../solve/describe-runtime.ts";
 import {
   type AnswerReading,
   clearMistakes,
@@ -27,7 +28,14 @@ import {
   status,
   textFormat,
 } from "./answer.ts";
-import { type Clues, type FillBoard, newBoard, solveBoard, spaceOf } from "./board.ts";
+import {
+  boardSizeOf,
+  type Clues,
+  type FillBoard,
+  newBoard,
+  solveBoard,
+  spaceOf,
+} from "./board.ts";
 import { type DealtFillModule, dealFill } from "./deal.ts";
 import { applyEdit, type Edit, editOf } from "./edit.ts";
 import {
@@ -193,11 +201,12 @@ export function fillGame<C extends Clues<C> & object>(
   // The board's clues are the desc's, beside the params' sizes beyond the
   // grid's.
   const newState = (p: FillParams, desc: string): FillBoard<C> => {
-    const sp = spaceOf(module, p);
+    const size = boardSizeOf(module, p);
+    const sp = spaceOf(module, size);
     const sizes = sizesOf(p);
     const grown = module.growBy?.(sp, sizes) ?? null;
     const clues = descValue(decodeDesc<C>(deal, sp, module.clueMax, desc, grown));
-    return newBoard<C>(module, p.w, p.h, { ...clues, ...sizes }, variationsOf(p));
+    return newBoard<C>(module, size.w, size.h, { ...clues, ...sizes }, variationsOf(p));
   };
   // The renderer previews the input's drag, and the input reads the board
   // where the renderer puts it: each is read only once both are built.
@@ -230,12 +239,24 @@ export function fillGame<C extends Clues<C> & object>(
     validateParams: params.validateParams,
     ...(deal.square === true
       ? { notApplicable: { transposeParams: SQUARE_GRID } }
-      : { transposeParams: transposeDimensions() }),
+      : deal.hexagon !== undefined
+        ? { notApplicable: { transposeParams: HEXAGON } }
+        : { transposeParams: transposeDimensions() }),
     paramConfig: params.paramConfig,
 
     newDesc: (p, rs) => dealFill(module, deal, p, rs),
     newState,
-    newUi: () => newFillUi(module.play.stroke),
+    newUi: (b) => {
+      const ui = newFillUi(module.play.stroke);
+      // A hexagon's store has no cell at its top left; the cursor starts on
+      // the first that is the board's.
+      if (module.hexagon !== undefined)
+        ui.cursor.x =
+          Array.from({ length: b.w }, (_, x) => x).find((x) =>
+            inHexagon(b.w, b.h, x, 0),
+          ) ?? 0;
+      return ui;
+    },
 
     targetVerbs: input.targetVerbs,
     interpretMove: input.interpretMove,

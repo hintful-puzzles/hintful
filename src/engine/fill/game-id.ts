@@ -37,6 +37,7 @@ import {
   type ClueList,
   clueList,
   type GridSpace,
+  inHexagon,
   type Partition,
   partition,
 } from "../solve/describe-runtime.ts";
@@ -64,6 +65,9 @@ export type IdSegment =
       /** By letter, a kind at cells whose digit may follow the letter, on
        * its cell (Sticks' numbered block, `B2`). */
       readonly after?: Readonly<Record<string, string>>;
+      /** By number, a one-valued kind at cells written as that number in
+       * place of one of the segment's own (Bricks' unknown number, `7`). */
+      readonly also?: Readonly<Record<string, string>>;
     }
   | { readonly numbers: string; readonly before?: string; readonly order?: "columns" };
 
@@ -124,6 +128,9 @@ export interface FillOption {
 export interface FillDeal {
   /** Whether the grid is as high as it is wide, so one size gives both. */
   readonly square?: true;
+  /** Where the board is a hexagon (`describe-runtime/hexagon.ts`): the clue kind
+   * every cell outside it holds, which the desc does not write. */
+  readonly hexagon?: { readonly outside: string };
   readonly settings?: readonly FillSetting[];
   /** The settings only the deal reads, by name. */
   readonly options?: Readonly<Record<string, FillOption>>;
@@ -140,6 +147,8 @@ export interface FillDeal {
   /** A bare letter older IDs write for a tier, by its index: read, never
    * written. */
   readonly tierFlag?: { readonly letter: string; readonly tier: number };
+  /** Retired tier letters a `d` may carry, each read as a tier's index. */
+  readonly tierAliases?: Readonly<Record<string, number>>;
   /** The clue kind at a cell of which two side by side and alike are both
    * taken off, so the answer is the ladder's and not the sample. */
   readonly unpair?: string;
@@ -494,6 +503,7 @@ export function fillParams(
             ),
           ]),
       ...(deal.tierFlag === undefined ? [] : [tierFlagSegment(deal.tierFlag)]),
+      ...(deal.tierAliases === undefined ? [] : [tierAliasSegment(deal.tierAliases)]),
       choice(paramConfig, "d", "difficulty", deal.tierLetters, { full: true }),
     ]),
     validateParams(p, full) {
@@ -560,6 +570,22 @@ export function fillParams(
 
 /** A bare letter older IDs write for a tier, before the tier's own `d`: read
  * as that tier, and never written. */
+/** A retired tier letter, read after `d` as the tier it stands for and never
+ * written (Bricks' `t`, upstream's Tricky, whose boards are Unreasonable). */
+function tierAliasSegment(
+  aliases: NonNullable<FillDeal["tierAliases"]>,
+): ParamsSegment<FillParams> {
+  return {
+    encode: () => "",
+    decode: (s, i, p) => {
+      const tier = s[i] === "d" ? aliases[s[i + 1] ?? ""] : undefined;
+      if (tier === undefined) return i;
+      p.diff = tier;
+      return i + 2;
+    },
+  };
+}
+
 function tierFlagSegment(
   flag: NonNullable<FillDeal["tierFlag"]>,
 ): ParamsSegment<FillParams> {
@@ -639,6 +665,33 @@ function universeOf(deal: FillDeal, kind: string): "cells" | "lines" {
   return u;
 }
 
+/** Each of `kinds` a digits segment marks, with the cells it holds before
+ * the desc is read: a hexagon's outside kind holds every cell `written`
+ * leaves out, and every other kind none. */
+function markedStart(
+  deal: FillDeal,
+  sp: GridSpace,
+  written: readonly number[],
+  kinds: readonly string[],
+): Map<string, number[]> {
+  const out = new Map<string, number[]>(kinds.map((k) => [k, []]));
+  const outside = deal.hexagon?.outside;
+  if (outside === undefined) return out;
+  const on = new Set(written);
+  out.set(
+    outside,
+    sp.cells.filter((c) => !on.has(c)),
+  );
+  return out;
+}
+
+/** The cells a desc writes, in the space's order: every one, or a
+ * hexagon's alone. */
+function boardCells(deal: FillDeal, sp: GridSpace): readonly number[] {
+  if (deal.hexagon === undefined) return sp.cells;
+  return sp.cells.filter((c) => inHexagon(sp.w, sp.h, c % sp.w, Math.floor(c / sp.w)));
+}
+
 /** The desc of the clues `dealt`, by the deal's `id`. */
 export function encodeDesc<C extends Clues<C>>(
   deal: FillDeal,
@@ -677,26 +730,46 @@ export function encodeDesc<C extends Clues<C>>(
     }
     if ("digits" in seg) {
       const list = listOf(seg.digits);
+      const cells = boardCells(deal, sp);
       const marked = Object.entries(seg.letters ?? {}).map(
         ([letter, kind]) => [letter, listOf(kind)] as const,
       );
       const after = new Map(
         Object.entries(seg.after ?? {}).map(([letter, kind]) => [letter, listOf(kind)]),
       );
+      const also = Object.entries(seg.also ?? {}).map(
+        ([number, kind]) => [number, listOf(kind)] as const,
+      );
       const letterAt = (c: number): string | null =>
         marked.find(([, l]) => l.valueAt[c] >= 0)?.[0] ?? null;
-      // A clue straight after a written cell has no run before it, so
+      /** The number cell `c` is written as: its own clue's, or another
+       * kind's that is written as a number. */
+      const numberAt = (c: number): string | null =>
+        list.valueAt[c] >= 0
+          ? String(list.valueAt[c])
+          : (also.find(([, l]) => l.valueAt[c] >= 0)?.[0] ?? null);
+      // The board cell before each, `-1` for the first: a cell off the board
+      // is never written, and ends a run of letters (upstream bricks.c).
+      const before = new Int32Array(sp.cells.length).fill(-1);
+      const onBoard = new Uint8Array(sp.cells.length);
+      cells.forEach((c, i) => {
+        onBoard[c] = 1;
+        if (i > 0) before[c] = cells[i - 1];
+      });
+      // A number straight after a written cell has no run before it, so
       // `apart` there.
       const apart = (c: number): string =>
         seg.apart !== undefined &&
-        c > 0 &&
-        (list.valueAt[c - 1] >= 0 || letterAt(c - 1) !== null)
+        before[c] >= 0 &&
+        (numberAt(before[c]) !== null || letterAt(before[c]) !== null)
           ? seg.apart
           : "";
       out += encodeRunLength(
         sp.cells.length,
         (c) => {
-          if (list.valueAt[c] >= 0) return apart(c) + String(list.valueAt[c]);
+          if (onBoard[c] === 0) return "";
+          const number = numberAt(c);
+          if (number !== null) return apart(c) + number;
           const letter = letterAt(c);
           const n = letter === null ? -1 : (after.get(letter)?.valueAt[c] ?? -1);
           return letter === null ? null : n >= 0 ? letter + String(n) : letter;
@@ -787,13 +860,19 @@ export function decodeDesc<C extends Clues<C>>(
         // no run between them, exactly there.
         const kind = seg.digits as keyof C;
         const least = deal.least?.[seg.digits] ?? 0;
-        const n = sp.cells.length;
+        const cells = boardCells(deal, sp);
+        const n = cells.length;
         const at: number[] = [];
         const v: number[] = [];
         const letters = seg.letters ?? {};
-        const markedAt = new Map<string, number[]>(
-          Object.values(letters).map((k) => [k, []]),
-        );
+        const also = seg.also ?? {};
+        const markedAt = markedStart(deal, sp, cells, [
+          ...Object.values(letters),
+          ...Object.values(also),
+        ]);
+        // The largest number the segment reads: its own kind's, or one that
+        // stands for another kind.
+        const topAlso = Math.max(-1, ...Object.keys(also).map(Number));
         const after = seg.after ?? {};
         const numberedAt = new Map<string, { at: number[]; v: number[] }>(
           Object.values(after).map((k) => [k, { at: [], v: [] }]),
@@ -810,23 +889,24 @@ export function decodeDesc<C extends Clues<C>>(
             afterClue = false;
             continue;
           }
+          const c = cells[pos];
           if (r.peekIs(isLetter)) {
             const letter = r.char();
-            markedAt.get(letters[letter])?.push(pos);
+            markedAt.get(letters[letter])?.push(c);
             const k = after[letter];
             if (k !== undefined && r.peekIs(isDigit)) {
               const value = Number(r.char());
-              if (value > maxOf(clueMax, k as keyof C, sp, pos))
+              if (value > maxOf(clueMax, k as keyof C, sp, c))
                 r.fail(DESC_OUT_OF_RANGE);
               const got = numberedAt.get(k);
-              got?.at.push(pos);
+              got?.at.push(c);
               got?.v.push(value);
             }
             pos++;
             afterClue = true;
             continue;
           }
-          const max = maxOf(clueMax, kind, sp, pos);
+          const max = Math.max(maxOf(clueMax, kind, sp, c), topAlso);
           let value: number;
           if (seg.apart === undefined) {
             value = Number(r.char(isDigit));
@@ -835,19 +915,29 @@ export function decodeDesc<C extends Clues<C>>(
             if (afterClue) r.expect(seg.apart);
             value = r.int(least, max);
           }
-          at.push(pos++);
-          v.push(value);
+          pos++;
           afterClue = true;
+          const other = also[String(value)];
+          if (other !== undefined) {
+            markedAt.get(other)?.push(c);
+            continue;
+          }
+          if (value > maxOf(clueMax, kind, sp, c)) r.fail(DESC_OUT_OF_RANGE);
+          at.push(c);
+          v.push(value);
         }
-        out[kind] = clueList(at, v, n);
+        const all = sp.cells.length;
+        out[kind] = clueList(at, v, all);
         for (const [k, got] of numberedAt)
-          out[k as keyof C] = clueList(got.at, got.v, n);
-        for (const [k, cells] of markedAt)
+          out[k as keyof C] = clueList(got.at, got.v, all);
+        for (const [k, marked] of markedAt) {
+          const sorted = marked.toSorted((a, b) => a - b);
           out[k as keyof C] = clueList(
-            cells,
-            cells.map(() => 0),
-            n,
+            sorted,
+            sorted.map(() => 0),
+            all,
           );
+        }
         continue;
       }
       if ("dots" in seg) {

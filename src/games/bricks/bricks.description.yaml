@@ -1,6 +1,13 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: bricks
+catalog:
+  name: Bricks
+  description: Hexagonal shading puzzle
+  objective: Shade cells in the hexagonal grid, each one supported from below.
+  collection: unreleased
+  family: shading
+  similar: Tawamurenga
 help:
   rules: |-
     You're given a hexagonal grid with numbers in some of its cells. Your objective is to shade several cells while following these rules:
@@ -14,7 +21,7 @@ help:
 
     Drag across several cells to make them all what the first one became.
 
-    You can also use the numpad (keys 1, 3, 7, 9) to move the cursor diagonally. Hold Ctrl while moving the cursor to shade the cells it leaves and enters, Shift to mark them clear, or both to empty them.
+    The number pad moves the cursor to all six neighbors of a cell: 4 and 6 along its row, 7 and 9 to the two cells above it, and 1 and 3 to the two below. Up and Down zigzag, keeping to the column the cursor is in. Hold Shift while moving the cursor to mark clear every empty cell it leaves and enters, or Ctrl to mark those cells clear even where they are shaded.
   sections:
     - heading: What the cells show
       body: |-
@@ -30,7 +37,7 @@ help:
 
     Each step is one of the rules at work on a single cell: shading it would make three in a row, leave it with nothing shaded beneath it to rest on, or give a number too many shaded neighbors; or clearing it would leave a shaded brick above with nothing to rest on, or leave a number unable to reach its count.
 
-    If a brick or a cross is wrong, the hint asks you to fix the highlighted mistakes first, and the wrong one turns red, as it does for **Check & save**, whether or not it breaks a rule yet. A broken rule is marked as well: a bar over three in a row, a diamond under a brick with nothing to rest on, a number in red. On an Unreasonable board it may stop and say that nothing further follows by deduction.
+    If a brick or a cross is wrong, the hint asks you to fix the highlighted mistakes first, and the wrong one turns red, as it does for **Check & save**, whether or not it breaks a rule yet. A broken rule is marked as well: a bar over three in a row, a brick with nothing to rest on in red, a number in red. On an Unreasonable board it may stop and say that nothing further follows by deduction.
 produces: shading
 sizes:
   # The hexagon is stored as a parallelogram half its height wider, its two
@@ -38,7 +45,9 @@ sizes:
   w: { min: 2 }
   h: { min: 2 }
 space:
-  grid: { w: "w", h: "h" }
+  # The hexagon is held sheared, a parallelogram half its height wider than
+  # it, the two corners outside it holes.
+  grid: { w: "w", h: "h", hexagon: { outside: hole } }
   units: []
 answer:
   # 1 is a shaded brick, 2 a clear square.
@@ -51,6 +60,8 @@ define:
   around(c): "{p in adj8(c) where x(p) - x(c) != y(p) - y(c)}"
   # The two squares c rests on, one where c is at the left edge.
   below(c): "{p in around(c) where y(p) > y(c)}"
+  # A row's i-th square.
+  sq(L, i): "nth(cells(L), i)"
   # The shaded run through c along its row.
   run(c): "stretch(row(c), c, {x in cells(row(c)) where value(x) = 1})"
   # Whether c has a square beneath it that is shaded, or may yet be.
@@ -59,8 +70,11 @@ define:
   shaded(k): "count(p in around(k) where value(p) = 1)"
   open(k): "count(p in around(k) where value(p) != 2)"
 shape:
-  # No three shaded in a row.
-  - "forall c in cells: |run(c)| <= 2"
+  # No three shaded in a row: bound by the row and a place along it, so a
+  # break is marked along the three, as Unruly's is.
+  - >-
+    forall L in rows, i in range(0, |cells(L)| - 3):
+    not (value(sq(L, i)) = 1 and value(sq(L, i + 1)) = 1 and value(sq(L, i + 2)) = 1)
   # A shaded brick rests on a shaded one, but on the bottom row.
   - "forall c in cells where value(c) = 1: y(c) = h - 1 or (exists p in below(c): value(p) = 1)"
 clues:
@@ -75,12 +89,51 @@ clues:
   number:
     at: cell
     value: "range(0, 6)"
-    means: "value(at) = 2 and shaded(at) = v"
+    means: "value(at) = 2 and count(p in around(at) where value(p) = 1) = v"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: "1", glyph: "###", paint: shade }
+    2: { does: mark it clear, key: ["0", "2"], glyph: " x ", paint: clear }
+  primary: 1
+  secondary: 2
+  # The answer is the shaded bricks alone: an open square is clear.
+  blank: 2
+  # A click goes round empty, the button's mark and the other one.
+  click: cycle
+  stroke: sweep
+  boards: [6x7, 8x10]
+  # Every 2x2 board with one answer the ladder stops short of holds one
+  # brick, under the deal's 40% (enumerated 2026-11-02).
+  bounds:
+    tiers: { Unreasonable: { area: { min: 5 } } }
+  hintMarks:
+    ring: >-
+      the cell the step decides. The sentence says whether it must be shaded
+      or stay clear.
+    outline: >-
+      what the step reasons from: a number, the shaded bricks beside the
+      cell, the cells beneath it or the brick above it.
 deal:
   answer: bricks laid from the bottom row up, at random, at least 40% of the squares
   number: on each clear square, then as many hidden as the board stays at its tier
   tier: one of the tiers
+  # Row by row from the bottom, each square a brick two times in three where
+  # the rules allow one (upstream's bricks_fill_grid), and drawn again where
+  # under 40% are.
+  sample:
+    build: { value: 1, order: upward, share: 0.6666666667, least: 0.4 }
+  hide: number
+# Upstream's game ID: a number a shown clue, `_` between two side by side, a
+# letter a run of squares without one, and `7` a hole.
+id:
+  - digits: number
+    apart: "_"
+    also: { "7": hole }
+# Upstream's letters: `n` its Normal, which is Unreasonable here.
+tierLetters: en
+# Upstream's Tricky dealt only Normal boards, which are Unreasonable here.
+tierAliases: { t: Unreasonable }
 tiers: [Easy, Unreasonable]
 names:
   strandSupport: "a shaded brick's only support"

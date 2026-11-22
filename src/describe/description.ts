@@ -42,7 +42,7 @@ export interface DescriptionJson {
   space: {
     /** The board as a rectangle, or, in its place, a count of cells with no
      * geometry, whose neighbors are a relation the board deals. */
-    grid?: { w: string; h: string };
+    grid?: GridJson;
     cells?: string;
     /** A tiling the deal decides, in place of a grid: its dots, edges,
      * faces and angles. `square` where it is always the grid of squares. */
@@ -120,6 +120,7 @@ export interface DescriptionJson {
   tierLetters?: string;
   /** A bare letter older game IDs write for a tier: read, never written. */
   tierFlag?: { letter: string; tier: string };
+  tierAliases?: Record<string, string>;
   tiers?: string[];
   /** What a placement rules out at a glance, which the engine's `auto-cross`
    * preference makes for the player: the preference's words, and the
@@ -246,8 +247,18 @@ export type IdSegmentJson =
       apart?: string;
       letters?: Record<string, string>;
       after?: Record<string, string>;
+      also?: Record<string, string>;
     }
   | { numbers: string; before?: string; order?: "columns" };
+
+/** The board as a rectangle, or as a hexagon `w` wide and `h` high, stored
+ * sheared (`engine/fill/hexagon.ts`), its store's corners holding the clue
+ * kind `outside`. */
+export interface GridJson {
+  w: string;
+  h: string;
+  hexagon?: { outside: string };
+}
 
 /** The clue kinds or dealt partition an ID segment writes. */
 export const segmentKinds = (seg: IdSegmentJson): string[] =>
@@ -262,6 +273,7 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
               seg.digits,
               ...Object.values(seg.letters ?? {}),
               ...Object.values(seg.after ?? {}),
+              ...Object.values(seg.also ?? {}),
             ]
           : [seg.numbers];
 
@@ -768,7 +780,7 @@ export interface PlanningJson {
   space: {
     /** The board as a rectangle, or, in its place, a count of cells with no
      * geometry. */
-    grid?: { w: string; h: string };
+    grid?: GridJson;
     cells?: string;
     units: string[];
     /** Relations the board deals, each a set of cells for each cell. */
