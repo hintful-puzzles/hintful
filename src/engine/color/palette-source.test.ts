@@ -76,6 +76,41 @@ const tableModules = import.meta.glob<string>(
   { query: "?raw", import: "default", eager: true },
 );
 
+/** Each painter's file, by the name a description's `paint:` gives it, read
+ * off the registry's imports. */
+const painterFiles: ReadonlyMap<string, ts.SourceFile> = (() => {
+  const files = Object.entries(
+    import.meta.glob<string>("../render/pieces/*.ts", {
+      query: "?raw",
+      import: "default",
+      eager: true,
+    }),
+  ).map(([key, text]) => parsed(fromHere(key), text));
+  const index = files.find((f) => f.fileName.endsWith("/pieces/index.ts"));
+  if (index === undefined) throw new Error("no painter registry: moved?");
+  const out = new Map<string, ts.SourceFile>();
+  for (const f of files)
+    for (const name of importedNames(index, f.fileName)) out.set(name, f);
+  return out;
+})();
+
+/** The painters each game born from its description names, by game id. */
+const paintersNamed: ReadonlyMap<string, readonly string[]> = new Map(
+  Object.entries(
+    import.meta.glob<{
+      readonly play?: {
+        readonly values: Readonly<Record<string, { readonly paint?: string }>>;
+      };
+    }>("../../generated/games/*/*.compiled.ts", { eager: true }),
+  ).flatMap(([key, module]) => {
+    const id = /\/games\/([^/]+)\//.exec(key)?.[1];
+    const names = Object.values(module.play?.values ?? {}).flatMap((v) =>
+      v.paint === undefined ? [] : [v.paint],
+    );
+    return id === undefined || names.length === 0 ? [] : [[id, names] as const];
+  }),
+);
+
 /** The module at `path`, parsed; throws when the glob missed it. */
 function tree(path: string): ts.SourceFile {
   const hit = Object.entries(tableModules).find(([key]) => fromHere(key) === path);
@@ -344,9 +379,10 @@ it("no game holds the ring's ink", () => {
  * the stripes in its own (`resolvePalette`).
  *
  * Counted by game id over `gameSourceFiles`, which credits a shared family's
- * renderer (`engine/edge-clue-latin/`) to every game that draws with it. A
- * game whose palette starts from `rolePalette` takes every role `roles.ts`
- * fills, read off that file's own import from `palette.ts`.
+ * renderer (`engine/edge-clue-latin/`) to every game that draws with it, and
+ * each painter a born game's `paint:` names to that game. A game whose
+ * palette starts from `rolePalette` takes every role `roles.ts` fills, read
+ * off that file's own import from `palette.ts`.
  */
 it("declares no shared role fewer than two games take", () => {
   const filledByRoles = importedNames(rolesTree, PALETTE);
@@ -361,6 +397,16 @@ it("declares no shared role fewer than two games take", () => {
       for (const name of names)
         takenBy.set(name, (takenBy.get(name) ?? new Set()).add(id));
     }
+  // A game born from its description draws with the painters it names, whose
+  // files are no game's source.
+  for (const [id, names] of paintersNamed)
+    for (const name of names) {
+      const file = painterFiles.get(name);
+      if (file === undefined) throw new Error(`${id}: no painter file for ${name}`);
+      for (const role of importedNames(file, PALETTE))
+        takenBy.set(role, (takenBy.get(role) ?? new Set()).add(id));
+    }
+  expect(paintersNamed.size).toBeGreaterThan(5);
   const lonely = Object.keys(roles)
     .map((name) => ({
       name,
