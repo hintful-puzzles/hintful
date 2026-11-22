@@ -1,7 +1,7 @@
 /**
  * Pearl (Masyu) state, params and the RLE desc codec.
  *
- * State is immutable: `lines` / `marks` / `errors` are per-move copies; the
+ * State is immutable: `lines` / `marks` are per-move copies; the
  * `clues` grid is shared frozen (upstream's ref-counted `shared_state`).
  */
 
@@ -36,17 +36,12 @@ export const STRAIGHT = 2; // white pearl
 // --- square-state bitmasks (1 << <pair of directions>) --------------------
 // Directions are `engine/board/square-edges.ts`'s bits, the ones `lines`, `marks`
 // and a move's `l` are stored in.
-export const BLANK = 0;
 export const bLR = 1 << (L | R);
 export const bUD = 1 << (U | D);
 export const bLU = 1 << (L | U);
 export const bLD = 1 << (L | D);
 export const bRU = 1 << (R | U);
 export const bRD = 1 << (R | D);
-
-/** Error bit that flags a contradicted clue (upstream `ERROR_CLUE`), OR-ed
- * into `errors` alongside the four direction bits. */
-export const ERROR_CLUE = 16;
 
 // --- difficulty ------------------------------------------------------------
 export const DIFF_EASY = pearl.TIER.easy;
@@ -160,8 +155,6 @@ export interface PearlState {
   readonly lines: Uint8Array;
   /** No-line marks in each cell (R|U|L|D bits). */
   readonly marks: Uint8Array;
-  /** Error flags per cell (R|U|L|D bits | ERROR_CLUE). */
-  readonly errors: Uint8Array;
 }
 
 export function newState(p: PearlParams, desc: string): PearlState {
@@ -173,7 +166,6 @@ export function newState(p: PearlParams, desc: string): PearlState {
     clues,
     lines: new Uint8Array(sz),
     marks: new Uint8Array(sz),
-    errors: new Uint8Array(sz),
   };
 }
 

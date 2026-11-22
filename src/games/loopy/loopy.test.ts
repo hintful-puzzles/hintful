@@ -38,6 +38,7 @@ import {
   type LoopyParams,
   validateParams,
 } from "./params.ts";
+import { errorsOf } from "./render.ts";
 import { solveGame } from "./solver.ts";
 import {
   AF_ADAPTIVE,
@@ -87,10 +88,8 @@ function blankState(w = 4, h = 4, type = 0): LoopyState {
     h,
     clues: new Int8Array(grid.numFaces).fill(NO_CLUE),
     lines: new Uint8Array(grid.numEdges).fill(LINE_UNKNOWN),
-    lineErrors: new Uint8Array(grid.numEdges),
     corners: new Uint8Array(2 * grid.numEdges),
     pairs: [],
-    exactlyOneLoop: false,
   };
 }
 
@@ -427,22 +426,27 @@ describe("completion and error highlighting", () => {
     return next;
   }
 
+  /** The edges drawn red: lines a broken rule names. */
+  const redLines = (s: LoopyState): number[] => {
+    const { lines } = errorsOf(s);
+    return [...lines.keys()].filter((e) => lines[e] && s.lines[e] === LINE_YES);
+  };
+
   it("recognizes exactly one loop, and wins only when the clues agree", () => {
     const s = blankState();
     const looped = closeSmallestLoop(s);
-    expect(looped.exactlyOneLoop).toBe(true);
     // No clues at all, so a single closed loop satisfies everything.
     expect(loopyGame.status(looped)).toBe("solved");
-    expect([...looped.lineErrors]).toEqual(new Array(s.grid.numEdges).fill(0));
+    expect(redLines(looped)).toEqual([]);
   });
 
-  it("does not win when a clue is unsatisfied", () => {
+  it("does not win when a clue is unsatisfied, and shows it as the loop closes", () => {
     const s = blankState();
     // Clue an unrelated face 3, which the little loop cannot satisfy.
     s.clues[8] = 3;
     const looped = closeSmallestLoop(s);
-    expect(looped.exactlyOneLoop).toBe(true);
     expect(loopyGame.status(looped)).toBe("ongoing");
+    expect(errorsOf(looped).clues[8]).toBe(1);
   });
 
   it("highlights every YES edge at a vertex of degree 3", () => {
@@ -455,48 +459,58 @@ describe("completion and error highlighting", () => {
       kind: "set",
       ops: [0, 1, 2].map((j) => ({ edge: dot.edges[j].index, state: LINE_YES as 0 })),
     });
-    for (const j of [0, 1, 2]) expect(next.lineErrors[dot.edges[j].index]).toBe(1);
-    expect(next.exactlyOneLoop).toBe(false);
+    expect(redLines(next).sort()).toEqual(
+      [0, 1, 2].map((j) => dot.edges[j].index).sort(),
+    );
     expect(loopyGame.status(next)).toBe("ongoing");
   });
 
-  it("leaves the largest component alone and reddens the rest", () => {
-    // Two disjoint closed loops: the smaller one is the error.
+  const loop = (s: LoopyState, faceIndex: number): { edge: number; state: 0 }[] =>
+    s.grid.faces[faceIndex].edges
+      .filter((e) => e !== null)
+      .map((e) => ({ edge: e.index, state: LINE_YES as 0 }));
+
+  it("reddens every closed piece once a loop closes with lines elsewhere", () => {
+    // Two disjoint closed loops: neither can be the only one, and which is
+    // wrong the rules do not say, so both are red.
     const s = blankState(6, 6);
-    const loop = (faceIndex: number): { edge: number; state: 0 }[] =>
-      s.grid.faces[faceIndex].edges
-        .filter((e) => e !== null)
-        .map((e) => ({ edge: e.index, state: LINE_YES as 0 }));
     // Faces 0 and 35 are opposite corners of a 6x6 board, so their unit loops
     // share no edges and no dots.
     const next = loopyGame.executeMove(s, {
       kind: "set",
-      ops: [...loop(0), ...loop(35)],
+      ops: [...loop(s, 0), ...loop(s, 35)],
     });
-    expect(next.exactlyOneLoop).toBe(false);
-    const errored = [...next.lineErrors].filter(Boolean).length;
-    // Exactly one of the two four-edge loops is highlighted.
-    expect(errored).toBe(4);
+    expect(redLines(next)).toHaveLength(8);
+  });
+
+  it("names nothing while a stray line can still join the open loop", () => {
+    const s = blankState(6, 6);
+    const [first, ...rest] = loop(s, 0);
+    const next = loopyGame.executeMove(s, {
+      kind: "set",
+      ops: [
+        ...rest,
+        ...loop(s, 35).slice(0, 1),
+        { ...first, state: LINE_UNKNOWN as 1 },
+      ],
+    });
+    expect(redLines(next)).toEqual([]);
   });
 
   it("clears stale errors when the board changes", () => {
     const s = blankState(6, 6);
-    const loop = (faceIndex: number): { edge: number; state: 0 }[] =>
-      s.grid.faces[faceIndex].edges
-        .filter((e) => e !== null)
-        .map((e) => ({ edge: e.index, state: LINE_YES as 0 }));
     const two = loopyGame.executeMove(s, {
       kind: "set",
-      ops: [...loop(0), ...loop(35)],
+      ops: [...loop(s, 0), ...loop(s, 35)],
     });
-    expect([...two.lineErrors].some(Boolean)).toBe(true);
+    expect(redLines(two).length).toBeGreaterThan(0);
     // Erase the second loop; the first is now the only component.
     const one = loopyGame.executeMove(two, {
       kind: "set",
-      ops: loop(35).map((o) => ({ ...o, state: LINE_UNKNOWN as 1 })),
+      ops: loop(s, 35).map((o) => ({ ...o, state: LINE_UNKNOWN as 1 })),
     });
-    expect([...one.lineErrors].some(Boolean)).toBe(false);
-    expect(one.exactlyOneLoop).toBe(true);
+    expect(redLines(one)).toEqual([]);
+    expect(loopyGame.status(one)).toBe("solved");
   });
 
   // Upstream latched the win; here the status is the board's, so a loop the
@@ -510,7 +524,6 @@ describe("completion and error highlighting", () => {
       ops: [{ edge: s.grid.faces[0].edges[0]?.index ?? 0, state: LINE_UNKNOWN }],
     });
     expect(loopyGame.status(reopened)).toBe("ongoing");
-    expect(reopened.exactlyOneLoop).toBe(false);
   });
 });
 

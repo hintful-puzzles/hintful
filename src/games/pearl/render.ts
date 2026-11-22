@@ -19,6 +19,7 @@ import {
   dirX,
   dirY,
   L,
+  opposite,
   R,
   sideOf,
   squareEdges,
@@ -57,14 +58,15 @@ import {
 import { dragPreview } from "../../engine/mechanics/line-drawing.ts";
 import { drawRectCorners } from "../../engine/render/draw.ts";
 import { drawMarkSides, evidenceSidesOf } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { loopSteps, WIN_LEAD, walkLoop } from "../../engine/render/win-wave.ts";
 import { edgeOf, type PearlHint } from "./hint.ts";
 import { SQUARE } from "./kinds.ts";
 import { pearlLines } from "./moves.ts";
+import { dealtOf, ladderOf, rules } from "./solver.ts";
 import {
-  ERROR_CLUE,
   NOCLUE,
   type PearlMove,
   type PearlParams,
@@ -395,6 +397,35 @@ function loopOrder(state: PearlState): Int32Array {
   return around;
 }
 
+/**
+ * Where the board breaks a rule, per square: `lines`, as direction bits,
+ * its lines a broken rule names (three at a square, a dead end, a piece
+ * closed off from the rest), and `pearls`, a pearl its lines can no longer
+ * satisfy. A rule that names an edge with no line paints nothing there.
+ */
+export function errorsOf(state: PearlState): { lines: Uint8Array; pearls: Uint8Array } {
+  const { w, h } = state;
+  const { g } = ladderOf(w, h, state.clues);
+  const live = liveErrors(rules, state);
+  const lines = new Uint8Array(w * h);
+  const name = (e: number): void => {
+    const i = g.edgeSquare[e];
+    const d = g.edgeSide[e];
+    if (!(state.lines[i] & d)) return;
+    lines[i] |= d;
+    lines[i + dirY(d) * w + dirX(d)] |= opposite(d);
+  };
+  for (let e = 0; e < live.at.length; e++) if (live.at[e]) name(e);
+  for (const [a, b] of live.pairs) {
+    name(a);
+    name(b);
+  }
+  const pearls = new Uint8Array(w * h);
+  const { pearl } = dealtOf(state.clues);
+  for (const k of live.clues.get("pearl") ?? []) pearls[pearl.at[k]] = 1;
+  return { lines, pearls };
+}
+
 export function redraw(
   dr: GameDrawing,
   ds: PearlDrawState,
@@ -431,6 +462,7 @@ export function redraw(
 
   // The win flash runs the loop: a square's position is its step around it.
   const around = flash.winning ? loopOrder(state) : null;
+  const errors = errorsOf(state);
 
   // In-progress drag preview: the lines a release would draw or take up.
   const draglines = new Uint8Array(w * h);
@@ -451,12 +483,12 @@ export function redraw(
     for (let y = 0; y < h; y++) {
       const i = y * w + x;
       let f = state.lines[i];
-      f |= (state.errors[i] & (R | U | L | D)) << DS_ESHIFT;
+      f |= errors.lines[i] << DS_ESHIFT;
       f |= draglines[i] << DS_DSHIFT;
       f |= state.marks[i] << DS_MSHIFT;
       f |= wrong[i] << DS_XSHIFT;
       f |= wrongCross[i] << DS_WSHIFT;
-      if (state.errors[i] & ERROR_CLUE) f |= DS_ERROR_CLUE;
+      if (errors.pearls[i]) f |= DS_ERROR_CLUE;
       if (around !== null && around[i] >= 0) {
         const tone = flash.win(around[i]);
         if (tone) f |= tone === WIN_LEAD ? DS_FLASH | DS_FLASH_LEAD : DS_FLASH;

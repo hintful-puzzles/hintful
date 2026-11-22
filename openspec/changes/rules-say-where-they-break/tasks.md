@@ -135,6 +135,16 @@
       Proposed: `violations` takes an optional mask per element of the values
       the player's marks still allow, read wherever the check reads a
       domain, and the guard checks each mask holds the answer's value.
+      Moved: loopy, pearl. Their loop rule is the through form, bounded in
+      2.3c; what they needed was the reading `oneLoopHeld` gives (an open
+      edge at a dot with two lines is none, and every open edge once a loop
+      closes), so a closed loop and the lines apart from it are each
+      finished and named, and a clue the loop leaves short turns red as it
+      closes, as Loopy's `exactlyOneLoop` did. A dot's shape said of each
+      line (`meets`, implied) marks the lines at a dot that breaks it.
+      `describedRules` takes `space` for a tiling. Loopy's `checkCompletion`,
+      `lineErrors` and `exactlyOneLoop`, and Pearl's `markErrors` and
+      `errors`, go.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
 - [x] 2.4 Plant a broken rule and see its mark appear in a game that wrote

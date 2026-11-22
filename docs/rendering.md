@@ -594,7 +594,11 @@ grid while a gesture is live, and paints only what they say:
   statement read alone sees it as the player does: Light Up's lit square
   holds no bulb, and a square beside a shaded one is clear in Range and
   Singles (`besideHeld`), so a pocket of open squares the shading cuts off
-  breaks `connected` at once.
+  breaks `connected` at once; and in a one-loop game (`oneLoopHeld`, Loopy
+  and Pearl) an open edge at a dot with two lines is none, and every open
+  edge is once a loop closes, so the loop and the lines apart from it are
+  each finished, and a clue it leaves short shows. A game whose space is
+  no grid passes `space` instead of `size` (Loopy's tiling).
 - **What the rules do not say is not an error.** A game that flagged more
   (a heuristic, a "largest piece wins") flagged a guess; a game that flagged
   less now shows what its rules already make certain. Where the marks are

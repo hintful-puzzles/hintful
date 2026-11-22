@@ -150,10 +150,8 @@ export function newDesc(p: LoopyParams, rng: RandomState): { desc: string } {
       h: p.h,
       clues: new Int8Array(grid.numFaces),
       lines: new Uint8Array(grid.numEdges).fill(LINE_UNKNOWN),
-      lineErrors: new Uint8Array(grid.numEdges),
       corners: new Uint8Array(2 * grid.numEdges),
       pairs: [],
-      exactlyOneLoop: false,
     };
 
     try {

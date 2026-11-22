@@ -13,6 +13,7 @@
  */
 
 import { DIRECTIONS, dirX, dirY, opposite } from "../../engine/board/square-edges.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
@@ -22,6 +23,7 @@ import {
   rangeMask,
   tilingSpace,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules, oneLoopHeld } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -35,7 +37,7 @@ import { NOCLUE, type PearlState } from "./state.ts";
 
 /** What the description reads a line as, and an edge with none. */
 export const LINE = 1;
-export const NONE = 2;
+const NONE = 2;
 
 /** A board's squares as a tiling, and the space the ladder reads it as. */
 export interface PearlGeometry extends SquareTiling {
@@ -64,7 +66,7 @@ export const sideEdge = (g: PearlGeometry, sq: number, d: number): number =>
 
 /** The board as the description deals it: a pearl on each square that has
  * one, numbered as the game stores it (1 black, 2 white). */
-function dealtOf(clues: Uint8Array): pearl.Dealt {
+export function dealtOf(clues: Uint8Array): pearl.Dealt {
   return { pearl: cluesWhere(clues, (c) => c !== NOCLUE) };
 }
 
@@ -130,6 +132,32 @@ export function pearlMarks(
   if (grid.includes(0)) return { ret: 2, grid };
   return { ret: pearl.isAnswer(grid, g.sp, dl) ? 1 : 0, grid };
 }
+
+/** The player's edges as the description reads them: a line, a cross, or
+ * open. */
+export function recordedEdges(
+  state: Pick<PearlState, "w" | "lines" | "marks">,
+  g: PearlGeometry,
+): Uint8Array {
+  const known = new Uint8Array(g.sp.edges.length);
+  for (let e = 0; e < known.length; e++) {
+    const i = g.edgeSquare[e];
+    const d = g.edgeSide[e];
+    const j = i + dirY(d) * state.w + dirX(d);
+    if (state.lines[i] & d || state.lines[j] & opposite(d)) known[e] = LINE;
+    else if (state.marks[i] & d || state.marks[j] & opposite(d)) known[e] = NONE;
+  }
+  return known;
+}
+
+export const rules: RulesOf<PearlState> = describedRules(pearl, {
+  grid: (s) => {
+    const g = geometryOf(s.w, s.h);
+    return oneLoopHeld(recordedEdges(s, g), g.sp, LINE, NONE);
+  },
+  space: (s) => geometryOf(s.w, s.h).sp,
+  deals: (s) => [dealtOf(s.clues)],
+});
 
 /** Whether the lines a player has drawn are the answer to the pearls: the
  * description's rules, compiled, over every edge a line or none. */

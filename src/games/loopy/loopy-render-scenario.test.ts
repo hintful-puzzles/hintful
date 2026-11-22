@@ -11,8 +11,8 @@
  * face, every digit on the canvas).
  *
  * The rest are the state-dependent colorings the sweep's opener frames cannot
- * reach — line state, the faint-line preference, vertex errors, the
- * `exactlyOneLoop` clue rule — and the clue positions after a resize.
+ * reach — line state, the faint-line preference, vertex errors, a clue read
+ * once a loop closes — and the clue positions after a resize.
  */
 import { describe, expect, it } from "vitest";
 import { gridFindIncenter } from "../../engine/board/grid/index.ts";
@@ -385,8 +385,8 @@ describe("Loopy render scenarios: error highlighting", () => {
   });
 
   it("reddens an underfilled clue the instant a single loop closes", () => {
-    // The `exactlyOneLoop` rule: once the YES edges form one loop and nothing
-    // else, UNKNOWN counts as NO for clue checking. Without it a player who
+    // Once the lines close a loop the rules read every open edge as none, so
+    // the clue counts them so. Without it a player who
     // never right-clicks could close a loop over an unsatisfied clue and be
     // shown neither a victory flash nor a reason why not.
     const { id, state } = board("squares", 0, 5, 5);

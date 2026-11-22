@@ -55,7 +55,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { pearlSolve } from "./solver.ts";
+import { pearlSolve, rules } from "./solver.ts";
 import {
   DIFF_COUNT,
   decodeParams,
@@ -244,6 +244,7 @@ export const pearlGame: Game<
   interpretMove: input.interpretMove,
   executeMove,
   status,
+  rules,
 
   solve,
   difficulty,

@@ -69,17 +69,12 @@ export interface LoopyState {
   readonly clues: Int8Array;
   /** One {@link LineState} per edge. */
   readonly lines: Uint8Array;
-  /** Per-edge error highlight, recomputed by {@link checkCompletion}. */
-  readonly lineErrors: Uint8Array;
   /** The player's corner notes, one entry per dline, indexed and encoded as
    * `dlines.ts` indexes the solver's bits: 1 at least one line, 2 at most one. */
   readonly corners: Uint8Array;
   /** The player's pair notes, sorted by `a` then `b`, so two states noting the
    * same pairs hold equal arrays. */
   readonly pairs: readonly LoopyPair[];
-  /** The YES edges form exactly one loop and nothing else. Varies the
-   * semantics of clue highlighting at display time — see `render.ts`. */
-  exactlyOneLoop: boolean;
 }
 
 /**
@@ -108,7 +103,6 @@ export function cloneState(s: LoopyState): LoopyState {
     ...s,
     clues: s.clues.slice(),
     lines: s.lines.slice(),
-    lineErrors: s.lineErrors.slice(),
     corners: s.corners.slice(),
   };
 }
@@ -233,25 +227,9 @@ export function newState(p: LoopyParams, desc: string): LoopyState {
     h: p.h,
     clues,
     lines: new Uint8Array(grid.numEdges).fill(LINE_UNKNOWN),
-    lineErrors: new Uint8Array(grid.numEdges),
     corners: new Uint8Array(2 * grid.numEdges),
     pairs: [],
-    exactlyOneLoop: false,
   };
-}
-
-// ---------------------------------------------------------------------------
-// Counting helpers
-// ---------------------------------------------------------------------------
-
-/** How many lines of `lineType` currently meet this dot. */
-function dotOrder(s: LoopyState, dot: number, lineType: number): number {
-  let n = 0;
-  const d = s.grid.dots[dot];
-  for (let i = 0; i < d.order; i++) {
-    if (s.lines[d.edges[i].index] === lineType) n++;
-  }
-  return n;
 }
 
 /** How much an edge click drags its neighbors along with it. */
@@ -383,69 +361,11 @@ export function forcedRuleOuts(
   return [...out];
 }
 
-/** How many lines of `lineType` currently surround this face. */
-export function faceOrder(s: LoopyState, face: number, lineType: number): number {
-  let n = 0;
-  const f = s.grid.faces[face];
-  for (let i = 0; i < f.order; i++) {
-    const e = f.edges[i];
-    if (e !== null && s.lines[e.index] === lineType) n++;
-  }
-  return n;
-}
-
 // ---------------------------------------------------------------------------
-// Completion and error highlighting
+// Runs of drawn lines
 // ---------------------------------------------------------------------------
 
-/** Classification of one connected component of YES edges. */
-const COMP_NONE = 0;
-const COMP_LOOP = 1;
-const COMP_PATH = 2;
-const COMP_SILLY = 3;
-const COMP_EMPTY = 4;
-
-/**
- * Recompute `lineErrors` and `exactlyOneLoop` **in place**, and report whether
- * the board is now solved. Mutates the state it is handed, so call it only on a
- * freshly-built state (`executeMove`'s copy), never on one already published.
- *
- * Upstream explains at length why the shared `findloop.c` is the wrong tool
- * here: in most puzzles loops are simply *forbidden*, so highlighting every
- * edge that lies on a loop is exactly right. Loopy is unusual — you are
- * *supposed* to make a loop, but only one, so some loops are wrong and the
- * interesting question is *which* edges to blame. Worse, the intuitive answer
- * flips with context: a small accidental loop in a corner should be
- * highlighted, but a nearly-complete solution with a few forgotten stray edges
- * elsewhere should blame the strays. Finding the longest cycle would settle it
- * and is NP-complete.
- *
- * The tractable substitute leans on the fact that no vertex may have degree
- * greater than two, which is trivial to detect:
- *
- *  - build the dsf of connected components over the YES edges;
- *  - flag any vertex of degree > 2 (and any degree-1 vertex all of whose other
- *    edges are explicitly NO) by lighting its incident YES edges, and exclude
- *    its whole component from further consideration;
- *  - every remaining component is therefore a simple loop or a simple path;
- *  - treat *all* the paths as one component, since a player normally builds the
- *    solution as many separate fragments that gradually join up;
- *  - if exactly one sensible component remains, highlight nothing further;
- *  - otherwise leave the largest sensible component alone and light up the rest.
- *
- * The result is that a player always sees *some* explanation of why a filled-in
- * grid is not a win, which is the Puzzles principle at work: it is not
- * necessary to highlight every error, only never to leave the player with
- * neither a victory flash nor a reason.
- */
-/**
- * The connected components of the drawn lines, over dots.
- *
- * One notion of "which lines are joined", with two readers: {@link
- * checkCompletion} classifies the components to decide the board, and the hover
- * highlight lights the one the pointer is over. A second traversal for the
- * second reader is how two answers to one question start disagreeing.
- */
+/** The connected components of the drawn lines, over dots. */
 function drawnLineComponents(state: LoopyState): Dsf {
   const g = state.grid;
   const dsf = new Dsf(g.numDots);
@@ -479,105 +399,6 @@ export function lineRun(state: LoopyState, edge: number): number[] {
     }
   }
   return run;
-}
-
-export function checkCompletion(state: LoopyState): boolean {
-  const g = state.grid;
-  state.lineErrors.fill(0);
-
-  const dsf = drawnLineComponents(state);
-
-  const componentState = new Int32Array(g.numDots);
-  for (let i = 0; i < g.numDots; i++) {
-    componentState[i] = dsf.canonify(i) === i ? COMP_LOOP : COMP_NONE;
-  }
-
-  for (let i = 0; i < g.numDots; i++) {
-    const comp = dsf.canonify(i);
-    const yes = dotOrder(state, i, LINE_YES);
-    const unknown = dotOrder(state, i, LINE_UNKNOWN);
-    if ((yes === 1 && unknown === 0) || yes >= 3) {
-      // A clear vertex-level error: light every YES edge at this dot, and take
-      // the whole component out of the loop analysis below.
-      const d = g.dots[i];
-      for (let j = 0; j < d.order; j++) {
-        const e = d.edges[j].index;
-        if (state.lines[e] === LINE_YES) state.lineErrors[e] = 1;
-      }
-      componentState[comp] = COMP_SILLY;
-    } else if (yes === 0) {
-      // An isolated dot is also excluded, but tagged distinctly so it does not
-      // count towards the components that inhibit a win.
-      componentState[comp] = COMP_EMPTY;
-    } else if (yes === 1) {
-      // Degree 1 without being erroneous means this component is a path, unless
-      // something worse elsewhere in it already made it silly.
-      if (componentState[comp] !== COMP_SILLY) componentState[comp] = COMP_PATH;
-    }
-  }
-
-  // Count the components and find the largest sensible one. The tie-break falls
-  // out of dot ordering in the grid — arbitrary, but stable for a whole game.
-  let nsilly = 0;
-  let nloop = 0;
-  let npath = 0;
-  let totalPathsize = 0;
-  let largestComp = -1;
-  let largestSize = -1;
-  for (let i = 0; i < g.numDots; i++) {
-    if (componentState[i] === COMP_SILLY) {
-      nsilly++;
-    } else if (componentState[i] === COMP_PATH) {
-      totalPathsize += dsf.size(i);
-      npath = 1;
-    } else if (componentState[i] === COMP_LOOP) {
-      nloop++;
-      const thisSize = dsf.size(i);
-      if (thisSize > largestSize) {
-        largestComp = i;
-        largestSize = thisSize;
-      }
-    }
-  }
-  if (largestSize < totalPathsize) {
-    largestComp = -1; // -1 means "the paths, collectively"
-    largestSize = totalPathsize;
-  }
-
-  if (nloop > 0 && nloop + npath > 1) {
-    // At least two sensible components, one of them a loop: highlight every
-    // sensible component that is not the largest.
-    for (let i = 0; i < g.numEdges; i++) {
-      if (state.lines[i] !== LINE_YES) continue;
-      const comp = dsf.canonify(g.edges[i].dot1.index); // either end will do
-      if (
-        (componentState[comp] === COMP_PATH && largestComp !== -1) ||
-        (componentState[comp] === COMP_LOOP && comp !== largestComp)
-      ) {
-        state.lineErrors[i] = 1;
-      }
-    }
-  }
-
-  // Exactly one component and it is a loop: record that, since it changes how
-  // clues are highlighted at display time, and the puzzle is complete if the
-  // clues agree.
-  state.exactlyOneLoop = nloop === 1 && npath === 0 && nsilly === 0;
-  return isSolved(state);
-}
-
-/**
- * Whether the board is solved: the drawn lines are exactly one loop and every
- * clue is met. Pure: it reads `exactlyOneLoop`, which every line move refreshes
- * through {@link checkCompletion} and nothing else moves.
- */
-export function isSolved(state: LoopyState): boolean {
-  if (!state.exactlyOneLoop) return false;
-  for (let i = 0; i < state.grid.numFaces; i++) {
-    const c = state.clues[i];
-    if (c >= 0 && faceOrder(state, i, LINE_YES) !== c) return false;
-  }
-  return true;
 }
 
 // ---------------------------------------------------------------------------

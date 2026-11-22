@@ -29,15 +29,23 @@ export interface RulesModule<Deals extends readonly unknown[]> {
 export interface RulesReading<State, Deals extends readonly unknown[]> {
   /** The values, 0 where undecided ({@link RulesOf.grid}). */
   grid(state: State): Uint8Array | Uint16Array;
-  /** The space's width and height, and the regions a space of dealt blocks
-   * has (Solo's jigsaw), as `describedSpace` takes them. */
-  size(state: State): readonly [number, number, (readonly (readonly number[])[])?];
   /** The units the board has, where a variation adds one (Solo's
    * diagonals); the module's `units` when absent. */
   units?(state: State): readonly string[];
   /** What the module's checks take after the space, in its order. */
   deals(state: State): Deals;
 }
+
+/** Where the board's elements are: a grid's size, or a space the game
+ * builds itself (Loopy's tiling). */
+export type RulesSpace<State> =
+  | {
+      /** The space's width and height, and the regions a space of dealt
+       * blocks has (Solo's jigsaw), as `describedSpace` takes them. */
+      size(state: State): readonly [number, number, (readonly (readonly number[])[])?];
+      space?: never;
+    }
+  | { space(state: State): GridSpace; size?: never };
 
 /**
  * `values`, a `w` by `h` board's, with each undecided square orthogonally
@@ -64,11 +72,53 @@ export function besideHeld(
   return values;
 }
 
+/**
+ * `values`, one per edge of `sp`, `line`, `none` or 0 where undecided, with
+ * what "the lines are one loop, two at each dot they pass" makes certain of
+ * every answer read in place: an open edge at a dot with two lines holds
+ * none, and once the lines close a loop, which can only be the loop, every
+ * open edge does. So a loop closed with lines elsewhere is finished as it
+ * stands, and a clue it leaves short shows (Loopy's and Pearl's).
+ */
+export function oneLoopHeld(
+  values: Uint8Array,
+  sp: GridSpace,
+  line: number,
+  none: number,
+): Uint8Array {
+  const n = sp.cells.length;
+  const parent = Int32Array.from({ length: n }, (_, i) => i);
+  const root = (c: number): number => {
+    while (parent[c] !== c) c = parent[c] = parent[parent[c]];
+    return c;
+  };
+  const lines = new Int32Array(n);
+  let closed = false;
+  for (const e of sp.edges) {
+    if (values[e] !== line) continue;
+    const a = sp.edgeEnds[2 * e];
+    const b = sp.edgeEnds[2 * e + 1];
+    lines[a]++;
+    lines[b]++;
+    const [ra, rb] = [root(a), root(b)];
+    if (ra === rb) closed = true;
+    else parent[ra] = rb;
+  }
+  for (const e of sp.edges)
+    if (
+      values[e] === 0 &&
+      (closed || lines[sp.edgeEnds[2 * e]] === 2 || lines[sp.edgeEnds[2 * e + 1]] === 2)
+    )
+      values[e] = none;
+  return values;
+}
+
 export function describedRules<State, Deals extends readonly unknown[]>(
   module: RulesModule<Deals>,
-  read: RulesReading<State, Deals>,
+  read: RulesReading<State, Deals> & RulesSpace<State>,
 ): RulesOf<State> {
   const space = (s: State): GridSpace => {
+    if (read.space !== undefined) return read.space(s);
     const [w, h, parts = []] = read.size(s);
     return describedSpace(
       read.units?.(s) ?? module.units,

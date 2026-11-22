@@ -1089,6 +1089,9 @@ says how each form is read; what a description's author acts on:
   to come. The size of a union of stretches is not bounded, a sum of their
   sizes is: Sticks' length is `|horiz(at)| + |vert(at)|`, one of the two
   being empty, where `|stick(at)|` would mark nothing until the line closed.
+  A dot's shape said of each line at it names the lines where it breaks,
+  where said of the dot it names what its count read, crosses included:
+  Loopy's and Pearl's `meets`, implied.
   A number counted along a chain is said between two given numbers, counted
   from each end with `onward`: Signpost's square some numbers on from one
   given must be the square as many short of the next, so two runs that

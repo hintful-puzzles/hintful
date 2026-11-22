@@ -38,8 +38,8 @@ import {
   LINE,
   ladderOf,
   marksOn,
-  NONE,
   type PearlGeometry,
+  recordedEdges,
   sideEdge,
 } from "./solver.ts";
 import {
@@ -378,20 +378,6 @@ const SUPPLIED: SuppliedHooks<pearl.SuppliedById, PearlMarked, PearlState> = {
 };
 
 // --- the plan -------------------------------------------------------------
-
-/** The player's edges as the description reads them: a line, a cross, or
- * open. */
-function recordedEdges(state: PearlState, g: PearlGeometry): Uint8Array {
-  const known = new Uint8Array(g.sp.edges.length);
-  for (let e = 0; e < known.length; e++) {
-    const i = g.edgeSquare[e];
-    const d = g.edgeSide[e];
-    const j = step(state, i, d);
-    if (state.lines[i] & d || state.lines[j] & opposite(d)) known[e] = LINE;
-    else if (state.marks[i] & d || state.marks[j] & opposite(d)) known[e] = NONE;
-  }
-  return known;
-}
 
 /**
  * Does the board already say this? True of a cross beside a square that has

@@ -171,6 +171,10 @@ rules:
     and (forall L = {e in edges where value(e) = 1},
     a in cells where dotLines(a) > 0, b in cells where dotLines(b) > 0:
     b in through(a, L))
+implied:
+  # A line meets one other at each of its dots: the dot's shape, said of the
+  # line, so a line that dead-ends or meets two others is where it breaks.
+  meets: "forall c in cells, e in edges(c) where value(e) = 1: dotLines(c) = 2"
 clues:
   # A face's number: how many of its edges are lines.
   number:

@@ -19,6 +19,7 @@
  */
 
 import type { Grid } from "../../engine/board/grid/index.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { Judging } from "../../engine/hint/move-judge.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
@@ -33,6 +34,7 @@ import {
   STRIKE_EDGE,
   tilingSpace,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules, oneLoopHeld } from "../../engine/solve/described-rules.ts";
 import type { FactGraph } from "../../engine/solve/fact-graph.ts";
 import {
   compiledRung,
@@ -48,7 +50,6 @@ import type { StepBudget } from "../../engine/solve/step-budget.ts";
 import * as loopy from "../../generated/games/loopy/loopy.compiled.ts";
 import { DIFF_HARD } from "./params.ts";
 import {
-  checkCompletion,
   cloneState,
   LINE_NO,
   LINE_UNKNOWN,
@@ -60,7 +61,7 @@ import {
 export type SolverStatus = "solved" | "mistake" | "incomplete";
 
 /** What the description reads a line as, and an edge with none. */
-const LINE = 1;
+export const LINE = 1;
 const NONE = 2;
 /** A corner that may hold any number of lines, 0 to 2. */
 const ANY = rangeMask(0, 2);
@@ -72,8 +73,22 @@ const lineOf = (v: number): LineState =>
 
 /** The board as the description deals it: a number on each face that has
  * one. */
-function dealtOf(clues: Int8Array): loopy.Dealt {
+export function dealtOf(clues: Int8Array): loopy.Dealt {
   return { number: cluesWhere(clues, (c) => c >= 0) };
+}
+
+export const rules: RulesOf<LoopyState> = describedRules(loopy, {
+  grid: (s) =>
+    oneLoopHeld(Uint8Array.from(s.lines, describedOf), tilingSpace(s.grid), LINE, NONE),
+  space: (s) => tilingSpace(s.grid),
+  deals: (s) => [dealtOf(s.clues)],
+});
+
+/** Whether the board is solved: every edge decided as the rules read it,
+ * which takes a closed loop, and the answer check holding. */
+export function loopySolved(state: LoopyState): boolean {
+  const g = rules.grid(state);
+  return !g.includes(0) && rules.isAnswer(state, g);
 }
 
 /**
@@ -485,7 +500,7 @@ export interface HintBoard {
 /** Whether the board a hint plans on is finished: exactly one loop, every
  * clue met. */
 export function hintBoardSolved(board: HintBoard): boolean {
-  return checkCompletion(board.state);
+  return loopySolved(board.state);
 }
 
 /** Every relation noted or found so far, both ways round. The ladder's

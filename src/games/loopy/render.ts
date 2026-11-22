@@ -58,6 +58,7 @@ import type {
   Size,
 } from "../../engine/contract/types.ts";
 import { glyphFont, strokeScaledPolygon } from "../../engine/render/draw.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   drawPencilGlyph,
   pencilIndicatorBox,
@@ -82,8 +83,8 @@ import type { LoopyMove, LoopyNoteDrag } from "./index.ts";
 import { CORNER, DOT, EDGE, FACE, PAIR } from "./kinds.ts";
 import { cornerArc, cursorCorner } from "./notes.ts";
 import { gridTypeOf, LOOPY_GRIDS, type LoopyParams } from "./params.ts";
+import { dealtOf, LINE, rules } from "./solver.ts";
 import {
-  faceOrder,
   LINE_NO,
   LINE_UNKNOWN,
   LINE_YES,
@@ -294,15 +295,41 @@ function loopOrder(s: LoopyState): Int32Array {
   return around;
 }
 
-/** The color edge `i` draws in: an error highlight overrides its line state, and
- * so does a line the mistake check says the loop does not run along. */
+/**
+ * Where the board breaks a rule: per edge, the elements a broken rule names
+ * (a line at a dot with three, a closed piece the others cannot join), and
+ * per face, a clue that can no longer be met; with the edges as the rules
+ * read them. The rules read every open edge as none once a loop closes, so a
+ * player who never rules an edge out still sees a clue the loop leaves short
+ * the moment it closes.
+ */
+export function errorsOf(s: LoopyState): {
+  lines: Uint8Array;
+  clues: Uint8Array;
+  read: Uint8Array;
+} {
+  const read = rules.grid(s);
+  const live = liveErrors(rules, s, read);
+  const lines = Uint8Array.from(live.at);
+  for (const [a, b] of live.pairs) lines[a] = lines[b] = 1;
+  const clues = new Uint8Array(s.grid.numFaces);
+  const { number } = dealtOf(s.clues);
+  for (const k of live.clues.get("number") ?? []) clues[number.at[k]] = 1;
+  return { lines, clues, read: Uint8Array.from(read) };
+}
+
+/** The color edge `i` draws in: a line where the board breaks a rule is red,
+ * and so is one the mistake check says the loop does not run along. A
+ * broken rule that names an edge with no line (the ones ruled out round a
+ * dead end) paints nothing there: the line it names too shows it. */
 function lineColor(
   s: LoopyState,
   i: number,
   tone: WinTone,
   mistaken: Uint8Array,
+  broken: Uint8Array,
 ): number {
-  if (s.lineErrors[i]) return COL_MISTAKE;
+  if (broken[i] && s.lines[i] === LINE_YES) return COL_MISTAKE;
   if (s.lines[i] === LINE_UNKNOWN) return COL_LINEUNKNOWN;
   if (s.lines[i] === LINE_NO) return COL_FAINT;
   if (mistaken[i]) return COL_MISTAKE;
@@ -953,24 +980,19 @@ export function redraw(
   for (const m of mistakes ?? []) if (m.kind === "edge") mistaken[m.edge] = 1;
   const marks = stepMarks(hint);
 
-  // Clue coloring. `clueError` and `clueSatisfied` are what the C diffs to
-  // decide whether a face needs repainting; here they are simply the key that
-  // selects the digit's color, recomputed each frame.
+  const { lines: lineErrors, clues, read } = errorsOf(s);
+  ds.clueError.set(clues);
   for (let i = 0; i < g.numFaces; i++) {
     const n = s.clues[i];
     if (n < 0) continue;
-    const sides = g.faces[i].order;
-    const yes = faceOrder(s, i, LINE_YES);
-    // When the YES edges already form exactly one loop and nothing else,
-    // UNKNOWN counts as NO for clue checking. Some people play Loopy without
-    // ever right-clicking, so they never mark a line NO; without this they
-    // could close a loop over an underfilled clue and be shown neither a
-    // victory flash nor a reason why not. Lighting the underfilled clue at the
-    // instant the loop closes is the earliest moment this style of play makes
-    // the error detectable at all. (Overfilled clues are caught either way.)
-    const no = s.exactlyOneLoop ? sides - yes : faceOrder(s, i, LINE_NO);
-    ds.clueError[i] = yes > n || no > sides - n ? 1 : 0;
-    ds.clueSatisfied[i] = yes === n && no === sides - n ? 1 : 0;
+    let yes = 0;
+    let decided = 0;
+    for (const e of g.faces[i].edges) {
+      if (e === null || read[e.index] === 0) continue;
+      decided++;
+      if (read[e.index] === LINE) yes++;
+    }
+    ds.clueSatisfied[i] = yes === n && decided === g.faces[i].order ? 1 : 0;
   }
 
   // The win flash runs the loop: an edge's position is its step around it.
@@ -981,7 +1003,7 @@ export function redraw(
   for (let i = 0; i < g.numEdges; i++) {
     const flashing =
       around !== null && around[i] >= 0 ? flash.win(around[i]) : WIN_NONE;
-    buckets.get(lineColor(s, i, flashing, mistaken))?.push(i);
+    buckets.get(lineColor(s, i, flashing, mistaken, lineErrors))?.push(i);
   }
 
   // The whole canvas, from the nominal extent — not the built grid's, which a

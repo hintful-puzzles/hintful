@@ -120,16 +120,14 @@ import {
   redraw,
   toScreen,
 } from "./render.ts";
-import { solveGame, uniqueSolution } from "./solver.ts";
+import { loopySolved, rules, solveGame, uniqueSolution } from "./solver.ts";
 import {
   AF_ADAPTIVE,
   AF_FIXED,
   AF_OFF,
   autofollowEdges,
-  checkCompletion,
   cloneState,
   forcedRuleOuts,
-  isSolved,
   LINE_NO,
   LINE_UNKNOWN,
   LINE_YES,
@@ -787,8 +785,6 @@ function executeLines(
     }
     next.lines[op.edge] = op.state;
   }
-  // Refreshes the error highlight and the one-loop fact `isSolved` reads.
-  checkCompletion(next);
   return next;
 }
 
@@ -811,10 +807,9 @@ function solve(orig: LoopyState, _curr: LoopyState): SolveResult<LoopyMove> {
  * Every edge the player has marked against the board's solution: a line the loop
  * does not run along, or an edge ruled out that it does.
  *
- * `checkCompletion`'s `lineErrors` is a different thing and stays: it flags a
- * *rule* broken on the board as drawn (a dot with three lines, a loop that is not
- * the only one), which it can see without knowing the answer. This compares with
- * the answer, so it also finds a line that breaks no rule and is still wrong, and
+ * The live errors are a different thing: they flag a *rule* broken on the board
+ * as drawn (a dot with three lines, a loop closed with lines elsewhere), which
+ * they see without knowing the answer. This compares with the answer, so it also finds a line that breaks no rule and is still wrong, and
  * that is what lets the hint take the player's marks as facts. A board whose clues
  * admit no provably unique solution has nothing to compare with and reports none.
  */
@@ -901,7 +896,8 @@ export const loopyGame: Game<
   interpretMove,
   executeMove,
   hover,
-  status: (s) => (isSolved(s) ? "solved" : "ongoing"),
+  status: (s) => (loopySolved(s) ? "solved" : "ongoing"),
+  rules,
   solve,
   difficulty,
   findMistakes,
