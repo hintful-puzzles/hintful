@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { magnetsGame } from "../../games/magnets/index.ts";
 import { DIFF_EASY, clueChar as magnetsClueChar } from "../../games/magnets/state.ts";
-import { singlesGame } from "../../games/singles/index.ts";
+import { game as singlesGame } from "../../generated/games/singles/singles.game.ts";
 import {
   c2n,
   c2nUpper,
@@ -61,7 +61,7 @@ describe("the desc digit alphabet", () => {
     };
 
     const singlesMax = largest((n) =>
-      paramsError(singlesGame, { w: n, h: n, diff: "easy" }, true),
+      paramsError(singlesGame, singlesGame.decodeParams(`${n}x${n}`), true),
     );
     const magnetsMax = largest((n) =>
       paramsError(

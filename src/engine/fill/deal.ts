@@ -44,6 +44,7 @@ import {
   variationsOf,
 } from "./game-id.ts";
 import { type GrowSizes, growPartition } from "./grow.ts";
+import { latinNumbers } from "./latin-numbers.ts";
 import {
   type BuiltSample,
   type FirstCells,
@@ -193,6 +194,15 @@ export function dealFill<C extends Clues<C>>(
   };
   /** An answer and its clues, every one shown, or `null` where this draw
    * gave none. `tier` is the tier a grown partition is mended for. */
+  /** The clues with the deal's Latin kind numbered round answer `g`, where
+   * it has one. */
+  const numbered = (clues: C, g: Uint8Array): C => {
+    const { latin } = deal;
+    if (latin === undefined) return clues;
+    const n = sp.cells.length;
+    const v = latinNumbers(g, sp, latin.under, rs);
+    return { ...clues, [latin.kind]: clueList(sp.cells, v, n) };
+  };
   /** The draws so far, which a ramp of the `first` cells' share counts. */
   let layouts = 0;
   const draw = (tier: number): { g: Uint8Array; clues: C } | null => {
@@ -216,7 +226,10 @@ export function dealFill<C extends Clues<C>>(
     if (g === null) return null;
     const grown = grownRound(g, tier);
     if (grown === null) return null;
-    const derived = module.deriveClues(g, sp, grown, sizes, (n) => randomUpto(rs, n));
+    const derived = numbered(
+      module.deriveClues(g, sp, grown, sizes, (n) => randomUpto(rs, n)),
+      g,
+    );
     if (!module.isAnswer(g, sp, derived, variations)) return null;
     if (kind === undefined) return { g, clues: derived };
     const list = derived[kind] as ClueList;
@@ -714,10 +727,24 @@ function buildAnswer<C extends Clues<C>>(
       ? new Uint8Array(sp.cells.length)
       : firstLaid(first, deal, p, rs, draw);
   const derived = module.deriveClues(start, sp, {}, sizesOf(p));
+  // A Latin kind is a Latin square's on the cells built round, so the ladder
+  // reads numbers none of which repeats (upstream singles.c's new_game_desc).
+  const { latin } = deal;
+  const numbered =
+    latin === undefined
+      ? derived
+      : {
+          ...derived,
+          [latin.kind]: clueList(
+            sp.cells,
+            latinNumbers(start, sp, latin.under, rs),
+            sp.cells.length,
+          ),
+        };
   const blank =
     first === undefined || deal.hide === undefined
-      ? derived
-      : keepingAll(derived, deal, sp, []);
+      ? numbered
+      : keepingAll(numbered, deal, sp, []);
   const board = newBoard(module, sp.w, sp.h, blank, variationsOf(p));
   // One set of marks the whole build, the ladder run again after each
   // placement: a fresh solve each time cost a 12x16 Light Up deal seconds.

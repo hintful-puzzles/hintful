@@ -603,9 +603,7 @@ grid while a gesture is live, and paints only what they say:
   moving the rule fails the typecheck.
 - **`rules.grid` reads what one rule makes certain of every answer**, so a
   statement read alone sees it as the player does: Light Up's lit square
-  holds no bulb, and a square beside a shaded one is clear in Range and
-  Singles (`besideHeld`), so a pocket of open squares the shading cuts off
-  breaks `connected` at once; and in a one-loop game (`oneLoopHeld`, Loopy
+  holds no bulb; and in a one-loop game (`oneLoopHeld`, Loopy
   and Pearl) an open edge at a dot with two lines is none, and every open
   edge is once a loop closes, so the loop and the lines apart from it are
   each finished, and a clue it leaves short shows; and in a game of regions

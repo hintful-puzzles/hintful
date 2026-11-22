@@ -305,7 +305,7 @@ erase and repaint undo it.
   calls: `drawMarkSides(dr, band, sidecar.outlineSides(i), …)` and
   `drawCellRing(dr, band, clear)`, which rings the band's box as `HintMarks`
   does. Its hint bits ride the sidecar, never its own tile word. Exemplar:
-  [`singles/render.ts`](../src/games/singles/render.ts).
+  the fill engine's tile ([`engine/fill/render.ts`](../src/engine/fill/render.ts)).
 - **Both**, a pixel of real gutter plus some of the cell's own edge. The
   `outer` part makes it an outside-band game, and the erase covers the inside
   part too. Exemplar: [`clusters/render.ts`](../src/games/clusters/render.ts).

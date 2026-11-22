@@ -320,7 +320,16 @@ research tools all read through it; the app never does.
   clue to hide draws until the ladder stops short and the search says one.
   `least_start(L, R, k, v)` and `greatest_start` are where run `k` of list
   `R` can start on line `L`, its runs of `v` packed one way and the other
-  around the line's decided cells.
+  around the line's decided cells. `id:`'s `cells` writes a kind on every
+  cell, one desc-alphabet character each (Singles'). `deal.latin` deals
+  such a kind as a Latin square's numbers, the build standing on them, and
+  then numbers each cell holding `under` again to repeat one its row or
+  column keeps (`engine/fill/latin-numbers.ts`). `play.hides` is a value
+  whose piece hides its cell's number, with a preference that shows it
+  smaller, flipped by a press in the half tile round the grid; `play.wrap`
+  carries the cursor over the edge; the `ring` painter circles a kept
+  number. A numbered cell's text is its number inside its value's glyph
+  where the glyph's middle is blank (`[3]`).
   The compiler writes `<id>.game.ts`, `fillGame` of the module, and
   `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One

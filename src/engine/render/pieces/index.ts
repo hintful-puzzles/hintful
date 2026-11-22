@@ -6,7 +6,7 @@ import { bulb, wall } from "./lamp.ts";
 import type { Painter } from "./painter.ts";
 import { block, disc } from "./pair.ts";
 import { star } from "./star.ts";
-import { clear, cross, domino, shade } from "./stock.ts";
+import { clear, cross, domino, ring, shade } from "./stock.ts";
 
 export const PAINTERS = {
   across,
@@ -18,6 +18,7 @@ export const PAINTERS = {
   domino,
   down,
   ground,
+  ring,
   shade,
   star,
   tent,

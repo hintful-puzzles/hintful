@@ -48,6 +48,32 @@ export const clear: Painter = {
   },
 };
 
+/** A cell whose number the player keeps: a ring round the number, the
+ * puzzle's own mark for it (Singles', upstream's circle), unfilled so the
+ * surface and a hatch on it show through; on a cell with no number, the
+ * cross. It stands in from the cell's edge, so a hint's band or the cursor
+ * there lands beside it. */
+export const ring: Painter = {
+  colors: () => [RULED_OUT],
+  surface: null,
+  paint(dr, tile, slot, error, _grown, occupied = false) {
+    const cell = surfaceOf(tile);
+    const color = error ? COL_ERROR : slot[0];
+    if (!occupied) {
+      drawRuledOutCross(dr, cell, color);
+      return;
+    }
+    const c = { x: cell.x + cell.w / 2, y: cell.y + cell.h / 2 };
+    const r =
+      (cell.w - 1) / 2 -
+      Math.max(Math.max(2, cell.w >> 4) + 1, Math.round(cell.w / 10));
+    const weight = Math.max(2, Math.round(cell.w / 24));
+    // Half-pixel steps: one-pixel strokes a whole pixel apart leave specks of
+    // surface between them.
+    for (let i = 0; i < 2 * weight - 1; i++) dr.drawCircle(c, r - i / 2, -1, color);
+  },
+};
+
 /** A cell the player has ruled out: the engine's cross, none where a number
  * takes the middle (a numbered square dealt clear, Range's). */
 export const cross: Painter = {

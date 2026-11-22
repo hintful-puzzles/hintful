@@ -168,7 +168,6 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
     "numbers a cell each pass or returns",
     "numbers a cell each pass or returns",
   ],
-  "games/singles/generator.ts › newSinglesDesc": ["counts `tries` to MAXTRIES"],
   "games/sixteen/state.ts › newDesc": [
     "rejection sampling over moves: only undoing or over-repeating the last line is refused",
   ],

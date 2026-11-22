@@ -1,253 +1,346 @@
 /**
- * Behavioral tests for the Singles (Hitori) port.
- *
- * Tier 1: params/desc codec round-trips, the generator produces uniquely
- * solvable boards at each difficulty, Solve completes a board, and
- * findMistakes flags wrong cells while clean boards report none. Tier 2.5:
- * a `renderScenario` of the initial frame and a black/circle/mistake frame
- * (targeted op assertions + a snapshot).
+ * Singles, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is upstream's IDs, the
+ * numbers a deal lays, the corner's wordings and each rung's pinned board,
+ * the number a shaded square hides, a wrong square outlined by Check & Save,
+ * and the cursor that wraps.
  */
+
 import { describe, expect, it } from "vitest";
-import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
-import {
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  descBadCharacter,
-  validateDesc,
-} from "../../engine/contract/desc-error.ts";
-import { describeParams } from "../../engine/game-id/param-label.ts";
-import { paramsError } from "../../engine/game-id/params.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
+import { DESC_OUT_OF_RANGE } from "../../engine/contract/desc-error.ts";
+import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { spaceOf } from "../../engine/fill/board.ts";
+import { encodeDesc } from "../../engine/fill/game-id.ts";
+import { CURSOR_RIGHT, LEFT_BUTTON } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeAbsentTiers } from "../../engine/testing/absent-tiers.ts";
-import {
-  DEFAULT_BACKGROUND,
-  renderScenario,
-} from "../../engine/testing/render-scenario.ts";
-import { newSinglesDesc } from "./generator.ts";
-import { type SinglesMistake, singlesGame } from "./index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import * as singles from "../../generated/games/singles/singles.compiled.ts";
+import { game } from "../../generated/games/singles/singles.game.ts";
 
-// Under 4 squares both ways, at Normal.
-describeAbsentTiers(singlesGame, ["2x2dk", "2x3dk", "3x2dk", "3x3dk"]);
+const SHADED = 1;
+const CLEAR = 2;
 
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { COL_GRID } from "./render.ts";
-import { solveSpecific } from "./solver.ts";
-import {
-  cloneState,
-  DIFF_ANY,
-  decodeParams,
-  diffToLevel,
-  encodeParams,
-  F_BLACK,
-  F_CIRCLE,
-  makeState,
-  newState,
-  type SinglesParams,
-} from "./state.ts";
+/** Boards upstream's generator and the hand-written port dealt. */
+const UPSTREAM = [
+  "6x6dk:146214162623436526534361613462465334",
+  "6x6dk:614262562311433246423351441133651123",
+  "5x5de:1154415435251455411244252",
+];
 
-describe("singles params codec", () => {
-  it("round-trips full and short encodings", () => {
-    const p: SinglesParams = { w: 8, h: 8, diff: "tricky" };
-    expect(encodeParams(p, true)).toBe("8x8dk");
-    expect(encodeParams(p, false)).toBe("8x8");
-    expect(decodeParams("8x8dk")).toEqual(p);
-    expect(decodeParams("8x8de")).toEqual({ w: 8, h: 8, diff: "easy" });
-  });
+/** A 3x3 board whose one answer shades its four corners. */
+const SMALL = "111321331";
 
-  it("decodes a bare square dimension", () => {
-    expect(decodeParams("6")).toEqual({ w: 6, h: 6, diff: "easy" });
-  });
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
+};
 
-  it("rejects params outside the grid's range", () => {
-    expect(paramsError(singlesGame, { w: 1, h: 5, diff: "easy" }, true)).toBe(
-      "Width must be at least 2.",
-    );
-    expect(paramsError(singlesGame, { w: 5, h: 62, diff: "easy" }, true)).toBe(
-      "Height must be at most 61.",
-    );
-    expect(paramsError(singlesGame, { w: 5, h: 5, diff: "easy" }, true)).toBeNull();
-  });
+/** What a pasted ID opens as: its params, or the refusal. */
+const opened = (id: string) => {
+  const me = new Midend(game);
+  return me.newGameFromId(id) ?? me.getParams();
+};
 
-  it("labels its params by size and tier", () => {
-    expect(describeParams(singlesGame, { w: 5, h: 7, diff: "tricky" })).toBe(
-      "5x7 Normal",
-    );
-  });
-});
+/** The hand-written port's moves, as the fill board's edits: `circle` is
+ * clear and `black` shaded, at `y * w + x`. */
+const edits = (
+  w: number,
+  sets: readonly (readonly [number, number, "circle" | "black"])[][],
+) =>
+  sets.map((s) => ({
+    set: s.flatMap(([x, y, v]) => [y * w + x, v === "black" ? SHADED : CLEAR]),
+  }));
 
-describe("singles desc codec", () => {
-  it("decodes a desc to the number grid and round-trips validation", () => {
-    const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
-    const { desc } = newSinglesDesc(p, randomNew("singles-codec"));
-    expect(validateDesc(singlesGame, p, desc)).toBeNull();
-    const s = newState(p, desc);
-    expect(s.n).toBe(25);
-    for (let i = 0; i < s.n; i++) {
-      expect(s.nums[i]).toBeGreaterThanOrEqual(1);
-      expect(s.nums[i]).toBeLessThanOrEqual(5);
-      expect(s.flags[i]).toBe(0);
+/** The first step of the hint's plan on `id`. */
+const firstStep = (id: string) => {
+  const plan = game.hint.plan(loaded(id));
+  if (!plan?.ok) throw new Error(`${id}: no hint`);
+  return plan.steps[0];
+};
+
+describe("singles", () => {
+  it("reads one character a square and writes the desc back", () => {
+    const board = loaded(`3x3:${SMALL}`);
+    expect(Array.from(board.dealt.number.v)).toEqual([1, 1, 1, 3, 2, 1, 3, 3, 1]);
+    // A number past nine is a letter.
+    expect(loaded("12x12:".padEnd(150, "c")).dealt.number.v[0]).toBe(12);
+    for (const id of UPSTREAM) {
+      const b = loaded(id);
+      expect(encodeDesc(singles.deal, spaceOf(singles, b), b.dealt), id).toBe(
+        id.split(":")[1],
+      );
     }
   });
 
-  it("rejects a wrong-length desc", () => {
-    const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
-    expect(validateDesc(singlesGame, p, "123")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(singlesGame, p, "1".repeat(26))).toBe(DESC_TOO_LONG);
+  it("refuses a desc that is not one", () => {
+    expect(opened(`3x3:${SMALL}`)).toBe("3x3de");
+    expect(opened("3x3:123231314")).toBe(DESC_OUT_OF_RANGE);
+    expect(opened("3x3:12323131")).toMatch(/\.$/);
+    expect(opened("3x3:1232313111")).toMatch(/\.$/);
+    expect(opened("3x3:12323131_")).toMatch(/\.$/);
   });
 
-  it("tells a number too big for the board from a character that is no number", () => {
-    const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
-    expect(validateDesc(singlesGame, p, `6${"1".repeat(24)}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(singlesGame, p, `0${"1".repeat(24)}`)).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(singlesGame, p, `!${"1".repeat(24)}`)).toBe(
-      descBadCharacter("!"),
-    );
-  });
-});
-
-const GEN_SPECS: SinglesParams[] = [
-  { w: 5, h: 5, diff: "easy" },
-  { w: 5, h: 5, diff: "tricky" },
-  { w: 6, h: 6, diff: "tricky" },
-  { w: 8, h: 8, diff: "easy" },
-];
-
-describe("singles generator + solver", () => {
-  for (const p of GEN_SPECS) {
-    it(`${encodeParams(p, true)} generates a uniquely solvable board`, () => {
-      const { desc } = newSinglesDesc(p, randomNew(`gen-${encodeParams(p, true)}`));
-      const s = newState(p, desc);
-      // Solvable at its difficulty.
-      const solved = cloneState(s);
-      expect(solveSpecific(solved, diffToLevel(p.diff))).toBe(1);
-      // Every rule is a forced deduction, so a completed solve is the unique
-      // solution: the all-rules solve must reach the same partition.
-      const solved2 = makeState(p.w, p.h, s.nums);
-      expect(solveSpecific(solved2, DIFF_ANY)).toBe(1);
-      for (let i = 0; i < s.n; i++) {
-        expect(solved.flags[i] & (F_BLACK | F_CIRCLE)).toBe(
-          solved2.flags[i] & (F_BLACK | F_CIRCLE),
-        );
+  it("deals each tier, every number a repeat where it is shaded", () => {
+    for (const id of ["5x5de", "6x6dk", "7x9dk", "4x4de"]) {
+      const p = game.decodeParams(id);
+      for (const seed of ["a", "b"]) {
+        const { desc } = game.newDesc(p, randomNew(`singles-${id}-${seed}`));
+        expect(opened(`${id}:${desc}`), `${id}:${desc}`).toBe(id);
+        const board = game.newState(p, desc);
+        const solved = game.solve(board, board);
+        if (!solved.ok) throw new Error(`${id}:${desc}: ${solved.error}`);
+        const done = game.executeMove(board, solved.move);
+        expect(game.status(done), `${id}:${desc}`).toBe("solved");
+        // Every number is one to the longer side, and a shaded one repeats
+        // a number of its row or its column.
+        const { w, h } = board;
+        const n = board.dealt.number.v;
+        for (let c = 0; c < w * h; c++) {
+          expect(n[c]).toBeGreaterThanOrEqual(1);
+          expect(n[c]).toBeLessThanOrEqual(Math.max(w, h));
+          if (done.values[c] !== SHADED) continue;
+          const [x, y] = [c % w, Math.floor(c / w)];
+          const peers = [
+            ...Array.from({ length: w }, (_, i) => y * w + i),
+            ...Array.from({ length: h }, (_, j) => j * w + x),
+          ].filter((d) => d !== c);
+          expect(peers.some((d) => n[d] === n[c])).toBe(true);
+        }
       }
-    });
-  }
-});
-
-describe("singles solve", () => {
-  it("completes a generated board and reports solved", () => {
-    const p: SinglesParams = { w: 6, h: 6, diff: "tricky" };
-    const { desc } = newSinglesDesc(p, randomNew("solve-test"));
-    const s0 = newState(p, desc);
-    const res = singlesGame.solve(s0, s0);
-    expect(res?.ok).toBe(true);
-    if (!res?.ok) return;
-    const solved = singlesGame.executeMove(s0, res.move);
-    expect(singlesGame.status(solved)).toBe("solved");
+    }
   });
-});
 
-describe("singles findMistakes", () => {
-  it("flags a wrong mark and passes a correct partial board", () => {
-    const p: SinglesParams = { w: 6, h: 6, diff: "easy" };
-    const { desc } = newSinglesDesc(p, randomNew("mistake-test"));
-    const s0 = newState(p, desc);
-    const sol = makeState(p.w, p.h, s0.nums);
-    expect(solveSpecific(sol, DIFF_ANY)).toBe(1);
-
-    const blackIdx = sol.flags.findIndex((f) => (f & F_BLACK) !== 0);
-    expect(blackIdx).toBeGreaterThanOrEqual(0);
-
-    // Mark a solution-black cell as white (circle) → a mistake.
-    const wrong = cloneState(s0);
-    wrong.flags[blackIdx] |= F_CIRCLE;
-    const mistakes = singlesGame.findMistakes?.(wrong) as SinglesMistake[];
-    expect(mistakes.some((m) => m.y * p.w + m.x === blackIdx)).toBe(true);
-
-    // Mark it correctly black → no mistakes.
-    const clean = cloneState(s0);
-    clean.flags[blackIdx] |= F_BLACK;
-    expect(singlesGame.findMistakes?.(clean)).toHaveLength(0);
-  });
-});
-
-describe("singles render", () => {
-  it("draws the initial frame with the grid's lines", () => {
-    const { recording } = renderScenario({
-      game: singlesGame,
-      id: "5x5de#singles-render",
+  it("writes its text with each number inside what its square holds", () => {
+    const board = game.executeMove(loaded(`3x3:${SMALL}`), {
+      set: [8, SHADED, 0, CLEAR],
     });
-    expect(recording.ops.length).toBeGreaterThan(0);
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_GRID)).toBe(
-      true,
+    expect(game.textFormat?.(board)).toBe(
+      [
+        "+---+---+---+",
+        "|(1)| 1 | 1 |",
+        "+---+---+---+",
+        "| 3 | 2 | 1 |",
+        "+---+---+---+",
+        "| 3 | 3 |[1]|",
+        "+---+---+---+",
+        "",
+      ].join("\n"),
     );
-    expect(recording.ops).toMatchSnapshot();
   });
 
-  it("renders a Check & Save mistake in the error color", () => {
-    const p: SinglesParams = { w: 5, h: 5, diff: "easy" };
-    const { desc } = newSinglesDesc(p, randomNew("render-mistake"));
-    const sol = makeState(p.w, p.h, newState(p, desc).nums);
-    solveSpecific(sol, DIFF_ANY);
-    const blackIdx = sol.flags.findIndex((f) => (f & F_BLACK) !== 0);
-    const x = blackIdx % p.w;
-    const y = (blackIdx / p.w) | 0;
-    const { recording, mistakeCount } = renderScenario({
-      game: singlesGame,
-      id: `5x5de:${desc}`,
-      // Mark a solution-black cell white — a mistake.
-      moves: [{ sets: [{ x, y, value: "circle" }] }],
-      showMistakes: true,
+  it("hides a shaded square's number until the preference shows it", () => {
+    const board = game.executeMove(loaded(`3x3:${SMALL}`), { set: [8, SHADED] });
+    const ui = game.newUi(board);
+    const pref = game.prefs?.find((p) => p.kw === "show-black-nums");
+    expect(pref?.type).toBe("boolean");
+    if (pref?.type !== "boolean") return;
+    expect(pref.get(ui)).toBe(false);
+    // A press off the grid flips it, and makes no move.
+    const ds = preferredDrawState(game, board);
+    expect(game.interpretMove(board, ui, ds, { x: 0, y: 0 }, LEFT_BUTTON)).toBe(
+      UI_UPDATE,
+    );
+    expect(pref.get(ui)).toBe(true);
+  });
+
+  it("outlines a square Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = UPSTREAM[0];
+    const fresh = loaded(id);
+    const solved = game.solve(fresh, fresh);
+    if (!solved.ok) throw new Error("no answer");
+    const answer = game.executeMove(fresh, solved.move).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < answer.length; c++) {
+      const moves = [{ set: [c, answer[c] === SHADED ? CLEAR : SHADED] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
+    }
+    throw new Error("no wrong square that breaks no rule");
+  });
+
+  it("carries the cursor over the grid's edge", () => {
+    const board = loaded(`3x3:${SMALL}`);
+    const ui = game.newUi(board);
+    const ds = preferredDrawState(game, board);
+    for (let i = 0; i < 3; i++)
+      game.interpretMove(board, ui, ds, { x: -1, y: -1 }, CURSOR_RIGHT);
+    expect([ui.cursor.x, ui.cursor.y]).toEqual([0, 0]);
+  });
+
+  it("tells a sandwich, a pair and each corner by its own rung", () => {
+    expect(firstStep("3x2:121312")).toMatchObject({
+      rung: "sandwich",
+      move: { set: [1, CLEAR] },
     });
-    expect(mistakeCount).toBeGreaterThan(0);
-    expect(recording.ops.some((o) => "color" in o && o.color === COL_ERROR)).toBe(true);
+    expect(firstStep("5x2:1122134512")).toMatchObject({
+      rung: "pair",
+      move: { set: [4, SHADED] },
+    });
+    const four = firstStep("2x2:2222");
+    expect(four.rung).toBe("corner.four");
+    expect(four.move.set).toEqual([0, SHADED, 3, SHADED]);
+    // What singles out the four: the square inside matches too, which the
+    // corner that matches its neighbors alone never says.
+    expect(four.explanation).toContain("diagonally inside");
+    expect(four.explanation).not.toContain("beside it");
+    const rungs = (id: string) => {
+      const plan = game.hint.plan(loaded(id));
+      return plan?.ok ? plan.steps.map((s) => s.rung) : [];
+    };
+    expect(
+      rungs("2x2:1112").some((r) => r === "corner.apex" || r === "corner.across"),
+    ).toBe(true);
+    expect(
+      rungs("2x2:1122").some((r) => r === "corner.pairAtS" || r === "corner.pairAtT"),
+    ).toBe(true);
   });
 });
 
-describe("singles: the win flash", () => {
-  // Any numbers serve. The blackened cell's ground lights under its piece.
-  const state = makeState(3, 3, Int8Array.from([1, 2, 3, 2, 3, 1, 3, 1, 2]));
-  state.flags[4] |= F_BLACK;
-  const ui = singlesGame.newUi(state);
-  const palette = singlesGame.colors(DEFAULT_BACKGROUND);
-  const paint = (flash: Flash) => {
-    const dr = new RecordingDrawing(palette);
-    singlesGame.redraw(dr, singlesGame.newDrawState(state, 32), {
-      prev: null,
-      state,
-      dir: 1,
-      ui,
-      animTime: 0,
-      flash,
-    });
-    return dr;
-  };
-  /** Where each square painted in the flash color is drawn, as `x,y`. */
-  const run = winFlashRun(paint, (dr) =>
-    dr.ops.flatMap((o) =>
-      o.op === "rect" && (o.color === COL_FLASH || o.color === COL_FLASH_LEAD)
-        ? [`${o.x},${o.y}`]
-        : [],
-    ),
-  );
-  /** The sweep's diagonal through a square drawn at `at`. */
-  const diagonal = (at: string): number => {
-    const [x, y] = at.split(",").map(Number);
-    return sweepStep(x, y);
-  };
+// Under 4 squares both ways, at Normal.
+describeAbsentTiers(game, ["2x2dk", "2x3dk", "3x2dk", "3x3dk"]);
 
-  it("fills the ground of every cell, the blackened one's too, from the bottom left to the top right", () => {
-    expectWinFlashTravels(run, state.n, diagonal);
-  });
-
-  it("leads in the flash's lead color, with its body color behind", () => {
-    const paints = (slot: number) =>
-      winFlashRun(paint, (dr) =>
-        dr.ops.filter((o) => o.op === "rect" && o.color === slot),
-      ).frames.some((frame) => frame.length > 0);
-    expect(paints(COL_FLASH_LEAD)).toBe(true);
-    expect(paints(COL_FLASH)).toBe(true);
-  });
+describeHintPins({
+  game,
+  params: [game.decodeParams("6x6dk"), game.decodeParams("5x5de")],
+  pins: {
+    sandwich: UPSTREAM[0],
+    sameLine: { id: UPSTREAM[0], moves: edits(6, [[[2, 1, "circle"]]]) },
+    besideCovered: {
+      id: UPSTREAM[0],
+      moves: edits(6, [[[2, 1, "circle"]], [[4, 1, "black"]]]),
+    },
+    pair: {
+      id: "6x6dk:445642432165334561225311213556453244",
+      moves: edits(6, [[[3, 3, "circle"]]]),
+    },
+    "corner.four": {
+      id: "6x6dk:663255261455611642532264154346416613",
+      moves: edits(6, [[[0, 1, "circle"]], [[3, 4, "circle"]], [[4, 3, "circle"]]]),
+    },
+    "corner.apex": {
+      id: UPSTREAM[2],
+      moves: edits(5, [[[3, 4, "circle"]], [[3, 1, "circle"]]]),
+    },
+    "corner.across": {
+      id: "6x6dk:455613345534323165563453556344231546",
+      moves: edits(6, [[[1, 2, "circle"]], [[1, 5, "circle"]]]),
+    },
+    "corner.pairAtS": {
+      id: "6x6dk:455613345534323165563453556344231546",
+      moves: edits(6, [[[1, 2, "circle"]]]),
+    },
+    "corner.pairAtT": {
+      id: "6x6dk:125136446533344162432351161354613145",
+      moves: edits(6, [
+        [[0, 2, "circle"]],
+        [[1, 4, "circle"]],
+        [[2, 3, "circle"]],
+        [[2, 5, "circle"]],
+        [[3, 1, "circle"]],
+      ]),
+    },
+    boxedIn: {
+      id: UPSTREAM[0],
+      moves: edits(6, [
+        [[2, 1, "circle"]],
+        [[4, 1, "black"]],
+        [
+          [3, 1, "circle"],
+          [5, 1, "circle"],
+          [4, 0, "circle"],
+          [4, 2, "circle"],
+        ],
+        [[0, 0, "black"]],
+        [
+          [1, 0, "circle"],
+          [0, 1, "circle"],
+        ],
+        [[5, 0, "black"]],
+        [[1, 1, "black"]],
+        [[1, 2, "circle"]],
+        [[1, 3, "black"]],
+        [
+          [0, 3, "circle"],
+          [2, 3, "circle"],
+          [1, 4, "circle"],
+        ],
+        [[3, 4, "circle"]],
+        [[4, 5, "circle"]],
+        [[3, 5, "black"]],
+        [[2, 5, "circle"]],
+        [[5, 4, "circle"]],
+      ]),
+    },
+    split: {
+      id: "6x6dk:231635324553435412511344463361362544",
+      moves: edits(6, [
+        [[0, 3, "circle"]],
+        [[1, 1, "circle"]],
+        [[4, 4, "circle"]],
+        [[1, 4, "black"]],
+        [
+          [0, 4, "circle"],
+          [2, 4, "circle"],
+          [1, 3, "circle"],
+          [1, 5, "circle"],
+        ],
+        [[2, 3, "black"]],
+        [
+          [3, 3, "circle"],
+          [2, 2, "circle"],
+        ],
+        [[3, 4, "black"]],
+        [[0, 2, "black"]],
+        [
+          [1, 2, "circle"],
+          [0, 1, "circle"],
+        ],
+        [
+          [5, 1, "black"],
+          [0, 5, "black"],
+        ],
+        [
+          [4, 1, "circle"],
+          [5, 0, "circle"],
+          [5, 2, "circle"],
+        ],
+        [[3, 1, "black"]],
+        [
+          [2, 1, "circle"],
+          [3, 0, "circle"],
+          [3, 2, "circle"],
+        ],
+        [[1, 0, "black"]],
+        [
+          [0, 0, "circle"],
+          [2, 0, "circle"],
+        ],
+        [[3, 5, "circle"]],
+        [[5, 4, "circle"]],
+        [[4, 0, "circle"]],
+        [[2, 5, "circle"]],
+      ]),
+    },
+    offset: {
+      id: "6x6dk:122513631454336424114662242615325532",
+      moves: edits(6, [
+        [[1, 4, "circle"]],
+        [[4, 1, "circle"]],
+        [[4, 2, "circle"]],
+        [[5, 4, "circle"]],
+      ]),
+    },
+  },
 });

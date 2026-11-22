@@ -51,31 +51,6 @@ export type RulesSpace<State> =
   | { space(state: State): GridSpace; size?: never };
 
 /**
- * `values`, a `w` by `h` board's, with each undecided square orthogonally
- * beside one holding `v` read as holding `as`, in place: for a game whose
- * rules say so of every answer (Range's and Singles' square beside a shaded
- * one is clear), so a statement read alone sees it, as the player does. A
- * group of open squares the shading cuts off is then clear where it meets
- * the cut.
- */
-export function besideHeld(
-  values: Uint8Array,
-  w: number,
-  h: number,
-  v: number,
-  as: number,
-): Uint8Array {
-  const held = values.slice();
-  for (let i = 0; i < values.length; i++) {
-    if (held[i] !== v) continue;
-    const x = i % w;
-    for (const p of [i - w, i + w, x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1])
-      if (p >= 0 && p < w * h && values[p] === 0) values[p] = as;
-  }
-  return values;
-}
-
-/**
  * `values`, one per edge of `sp`, `line`, `none` or 0 where undecided, with
  * what "the lines are one loop, two at each dot they pass" makes certain of
  * every answer read in place: an open edge at a dot with two lines holds

@@ -1,6 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: singles
+catalog:
+  name: Singles
+  aliases: [Hitori]
+  description: Number-removing puzzle
+  objective: Shade the right set of duplicate numbers.
+  collection: original
+  family: shading
+  similar: Hitori (一人)
 help:
   rules: |-
     Shade some of the squares, in such a way that:
@@ -16,8 +24,10 @@ help:
     The cursor wraps: an arrow key pressed at an edge of the grid carries it
     to the opposite edge.
 
-    Either button, or either key, clears a square that is already shaded
-    or circled.
+    Drag across several squares to make them all what the first one became.
+    Hold Shift while moving the cursor to circle every unmarked square it
+    leaves and enters, or Ctrl to circle those squares even where they are
+    shaded.
 
     A shaded square hides its number. Clicking outside the grid shows
     the numbers on the shaded squares, and clicking there again hides
@@ -84,10 +94,49 @@ clues:
       or (forall L in {row(at), col(at)}, p in cells(L) where p != at and clue(number, p) = v:
       value(p) = 1)
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "[ ]", paint: shade }
+    2: { does: "circle it, marking a square you are sure should stay clear", key: X, glyph: "( )", paint: ring }
+  primary: 1
+  secondary: 2
+  # An unmarked square is clear, as upstream completes the board.
+  blank: 2
+  stroke: sweep
+  # The number fills its square, and reads no block of squares.
+  plain: [number]
+  hides:
+    value: 1
+    pref: { kw: show-black-nums, name: Show numbers on shaded squares }
+  wrap: true
+  # Upstream's five sizes, its 8x8 and 10x10 made upright boards of about
+  # their area, each at both tiers.
+  boards: [5x5, 6x6, 7x9, 9x11, 12x12]
+  # A number is one character of the desc alphabet. Under 4 squares both
+  # ways, no board needs Normal (none in 50,000 at each of 2x2 to 3x3,
+  # measured 2026-10-05).
+  bounds:
+    tiers: { Normal: { longer: { min: 4 } } }
+  hintMarks:
+    ring: "the square the step decides. It is drawn empty: the sentence says whether to shade it or circle it."
+    outline: >-
+      the squares the step reasons from, such as two matching numbers one
+      square apart. One you have already shaded or circled is outlined as
+      well, and so is the corner a step keeps from being boxed in.
+    stripes: the row or column the sentence calls "this row" or "this column".
 deal:
   answer: a Latin square's numbers, and squares covered at random while the clear squares stay joined
   number: a repeated number on each covered square
   tier: one of the tiers
+  # Squares covered at random, the ladder after each keeping the clear ones
+  # joined and the covered ones apart (upstream singles.c's new_game_desc).
+  sample:
+    build: { value: 1 }
+  latin: { kind: number, under: 1 }
+# One character of the desc alphabet a square, its number.
+id:
+  - cells: number
+tierLetters: ek
 tiers: [Easy, Normal]
 names:
   besideCovered: "shaded squares never touching"

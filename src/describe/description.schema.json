@@ -878,6 +878,28 @@
                 }
               }
             },
+            "hides": {
+              "type": "object",
+              "description": "A value whose piece hides the number on its cell, and a preference, off by default, that shows the number there smaller; a press off the grid flips it (upstream's Singles).",
+              "required": ["value", "pref"],
+              "additionalProperties": false,
+              "properties": {
+                "value": { "type": "integer" },
+                "pref": {
+                  "type": "object",
+                  "required": ["kw", "name"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kw": { "type": "string" },
+                    "name": { "type": "string" }
+                  }
+                }
+              }
+            },
+            "wrap": {
+              "const": true,
+              "description": "An arrow at the grid's edge carries the cursor to the other edge (upstream's Singles)."
+            },
             "click": {
               "enum": ["toggle", "cycle"],
               "description": "What a click does: `toggle` (the default) sets the button's value or empties a cell holding it; `cycle` goes round empty, the button's value and the other button's, the right button the other way round."
@@ -1094,6 +1116,15 @@
               },
               {
                 "type": "object",
+                "required": ["cells"],
+                "additionalProperties": false,
+                "description": "A clue kind on every cell, each one character of the desc alphabet (`engine/game-id/desc-alphabet.ts`: `0`–`9`, `a`–`z`, `A`–`Z`), in reading order (upstream's Singles).",
+                "properties": {
+                  "cells": { "type": "string" }
+                }
+              },
+              {
+                "type": "object",
                 "required": ["dots", "cases"],
                 "additionalProperties": false,
                 "description": "A clue kind of two values at cells as upstream's dot runs (`engine/game-id/dot-runs.ts`): a letter a clue, its offset the run of cells before it and its case its value, `cases` the values written lowercase and uppercase. It ends the desc. With `before`, it follows that mark and is written only where a clue is dealt (Pattern's `,`).",
@@ -1184,6 +1215,16 @@
                 }
               ],
               "description": "A clue kind, or several, that no deal deals: only a game ID carries one (Pattern's given squares, which only upstream's pictures hold)."
+            },
+            "latin": {
+              "type": "object",
+              "required": ["kind", "under"],
+              "additionalProperties": false,
+              "description": "A clue kind at every cell dealt as a Latin square's numbers, never derived from the answer; each cell holding the value `under` is then numbered again to repeat a number of its row or column, one single in both where there is one (upstream's singles.c `best_black_col`). With no `hide`.",
+              "properties": {
+                "kind": { "type": "string" },
+                "under": { "type": "integer" }
+              }
             },
             "unpair": {
               "type": "string",

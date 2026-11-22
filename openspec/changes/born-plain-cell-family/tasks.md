@@ -120,7 +120,7 @@ order.
       params string with upstream's `t` deals and opens as Unreasonable,
       where generating was refused; the drag paints with the engine's
       sweep; saves of the hand-written game are not read.
-- [ ] 2.7 Pattern born. 2,066 hand-written lines gone.
+- [x] 2.7 Pattern born. Done 2026-11-22, 2,066 hand-written lines gone.
       Added, each the engine's: list clues on a fill board, a line kind
       whose meaning is `T = v` derived whole and checked live; `id:`'s
       `lists` segment (`order: columns`) and `dots`' `before`; margins as
@@ -142,7 +142,26 @@ order.
       opens as contradictory, not with a message of its own; a shaded
       square is the engine's purple piece; saves of the hand-written game
       are not read.
-- [ ] 2.8 Singles born.
+- [x] 2.8 Singles born. Done 2026-11-22, 1,166 hand-written lines gone.
+      Added, each the engine's: `id:`'s `cells` segment, one
+      desc-alphabet character a cell; `deal.latin`, a Latin square's
+      numbers under the build, each covered cell renumbered to repeat one
+      of its row or column, single in both where it can
+      (`latin-numbers.ts`); `play.hides`, a value whose piece hides the
+      number unless a preference shows it smaller, flipped by a press in
+      the half-tile rim such a board keeps; `play.wrap`; the `ring`
+      painter; the text format's number inside a glyph with a blank middle.
+      Deals measured 2026-11-22 over 8 each: 12x12 Easy median 137 ms,
+      max 262 ms; 12x12 Normal median 20 ms, max 38 ms. Differences a
+      player sees: a press with the other button replaces a mark rather
+      than emptying the cell; Shift or Ctrl with a drag marks clear, as in
+      every sweeping fill game; a Normal board is graded by the ladder
+      alone, without the generator's sneaky step; the hint carries on from
+      its last step rather than taking every number pattern first; live
+      errors are the engine's diamond between touching shaded squares and
+      badges on repeated clear numbers, where a square beside a shaded one
+      was read as clear; Solve fills the answer rather than solving the
+      current board; saves of the hand-written game are not read.
 - [ ] 2.9 Boats born.
 
 ## 3. Finish

@@ -16,6 +16,7 @@ import {
 import { difficultyItem, noSuchTier } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
 import { isDigit } from "../game-id/decimal.ts";
+import { c2n, n2c } from "../game-id/desc-alphabet.ts";
 import { type DescReader, readDesc } from "../game-id/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../game-id/dot-runs.ts";
 import { modifierItem } from "../game-id/modifier.ts";
@@ -66,6 +67,8 @@ export type IdSegment =
       readonly before?: string;
     }
   | { readonly lists: string; readonly order?: "columns" }
+  /** A clue on every cell, each one character of the desc alphabet. */
+  | { readonly cells: string }
   | {
       readonly digits: string;
       readonly apart?: string;
@@ -162,6 +165,10 @@ export interface FillDeal {
   /** The clue kind at a cell of which two side by side and alike are both
    * taken off, so the answer is the ladder's and not the sample. */
   readonly unpair?: string;
+  /** The kind on every cell numbered as a Latin square, and the value under
+   * which a cell is renumbered to repeat a number of its row or column
+   * (`latin-numbers.ts`). */
+  readonly latin?: { readonly kind: string; readonly under: number };
   /** The symmetry the clues it leaves keep: a clue and its partner under a
    * half turn are hidden together. */
   readonly symmetric?: "halfTurn";
@@ -808,6 +815,11 @@ export function encodeDesc<C extends Clues<C>>(
         .join("/");
       continue;
     }
+    if ("cells" in seg) {
+      const list = listOf(seg.cells);
+      for (const c of sp.cells) out += n2c(list.valueAt[c]);
+      continue;
+    }
     const list = listOf(seg.numbers);
     elements(sp, universeOf(deal, seg.numbers), seg.order).forEach((e, i) => {
       out += i === 0 ? (seg.before ?? "") : ",";
@@ -1007,6 +1019,17 @@ export function decodeDesc<C extends Clues<C>>(
       }
       if ("lists" in seg) {
         out[seg.lists as keyof C] = readLists(r, deal, sp, clueMax, seg);
+        continue;
+      }
+      if ("cells" in seg) {
+        const kind = seg.cells as keyof C;
+        const least = deal.least?.[seg.cells] ?? 0;
+        const v = sp.cells.map((c) => {
+          const n = c2n(r.char((ch) => c2n(ch) !== null)) ?? -1;
+          if (n < least || n > maxOf(clueMax, kind, sp, c)) r.fail(DESC_OUT_OF_RANGE);
+          return n;
+        });
+        out[kind] = clueList(sp.cells, v, sp.cells.length);
         continue;
       }
       const kind = seg.numbers as keyof C;

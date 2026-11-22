@@ -311,9 +311,13 @@ function gridFormat<C extends Clues<C>>(
       // A row's line is its index; a column's comes after the rows.
       if (x === w) return clue(y);
       if (y === h) return clue(h + x);
+      // A number on a cell the player fills sits inside the glyph of what the
+      // cell holds, where the glyph leaves its middle blank (Singles' `[3]`).
       for (const kind of reading.numbers ?? []) {
         const n = listOf(dealt, kind).valueAt[y * w + x];
-        if (n >= 0) return ` ${n} `;
+        if (n < 0) continue;
+        const g = reading.glyphs[values[y * w + x]];
+        return g?.[1] === " " && n < 10 ? `${g[0]}${n}${g[2]}` : ` ${n} `;
       }
       const v = values[y * w + x];
       return v === 0 ? " . " : (reading.glyphs[v] ?? " ? ");

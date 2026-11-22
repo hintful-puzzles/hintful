@@ -120,6 +120,15 @@ export interface FillPlay {
   /** Where the open cells a definition holds of are washed (`washed`), the
    * preference that draws the secondary piece on one, on by default. */
   readonly wash?: { readonly pref?: { readonly kw: string; readonly name: string } };
+  /** The value whose piece hides the number on its cell, and the preference
+   * that shows it there, smaller, off by default; a press off the grid
+   * flips it (upstream singles.c). */
+  readonly hides?: {
+    readonly value: number;
+    readonly pref: { readonly kw: string; readonly name: string };
+  };
+  /** Whether an arrow at the grid's edge carries the cursor to the other. */
+  readonly wrap?: true;
   /** The clue kind the cell mark names, where the player draws it as a link
    * between a cell and the clue's cell beside it. */
   readonly links?: {
@@ -144,6 +153,9 @@ export interface FillUi {
   /** The wash's preference (`FillPlay.wash`): whether the secondary piece is
    * drawn on a washed cell. */
   washedMarks: boolean;
+  /** The hiding preference (`FillPlay.hides`): whether a number shows on the
+   * piece that hides it. */
+  hiddenShown: boolean;
 }
 
 export function newFillUi(stroke: FillPlay["stroke"] = "line"): FillUi {
@@ -154,6 +166,7 @@ export function newFillUi(stroke: FillPlay["stroke"] = "line"): FillUi {
     dragOk: false,
     linkArmed: false,
     washedMarks: true,
+    hiddenShown: false,
   };
 }
 
@@ -204,7 +217,11 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   type Verb = TargetVerb<FillBoard<C>, FillUi, Point, Edit>;
   const geometry =
     module.hexagon === undefined
-      ? squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin })
+      ? squareGrid<FillBoard<C>, D>({
+          size: (b) => b,
+          border: origin,
+          ...(play.wrap === true ? { wrap: true } : {}),
+        })
       : hexGrid<FillBoard<C>, D>({
           size: (b) => b,
           border: origin,
@@ -505,6 +522,16 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
       if (ui.drag !== null && (isMouseDown(button) || ui.dragButton >= 0)) {
         const got = lineDrag(b, ui, ui.drag, ds, p, button);
         if (got !== PASS) return got;
+      }
+      // A press off the grid shows or hides the numbers the piece hides.
+      if (
+        play.hides !== undefined &&
+        isMouseDown(button) &&
+        geometry.pointerTarget(b, ds, p, ui) === null
+      ) {
+        ui.cursor.visible = false;
+        ui.hiddenShown = !ui.hiddenShown;
+        return UI_UPDATE;
       }
       const linked = linkKey(b, ui, button);
       if (linked !== PASS) return linked;

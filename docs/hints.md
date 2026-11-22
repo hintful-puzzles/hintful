@@ -347,8 +347,8 @@ Nontrivial is anything past one local rule application. A step whose signal
 is the move itself ("These squares touch a shaded square…") satisfies the
 rule already. The multi-element deductions are the ones that need care; when
 in doubt, lead with the indication. Read orientation off the reason so
-"column" or "row" is concrete. Exemplar: the `offset` arm of Singles, and the
-`singles-hint.test.ts` case that asserts how it opens.
+"column" or "row" is concrete. Exemplar: the `offset` arm of
+`singles.description.yaml`.
 
 ### Two marks of one kind: tie them, and never by color
 
@@ -428,8 +428,9 @@ The deduction knows its targets, so read the digit off the state in `narrate`.
   names. Its users: `npm run refs -- src/engine/hint/apart-by-position.ts
   apartByPosition`.
 
-Exemplar: every branch of `narrate` in
-[`singles/index.ts`](../src/games/singles/index.ts) names a value.
+Exemplar: every wording of
+[`singles.description.yaml`](../src/games/singles/singles.description.yaml)
+names a value.
 
 #### A clue named with its area is marked on its own square
 
@@ -464,7 +465,7 @@ State the premise that discriminates this move from the others. Where two
 candidate moves both satisfy the stated premise, the sentence describes the
 wrong reason, even when the move is right: find the premise that separates
 them. Guard it by asserting the discriminating phrase present and the false
-one absent (`singles-hint.test.ts`, "corner4").
+one absent (`singles.test.ts`, the four matching numbers at a corner).
 
 Where one technique can be forced several ways, carry which. An "only one
 candidate is left" rung has candidates that died of unrelated causes (the

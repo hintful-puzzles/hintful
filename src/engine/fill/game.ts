@@ -7,7 +7,7 @@
  */
 
 import { descValue } from "../contract/desc-error.ts";
-import type { Game, PresetBoards } from "../contract/game.ts";
+import type { Game, GamePref, PresetBoards } from "../contract/game.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
 import { HEXAGON, SQUARE_GRID } from "../contract/sections.ts";
 import type { Point } from "../contract/types.ts";
@@ -184,6 +184,23 @@ export function fillGame<C extends Clues<C> & object>(
           })),
         }),
   };
+  /** A boolean preference on the Ui, by its field. */
+  const flag = (
+    { kw, name }: { readonly kw: string; readonly name: string },
+    field: "washedMarks" | "hiddenShown",
+  ): GamePref<FillUi> => ({
+    kw,
+    name,
+    type: "boolean",
+    get: (ui) => ui[field],
+    set: (ui, v) => {
+      ui[field] = v;
+    },
+  });
+  const prefs = [
+    ...(play.wash?.pref === undefined ? [] : [flag(play.wash.pref, "washedMarks")]),
+    ...(play.hides === undefined ? [] : [flag(play.hides.pref, "hiddenShown")]),
+  ];
   const numbered = module.numbers ?? [];
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
@@ -283,21 +300,7 @@ export function fillGame<C extends Clues<C> & object>(
     clearMistakes,
     revealOne,
     textFormat: (b) => textFormat(reading, b),
-    ...(play.wash?.pref === undefined
-      ? {}
-      : {
-          prefs: [
-            {
-              kw: play.wash.pref.kw,
-              name: play.wash.pref.name,
-              type: "boolean" as const,
-              get: (ui: FillUi) => ui.washedMarks,
-              set: (ui: FillUi, v: boolean) => {
-                ui.washedMarks = v;
-              },
-            },
-          ],
-        }),
+    ...(prefs.length === 0 ? {} : { prefs }),
     // A plain number has no cells to be done with, so is never counted.
     ...(!numbered.some((k) => module.clueCells?.[k] !== undefined)
       ? {}

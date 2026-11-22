@@ -373,6 +373,41 @@ packed toward one end and then the other around the line's decided cells.
 - **THEN** a step shades that column's top four squares, saying its run of
   4 has nowhere to slide
 
+### Requirement: A born game's cell kind may be written a character a cell
+
+An ID's `cells` segment SHALL write its cell kind on every cell in scan
+order, one desc-alphabet character each, and SHALL refuse a desc of another
+length or a number outside the kind's range.
+
+#### Scenario: Singles' 3×3
+
+- **WHEN** `3x3:111321331` is read and written
+- **THEN** its fourth cell holds 3, and the ID it writes is the one read
+
+### Requirement: A born game's numbers may be a Latin square's
+
+`deal.latin` SHALL lay a Latin square's numbers on the build board, and SHALL
+then number each cell holding its `under` value to repeat a number of its
+row or column, one single in both where there is one.
+
+#### Scenario: A Singles deal
+
+- **WHEN** a Singles board is dealt and solved
+- **THEN** each shaded square's number is another square's in its row or
+  column
+
+### Requirement: A born game's piece may hide its number
+
+A value named by `play.hides` SHALL hide its cell's number, and its
+preference SHALL show it smaller; a press in the half tile round the grid
+SHALL flip the preference and make no move. `play.wrap` SHALL carry the
+cursor over the grid's edge.
+
+#### Scenario: A press off Singles' grid
+
+- **WHEN** the player presses outside the grid with the preference off
+- **THEN** it is on, and `interpretMove` returns `UI_UPDATE`
+
 ## MODIFIED Requirements
 
 ### Requirement: A fill game is born from its description

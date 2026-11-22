@@ -233,6 +233,9 @@ const JOIN_SHIFT = 8;
 const WASHED = 1 << 12;
 /** The cell is washed and the preference leaves its secondary piece out. */
 const WASH_HIDES = 1 << 13;
+/** The cell's piece hides its number (`play.hides`) and the preference shows
+ * it: it is drawn smaller, the piece staying what the cell holds. */
+const NUMBER_UNDER = 1 << 14;
 
 /** The step to each of a cell's four sides, up, right, down, left. */
 const DIRS: readonly (readonly [number, number])[] = [
@@ -456,10 +459,26 @@ export function fillRender<C extends Clues<C>>(
    * within a redraw, which sets them from its board first. */
   let depth = 0;
   let boardW = 0;
+  /** Cell `i`'s number as drawn, holding `v`: -1 where it has none, or its
+   * piece hides it (`play.hides`) and the preference does not show it. */
+  const shownNumber = (
+    state: FillBoard<C>,
+    i: number,
+    v: number,
+    show: boolean,
+  ): number => {
+    const at = numberAt(state, i);
+    if (at === null || (v === play.hides?.value && !show)) return -1;
+    return listOf(state.dealt, at.kind).v[at.k];
+  };
+  // Where a press off the grid shows the hidden numbers, the board keeps
+  // half a tile round it to press (upstream singles.c's BORDER).
+  const rim = (ts: number): number =>
+    play.hides === undefined ? 1 : Math.floor(ts / 2);
   const startAt = (ts: number, d: number): number =>
-    labelStart !== undefined ? ts : d > 0 ? d * ts + Math.floor(ts / 4) : 1;
+    labelStart !== undefined ? ts : d > 0 ? d * ts + Math.floor(ts / 4) : rim(ts);
   const start = (ts: number): number => startAt(ts, depth);
-  const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : 1);
+  const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : rim(ts));
   const coord = (n: number, ts: number): number => n * ts + start(ts);
   // A hexagon's rows are drawn sheared, each half a tile right of the one
   // above, its store's corners not at all.
@@ -722,7 +741,17 @@ export function fillRender<C extends Clues<C>>(
     // once done; and broken, a badge on a decided cell, where red ink on a
     // piece would differ in hue with little of lightness in the dark scheme.
     if (n >= 0) {
-      const text = numberText(ts, tx, ty);
+      const full = numberText(ts, tx, ty);
+      const text =
+        lineWord & NUMBER_UNDER
+          ? {
+              ...full,
+              options: {
+                ...full.options,
+                size: Math.floor((full.options.size * 3) / 4),
+              },
+            }
+          : full;
       const dark = piece?.painter.dark === true;
       let color = dark ? COL_NUMBER_LIGHT : COL_INK;
       if (lineWord & NUMBER_BROKEN) {
@@ -1151,10 +1180,10 @@ export function fillRender<C extends Clues<C>>(
         if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
         k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
         const hk = hintWord[i] | outlines.packed(x, y);
-        const lk =
+        let lk =
           lineWord[i] | (states.get(i) ?? 0) | (joins[i] << JOIN_SHIFT) | washes[i];
-        const at = numberAt(state, i);
-        const n = at === null ? -1 : listOf(state.dealt, at.kind).v[at.k];
+        const n = shownNumber(state, i, shown.values[i], ui.hiddenShown);
+        if (n >= 0 && shown.values[i] === play.hides?.value) lk |= NUMBER_UNDER;
         const part =
           parts === null ? null : { walls: parts.walls[i], fill: parts.fills[i] };
         // A growing piece is no key's: its tile is drawn every frame.

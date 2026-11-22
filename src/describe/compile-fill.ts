@@ -180,6 +180,10 @@ export function playOf(
     throw new CompileError(
       "play sweepWith: a button sweeps only where the stroke does",
     );
+  if (rest.hides !== undefined && p.values[rest.hides.value] === undefined)
+    throw new CompileError(
+      `play hides: ${rest.hides.value} is not a value the player places`,
+    );
   const rungs = d.techniques.filter((t) => t.on === null).map((t) => t.id);
   for (const [key, ids] of [
     ["glance", glance],
@@ -567,6 +571,8 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
       throw new CompileError(
         `id: digits of ${kind}, which is not a cell's clue of the values 0 to 9`,
       );
+    if ("cells" in seg && c.at !== "cell")
+      throw new CompileError(`id: cells of ${kind}, which is not a cell's clue`);
     if ("digits" in seg && seg.apart !== undefined && c.at !== "cell")
       throw new CompileError(`id: digits of ${kind}, which is not a cell's clue`);
   }
@@ -623,6 +629,12 @@ function tierAliasesOf(
       return [letter, tierIndex(tiers, tier, "tierAliases")];
     }),
   );
+}
+
+/** `{ [key]: value }` to spread into a module's object, or nothing where
+ * `value` is absent, so the module holds no `null` field. */
+function present<K extends string, V>(key: K, value: V | null): Partial<Record<K, V>> {
+  return value === null ? {} : ({ [key]: value } as Record<K, V>);
 }
 
 export function dealOf(
@@ -723,6 +735,7 @@ export function dealOf(
     if (s === null || !("scatter" in s) || s.climb !== true)
       throw new CompileError("deal unpair: a board unpaired is graded by a climb");
   }
+  const latin = latinOf(json, d);
   if (sample !== null && "scatter" in sample) {
     if ((sample.mend === true || sample.climb === true) && sample.scatter.each !== true)
       throw new CompileError(
@@ -792,11 +805,12 @@ export function dealOf(
     ...(hides ? { hide } : {}),
     ...(stripFrom === undefined ? {} : { stripFrom }),
     ...(typeof leaves === "string" ? { leaves } : {}),
-    ...(tierFlag === null ? {} : { tierFlag }),
-    ...(tierAliases === null ? {} : { tierAliases }),
+    ...present("tierFlag", tierFlag),
+    ...present("tierAliases", tierAliases),
     ...(typeof unpair === "string" ? { unpair } : {}),
+    ...present("latin", latin),
     ...(symmetric === undefined ? {} : { symmetric }),
-    ...(thorough === null ? {} : { thorough }),
+    ...present("thorough", thorough),
     ...(grow === null
       ? {}
       : {
@@ -1249,6 +1263,29 @@ function neverOf(json: DescriptionJson, d: Description): string[] {
   return kinds as string[];
 }
 
+/** `deal.latin`: a kind on every cell the deal numbers as a Latin square
+ * and renumbers under `under` (`engine/fill/latin-numbers.ts`), never derived
+ * from the answer; `null` where it deals none. */
+function latinOf(
+  json: DescriptionJson,
+  d: Description,
+): { readonly kind: string; readonly under: number } | null {
+  const latin = json.deal?.["latin"];
+  if (latin === undefined) return null;
+  if (typeof latin !== "object" || latin === null)
+    throw new CompileError("deal latin: { kind, under }");
+  const { kind, under } = latin as { kind?: unknown; under?: unknown };
+  if (typeof kind !== "string" || d.clueKinds.get(kind)?.at !== "cell")
+    throw new CompileError(`deal latin: ${String(kind)} is no clue kind at a cell`);
+  if (typeof under !== "number" || json.play?.values[String(under)] === undefined)
+    throw new CompileError(
+      `deal latin: under ${String(under)}, which is no value played`,
+    );
+  if (json.deal?.["hide"] !== undefined)
+    throw new CompileError("deal latin: every number is shown, and none hidden");
+  return { kind, under };
+}
+
 /**
  * `<kind>_l`, the list a list kind deals at each element of `universe`, its
  * meaning `T = v` (either way round) with `T` read off the answer: the list
@@ -1330,7 +1367,8 @@ export function derivedClues(
   /** The kinds dealt one in each group, after the rest. */
   const once = new Out(1);
   const outside = json.space.grid?.hexagon?.outside;
-  const never = neverOf(json, d);
+  const latinKind = latinOf(json, d)?.kind;
+  const never = [...neverOf(json, d), ...(latinKind === undefined ? [] : [latinKind])];
   for (const [kind, c] of d.clueKinds) {
     // A hexagon's corners hold its outside kind, and no other cell does.
     if (kind === outside) {

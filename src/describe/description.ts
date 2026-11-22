@@ -163,6 +163,11 @@ export interface PlayJson {
   /** A wash over the open cells where `when` holds, which read as the
    * secondary value, and a preference that draws that value's piece on one. */
   wash?: { when: string; pref?: { kw: string; name: string } };
+  /** A value whose piece hides its cell's number, and the preference that
+   * shows it. */
+  hides?: { value: number; pref: { kw: string; name: string } };
+  /** Whether the cursor carries over the grid's edge. */
+  wrap?: true;
   click?: "toggle" | "cycle";
   /** The clue kind at a cell that the cell is dealt holding. */
   dealt?: string;
@@ -243,6 +248,7 @@ export type IdSegmentJson =
   | { walls: string }
   | { dots: string; cases: [number, number]; before?: string }
   | { lists: string; order?: "columns" }
+  | { cells: string }
   | {
       digits: string;
       apart?: string;
@@ -271,14 +277,16 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
         ? [seg.dots]
         : "lists" in seg
           ? [seg.lists]
-          : "digits" in seg
-            ? [
-                seg.digits,
-                ...Object.values(seg.letters ?? {}),
-                ...Object.values(seg.after ?? {}),
-                ...Object.values(seg.also ?? {}),
-              ]
-            : [seg.numbers];
+          : "cells" in seg
+            ? [seg.cells]
+            : "digits" in seg
+              ? [
+                  seg.digits,
+                  ...Object.values(seg.letters ?? {}),
+                  ...Object.values(seg.after ?? {}),
+                  ...Object.values(seg.also ?? {}),
+                ]
+              : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
