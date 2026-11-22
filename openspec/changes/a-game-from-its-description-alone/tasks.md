@@ -58,6 +58,12 @@ engine commit.
       keeps that is a `sample` parameter to add then, or a stated drop.
 - [ ] 2.7 The hint: `describedFiringHint`'s hooks from the board; `MARK`
       facts as an `Edit`'s marks; step words from `says` and its arms.
+      Where it starts (2026-11-22): the plan's fact loop in
+      `engine/hint/described-firing-hint.ts` skips every fact but `PLACE`.
+      The renderer (`engine/fill/render.ts`) already draws a step's
+      `ring`/`outline`/`stripes` of `CELL`, `ring` of `LINK` (a cell and
+      the clue's cell) and `outline` of `LINE` (a line's clue, by its index
+      in `sp.lines`), from `engine/fill/marks.ts`: the hint emits those.
 
 ## 3. The games
 
