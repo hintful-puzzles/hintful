@@ -173,7 +173,14 @@
       also reads its cell marks (track, no track) in its clue counts, which
       edges alone cannot hold: a cell marked no track reads its edges as
       none, but a cell marked track needs the per-element mask Bridges does
-      (above), or a bound from a mark's declared `of` term. Rome's goal
+      (above), or a bound from a mark's declared `of` term. (2026-11-22)
+      The mask does not cover it: a square marked track says one of its
+      sides holds a rail, a disjunction over edges no per-edge mask holds,
+      so Tracks needs the mark read through its `of` (`2 - drawn(at) / 2`
+      is 1, so `drawn(at)` is 2). Its path rule is already the through form,
+      and its "every other track is wrong once A meets B" is a reading like
+      `oneLoopHeld`: once the lines join the two ends, every open edge is
+      none. Rome's goal
       chain and wordtrail's pieces are to be read before their batch.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
