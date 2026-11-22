@@ -22,19 +22,19 @@ tests excluded, as of 2026-11-22:
 | Boats | 2,949 | `n`, `seg`, `fleet` |
 | Clusters | 1,506 | `dot` |
 | Bricks | 1,838 | `hole`, `number` |
-| Magnets | 3,423 | `count`; a dealt partition of tiles |
 | Sticks | 1,642 | `block`, `length`, `joins` |
-| Undead | 3,353 | `mirror`, `sees` |
 
-That is 22,437 lines. Each game's TypeScript goes. Its tests become one
+That is 15,661 lines. Each game's TypeScript goes. Its tests become one
 file of hint pins plus what only it decides, as for the pilots. Game IDs
-and links keep loading. Saves are expected to break, as the pilots' did;
-the owner is asked once for the whole family (task 1.2).
+and links keep loading. Saves break, as the pilots' did (the owner,
+2026-11-22).
 
 Out of scope:
 - Map, whose colors fill regions, not cells.
 - Games with candidate notes or a keypad (Crossing, Seismic, the Latin
-  games), which are the candidate family's own change.
+  games), which are the candidate family's own change. Undead and Magnets,
+  listed here first, have candidate notes too (design.md § "The gap list
+  (1.1)"), and go with them (the owner, 2026-11-22).
 - Games whose answer is on edges or links.
 
 ## Capabilities
@@ -51,6 +51,6 @@ None.
 ## Impact
 
 - `src/engine/fill/`, `src/describe/` and `src/games/<game>/` for the
-  eleven games.
+  nine games.
 - The `game-lines` ceiling falls by each game's lines.
-- Saves of the moved games, if the owner confirms the break.
+- Saves of the moved games break.

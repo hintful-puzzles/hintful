@@ -1,11 +1,13 @@
 ## 1. Design
 
-- [ ] 1.1 Per game, the gap list: what its description already states,
+- [x] 1.1 Per game, the gap list: what its description already states,
       what `fillGame` lacks to deal, draw and play it, its ID grammar, and
       how its saves are written. Write it in `design.md`, and set the
-      order (§ 1).
-- [ ] 1.2 Ask the owner whether the eleven games' saves break, with each
-      game's cost from 1.1.
+      order (§ 1). Written 2026-11-22. Undead and Magnets have candidate
+      notes, so are not of this family.
+- [x] 1.2 Ask the owner whether the games' saves break, with each game's
+      cost from 1.1. The owner (2026-11-22): break them; and move Undead
+      and Magnets to the candidate family's change.
 
 ## 2. The games
 
@@ -13,20 +15,18 @@ Each its own commit, with the hand-written game playing on until its flip.
 Each flip runs in the app before it is done: a deal, input, hints, live
 errors, dark mode, and a solve to the end. It lists the capabilities it
 added here, lowers the `game-lines` ceiling, writes its spec deltas, and
-runs `npm run test:hint-sweeps` before its commit. The order is 1.1's; this
-list is not it.
+runs `npm run test:hint-sweeps` before its commit. In design.md § 1's
+order.
 
-- [ ] 2.1 Star Battle born.
-- [ ] 2.2 Singles born.
-- [ ] 2.3 Light Up born.
-- [ ] 2.4 Pattern born.
-- [ ] 2.5 Range born.
-- [ ] 2.6 Boats born.
-- [ ] 2.7 Clusters born.
-- [ ] 2.8 Bricks born.
-- [ ] 2.9 Magnets born.
-- [ ] 2.10 Sticks born.
-- [ ] 2.11 Undead born.
+- [ ] 2.1 Range born.
+- [ ] 2.2 Star Battle born.
+- [ ] 2.3 Clusters born.
+- [ ] 2.4 Light Up born.
+- [ ] 2.5 Sticks born.
+- [ ] 2.6 Bricks born.
+- [ ] 2.7 Pattern born.
+- [ ] 2.8 Singles born.
+- [ ] 2.9 Boats born.
 
 ## 3. Finish
 
