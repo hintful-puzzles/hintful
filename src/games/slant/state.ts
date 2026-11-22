@@ -11,7 +11,6 @@
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
-import { findLoops } from "../../engine/board/findloop.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import { assertNever } from "../../engine/contract/assert-never.ts";
 import {
@@ -24,7 +23,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import type { GameStatus, Point } from "../../engine/contract/types.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
 import { dimensionParamConfig } from "../../engine/game-id/params.ts";
@@ -61,13 +60,6 @@ export interface SlantState {
   /** Per-square same-slant marks: {@link ALIKE_RIGHT} joins a square to its
    * right neighbor, {@link ALIKE_DOWN} to the one below. */
   readonly alike: Uint8Array;
-  /** Per-square: this diagonal lies on a closed loop (upstream ERR_SQUARE). */
-  readonly loopErrors: Uint8Array;
-  /** Per-vertex: this clue is over-committed or unsatisfiable (ERR_VERTEX). */
-  readonly vertexErrors: Uint8Array;
-  /** Per-square: this diagonal is connected to the border (BORDER_EDGE) —
-   * not an error; the fade-grounded pref renders it dimmed. */
-  readonly grounded: Uint8Array;
 }
 
 /** Which neighbor a same-slant mark joins a square to. */
@@ -189,117 +181,61 @@ export function newState(p: SlantParams, desc: string): SlantState {
     clues: decodeClues(p, desc),
     soln: new Int8Array(w * h),
     alike: new Uint8Array(w * h),
-    loopErrors: new Uint8Array(w * h),
-    vertexErrors: new Uint8Array((w + 1) * (h + 1)),
-    grounded: new Uint8Array(w * h),
   };
 }
 
-// --- error / completion analysis (upstream check_completion) --------------
+// --- board readings ---------------------------------------------------------
 
-/**
- * Current degree of a vertex: the number of placed diagonals meeting it.
- * With `anti`, returns 4 minus the number of placed diagonals *avoiding* it
- * (i.e. the maximum degree it could still reach) — yes, 4 even on a border
- * vertex, faithful to upstream.
- */
+/** The number of placed diagonals meeting the point (x, y). */
 export function vertexDegree(
   w: number,
   h: number,
   soln: Int8Array,
   x: number,
   y: number,
-  anti: boolean,
 ): number {
-  const a = anti ? 1 : 0;
   let ret = 0;
-  if (x > 0 && y > 0 && soln[(y - 1) * w + (x - 1)] - a < 0) ret++;
-  if (x > 0 && y < h && soln[y * w + (x - 1)] + a > 0) ret++;
-  if (x < w && y > 0 && soln[(y - 1) * w + x] + a > 0) ret++;
-  if (x < w && y < h && soln[y * w + x] - a < 0) ret++;
-  return anti ? 4 - ret : ret;
+  if (x > 0 && y > 0 && soln[(y - 1) * w + (x - 1)] < 0) ret++;
+  if (x > 0 && y < h && soln[y * w + (x - 1)] > 0) ret++;
+  if (x < w && y > 0 && soln[(y - 1) * w + x] > 0) ret++;
+  if (x < w && y < h && soln[y * w + x] < 0) ret++;
+  return ret;
 }
 
-/** Recompute the full error overlay + completion verdict for a board. */
-export function computeErrors(w: number, h: number, clues: Int8Array, soln: Int8Array) {
+/**
+ * Per square, 1 where its diagonal is joined, through other diagonals, to
+ * the border: such a diagonal can never be part of a loop, which the
+ * fade-grounded preference shows by dimming it.
+ */
+export function groundedOf(w: number, h: number, soln: Int8Array): Uint8Array {
   const W = w + 1;
-  const H = h + 1;
-  const loopErrors = new Uint8Array(w * h);
-  const vertexErrors = new Uint8Array(W * H);
   const grounded = new Uint8Array(w * h);
-  let err = false;
-
-  // Grounded (border-connected) components: a diagonal in the border's
-  // vertex component can never be part of a loop.
-  {
-    const connected = new Dsf(W * H);
-    for (let x = 0; x <= w; x++) {
-      connected.merge(x, 0);
-      connected.merge(h * W + x, 0);
+  const connected = new Dsf(W * (h + 1));
+  for (let x = 0; x <= w; x++) {
+    connected.merge(x, 0);
+    connected.merge(h * W + x, 0);
+  }
+  for (let y = 0; y <= h; y++) {
+    connected.merge(y * W, 0);
+    connected.merge(y * W + w, 0);
+  }
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const s = soln[y * w + x];
+      if (s === -1) connected.merge(y * W + x, (y + 1) * W + (x + 1));
+      else if (s === 1) connected.merge(y * W + (x + 1), (y + 1) * W + x);
     }
-    for (let y = 0; y <= h; y++) {
-      connected.merge(y * W, 0);
-      connected.merge(y * W + w, 0);
-    }
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const s = soln[y * w + x];
-        if (s === -1) connected.merge(y * W + x, (y + 1) * W + (x + 1));
-        else if (s === 1) connected.merge(y * W + (x + 1), (y + 1) * W + x);
-      }
-    }
-    const rootNW = connected.canonify(0);
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const s = soln[y * w + x];
-        if (s !== 0 && connected.canonify(y * W + x + (s === 1 ? 1 : 0)) === rootNW) {
-          grounded[y * w + x] = 1;
-        }
+  }
+  const rootNW = connected.canonify(0);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const s = soln[y * w + x];
+      if (s !== 0 && connected.canonify(y * W + x + (s === 1 ? 1 : 0)) === rootNW) {
+        grounded[y * w + x] = 1;
       }
     }
   }
-
-  // Loops: a diagonal lying on a graph loop is an error.
-  {
-    const result = findLoops(W * H, function* (vertex) {
-      const x = vertex % W;
-      const y = Math.floor(vertex / W);
-      if (x < w && y < h && soln[y * w + x] < 0) yield (y + 1) * W + (x + 1);
-      if (x > 0 && y > 0 && soln[(y - 1) * w + (x - 1)] < 0)
-        yield (y - 1) * W + (x - 1);
-      if (x > 0 && y < h && soln[y * w + (x - 1)] > 0) yield (y + 1) * W + (x - 1);
-      if (x < w && y > 0 && soln[(y - 1) * w + x] > 0) yield (y - 1) * W + (x + 1);
-    });
-    if (result.anyLoop) err = true;
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const s = soln[y * w + x];
-        if (s === 0) continue;
-        const u = s > 0 ? y * W + (x + 1) : (y + 1) * W + (x + 1);
-        const v = s > 0 ? (y + 1) * W + x : y * W + x;
-        if (result.isLoopEdge(u, v)) loopErrors[y * w + x] = 1;
-      }
-    }
-  }
-
-  // Clue vertices: too many connections, or too many avoidances to ever
-  // reach the clue, are both errors.
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const c = clues[y * W + x];
-      if (c < 0) continue;
-      if (
-        vertexDegree(w, h, soln, x, y, false) > c ||
-        vertexDegree(w, h, soln, x, y, true) > 4 - c
-      ) {
-        vertexErrors[y * W + x] = 1;
-        err = true;
-      }
-    }
-  }
-
-  const complete = !err && !soln.includes(0);
-  return { loopErrors, vertexErrors, grounded, complete };
+  return grounded;
 }
 
 // --- moves ---------------------------------------------------------------
@@ -332,22 +268,10 @@ export function executeMove(state: SlantState, move: SlantMove): SlantState {
     return assertNever(move, "slant: executeMove");
   }
 
-  const errors = computeErrors(w, h, state.clues, soln);
-  return {
-    ...state,
-    soln,
-    loopErrors: errors.loopErrors,
-    vertexErrors: errors.vertexErrors,
-    grounded: errors.grounded,
-  };
+  return { ...state, soln };
 }
 
 // --- status / text -------------------------------------------------------
-
-export function status(state: SlantState): GameStatus {
-  const { w, h, clues, soln } = state;
-  return computeErrors(w, h, clues, soln).complete ? "solved" : "ongoing";
-}
 
 export function textFormat(state: SlantState): string {
   const { w, h, clues, soln } = state;

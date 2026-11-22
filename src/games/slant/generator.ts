@@ -53,7 +53,7 @@ function deriveClues(w: number, h: number, soln: Int8Array): Int8Array {
   const clues = new Int8Array(W * (h + 1));
   for (let y = 0; y <= h; y++) {
     for (let x = 0; x <= w; x++) {
-      clues[y * W + x] = vertexDegree(w, h, soln, x, y, false);
+      clues[y * W + x] = vertexDegree(w, h, soln, x, y);
     }
   }
   return clues;

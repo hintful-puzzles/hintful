@@ -110,6 +110,15 @@ shape:
   # No loop: every point is joined, along the diagonals, to the border, which
   # on a full board is the same.
   - "forall k in points: exists q in linked(k): |cells(q)| < 4"
+implied:
+  # No diagonal closes a loop: the two points it joins are joined by no
+  # other way. Said of each diagonal, so a loop's diagonals are where it
+  # breaks, where the shape names the points it shuts in. (A definition
+  # would be in every technique's soundness fingerprint.)
+  noLoop: >-
+    forall c in cells, k in {p in points(c) where slash(c, p) = value(c)},
+    q in before(k, {p in points(c) where slash(c, p) = value(c)}):
+    q not in linked(k, c)
 clues:
   # A number at a point, which that many diagonals meet.
   n:

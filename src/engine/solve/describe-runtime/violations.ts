@@ -252,56 +252,89 @@ export function apartThrough(
  * graph `E` makes, by one depth-first walk (Tarjan's bridges).
  */
 export function cycleEdges(sp: GridSpace, E: readonly number[]): number[] {
-  const n = sp.cells.length;
-  const inE = new Uint8Array(sp.edgeEnds.length / 2);
-  for (const e of E) inE[e] = 1;
+  const ends: number[] = [];
+  for (const e of E) ends.push(sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]);
+  const on = cycleLinks(sp.cells.length, ends);
+  return E.filter((_, i) => on[i] === 1);
+}
+
+/**
+ * The squares of `lines`, triples of a square and the two points its
+ * diagonal joins, whose diagonal lies on a cycle of the others: "no
+ * diagonal closes a loop" breaks at each (Slant's loop, every diagonal of
+ * it).
+ */
+export function cycleDiagonals(sp: GridSpace, lines: readonly number[]): number[] {
+  const ends: number[] = [];
+  for (let i = 0; i < lines.length; i += 3) ends.push(lines[i + 1], lines[i + 2]);
+  const on = cycleLinks(sp.points.length, ends);
+  const out: number[] = [];
+  for (let i = 0; i < on.length; i++) if (on[i] === 1) out.push(lines[3 * i]);
+  return out;
+}
+
+/**
+ * Of the links `ends` lists by their two ends, among `n` nodes, 1 for each
+ * on a cycle of the links: every link that is not a bridge of the graph they
+ * make, by one depth-first walk (Tarjan's bridges).
+ */
+function cycleLinks(n: number, ends: readonly number[]): Uint8Array {
+  const m = ends.length / 2;
+  // Each node's links, as a compressed adjacency list.
+  const start = new Int32Array(n + 1);
+  for (const x of ends) start[x + 1]++;
+  for (let i = 0; i < n; i++) start[i + 1] += start[i];
+  const fill = start.slice(0, n);
+  const links = new Int32Array(2 * m);
+  for (let l = 0; l < m; l++) {
+    links[fill[ends[2 * l]]++] = l;
+    links[fill[ends[2 * l + 1]]++] = l;
+  }
   const order = new Int32Array(n).fill(-1);
   const low = new Int32Array(n);
-  const bridge = new Uint8Array(inE.length);
+  const bridge = new Uint8Array(m);
   let time = 0;
-  // Each frame: the cell, the edge it was entered by, and how far through
-  // its edges the walk is.
-  const cell: number[] = [];
+  // Each frame: the node, the link it was entered by, and how far through
+  // its links the walk is.
+  const node: number[] = [];
   const by: number[] = [];
   const at: number[] = [];
-  for (const e0 of E) {
-    const root = sp.edgeEnds[2 * e0];
+  for (let l0 = 0; l0 < m; l0++) {
+    const root = ends[2 * l0];
     if (order[root] >= 0) continue;
     order[root] = low[root] = time++;
-    cell.push(root);
+    node.push(root);
     by.push(-1);
-    at.push(0);
-    while (cell.length > 0) {
-      const top = cell.length - 1;
-      const c = cell[top];
-      const edges = sp.cellEdges[c];
-      if (at[top] < edges.length) {
-        const e = edges[at[top]++];
-        // The edge walked in by is not a way back, though another edge
-        // between the same two cells is.
-        if (!inE[e] || e === by[top]) continue;
-        const d =
-          sp.edgeEnds[2 * e] === c ? sp.edgeEnds[2 * e + 1] : sp.edgeEnds[2 * e];
+    at.push(start[root]);
+    while (node.length > 0) {
+      const top = node.length - 1;
+      const c = node[top];
+      if (at[top] < start[c + 1]) {
+        const l = links[at[top]++];
+        // The link walked in by is not a way back, though another link
+        // between the same two nodes is.
+        if (l === by[top]) continue;
+        const d = ends[2 * l] === c ? ends[2 * l + 1] : ends[2 * l];
         if (order[d] >= 0) {
           low[c] = Math.min(low[c], order[d]);
           continue;
         }
         order[d] = low[d] = time++;
-        cell.push(d);
-        by.push(e);
-        at.push(0);
+        node.push(d);
+        by.push(l);
+        at.push(start[d]);
         continue;
       }
-      cell.pop();
-      const e = by.pop() as number;
+      node.pop();
+      const l = by.pop() as number;
       at.pop();
-      if (cell.length === 0) continue;
-      const parent = cell[cell.length - 1];
+      if (node.length === 0) continue;
+      const parent = node[node.length - 1];
       low[parent] = Math.min(low[parent], low[c]);
-      if (low[c] > order[parent]) bridge[e] = 1;
+      if (low[c] > order[parent]) bridge[l] = 1;
     }
   }
-  return E.filter((e) => !bridge[e]);
+  return bridge.map((b) => 1 - b);
 }
 
 /** The members of `need` in each group of `need` and `give` joined by sides

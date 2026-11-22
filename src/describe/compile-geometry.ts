@@ -237,8 +237,28 @@ export function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | nu
       env.used.add("slash");
       return { code: `slash(sp, ${cell(0)}, ${vs[1].code})`, sort: NUM };
     case "linked": {
-      arity(1);
+      if (vs.length !== 1 && vs.length !== 2)
+        throw new CompileError(`linked takes 1 or 2, given ${vs.length}`);
       expectElem(vs[0], "point", fn);
+      // `linked(k, c)`: as if square c had no diagonal, which only a rule
+      // reads ("no diagonal closes a loop"), so no group the marks keep
+      // serves it.
+      if (vs.length === 2) {
+        if (!env.answer)
+          throw new CompileError("linked(k, c) is read by a rule, not a technique");
+        const x = Out.fresh("_x");
+        const read = markRead(
+          "value",
+          { code: x, sort: elem("cell") },
+          env,
+          new Out(0),
+        );
+        env.used.add("linked");
+        return {
+          code: `linked(sp, (${x}: number) => ${x} === ${cell(1)} ? 0 : ${read.code}, ${vs[0].code})`,
+          sort: setOf(elem("point")),
+        };
+      }
       // The marks' own groups, kept while no value is placed, where nothing
       // is supposed.
       if (!env.answer && env.supposed.length === 0) {
@@ -252,8 +272,15 @@ export function diagonalCall(fn: string, vs: readonly Val[], env: Env): Val | nu
       const x = Out.fresh("_x");
       const read = markRead("value", { code: x, sort: elem("cell") }, env, new Out(0));
       // The answer check reads one grid, so its groups are joined once a
-      // check, not walked from each point.
-      if (env.answer && env.supposed.length === 0 && env.scratch !== null) {
+      // check, not walked from each point. A board still being filled is
+      // walked from each, so an undecided square stops only the walks that
+      // reach it.
+      if (
+        env.answer &&
+        !env.answer.partial &&
+        env.supposed.length === 0 &&
+        env.scratch !== null
+      ) {
         if (!env.scratch.some((s) => s.startsWith("const _links ")))
           env.scratch.push(
             `const _links = pointGroups(sp, (${x}: number) => ${read.code});`,

@@ -107,8 +107,6 @@ const KEPT_UNUSED = {
   // The compiler (src/describe/compile.ts) writes calls to these into a
   // compiled module, by name, for a statement that uses the form; no module
   // compiled today does.
-  "src/engine/solve/describe-runtime.ts::linked":
-    "called by compiled code for linked(k) read with a square supposed",
   "src/engine/solve/describe-runtime.ts::knownIn":
     "called by compiled code for known(x) read in a rule's violation check",
   "src/engine/solve/describe-runtime.ts::rectWithin":

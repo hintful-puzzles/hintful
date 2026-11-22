@@ -168,8 +168,18 @@
       stays the generator's. New: a locked tile whose piece no longer fits
       the sides read round it is red whole, and a group of locked tiles
       closed off is red.
-      Next: slant's shape reads
-      `linked(k)`, which needs the same sure/possible reading. Tracks
+      Moved (2026-11-22): slant. Its shape ("every point reaches the
+      border") names the points a loop shuts in, so it states `noLoop`,
+      implied, over the points: `q not in linked(k, c)` for the two points
+      k, q square c's diagonal joins, `linked(k, c)` leaving c's diagonal
+      out; the compiler reads it as the edge cycle form, the drawn diagonals
+      on a cycle of drawn diagonals (`cycleDiagonals`, one bridge walk with
+      `cycleEdges`). The violation check walks `linked(k)` from each point,
+      where it hoisted one grouping of the whole board ahead of the board's
+      declaration. Its `loopErrors`, `vertexErrors` and `grounded` leave the
+      State, the fade reading `groundedOf` at redraw; a border number both
+      its squares miss is red, which the old check, counting four squares
+      round every point, never showed. Tracks
       also reads its cell marks (track, no track) in its clue counts, which
       edges alone cannot hold: a cell marked no track reads its edges as
       none, but a cell marked track needs the per-element mask Bridges does

@@ -990,6 +990,61 @@ export function cycleOf(e: Extract<Expr, { k: "quant" }>): Binder | null {
   return b;
 }
 
+/**
+ * `forall c in cells [where W], k in J, q in before(k, J): q not in
+ * linked(k, c)`, `J` the points square c's diagonal joins: no diagonal
+ * closes a loop, the cycle form over the points (Slant's). The violation
+ * check reads it as one walk over the diagonals drawn. Its three binders,
+ * or `null` for any other statement.
+ */
+export function pointCycleOf(
+  e: Extract<Expr, { k: "quant" }>,
+): readonly [Binder, Binder, Binder] | null {
+  if (e.q !== "forall" || e.binders.length !== 3) return null;
+  const [c, k, q] = e.binders;
+  if (c.kind !== "in" || c.of.k !== "name" || c.of.name !== "cells") return null;
+  if (k.kind !== "in" || k.where !== null || q.kind !== "in" || q.where !== null)
+    return null;
+  const J = k.of;
+  if (J.k !== "agg" || J.fn !== "set" || J.where !== null || J.binders.length !== 1)
+    return null;
+  const [p] = J.binders;
+  const call = (fn: string, ...args: Expr[]): Expr => ({ k: "call", fn, args });
+  const ends: Expr = {
+    k: "bin",
+    op: "=",
+    a: call("slash", nm(c.name), nm(p.name)),
+    b: call("value", nm(c.name)),
+  };
+  if (
+    p.kind !== "in" ||
+    JSON.stringify(p.of) !== JSON.stringify(call("points", nm(c.name))) ||
+    JSON.stringify(p.where) !== JSON.stringify(ends) ||
+    JSON.stringify(J.term) !== JSON.stringify(nm(p.name))
+  )
+    return null;
+  const before = q.of;
+  if (
+    before.k !== "call" ||
+    before.fn !== "before" ||
+    before.args.length !== 2 ||
+    JSON.stringify(before.args[0]) !== JSON.stringify(nm(k.name)) ||
+    JSON.stringify(before.args[1]) !== JSON.stringify(k.of)
+  )
+    return null;
+  const { body } = e;
+  if (body.k !== "bin" || body.op !== "notin") return null;
+  const walk = body.b;
+  if (
+    JSON.stringify(body.a) !== JSON.stringify(nm(q.name)) ||
+    walk.k !== "call" ||
+    walk.fn !== "linked" ||
+    JSON.stringify(walk.args) !== JSON.stringify([nm(k.name), nm(c.name)])
+  )
+    return null;
+  return [c, k, q];
+}
+
 /** Whether `e` reads the name `n` without binding it. */
 function readsFree(e: Expr, n: string): boolean {
   const free = new Set<string>();

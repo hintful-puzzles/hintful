@@ -312,7 +312,8 @@ description author acts on:
   square's four corners. A clue may sit at one (`at: point`). `slash(c, k)`
   is the value of square `c`'s diagonal through its corner `k`, 1 from above
   left to below right and 2 the other way; `linked(k)` is `k` and the points
-  the drawn diagonals join it to, in reading order. The runtime keeps the
+  the drawn diagonals join it to, in reading order, and `linked(k, c)` the
+  same with square `c`'s diagonal left out, which only a rule reads. The runtime keeps the
   groups as the hand-written solver did, joined a placement at a time from
   the marks' log, so `x in linked(k)` costs a lookup, and a `sum`, `count`,
   `forall` or `exists` over `linked(k)` whose term reads the marks only
@@ -1078,7 +1079,10 @@ says how each form is read; what a description's author acts on:
   square of a piece's length. `forall e in edges where
   W: end2(e) not in through(end1(e), {x in edges where W' and x != e})`,
   W' being W said of x, is read as one, "no line closes a loop": each sure
-  edge on a cycle of sure edges, found in one walk. A form that reads only
+  edge on a cycle of sure edges, found in one walk. Over the points, `forall
+  c in cells, k in J, q in before(k, J): q not in linked(k, c)`, J being
+  `{p in points(c) where slash(c, p) = value(c)}`, is the same: each drawn
+  diagonal on a cycle of drawn diagonals (Slant's). A form that reads only
   decided elements needs nothing: a rule is reported once its elements are
   decided, and bounding it earlier is that form's work in the compiler,
   never a game's.
@@ -1120,7 +1124,10 @@ says how each form is read; what a description's author acts on:
   where the rules make it so only through a count or a shape, is said of
   each line in the cycle form above, so a loop's lines are where it breaks:
   Path's `noLoop`, implied, where a loop through numbers in order breaks no
-  other statement. A network is said as the through form over every pair of
+  other statement, and Slant's, where the shape names the points a loop
+  shuts in. An implied statement is in no technique's soundness
+  fingerprint and a definition is in every one, so a set only the
+  statement reads is written in place. A network is said as the through form over every pair of
   squares and the cycle form, never as "one fewer line than squares, every
   square reached from the first": the count names every line, and the reach
   every square the first one's group does not hold (Net).

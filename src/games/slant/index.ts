@@ -77,10 +77,12 @@ import {
   type SlantDrawState,
 } from "./render.ts";
 import {
+  rules,
   SOLVE_IMPOSSIBLE,
   SOLVE_UNIQUE,
   slantSolve,
   solveFromClues,
+  status,
 } from "./solver.ts";
 import {
   ALIKE_DOWN,
@@ -100,7 +102,6 @@ import {
   type SlantState,
   type SlantUi,
   type Slash,
-  status,
   textFormat,
 } from "./state.ts";
 
@@ -367,6 +368,7 @@ export const slantGame: Game<
   interpretMove,
   executeMove,
   status,
+  rules,
 
   solve,
   difficulty,

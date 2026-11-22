@@ -11,6 +11,8 @@
  * fills is uniquely solved, at either tier.
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import type { Judging } from "../../engine/hint/move-judge.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import {
@@ -21,6 +23,7 @@ import {
   rangeMask,
   slash,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import { FactGraph } from "../../engine/solve/fact-graph.ts";
 import {
   compiledRung,
@@ -34,7 +37,13 @@ import {
 import { ladderWalk, type Taken } from "../../engine/solve/ladder-walk.ts";
 import { stepBudget } from "../../engine/solve/step-budget.ts";
 import * as slant from "../../generated/games/slant/slant.compiled.ts";
-import { ALIKE_DOWN, ALIKE_RIGHT, DIFF_NORMAL, type Slash } from "./state.ts";
+import {
+  ALIKE_DOWN,
+  ALIKE_RIGHT,
+  DIFF_NORMAL,
+  type SlantState,
+  type Slash,
+} from "./state.ts";
 
 /** Solver verdicts (upstream's 0 / 1 / 2 return codes). */
 export const SOLVE_IMPOSSIBLE = 0;
@@ -206,6 +215,20 @@ export function slantSolve(
   if (impossible) return SOLVE_IMPOSSIBLE;
   if (grid.includes(0)) return SOLVE_NOT_CONVERGED;
   return slant.isAnswer(grid, sp, dl) ? SOLVE_UNIQUE : SOLVE_IMPOSSIBLE;
+}
+
+/** The diagonals as the rules read them, 0 where none is drawn. Same-slant
+ * marks are notes and play no part. */
+export const rules: RulesOf<SlantState> = describedRules(slant, {
+  grid: (s) => Uint8Array.from(s.soln, describedOf),
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s.clues)],
+});
+
+/** Solved where every square has its diagonal and they are an answer. */
+export function status(state: SlantState): GameStatus {
+  const g = rules.grid(state);
+  return !g.includes(0) && rules.isAnswer(state, g) ? "solved" : "ongoing";
 }
 
 /** Solve a board's clues from scratch at the top tier, as `solve()` and

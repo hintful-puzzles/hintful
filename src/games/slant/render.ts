@@ -50,6 +50,7 @@ import {
   drawMarkSides,
   MARK_ALL,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import {
   type PencilIndicatorCache,
@@ -61,11 +62,14 @@ import {
 import { NOTHING_TO_CLEAR, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/render/win-wave.ts";
+import type * as slant from "../../generated/games/slant/slant.compiled.ts";
 import type { SlantHint, SlantMark } from "./hint.ts";
 import { ALIKE, CLUE } from "./hint-marks.ts";
+import { rules } from "./solver.ts";
 import {
   ALIKE_DOWN,
   ALIKE_RIGHT,
+  groundedOf,
   type SlantMistake,
   type SlantMove,
   type SlantParams,
@@ -74,6 +78,8 @@ import {
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
+
+const NO_LOOP: slant.RuleName = "noLoop";
 
 // --- palette --------------------------------------------------------------
 // `COL_HINT_OUTLINE` outlines the evidence area and the cited anchors; the win
@@ -552,9 +558,14 @@ export function redraw(
     }
   }
 
+  // A loop's diagonals and the numbers the rules break. The shape breaks
+  // only at points a loop shuts in, so the loop's own marks show it.
+  const live = liveErrors(rules, state);
+  const loops = new Uint8Array(w * h);
+  for (const [c] of live.byRule.get(NO_LOOP) ?? []) loops[c] = 1;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      const err = state.loopErrors[y * w + x] !== 0;
+      const err = loops[y * w + x] !== 0;
       if (soln[y * w + x] < 0) {
         todraw[ti(x, y)] |= BACKSLASH;
         todraw[ti(x, y + 1)] |= T_R;
@@ -582,23 +593,27 @@ export function redraw(
     }
   }
 
-  // A clue vertex in error reddens its number in all four tiles that draw it.
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      if (state.vertexErrors[y * W + x]) {
-        todraw[y * stride + x] |= ERR_BR;
-        todraw[y * stride + (x + 1)] |= ERR_BL;
-        todraw[(y + 1) * stride + x] |= ERR_TR;
-        todraw[(y + 1) * stride + (x + 1)] |= ERR_TL;
-      }
+  // A broken number reddens in all four tiles that draw it. The dealt
+  // numbers are listed in reading order of their points.
+  const broken = live.clues.get("n") ?? new Set<number>();
+  for (let k = 0, p = 0; p < W * H; p++) {
+    if (clues[p] < 0) continue;
+    if (broken.has(k++)) {
+      const x = p % W;
+      const y = (p / W) | 0;
+      todraw[y * stride + x] |= ERR_BR;
+      todraw[y * stride + (x + 1)] |= ERR_BL;
+      todraw[(y + 1) * stride + x] |= ERR_TR;
+      todraw[(y + 1) * stride + (x + 1)] |= ERR_TL;
     }
   }
 
   // Grounded fade (pref): a border-connected diagonal can never loop.
   if (ui.fadeGrounded) {
+    const grounded = groundedOf(w, h, soln);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        if (state.grounded[y * w + x]) todraw[ti(x, y)] |= GROUNDED;
+        if (grounded[y * w + x]) todraw[ti(x, y)] |= GROUNDED;
       }
     }
   }

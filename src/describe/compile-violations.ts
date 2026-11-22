@@ -27,7 +27,14 @@ import {
   type Scope,
   type Val,
 } from "./compile-sorts.ts";
-import { cycleOf, freeNames, inlined, joinOf, substitute } from "./compile-terms.ts";
+import {
+  cycleOf,
+  freeNames,
+  inlined,
+  joinOf,
+  pointCycleOf,
+  substitute,
+} from "./compile-terms.ts";
 import type { Binder, Expr } from "./expr.ts";
 
 /** A verdict's code: `0` false, `1` true, `2` undecided. */
@@ -309,6 +316,37 @@ class Check {
       this.env.used.add("cycleEdges");
       const x = Out.fresh("_cy");
       out.open(`for (const ${x} of cycleEdges(sp, ${sure})) {`);
+      out.emit(
+        `_out.push({ rule: ${JSON.stringify(rule)}, clue: ${clue}, at: [${[...bound, x].join(", ")}] });`,
+      );
+      out.close();
+      return;
+    }
+    const diagonals =
+      e.k === "quant" && this.env.answerSort === "cell" ? pointCycleOf(e) : null;
+    if (diagonals !== null) {
+      // The same over the points: each drawn diagonal, by its square and
+      // the two points it joins, and those on a cycle of the others.
+      const lines = Out.fresh("_dl");
+      out.emit(`const ${lines}: number[] = [];`);
+      this.stopped(() =>
+        this.binders(
+          diagonals,
+          scope,
+          guard,
+          (sc, g) =>
+            out.emit(
+              `if (${g} === ${T}) ${lines}.push(${diagonals
+                .map((b) => (sc.get(b.name) as Val).code)
+                .join(", ")});`,
+            ),
+          [],
+          true,
+        ),
+      );
+      this.env.used.add("cycleDiagonals");
+      const x = Out.fresh("_cy");
+      out.open(`for (const ${x} of cycleDiagonals(sp, ${lines})) {`);
       out.emit(
         `_out.push({ rule: ${JSON.stringify(rule)}, clue: ${clue}, at: [${[...bound, x].join(", ")}] });`,
       );

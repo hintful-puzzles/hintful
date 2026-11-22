@@ -170,6 +170,7 @@ export {
 export {
   apart,
   apartThrough,
+  cycleDiagonals,
   cycleEdges,
   decidedAll,
   decidedIf,

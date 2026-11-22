@@ -24,6 +24,7 @@ import {
   RIGHT_BUTTON,
 } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { type Flash, NO_FLASH, sweepStep } from "../../engine/render/win-wave.ts";
 import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
@@ -35,9 +36,8 @@ import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-fla
 import { newDesc, slantGenerate } from "./generator.ts";
 import { slantGame } from "./index.ts";
 import { border, COL_GROUNDED } from "./render.ts";
-import { SOLVE_UNIQUE, slantSolve } from "./solver.ts";
+import { rules, SOLVE_UNIQUE, slantSolve } from "./solver.ts";
 import {
-  computeErrors,
   DIFF_EASY,
   DIFF_NORMAL,
   decodeClues,
@@ -45,6 +45,7 @@ import {
   encodeClues,
   encodeParams,
   executeMove,
+  groundedOf,
   newState,
   type SlantMove,
   type SlantState,
@@ -148,29 +149,47 @@ describe("slant errors and completion", () => {
     // The minimal diamond loop around the center vertex of a 2x2 grid.
     let s = newState(P22, "i");
     s = applyAll(s, [set(0, 0, 1), set(1, 0, -1), set(0, 1, -1), set(1, 1, 1)]);
-    expect(Array.from(s.loopErrors)).toEqual([1, 1, 1, 1]);
+    const loops = liveErrors(rules, s).byRule.get("noLoop") ?? [];
+    expect(loops.map(([c]) => c).sort()).toEqual([0, 1, 2, 3]);
     expect(slantGame.status(s)).toBe("ongoing"); // full but erroneous
+  });
+
+  it("flags only the diagonals on the loop", () => {
+    // The diamond in the corner of a 3x3 grid, and a tail leading off it.
+    let s = newState({ w: 3, h: 3, diff: DIFF_EASY }, "p");
+    s = applyAll(s, [set(0, 0, 1), set(1, 0, -1), set(0, 1, -1), set(1, 1, 1)]);
+    s = executeMove(s, set(2, 2, -1));
+    const loops = liveErrors(rules, s).byRule.get("noLoop") ?? [];
+    expect(loops.map(([c]) => c).sort()).toEqual([0, 1, 3, 4]);
   });
 
   it("flags an over-committed clue vertex", () => {
     // Clue 0 at the top-left vertex; a backslash in square (0,0) meets it.
     let s = newState(P22, "0h");
     s = executeMove(s, set(0, 0, -1));
-    expect(s.vertexErrors[0]).toBe(1);
+    expect([...(liveErrors(rules, s).clues.get("n") ?? [])]).toEqual([0]);
   });
 
   it("flags a clue vertex that can no longer be satisfied", () => {
-    // Clue 4 at the center vertex (index 4 of the 3x3 vertex grid); a
-    // forward slash in (0,0) avoids it, capping its degree at 3.
+    // Clue 4 at the center vertex; a forward slash in (0,0) avoids it,
+    // capping its degree at 3.
     let s = newState(P22, "d4d");
     s = executeMove(s, set(0, 0, 1));
-    expect(s.vertexErrors[4]).toBe(1);
+    expect([...(liveErrors(rules, s).clues.get("n") ?? [])]).toEqual([0]);
+  });
+
+  it("flags a border clue that can no longer be satisfied", () => {
+    // Clue 1 at the top-left corner, which only square (0,0) meets; a
+    // forward slash there misses it.
+    let s = newState(P22, "1h");
+    s = executeMove(s, set(0, 0, 1));
+    expect([...(liveErrors(rules, s).clues.get("n") ?? [])]).toEqual([0]);
   });
 
   it("marks border-connected diagonals grounded", () => {
     let s = newState(P22, "i");
     s = executeMove(s, set(0, 0, -1));
-    expect(s.grounded[0]).toBe(1);
+    expect(groundedOf(2, 2, s.soln)[0]).toBe(1);
   });
 
   it("is solved exactly while the board holds the unique solution", () => {
@@ -185,16 +204,6 @@ describe("slant errors and completion", () => {
     // Clearing a square afterwards un-solves it.
     s = executeMove(s, set(0, 0, 0));
     expect(slantGame.status(s)).toBe("ongoing");
-  });
-
-  it("computeErrors reports complete only when full and clean", () => {
-    const p = { w: BOARD.w, h: BOARD.h, diff: BOARD.diff };
-    const clues = decodeClues(p, BOARD.desc);
-    const soln = new Int8Array(p.w * p.h);
-    for (let i = 0; i < soln.length; i++) soln[i] = BOARD.aux[i] === "\\" ? -1 : 1;
-    expect(computeErrors(p.w, p.h, clues, soln).complete).toBe(true);
-    soln[3] = 0;
-    expect(computeErrors(p.w, p.h, clues, soln).complete).toBe(false);
   });
 });
 
@@ -332,8 +341,8 @@ describe("slant generator (behavioral)", () => {
     const soln = new Int8Array(8 * 8);
     slantGenerate(8, 8, soln, rng);
     expect(soln.includes(0)).toBe(false);
-    const errors = computeErrors(8, 8, new Int8Array(81).fill(-1), soln);
-    expect(errors.loopErrors.every((e) => e === 0)).toBe(true);
+    // With no loop, every diagonal reaches the border.
+    expect(groundedOf(8, 8, soln).every((g) => g === 1)).toBe(true);
   });
 });
 
