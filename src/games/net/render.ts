@@ -61,8 +61,9 @@ import { TileCache } from "../../engine/render/tile-cache.ts";
 import { WIN_LEAD } from "../../engine/render/win-wave.ts";
 import type { NetHint } from "./hint.ts";
 import { SIDE } from "./hint-marks.ts";
-import { computeLoops, ERR_SHIFT } from "./loops.ts";
+import { ERR_SHIFT } from "./loops.ts";
 import type { NetMistake } from "./mistakes.ts";
+import { errorWires } from "./solver.ts";
 import {
   ACTIVE,
   computeActive,
@@ -644,7 +645,7 @@ export function redraw(
     ? wireDistance(w, h, state.tiles, barriers, ui.cx, ui.cy)
     : null;
   const active = computeActive(state, ui.cx, ui.cy);
-  const loops = computeLoops(w, h, state.tiles, barriers, ui.unlockedLoops);
+  const errors = errorWires(state, ui.unlockedLoops);
 
   const td = ds.toDraw;
   td.fill(0);
@@ -662,7 +663,10 @@ export function redraw(
     for (let dx = 0; dx < w; dx++) {
       const gx = (dx + ui.orgX) % w;
       const here = cell(ds, dx, dy);
-      let t = state.tiles[gy * w + gx] | loops[gy * w + gx] | active[gy * w + gx];
+      const t =
+        state.tiles[gy * w + gx] |
+        (errors[gy * w + gx] << ERR_SHIFT) |
+        active[gy * w + gx];
 
       for (let d = 1, dsh = 0; d < 16; d *= 2, dsh++) {
         if (barriers[gy * w + gx] & d) {
@@ -682,18 +686,6 @@ export function redraw(
         }
 
         if (t & d) {
-          // Highlight as an error any edge of a locked tile adjacent to a
-          // lack-of-edge in another locked tile, or to a barrier.
-          if (t & LOCKED) {
-            if (barriers[gy * w + gx] & d) {
-              t |= d << ERR_SHIFT;
-            } else {
-              const o = offset(gx, gy, d, w, h);
-              const t2 = state.tiles[o.y * w + o.x];
-              if (t2 & LOCKED && !(t2 & opposite(d))) t |= d << ERR_SHIFT;
-            }
-          }
-
           const edgeval = t & (d << ERR_SHIFT) ? 3 : t & ACTIVE ? 2 : 1;
           td[here] |= edgeval << (TILE_WIRE_SHIFT + dsh * 2);
           if (!(gx === tx && gy === ty)) {

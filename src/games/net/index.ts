@@ -92,7 +92,7 @@ import {
   ROTATE_TIME,
   redraw,
 } from "./render.ts";
-import { answerOf, finishes, type NetAnswer } from "./solver.ts";
+import { answerOf, finishes, type NetAnswer, rules } from "./solver.ts";
 import {
   computeActive,
   decodeParams,
@@ -861,6 +861,7 @@ export const netGame: Game<
   ],
 
   status: (s): GameStatus => (isComplete(s) ? "solved" : "ongoing"),
+  rules,
 
   solve,
   findMistakes,

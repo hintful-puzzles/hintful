@@ -599,6 +599,10 @@ grid while a gesture is live, and paints only what they say:
   edge is once a loop closes, so the loop and the lines apart from it are
   each finished, and a clue it leaves short shows. A game whose space is
   no grid passes `space` instead of `size` (Loopy's tiling).
+- **A reading the player opts into is passed to `liveErrors`, never made
+  `rules.grid`**, which the guard holds to the answer: Net's loops through
+  unlocked tiles read the tiles as turned, for one rule's marks, where the
+  preference asks for them (`turnedGrid`).
 - **What the rules do not say is not an error.** A game that flagged more
   (a heuristic, a "largest piece wins") flagged a guess; a game that flagged
   less now shows what its rules already make certain. Where the marks are

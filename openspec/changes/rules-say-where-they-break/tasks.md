@@ -155,10 +155,20 @@
       its lines as none, so a line run into a corner it cannot leave is
       red, which is new; its pieces' colors stay the render's, and a piece
       the rules break is red whole, as before).
-      Next: a let-bound set (`forall L = {...}: c in through(s, L)`, Net's
-      and Tracks') is not yet read as its members: substitute it, or bound
-      the name. Net then states its acyclic rule in the cycle form, and its
-      state (rotations, not edges) needs a reading; slant's shape reads
+      Moved (2026-11-22): net. Its `network` is the through form over every
+      pair of squares and `noLoop` the cycle form, where it was "one fewer
+      wire than squares, each reached from the first" (the count named every
+      wire, the reach every square outside the first one's group); the
+      answer check reads both forms whole, so it stays linear (`wholeGraph`
+      in `compile-expr.ts`), and Tracks' `path` gains that too. Its board is
+      `recordedMarks` (locks, then notes, then walls; a wire where two locks
+      disagree), the hint's reading. Unlocked loops, its preference, are the
+      `noLoop` marks of the board read as turned (`turnedGrid`), passed to
+      `liveErrors`; its render's lock-mismatch check goes, and `loops.ts`
+      stays the generator's. New: a locked tile whose piece no longer fits
+      the sides read round it is red whole, and a group of locked tiles
+      closed off is red.
+      Next: slant's shape reads
       `linked(k)`, which needs the same sure/possible reading. Tracks
       also reads its cell marks (track, no track) in its clue counts, which
       edges alone cannot hold: a cell marked no track reads its edges as

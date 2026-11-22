@@ -78,6 +78,7 @@ import {
   chainsKept,
   cluePin,
   countedSlope,
+  cycleOf,
   early,
   emptyAhead,
   FACTS,
@@ -86,6 +87,7 @@ import {
   inlined,
   isBentSight,
   isRead,
+  joinOf,
   keptChain,
   keptWhilePlaced,
   mentions,
@@ -2034,6 +2036,52 @@ function keptEdgeSet(
 }
 
 /**
+ * In the answer check, a statement about the graph a set of edges makes,
+ * read as one over the graph: the through form (`joinOf`) as every member
+ * of its two sets in one group, where pair by pair it is quadratic in the
+ * squares (Net's network on a large board), and "no line closes a loop"
+ * (`cycleOf`) as no line on a cycle, where line by line it is a walk from
+ * each. `null` for any other statement, and in any other check, where the
+ * statement is read on marks or a board still open.
+ */
+function wholeGraph(
+  e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
+  out: Out,
+): Val | null {
+  if (env.answer === null || env.answer.partial === true || env.supposed.length > 0)
+    return null;
+  const join = joinOf(e);
+  if (join !== null) {
+    const E = once(compileExpr(join.E, scope, env, out), out).code;
+    const [A, B] = [join.A, join.B].map(
+      (s) => once(compileExpr(s, scope, env, out), out).code,
+    );
+    const [groups, all, r] = ["_eg", "_all", "_q"].map((p) => Out.fresh(p));
+    env.used.add("edgeGroups");
+    out.emit(`const ${groups} = edgeGroups(sp, [...${E}]);`);
+    out.emit(`const ${all} = [...${A}, ...${B}];`);
+    out.emit(
+      `const ${r} = [...${A}].length === 0 || [...${B}].length === 0 || ${all}.every((c) => ${groups}.of(c) === ${groups}.of(${all}[0]));`,
+    );
+    return { code: r, sort: BOOL };
+  }
+  const cycle = env.answerSort === "edge" ? cycleOf(e) : null;
+  if (cycle === null) return null;
+  const set: Expr = {
+    k: "agg",
+    fn: "set",
+    binders: [cycle],
+    where: null,
+    term: { k: "name", name: cycle.name },
+  };
+  const E = once(compileExpr(set, scope, env, out), out).code;
+  env.used.add("cycleEdges");
+  return { code: `(cycleEdges(sp, [...${E}]).length === 0)`, sort: BOOL };
+}
+
+/**
  * `forall R = through(x, O): P` (or `exists`), `O` a set whose groups are
  * kept (`keptEdgeSet`), and `P` reading `R` but no marks and nothing else
  * bound: a truth about the group, so it is made once a group, kept by the
@@ -2182,6 +2230,8 @@ function quantifier(
 ): Val {
   const linked = linkedAggregate(e.q, e.binders, null, e.body, scope, env);
   if (linked !== null) return linked;
+  const whole = wholeGraph(e, scope, env, out);
+  if (whole !== null) return whole;
   const ofGroup = groupQuantifier(e, scope, env, out);
   if (ofGroup !== null) return ofGroup;
   const forall = e.q === "forall";

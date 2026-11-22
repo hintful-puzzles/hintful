@@ -1005,6 +1005,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "prefs",
       "requestKeys",
       "revealOne",
+      "rules",
       "statusbarText",
       "targetVerbs",
       "transposeParams",

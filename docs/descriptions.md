@@ -1020,6 +1020,12 @@ compiles; what a game acts on:
   is off, and needs nothing.
 - **A grid measured in other sizes** (Solo's `c * r`) reads that term as the
   grid's width, so the check needs no size the space already gives.
+- **Two forms about the graph a set of edges makes are read whole**, so
+  each can be said where a player's board should break it: `forall L = E,
+  a in A, b in B: b in through(a, L)` as every member of A and B in one
+  group, where pair by pair it is quadratic in the squares, and the "no line
+  closes a loop" form of § "Where a rule breaks" as no line on a cycle, where
+  line by line it is a walk from each (Net's `network` and `noLoop`).
 - **The live error marks come from the same statements**, read on a board
   still being filled (§ "Where a rule breaks"). They never decide that a
   board is solved.
@@ -1114,7 +1120,10 @@ says how each form is read; what a description's author acts on:
   where the rules make it so only through a count or a shape, is said of
   each line in the cycle form above, so a loop's lines are where it breaks:
   Path's `noLoop`, implied, where a loop through numbers in order breaks no
-  other statement.
+  other statement. A network is said as the through form over every pair of
+  squares and the cycle form, never as "one fewer line than squares, every
+  square reached from the first": the count names every line, and the reach
+  every square the first one's group does not hold (Net).
   A number counted along a chain is said between two given numbers, counted
   from each end with `onward`: Signpost's square some numbers on from one
   given must be the square as many short of the next, so two runs that

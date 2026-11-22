@@ -13,6 +13,8 @@
  */
 
 import { D, DIRECTIONS, L, R, U } from "../../engine/board/square-edges.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import {
   type Answer,
   answerCache,
@@ -27,6 +29,7 @@ import {
   rangeMask,
   tilingSpace,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   compiledRung,
   describedLadder,
@@ -200,14 +203,26 @@ function wallMarks(g: NetGeometry, dl: net.Dealt): Uint8Array {
 }
 
 /**
- * What the player has recorded of the sides: a wall's none, a note, and each
- * side of a locked tile as it shows. A side two of them disagree about is
- * read as the first says, in that order; the mistake check is what reports
- * the disagreement.
+ * What the player has recorded of the sides: each side of a locked tile as
+ * it shows, a note, and a wall's none. A side two of them disagree about is
+ * read as the first says, in that order, and as a wire where two locks
+ * disagree, so the rules find the disagreement where it stands: a wire
+ * across a wall, or a locked piece given a wire it has not. Which of the two
+ * is wrong is the mistake check's to say, and the hint asks for mistakes to
+ * be fixed before it reads these.
  */
 export function recordedMarks(s: NetState, g: NetGeometry, dl: net.Dealt): Uint8Array {
-  const known = wallMarks(g, dl);
+  const known = new Uint8Array(g.sp.edges.length);
   const n = s.w * s.h;
+  for (let i = 0; i < n; i++) {
+    if (!(s.tiles[i] & LOCKED)) continue;
+    for (const d of DIRECTIONS) {
+      const e = g.sideEdge[i * 16 + d];
+      if (e < 0) continue;
+      if (s.tiles[i] & d) known[e] = WIRE;
+      else if (known[e] === 0) known[e] = NONE;
+    }
+  }
   for (let i = 0; i < n; i++) {
     const x = i % s.w;
     const y = (i / s.w) | 0;
@@ -219,14 +234,76 @@ export function recordedMarks(s: NetState, g: NetGeometry, dl: net.Dealt): Uint8
       else if (note === NOTE_NONE) known[e] = NONE;
     }
   }
-  for (let i = 0; i < n; i++) {
-    if (!(s.tiles[i] & LOCKED)) continue;
+  for (const e of dl.wall.at) if (known[e] === 0) known[e] = NONE;
+  return known;
+}
+
+/** The board as its rules read it: the sides the player has recorded
+ * ({@link recordedMarks}). A tile turned but not locked records nothing. */
+export const rules: RulesOf<NetState> = describedRules(net, {
+  space: (s) => geometryOf(s.w, s.h, s.wrapping).sp,
+  grid: (s) => {
+    const g = geometryOf(s.w, s.h, s.wrapping);
+    return recordedMarks(s, g, dealtOf(s, g));
+  },
+  deals: (s) => [dealtOf(s, geometryOf(s.w, s.h, s.wrapping))],
+});
+
+/**
+ * {@link rules}' reading with the wires of unlocked tiles that meet across
+ * a side read as a wire, where nothing is recorded there: what a loop
+ * through unlocked tiles is found on, for the player who asks to see one
+ * (`NetUi.unlockedLoops`). A loop the tiles make as they are turned is
+ * certain only of the board as it is turned, not of the player's records.
+ */
+function turnedGrid(s: NetState): Uint8Array {
+  const g = geometryOf(s.w, s.h, s.wrapping);
+  const out = rules.grid(s) as Uint8Array;
+  for (let i = 0; i < s.w * s.h; i++)
+    for (const d of [R, D]) {
+      const e = g.sideEdge[i * 16 + d];
+      if (e < 0 || out[e] !== 0 || s.barriers[i] & d || !(s.tiles[i] & d)) continue;
+      const x = i % s.w;
+      const y = (i / s.w) | 0;
+      const j = d === R ? y * s.w + ((x + 1) % s.w) : ((y + 1) % s.h) * s.w + x;
+      if (s.tiles[j] & (d === R ? L : U)) out[e] = WIRE;
+    }
+  return out;
+}
+
+const NO_LOOP: net.RuleName = "noLoop";
+const PIECE: keyof net.Dealt = "piece";
+
+/**
+ * The live errors as each tile's wires to draw red, a direction's bit per
+ * wire: every wire of a tile whose piece no longer fits the sides, and each
+ * wire across a side a broken rule names (a loop's, a closed group's, a
+ * wall's, a side two locks disagree about). With `turned`, the loops the
+ * tiles make as they are turned too ({@link turnedGrid}).
+ */
+export function errorWires(s: NetState, turned: boolean): Uint8Array {
+  const g = geometryOf(s.w, s.h, s.wrapping);
+  const live = liveErrors(rules, s);
+  const bad = new Uint8Array(g.sp.edges.length);
+  bad.set(live.at);
+  for (const pair of live.pairs) for (const e of pair) bad[e] = 1;
+  for (const byClue of live.clueAt.values())
+    for (const els of byClue.values()) for (const e of els) bad[e] = 1;
+  if (turned)
+    for (const at of liveErrors(rules, s, turnedGrid(s)).byRule.get(NO_LOOP) ?? [])
+      for (const e of at) bad[e] = 1;
+  const out = new Uint8Array(s.w * s.h);
+  const pieces = live.clues.get(PIECE);
+  if (pieces !== undefined) {
+    const at = dealtOf(s, g).piece.at;
+    for (const k of pieces) out[at[k]] = 0xf;
+  }
+  for (let i = 0; i < s.w * s.h; i++)
     for (const d of DIRECTIONS) {
       const e = g.sideEdge[i * 16 + d];
-      if (e >= 0 && known[e] === 0) known[e] = s.tiles[i] & d ? WIRE : NONE;
+      if (e >= 0 && bad[e]) out[i] |= d;
     }
-  }
-  return known;
+  return out;
 }
 
 /** Run the ladder on `m` to its fixpoint, at Easy: whether it found the

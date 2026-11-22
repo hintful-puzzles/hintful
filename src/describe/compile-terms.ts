@@ -897,3 +897,104 @@ export function monotone(
       none(e);
   }
 }
+
+/**
+ * `forall L = E, a in A0 where P, b in B0 where Q: b in through(a, L)`, every
+ * member of one set reaching every member of another through a set of edges,
+ * as its three sets, each `{x in S where P}`. Both checks read the form as
+ * one: the answer check as one group holding every member, since pair by
+ * pair it is quadratic in the squares, and the violation check because pair
+ * by pair it is a violation for each pair, where the groups it reads are the
+ * same for all of them. `null` for any other statement.
+ */
+export function joinOf(
+  e: Extract<Expr, { k: "quant" }>,
+): { E: Expr; A: Expr; B: Expr } | null {
+  if (e.q !== "forall" || e.binders.length !== 3) return null;
+  const [L, a, b] = e.binders;
+  if (L.kind !== "let" || L.where !== null || a.kind !== "in" || b.kind !== "in")
+    return null;
+  const { body } = e;
+  if (
+    body.k !== "bin" ||
+    body.op !== "in" ||
+    body.a.k !== "name" ||
+    body.a.name !== b.name ||
+    body.b.k !== "call" ||
+    body.b.fn !== "through" ||
+    body.b.args.length !== 2 ||
+    body.b.args[0].k !== "name" ||
+    body.b.args[0].name !== a.name ||
+    body.b.args[1].k !== "name" ||
+    body.b.args[1].name !== L.name
+  )
+    return null;
+  const bound = [L.name, a.name];
+  if ([b.of, b.where].some((x) => x !== null && bound.some((n) => readsFree(x, n))))
+    return null;
+  if ([a.of, a.where].some((x) => x !== null && readsFree(x, L.name))) return null;
+  const setOf = (x: Binder): Expr => ({
+    k: "agg",
+    fn: "set",
+    binders: [{ name: x.name, kind: "in", of: x.of, where: x.where }],
+    where: null,
+    term: nm(x.name),
+  });
+  return { E: L.of, A: setOf(a), B: setOf(b) };
+}
+
+/**
+ * `forall e in edges where W: end2(e) not in through(end1(e), {x in edges
+ * where W' and x != e})`, `W'` being `W` said of `x` (either end may come
+ * first): no edge W holds of closes a loop of such edges. Both checks read
+ * it as one walk over the edges W holds of, where edge by edge it is a walk
+ * from each. Its binder, or `null` for any other statement.
+ */
+export function cycleOf(e: Extract<Expr, { k: "quant" }>): Binder | null {
+  if (e.q !== "forall" || e.binders.length !== 1) return null;
+  const [b] = e.binders;
+  if (b.kind !== "in" || b.of.k !== "name" || b.of.name !== "edges" || b.where === null)
+    return null;
+  const { body } = e;
+  if (body.k !== "bin" || body.op !== "notin") return null;
+  const end = (x: Expr, fn: string) =>
+    x.k === "call" &&
+    x.fn === fn &&
+    x.args.length === 1 &&
+    x.args[0].k === "name" &&
+    x.args[0].name === b.name;
+  const walk = body.b;
+  if (walk.k !== "call" || walk.fn !== "through" || walk.args.length !== 2) return null;
+  const [from, S] = walk.args;
+  if (
+    !(end(body.a, "end2") && end(from, "end1")) &&
+    !(end(body.a, "end1") && end(from, "end2"))
+  )
+    return null;
+  if (S.k !== "agg" || S.fn !== "set" || S.where !== null || S.binders.length !== 1)
+    return null;
+  const [x] = S.binders;
+  if (x.kind !== "in" || x.of.k !== "name" || x.of.name !== "edges" || x.where === null)
+    return null;
+  if (S.term?.k !== "name" || S.term.name !== x.name) return null;
+  const w = x.where;
+  const same = substitute(b.where, new Map([[b.name, nm(x.name)]]), new Set());
+  const apart: Expr = { k: "bin", op: "!=", a: nm(x.name), b: nm(b.name) };
+  if (
+    w.k !== "bin" ||
+    w.op !== "and" ||
+    JSON.stringify(w.a) !== JSON.stringify(same) ||
+    JSON.stringify(w.b) !== JSON.stringify(apart)
+  )
+    return null;
+  return b;
+}
+
+/** Whether `e` reads the name `n` without binding it. */
+function readsFree(e: Expr, n: string): boolean {
+  const free = new Set<string>();
+  freeNames(e, free, new Set());
+  return free.has(n);
+}
+
+const nm = (name: string): Expr => ({ k: "name", name });

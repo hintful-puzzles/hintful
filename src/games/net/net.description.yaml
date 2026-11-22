@@ -211,11 +211,18 @@ define:
 rules:
   # Every square holds a piece.
   pieces: "forall c in cells: clue(piece, c) != none"
-  # The wires are one network with no loop: one fewer of them than there
-  # are squares, and every square reached from the first along them.
+  # The wires are one network: every square reaches every other along
+  # them. Said of every pair, so a group of squares closed off is where it
+  # breaks, where from one square it would be every square that one does
+  # not reach.
   network: >-
-    forall L = {e in edges where value(e) = 1}, s = first(cells):
-    |L| = |cells| - 1 and (forall c in cells: c in through(s, L))
+    forall L = {e in edges where value(e) = 1}, a in cells, b in cells:
+    b in through(a, L)
+  # No wire closes a loop. Said of each wire, so a loop's wires are where
+  # it breaks.
+  noLoop: >-
+    forall e in edges where value(e) = 1:
+    end2(e) not in through(end1(e), {x in edges where value(x) = 1 and x != e})
 clues:
   # The piece on a square, however it is turned: 1 a dead end, 2 a
   # straight, 3 a corner, 4 a T, 5 a cross.
