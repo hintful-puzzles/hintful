@@ -1146,7 +1146,9 @@ the ladder reads it with no adapter. `edit.ts` is the one move, and
 `answer.ts` the hooks that judge a board against its answer and its rules.
 `play.ts` is the input the description's `play:` declares, and the engine's
 `FillUi`. `render.ts` draws the board by layers from the painters `play:`
-names, and `marks.ts` holds the hint's mark kinds beside the cells. A game reaches them through `fillGame` once that lands; until then no game
+names, and `marks.ts` holds the hint's mark kinds beside the cells.
+`deal.ts` deals a board from the answer `sample.ts` draws, and
+`game-id.ts` is its params and desc, from the description's `id:`. A game reaches them through `fillGame` once that lands; until then no game
 uses them.
 
 ### `edge-hint.ts` — a hint on an edge between squares

@@ -47,9 +47,15 @@ engine commit.
       (under `play:`) and `lineClues`. Tested on Tents' compiled module
       with a recording; the warm-repaint and render-scenario guards reach
       it once `fillGame` registers a game (2.3).
-- [ ] 2.6 The deal: `scatter`/`partner` samplers reading `deal.sample`, the
+- [x] 2.6 The deal: `scatter`/`partner` samplers reading `deal.sample`, the
       tier gate, the codec combinators and the params codec. The compiler:
-      `id:` and `tierLetters:`.
+      `id:` and `tierLetters:`, as the module's `deal`, and `clueMax`, each
+      kind's largest value from its `range`, which bounds a desc's numbers.
+      Tents' `id:` reads and writes upstream's descs byte for byte
+      (`engine/fill/deal.test.ts`, against Tents' own parser). For 3.2:
+      upstream's Tents generator rejects a board with a line holding
+      neither a tent nor a tree, which the sampler does not; whether Tents
+      keeps that is a `sample` parameter to add then, or a stated drop.
 - [ ] 2.7 The hint: `describedFiringHint`'s hooks from the board; `MARK`
       facts as an `Edit`'s marks; step words from `says` and its arms.
 

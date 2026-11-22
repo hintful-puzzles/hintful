@@ -110,6 +110,10 @@ export interface DescriptionJson {
   deal?: DealJson;
   /** How the player fills the board, for a fill game the engine plays. */
   play?: PlayJson;
+  /** A fill game's game ID: the codec's segments in order. */
+  id?: IdSegmentJson[];
+  /** The letter of each tier in the params' `d<letter>`, in order. */
+  tierLetters?: string;
   tiers?: string[];
   /** What a placement rules out at a glance, which the engine's `auto-cross`
    * preference makes for the player: the preference's words, and the
@@ -147,6 +151,13 @@ export interface PlayJson {
   links?: string;
   labels?: { start?: string };
 }
+
+/** A piece of a fill game's game ID (`engine/fill/game-id.ts`): `runs`, the
+ * cells a clue kind sits at as upstream's run code, or `numbers`, a clue
+ * kind's values in the space's order, or the columns first. */
+export type IdSegmentJson =
+  | { runs: string }
+  | { numbers: string; before?: string; order?: "columns" };
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`

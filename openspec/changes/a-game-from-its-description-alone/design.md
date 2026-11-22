@@ -334,6 +334,13 @@ change.
 **The default.** Without `id:`, the codec is `numbers` over every clue
 kind.
 
+**As built (task 2.6, 2026-11-22):** `numbers` writes its first value
+after `before` and each other after a comma, an absent clue as nothing.
+`id:` names every clue kind once, and `runs` only a cell's one-valued
+marker (`range(0, 0)`), which the compiler checks. A number is read within
+`clueMax`, compiled from the kind's `value: range(lo, hi)`: a fill game's
+clue values are a range.
+
 **Params.** Params are `WxH` and `d<letter>`:
 
 - the size bounds come from `sizes`;

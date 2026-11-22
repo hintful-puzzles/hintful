@@ -131,6 +131,107 @@ export function playOf(json: DescriptionJson, d: Description, env: Env): string[
 }
 
 /**
+ * `deal`, what the engine deals a fill game's board by and writes its game
+ * ID with: the sample, the codec's segments, the tiers' letters and the
+ * sizes; and `clueMax`, each clue kind's largest value at an element, from
+ * its `value: range(lo, hi)`, which bounds what a game ID may say. Nothing
+ * where there is no `play:`.
+ */
+export function dealOf(
+  json: DescriptionJson,
+  d: Description,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
+  if (json.play === undefined) return [];
+  const kinds = [...d.clueKinds.keys()];
+  const id =
+    json.id ?? kinds.map((k, i) => ({ numbers: k, ...(i > 0 ? { before: "," } : {}) }));
+  const named = id.map((seg) => ("runs" in seg ? seg.runs : seg.numbers));
+  for (const kind of kinds)
+    if (named.filter((k) => k === kind).length !== 1)
+      throw new CompileError(`id: clue kind ${kind} is not named once`);
+  for (const seg of id) {
+    const kind = "runs" in seg ? seg.runs : seg.numbers;
+    const c = d.clueKinds.get(kind);
+    if (c === undefined) throw new CompileError(`id: no clue kind ${kind}`);
+    // A run code says where a clue is, never its value: one value, 0.
+    const one =
+      c.value !== null &&
+      c.value.k === "call" &&
+      c.value.args.every((a) => a.k === "num" && a.v === 0);
+    if ("runs" in seg && (c.at !== "cell" || !one))
+      throw new CompileError(
+        `id: runs of ${kind}, which is not a cell's one-valued marker`,
+      );
+  }
+  const tiers = json.tiers ?? [];
+  const tierLetters =
+    json.tierLetters ?? tiers.map((t) => t[0]?.toLowerCase() ?? "").join("");
+  if (tierLetters.length !== tiers.length || new Set(tierLetters).size !== tiers.length)
+    throw new CompileError(`tierLetters: ${tierLetters} is not one letter a tier`);
+  const universes = Object.fromEntries(
+    [...d.clueKinds].map(([k, c]) => {
+      const u = UNIVERSE[c.at];
+      if (u === undefined)
+        throw new CompileError(
+          `clue ${k}: a fill game's clue sits at a cell or a line`,
+        );
+      return [k, u];
+    }),
+  );
+  const deal = {
+    sample: sampleOf(json),
+    id,
+    universes,
+    tierLetters,
+    sizes: json.sizes,
+  };
+  const max: string[] = [];
+  for (const [kind, c] of d.clueKinds) {
+    const sorts = env.clues.get(kind) as ClueKind;
+    const range = c.value === null ? null : measured(c.value);
+    if (
+      range === null ||
+      range.k !== "call" ||
+      range.fn !== "range" ||
+      range.args.length !== 2
+    )
+      throw new CompileError(
+        `clue ${kind}: a fill game's clue values are a range(lo, hi)`,
+      );
+    const scratch: string[] = [];
+    const out = new Out(2);
+    const hi = compileExpr(
+      range.args[1],
+      new Map<string, Val>([["at", { code: "at", sort: sorts.at }]]),
+      answerEnv(env, { yes: false }, scratch),
+      out,
+    );
+    const body = [
+      ...scratch.map((s) => `    ${s}`),
+      ...out.text(),
+      `    return Number(${hi.code});`,
+    ];
+    max.push(
+      `  ${kind}(${param("sp", "GridSpace", body)}, ${param("at", "number", body)}): number {`,
+      ...body,
+      "  },",
+    );
+  }
+  return [
+    "",
+    "/** How the engine deals the board and writes its game ID. */",
+    `export const deal = ${JSON.stringify(deal)} as const;`,
+    "",
+    "/** Each clue kind's largest value at an element. */",
+    "export const clueMax = {",
+    ...max,
+    "};",
+  ];
+}
+
+/**
  * `labels`, the fixed text before each line's start, from `play`'s
  * `labels:`: a formula of `i`, the line's index along its axis. It reads
  * nothing of the board, so it is drawn once.

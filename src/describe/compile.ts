@@ -16,7 +16,7 @@
  */
 
 import { compileExpr } from "./compile-expr.ts";
-import { derivedClues, markWhileOf, playOf } from "./compile-fill.ts";
+import { dealOf, derivedClues, markWhileOf, playOf } from "./compile-fill.ts";
 import {
   answerSet,
   type ClueKind,
@@ -359,6 +359,7 @@ export function compileGame(
     ...markWhileOf(json, env, measured),
     ...derivedClues(json, d, env, measured),
     ...playOf(json, d, env),
+    ...dealOf(json, d, env, measured),
   ]);
   // Kept by a technique or by the rules alone (Signpost's `nextGiven`).
   const kept = env.kept?.defs ?? new Map();

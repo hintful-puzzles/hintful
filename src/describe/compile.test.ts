@@ -856,6 +856,22 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/links names pair/);
   });
 
+  it("refuses a game ID that leaves a clue kind out, or writes a valued one as runs", () => {
+    type Id = { id: Record<string, string>[] };
+    expect(() =>
+      compileTents((j: Id) => {
+        j.id = [{ runs: "tree" }];
+        return j;
+      }),
+    ).toThrow(/count is not named once/);
+    expect(() =>
+      compileTents((j: Id) => {
+        j.id = [{ numbers: "tree" }, { runs: "count" }];
+        return j;
+      }),
+    ).toThrow(/runs of count/);
+  });
+
   it("writes a label of the line's index, and refuses one that reads the board", () => {
     const compiled = compileTents((j: { play: { labels?: { start: string } } }) => {
       j.play.labels = { start: "2 * i + 1" };
