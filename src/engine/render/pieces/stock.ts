@@ -13,8 +13,8 @@ import { type Painter, surfaceOf } from "./painter.ts";
 export const shade: Painter = {
   colors: () => [SHADED],
   surface: null,
-  paint(dr, tile, base, error) {
-    drawPiece(dr, surfaceOf(tile), SHADED_SHAPE, error ? COL_ERROR : base);
+  paint(dr, tile, slot, error) {
+    drawPiece(dr, surfaceOf(tile), SHADED_SHAPE, error ? COL_ERROR : slot[0]);
   },
 };
 
@@ -22,7 +22,7 @@ export const shade: Painter = {
 export const cross: Painter = {
   colors: () => [RULED_OUT],
   surface: null,
-  paint(dr, tile, base, error) {
-    drawRuledOutCross(dr, surfaceOf(tile), error ? COL_ERROR : base);
+  paint(dr, tile, slot, error) {
+    drawRuledOutCross(dr, surfaceOf(tile), error ? COL_ERROR : slot[0]);
   },
 };

@@ -137,7 +137,7 @@ The shapes that are not the plain one:
 | a technique that, restarted, visits only what a firing reached, so the restart costs little | `CellMarks.visit`, and [`descriptions.md`](./descriptions.md) § "What a technique compiles to" |
 | two scales, each capped and graded apart | [`solo/solver.ts`](../src/games/solo/solver.ts) `SolverUsage.ladder` |
 | a Search no description states, after the compiled techniques | `withSearch`, in [`engine/solve/latin.ts`](../src/engine/solve/latin.ts) |
-| a hint rung offering a technique's firing only where it serves another | `keptRung`, in [`tents/solver.ts`](../src/games/tents/solver.ts) `linkFor` |
+| a hint rung offering a technique's firing only where it serves another | `keptRung`, in [`engine/hint/glance.ts`](../src/engine/hint/glance.ts) |
 | a count kept from the firings tally rather than a wrapped rung | [`undead/solver.ts`](../src/games/undead/solver.ts) `solveDeductive` |
 
 ### A fixpoint is order-independent only if every rule is monotone
@@ -192,8 +192,7 @@ the game's solve. Exemplar:
   the verdicts, and the board comparison stays green
   ([`abcd-ladder.test.ts`](../src/games/abcd/abcd-ladder.test.ts)).
 - **A rung's firing count says it runs, not that anything depends on it.**
-  Solve with the rung silenced and see whether the board still finishes
-  ([`tents-ladder.test.ts`](../src/games/tents/tents-ladder.test.ts)).
+  Solve with the rung silenced and see whether the board still finishes.
 - **Give a Tricky deduction its own rung where upstream folds it into an
   Easy sweep**, with a Tricky `tier`, so a census can say whether it is
   reached, and have it write only what the Tricky half deduces. On a ladder

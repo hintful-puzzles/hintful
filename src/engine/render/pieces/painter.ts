@@ -9,18 +9,20 @@ import type { GameDrawing } from "../../contract/game.ts";
 import type { Color, Rect } from "../../contract/types.ts";
 
 export interface Painter {
-  /** The colors the piece is drawn in, from the board's background: its
-   * slots, in this order. */
+  /** The colors the piece is drawn in, from the board's background, each
+   * one of the palette's named colors. Two painters naming one color share
+   * its slot, since it means one thing on the board (the ground under a
+   * tent, a tree and grass). */
   colors(background: Color): readonly Color[];
   /** The surface a cell holding the piece takes, as an index into
    * {@link colors}, or `null` for the board's surface of an undecided cell. */
   readonly surface: number | null;
   /**
-   * Draw the piece in `tile`, the cell's whole box, its colors from slot
-   * `base` on. `error` where a rule breaks at the cell, which a piece shows in
-   * the error role.
+   * Draw the piece in `tile`, the cell's whole box, the color at index `i`
+   * of {@link colors} in slot `slot[i]`. `error` where a rule breaks at the
+   * cell, which a piece shows in the error role.
    */
-  paint(dr: GameDrawing, tile: Rect, base: number, error: boolean): void;
+  paint(dr: GameDrawing, tile: Rect, slot: readonly number[], error: boolean): void;
 }
 
 /** The box of a tile's surface: inside the grid line on its top and left. */

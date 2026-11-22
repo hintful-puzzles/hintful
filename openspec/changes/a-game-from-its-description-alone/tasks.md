@@ -56,10 +56,9 @@ engine commit.
       `id:` and `tierLetters:`, as the module's `deal`, and `clueMax`, each
       kind's largest value from its `range`, which bounds a desc's numbers.
       Tents' `id:` reads and writes upstream's descs byte for byte
-      (`engine/fill/deal.test.ts`, against Tents' own parser). For 3.2:
-      upstream's Tents generator rejects a board with a line holding
-      neither a tent nor a tree, which the sampler does not; whether Tents
-      keeps that is a `sample` parameter to add then, or a stated drop.
+      (`engine/fill/deal.test.ts`). Upstream's Tents generator rejects a
+      board with a line holding neither a tent nor a tree; Tents keeps it
+      as `sample.noBareLine` (3.2.4).
 - [x] 2.7 The hint: `describedFiringHint`'s hooks from the board
       (`engine/fill/hint.ts`), the walk begun at the lowest tier that
       finishes the board as dealt; step words from `says`, its wordings and
@@ -99,7 +98,7 @@ engine commit.
       wrong square asked to be fixed first), both live errors as the help
       words them, dark mode; a cross drew as ground and now draws as the
       engine's cross. Icons captured from `?screenshot`.
-- [ ] 3.2 Tents moved: `id:` keeps upstream's grammar (the upstream-descs
+- [x] 3.2 Tents moved: `id:` keeps upstream's grammar (the upstream-descs
       guard proves it); its walk's link reading as engine capabilities;
       `lineCount` split by `says.arms`. The fill hint gains `MARK` facts as
       an `Edit`'s marks, rung as `LINK`, and a line's clue outlined as
@@ -141,9 +140,32 @@ engine commit.
         The 17 that differ are the fill hint's tier start (it walks an
         Easy board at Easy, the hand-written at every tier, 14) and
         `betweenThem` said within `noSpareRoom` (3.2.1, 3).
-  - [ ] 3.2.4 The flip: Tents born (its TypeScript gone, its catalog and
+  - [x] 3.2.4 The flip: Tents born (its TypeScript gone, its catalog and
         help from the description), its tests on the engine's moves, the
-        upstream-descs guard, run in the app.
+        upstream-descs guard, run in the app. As built (2026-11-22): the
+        description gains `catalog:`, `play.boards` and `hintMarks`,
+        `rulesOut` and `deal.sample.noBareLine`, and loses `phrases:` and
+        `steps:`. Capabilities added: `rulesOut` names a technique's arm
+        (`lineCount.countMet`), so the hand-written rule-out goes; the
+        sampler's `noBareLine` keeps upstream's refusal of a row or column
+        of grass alone (2.6); a fill game's hint clicks the squares it rules
+        out before those it places, which the rules-out guard caught (a
+        placement's brought grass was clicked off again); painters naming
+        one color share its slot (the mark-collision guard found the ground
+        under a tent, a tree and grass in three); `LINE`, which no hint
+        drew, went (warm-repaint). The palette guard counts the painters as
+        a color's consumers. `noSpareRoom` reads "this row fits only the
+        {k} tents it needs", the 152 characters it ran to now 119 at most.
+        Tents' tests are
+        one file: its pins, every kind reached (2554 positions on 60
+        boards), and its rule-out against the help's words; the ladder
+        census goes, as Kakurasu and Norinori have none, its pins holding
+        each rung in CI. The engine's tests that compared against Tents'
+        own solver, generator and text format now read upstream's descs and
+        text format, written out. Run in the app: deal, clicks, right-drag,
+        link drag, `L` and an arrow, Shift painting, the rule-out
+        preference (same `auto-cross` key), a hint walk with link steps,
+        the live errors the help names, dark mode, a solve to the end.
 - [ ] 3.3 Measure lines, frame time, hint-walk time and capabilities added
       per game, against the baseline; record the figures in design.md.
 

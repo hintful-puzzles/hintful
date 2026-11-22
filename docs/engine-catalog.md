@@ -314,8 +314,8 @@ several squares or edges, and the targets left. `changedCells` is the diff
 for a board with one value per cell. `keepTrackBy` is the whole
 `hint.keepTrack` from a codec: how the game executes a move, diffs two
 boards, keys and values a target, rebuilds the shrunk move (or leaves the
-step whole, as a Tents link is) and keys a target's ring. Exemplars:
-`tents/hint.ts`, `pearl/hint.ts`. What the verdict and the shrinking owe:
+step whole, as a Tents link is) and keys a target's ring. Exemplar:
+`pearl/hint.ts`. What the verdict and the shrinking owe:
 [`hints-marks.md`](./hints-marks.md) § "Group one firing into one step".
 
 ### `hint-words.ts` — a hint's words bound to its marks
@@ -830,7 +830,7 @@ points at. How to write a renderer is [`rendering.md`](./rendering.md).
 Reach for it when the game marks a broken rule as the board is filled:
 `liveErrors(rules, state, g?)` gives the pairs, the elements and the clues
 to paint, from `Game.rules` ([`rendering.md`](./rendering.md) § "Live
-errors are the rules'"). Exemplar: `src/games/tents/render.ts`.
+errors are the rules'"). Exemplar: `src/engine/fill/render.ts`.
 
 ### `piece.ts` — a piece on its cell
 
@@ -1380,7 +1380,7 @@ Reach for `describedRules(module, { grid, size, deals })` when a game draws
 its live errors: the game says how its state reads as the description's
 values, and what its board deals and the variations it has on, and the
 module's `violations` and
-`isAnswer` do the rest. Exemplar: `tents/solver.ts`; the guide is
+`isAnswer` do the rest. Exemplar: `rulesOf` in `engine/fill/answer.ts`; the guide is
 [`rendering.md`](./rendering.md) § "Live errors are the rules'".
 
 ### `deduction-fixpoint.ts` — the shared technique ladder

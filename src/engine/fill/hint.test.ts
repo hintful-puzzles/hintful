@@ -114,11 +114,7 @@ describe("a fill game's hint that asks for a link", () => {
   // Tents (T), trees (R) and grass (.): each tent's tree is beside it, the
   // trees at 1, 11 and 12.
   const TENTS = ["TR..", "...T", "...R", "RT.."];
-  const tentsGame = fillGame("tents", {
-    ...tents,
-    boards: [{ w: W, h: W }],
-    hintMarks: {},
-  });
+  const tentsGame = fillGame("tents", tents);
   const TENT = 1;
   type Step = HintStep<Edit, FillHint>;
 

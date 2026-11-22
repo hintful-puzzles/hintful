@@ -914,7 +914,11 @@
                     "along": { "enum": ["adj4", "adj8"] }
                   }
                 },
-                "rest": { "type": "integer", "minimum": 1 }
+                "rest": { "type": "integer", "minimum": 1 },
+                "noBareLine": {
+                  "type": "boolean",
+                  "description": "Draw again an answer with a row or column holding nothing but `rest`: such a line's clue gives it away, and it reads as an empty strip of the board (upstream's Tents)."
+                }
               }
             }
           }
@@ -972,7 +976,7 @@
               "type": "array",
               "minItems": 1,
               "items": { "type": "string" },
-              "description": "Ids of the game's own techniques."
+              "description": "Ids of the game's own techniques, or `<id>.<arm>` for the firings of one of a technique's `says.arms`: how a technique that also places is named for the arm that only rules out (Tents' `lineCount.countMet`)."
             }
           }
         },

@@ -1883,8 +1883,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
+      "clues",
       "marks",
-      "numbers",
       "tileSize",
       "tiles",
     ],
@@ -1896,12 +1896,13 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint",
       "hint.gesture",
       "hint.judgeMove",
+      "hint.refreshStep",
+      "revealOne",
       "rules",
       "rulesOut",
       "targetVerbs",
       "textFormat",
       "transposeParams",
-      "validateParams",
     ],
     "ui": [
       "cursor",

@@ -456,7 +456,8 @@ through the engine's verbs".
 
 Where a drag preview shows what the release will do, the preview and the verb
 read one function. A key the drag has no button for is a `keyOnly` verb on a
-`cycle` route. Exemplar: [`tents/index.ts`](../src/games/tents/index.ts).
+`cycle` route. Exemplar: [`engine/fill/play.ts`](../src/engine/fill/play.ts)
+(`pendingEdit`).
 
 ### A mark that drags is a sweep
 
@@ -542,7 +543,8 @@ skipping, lock modes), build on `cursorDelta`, `isCursorMove` and
   plain arrow beside it reveals and moves. Exemplar:
   [`range/index.ts`](../src/games/range/index.ts), the shifted arrow.
 - **What a game does while the cursor moves is its own**: read `ui.cursor`
-  either side of a `moveCursor` call. Exemplar: `tents/index.ts`.
+  either side of a `moveCursor` call. Exemplar: `strokeKey` in
+  `engine/fill/play.ts`.
 - **A fact kept beside the cursor is a field beside it, never a second
   cursor.** `cursorFromKeyboard` is the collection's name and polarity: `true`
   when the keyboard revealed or moved the cursor, `false` when a pointer took
@@ -754,7 +756,7 @@ press point, and a release that never traveled is the click. Exemplar:
 - **Where a drag was only ever "a click at its start", resolve by where it
   ends.** Take the drag only when its two ends make the gesture's pair, and
   let one function answer "is this the gesture?" for the preview, the release
-  and the error feedback. Exemplar: `dragLink` in `tents/index.ts`.
+  and the error feedback. Exemplar: `dragLink` in `engine/fill/play.ts`.
 
 ## A press you do not act on must still be consumed
 

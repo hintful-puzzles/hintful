@@ -27,8 +27,14 @@ export interface DescribedRulesOut {
   readonly name: string;
   /** The value a placement gives a square, as the description reads it. */
   readonly placing: number;
+  /** Technique ids, or `<id>.<arm>` for the firings of one of its arms. */
   readonly techniques: readonly string[];
 }
+
+/** The arm a firing's reason says held, or `null` where its technique has
+ * none. */
+const armOf = (reason: object): string | null =>
+  (reason as { says?: { arm?: string } }).says?.arm ?? null;
 
 /** What a game supplies to build `Game.rulesOut` from its description. */
 export interface RulesOutSpec<State, Move, Target extends Point> {
@@ -70,12 +76,14 @@ export function describedRulesOut<State, Move, Target extends Point>(
       const { marks, entries } = walked;
       marks.budget = stepBudget(spec.name);
       const brought = new Map<number, number>();
-      for (const id of rulesOut.techniques) {
+      for (const named of rulesOut.techniques) {
+        const [id, arm] = named.split(".");
         const entry = entries.find((e) => e.id === id);
         if (entry === undefined) throw new Error(`${spec.name}: no technique ${id}`);
         const firings = entry.run.firings(marks);
         if (firings === "contradiction") return null;
         for (const firing of firings) {
+          if (arm !== undefined && armOf(firing.reasons[0]) !== arm) continue;
           if (!premiseOf({ ...firing, entry }).some((c) => placed.has(c))) continue;
           for (let i = 0; i < firing.facts.length; i += 3) {
             const cell = firing.facts[i + 1];

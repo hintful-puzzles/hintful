@@ -55,7 +55,7 @@ import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
 import { type FillMistake, rulesOf } from "./answer.ts";
 import type { FillBoard, FillModule } from "./board.ts";
 import type { Edit } from "./edit.ts";
-import { type FillLink, LINE, LINK } from "./marks.ts";
+import { type FillLink, LINK } from "./marks.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 
 /** A board's clues, by kind. */
@@ -172,9 +172,12 @@ export function fillRender<C extends Clues<C>>(
   const labelStart = labels?.start;
   const rules = rulesOf(module);
 
-  // Each value's painter, and its first slot.
-  const painted = new Map<PainterName, { painter: Painter; base: number }>();
-  const byValue = new Map<number, { painter: Painter; base: number }>();
+  // Each value's painter, and the slot of each of its colors: one slot a
+  // named color, however many painters draw in it.
+  type Placed = { painter: Painter; slot: readonly number[] };
+  const painted = new Map<PainterName, Placed>();
+  const byValue = new Map<number, Placed>();
+  const slotOf = new Map<Color, number>();
   let next = FIRST_PAINTER_SLOT;
   for (const [v, { paint }] of [
     ...Object.entries(play.values),
@@ -185,8 +188,13 @@ export function fillRender<C extends Clues<C>>(
     let got = painted.get(name);
     if (got === undefined) {
       const painter: Painter = PAINTERS[name];
-      got = { painter, base: next };
-      next += painter.colors([0, 0, 0]).length;
+      const slot = painter.colors([0, 0, 0]).map((c) => {
+        const known = slotOf.get(c);
+        if (known !== undefined) return known;
+        slotOf.set(c, next);
+        return next++;
+      });
+      got = { painter, slot };
       painted.set(name, got);
     }
     byValue.set(Number(v), got);
@@ -203,9 +211,9 @@ export function fillRender<C extends Clues<C>>(
     out[COL_INK] = INK;
     out[COL_ERRTEXT] = ERROR_TEXT;
     out[COL_LABEL] = GRID_DARK;
-    for (const { painter, base } of painted.values())
+    for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
-        out[base + i] = c;
+        out[slot[i]] = c;
       });
     return out;
   }
@@ -298,12 +306,12 @@ export function fillRender<C extends Clues<C>>(
       tone
         ? winSlot(tone)
         : piece !== undefined && piece.painter.surface !== null
-          ? piece.base + piece.painter.surface
+          ? piece.slot[piece.painter.surface]
           : COL_CELL,
     );
     // Under the content, so the piece stays whole.
     if (hintWord & HINT_LINE) dr.drawHatch(surface, hatchPeriod(ts));
-    piece?.painter.paint(dr, tile, piece.base, (word & ERR_AT) !== 0);
+    piece?.painter.paint(dr, tile, piece.slot, (word & ERR_AT) !== 0);
 
     for (let d = 0; d < 4; d++)
       if (word & (1 << (LINK_SHIFT + d)))
@@ -509,7 +517,6 @@ export function fillRender<C extends Clues<C>>(
           : stripes.every((p) => p.x === stripes[0].x)
             ? h + stripes[0].x
             : -1;
-    const counted = new Set(marks.of("outline", LINE));
 
     const cx = ui.cursor.visible ? ui.cursor.x : -1;
     const cy = ui.cursor.visible ? ui.cursor.y : -1;
@@ -533,7 +540,7 @@ export function fillRender<C extends Clues<C>>(
       const v = lineClue(state, k);
       const hatched = stripedLine === k;
       const err = lineErrors.has(k);
-      const key = (err ? 1 : 0) | (hatched ? 2 : 0) | (counted.has(k) ? 4 : 0);
+      const key = (err ? 1 : 0) | (hatched ? 2 : 0);
       if (!ds.clues.changed(k, key)) continue;
       const row = k < h;
       const box = row
@@ -552,7 +559,7 @@ export function fillRender<C extends Clues<C>>(
             fontType: "variable",
             size,
           },
-          err ? COL_ERROR : counted.has(k) ? COL_HINT_OUTLINE : COL_INK,
+          err ? COL_ERROR : COL_INK,
           String(v),
         );
       dr.drawUpdate(box);

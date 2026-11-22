@@ -1,21 +1,15 @@
 /**
- * The fill board on a real compiled module, Tents', judged against Tents' own
- * code where that is the outside reference: its solver's answer and its text
- * format.
+ * The fill board on a real compiled module, Tents'. Its hand-written solver,
+ * generator and text format were the outside reference until Tents was born
+ * from its description; git keeps those comparisons, and upstream's own
+ * descs (`guards/upstream-descs.test.ts`) and text format, written out below,
+ * are what stays outside the engine.
  */
 
 import { describe, expect, it } from "vitest";
-import { newTentsDesc } from "../../games/tents/generator.ts";
-import { tentsSolve } from "../../games/tents/solver.ts";
-import {
-  newState,
-  TENT,
-  type TentsState,
-  textFormat as tentsText,
-} from "../../games/tents/state.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
+import { descValue } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
-import { clueList } from "../solve/describe-runtime.ts";
 import {
   type AnswerReading,
   answerOf,
@@ -28,8 +22,10 @@ import {
   status,
   textFormat,
 } from "./answer.ts";
-import { type FillBoard, newBoard, solveBoard, spaceOf } from "./board.ts";
+import { newBoard, solveBoard, spaceOf } from "./board.ts";
+import { dealFill } from "./deal.ts";
 import { applyEdit } from "./edit.ts";
+import { decodeDesc } from "./game-id.ts";
 
 const TENT_V = 1;
 const GRASS = 2;
@@ -41,53 +37,38 @@ const reading: AnswerReading<tents.Dealt> = {
   lineClues: ["count"],
 };
 
-/** Tents' board as the engine lays it out: trees by cell, counts by line,
- * rows before columns. */
-function boardOf(s: TentsState): FillBoard<tents.Dealt> {
-  const { w, h, grid, numbers } = s;
-  const trees = [...grid.keys()].filter((c) => grid[c] === 1);
-  const lines = Array.from({ length: w + h }, (_, L) => L);
-  const dealt: tents.Dealt = {
-    tree: clueList(
-      trees,
-      trees.map(() => 0),
-      w * h,
-    ),
-    count: clueList(
-      lines,
-      lines.map((L) => (L < h ? numbers[w + L] : numbers[L - h])),
-      w + h,
-    ),
-  };
-  return newBoard(tents, w, h, dealt);
-}
+/** A board of `w` by `h` from its desc. */
+const loaded = (w: number, h: number, desc: string) =>
+  newBoard(
+    tents,
+    w,
+    h,
+    descValue(decodeDesc(tents.deal, spaceOf(tents, { w, h }), tents.clueMax, desc)),
+  );
 
 function dealt(seed: string) {
   const p = { w: 8, h: 8, diff: tents.TIER.normal };
-  const { desc, aux } = newTentsDesc(p, randomNew(seed));
-  const s = newState(p, desc);
-  return { s, aux, board: boardOf(s) };
+  const { desc, aux } = dealFill(tents, tents.deal, p, randomNew(seed));
+  return { aux, board: loaded(p.w, p.h, desc) };
 }
 
 describe("the fill board", () => {
   it("places each tree as dealt, fixed", () => {
-    const { s, board } = dealt("fill-trees");
-    for (let c = 0; c < s.grid.length; c++) {
-      expect(board.fixed[c]).toBe(s.grid[c] === 1 ? 1 : 0);
-      expect(board.values[c]).toBe(s.grid[c] === 1 ? TREE : 0);
+    const { board } = dealt("fill-trees");
+    const trees = board.dealt.tree.at;
+    expect(trees.length).toBeGreaterThan(0);
+    for (let c = 0; c < board.values.length; c++) {
+      expect(board.fixed[c]).toBe(trees.includes(c) ? 1 : 0);
+      expect(board.values[c]).toBe(trees.includes(c) ? TREE : 0);
     }
   });
 
-  it("reaches Tents' own solver's answer", () => {
-    for (const seed of ["fill-a", "fill-b", "fill-c", "fill-d"]) {
-      const { s, board } = dealt(seed);
-      const ref = tentsSolve(s.w, s.h, s.grid, s.numbers, tents.TIER.normal);
-      expect(ref.ret).toBe(1);
+  it("finishes at the top tier on the answer the deal wrote", () => {
+    for (const seed of ["fill-a", "fill-b", "fill-c"]) {
+      const { board, aux } = dealt(seed);
       const got = solveBoard(tents, board, tents.TIER.normal);
       expect(got.verdict).toBe("solved");
-      expect(Array.from(got.values, (v) => v === TENT_V)).toEqual(
-        Array.from(ref.soln, (v) => v === TENT),
-      );
+      expect(encodeAnswer(got.values)).toBe(aux);
     }
   });
 
@@ -99,8 +80,10 @@ describe("the fill board", () => {
     if (!ownAnswer.ok) return;
     const solved = applyEdit(tents, board, ownAnswer.move);
     expect(status(tents, reading, solved)).toBe("solved");
-    // Tents' `aux` is its own; an engine answer is a digit a cell.
-    expect(solve(tents, board, board, aux).ok).toBe(true);
+    const fromAux = solve(tents, board, board, aux);
+    expect(fromAux.ok && applyEdit(tents, board, fromAux.move).values).toEqual(
+      solved.values,
+    );
   });
 
   it("is solved with its grass left open, which Tents reads as grass", () => {
@@ -184,7 +167,7 @@ describe("the fill board", () => {
     expect(applyEdit(tents, board, { mark: [tent, 0] }).mark[tent]).toBe(-1);
   });
 
-  it("derives from the answer the very clues Tents' generator dealt", () => {
+  it("derives from the answer the very clues its desc reads back", () => {
     for (const seed of ["fill-derive-a", "fill-derive-b", "fill-derive-c"]) {
       const { board } = dealt(seed);
       const answer = answerOf(tents, board);
@@ -197,14 +180,26 @@ describe("the fill board", () => {
     }
   });
 
-  it("prints as Tents' own text format does", () => {
-    const { s, board } = dealt("fill-text");
-    const answer = answerOf(tents, board);
-    if (answer === null) throw new Error("no answer");
-    const solved = { ...board, values: answer };
-    const back = [0, TENT, 3, 1];
-    const tentsSolved = { ...s, grid: Int8Array.from(answer, (v) => back[v]) };
-    expect(textFormat(reading, solved)).toBe(tentsText(tentsSolved));
-    expect(textFormat(reading, board)).toBe(tentsText(s));
+  it("prints as upstream's Tents does", () => {
+    // Upstream's 4x4 desc: a run of three open squares before each tree (`c`),
+    // then four (`d`); columns 1, 1, 1, 0 and rows 1, 1, 0, 1. The last line's
+    // trailing spaces are upstream's `game_text_format`'s.
+    const board = loaded(4, 4, "cdcc,1,1,1,0,1,1,0,1");
+    expect(textFormat(reading, board)).toBe(
+      [
+        "+---+---+---+---+---+",
+        "| . | . | . | T | 1 |",
+        "+---+---+---+---+---+",
+        "| . | . | . | . | 1 |",
+        "+---+---+---+---+---+",
+        "| T | . | . | . | 0 |",
+        "+---+---+---+---+---+",
+        "| T | . | . | . | 1 |",
+        "+---+---+---+---+---+",
+        "| 1 | 1 | 1 | 0 |    ",
+        "+---+---+---+---+   ",
+        "",
+      ].join("\n"),
+    );
   });
 });

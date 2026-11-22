@@ -1,13 +1,10 @@
 /**
- * The hint marks a fill board draws beside the cells: a line's clue in the
- * margin, and a link between a cell and the clue its mark names.
+ * The hint mark a fill board draws beside the cells: a link between a cell
+ * and the clue its mark names. A line's clue is no mark of its own: the
+ * striped line hatches it.
  */
 
 import type { MarkKind } from "../contract/hint-words.ts";
-
-/** A line's clue in the margin, by the line's index in the space's `lines`:
- * the rows, then the columns. */
-export const LINE: MarkKind<number> = { name: "line", key: String };
 
 /** A link from cell `cell` to the clue's cell `to`, its orthogonal
  * neighbor. */

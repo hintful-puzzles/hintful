@@ -277,9 +277,10 @@ that does not fit.
   `L` has armed a link: Tents' own ink outline goes when it moves.
 - The live errors are read on the board as a drag would leave it, not on
   its start cell alone as upstream did.
-- The hint's engine mark kinds are `LINE` (a line's clue) and `LINK` (a
-  cell and the clue's cell), in `engine/fill/marks.ts`; the hint in 2.7
-  emits them.
+- The hint's engine mark kind is `LINK` (a cell and the clue's cell), in
+  `engine/fill/marks.ts`. A `LINE` kind for a line's clue went unused once
+  the striped line hatched its clue (3.2.1), and went in 3.2.4, when the
+  warm-repaint guard found no hint that drew it.
 
 ### 7. Clues derived from `means`; the deal
 

@@ -105,6 +105,17 @@ const sourceModules = import.meta.glob<string>("../../games/**/*.ts", {
   eager: true,
 });
 
+/** The engine's painters, which a game born from its description names in
+ * its `play:`: their colors are that game's. */
+const painterModules = import.meta.glob<string>("../render/pieces/*.ts", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+const painterTrees = Object.entries(painterModules)
+  .filter(([key]) => !key.endsWith(".test.ts"))
+  .map(([key, text]) => parsed(fromHere(key), text));
+
 /** Every non-test game source, keyed `<game>/<file>`, with its tree. */
 const sources: { rel: string; tree: ts.SourceFile }[] = Object.entries(sourceModules)
   .filter(([key]) => !key.endsWith(".test.ts"))
@@ -283,7 +294,8 @@ describe("a per-game token belongs to the game it names", () => {
  * shade nothing on any board can show. That is exactly the state the palette is
  * small in order to avoid.
  *
- * "Used" spans all four ways a color reaches a board: a game imports it, a
+ * "Used" spans all five ways a color reaches a board: a game or one of the
+ * engine's painters (`engine/render/pieces/`) imports it, a
  * meaning in `palette.ts` or `palette-games.ts` is defined over it, one of the
  * sets in `colors.ts` itself gathers it up (`PURPLE` is in `TWO`, which is
  * what Unruly imports), or the app paints it over the board (a hint's
@@ -291,9 +303,13 @@ describe("a per-game token belongs to the game it names", () => {
  */
 it("declares no named color nothing can show", () => {
   const used = new Set(
-    [...sources.map((s) => s.tree), paletteTree, tableTree, appTree].flatMap((t) =>
-      importedNames(t, COLORS),
-    ),
+    [
+      ...sources.map((s) => s.tree),
+      ...painterTrees,
+      paletteTree,
+      tableTree,
+      appTree,
+    ].flatMap((t) => importedNames(t, COLORS)),
   );
   const dead = Object.keys(colors).filter(
     (name) =>

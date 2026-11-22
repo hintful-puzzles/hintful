@@ -1283,9 +1283,15 @@ squares the move left alone. So:
   placed beside another crosses no square.
 - **Name only techniques whose conclusions the player would cross at a
   glance**, and that conclude marks alone: a technique that also places (Tents'
-  `lineCount`, Light Up's `square`) cannot be named, since its other
-  conclusions are not the placement's to make. A game whose rule-out is
-  inside such a technique writes `Game.rulesOut` itself and says why.
+  `lineCount`, Light Up's `square`) cannot be named whole, since its other
+  conclusions are not the placement's to make. Where its `says.arms` split
+  off the case that only rules out, name that arm as `<id>.<arm>` (Tents'
+  `lineCount.countMet`, a line whose number is met). A game whose rule-out
+  is inside such a technique with no such arm writes `Game.rulesOut` itself
+  and says why.
+- **A fill game's hint clicks the squares it rules out before those it
+  places**, so a placement's brought marks never meet a click that would
+  undo them (`engine/fill/game.ts`).
 
 ## A firing's reason is built from its binding
 

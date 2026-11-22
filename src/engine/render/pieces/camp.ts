@@ -18,11 +18,11 @@ export const ground: Painter = {
 export const tent: Painter = {
   colors: () => [GREEN_WASH, ORANGE],
   surface: 0,
-  paint(dr, { x, y, w: ts }, base, error) {
+  paint(dr, { x, y, w: ts }, slot, error) {
     const cx = x + Math.floor(ts / 2);
     const cy = y + Math.floor(ts / 2);
     const t = Math.floor(ts / 3);
-    const col = error ? COL_ERROR : base + 1;
+    const col = error ? COL_ERROR : slot[1];
     dr.drawPolygon(
       [
         { x: cx - t, y: cy + t },
@@ -41,7 +41,7 @@ export const tree: Painter = {
   // told from the red leaves it is drawn under.
   colors: () => [GREEN_WASH, BROWN, GREEN, RED_BOLD],
   surface: 0,
-  paint(dr, { x: tx, y: ty, w: ts }, base, error) {
+  paint(dr, { x: tx, y: ty, w: ts }, slot, error) {
     const cx = tx + Math.floor(ts / 2);
     dr.drawRect(
       {
@@ -50,9 +50,9 @@ export const tree: Painter = {
         w: 2 * Math.floor(ts / 15) + 1,
         h: Math.floor((ts * 9) / 10) - Math.floor((ts * 3) / 10),
       },
-      error ? base + 3 : base + 1,
+      error ? slot[3] : slot[1],
     );
-    const col = error ? COL_ERROR : base + 2;
+    const col = error ? COL_ERROR : slot[2];
     const leaf = (dx: number, dy: number, r: number) =>
       dr.drawCircle({ x: cx + dx, y: ty + dy }, r, col, col);
     leaf(0, Math.floor((ts * 4) / 10), Math.floor(ts / 4));

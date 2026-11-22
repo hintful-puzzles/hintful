@@ -153,10 +153,14 @@ export function fillGame<C extends Clues<C> & object>(
         const marks = move.mark ?? [];
         const linked = new Set(marks.filter((_, i) => i % 2 === 0));
         const set = move.set ?? [];
+        // The squares the secondary value rules out go first: a placement
+        // may bring that value onto them (`rulesOut`), and a click after
+        // would take it off again.
         const clicks: Point[] = [];
-        for (let i = 0; i < set.length; i += 2)
-          if (!linked.has(set[i]))
-            clicks.push({ x: set[i] % b.w, y: Math.floor(set[i] / b.w) });
+        for (const ruling of [true, false])
+          for (let i = 0; i < set.length; i += 2)
+            if (!linked.has(set[i]) && (set[i + 1] === play.secondary) === ruling)
+              clicks.push({ x: set[i] % b.w, y: Math.floor(set[i] / b.w) });
         const drags: PointerAction[] = [];
         if (play.links !== undefined)
           for (let i = 0; i < marks.length; i += 2)

@@ -1049,7 +1049,8 @@ asks ([`pearl.description.yaml`](../src/games/pearl/pearl.description.yaml)).
 
 Exemplars: `reading` in
 [`ascent/hint.ts`](../src/games/ascent/hint.ts) with `techniqueTier`;
-`TentsBoard.readLinks` in [`tents/solver.ts`](../src/games/tents/solver.ts).
+`glanceWalk` in [`engine/hint/glance.ts`](../src/engine/hint/glance.ts),
+which Tents' `play.glance` declares.
 
 ### Design the mark from what the solver derives
 
@@ -1089,8 +1090,8 @@ mark exactly that reach.**
   it narrates), Slant's `deduceHintPlan` (`slant/solver.ts`).
 - **Let the notation's gesture carry the placement it explains**, where the
   player would make both at once; a player who makes the placement alone is
-  on track, and the step shrinks to the note. Exemplar: the link in
-  `src/games/tents/`.
+  on track, and the step shrinks to the note. Exemplar: Tents' link, the
+  hint's gesture in `engine/fill/game.ts`.
 - **Geometry the mark depends on is checked on every tiling.** A dot's edge
   order is not a direction; choose a corner's angle by the face it belongs
   to. Exemplar: [`loopy/notes.ts`](../src/games/loopy/notes.ts) and

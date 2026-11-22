@@ -1,2 +1,2 @@
-8x8 Easy #0: 21 steps, solved, 3cb507cb1c0511b1 [lineCount.allOpen:3 lineCount.countMet:2 lineCount.noSpareRoom:3 nextToTent:8 noTree:1 treeSingle:4]
-8x8 Normal #0: 26 steps, solved, 69708b25b5d3421f [lineCount.allOpen:6 lineNeighbors:4 nextToTent:10 noTree:1 treeDiagonal:1 treeSingle:4]
+8x8 Easy #0: 21 steps, solved, 628ba6f2cde1fe9a [lineCount.allOpen:3 lineCount.countMet:4 lineCount.noSpareRoom:1 nextToTent:4 noTree:1 tentLink:1 treeSingle:6 treesDone:1]
+8x8 Normal #0: 25 steps, solved, 54f2f87f4ba6915b [lineCount.allOpen:3 lineCount.countMet:4 lineNeighbors:2 nextToTent:8 noTree:1 treeSingle:7]

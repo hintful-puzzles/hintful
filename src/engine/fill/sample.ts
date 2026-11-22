@@ -25,6 +25,9 @@ export interface Sample {
   };
   readonly partner?: { readonly value: number; readonly along: Near };
   readonly rest: number;
+  /** Whether a row or column holding nothing but `rest` is refused: upstream's
+   * Tents rejects one as giving nothing away. */
+  readonly noBareLine?: boolean;
 }
 
 /** How many cells a share of `n` is: rounded down, a share written as a
@@ -32,7 +35,8 @@ export interface Sample {
 const shareOf = (share: number, n: number): number => Math.floor(share * n + 1e-9);
 
 /** An answer as `sample` draws it on `sp`, or `null` where this draw found no
- * room for every scattered cell or no partner for each. */
+ * room for every scattered cell or no partner for each, or left a line bare
+ * that `noBareLine` refuses. */
 export function sampleAnswer(
   sample: Sample,
   sp: GridSpace,
@@ -85,5 +89,10 @@ export function sampleAnswer(
     for (const r of paired) g[rooms[r]] = partner.value;
   }
   for (const c of sp.cells) if (g[c] === 0) g[c] = sample.rest;
+  if (
+    sample.noBareLine === true &&
+    sp.lines.some((L) => sp.lineCells[L].every((c) => g[c] === sample.rest))
+  )
+    return null;
   return g;
 }

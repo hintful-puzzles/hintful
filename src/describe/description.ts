@@ -196,11 +196,13 @@ export function sampleOf(json: DescriptionJson): SampleJson | null {
 
 /** How a deal samples an answer: `scatter`'s value on a share of the cells,
  * optionally none within `apart` of another; `partner`'s value beside each,
- * along `along`, the two matched; and `rest` on every other cell. */
+ * along `along`, the two matched; and `rest` on every other cell. With
+ * `noBareLine`, an answer with a row or column all `rest` is drawn again. */
 export interface SampleJson {
   scatter: { value: number; share: number; apart?: "adj4" | "adj8" };
   partner?: { value: number; along: "adj4" | "adj8" };
   rest: number;
+  noBareLine?: boolean;
 }
 
 /** A game's nouns, compiled into its module as `WORDS`: the engine's
@@ -1283,7 +1285,8 @@ function rulesOutOf(
 ): { name: string; placing: number; techniques: string[] } | null {
   const r = json.rulesOut;
   if (r === undefined) return null;
-  for (const id of r.techniques) {
+  for (const named of r.techniques) {
+    const [id, arm] = named.split(".");
     const t = techniques.find((x) => x.id === id);
     if (t === undefined)
       throw new SyntaxError(`${json.game} rulesOut: no technique ${id}`);
@@ -1291,6 +1294,8 @@ function rulesOutOf(
       throw new SyntaxError(
         `${json.game} rulesOut: ${id} says nothing, so a move's evidence is not known`,
       );
+    if (arm !== undefined && !t.says.variants.some((v) => v.name === arm))
+      throw new SyntaxError(`${json.game} rulesOut: ${id} has no arm ${arm}`);
   }
   return r;
 }

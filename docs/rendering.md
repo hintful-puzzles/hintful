@@ -619,8 +619,8 @@ grid while a gesture is live, and paints only what they say:
   too coarse, the fix is the statement's shape or the compiler's bound on
   its form, so every game gains it.
 
-Exemplar: [`tents/render.ts`](../src/games/tents/render.ts) (`errorsOf`) and
-[`tents/solver.ts`](../src/games/tents/solver.ts) (`rules`).
+Exemplar: [`engine/fill/render.ts`](../src/engine/fill/render.ts) and
+`rulesOf` in [`engine/fill/answer.ts`](../src/engine/fill/answer.ts).
 
 ## Special paint shapes
 
