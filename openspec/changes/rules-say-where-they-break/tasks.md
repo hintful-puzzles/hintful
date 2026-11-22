@@ -220,6 +220,15 @@
       `broken` pieces go; 0.8 ms a redraw on 7×7.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
+      Read first (2026-11-22): the size of a set read from the answer is
+      bounded already where the set is written in place (`heldSet`, the
+      `size` arm of `compile-violations.ts`: sure members at least, possible
+      at most). Palisade and Separate name theirs by a binder, `forall O =
+      joined`, which the check evaluates whole, and Filling's binder set
+      reads values, not edges. Likely the whole compiler part: read a
+      binder's held set as if written in place, so no description changes
+      and no technique re-check runs. Then look at what each game's checker
+      draws before moving it.
 - [x] 2.4 Plant a broken rule and see its mark appear in a game that wrote
       no checker (once batch 1 has moved a game whose checker is deleted:
       edit its description's rule, see the mark move in the app). Range's
