@@ -644,6 +644,10 @@
               "means": {
                 "$ref": "#/$defs/formula",
                 "description": "For a mark on the cells that names one clue (`notation: \"one of clues(kind)\"`): what the cell `at` naming the clue `v` says of the answer. The mark is read `name(c)`, the clue or none, and made by `mark(c, q)`."
+              },
+              "while": {
+                "$ref": "#/$defs/formula",
+                "description": "For the cell mark that names one clue: what it needs to stand, read of the cell `at` on the board's values. An edit drops every mark whose `while` the values it leaves break (Tents' link needs `value(at) = 1`)."
               }
             }
           }
@@ -731,7 +735,37 @@
         "deal": {
           "type": "object",
           "additionalProperties": { "type": "string" },
-          "description": "What the generator chooses, in words: consumed by nothing yet."
+          "description": "What the generator chooses, in words, and `sample` where the deal samples an answer and derives the clues from each kind's `means`.",
+          "properties": {
+            "sample": {
+              "type": "object",
+              "description": "How the deal samples an answer: `scatter`'s value on a share of the cells, optionally none within `apart` of another; `partner`'s value beside each, along `along`, the two matched; `rest` on every other cell. The compiler then writes `clueHolds_<kind>` and `deriveClues`.",
+              "required": ["scatter", "rest"],
+              "additionalProperties": false,
+              "properties": {
+                "scatter": {
+                  "type": "object",
+                  "required": ["value", "share"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "value": { "type": "integer", "minimum": 1 },
+                    "share": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                    "apart": { "enum": ["adj4", "adj8"] }
+                  }
+                },
+                "partner": {
+                  "type": "object",
+                  "required": ["value", "along"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "value": { "type": "integer", "minimum": 1 },
+                    "along": { "enum": ["adj4", "adj8"] }
+                  }
+                },
+                "rest": { "type": "integer", "minimum": 1 }
+              }
+            }
+          }
         },
         "words": {
           "type": "object",

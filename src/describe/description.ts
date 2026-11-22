@@ -73,7 +73,15 @@ export interface DescriptionJson {
    * answer: `means`, read of the cell `at`. */
   marks?: Record<
     string,
-    { sort: string; notation: string; of?: string; means?: string }
+    {
+      sort: string;
+      notation: string;
+      of?: string;
+      means?: string;
+      /** What the mark needs to stand, read of the cell `at`: an edit drops
+       * a mark whose `while` the values it leaves break. */
+      while?: string;
+    }
   >;
   define?: Record<string, string>;
   /** How a rule is seen broken, by name with its parameters (`stuck(t)`):
@@ -99,7 +107,7 @@ export interface DescriptionJson {
     }
   >;
   freedom: { kind: string };
-  deal?: Record<string, string>;
+  deal?: DealJson;
   tiers?: string[];
   /** What a placement rules out at a glance, which the engine's `auto-cross`
    * preference makes for the player: the preference's words, and the
@@ -122,6 +130,26 @@ export interface DescriptionJson {
    * recorded under: what Check & save names a move by. */
   names?: Record<string, string>;
   variations?: Record<string, VariationJson>;
+}
+
+/** What the generator chooses, in words, and, where the deal samples an
+ * answer and derives the clues from it, how it samples, as `sample`
+ * ({@link sampleOf}). */
+type DealJson = Record<string, string | SampleJson>;
+
+/** How a description's deal samples an answer, or `null` where it does not. */
+export function sampleOf(json: DescriptionJson): SampleJson | null {
+  const sample = json.deal?.["sample"];
+  return typeof sample === "object" ? sample : null;
+}
+
+/** How a deal samples an answer: `scatter`'s value on a share of the cells,
+ * optionally none within `apart` of another; `partner`'s value beside each,
+ * along `along`, the two matched; and `rest` on every other cell. */
+export interface SampleJson {
+  scatter: { value: number; share: number; apart?: "adj4" | "adj8" };
+  partner?: { value: number; along: "adj4" | "adj8" };
+  rest: number;
 }
 
 /** A game's nouns, compiled into its module as `WORDS`: the engine's

@@ -16,6 +16,7 @@
  */
 
 import { compileExpr } from "./compile-expr.ts";
+import { derivedClues, markWhileOf } from "./compile-fill.ts";
 import {
   answerSet,
   type ClueKind,
@@ -353,6 +354,11 @@ export function compileGame(
   const code = compiled.map((c) => c.code);
   const check = Out.own("isAnswer", () => answerCheck(json, d, env));
   const broken = Out.own("violations", () => violationsOf(json, d, env));
+  const measured = grid === null ? (e: Expr) => e : measuredBy(grid);
+  const fill = Out.own("", () => [
+    ...markWhileOf(json, env, measured),
+    ...derivedClues(json, d, env, measured),
+  ]);
   // Kept by a technique or by the rules alone (Signpost's `nextGiven`).
   const kept = env.kept?.defs ?? new Map();
   for (const fn of kept.keys())
@@ -573,6 +579,7 @@ export function compileGame(
     ...check,
     "",
     ...broken,
+    ...fill,
     "",
     "/** The statements a violation names, so a game that draws one its own",
     " * way names it by a name the description has. */",

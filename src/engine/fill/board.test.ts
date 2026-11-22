@@ -28,7 +28,7 @@ import {
   status,
   textFormat,
 } from "./answer.ts";
-import { type FillBoard, newBoard, solveBoard } from "./board.ts";
+import { type FillBoard, newBoard, solveBoard, spaceOf } from "./board.ts";
 import { applyEdit } from "./edit.ts";
 
 const TENT_V = 1;
@@ -170,24 +170,31 @@ describe("the fill board", () => {
     expect(Array.from(at.values)).toEqual(Array.from(answer));
   });
 
-  it("drops a mark whose `while` an edit breaks", () => {
+  it("drops a link whose square an edit stops being a tent, by the link's `while`", () => {
     const { board } = dealt("fill-while");
-    const withWhile = {
-      ...tents,
-      markWhile: (g: ArrayLike<number>, _sp: unknown, _cl: unknown, c: number) =>
-        g[c] === TENT_V,
-    };
     const answer = answerOf(tents, board);
     if (answer === null) throw new Error("no answer");
     const tent = answer.indexOf(TENT_V);
-    const linked = applyEdit(withWhile, board, {
-      set: [tent, TENT_V],
-      mark: [tent, 0],
-    });
+    const linked = applyEdit(tents, board, { set: [tent, TENT_V], mark: [tent, 0] });
     expect(linked.mark[tent]).toBe(0);
-    expect(applyEdit(withWhile, linked, { set: [tent, GRASS] }).mark[tent]).toBe(-1);
-    // Without a `while`, a mark stands whatever the cell holds.
-    expect(applyEdit(tents, linked, { set: [tent, GRASS] }).mark[tent]).toBe(0);
+    expect(applyEdit(tents, linked, { set: [tent, TENT_V] }).mark[tent]).toBe(0);
+    expect(applyEdit(tents, linked, { set: [tent, GRASS] }).mark[tent]).toBe(-1);
+    expect(applyEdit(tents, linked, { set: [tent, 0] }).mark[tent]).toBe(-1);
+    // A link put on a square the same edit leaves no tent never stands.
+    expect(applyEdit(tents, board, { mark: [tent, 0] }).mark[tent]).toBe(-1);
+  });
+
+  it("derives from the answer the very clues Tents' generator dealt", () => {
+    for (const seed of ["fill-derive-a", "fill-derive-b", "fill-derive-c"]) {
+      const { board } = dealt(seed);
+      const answer = answerOf(tents, board);
+      if (answer === null) throw new Error("no answer");
+      const got = tents.deriveClues(answer, spaceOf(tents, board));
+      for (const kind of ["tree", "count"] as const) {
+        expect(Array.from(got[kind].at)).toEqual(Array.from(board.dealt[kind].at));
+        expect(Array.from(got[kind].v)).toEqual(Array.from(board.dealt[kind].v));
+      }
+    }
   });
 
   it("prints as Tents' own text format does", () => {

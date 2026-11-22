@@ -798,3 +798,46 @@ describe("a witness is written for a hint only", () => {
     expect(solvePath(stated)).toEqual(solvePath(absent));
   });
 });
+
+describe("what the fill board reads of a description", () => {
+  const tentsSource = "src/games/tents/tents.description.yaml";
+  const compileTents = (over: (json: never) => unknown): string => {
+    const tents = sources.get(tentsSource);
+    if (tents === undefined || !isFormal(tents)) throw new Error("no Tents");
+    return compileGame(
+      over(structuredClone(tents) as never) as never,
+      [...sources.values()].filter(isLibrary),
+      tentsSource,
+      "../../engine/describe-runtime.ts",
+      "./step-voice.ts",
+    );
+  };
+
+  it("writes the clues a sampled deal derives only where the deal samples", () => {
+    expect(compileTents((j) => j)).toContain("export function deriveClues(");
+    const unsampled = compileTents((j: { deal: { sample?: unknown } }) => {
+      delete j.deal.sample;
+      return j;
+    });
+    expect(unsampled).not.toContain("deriveClues");
+    expect(unsampled).not.toContain("clueHolds_");
+  });
+
+  it("refuses a sampled deal whose clue reads the board's other clues", () => {
+    expect(() =>
+      compileTents((j: { clues: { count: { means: string } } }) => {
+        j.clues.count.means = "count(c in cells(at) where clue(tree, c) >= 0) = v";
+        return j;
+      }),
+    ).toThrow(/reads the board's clues/);
+  });
+
+  it("refuses a `while` on any mark but the cell mark naming a clue", () => {
+    expect(() =>
+      compileTents((j: { marks: Record<string, unknown> }) => {
+        j.marks["scrap"] = { sort: "edge", notation: "x", while: "true" };
+        return j;
+      }),
+    ).toThrow(/`while` is the one cell mark's/);
+  });
+});

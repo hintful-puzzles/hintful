@@ -182,6 +182,14 @@ research tools all read through it; the app never does.
   `run_lengths(L, S)` makes one: the lengths of the runs of `S`'s cells
   along `L`, in order. `Dealt` keeps the kind as `ListClues`. The checker
   deals one a line, up to as many members as the line has room for runs.
+- **What the engine's fill board reads** (`engine/fill/`,
+  [`compile-fill.ts`](../src/describe/compile-fill.ts)). The cell mark that
+  names a clue may say `while:`, what it needs to stand: an edit drops every
+  mark its new values break (Tents' link, `value(at) = 1`). A deal that
+  samples an answer says how in `deal.sample`, and the compiler then writes
+  `deriveClues`: each kind at each cell or line where one of its values
+  holds of the answer, by its `means`. A clue whose `means` reads other
+  clues cannot be derived, and is refused.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's

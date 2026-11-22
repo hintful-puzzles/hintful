@@ -19,18 +19,28 @@ engine commit.
       the difficulty verdict), tested on Tents' compiled module against
       Tents' own solver and text format. `FillUi` moved to 2.4, with the
       input that is its only reader.
-- [ ] 2.2 The compiler: `play:`, `catalog:`, `id:`, `tierLetters:`,
-      `deal.sample:`, a mark's `while:`, `labels:`; `clueHolds_<kind>` and
-      `deriveClues`; the generated `<id>.game.ts`. Schema and lint.
-- [ ] 2.3 `src/games/catalog.ts` as the one way to the catalog, every
-      reader of `src/games/*/catalog.ts` moved to it; `src/games/index.ts`
-      registers the generated games.
+- [x] 2.2 The compiler (`describe/compile-fill.ts`): a mark's `while:` as
+      `markWhile`, which `applyEdit` reads; `deal.sample:` in the schema,
+      and where a deal samples, `clueHolds_<kind>` and `deriveClues`, tested
+      on Tents' module against its generator's clues. A declaration the
+      engine only carries lands with the task whose code reads it, so none
+      is compiled unread: `catalog:` and the generated `<id>.game.ts` in
+      2.3, `play:` in 2.4, `labels:` in 2.5, `id:` and `tierLetters:` in 2.6.
+- [ ] 2.3 The generated games in the catalog and the registry. Re-derived
+      2026-11-22: every reader already goes through one module,
+      `src/puzzle/catalog.ts` (`catalogFrom` in `catalog-data.ts`), and only
+      it, `vite-plugins/catalog.ts` and `src/games/index.ts` glob
+      `src/games/*/catalog.ts`; so no `src/games/catalog.ts` is needed, and
+      those three glob the generated games beside. The compiler: `catalog:`,
+      and the generated `<id>.game.ts`. Needs `fillGame`, so it is done
+      after 2.7, with 3.1.
 - [ ] 2.4 `FillUi`, `newUi`, `changedState`, and input from `play` (verbs,
-      keys, Shift/Ctrl painting, `stroke`, `links`).
+      keys, Shift/Ctrl painting, `stroke`, `links`). The compiler: `play:`.
 - [ ] 2.5 Render by layers: the engine walk, painters in
-      `engine/render/pieces/`, margins, labels.
-- [ ] 2.6 The deal: `scatter`/`partner` samplers, the tier gate, the codec
-      combinators and the params codec.
+      `engine/render/pieces/`, margins, labels. The compiler: `labels:`.
+- [ ] 2.6 The deal: `scatter`/`partner` samplers reading `deal.sample`, the
+      tier gate, the codec combinators and the params codec. The compiler:
+      `id:` and `tierLetters:`.
 - [ ] 2.7 The hint: `describedFiringHint`'s hooks from the board; `MARK`
       facts as an `Edit`'s marks; step words from `says` and its arms.
 

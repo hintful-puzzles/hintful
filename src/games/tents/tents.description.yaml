@@ -85,6 +85,8 @@ marks:
     sort: cell
     notation: "one of clues(tree)"
     means: "paired(at, at(v))"
+    # A square that stops being a tent lets go of its tree.
+    while: "value(at) = 1"
 define:
   # The trees beside square c.
   trees(c): "{q in clues(tree) where at(q) in adj4(c)}"
@@ -133,6 +135,10 @@ deal:
   tree: beside each tent, as the pairing put it
   count: every row's and column's tents
   tier: one of the tiers, the board finished at it and not at the tier below
+  sample:
+    scatter: { value: 1, share: 0.2, apart: adj8 }
+    partner: { value: 3, along: adj4 }
+    rest: 2
 tiers: [Easy, Normal]
 names:
   tentLink: "a tent with one tree left"
