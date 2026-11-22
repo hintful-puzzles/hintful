@@ -135,6 +135,15 @@ export function paramsCorpus(game: AnyGame): ParamsCase[] {
       cases.push({ label: `bump:${key}`, params: { ...base, [key]: value + 1 } });
     } else if (typeof value === "boolean") {
       cases.push({ label: `flip:${key}`, params: { ...base, [key]: !value } });
+    } else if (isRecord(value)) {
+      // A record of numbers, each its own field: a born game's sizes beyond
+      // the grid's (Star Battle's `sizes.stars`).
+      for (const [inner, n] of Object.entries(value))
+        if (typeof n === "number")
+          cases.push({
+            label: `bump:${key}.${inner}`,
+            params: { ...base, [key]: { ...value, [inner]: n + 1 } },
+          });
     }
   }
 
@@ -153,6 +162,14 @@ export function paramsCorpus(game: AnyGame): ParamsCase[] {
 function canonical(p: AnyParams): string {
   return Object.keys(p)
     .sort()
-    .map((k) => `${k}=${String(p[k])}`)
+    .map((k) => {
+      const v = p[k];
+      // A nested record is read whole: as a string, every one is the same.
+      return `${k}=${isRecord(v) ? `{${canonical(v)}}` : String(v)}`;
+    })
     .join(",");
 }
+
+/** Whether `v` is a plain record and not an array or a value. */
+const isRecord = (v: unknown): v is AnyParams =>
+  typeof v === "object" && v !== null && !Array.isArray(v);

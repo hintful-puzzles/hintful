@@ -64,6 +64,48 @@ cell.
   the 5 side by side
 - **AND** `2_c5d`, `0h` and `25g` on a 3x3 board are refused
 
+### Requirement: A born game's params may give a size beyond the grid's
+
+A size the rules read that the grid is not measured in SHALL be given by
+the params, as `play.sizes` declares it: its letter, and a ruleset for each
+value, which the Custom dialog offers as the game mode and the help's
+`{{rulesets}}` lists. A ruleset's `least` SHALL refuse a narrower board,
+naming the ruleset. A preset board SHALL give the size after its `WxH` by
+its letter. Every technique and rule that reads the size SHALL get it.
+
+#### Scenario: Star Battle's stars
+
+- **WHEN** Star Battle's params `10s2dn` are read, and a 7x7 grid of two
+  stars is checked
+- **THEN** the board is 10x10 with two stars to a row at Normal, and the
+  grid is refused with "Two stars: the grid size must be at least 8."
+
+### Requirement: A born game's grid may be square
+
+Where the description's grid is as high as it is wide, the Custom dialog
+SHALL offer one grid size, the params SHALL write it as a bare number, and
+the game SHALL have no turned board.
+
+#### Scenario: Star Battle's size
+
+- **WHEN** a 10x10 Star Battle board is encoded
+- **THEN** its params start `10`, not `10x10`
+
+### Requirement: A born game's answer may be a count to every line
+
+`deal.sample.lines` SHALL draw `count` cells of its value in every row and
+column, none within `apart` of another, at random, `count` a number or a
+size the params give; and `deal.grow`'s `holds`, `smallest` and `parts`
+SHALL each be a number or a formula of the board's sizes, `closed` SHALL be
+optional, and a desc with another count of parts than `parts` SHALL be
+refused.
+
+#### Scenario: Star Battle's deal
+
+- **WHEN** a Star Battle board of two stars is dealt
+- **THEN** its answer holds two stars in every row, column and region, none
+  touching another, and a desc naming a region for every square is refused
+
 ## MODIFIED Requirements
 
 ### Requirement: A fill game is born from its description

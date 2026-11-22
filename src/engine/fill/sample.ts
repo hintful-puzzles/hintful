@@ -19,8 +19,25 @@ import { matching } from "../solve/latin.ts";
 type Near = "adj4" | "adj8";
 
 /** How a deal draws its answer: built by the ladder (`buildAnswer`),
- * scattered (`sampleAnswer`), or as dominoes (`sampleDominoes`). */
-export type Sample = { readonly build: true } | ScatterSample | DominoSample;
+ * scattered (`sampleAnswer`), as dominoes (`sampleDominoes`), or a count to
+ * every line (`sampleLines`). */
+export type Sample =
+  | { readonly build: true }
+  | ScatterSample
+  | DominoSample
+  | LinesSample;
+
+/** `count` cells of `value` in every row and column, none within `apart` of
+ * another; `rest` on every other cell. `count` is a number, or the name of a
+ * size the params give (Star Battle's `stars`). */
+export interface LinesSample {
+  readonly lines: {
+    readonly value: number;
+    readonly count: number | string;
+    readonly apart: Near;
+  };
+  readonly rest: number;
+}
 
 /** Dominoes of `value`, two cells side by side, no two touching along a
  * side, packed densely; `rest` on every other cell. */
@@ -162,6 +179,76 @@ function restJoined(
       }
   }
   return reached === count;
+}
+
+/** A count a deal reads, a number or the name of a size in `sizes`. */
+function countOf(n: number | string, sizes: Readonly<Record<string, number>>): number {
+  if (typeof n === "number") return n;
+  const v = sizes[n];
+  if (v === undefined) throw new Error(`deal: no size ${n} in the params`);
+  return v;
+}
+
+/**
+ * Every row and column holding `count` cells of the value, none within
+ * `apart` of another, at random; `null` where the grid has no such answer.
+ * A search down the rows, each row's ways in a random order, backing up from
+ * a row with none left: the fork's own Star Battle generator's. Two cells of
+ * the value are never side by side along a line, so a column takes one at
+ * most every other row, which prunes a row that leaves a column too few.
+ */
+export function sampleLines(
+  sample: LinesSample,
+  sp: GridSpace,
+  sizes: Readonly<Record<string, number>>,
+  rs: RandomState,
+): Uint8Array | null {
+  const { w, h } = sp;
+  const { value, apart } = sample.lines;
+  const count = countOf(sample.lines.count, sizes);
+  // Every way to take `count` cells of a row, none side by side.
+  const ways: number[][] = [];
+  const extend = (from: number, chosen: number[]): void => {
+    if (chosen.length === count) {
+      ways.push(chosen);
+      return;
+    }
+    for (let x = from; x < w; x++) extend(x + 2, [...chosen, x]);
+  };
+  extend(0, []);
+  // How far apart two cells of rows side by side must be, across.
+  const reach = apart === "adj8" ? 1 : 0;
+  const held = new Int32Array(w);
+  const placed: number[][] = [];
+  const fill = (y: number): boolean => {
+    if (y === h) return true;
+    const above = placed[y - 1] ?? [];
+    const left = h - y;
+    for (let x = 0; x < w; x++) {
+      const room = above.includes(x) ? left - 1 : left;
+      if (count - held[x] > Math.ceil(room / 2)) return false;
+    }
+    const order = ways.filter((row) =>
+      row.every(
+        (x) => held[x] < count && above.every((a) => a < x - reach || a > x + reach),
+      ),
+    );
+    shuffle(order, rs);
+    for (const row of order) {
+      for (const x of row) held[x]++;
+      placed.push(row);
+      if (fill(y + 1)) return true;
+      placed.pop();
+      for (const x of row) held[x]--;
+    }
+    return false;
+  };
+  if (!fill(0)) return null;
+  const g = new Uint8Array(w * h).fill(sample.rest);
+  placed.forEach((row, y) => {
+    for (const x of row) g[y * w + x] = value;
+  });
+  return g;
 }
 
 /** The rounds of {@link sampleDominoes}' refill. A greedy fill alone stops

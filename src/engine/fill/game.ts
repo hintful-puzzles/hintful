@@ -9,6 +9,7 @@
 import { descValue } from "../contract/desc-error.ts";
 import type { Game, PresetBoards } from "../contract/game.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
+import { SQUARE_GRID } from "../contract/sections.ts";
 import type { Point } from "../contract/types.ts";
 import { transposeDimensions } from "../game-id/params.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
@@ -37,6 +38,7 @@ import {
   type FillModifier,
   type FillParams,
   fillParams,
+  sizesOf,
   variationsOf,
   withThorough,
 } from "./game-id.ts";
@@ -63,11 +65,11 @@ export interface BornModule<C> extends FillHintModule<C>, DealtFillModule<C> {
   readonly labels?: { readonly start?: (i: number) => string };
   readonly deal: FillDeal;
   readonly clueMax: ClueMax<C>;
-  readonly boards: readonly Size[];
+  readonly boards: readonly Board[];
   /** The preset menu beside its grid of `boards`. */
   readonly menu?: {
-    readonly default?: Size;
-    readonly tiers: readonly (Size & {
+    readonly default?: Board;
+    readonly tiers: readonly (Board & {
       readonly first: number;
       readonly last: number;
     })[];
@@ -83,6 +85,16 @@ export interface BornModule<C> extends FillHintModule<C>, DealtFillModule<C> {
 }
 
 type Size = { readonly w: number; readonly h: number };
+
+/** A preset board: its size, and the sizes beyond the grid's it gives, by
+ * name, where the params have any. */
+type Board = Size & { readonly sizes?: Readonly<Record<string, number>> };
+
+/** Whether params `p` are those of the board `b`. */
+const isBoard = (p: FillParams, b: Board): boolean =>
+  p.w === b.w &&
+  p.h === b.h &&
+  Object.entries(b.sizes ?? {}).every(([n, v]) => p.sizes?.[n] === v);
 
 export type FillGame<C> = Game<
   FillParams,
@@ -101,8 +113,20 @@ export function fillGame<C extends Clues<C> & object>(
 ): FillGame<C> {
   const { play, deal, boards } = module;
   const byDefault = module.menu?.default ?? boards[0];
-  const sized = ({ w, h }: Size, diff = 0): FillParams =>
-    withThorough(deal, { w, h, diff });
+  // A board gives each size beyond the grid's, its least where it names none.
+  const sized = ({ w, h, sizes }: Board, diff = 0): FillParams =>
+    withThorough(deal, {
+      w,
+      h,
+      diff,
+      ...(deal.settings === undefined
+        ? {}
+        : {
+            sizes: Object.fromEntries(
+              deal.settings.map((s) => [s.size, sizes?.[s.size] ?? s.min]),
+            ),
+          }),
+    });
   const defaultParams = (): FillParams => sized(byDefault);
   const params = fillParams(
     deal,
@@ -119,7 +143,7 @@ export function fillGame<C extends Clues<C> & object>(
       ? {}
       : {
           tiers: (p: FillParams) => {
-            const got = boardTiers.find((b) => b.w === p.w && b.h === p.h);
+            const got = boardTiers.find((b) => isBoard(p, b));
             return got === undefined ? null : [got.first, got.last];
           },
         }),
@@ -147,14 +171,15 @@ export function fillGame<C extends Clues<C> & object>(
       ? {}
       : { partition: deal.partitions[0] as keyof C }),
   };
-  const newState = (p: FillParams, desc: string): FillBoard<C> =>
-    newBoard(
-      module,
-      p.w,
-      p.h,
-      descValue(decodeDesc(deal, spaceOf(module, p), module.clueMax, desc)),
-      variationsOf(p),
-    );
+  // The board's clues are the desc's, beside the params' sizes beyond the
+  // grid's.
+  const newState = (p: FillParams, desc: string): FillBoard<C> => {
+    const sp = spaceOf(module, p);
+    const sizes = sizesOf(p);
+    const grown = module.growBy?.(sp, sizes) ?? null;
+    const clues = descValue(decodeDesc<C>(deal, sp, module.clueMax, desc, grown));
+    return newBoard<C>(module, p.w, p.h, { ...clues, ...sizes }, variationsOf(p));
+  };
   // The renderer previews the input's drag, and the input reads the board
   // where the renderer puts it: each is read only once both are built.
   const render: FillRender<C> = fillRender(
@@ -184,7 +209,9 @@ export function fillGame<C extends Clues<C> & object>(
     encodeParams: params.encodeParams,
     decodeParams: params.decodeParams,
     validateParams: params.validateParams,
-    transposeParams: transposeDimensions(),
+    ...(deal.square === true
+      ? { notApplicable: { transposeParams: SQUARE_GRID } }
+      : { transposeParams: transposeDimensions() }),
     paramConfig: params.paramConfig,
 
     newDesc: (p, rs) => dealFill(module, deal, p, rs),

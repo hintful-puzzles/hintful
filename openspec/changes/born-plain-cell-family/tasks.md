@@ -35,34 +35,19 @@ order.
       step counts from is outlined apart in its words' color, where its
       digit was redrawn in the outline's ink; a 2x2 or smaller ID is
       refused on load too, where it was refused only when dealt.
-- [ ] 2.2 Star Battle born. Read 2026-11-22, not started. Beyond design.md's
-      gap list, what the reading found:
-      - The compiled ladder's `Dealt` already holds `stars: number` beside
-        `region`; the fill engine must fill it from the params. `FillParams`
-        has only `w`, `h`, `diff`: a size beyond the grid's needs a field,
-        its codec segment (`s<n>`, `num`), and its form item. Star Battle's
-        form shows it as a ruleset (`rulesetItem`, "One star", "Two stars",
-        "Three stars" with their rule lines), and its help uses
-        `{{rulesets}}`.
-      - `compile-fill.ts` `derivedClues` refuses a sampled deal whose
-        ladder reads a size (`env.sizes.read`); lift that for a size the
-        params give.
-      - The board is square (`space.grid: {w: w, h: w}`, no `sizes.h`):
-        check what `fillParams`'s `dims` and the menu do with no `h`
-        (upstream's ID is a bare `<n>`).
-      - The least size depends on the stars (4, 8, 12): `play.bounds`
-        reads only w and h; it needs a bound by the extra size.
-      - The menu's tiers depend on the stars, not the size alone
-        (`state.ts` `menu.tiers`), and the boards carry stars.
-      - `growPartition` needs `closed` optional (Star Battle closes none),
-        with `holds: stars` and `smallest: 2 * stars`, both read from the
-        size, not literals.
-      - The sample is new: `stars` to every row and column, none touching
-        at a corner (`generator.ts` `placeStars`, a row-by-row backtrack).
-      - Its old generator's second-answer search had a budget of 24
-        positions; the engine's mend judge is what Norinori uses.
-      - No `star` painter exists (`engine/render/pieces/index.ts`); the
-        hand-written one is `render.ts` `starPoints`.
+- [x] 2.2 Star Battle born. Done 2026-11-22, 1,429 hand-written lines gone.
+      Added, each the engine's: `play.sizes`, a size beyond the grid's that
+      the params give, by its letter and one ruleset a value with its
+      `least` board (the Custom dialog's game mode, `{{rulesets}}`, and a
+      preset board's `8x8s2`); a square grid's one size field and
+      bare-number ID, with no turned board; `deal.sample.lines`, a count
+      to every row and column, none within `apart`; `deal.grow`'s `holds`,
+      `smallest` and `parts` as formulas of the sizes (`growBy`), `closed`
+      optional, and a desc with another count of parts refused; the `star`
+      painter. Differences a player sees, for consistency with the born
+      games: `S` and `X` keys; two touching stars take a diamond where they
+      meet, not a red star each; a star grows as it is placed; the refusal
+      of a small grid names the ruleset.
 - [ ] 2.3 Clusters born.
 - [ ] 2.4 Light Up born.
 - [ ] 2.5 Sticks born.

@@ -202,7 +202,7 @@ research tools all read through it; the app never does.
   gives every cell the board's domain. A step's line is its `stripes`,
   which hatch the line's clue in the margin too.
 - **A fill game born from its description declares the rest of a game**
-  (Kakurasu, Mosaic, Norinori, Range, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
+  (Kakurasu, Mosaic, Norinori, Range, Star Battle, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
   (the first the default unless `default:` names another, `boardTiers:` a
   board that stops short of a tier, `variants:` the boards after the grid),
   `play.hintMarks` its legend, `id:` its game ID's grammar and
@@ -214,7 +214,12 @@ research tools all read through it; the app never does.
   `most` lines a board of each width may have where the rule bounds the
   size, and `sizes.step` holds a side to a multiple. `play.bounds` says
   what the sizes alone cannot: the sides' sum, product, shorter and longer,
-  and in `tiers` a tier's own (Range's `w + h` and its strips). `play.dealt` names a
+  and in `tiers` a tier's own (Range's `w + h` and its strips). A size the
+  rules read that the grid is not measured in is the params' and is named in
+  `play.sizes`: its letter, and one ruleset a value, each with the `least`
+  board it has an answer on (Star Battle's `stars`, `s2`); a preset board
+  gives it after its `WxH` (`8x8s2`). A grid as high as it is wide
+  (`grid: { w: w, h: w }`) has one size field and a bare-number ID. `play.dealt` names a
   clue kind meaning `value(at) = v` that the cell is dealt holding (Unruly's
   givens, which `id:` writes as `dots`). `play.click: cycle` goes round
   empty and both buttons' values. The right button rules out unless its
@@ -222,7 +227,8 @@ research tools all read through it; the app never does.
   is a placement and not a ruling out. `deal.sample` draws the answer: `build`, a random
   value on a random cell and then what the whole ladder decides, until the
   board is full; `dominoes`, a fill of its value's dominoes touching only
-  at corners, the rest `rest`; or `scatter`, `partner`, `rest`, and `noBareLine` where no
+  at corners, the rest `rest`; `lines`, `count` of its value in every row
+  and column, none within `apart` of another; or `scatter`, `partner`, `rest`, and `noBareLine` where no
   line may hold the rest value alone, with `scatter.each` where each cell
   takes the value at the share's odds and the count varies (a small board
   then draws from every picture), `scatter.tried` where the share is of the
@@ -232,8 +238,10 @@ research tools all read through it; the app never does.
   wall runs, the board draws it as walls and fills, a rule over its parts
   breaks on the squares it counts, never as a run, and `deal.grow` grows it
   round the answer (`engine/fill/grow.ts`): parts of `holds` cells of the
-  answer's value, some closed whole by `closed.oneIn` a tier, merged and
-  mended until the ladder alone finishes the board at its tier. The
+  answer's value, some closed whole by `closed.oneIn` a tier (none without
+  `closed`), merged and mended until the ladder alone finishes the board at
+  its tier; `holds`, `smallest` and `parts`, the count a desc must have, may
+  each be a formula of the sizes (Star Battle's `2 * stars`). The
   `domino` painter draws two alike pieces touching only each other as one.
   `deal.hide` then takes a kind's clues off
   a tier at a time from the lowest: first every clue no firing's bindings

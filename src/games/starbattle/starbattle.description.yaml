@@ -1,6 +1,16 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: starbattle
+catalog:
+  name: Star Battle
+  aliases: [Queens, Two Not Touch]
+  description: Star placement puzzle
+  objective: >-
+    Place stars so that every row, column and region holds the same number and
+    no two touch.
+  collection: own
+  family: objects
+  similar: Queens, Two Not Touch
 help:
   rules: |-
     Place stars so that every row, every column and every region holds the same number of them, and no two stars touch, not even at a corner. Heavy lines divide the regions; their tints only tell neighbors apart. How many stars is the game mode:
@@ -91,10 +101,67 @@ shape:
   - "forall r in region: count(c in cells(r) where value(c) = 1) = stars"
   - "forall a in cells where value(a) = 1: forall b in adj8(a): value(b) != 1"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: put a star there, key: S, glyph: " * ", paint: star }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  # The answer is the stars alone: an open square holds none.
+  blank: 2
+  # A click goes round empty, the button's mark and the other one.
+  click: cycle
+  stroke: sweep
+  sizes:
+    stars:
+      letter: s
+      # Two rows side by side hold twice the stars, none touching, so four
+      # times the stars is the narrowest board each has an answer on.
+      rulesets:
+        - name: One star
+          rule: One in each, the puzzle also known as <em>Queens</em>.
+          least: 4
+        - name: Two stars
+          rule: Two in each, the puzzle also known as <em>Two Not Touch</em>.
+          least: 8
+        - name: Three stars
+          rule: Three in each.
+          least: 12
+  boards: [5x5, 6x6, 8x8, 8x8s2, 9x9s2, 10x10s2, 12x12s3]
+  # Measured 2026-10-15, the 95th of 100 deals: a Tricky board of two stars
+  # takes half a second at 9x9 and a second at 10x10, but 9 at 8x8, where a
+  # board seldom needs it; three stars take two seconds at Normal.
+  boardTiers:
+    8x8s2: [Easy, Normal]
+    12x12s3: [Easy, Easy]
+  hintMarks:
+    ring: the squares the step decides. The sentence says what they must be.
+    stripes: >-
+      the row, column or region the step is about, or several rows or columns
+      counted together.
+    outline: >-
+      what else it reasons from: a star, a region, or the squares a star would
+      block.
 deal:
-  region: the partition, one region a column, round stars placed at random
-  stars: the stars to a row
-  tier: one of the tiers
+  answer: >-
+    the stars at random, as many to every row and column, none touching
+    another even at a corner
+  region: >-
+    a region grown round each star, joined until each holds the stars, then
+    mended until the board finishes at the tier
+  tier: one of the tiers, the board finished at it and not at the tier below
+  sample: { lines: { value: 1, count: stars, apart: adj8 }, rest: 2 }
+  grow:
+    partition: region
+    holds: stars
+    # A region of no more cells than its stars hands them over at a glance.
+    smallest: "2 * stars"
+    # One region a row: any other number cannot each hold a row's stars.
+    parts: w
+# The regions as the walls between them.
+id:
+  - walls: region
+tierLetters: ent
 tiers: [Easy, Normal, Tricky]
 # What a star rules out at a glance: the squares touching it, and the rest of
 # a row, column or region it fills.

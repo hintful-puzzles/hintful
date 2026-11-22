@@ -20,13 +20,22 @@ export interface FillGrow {
   readonly partition: string;
   /** The value each part holds `holds` cells of: the sample's. */
   readonly value: number;
+  /** A closed piece: one of the answer's pieces of `holds` cells dealt as a
+   * part of its own, one in `oneIn[tier]` of them, and at most one part in
+   * `atMostOneIn`. None is closed where it is absent. */
+  readonly closed?: { readonly oneIn: readonly number[]; readonly atMostOneIn: number };
+}
+
+/** What a grown partition's parts hold on a board: the compiled module's
+ * `growBy`, since each may be a formula of the board's sizes (Star Battle's
+ * `holds: stars`). */
+export interface GrowSizes {
   readonly holds: number;
   /** The fewest cells a part is dealt with, but for a closed piece. */
   readonly smallest: number;
-  /** A closed piece: one of the answer's pieces of `holds` cells dealt as a
-   * part of its own, one in `oneIn[tier]` of them, and at most one part in
-   * `atMostOneIn`. */
-  readonly closed: { readonly oneIn: readonly number[]; readonly atMostOneIn: number };
+  /** How many parts a board has, where the rules fix it: a desc with another
+   * count is refused. */
+  readonly parts: number | null;
 }
 
 /**
@@ -42,7 +51,7 @@ export interface FillGrow {
  * in a median of 0.3 s against 0.7 (2026-11-16).
  */
 export function growPartition(
-  grow: FillGrow,
+  grow: FillGrow & GrowSizes,
   sp: GridSpace,
   g: ArrayLike<number>,
   tier: number,
@@ -57,10 +66,12 @@ export function growPartition(
     return drawRejected("fill: no answer to grow a partition round");
   const pieces = piecesOf(sp, seeds).filter((p) => p.length === grow.holds);
   shuffle(pieces, rs);
-  const { oneIn, atMostOneIn } = grow.closed;
   let closing = 0;
-  for (const _ of pieces) if (randomUpto(rs, oneIn[tier] ?? 1) === 0) closing++;
-  closing = Math.min(closing, Math.floor(seeds.length / grow.holds / atMostOneIn));
+  if (grow.closed !== undefined) {
+    const { oneIn, atMostOneIn } = grow.closed;
+    for (const _ of pieces) if (randomUpto(rs, oneIn[tier] ?? 1) === 0) closing++;
+    closing = Math.min(closing, Math.floor(seeds.length / grow.holds / atMostOneIn));
+  }
   const closed = new Set<number>();
   const at = (c: number) => [c % w, Math.floor(c / w)] as const;
   const apart = (c: number): number => {

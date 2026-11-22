@@ -1302,14 +1302,15 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "h",
-      "hint",
+      "clues",
+      "marks",
+      "parts",
       "tileSize",
       "tiles",
-      "w",
     ],
     "id": "range",
     "members": [
+      "animLength",
       "clearMistakes",
       "difficulty",
       "findMistakes",
@@ -1326,6 +1327,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "cursor",
+      "drag",
+      "dragButton",
+      "dragOk",
+      "linkArmed",
     ],
   },
   {
@@ -1804,23 +1809,24 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "hint",
+      "clues",
       "marks",
-      "surfaces",
+      "parts",
       "tileSize",
       "tiles",
-      "walls",
     ],
     "id": "starbattle",
     "members": [
+      "animLength",
       "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
+      "hint.gesture",
       "hint.judgeMove",
       "hint.refreshStep",
-      "hint.targets",
       "notApplicable",
+      "revealOne",
       "rules",
       "rulesOut",
       "targetVerbs",
@@ -1829,6 +1835,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "cursor",
+      "drag",
+      "dragButton",
+      "dragOk",
+      "linkArmed",
     ],
   },
   {

@@ -820,7 +820,9 @@ preset:Two stars/Two stars: 10x10 Easy  full=10s2de  brief=10s2
 preset:Two stars/Two stars: 10x10 Normal  full=10s2dn  brief=10s2
 preset:Two stars/Two stars: 10x10 Tricky  full=10s2dt  brief=10s2
 preset:Three stars/Three stars: 12x12 Easy  full=12s3de  brief=12s3
-bump:stars  full=5s2de  brief=5s2"
+bump:w  full=6s1de  brief=6s1
+bump:h  full=5s1de  brief=5s1
+bump:sizes.stars  full=5s2de  brief=5s2"
 `;
 
 exports[`encoded params are byte-stable > sticks 1`] = `

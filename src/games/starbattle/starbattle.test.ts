@@ -1,9 +1,14 @@
 /**
- * Star Battle's own behavior: the codecs, a move, the path from a solve to a
- * finished board, the mistake check, a save, and the frame.
+ * Star Battle, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is a position for every
+ * kind of step its hint takes, the stars in the params and the grid each
+ * needs, the regions read from their walls and counted, a star drawn, and
+ * the wordings no walk reaches.
  *
- * The board below is one the generator dealt, small enough to solve by eye.
- * Its regions, and the one answer:
+ * The 5x5 board below is one the hand-written generator dealt. Its regions,
+ * and the one answer:
  *
  *     A A A A B      . . * . .
  *     C A D D B      . . . . *
@@ -11,80 +16,120 @@
  *     E E D D D      . . . * .
  *     E D D D D      * . . . .
  */
+
 import { describe, expect, it } from "vitest";
-import { Dsf } from "../../engine/board/dsf.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
+import { CELL } from "../../engine/contract/hint-words.ts";
+import type { Point } from "../../engine/contract/types.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/midend/midend.ts";
-import { ringsOf } from "../../engine/testing/mark-shape.ts";
-import { paintsWith } from "../../engine/testing/recording-drawing.ts";
+import { statedSentence } from "../../engine/hint/stated.ts";
+import type { Partition } from "../../engine/solve/describe-runtime.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { starbattleGame } from "./index.ts";
-import { COL_REGION, COL_STAR, COL_WRONG, newDrawState } from "./render.ts";
-import {
-  BLANK,
-  CROSSED,
-  DIFF_EASY,
-  DIFF_NORMAL,
-  decodeParams,
-  encodeDesc,
-  encodeParams,
-  executeMove,
-  newState,
-  STAR,
-  type StarbattleMove,
-  validateParams,
-} from "./state.ts";
+import { STATED } from "../../generated/games/starbattle/starbattle.compiled.ts";
+import { game } from "../../generated/games/starbattle/starbattle.game.ts";
 
-const P = { size: 5, stars: 1, diff: DIFF_EASY };
-const DESC = "c2aacbca1bb2dc";
-const ID = `${encodeParams(P, true)}:${DESC}`;
-/** The answer's stars, as indices. */
-const STARS = [2, 9, 11, 18, 20];
+const STAR = 1;
+const ID = "5s1de:c2aacbca1bb2dc";
 
-const mark = (index: number, to: 0 | 1 | 2): StarbattleMove => ({
-  kind: "mark",
-  cells: [{ index, mark: to }],
+/** A position for every kind of step. */
+describeHintPins({
+  game,
+  params: [
+    { w: 6, h: 6, diff: 2, sizes: { stars: 1 } },
+    { w: 8, h: 8, diff: 0, sizes: { stars: 2 } },
+    { w: 9, h: 9, diff: 1, sizes: { stars: 2 } },
+  ],
+  pins: {
+    around: {
+      id: "8s2de:eeca1caab3c3e1ebeb3h3caj2ah1a",
+      moves: [{ set: [44, STAR] }],
+    },
+    fullLine: {
+      id: "6s1dt:1baa3aacabae1adc1aac1d1",
+      moves: '[{"set":[24,2,25,2,26,2,27,2]},{"set":[30,1]},{"set":[31,2]}]',
+    },
+    fullRegion: {
+      id: "6s1dt:2b2a1ae4a1aac1bccababd",
+      moves:
+        '[{"set":[12,2,18,2,24,2,30,2]},{"set":[1,2,7,2,13,2,19,2]},{"set":[5,2,8,2,9,2,11,2,21,2,23,2,29,2]},{"set":[15,2]},{"set":[26,2]},{"set":[27,2]},{"set":[32,2]},{"set":[22,2]},{"set":[20,1]},{"set":[14,2,25,2]},{"set":[2,2]}]',
+    },
+    exactLine: {
+      id: "6s1dt:aab1bababbaaacbaj2e1a",
+      moves:
+        '[{"set":[30,2,31,2,32,2,35,2]},{"set":[24,2,28,2,29,2]},{"set":[0,2,6,2]},{"set":[4,2,9,2,10,2,15,2,16,2,21,2,22,2]}]',
+    },
+    exactRegion: {
+      id: "6s1dt:1baa3aacabae1adc1aac1d1",
+      moves: '[{"set":[24,2,25,2,26,2,27,2]}]',
+    },
+    "confined.lines": "6s1dt:1baa3aacabae1adc1aac1d1",
+    "confined.regions": {
+      id: "6s1dt:2b2a1ae4a1aac1bccababd",
+      moves: '[{"set":[12,2,18,2,24,2,30,2]},{"set":[1,2,7,2,13,2,19,2]}]',
+    },
+    neededLine: {
+      id: "8s2de:eeca1caab3c3e1ebeb3h3caj2ah1a",
+      moves:
+        '[{"set":[44,1]},{"set":[36,2,37,2,45,2,53,2,52,2,51,2,43,2,35,2]},{"set":[56,2,57,2,58,2,59,2,63,2]},{"set":[54,2,55,2]}]',
+    },
+    neededRegion: "8s2de:eeca1caab3c3e1ebeb3h3caj2ah1a",
+    crowdedLine: {
+      id: "6s1dt:bd1ca1caabbd1c1a2dba1ba",
+      moves: '[{"set":[32,2,33,2,34,2,35,2]}]',
+    },
+    crowdedRegion: "6s1dt:dca2cab1ab1eba3a1e1caa",
+    "banded.lines": {
+      id: "9s2dn:f2bc1dabbcba1ac1ad1a1a1bcdc2c4d1c1c2a1fbaga1a1aab3a",
+      moves: '[{"set":[64,2]},{"set":[68,2]},{"set":[70,2]}]',
+    },
+    "banded.regions": {
+      id: "6s1dt:dca2cab1ab1eba3a1e1caa",
+      moves: '[{"set":[4,2]},{"set":[27,2]},{"set":[34,2]}]',
+    },
+    starvedLine: {
+      id: "6s1dt:2b2a1ae4a1aac1bccababd",
+      moves:
+        '[{"set":[12,2,18,2,24,2,30,2]},{"set":[1,2,7,2,13,2,19,2]},{"set":[5,2,8,2,9,2,11,2,21,2,23,2,29,2]},{"set":[15,2]},{"set":[26,2]},{"set":[27,2]},{"set":[32,2]}]',
+    },
+    starvedRegion: {
+      id: "6s1dt:dca2cab1ab1eba3a1e1caa",
+      moves:
+        '[{"set":[4,2]},{"set":[27,2]},{"set":[34,2]},{"set":[12,2,14,2]},{"set":[2,2,3,2,8,2,9,2,32,2]},{"set":[21,2]},{"set":[19,2]},{"set":[25,2]},{"set":[35,2]}]',
+    },
+  },
 });
 
-/** A grid whose regions are its rows, where a star to each row and column
- * can still have two stars touch. */
-function rowsAsRegions(size: number): string {
-  const joined = new Dsf(size * size);
-  for (let i = 0; i < size * size; i++) if (i % size > 0) joined.merge(i - 1, i);
-  return encodeDesc(joined, size);
-}
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
+};
 
-describe("starbattle params", () => {
-  it("round-trip through their string, tier included only in full", () => {
-    const p = { size: 10, stars: 2, diff: DIFF_NORMAL };
-    expect(encodeParams(p, true)).toBe("10s2dn");
-    expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    expect(decodeParams(encodeParams(p, false))).toEqual({ ...p, diff: DIFF_EASY });
+describe("starbattle", () => {
+  it("writes its stars and its square size as the hand-written game did", () => {
+    const p = { w: 10, h: 10, diff: 1, sizes: { stars: 2 } };
+    expect(game.encodeParams(p, true)).toBe("10s2dn");
+    expect(game.decodeParams("10s2dn")).toEqual(p);
+    expect(game.encodeParams(p, false)).toBe("10s2");
   });
 
-  it("refuse a grid too small for its stars", () => {
-    expect(validateParams({ size: 7, stars: 2, diff: DIFF_EASY }, true)).toMatch(/\.$/);
-    expect(validateParams({ size: 11, stars: 3, diff: DIFF_EASY }, true)).toMatch(
-      /\.$/,
-    );
-    expect(validateParams({ size: 8, stars: 2, diff: DIFF_EASY }, true)).toBeNull();
-    expect(validateParams(P, true)).toBeNull();
+  it("refuses a grid too small for its stars", () => {
+    const refusal = (w: number, stars: number) =>
+      paramsError(game, { w, h: w, diff: 0, sizes: { stars } }, true);
+    expect(refusal(7, 2)).toBe("Two stars: the grid size must be at least 8.");
+    expect(refusal(11, 3)).toBe("Three stars: the grid size must be at least 12.");
+    expect(refusal(8, 2)).toBeNull();
+    expect(refusal(4, 1)).toBeNull();
+    expect(refusal(26, 1)).toBeNull();
+    expect(refusal(27, 1)).not.toBeNull();
   });
 
-  it("take a grid as large as the text form has letters for its regions", () => {
-    const refusal = (size: number) =>
-      paramsError(starbattleGame, { size, stars: 1, diff: DIFF_EASY }, true);
-    expect(refusal(26)).toBeNull();
-    expect(refusal(27)).toMatch(/\.$/);
-  });
-});
-
-describe("starbattle desc", () => {
-  it("reads the regions, numbered as they are met", () => {
-    const s = newState(P, DESC);
-    expect(Array.from(s.regions.slice(0, 10))).toEqual([0, 0, 0, 0, 1, 2, 0, 3, 3, 1]);
-    expect(Array.from(s.grid)).toEqual(new Array(25).fill(BLANK));
+  it("reads its regions from their walls, numbered as they are met", () => {
+    const board = loaded(ID);
+    const { of } = board.dealt.region as Partition;
+    expect(Array.from(of.slice(0, 10))).toEqual([0, 0, 0, 0, 1, 2, 0, 3, 3, 1]);
+    expect(board.dealt.stars).toBe(1);
   });
 
   it.each([
@@ -93,188 +138,112 @@ describe("starbattle desc", () => {
     ["a stray character", "c2aacbca1bb2d!"],
     ["a region to every square", "40"],
   ])("refuses a desc that is %s", (_why, desc) => {
-    expect(() => newState(P, desc)).toThrow();
+    expect(() => loaded(`5s1de:${desc}`)).toThrow();
+  });
+
+  it("deals a board of the stars it is asked for", () => {
+    const solved = (id: string) => {
+      const board = loaded(id);
+      const s = game.solve(board, board);
+      if (!s.ok) throw new Error("no answer");
+      return game.executeMove(board, s.move).values;
+    };
+    const stars = solved("8s2de:eeca1caab3c3e1ebeb3h3caj2ah1a");
+    for (let y = 0; y < 8; y++)
+      expect(stars.slice(y * 8, y * 8 + 8).filter((v) => v === STAR)).toHaveLength(2);
+  });
+
+  it("draws a star, and an error where two touch at a corner", () => {
+    const ops = (moves: { set: number[] }[]) =>
+      renderScenario({ game, id: ID, moves }).recording.ops;
+    const stars = (moves: { set: number[] }[]) =>
+      ops(moves).filter((o) => o.op === "polygon" && o.points.length === 10);
+    const errors = (moves: { set: number[] }[]) =>
+      ops(moves).filter((o) => o.op === "polygon" && o.fill === COL_ERROR);
+    expect(stars([])).toHaveLength(0);
+    expect(stars([{ set: [2, STAR] }])).toHaveLength(1);
+    expect(errors([{ set: [2, STAR, 9, STAR] }])).toHaveLength(0);
+    expect(errors([{ set: [2, STAR, 8, STAR] }]).length).toBeGreaterThan(0);
+  });
+
+  it("outlines a star Check & Save finds wrong, which breaks no rule yet", () => {
+    // A star on square 7, which the answer leaves empty, touches no star.
+    const moves = [{ set: [7, STAR] }];
+    const shown = renderScenario({ game, id: ID, moves, showMistakes: true });
+    expect(shown.mistakeCount).toBe(1);
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    expect(count(renderScenario({ game, id: ID, moves }))).toBe(0);
+    expect(count(shown)).toBeGreaterThan(0);
   });
 });
 
-describe("starbattle moves", () => {
-  const start = newState(P, DESC);
-  const ui = starbattleGame.newUi(start);
-  const { primary, secondary } = starbattleGame.targetVerbs ?? {};
+// The walk's boards never meet a star that completes its unit and leaves it
+// nowhere for more, a starved star that completes all three or none, and a
+// needed square with no room left in its unit; their clauses are rendered
+// directly, so a change to their words or slots shows.
+describe("the wordings no walk reaches", () => {
+  const at = (c: number): Point => ({ x: c % 4, y: (c / 4) | 0 });
+  const words = (
+    clauses: readonly { look: string; move: string }[],
+    wording: number,
+    terms: Record<string, number | boolean>,
+  ): string =>
+    statedSentence(clauses[wording], {
+      kind: CELL,
+      at,
+      ring: [at(5)],
+      marks: { outline: [at(6), at(7)] },
+      terms: {
+        n: 2,
+        room: 1,
+        row: true,
+        mine: true,
+        one: true,
+        closesRow: true,
+        closesCol: false,
+        closesRegion: false,
+        ...terms,
+      },
+      value: String,
+    }).text;
+  const starved = STATED.starvedLine.step;
 
-  it("the left button puts a star, then crosses out, then clears", () => {
-    let s = start;
-    for (const want of [STAR, CROSSED, BLANK]) {
-      s = executeMove(s, primary?.apply(s, { x: 1, y: 0 }, ui) as StarbattleMove);
-      expect(s.grid[1]).toBe(want);
-    }
-  });
-
-  it("the right button crosses out first", () => {
-    const move = secondary?.apply(start, { x: 1, y: 0 }, ui) as StarbattleMove;
-    expect(executeMove(start, move).grid[1]).toBe(CROSSED);
-  });
-
-  it("a star rules out the squares it touches and the rest of what it completes", () => {
-    const bring = starbattleGame.rulesOut?.bring;
-    if (!bring) throw new Error("Star Battle declares what a star rules out");
-    // The answer's star in the top row: the squares touching it, and the
-    // rest of its row, its column and its region, each of which it completes.
-    const brought = bring(start, executeMove(start, mark(2, STAR)));
-    if (brought?.kind !== "mark") throw new Error("a star brings crosses");
-    expect(brought.cells.map((c) => c.index)).toEqual([
-      0, 1, 3, 4, 6, 7, 8, 12, 17, 22,
-    ]);
-    expect(brought.cells.every((c) => c.mark === CROSSED)).toBe(true);
-    // A square already marked is left as the player has it.
-    const crossed = executeMove(start, mark(7, CROSSED));
-    const beside = bring(crossed, executeMove(crossed, mark(2, STAR)));
-    if (beside?.kind !== "mark") throw new Error("a star brings crosses");
-    expect(beside.cells.map((c) => c.index)).not.toContain(7);
-    // What an earlier star rules out and the player left open is not this
-    // star's to bring: only the firings that read the new star are.
-    const earlier = executeMove(start, mark(7, STAR));
-    const near = bring(earlier, executeMove(earlier, mark(20, STAR)));
-    if (near?.kind !== "mark") throw new Error("a star brings crosses");
-    expect(near.cells.map((c) => c.index)).toEqual([0, 5, 10, 15, 16, 21, 22, 23, 24]);
-    // A star beside another is a mistake, and a mistake brings nothing.
-    expect(bring(earlier, executeMove(earlier, mark(2, STAR)))).toBeNull();
-    // A cross, and a star taken away, bring nothing.
-    expect(bring(start, executeMove(start, mark(2, CROSSED)))).toBeNull();
-    const starred = executeMove(start, mark(2, STAR));
-    expect(bring(starred, executeMove(starred, mark(2, BLANK)))).toBeNull();
-  });
-
-  it("executeMove leaves the state it was given alone", () => {
-    const next = executeMove(start, mark(1, STAR));
-    expect(start.grid[1]).toBe(BLANK);
-    expect(next.grid[1]).toBe(STAR);
-    expect(next.regions).toBe(start.regions);
-  });
-});
-
-describe("starbattle completion", () => {
-  const start = newState(P, DESC);
-
-  it("the solve move finishes the board", () => {
-    const solved = starbattleGame.solve(start, start);
-    if (!solved?.ok) throw new Error("expected a solution");
-    const end = executeMove(start, solved.move);
-    expect(starbattleGame.status(end)).toBe("solved");
-    expect(Array.from(end.grid.keys()).filter((i) => end.grid[i] === STAR)).toEqual(
-      STARS,
+  it("says a completing star that leaves its line nowhere for more", () => {
+    expect(words(starved, 0, { exhausted: true })).toBe(
+      "A star on this square would complete its row, leaving this row nowhere for 2 more stars, so it must be empty.",
     );
   });
 
-  it("is reached by stars alone, with nothing crossed out", () => {
-    let s = start;
-    for (const i of STARS) {
-      expect(starbattleGame.status(s)).toBe("ongoing");
-      s = executeMove(s, mark(i, STAR));
-    }
-    expect(starbattleGame.status(s)).toBe("solved");
-  });
-
-  it("is not reached while two stars touch at a corner", () => {
-    const p = { size: 4, stars: 1, diff: DIFF_EASY };
-    const rows = newState(p, rowsAsRegions(4));
-    const place = (cells: number[]) =>
-      cells.reduce((s, i) => executeMove(s, mark(i, STAR)), rows);
-    // A star to every row, column and region both times.
-    expect(starbattleGame.status(place([0, 5, 10, 15]))).toBe("ongoing");
-    expect(starbattleGame.status(place([1, 7, 8, 14]))).toBe("solved");
-  });
-
-  it("a wrong mark is a mistake, and a right one is not", () => {
-    const right = executeMove(executeMove(start, mark(2, STAR)), mark(0, CROSSED));
-    expect(starbattleGame.findMistakes?.(right)).toEqual([]);
-    const wrong = executeMove(executeMove(right, mark(7, STAR)), mark(9, CROSSED));
-    expect(starbattleGame.findMistakes?.(wrong)).toEqual([
-      { x: 2, y: 1, kind: "cell" },
-      { x: 4, y: 1, kind: "cell" },
-    ]);
-  });
-});
-
-describe("starbattle save", () => {
-  it("a saved game loads with its marks", () => {
-    const { midend } = renderScenario({
-      game: starbattleGame,
-      id: ID,
-      moves: [mark(2, STAR), mark(7, CROSSED)],
-    });
-    const loaded = new Midend(starbattleGame);
-    expect(loaded.loadGame(midend.saveGame())).toBeNull();
-    expect(loaded.formatAsText()).toBe(
-      [
-        "A. A. A* A. B.",
-        "C. A. Dx D. B.",
-        "C. C. D. D. D.",
-        "E. E. D. D. D.",
-        "E. D. D. D. D.",
-        "",
-      ].join("\n"),
+  it("says a star that blocks without completing anything", () => {
+    expect(words(starved, 1, {})).toBe(
+      "A star on this square would block the rest of this row, which would still need 2 stars, so it must be empty.",
+    );
+    expect(words(starved, 2, {})).toBe(
+      "A star on this square would block every open square of this row, leaving it no room for a star, so it must be empty.",
+    );
+    expect(words(starved, 3, { mine: false, room: 3 })).toBe(
+      "A star on this square would block the outlined squares, leaving this row room for 3, not 2, so it must be empty.",
     );
   });
-});
 
-describe("starbattle frame", () => {
-  it("draws the board", () => {
-    const { recording } = renderScenario({
-      game: starbattleGame,
-      id: ID,
-      moves: [mark(2, STAR), mark(7, CROSSED)],
-    });
-    expect(recording.ops).toMatchSnapshot();
+  it("names the kinds a star completes in pairs", () => {
+    const say = (r: boolean, c: boolean, g: boolean): string =>
+      words(starved, 0, {
+        closesRow: r,
+        closesCol: c,
+        closesRegion: g,
+        exhausted: false,
+      });
+    expect(say(true, true, false)).toContain("complete its row and column,");
+    expect(say(true, false, true)).toContain("complete its row and region,");
+    expect(say(false, true, true)).toContain("complete its column and region,");
+    expect(say(false, false, true)).toContain("complete its region,");
   });
 
-  it("gives a region one fill, and the regions beside it another", () => {
-    const { size, regions } = newState(P, DESC);
-    const { surfaces } = newDrawState(newState(P, DESC), 40);
-    let walls = 0;
-    regions.forEach((r, i) => {
-      expect(surfaces[i]).toBeGreaterThanOrEqual(COL_REGION);
-      for (const j of [(i + 1) % size === 0 ? i : i + 1, i + size]) {
-        if (j === i || j >= regions.length) continue;
-        expect(surfaces[j] === surfaces[i], `squares ${i} and ${j}`).toBe(
-          regions[j] === r,
-        );
-        if (regions[j] !== r) walls++;
-      }
-    });
-    expect(walls).toBeGreaterThan(10);
-  });
-
-  const paints = (moves: StarbattleMove[], color: number): boolean =>
-    renderScenario({ game: starbattleGame, id: ID, moves }).recording.ops.some((op) =>
-      paintsWith(op, color),
+  it("says a needed square with no room left in the unit", () => {
+    expect(words(STATED.neededLine.step, 0, { none: true, placed: false })).toBe(
+      "This row needs 2 stars and without this square has room for none, so that square must hold a star.",
     );
-
-  it("shows a star where one is placed and none on a blank board", () => {
-    expect(paints([], COL_STAR)).toBe(false);
-    expect(paints([mark(2, STAR)], COL_STAR)).toBe(true);
-  });
-
-  it("turns stars red that touch, or are too many for their row", () => {
-    expect(paints([mark(2, STAR), mark(9, STAR)], COL_ERROR)).toBe(false);
-    // Touching at a corner.
-    expect(paints([mark(2, STAR), mark(8, STAR)], COL_ERROR)).toBe(true);
-    // Two in one row, apart.
-    expect(paints([mark(0, STAR), mark(3, STAR)], COL_ERROR)).toBe(true);
-  });
-
-  it("washes a mistake and rings a hint's squares", () => {
-    const wrong = renderScenario({
-      game: starbattleGame,
-      id: ID,
-      moves: [mark(7, STAR)],
-      showMistakes: true,
-    });
-    expect(wrong.mistakeCount).toBe(1);
-    expect(wrong.recording.ops.some((op) => paintsWith(op, COL_WRONG))).toBe(true);
-
-    const hinted = renderScenario({ game: starbattleGame, id: ID, showHint: true });
-    expect(hinted.hint).toBeDefined();
-    expect(ringsOf(hinted.recording.ops).length).toBeGreaterThan(0);
   });
 });

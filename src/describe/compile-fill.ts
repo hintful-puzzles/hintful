@@ -23,6 +23,7 @@ import { freeNames } from "./compile-terms.ts";
 import {
   type Description,
   type DescriptionJson,
+  type GrowJson,
   growOf,
   type PlayJson,
   sampleOf,
@@ -145,6 +146,7 @@ export function playOf(
     modifiers,
     bounds,
     plain: _plain,
+    sizes: _sizes,
     ...rest
   } = p;
   const rungs = d.techniques.filter((t) => t.on === null).map((t) => t.id);
@@ -207,7 +209,7 @@ export function playOf(
       : [
           "",
           "/** The preset menu's sizes, smallest first; the first is the default. */",
-          `export const boards = ${JSON.stringify(boards.map(sizeOf))} as const;`,
+          `export const boards = ${JSON.stringify(boards.map(sizeOf(json)))} as const;`,
         ]),
     ...menuOf(json, { boards, byDefault, boardTiers, variants }),
     ...boundsOf(json, bounds),
@@ -228,11 +230,31 @@ export function playOf(
   ];
 }
 
-/** A board's `WxH` as its size. */
-const sizeOf = (b: string): { w: number; h: number } => {
-  const [w, h] = b.split("x").map(Number);
-  return { w, h };
-};
+/** A board's `WxH` as its size, and each size beyond the grid's it gives
+ * after it by its params letter (`8x8s2`, two stars), a size it does not
+ * name at its least. A letter that is no size's is refused. */
+const sizeOf =
+  (json: DescriptionJson) =>
+  (b: string): { w: number; h: number; sizes?: Record<string, number> } => {
+    const m = /^(\d+)x(\d+)((?:[a-z]\d+)*)$/.exec(b);
+    if (m === null) throw new CompileError(`play boards: ${b} is not WxH`);
+    const sizes: Record<string, number> = Object.fromEntries(
+      Object.keys(json.play?.sizes ?? {}).map((n) => [n, json.sizes[n]?.min ?? 0]),
+    );
+    for (const [, letter, n] of m[3].matchAll(/([a-z])(\d+)/g)) {
+      const named = Object.entries(json.play?.sizes ?? {}).find(
+        ([, s]) => s.letter === letter,
+      );
+      if (named === undefined)
+        throw new CompileError(`play boards: ${b}: ${letter} is no size's letter`);
+      sizes[named[0]] = Number(n);
+    }
+    return {
+      w: Number(m[1]),
+      h: Number(m[2]),
+      ...(Object.keys(sizes).length === 0 ? {} : { sizes }),
+    };
+  };
 
 /**
  * `menu`, what the preset menu offers beside its grid of `boards`: the
@@ -257,7 +279,7 @@ function menuOf(
   const board = (b: string, where: string) => {
     if (!boards?.includes(b))
       throw new CompileError(`play ${where}: ${b} is not in boards`);
-    return sizeOf(b);
+    return sizeOf(json)(b);
   };
   const menu = {
     ...(byDefault === undefined ? {} : { default: board(byDefault, "default") }),
@@ -474,7 +496,7 @@ export function dealOf(
       throw new CompileError(`deal grow: ${grow.partition} is no dealt partition`);
     if (sample === null || "build" in sample)
       throw new CompileError("deal grow: a partition is grown round a sampled value");
-    if (grow.closed.oneIn.length !== tiers.length)
+    if (grow.closed !== undefined && grow.closed.oneIn.length !== tiers.length)
       throw new CompileError("deal grow: closed oneIn is not one number a tier");
   }
   for (const r of env.regions)
@@ -482,7 +504,16 @@ export function dealOf(
       throw new CompileError(
         `${r}: a fill game's dealt partition is one the deal grows`,
       );
+  const settings = settingsOf(json, env);
+  if (sample !== null && "lines" in sample) {
+    const { count } = sample.lines;
+    if (typeof count === "string" && !settings.some((s) => s.size === count))
+      throw new CompileError(`deal sample: ${count} is no size the params give`);
+  }
+  const { grid } = json.space;
   const deal = {
+    ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
+    ...(settings.length === 0 ? {} : { settings }),
     sample,
     ...(typeof hide === "string" ? { hide } : {}),
     ...(symmetric === undefined ? {} : { symmetric }),
@@ -491,13 +522,16 @@ export function dealOf(
       ? {}
       : {
           grow: {
-            ...grow,
+            partition: grow.partition,
             value:
               sample === null || "build" in sample
                 ? 0
                 : "dominoes" in sample
                   ? sample.dominoes.value
-                  : sample.scatter.value,
+                  : "lines" in sample
+                    ? sample.lines.value
+                    : sample.scatter.value,
+            ...(grow.closed === undefined ? {} : { closed: grow.closed }),
           },
         }),
     id,
@@ -555,6 +589,94 @@ export function dealOf(
     "export const clueMax = {",
     ...max,
     "};",
+    ...(grow === null ? [] : growByOf(grow, env)),
+  ];
+}
+
+/**
+ * The sizes beyond the grid's that the params give, from `play.sizes`: each
+ * a size the rules read that the grid is not measured in, with one ruleset a
+ * value. A size with no setting, a setting of no such size, a letter another
+ * field takes, or a second ruleset field is refused.
+ */
+function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
+  const given = json.play?.sizes ?? {};
+  for (const n of env.sizes.names)
+    if (given[n] === undefined)
+      throw new CompileError(`play sizes: ${n} is a size the params must give`);
+  const taken = new Set([
+    "d",
+    ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
+    ...(thoroughOf(json) === null ? [] : [thoroughOf(json)?.letter]),
+  ]);
+  const out = Object.entries(given).map(([size, s]) => {
+    const range = json.sizes[size];
+    if (range === undefined || !env.sizes.names.has(size))
+      throw new CompileError(`play sizes: ${size} is no size beyond the grid's`);
+    if (taken.has(s.letter))
+      throw new CompileError(`play sizes: the letter ${s.letter} is taken`);
+    taken.add(s.letter);
+    if (range.max === undefined || s.rulesets.length !== range.max - range.min + 1)
+      throw new CompileError(`play sizes: ${size} has not one ruleset a value`);
+    return { size, letter: s.letter, min: range.min, rulesets: s.rulesets };
+  });
+  // The Custom dialog has one ruleset field.
+  if (out.length > 1)
+    throw new CompileError("play sizes: a game has one field of rulesets");
+  return out;
+}
+
+/** A size beyond the grid's as the deal holds it (`FillSetting`). */
+interface FillSettingJson {
+  size: string;
+  letter: string;
+  min: number;
+  rulesets: { name: string; rule: string; least?: number }[];
+}
+
+/**
+ * `growBy(sp, cl)`, what a grown partition's parts hold on a board: `holds`,
+ * `smallest` and `parts`, each a number or a formula of the board's sizes
+ * (`engine/fill/grow.ts`'s `GrowSizes`).
+ */
+function growByOf(grow: GrowJson, env: Env): string[] {
+  const read = new Set<string>();
+  const scratch: string[] = [];
+  const out = new Out(1);
+  const genv = {
+    ...answerEnv(env, { yes: false }, scratch),
+    sizes: { names: env.sizes.names, read },
+  };
+  const term = (v?: number | string): string => {
+    if (v === undefined) return "null";
+    if (typeof v === "number") return String(v);
+    const got = compileExpr(parse(v), new Map(), genv, out);
+    if (got.sort.k !== "int" && got.sort.k !== "num")
+      throw new CompileError(`deal grow: ${v} is not a number`);
+    return got.code;
+  };
+  const fields = [
+    `holds: ${term(grow.holds)}`,
+    `smallest: ${term(grow.smallest)}`,
+    `parts: ${term(grow.parts)}`,
+  ];
+  const body = [
+    ...scratch.map((s) => `  ${s}`),
+    ...out.text(),
+    `  return { ${fields.join(", ")} };`,
+  ];
+  const sizes = [...read].sort().map((n) => JSON.stringify(n));
+  return [
+    "",
+    "/** What the grown partition's parts hold on a board of these sizes. */",
+    `export function growBy(${[
+      param("sp", "GridSpace", body),
+      sizes.length === 0
+        ? "_cl: object"
+        : `cl: Readonly<Record<${sizes.join(" | ")}, number>>`,
+    ].join(", ")}): { holds: number; smallest: number; parts: number | null } {`,
+    ...body,
+    "}",
   ];
 }
 
@@ -705,10 +827,8 @@ export function derivedClues(
 ): string[] {
   if (sampleOf(json) === null) return [];
   const grown = growOf(json)?.partition;
-  if (
-    [...env.regions].some((r) => r !== grown) ||
-    env.relations.size + env.sizes.read.size > 0
-  )
+  // A size the grid is not measured in is the params' (`play.sizes`).
+  if ([...env.regions].some((r) => r !== grown) || env.relations.size > 0)
     throw new CompileError(
       `${json.game}: a sampled deal derives clues and grows a partition, and this board deals more`,
     );
@@ -784,13 +904,16 @@ export function derivedClues(
   }
   if (dealt.length > 0) env.used.add("clueList");
   if (grown !== undefined) dealt.unshift(`${grown}: grown[${JSON.stringify(grown)}]`);
+  // The sizes the techniques and the rules read, as `Dealt` holds them.
+  const sizes = [...env.sizes.read].sort();
+  for (const n of sizes) dealt.push(`${n}: sizes.${n}`);
   const body = [...derive.text(), `  return { ${dealt.join(", ")} };`];
   return [
     ...holds,
     "",
     "/** The clues the whole board `g` deals: each kind at each element where",
-    " * one of its values holds, the first in its values' order; and the",
-    " * partition the deal grew round it. */",
+    " * one of its values holds, the first in its values' order; the",
+    " * partition the deal grew round it; and the sizes the params give. */",
     `export function deriveClues(${[
       param("g", "ArrayLike<number>", body),
       param("sp", "GridSpace", body),
@@ -798,6 +921,9 @@ export function derivedClues(
       grown === undefined
         ? "_grown: object = {}"
         : param("grown", "Readonly<Record<string, Partition>>", body),
+      sizes.length === 0
+        ? "_sizes: object = {}"
+        : `sizes: Readonly<Record<${sizes.map((n) => JSON.stringify(n)).join(" | ")}, number>>`,
     ].join(", ")}): Dealt {`,
     ...body,
     "}",

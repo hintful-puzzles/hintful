@@ -38,10 +38,11 @@ import {
   type FillDeal,
   type FillParams,
   partitionOf,
+  sizesOf,
   variationsOf,
 } from "./game-id.ts";
-import { growPartition } from "./grow.ts";
-import { sampleAnswer, sampleDominoes } from "./sample.ts";
+import { type GrowSizes, growPartition } from "./grow.ts";
+import { sampleAnswer, sampleDominoes, sampleLines } from "./sample.ts";
 import {
   type SearchedFillModule,
   searchBoard,
@@ -67,9 +68,16 @@ interface Reads {
 }
 
 /** A fill module whose deal samples its answer: its clues derived from it,
- * beside the partitions grown round it. */
+ * beside the partitions grown round it and the sizes the params give; and
+ * where it grows a partition, what the parts hold on a board. */
 export type DealtFillModule<C> = SearchedFillModule<C> & {
-  deriveClues(g: ArrayLike<number>, sp: GridSpace, grown: Grown): C;
+  deriveClues(
+    g: ArrayLike<number>,
+    sp: GridSpace,
+    grown: Grown,
+    sizes: Readonly<Record<string, number>>,
+  ): C;
+  growBy?(sp: GridSpace, sizes: Readonly<Record<string, number>>): GrowSizes;
 };
 
 /**
@@ -101,6 +109,7 @@ export function dealFill<C extends Clues<C>>(
   if (sample === null) throw new Error("deal: the description samples no answer");
   const sp = spaceOf(module, p);
   const variations = variationsOf(p);
+  const sizes = sizesOf(p);
   const board = (clues: C): FillBoard<C> =>
     newBoard(module, p.w, p.h, clues, variations);
   const finishes = (clues: C, cap: number): boolean =>
@@ -114,10 +123,12 @@ export function dealFill<C extends Clues<C>>(
   const grownRound = (g: Uint8Array, tier: number): Grown | null => {
     const { grow } = deal;
     if (grow === undefined) return {};
+    if (module.growBy === undefined)
+      throw new Error("deal: a grown partition with no growBy");
     const withParts = (parts: Int32Array): C =>
-      module.deriveClues(g, sp, { [grow.partition]: partitionOf(parts) });
+      module.deriveClues(g, sp, { [grow.partition]: partitionOf(parts) }, sizes);
     const parts = growPartition(
-      grow,
+      { ...grow, ...module.growBy(sp, sizes) },
       sp,
       g,
       tier,
@@ -158,11 +169,13 @@ export function dealFill<C extends Clues<C>>(
         ? buildAnswer(module, sp, p, rs)
         : "dominoes" in sample
           ? sampleDominoes(sample, sp, rs)
-          : sampleAnswer(sample, sp, rs);
+          : "lines" in sample
+            ? sampleLines(sample, sp, sizes, rs)
+            : sampleAnswer(sample, sp, rs);
     if (g === null) return null;
     const grown = grownRound(g, tier);
     if (grown === null) return null;
-    const derived = module.deriveClues(g, sp, grown);
+    const derived = module.deriveClues(g, sp, grown, sizes);
     if (!module.isAnswer(g, sp, derived, variations)) return null;
     // A clue whose partner square has none cannot be shown symmetrically.
     if (kind === undefined || deal.symmetric === undefined)
@@ -390,7 +403,7 @@ function buildAnswer<C extends Clues<C>>(
   p: FillParams,
   rs: RandomState,
 ): Uint8Array | null {
-  const blank = module.deriveClues(new Uint8Array(sp.cells.length), sp, {});
+  const blank = module.deriveClues(new Uint8Array(sp.cells.length), sp, {}, sizesOf(p));
   const board = newBoard(module, p.w, p.h, blank, variationsOf(p));
   const top = module.tiers.length - 1;
   const g = board.values.slice();

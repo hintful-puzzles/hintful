@@ -166,6 +166,9 @@ export interface PlayJson {
   variants?: { board: string; with: string[]; tier: string }[];
   /** What the sizes alone cannot say of a board, and of a board of a tier. */
   bounds?: SizeBoundsJson & { tiers?: Record<string, SizeBoundsJson> };
+  /** Each size beyond the grid's that the params give, by name: its letter
+   * in the params, and its rulesets, one a value from the size's `min`. */
+  sizes?: Record<string, SizeSettingJson>;
   /** The numbers on cells drawn plain: no block, never faint, not counted. */
   plain?: string[];
   /** Each variation the player may switch on, by its name. */
@@ -182,6 +185,14 @@ export interface PlayJson {
   boards?: string[];
   /** What each mark of the hint means here (`Game.hint.marks`). */
   hintMarks?: Partial<Record<"ring" | "outline" | "stripes" | "strike", string>>;
+}
+
+/** A size beyond the grid's that the params give: its params letter, and a
+ * ruleset for each of its values, each with the narrowest board it has an
+ * answer on. */
+export interface SizeSettingJson {
+  letter: string;
+  rulesets: { name: string; rule: string; least?: number }[];
 }
 
 /** Bounds on a board's two sides together: their sum, their product, the
@@ -275,9 +286,12 @@ export function growOf(json: DescriptionJson): GrowJson | null {
  * board at the tier. */
 export interface GrowJson {
   partition: string;
-  holds: number;
-  smallest: number;
-  closed: { oneIn: number[]; atMostOneIn: number };
+  /** Each a number or a formula of the board's sizes. */
+  holds: number | string;
+  smallest: number | string;
+  /** How many parts a board has, where the rules fix it. */
+  parts?: number | string;
+  closed?: { oneIn: number[]; atMostOneIn: number };
 }
 
 /** A deal setting the player may turn off, by its params letter (`h1`,
@@ -293,7 +307,8 @@ export interface ThoroughJson {
 }
 
 /** How a deal samples an answer: built by the ladder (`build`); `dominoes`
- * of a value, packed, none touching another along a side; or `scatter`'s
+ * of a value, packed, none touching another along a side; `lines`, `count`
+ * of a value in every row and column, none within `apart`; or `scatter`'s
  * value on a share of the cells, optionally none within `apart`
  * of another; `partner`'s value beside each, along `along`, the two matched;
  * and `rest` on every other cell. With `noBareLine`, an answer with a row or
@@ -301,6 +316,10 @@ export interface ThoroughJson {
 export type SampleJson =
   | { build: true }
   | { dominoes: { value: number }; rest: number }
+  | {
+      lines: { value: number; count: number | string; apart: "adj4" | "adj8" };
+      rest: number;
+    }
   | {
       scatter: {
         value: number;

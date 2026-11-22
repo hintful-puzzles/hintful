@@ -3,6 +3,7 @@
 import { ground, tent, tree } from "./camp.ts";
 import type { Painter } from "./painter.ts";
 import { block, disc } from "./pair.ts";
+import { star } from "./star.ts";
 import { clear, cross, domino, shade } from "./stock.ts";
 
 export const PAINTERS = {
@@ -13,6 +14,7 @@ export const PAINTERS = {
   domino,
   ground,
   shade,
+  star,
   tent,
   tree,
 } as const satisfies Record<string, Painter>;

@@ -8,6 +8,9 @@
   "else": { "$ref": "#/$defs/game" },
   "$defs": {
     "formula": { "type": "string", "minLength": 1, "description": "A formula." },
+    "countOrFormula": {
+      "oneOf": [{ "type": "integer", "minimum": 1 }, { "$ref": "#/$defs/formula" }]
+    },
     "sizeBound": {
       "type": "object",
       "minProperties": 1,
@@ -829,18 +832,46 @@
             },
             "default": {
               "type": "string",
-              "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+              "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$",
               "description": "The default board, one of `boards`, where it is not the first."
             },
             "boardTiers": {
               "type": "object",
               "description": "The first and last tier a board of `boards` is offered at, by its `WxH`, where it is not every tier.",
-              "propertyNames": { "pattern": "^[1-9][0-9]*x[1-9][0-9]*$" },
+              "propertyNames": {
+                "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$"
+              },
               "additionalProperties": {
                 "type": "array",
                 "minItems": 2,
                 "maxItems": 2,
                 "items": { "type": "string" }
+              }
+            },
+            "sizes": {
+              "type": "object",
+              "description": "Each size beyond the grid's that the rules read, which the params give, by its name in `sizes`: its letter in the params, written as the number itself, and its rulesets, one for each value from the size's `min`, each with the narrowest board it has an answer on (`least`). The Custom dialog offers them as its game mode, and the help's `{{rulesets}}` lists them (Star Battle's stars).",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["letter", "rulesets"],
+                "additionalProperties": false,
+                "properties": {
+                  "letter": { "type": "string", "pattern": "^[a-z]$" },
+                  "rulesets": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "required": ["name", "rule"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "name": { "type": "string" },
+                        "rule": { "type": "string" },
+                        "least": { "type": "integer", "minimum": 1 }
+                      }
+                    }
+                  }
+                }
               }
             },
             "plain": {
@@ -880,7 +911,10 @@
                 "required": ["board", "with", "tier"],
                 "additionalProperties": false,
                 "properties": {
-                  "board": { "type": "string", "pattern": "^[1-9][0-9]*x[1-9][0-9]*$" },
+                  "board": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$"
+                  },
                   "with": { "type": "array", "items": { "type": "string" } },
                   "tier": { "type": "string" }
                 }
@@ -932,9 +966,12 @@
             },
             "boards": {
               "type": "array",
-              "description": "The sizes the preset menu offers, `WxH`, smallest first, each at every tier unless `boardTiers` says otherwise; the first at the easiest tier is the default board unless `default` names another. A game born from its description (`catalog:`) states them.",
+              "description": "The sizes the preset menu offers, `WxH`, each followed by the sizes beyond the grid's it gives by their letters (`8x8s2`, two stars; a size it does not name is at its `min`), smallest first, each at every tier unless `boardTiers` says otherwise; the first at the easiest tier is the default board unless `default` names another. A game born from its description (`catalog:`) states them.",
               "minItems": 1,
-              "items": { "type": "string", "pattern": "^[1-9][0-9]*x[1-9][0-9]*$" }
+              "items": {
+                "type": "string",
+                "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$"
+              }
             },
             "hintMarks": {
               "type": "object",
@@ -1042,13 +1079,17 @@
             },
             "grow": {
               "type": "object",
-              "description": "A dealt partition grown round the sampled answer: a part round each cell of the sample's value, joined until each holds `holds` of them; one of the answer's pieces of `holds` cells in `closed.oneIn[tier]` dealt as a part of its own, at most one part in `closed.atMostOneIn`; no other part under `smallest` cells; then the parts mended until the ladder finishes the board at the tier and not at the tier below.",
-              "required": ["partition", "holds", "smallest", "closed"],
+              "description": "A dealt partition grown round the sampled answer: a part round each cell of the sample's value, joined until each holds `holds` of them; one of the answer's pieces of `holds` cells in `closed.oneIn[tier]` dealt as a part of its own, at most one part in `closed.atMostOneIn`, and none without `closed`; no other part under `smallest` cells; then the parts mended until the ladder finishes the board at the tier and not at the tier below. `holds`, `smallest` and `parts` are each a number or a formula of the board's sizes.",
+              "required": ["partition", "holds", "smallest"],
               "additionalProperties": false,
               "properties": {
                 "partition": { "type": "string" },
-                "holds": { "type": "integer", "minimum": 1 },
-                "smallest": { "type": "integer", "minimum": 1 },
+                "holds": { "$ref": "#/$defs/countOrFormula" },
+                "smallest": { "$ref": "#/$defs/countOrFormula" },
+                "parts": {
+                  "$ref": "#/$defs/countOrFormula",
+                  "description": "How many parts a board has, where the rules fix it: a desc with another count is refused."
+                },
                 "closed": {
                   "type": "object",
                   "required": ["oneIn", "atMostOneIn"],
@@ -1100,6 +1141,30 @@
                       "required": ["value"],
                       "additionalProperties": false,
                       "properties": { "value": { "type": "integer", "minimum": 1 } }
+                    },
+                    "rest": { "type": "integer", "minimum": 1 }
+                  }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer as `count` cells of `value` in every row and column, none within `apart` of another, at random; `rest` on every other cell. `count` is a number or a size the params give.",
+                  "required": ["lines", "rest"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "lines": {
+                      "type": "object",
+                      "required": ["value", "count", "apart"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "value": { "type": "integer", "minimum": 1 },
+                        "count": {
+                          "oneOf": [
+                            { "type": "integer", "minimum": 1 },
+                            { "type": "string" }
+                          ]
+                        },
+                        "apart": { "enum": ["adj4", "adj8"] }
+                      }
                     },
                     "rest": { "type": "integer", "minimum": 1 }
                   }

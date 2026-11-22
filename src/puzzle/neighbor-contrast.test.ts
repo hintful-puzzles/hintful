@@ -131,9 +131,7 @@ describe("neighbors stand apart in the dark scheme", () => {
   // The exemption is found by the token, so a fill that stopped being one, or
   // a margin the scheme misplaced, would leave it exempting nothing.
   it("exempts a region fill at the margin where one is painted", () => {
-    expect([...exemptedIn]).toEqual(
-      expect.arrayContaining(["map", "starbattle"].filter(inSweep)),
-    );
+    expect([...exemptedIn]).toEqual(expect.arrayContaining(["map"].filter(inSweep)));
   });
 
   // Likewise a bevel's: a swap that stopped being declared would leave it

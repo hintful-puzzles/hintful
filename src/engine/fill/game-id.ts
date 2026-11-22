@@ -19,8 +19,9 @@ import { isDigit } from "../game-id/decimal.ts";
 import { readDesc } from "../game-id/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../game-id/dot-runs.ts";
 import { modifierItem } from "../game-id/modifier.ts";
-import { dimensionParamConfig } from "../game-id/params.ts";
-import { choice, dims, flag, num, paramsCodec } from "../game-id/params-codec.ts";
+import { dimensionParamConfig, parseConfigInt } from "../game-id/params.ts";
+import { choice, dims, flag, num, paramsCodec, size } from "../game-id/params-codec.ts";
+import { rulesetItem } from "../game-id/ruleset.ts";
 import { encodeRunLength } from "../game-id/run-length.ts";
 import { encodeWallRuns, readRegionWalls } from "../game-id/wall-runs.ts";
 import { regionNumbers } from "../generate/divide.ts";
@@ -32,7 +33,7 @@ import {
   partition,
 } from "../solve/describe-runtime.ts";
 import type { Clues } from "./board.ts";
-import type { FillGrow } from "./grow.ts";
+import type { FillGrow, GrowSizes } from "./grow.ts";
 import type { Sample } from "./sample.ts";
 
 /** A segment of the desc: where a one-valued clue kind sits, as upstream's
@@ -60,8 +61,26 @@ export interface FillThorough {
   readonly offFrom: number;
 }
 
+/** A size beyond the grid's that the params give (`play.sizes`): its letter
+ * in the params, and the Custom dialog's ruleset field, one ruleset a value
+ * from the size's `min` up. A ruleset's `least` is the narrowest board it
+ * has an answer on. */
+export interface FillSetting {
+  readonly size: string;
+  readonly letter: string;
+  readonly min: number;
+  readonly rulesets: readonly {
+    readonly name: string;
+    readonly rule: string;
+    readonly least?: number;
+  }[];
+}
+
 /** What a compiled fill module says of its deal (`deal`). */
 export interface FillDeal {
+  /** Whether the grid is as high as it is wide, so one size gives both. */
+  readonly square?: true;
+  readonly settings?: readonly FillSetting[];
   readonly sample: Sample | null;
   /** The clue kind the deal hides while the board still finishes. */
   readonly hide?: string;
@@ -109,10 +128,21 @@ export interface FillParams {
   /** Whether the deal hides thoroughly, in a game whose deal has the
    * setting; absent in any other. */
   thorough?: boolean;
+  /** The sizes beyond the grid's, by name, in a game whose params give any
+   * (`FillDeal.settings`); absent in any other. */
+  sizes?: Readonly<Record<string, number>>;
 }
 
 /** The variations `p` has on. */
 export const variationsOf = (p: FillParams): readonly string[] => p.variations ?? [];
+
+/** The sizes beyond the grid's that `p` gives. */
+export const sizesOf = (p: FillParams): Readonly<Record<string, number>> =>
+  p.sizes ?? {};
+
+/** The setting `s`'s ruleset on a board of `p`, by its index. */
+const rulesetOf = (s: FillSetting, p: FillParams): number =>
+  (p.sizes?.[s.size] ?? s.min) - s.min;
 
 /** The setting's default for a board `w` squares wide. */
 const thoroughBy = (t: FillThorough, w: number): boolean => w < t.offFrom;
@@ -240,13 +270,49 @@ export function fillParams(
   const w = deal.sizes["w"];
   const step = w?.step;
   const named = Object.entries(modifiers);
+  const settings = deal.settings ?? [];
+  const sizeBounds =
+    w === undefined
+      ? {}
+      : { bounds: { min: w.min, ...(w.max === undefined ? {} : { max: w.max }) } };
+  // Each ruleset's narrowest board, said beside the size.
+  const leasts = settings.flatMap((s) =>
+    s.rulesets.flatMap((r) =>
+      r.least === undefined ? [] : [`${r.least} with ${r.name}`],
+    ),
+  );
+  const leastWords =
+    leasts.length === 0
+      ? ""
+      : ` It must be at least ${leasts.slice(0, -1).join(", ")}${leasts.length > 1 ? " and " : ""}${leasts.at(-1)}.`;
   const paramConfig: ParamConfigItem<FillParams>[] = [
-    ...dimensionParamConfig<FillParams>({
-      doc: `Size of the grid in squares.${step === 2 ? " Both must be even." : ""}`,
-      ...(w === undefined
-        ? {}
-        : { bounds: { min: w.min, ...(w.max === undefined ? {} : { max: w.max }) } }),
-    }),
+    ...(deal.square === true
+      ? [
+          {
+            kw: "grid-size",
+            name: "Grid size",
+            type: "string" as const,
+            doc: `Width and height of the grid, which is square.${leastWords}`,
+            ...sizeBounds,
+            label: { slot: "size" as const, words: (p: FillParams) => `${p.w}x${p.w}` },
+            get: (p: FillParams) => String(p.w),
+            set: (p: FillParams, v: string) => {
+              p.w = p.h = parseConfigInt(v);
+            },
+          },
+        ]
+      : dimensionParamConfig<FillParams>({
+          doc: `Size of the grid in squares.${step === 2 ? " Both must be even." : ""}${leastWords}`,
+          ...sizeBounds,
+        })),
+    ...settings.map((s) =>
+      rulesetItem<FillParams>(s.rulesets, {
+        get: (p) => rulesetOf(s, p),
+        set: (p, index) => {
+          p.sizes = { ...p.sizes, [s.size]: s.min + index };
+        },
+      }),
+    ),
     difficultyItem(tiers, "diff"),
     ...named.map(([variation, m]) =>
       modifierItem<FillParams>({
@@ -294,7 +360,16 @@ export function fillParams(
   return {
     paramConfig,
     ...paramsCodec(defaults, [
-      dims(paramConfig),
+      deal.square === true ? size(paramConfig, "grid-size") : dims(paramConfig),
+      // A size the params give, written as the number itself.
+      ...settings.map((s) =>
+        num(paramConfig, s.letter, {
+          get: (p) => p.sizes?.[s.size] ?? s.min,
+          set: (p, v) => {
+            p.sizes = { ...p.sizes, [s.size]: v };
+          },
+        }),
+      ),
       ...named.map(([, m]) => flag(paramConfig, m.letter, m.kw)),
       // A deal setting, which only a full ID carries, and only where it is
       // off: absent, it is on whatever the size, as upstream reads it, so an
@@ -323,6 +398,14 @@ export function fillParams(
       choice(paramConfig, "d", "difficulty", deal.tierLetters, { full: true }),
     ]),
     validateParams(p, full) {
+      for (const s of settings) {
+        const ruleset = s.rulesets[rulesetOf(s, p)];
+        if (ruleset === undefined) return "There is no such game mode.";
+        if (ruleset.least !== undefined && Math.min(p.w, p.h) < ruleset.least)
+          return deal.square === true
+            ? `${ruleset.name}: the grid size must be at least ${ruleset.least}.`
+            : `${ruleset.name}: width and height must both be at least ${ruleset.least}.`;
+      }
       if (beyond(bounds.all, p) !== null) return beyond(bounds.all, p);
       // A tier's own bounds hold of the board a deal makes, which only a full
       // ID's tier names.
@@ -450,6 +533,9 @@ export function decodeDesc<C extends Clues<C>>(
   // Not read for `C`, which `ClueMax` cannot say: the caller's board says it.
   clueMax: ClueMax<NoInfer<C>>,
   desc: string,
+  /** What the grown partition's parts hold on this board, where the deal
+   * grows one. */
+  grown: GrowSizes | null = null,
 ): DescParse<C> {
   return readDesc(desc, (r) => {
     const out: Partial<Record<keyof C, ClueList | Partition>> = {};
@@ -459,10 +545,13 @@ export function decodeDesc<C extends Clues<C>>(
         const joined = new Dsf(n);
         readRegionWalls(r, joined, sp.w, sp.h);
         const parts = partitionOf(regionNumbers(joined, n));
-        // A part too small to hold what the deal grows each part round has
-        // no answer.
-        const least = deal.grow?.partition === seg.walls ? deal.grow.holds : 1;
-        if (parts.cells.some((cs) => cs.length < least)) r.fail(DESC_MALFORMED);
+        // A part too small to hold what the deal grows each part round, or
+        // a count of parts the rules do not allow, has no answer.
+        const sized = deal.grow?.partition === seg.walls ? grown : null;
+        if (parts.cells.some((cs) => cs.length < (sized?.holds ?? 1)))
+          r.fail(DESC_MALFORMED);
+        const count = sized?.parts ?? null;
+        if (count !== null && parts.cells.length !== count) r.fail(DESC_MALFORMED);
         out[seg.walls as keyof C] = parts;
         continue;
       }

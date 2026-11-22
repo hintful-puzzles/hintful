@@ -25,9 +25,10 @@ import {
 } from "../solve/ladder-runtime.ts";
 import type { FillPlay } from "./play.ts";
 
-/** A board's clues by kind, and its dealt partitions by name: a compiled
- * module's `Dealt`. */
-export type Clues<C> = { readonly [K in keyof C]: ClueList | Partition };
+/** A board's clues by kind, its dealt partitions by name, and the sizes its
+ * params give beyond the grid's (Star Battle's `stars`): a compiled module's
+ * `Dealt`. */
+export type Clues<C> = { readonly [K in keyof C]: ClueList | Partition | number };
 
 /** The clues of kind `kind`, which the caller knows is a clue kind and not a
  * partition. */

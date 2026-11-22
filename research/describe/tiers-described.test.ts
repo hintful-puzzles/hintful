@@ -12,8 +12,8 @@ import { difficultyTiers, withTier } from "../../src/engine/contract/difficulty.
 import { randomNew } from "../../src/engine/random/index.ts";
 import { clustersGame } from "../../src/games/clusters/index.ts";
 import { seismicGame } from "../../src/games/seismic/index.ts";
-import { starbattleGame } from "../../src/games/starbattle/index.ts";
 import { game as mosaicGame } from "../../src/generated/games/mosaic/mosaic.game.ts";
+import { game as starbattleGame } from "../../src/generated/games/starbattle/starbattle.game.ts";
 import { game as unrulyGame } from "../../src/generated/games/unruly/unruly.game.ts";
 import { say } from "../progress.ts";
 
