@@ -1148,8 +1148,11 @@ the ladder reads it with no adapter. `edit.ts` is the one move, and
 `FillUi`. `render.ts` draws the board by layers from the painters `play:`
 names, and `marks.ts` holds the hint's mark kinds beside the cells.
 `deal.ts` deals a board from the answer `sample.ts` draws, and
-`game-id.ts` is its params and desc, from the description's `id:`. A game reaches them through `fillGame` once that lands; until then no game
-uses them.
+`game-id.ts` is its params and desc, from the description's `id:`.
+`hint.ts` is the hint, `describedFiringHint`'s hooks read off the board,
+the walk begun at the lowest tier that finishes the board as dealt; a step
+decides values only (`PLACE` facts). A game reaches them through `fillGame`
+once that lands; until then no game uses them.
 
 ### `edge-hint.ts` — a hint on an edge between squares
 

@@ -26,14 +26,18 @@ engine commit.
       engine only carries lands with the task whose code reads it, so none
       is compiled unread: `catalog:` and the generated `<id>.game.ts` in
       2.3, `play:` in 2.4, `labels:` in 2.5, `id:` and `tierLetters:` in 2.6.
-- [ ] 2.3 The generated games in the catalog and the registry. Re-derived
+- [x] 2.3 The generated games in the catalog and the registry. Re-derived
       2026-11-22: every reader already goes through one module,
       `src/puzzle/catalog.ts` (`catalogFrom` in `catalog-data.ts`), and only
       it, `vite-plugins/catalog.ts` and `src/games/index.ts` glob
       `src/games/*/catalog.ts`; so no `src/games/catalog.ts` is needed, and
-      those three glob the generated games beside. The compiler: `catalog:`,
-      and the generated `<id>.game.ts`. Needs `fillGame`, so it is done
-      after 2.7, with 3.1.
+      those three glob the generated games beside. As built: `fillGame`
+      (`engine/fill/game.ts`); the description's `catalog:`, and `play:`'s
+      `boards` (the first the default) and `hintMarks` (the legend); the
+      compiler writes `<id>.catalog.ts`, which imports only a type so the
+      Vite config may read it (and runs the compiler first where it is
+      missing), and `<id>.game.ts`, which registers the game
+      (`describe/sources.ts`, `bornFiles`).
 - [x] 2.4 `FillUi`, `newUi`, and input from `play` (verbs, keys,
       Shift/Ctrl painting, `stroke`, `links`): `engine/fill/play.ts`, tested
       on Tents' compiled `play`. The compiler: `play:`. No `changedState`
@@ -56,24 +60,51 @@ engine commit.
       upstream's Tents generator rejects a board with a line holding
       neither a tent nor a tree, which the sampler does not; whether Tents
       keeps that is a `sample` parameter to add then, or a stated drop.
-- [ ] 2.7 The hint: `describedFiringHint`'s hooks from the board; `MARK`
-      facts as an `Edit`'s marks; step words from `says` and its arms.
-      Where it starts (2026-11-22): the plan's fact loop in
-      `engine/hint/described-firing-hint.ts` skips every fact but `PLACE`.
-      The renderer (`engine/fill/render.ts`) already draws a step's
-      `ring`/`outline`/`stripes` of `CELL`, `ring` of `LINK` (a cell and
-      the clue's cell) and `outline` of `LINE` (a line's clue, by its index
-      in `sp.lines`), from `engine/fill/marks.ts`: the hint emits those.
+- [x] 2.7 The hint: `describedFiringHint`'s hooks from the board
+      (`engine/fill/hint.ts`), the walk begun at the lowest tier that
+      finishes the board as dealt; step words from `says`, its wordings and
+      its arms (`STATED`). Tested on Kakurasu's compiled module
+      (`engine/fill/hint.test.ts`), so Kakurasu's description and plants
+      land here, their techniques checked sound; its help lands with its
+      catalog entry in 2.3, since the help guard refuses help for a game
+      not in the catalog. The compiler writes `domainOf` for a fill game
+      whose domain is the board's. Moved to 3.2, the first game that reads
+      them: `MARK` facts as an `Edit`'s marks (the firing hint reads only
+      `PLACE` facts, and how a link's ring is said is Tents' words), and a
+      line's clue outlined as `LINE` (Kakurasu's steps stripe the line,
+      which hatches its clue; the renderer already draws both).
 
 ## 3. The games
 
-- [ ] 3.1 Kakurasu from its description alone: description, help, spec,
+- [x] 3.1 Kakurasu from its description alone: description, help, spec,
       icons; measure its deal rate first (design.md § "Risks"). Each gap
       is closed in the engine, and listed here as a capability added.
+      Its description, plants and spec are in (2.7, 2.3). Capabilities
+      added: a board-wide domain read as every cell's (`domainOf`,
+      compile-fill); a born game's catalog entry, boards and legend (2.3);
+      a move from a save that is not an edit refused as the game's
+      (`editOf`); a step's linked rings read only where the game has links.
+      The guards that read a game's sources read a born game's under
+      `src/generated/` (coord-conversion); its directory's one TypeScript
+      file is the test that paints its mistake outline.
+      Deal rate measured 2026-11-22, 300 sampled answers a size at share
+      one half (0.4 and 0.6 differ little): finished at Easy / at Normal /
+      by neither: 5x5 33% / 59% / 8%; 6x6 7% / 70% / 23%; 7x7 0.7% / 43% /
+      56%; 8x8 0 / 13% / 87%; 9x9 0 / 3% / 97%; 10x10 0 / 0.3%, a sample
+      0.07 ms at 5x5 to 3.4 ms at 10x10. So the menu is 5x5, 5x7 (the
+      menu's rectangle, portrait) and 7x7 at both tiers, and a custom side
+      4 to 9; a board line reading cannot finish is the room a third tier
+      would take, and is not this pilot's. Run in the app 2026-11-22:
+      deal, clicks and right-clicks, hints (look, explain, apply, and a
+      wrong square asked to be fixed first), both live errors as the help
+      words them, dark mode; a cross drew as ground and now draws as the
+      engine's cross. Icons captured from `?screenshot`.
 - [ ] 3.2 Tents moved: `id:` keeps upstream's grammar (the upstream-descs
       guard proves it); its walk's link reading as engine capabilities;
-      `lineCount` split by `says.arms`. Checked in the app, including
-      links, drags, hints and dark mode. List the capabilities added.
+      `lineCount` split by `says.arms`. The fill hint gains `MARK` facts as
+      an `Edit`'s marks, rung as `LINK`, and a line's clue outlined as
+      `LINE` (Tents' "its number"). Checked in the app, including links,
+      drags, hints and dark mode. List the capabilities added.
 - [ ] 3.3 Measure lines, frame time, hint-walk time and capabilities added
       per game, against the baseline; record the figures in design.md.
 

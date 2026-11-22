@@ -104,7 +104,7 @@ function domainMask<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
 
 /** The ladder's marks on the board's values and marks, copied, and whether
  * they hold of the board's clues. */
-function marksOf<C>(
+export function marksOf<C>(
   module: FillModule<C>,
   board: FillBoard<C>,
 ): { marks: CellMarks; ok: boolean } {

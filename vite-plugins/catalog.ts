@@ -2,8 +2,10 @@
  * The game catalog, for the Vite config, which reads it as it loads: the
  * puzzle and help pages it serves, and the count the pages state.
  *
- * Read from `src/games/<id>/catalog.ts`, the population the app's own reader
- * (`src/puzzle/catalog.ts`) globs. The config's bundler does not expand a
+ * Read from `src/games/<id>/catalog.ts`, or for a game born from its
+ * description the `<id>.catalog.ts` the compiler writes beside its module:
+ * the population the app's own reader (`src/puzzle/catalog.ts`) globs. The
+ * config's bundler does not expand a
  * glob, so this lists the directories and has Node import each module, whose
  * only import is a type. A directory without one fails the config load, as
  * it fails the app's catalog check (`src/games/index.ts`).
@@ -21,8 +23,21 @@ import { pathToFileURL } from "node:url";
 import type { Plugin } from "vite";
 import type { PuzzleData } from "../src/engine/contract/catalog.ts";
 import { type CatalogModule, catalogFrom } from "../src/puzzle/catalog-data.ts";
+import { describeNow } from "./describe.ts";
 
 const GAMES = path.resolve(import.meta.dirname, "../src/games");
+const GENERATED = path.resolve(import.meta.dirname, "../src/generated/games");
+
+/** A game's catalog module: its own, or the one the compiler writes for a game
+ * born from its description, which this config may read before any plugin has
+ * generated it. */
+function catalogFile(id: string): string {
+  const own = path.join(GAMES, id, "catalog.ts");
+  if (fs.existsSync(own)) return own;
+  const born = path.join(GENERATED, id, `${id}.catalog.ts`);
+  if (!fs.existsSync(born)) describeNow();
+  return born;
+}
 
 /** Every game's catalog entry, by id, in id order, as the files are now. */
 async function readCatalog(): Promise<Readonly<Record<string, PuzzleData>>> {
@@ -32,7 +47,7 @@ async function readCatalog(): Promise<Readonly<Record<string, PuzzleData>>> {
     .map((entry) => entry.name);
   const modules = await Promise.all(
     ids.map(async (id): Promise<[string, CatalogModule]> => {
-      const file = path.join(GAMES, id, "catalog.ts");
+      const file = catalogFile(id);
       const url = `${pathToFileURL(file).href}#${fs.statSync(file).mtimeMs}.ts`;
       const module: CatalogModule = await import(url);
       return [`games/${id}/catalog.ts`, module];
@@ -43,7 +58,7 @@ async function readCatalog(): Promise<Readonly<Record<string, PuzzleData>>> {
 
 export const puzzleCatalog = await readCatalog();
 
-const CATALOG_FILE = /\/src\/games\/[^/]+\/catalog\.ts$/;
+const CATALOG_FILE = /\/src\/(?:generated\/)?games\/([^/]+)\/(?:\1\.)?catalog\.ts$/;
 
 /** Restarts the dev server when a game's catalog entry is added, edited or
  * removed, so the pages built from the catalog follow it. */

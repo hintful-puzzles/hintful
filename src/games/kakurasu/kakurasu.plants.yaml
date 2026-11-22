@@ -1,0 +1,30 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, or a quantity read too
+# finely, which the soundness checks under research/technique-check must find
+# unsound.
+
+techniques:
+  # A line one short of its number read as already at it.
+  lineMet:
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) <= 1"
+  # A line read as needing every open square when it needs all but one of
+  # them.
+  lineFull:
+    for: >-
+      L in lines, O = open(L), k = need(L)
+      where |O| > 0 and k > 0 and k + 1 >= sum(c in O of worth(L, c))
+  # A square worth exactly what its line needs read as worth too much.
+  tooMuch:
+    for: >-
+      L in lines, k = need(L) where k > 0,
+      S = {c in open(L) where worth(L, c) >= k} where |S| > 0
+  # A line read as needing one more than it does.
+  everyWay:
+    for: >-
+      L in lines, k = need(L) + 1, O = open(L) where |O| > 0,
+      S = {x in O where not makes(L, O, k, x, 2)} where |S| > 0
+  # A line read as needing one more than it does.
+  noWay:
+    for: >-
+      L in lines, k = need(L) + 1, O = open(L) where |O| > 0,
+      S = {x in O where not makes(L, O, k, x, 1)} where |S| > 0

@@ -803,7 +803,45 @@
               "properties": {
                 "start": { "$ref": "#/$defs/formula" }
               }
+            },
+            "boards": {
+              "type": "array",
+              "description": "The sizes the preset menu offers, `WxH`, smallest first, each at every tier; the first at the easiest tier is the default board. A game born from its description (`catalog:`) states them.",
+              "minItems": 1,
+              "items": { "type": "string", "pattern": "^[1-9][0-9]*x[1-9][0-9]*$" }
+            },
+            "hintMarks": {
+              "type": "object",
+              "description": "What each mark of the hint means in this game (`Game.hint.marks`), which the help's `{{hint-marks}}` lists. A game born from its description (`catalog:`) states the roles its steps draw.",
+              "additionalProperties": false,
+              "properties": {
+                "ring": { "type": "string" },
+                "outline": { "type": "string" },
+                "stripes": { "type": "string" },
+                "strike": { "type": "string" }
+              }
             }
+          }
+        },
+        "catalog": {
+          "type": "object",
+          "description": "A game born from its description: its catalog entry (`engine/contract/catalog.ts`'s `PuzzleData`). The compiler then writes `<id>.catalog.ts` and `<id>.game.ts`, which registers `fillGame` of the compiled module.",
+          "required": ["name", "description", "objective", "collection", "family"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string" },
+            "aliases": { "type": "array", "items": { "type": "string" } },
+            "description": { "type": "string" },
+            "objective": { "type": "string" },
+            "collection": {
+              "type": "string",
+              "description": "Typed by `PuzzleData`, which the generated entry is: the typecheck refuses one that is not."
+            },
+            "family": {
+              "type": "string",
+              "description": "Typed by `PuzzleData`, which the generated entry is: the typecheck refuses one that is not."
+            },
+            "similar": { "type": "string" }
           }
         },
         "id": {

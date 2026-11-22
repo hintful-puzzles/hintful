@@ -15,7 +15,10 @@ export interface CatalogModule {
   entry: PuzzleData;
 }
 
-const MODULE_PATH = /(?:^|\/)games\/([a-z0-9]+)\/catalog\.ts$/;
+// A hand-written game's `games/<id>/catalog.ts`, or the
+// `generated/games/<id>/<id>.catalog.ts` the compiler writes for a game born
+// from its description.
+const MODULE_PATH = /(?:^|\/)games\/([a-z0-9]+)\/(?:\1\.)?catalog\.ts$/;
 
 /**
  * The catalog, from the games' catalog modules keyed by their paths: each

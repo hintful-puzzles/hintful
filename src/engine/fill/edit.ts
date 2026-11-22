@@ -3,6 +3,7 @@
  * in flat lists so a save holds it as it is. Solve is an edit too.
  */
 
+import { rejectMove } from "../contract/assert-never.ts";
 import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
 
 export interface Edit {
@@ -11,6 +12,30 @@ export interface Edit {
   /** Cell, element, ...: the element the cell's mark names, `-1` to clear
    * it. */
   readonly mark?: readonly number[];
+}
+
+/**
+ * `move` as an edit, or refused as `context`'s: a move from a save is read
+ * back as whatever it was written as, and one with a field an edit lacks, or
+ * a list that is not one of numbers, came from no build of this game.
+ */
+export function editOf(move: unknown, context: string): Edit {
+  if (!isEdit(move)) rejectMove(move, context);
+  return move;
+}
+
+function isEdit(move: unknown): move is Edit {
+  return (
+    typeof move === "object" &&
+    move !== null &&
+    Object.entries(move).every(
+      ([k, v]) =>
+        (k === "set" || k === "mark") &&
+        Array.isArray(v) &&
+        v.length % 2 === 0 &&
+        v.every((x) => typeof x === "number"),
+    )
+  );
 }
 
 /**

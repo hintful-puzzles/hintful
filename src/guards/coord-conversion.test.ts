@@ -25,10 +25,12 @@ import { REGISTERED_IDS } from "../engine/testing/enrollment.ts";
 import { nodesOf, parsed, resolveSpecifier } from "../engine/testing/syntax.ts";
 
 /** Every game's sources, and the engine's own, where a helper several games
- * share can hold the same second copy. `geometry.ts` is the conversion. */
+ * share can hold the same second copy. `geometry.ts` is the conversion. A
+ * game born from its description has its sources written by the compiler. */
 const sourceModules = import.meta.glob<string>(
   [
     "../games/**/*.ts",
+    "../generated/games/**/*.ts",
     "../engine/**/*.ts",
     "!../engine/board/geometry.ts",
     "!../engine/testing/**",
@@ -160,7 +162,9 @@ describe("a game does not re-derive the pixel-to-cell conversion", () => {
   const all = conversions();
 
   it("read the games, and sees each shape it looks for", () => {
-    const games = new Set(Object.keys(sourceModules).map((path) => path.split("/")[2]));
+    const games = new Set(
+      Object.keys(sourceModules).map((path) => /\/games\/([^/]+)\//.exec(path)?.[1]),
+    );
     for (const id of REGISTERED_IDS) expect(games).toContain(id);
     // The shapes, on lines written here: an unmatched shape finds nothing
     // and every game passes.

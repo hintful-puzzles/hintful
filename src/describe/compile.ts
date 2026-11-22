@@ -358,7 +358,7 @@ export function compileGame(
   const fill = Out.own("", () => [
     ...markWhileOf(json, env, measured),
     ...derivedClues(json, d, env, measured),
-    ...playOf(json, d, env),
+    ...playOf(json, d, env, measured),
     ...dealOf(json, d, env, measured),
   ]);
   // Kept by a technique or by the rules alone (Signpost's `nextGiven`).

@@ -193,6 +193,10 @@ research tools all read through it; the app never does.
   the board, which the engine's input is built from (`engine/fill/play.ts`):
   the right button's value is always the one that rules a cell out, and
   `links:` names the cell mark, drawn as a link to the clue beside the cell.
+  The board seeds each cell from `domainOf`, so a game with `play:` whose
+  domain is the board's (Kakurasu's `range(1, 2)`) has one written that
+  gives every cell the board's domain. A step's line is its `stripes`,
+  which hatch the line's clue in the margin too.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's

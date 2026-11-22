@@ -18,6 +18,12 @@ const SCRIPT = path.join(ROOT, "scripts", "describe.ts");
 /** Once a process: a test run's projects each apply the config's plugins. */
 let generated = false;
 
+/** Compile every description now. A description that does not compile throws,
+ * with the compiler's message printed. */
+export function describeNow(): void {
+  execFileSync(process.execPath, [SCRIPT, "--quiet"], { stdio: "inherit" });
+}
+
 /** Whether this process already serves: a restart imports the config afresh,
  * so the mark is the process's, not this module's. */
 const SERVING = Symbol.for("hintful.describe-first.serving");
@@ -31,7 +37,7 @@ export function describeFirst(): Plugin {
       try {
         // A description that does not compile fails the command here, with
         // the compiler's message, before anything imports a missing module.
-        execFileSync(process.execPath, [SCRIPT, "--quiet"], { stdio: "inherit" });
+        describeNow();
       } catch (error) {
         // A restart (on a schema edit: the config imports the loader) that
         // failed would leave the server reading the old schema until the

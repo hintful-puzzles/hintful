@@ -110,6 +110,8 @@ export interface DescriptionJson {
   deal?: DealJson;
   /** How the player fills the board, for a fill game the engine plays. */
   play?: PlayJson;
+  /** A game born from its description: its catalog entry. */
+  catalog?: CatalogJson;
   /** A fill game's game ID: the codec's segments in order. */
   id?: IdSegmentJson[];
   /** The letter of each tier in the params' `d<letter>`, in order. */
@@ -150,6 +152,22 @@ export interface PlayJson {
   stroke: "line" | "sweep";
   links?: string;
   labels?: { start?: string };
+  /** The preset menu's sizes, `WxH`; the first is the default. */
+  boards?: string[];
+  /** What each mark of the hint means here (`Game.hint.marks`). */
+  hintMarks?: Partial<Record<"ring" | "outline" | "stripes" | "strike", string>>;
+}
+
+/** A game born from its description: its catalog entry, the engine's
+ * `PuzzleData`. */
+export interface CatalogJson {
+  name: string;
+  aliases?: string[];
+  description: string;
+  objective: string;
+  collection: string;
+  family: string;
+  similar?: string;
 }
 
 /** A piece of a fill game's game ID (`engine/fill/game-id.ts`): `runs`, the

@@ -709,6 +709,36 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
+      "clues",
+      "marks",
+      "tileSize",
+      "tiles",
+    ],
+    "id": "kakurasu",
+    "members": [
+      "clearMistakes",
+      "difficulty",
+      "findMistakes",
+      "hint",
+      "hint.judgeMove",
+      "hint.refreshStep",
+      "hint.targets",
+      "revealOne",
+      "rules",
+      "targetVerbs",
+      "textFormat",
+      "transposeParams",
+    ],
+    "ui": [
+      "cursor",
+      "drag",
+      "dragButton",
+      "dragOk",
+      "linkArmed",
+    ],
+  },
+  {
+    "drawState": [
       "hint",
       "marks",
       "pencilModeShown",

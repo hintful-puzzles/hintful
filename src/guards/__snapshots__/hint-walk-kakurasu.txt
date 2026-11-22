@@ -1,0 +1,2 @@
+5x5 Easy #0: 14 steps, solved, 002a3051575da261 [lineFull:6 lineMet:3 tooMuch:5]
+5x5 Normal #0: 17 steps, solved, 4def28fcc5ad84f0 [everyWay:2 lineFull:5 lineMet:4 tooMuch:6]

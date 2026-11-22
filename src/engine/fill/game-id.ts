@@ -10,6 +10,7 @@ import type { DescParse } from "../contract/desc-error.ts";
 import { DESC_TOO_LONG } from "../contract/desc-error.ts";
 import { difficultyItem } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
+import { isDigit } from "../game-id/decimal.ts";
 import { readDesc } from "../game-id/desc-reader.ts";
 import { dimensionParamConfig } from "../game-id/params.ts";
 import { choice, dims, paramsCodec } from "../game-id/params-codec.ts";
@@ -186,7 +187,7 @@ export function decodeDesc<C extends Clues<C>>(
           if (seg.before !== undefined) r.expect(seg.before);
         } else r.expect(",");
         // An absent clue is written as nothing.
-        if (!r.peekIs((ch) => ch >= "0" && ch <= "9")) return;
+        if (!r.peekIs(isDigit)) return;
         at.push(e);
         v.push(r.int(0, clueMax[kind](sp, e)));
       });

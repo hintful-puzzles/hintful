@@ -1,0 +1,15 @@
+ok  kakurasu   lineMet                        3  sound    (want sound   )     6 queries    0.0s
+ok  kakurasu   lineMet (planted)              3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/kakurasu/kakurasu.description.yaml#lineMet: recorded sound, proved whole on all 1 boards
+ok  kakurasu   lineFull                       3  sound    (want sound   )     6 queries    0.0s
+ok  kakurasu   lineFull (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/kakurasu/kakurasu.description.yaml#lineFull: recorded sound, proved whole on all 1 boards
+ok  kakurasu   tooMuch                        3  sound    (want sound   )     6 queries    0.0s
+ok  kakurasu   tooMuch (planted)              3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/kakurasu/kakurasu.description.yaml#tooMuch: recorded sound, proved whole on all 1 boards
+ok  kakurasu   everyWay                       3  sound    (want sound   )     6 queries    0.1s
+ok  kakurasu   everyWay (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/kakurasu/kakurasu.description.yaml#everyWay: recorded sound, proved whole on all 1 boards
+ok  kakurasu   noWay                          3  sound    (want sound   )     6 queries    0.1s
+ok  kakurasu   noWay (planted)                3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/kakurasu/kakurasu.description.yaml#noWay: recorded sound, proved whole on all 1 boards

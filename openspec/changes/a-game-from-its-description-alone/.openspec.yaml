@@ -1,5 +1,2 @@
-# Drop skip_specs and add deltas once the board, Edit and Ui are designed
-# (tasks 1.3): this change alters the game contract's requirements.
 schema: spec-driven
 created: 2026-11-21
-skip_specs: true

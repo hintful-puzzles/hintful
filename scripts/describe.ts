@@ -27,6 +27,7 @@ import { lintDescription } from "../src/describe/lint.ts";
 import { loadDescriptionFile } from "../src/describe/load.ts";
 import { unchecked } from "../src/describe/soundness.ts";
 import {
+  bornFiles,
   compiledPath,
   compileSource,
   compiles,
@@ -58,26 +59,29 @@ for (const [f, file] of sources) {
     continue;
   }
   const out = compiledPath(f);
-  wanted.add(out);
   const code = compileSource(f, sources);
-  const path = `${root}${out}`;
-  if (existsSync(path) && readFileSync(path, "utf8") === code) continue;
-  // A dev server and a test run may generate at once, and a reader must never
-  // see half a module: each writes its own file and renames it into place.
-  mkdirSync(dirname(path), { recursive: true });
-  const partial = `${path}.${process.pid}.partial`;
-  writeFileSync(partial, code);
-  renameSync(partial, path);
-  written.push(`${f} -> ${out}`);
+  for (const [to, text] of [[out, code], ...bornFiles(f, file)]) {
+    wanted.add(to);
+    const path = `${root}${to}`;
+    if (existsSync(path) && readFileSync(path, "utf8") === text) continue;
+    // A dev server and a test run may generate at once, and a reader must
+    // never see half a module: each writes its own file and renames it into
+    // place.
+    mkdirSync(dirname(path), { recursive: true });
+    const partial = `${path}.${process.pid}.partial`;
+    writeFileSync(partial, text);
+    renameSync(partial, path);
+    written.push(`${f} -> ${to}`);
+  }
   // Each technique states its growth above it (`techniqueGrowth`).
   for (const m of code.matchAll(
     /grows with the board as n\^([\d.]+)\. \*\/\nexport function (\w+)/g,
   ))
     if (2 * Number(m[1]) >= WARN_GROWTH) steep.push(`  ${out} ${m[2]}: n^${m[1]}`);
 }
-const removed = globSync(`${GENERATED}/**/*.compiled.ts`, { cwd: root }).filter(
-  (f) => !wanted.has(f),
-);
+const removed = globSync(`${GENERATED}/**/*.{compiled,catalog,game}.ts`, {
+  cwd: root,
+}).filter((f) => !wanted.has(f));
 for (const f of removed) rmSync(`${root}${f}`);
 
 if (!quiet) for (const line of written) console.log(line);
@@ -87,7 +91,7 @@ if (!quiet)
 for (const f of removed) console.log(`removed ${f}: no description compiles to it`);
 if (!quiet || written.length + removed.length > 0)
   console.log(
-    `describe: ${wanted.size} compiled modules, ${written.length} written, ${removed.length} removed.`,
+    `describe: ${wanted.size} generated modules, ${written.length} written, ${removed.length} removed.`,
   );
 const findings = [...sources].flatMap(([f, file]) =>
   lintDescription(file).map((x) => ({ ...x, source: f })),

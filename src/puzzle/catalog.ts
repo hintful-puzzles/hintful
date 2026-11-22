@@ -5,9 +5,13 @@ export type { PuzzleData, PuzzleFamily } from "../engine/contract/catalog.ts";
 export { puzzleFamilies };
 
 /** Every game's catalog entry, by id, in id order. */
-export const puzzleDataMap = catalogFrom(
-  import.meta.glob<CatalogModule>("../games/*/catalog.ts", { eager: true }),
-);
+export const puzzleDataMap = catalogFrom({
+  ...import.meta.glob<CatalogModule>("../games/*/catalog.ts", { eager: true }),
+  // A game born from its description: the compiler writes its entry.
+  ...import.meta.glob<CatalogModule>("../generated/games/*/*.catalog.ts", {
+    eager: true,
+  }),
+});
 
 /** Catalog ids, sorted — the display order the home screen and menus use. */
 export const puzzleIds: readonly string[] = Object.keys(puzzleDataMap);

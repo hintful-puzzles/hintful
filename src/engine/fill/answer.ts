@@ -45,7 +45,7 @@ export interface AnswerReading<C> {
 }
 
 /** The board as dealt: its fixed cells alone, and no marks. */
-function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
+export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
   return {
     ...board,
     values: Uint8Array.from(board.values, (v, c) => (board.fixed[c] ? v : 0)),

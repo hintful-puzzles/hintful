@@ -14,6 +14,7 @@ import {
   type Env,
   elem,
   expect,
+  isMask,
   NUM,
   Out,
   type Val,
@@ -100,7 +101,12 @@ export function markWhileOf(
  * `play:`. A button whose value the player cannot place, or a link that is
  * not the cell mark naming a clue, is refused.
  */
-export function playOf(json: DescriptionJson, d: Description, env: Env): string[] {
+export function playOf(
+  json: DescriptionJson,
+  d: Description,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
   const p = json.play;
   if (p === undefined) return [];
   for (const [button, v] of [
@@ -115,11 +121,12 @@ export function playOf(json: DescriptionJson, d: Description, env: Env): string[
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,
     );
-  const { links, labels, ...rest } = p;
+  const { links, labels, boards, hintMarks, ...rest } = p;
   const play =
     links === undefined ? rest : { ...rest, links: { clue: env.cellMark?.kind } };
   const lineClues = [...d.clueKinds].filter(([, c]) => c.at === "line").map(([k]) => k);
   return [
+    ...boardDomainOf(d, env, measured),
     "",
     "/** How the player fills the board: the engine's `FillPlay`. */",
     `export const play = ${JSON.stringify(play)} as const;`,
@@ -127,6 +134,54 @@ export function playOf(json: DescriptionJson, d: Description, env: Env): string[
     "/** The clue kinds at lines, drawn past each line's end. */",
     `export const lineClues = ${JSON.stringify(lineClues)} as const;`,
     ...labelsOf(labels, env),
+    ...(boards === undefined
+      ? []
+      : [
+          "",
+          "/** The preset menu's sizes, smallest first; the first is the default. */",
+          `export const boards = ${JSON.stringify(
+            boards.map((b) => {
+              const [w, h] = b.split("x").map(Number);
+              return { w, h };
+            }),
+          )} as const;`,
+        ]),
+    ...(hintMarks === undefined
+      ? []
+      : [
+          "",
+          "/** What each mark of the hint means here (`Game.hint.marks`). */",
+          `export const hintMarks = ${JSON.stringify(hintMarks)} as const;`,
+        ]),
+  ];
+}
+
+/**
+ * `domainOf` where the description states the domain for the whole board
+ * (Kakurasu's `range(1, 2)`), as every cell's: the fill board seeds each cell
+ * from it. Nothing where the domain is a cell's, which compiles its own.
+ */
+function boardDomainOf(
+  d: Description,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
+  if (env.cellDomain) return [];
+  const out = new Out(1);
+  const v = compileExpr(
+    measured(d.domain),
+    new Map(),
+    { ...env, answer: { repeats: false } },
+    out,
+  );
+  if (!isMask(v.sort)) throw new CompileError("the domain is not a set of values");
+  return [
+    "",
+    "/** The values each cell may hold: the board's domain, the same at every cell. */",
+    "export function domainOf(_sp: GridSpace, _cl: Dealt, _c: number): number {",
+    ...out.text(),
+    `  return ${v.code};`,
+    "}",
   ];
 }
 

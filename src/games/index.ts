@@ -18,9 +18,19 @@ const directoryOf = (path: string) => path.split("/")[1] ?? path;
 // Bound to a name: Vite compiles `Object.keys(import.meta.glob(...))` written
 // as one expression to the paths alone, importing none of the modules.
 const games = import.meta.glob("./*/index.ts", { eager: true });
-const directories = Object.keys(games).map(directoryOf);
+// A game born from its description: the compiler writes the module that
+// registers it, and its catalog entry, under the generated directory.
+const born = import.meta.glob("../generated/games/*/*.game.ts", { eager: true });
+const bornOf = (path: string) => path.split("/")[3] ?? path;
+const directories = [
+  ...Object.keys(games).map(directoryOf),
+  ...Object.keys(born).map(bornOf),
+];
 // The paths alone, which is all this needs of the entries.
-const cataloged = Object.keys(import.meta.glob("./*/catalog.ts")).map(directoryOf);
+const cataloged = [
+  ...Object.keys(import.meta.glob("./*/catalog.ts")).map(directoryOf),
+  ...Object.keys(import.meta.glob("../generated/games/*/*.catalog.ts")).map(bornOf),
+];
 
 const unregistered = directories.filter((id) => !hasTsGame(id));
 if (unregistered.length > 0) {

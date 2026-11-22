@@ -52,6 +52,48 @@ function importPath(from: string, to: string): string {
   return up.length === 0 ? `./${path}` : path;
 }
 
+/** The files a game born from its description (`catalog:`) is beside its
+ * compiled module, by path: its catalog entry, which imports nothing but a
+ * type so the Vite config may load it, and the module that registers the
+ * engine's game built from the compiled one. None for any other description. */
+export function bornFiles(
+  source: string,
+  file: DescriptionFile,
+): ReadonlyMap<string, string> {
+  if (!("catalog" in file) || file.catalog === undefined) return new Map();
+  const { game, play } = file;
+  if (play?.boards === undefined || play.hintMarks === undefined)
+    throw new Error(
+      `${source}: a game born from its description states play's boards and hintMarks`,
+    );
+  const compiled = compiledPath(source);
+  const dir = compiled.slice(0, compiled.lastIndexOf("/") + 1);
+  const header = `// Written by \`npm run describe\` from ${source}: edit that, not this.\n\n`;
+  const catalog = `${dir}${game}.catalog.ts`;
+  const module = `${dir}${game}.game.ts`;
+  return new Map([
+    [
+      catalog,
+      `${header}import type { PuzzleData } from "${importPath(catalog, "src/engine/contract/catalog.ts")}";\n\nexport const entry: PuzzleData = ${JSON.stringify(file.catalog, null, 2)};\n`,
+    ],
+    [
+      module,
+      [
+        header.trimEnd(),
+        "",
+        `import { fillGame } from "${importPath(module, "src/engine/fill/game.ts")}";`,
+        `import { registerGame } from "${importPath(module, "src/engine/midend/registry.ts")}";`,
+        `import * as compiled from "./${game}.compiled.ts";`,
+        "",
+        `export const game = fillGame(${JSON.stringify(game)}, compiled);`,
+        "",
+        "registerGame(game);",
+        "",
+      ].join("\n"),
+    ],
+  ]);
+}
+
 /** The module `source` compiles to, given every description by path. */
 export function compileSource(
   source: string,

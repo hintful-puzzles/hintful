@@ -272,6 +272,17 @@ bump:w  full=9x10
 bump:h  full=8x11"
 `;
 
+exports[`encoded params are byte-stable > kakurasu 1`] = `
+"default  full=5x5de  brief=5x5
+preset:5x5 Normal  full=5x5dn  brief=5x5
+preset:5x7 Easy  full=5x7de  brief=5x7
+preset:5x7 Normal  full=5x7dn  brief=5x7
+preset:7x7 Easy  full=7x7de  brief=7x7
+preset:7x7 Normal  full=7x7dn  brief=7x7
+bump:w  full=6x5de  brief=6x5
+bump:h  full=5x6de  brief=5x6"
+`;
+
 exports[`encoded params are byte-stable > keen 1`] = `
 "default  full=6dn  brief=6
 preset:4x4 Easy  full=4de  brief=4

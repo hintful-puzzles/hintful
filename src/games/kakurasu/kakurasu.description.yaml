@@ -1,0 +1,189 @@
+# yaml-language-server: $schema=../../describe/description.schema.json
+
+game: kakurasu
+help:
+  rules: |-
+    Shade some of the squares. Each column is worth its number along the top,
+    from 1 at the left, and each row its number down the side, from 1 at the
+    top. The number past the end of a row is the sum of the column numbers of
+    its shaded squares, and the number below a column the sum of the row
+    numbers of its shaded squares.
+
+    Every puzzle has exactly one solution, and none needs a guess.
+  controls: |-
+    {{controls}}
+
+    Right-click and drag along a row or column to cross out many squares at
+    once. Hold Shift while moving the cursor to cross out the empty squares it
+    passes over, or Ctrl to turn shaded squares it passes over into crosses as
+    well.
+
+    You need not cross anything out to finish: the puzzle is solved as soon as
+    the shaded squares are all in place. A number past a row or column turns
+    red when its shaded squares add up to more than it, or when its crosses
+    leave it too little to reach it.
+  hints: |-
+    **Hint** explains the next step rather than simply making it. It reasons
+    only from the numbers and the squares you have shaded and crossed out, so
+    it carries on from wherever you are; if a square you marked is wrong, it
+    asks you to fix the highlighted mistakes first. An *open* square, in its
+    words, is one you have neither shaded nor crossed out, and a *clear* one
+    is one that must be crossed out.
+
+    {{hint-marks}}
+
+    Its steps, easiest first:
+
+    - A row whose shaded squares already add up to its number has the rest
+      clear, and one that needs every open square to reach it has them all
+      shaded. An open square worth more than its row still needs is clear.
+    - On Normal boards, the ways to make what a row still needs from its open
+      squares are read together: a square every way shades is shaded, and one
+      no way shades is clear.
+
+    Each step reads a column the same way, by its row numbers.
+catalog:
+  name: Kakurasu
+  description: Weighted shading puzzle
+  objective: Shade squares so each row and column adds up to its number.
+  collection: own
+  family: shading
+produces: shading
+sizes:
+  # Past 9 one sampled answer in hundreds is a board, and Normal's line
+  # reading finishes it: a 10x10 deal takes about a second (2026-11-22).
+  w: { min: 4, max: 9 }
+  h: { min: 4, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is shaded, 2 crossed out.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # What square c is worth along line L: its place in the line, from 1.
+  worth(L, c): "index(c, cells(L)) + 1"
+  # What line L still needs from its open squares.
+  need(L): "clue(sum, L) - sum(c in cells(L) where value(c) = 1 of worth(L, c))"
+  # The open squares of line L.
+  open(L): "{c in cells(L) where not known(c)}"
+  # Whether shading some of the open squares O of line L makes k, square x
+  # of them holding d.
+  makes(L, O, k, x, d): >-
+    exists fill f of O from cand
+    where f(x) = d and sum(y in O where f(y) = 1 of worth(L, y)) = k: true
+clues:
+  # A number past a row or column: the sum of what its shaded squares are
+  # worth.
+  sum:
+    at: line
+    value: "range(0, |cells(at)| * (|cells(at)| + 1) / 2)"
+    complete: true
+    means: "sum(c in cells(at) where value(c) = 1 of index(c, cells(at)) + 1) = v"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  # The answer is the shaded squares alone: an open square is crossed out.
+  blank: 2
+  erase: B
+  stroke: line
+  labels: { start: "i + 1" }
+  # Easy's line reading finishes few boards past 7x7, and none past 8x8.
+  boards: [5x5, 5x7, 7x7]
+  hintMarks:
+    ring: the squares the step decides. The sentence says what they must be.
+    stripes: >-
+      the row or column the sentence calls "this row" or "this column", and
+      its number.
+deal:
+  answer: half of the squares shaded, at random
+  sum: every row's and column's sum
+  tier: one of the tiers, the board finished at it and not at the tier below
+  sample:
+    scatter: { value: 1, share: 0.5 }
+    rest: 2
+tiers: [Easy, Normal]
+names:
+  lineMet: "a line already at its number"
+  lineFull: "a line needing every open square"
+  tooMuch: "a square worth more than its line needs"
+  everyWay: "a square every way uses"
+  noWay: "a square no way uses"
+techniques:
+  # A line whose shaded squares already make its number: its open squares
+  # are crossed out.
+  - id: lineMet
+    tier: Easy
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) = 0"
+    conclude: "forall c in O: place(c, 2)"
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}}'s shaded squares already make its number"
+      move: "{ring: its open square | its open squares} must be {unshaded}"
+  # A line that needs all its open squares together: each is shaded.
+  - id: lineFull
+    tier: Easy
+    for: >-
+      L in lines, O = open(L), k = need(L)
+      where |O| > 0 and k > 0 and k = sum(c in O of worth(L, c))
+    conclude: "forall c in O: place(c, 1)"
+    says:
+      terms: { k: k }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}} still needs {k}, which takes every open square"
+      move: "{ring: the ringed square | every ringed square} must be {shaded}"
+  # An open square worth more than its line still needs is crossed out. A
+  # line past its number makes the marks inconsistent.
+  - id: tooMuch
+    tier: Easy
+    for: >-
+      L in lines, k = need(L) where k > 0,
+      S = {c in open(L) where worth(L, c) > k} where |S| > 0
+    conclude: "forall c in S: place(c, 2)"
+    says:
+      terms: { k: k }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      wordings:
+        - when: "|S| = 1"
+          look: "{stripes: this {unit}} still needs only {k}, and {ring: the ringed square} is worth more"
+          move: "it must be {unshaded}"
+        - look: "{stripes: this {unit}} still needs only {k}, and {ring: the ringed squares} are each worth more"
+          move: "they must be {unshaded}"
+  # An open square that every way to make what its line still needs uses is
+  # shaded. A line with no way makes the marks inconsistent.
+  - id: everyWay
+    tier: Normal
+    for: >-
+      L in lines, k = need(L), O = open(L) where |O| > 0,
+      S = {x in O where not makes(L, O, k, x, 2)} where |S| > 0
+    conclude: "forall x in S: makes(L, O, k, x, 1) and place(x, 1)"
+    says:
+      terms: { k: k }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      wordings:
+        - when: "|S| = 1"
+          look: "{stripes: this {unit}} still needs {k}, and every way to make it from its open squares shades {ring: the ringed square}"
+          move: "it must be {shaded}"
+        - look: "{stripes: this {unit}} still needs {k}, and every way to make it shades {ring: the ringed squares}"
+          move: "they must be {shaded}"
+  # An open square that no way to make what its line still needs uses is
+  # crossed out.
+  - id: noWay
+    tier: Normal
+    for: >-
+      L in lines, k = need(L), O = open(L) where |O| > 0,
+      S = {x in O where not makes(L, O, k, x, 1)} where |S| > 0
+    conclude: "forall x in S: makes(L, O, k, x, 2) and place(x, 2)"
+    says:
+      terms: { k: k }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      wordings:
+        - when: "|S| = 1"
+          look: "{stripes: this {unit}} still needs {k}, and no way to make it from its open squares shades {ring: the ringed square}"
+          move: "it must be {unshaded}"
+        - look: "{stripes: this {unit}} still needs {k}, and no way to make it from its open squares shades {ring: any ringed square}"
+          move: "they must be {unshaded}"

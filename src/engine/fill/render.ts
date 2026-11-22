@@ -477,7 +477,8 @@ export function fillRender<C extends Clues<C>>(
       [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
     const targets = byReading(marks.of("ring", CELL));
     const area = byReading(marks.of("outline", CELL));
-    const askedLinks = marks.of("ring", LINK);
+    // A game without links has no step that rings one.
+    const askedLinks = linkClues === null ? [] : marks.of("ring", LINK);
     const hintWord = new Int32Array(w * h);
     for (const l of askedLinks) {
       const d = dirTo(w, l.cell, l.to);
