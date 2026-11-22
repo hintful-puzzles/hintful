@@ -1140,8 +1140,8 @@ its reasons and its hint's sentences. Exemplars: `unequal/`, `adjacent/`.
 
 ### `fill/` — the board of a fill game, laid out from its description
 
-Being built by `openspec/changes/a-game-from-its-description-alone`, whose
-`design.md` is its plan. The board (`board.ts`) holds the description's own
+The whole of a game born from its description, which writes no TypeScript.
+The board (`board.ts`) holds the description's own
 values in the space's own order, one mark a cell and the dealt clues, so
 the ladder reads it with no adapter. `edit.ts` is the one move, and
 `answer.ts` the hooks that judge a board against its answer and its rules.

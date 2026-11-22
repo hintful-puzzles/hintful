@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`kakurasu: pinned hint positions > says, at each pin 1`] = `
+{
+  "everyWay": "This row still needs 22, and every way to make it from its open squares shades the ringed square, so it must be shaded.",
+  "lineFull": "This column still needs 15, which takes every open square, so every ringed square must be shaded.",
+  "lineMet": "This row's shaded squares already make its number, so its open squares must be clear.",
+  "noWay": "This column still needs 8, and no way to make it from its open squares shades the ringed square, so it must be clear.",
+  "tooMuch": "This row still needs only 4, and the ringed square is worth more, so it must be clear.",
+}
+`;

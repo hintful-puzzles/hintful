@@ -45,10 +45,18 @@ speaks the engine's vocabulary, so the engine's board comes first.
 
 ## Capabilities
 
+### New Capabilities
+
+- `described-fill-game`: a fill game born from its description, beside
+  `described-ladder` and `described-position`.
+- `kakurasu`: the new game.
+
 ### Modified Capabilities
 
-The game contract's requirements (`engine-*` specs) and `tents`, named once
-the board is designed.
+- `tents`: its hint begins at its dealt tier, its pins certify its ladder,
+  and a line count hatches its clue.
+- `repo-layout`: a born game is registered by what the compiler writes, and
+  the TypeScript under `src/games/` only shrinks.
 
 ## Impact
 

@@ -413,6 +413,15 @@ step node scripts/checks/vacuous-assertions.mjs
 # vitest.
 step node scripts/checks/unused-exports.mjs
 
+# --- 1b-v-a. A game's hand-written TypeScript only shrinks. ~0s. ---
+#
+# A game is heading to be its description alone, and a new game is born from
+# one; this ratchet holds `src/games/`'s TypeScript, tests excluded, to the
+# count it last fell to. It refuses a count below the ceiling as well, so the
+# change that deletes a game's code is the one that lowers it. Here rather than
+# in vitest because it is a line count, under a tenth of a second.
+step node scripts/checks/game-lines.mjs
+
 # --- 1b-vi. Absence has one spelling. ~7s. ---
 #
 # `undefined` written into a union, and a strict comparison testing for an

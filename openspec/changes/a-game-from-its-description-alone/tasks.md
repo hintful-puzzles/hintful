@@ -166,17 +166,33 @@ engine commit.
         link drag, `L` and an arrow, Shift painting, the rule-out
         preference (same `auto-cross` key), a hint walk with link steps,
         the live errors the help names, dark mode, a solve to the end.
-- [ ] 3.3 Measure lines, frame time, hint-walk time and capabilities added
+- [x] 3.3 Measure lines, frame time, hint-walk time and capabilities added
       per game, against the baseline; record the figures in design.md.
+      Recorded in design.md § 9 (2026-11-22). Time holds: the born Tents
+      is no slower in any figure. The capability count does not hold as
+      written: Tents added six to Kakurasu's four. Four of the six are the
+      link-reading Tents' hint has and Kakurasu has no use for. Whether
+      that counts as the pilot holding is the owner's call in 4.3.
 
 ## 4. Finish
 
-- [ ] 4.1 The ratchet on TypeScript lines under `src/games/`; see it fail
-      on a planted line.
-- [ ] 4.2 Spec deltas (`engine-*`, `tents`, a new `kakurasu`), with
+- [x] 4.1 The ratchet on TypeScript lines under `src/games/`; see it fail
+      on a planted line. `scripts/checks/game-lines.mjs`, a gate step,
+      read from disk (an untracked file counts). It refuses a count below
+      the ceiling too, so the change that deletes code lowers it. Seen
+      failing on a comment planted in `src/games/index.ts` (1 over).
+- [x] 4.2 Spec deltas (`engine-*`, `tents`, a new `kakurasu`), with
       `skip_specs` dropped from `.openspec.yaml`;
       `docs/new-game.md` gains the route for a game born from its
-      description.
+      description. As built: the engine's requirements are a new
+      `described-fill-game`, beside `described-ladder` and
+      `described-position`, not an `engine-*` spec; `repo-layout` registers
+      a born game and holds the ratchet; `tents` changes four requirements
+      (pins certify the ladder, the dealt tier, the hatched clue, a
+      sentence). Both hint scenarios the spec names were walked on the born
+      game and hold. `skip_specs` was already gone. Kakurasu gains its
+      hint pins (901 positions on 48 boards, every kind), which the route
+      now asks of a born game.
 - [ ] 4.3 Commit, push, archive. File the migration batches (review stage
       4) as changes if the pilot holds; if it does not, record why in the
       doctrine.

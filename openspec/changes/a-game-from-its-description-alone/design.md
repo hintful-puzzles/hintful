@@ -362,6 +362,32 @@ clue values are a range.
 The pilot holds if Tents needed fewer new capabilities than Kakurasu, and
 frame time and hint-walk time are within 10%.
 
+**As measured (2026-11-22, `06662e01f` against `cd2c5ec4f`):**
+
+- Lines: `src/games/tents/` had 3005 TypeScript lines and 1478 of tests;
+  it now has none and one 208-line test file, beside its description (388
+  lines then, 404 now). `src/engine/` and `src/describe/` gained 3469
+  lines and lost 71, tests excluded; 2179 of them are `engine/fill/`.
+- Frame and hint walk: the same 79 dealt boards (20 a size at 8x8 and
+  10x10, both tiers; the baseline refuses one 10x10 Easy deal as needing
+  trial and error, so it is left out of both), each walked by `hint` and
+  `executeHint` to the end, one warm-up round, two runs a tree
+  interleaved. Timed by a `RecordingDrawing` through the `Midend` rather
+  than `npm run probe`, which times nothing (it is the local-feedback
+  probe). Medians, baseline then now: walk 4.2-4.7 / 3.9-4.5 ms at 8x8
+  and 8.4-9.3 / 7.6-8.8 ms at 10x10; cold frame 0.10 / 0.10 ms and
+  0.15 / 0.15-0.16 ms; warm frame 0.042-0.045 / 0.038-0.042 ms and
+  0.056-0.059 / 0.048-0.051 ms. The born game is no slower anywhere, and
+  draws 362 ops to the hand-written 379 on a fresh 8x8. Step counts agree
+  (10x10 Easy 34 to 35, the tier start of 3.2.3).
+- Capabilities: Kakurasu added four (a board-wide domain as every cell's,
+  a born game's catalog entry, boards and legend, a save's non-edit move
+  refused, linked rings read only where links exist). Tents added six
+  (a firing's `MARK` facts as an edit's marks with the link gesture,
+  `says.arms`, `play.glance`, `play.askBefore`, a `rulesOut` arm,
+  `sample.noBareLine`), and fixed two defects its use found (ruled-out
+  squares clicked first; a color shared by painters takes one slot).
+
 **The ratchet.** It is a gate check that counts the TypeScript lines under
 `src/games/`, tests excluded, against a committed ceiling. It fails above
 the ceiling, and lowering the ceiling is part of the change that lowers the

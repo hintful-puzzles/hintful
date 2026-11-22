@@ -201,6 +201,13 @@ research tools all read through it; the app never does.
   domain is the board's (Kakurasu's `range(1, 2)`) has one written that
   gives every cell the board's domain. A step's line is its `stripes`,
   which hatch the line's clue in the margin too.
+- **A fill game born from its description declares the rest of a game**
+  (Kakurasu, Tents): `catalog:` its entry, `play.boards` its menu (the first
+  the default), `play.hintMarks` its legend, `id:` its game ID's grammar and
+  `tierLetters:` its params' tier letters, so upstream's IDs still load.
+  `deal.sample` draws the answer (`scatter`, `partner`, `rest`, and
+  `noBareLine` where no line may hold the rest value alone). The compiler
+  writes `<id>.game.ts`, `fillGame` of the module, and `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's

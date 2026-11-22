@@ -18,7 +18,9 @@ state and one set of marks, so the writing is not divided among agents.
 1. **Open the change**, `add-<game>`, and settle § "Before you start" in its
    `design.md`.
 2. **Find the game's kind** in § "The route by kind of game". It names the
-   sections of each guide the game needs, and the rest are skipped.
+   sections of each guide the game needs, and the rest are skipped. A game
+   the engine carries whole is born from its description and is not
+   scaffolded: § "A game born from its description".
 3. **Scaffold.** `scripts/new-game.sh <gameId> [kind]` copies the skeleton
    of the game's kind ([`src/skeleton/`](../src/skeleton/README.md)) to
    `src/games/<gameId>/`, renamed for the game, registers it (§
@@ -55,6 +57,7 @@ state and one set of marks, so the writing is not divided among agents.
 | Section | Read it when |
 | --- | --- |
 | The route by kind of game | you are starting a game, or a concern of one, and want only the sections its kind needs |
+| A game born from its description | the player sets cells toward one answer, each cell a value or a link to a clue beside it |
 | Before you start | the game comes from upstream or from an unfinished port, or its board is not fixed until the first move |
 | File anatomy | you are deciding which file a thing goes in |
 | Registering a game | the game plays in its tests and is not yet in the app |
@@ -225,6 +228,32 @@ is one to weigh against a pointer.
 - It skips the deduction sections above, difficulty tiers and the generator:
   the answer is the desc, dealt at random, so `solver-and-generator.md` §
   "Every retry loop is bounded" has no loop to bound.
+
+## A game born from its description
+
+A fill game, whose player sets each cell to one of a few values toward one
+answer, with clues on cells or lines and optionally a link from a cell to a
+clue beside it, is written as its description alone: no `index.ts`, no
+skeleton. Exemplars: Kakurasu (born new), Tents (moved). Its directory holds
+`<game>.description.yaml`, `<game>.plants.yaml` and `<game>.test.ts`.
+
+1. **Write the description** whole: help, rules, clues, techniques and
+   their words as every described game does, and the parts a born game
+   declares ([`descriptions.md`](./descriptions.md) § "The file", its
+   bullets on the fill board and on a born game). `npm run describe`
+   compiles it and registers the game; a dev server does it on save.
+2. **Measure the deal rate** before choosing the menu: what share of
+   sampled answers each tier finishes, a size at a time. A size few deals
+   finish is left off the menu, not tuned for.
+3. **Test it in `<game>.test.ts`**: `describeHintPins`, rescanned by
+   `npm run hint-scan -- <file>`, and the mistake outline a render scenario
+   paints. The cross-game guards read the born game as they read any other.
+4. **The rest of § "What every game does"** from its step 6: help, spec,
+   icons, the app, done.
+
+A gap the description cannot say is closed in `engine/fill/` or the
+compiler, never by a file in the game's directory: the `game-lines` gate
+check refuses TypeScript there.
 
 ## Before you start
 
