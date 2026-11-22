@@ -413,4 +413,15 @@ count.
 
 ## Open questions
 
-None for the owner. Breaking saves was answered on 2026-11-21.
+Breaking saves was answered on 2026-11-21.
+
+**Does the pilot hold?** (for the owner, 2026-11-22; it decides 4.3). By
+§ 9's own test it does not: Tents needed six new capabilities to
+Kakurasu's four. Time holds, and Tents' 3005 lines are gone. Four of the
+six are the link reading only Tents' hint has (a step's `MARK` facts,
+`says.arms`, `glance`, `askBefore`), and they serve any later game with
+links. The other two are small: an arm in `rulesOut`, and `noBareLine`.
+The recommendation is to read it as holding and file the stage-4
+migration batches, starting with the fill games that have no links. The
+alternative is to record in the doctrine why it did not hold, and file
+no batches.
