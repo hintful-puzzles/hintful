@@ -11,17 +11,19 @@ import { PUZZLE_NOT_REASONABLE } from "../contract/hint-refusal.ts";
 import type { RulesOf } from "../contract/rules.ts";
 import { NO_SOLUTION } from "../contract/solve-failure.ts";
 import type { GameStatus } from "../contract/types.ts";
+import { solveFromAnswer } from "../solve/answer-search.ts";
 import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
 import { describedRules } from "../solve/described-rules.ts";
 import {
+  asDealt,
   type FillBoard,
   type FillModule,
   isAnswerOf,
-  type LadderedFillModule,
   solveBoard,
   spaceOf,
 } from "./board.ts";
 import type { Edit } from "./edit.ts";
+import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
 
 /** A board's clues, by kind: a compiled module's `Dealt`. */
 type Clues<C> = { readonly [K in keyof C]: ClueList };
@@ -43,23 +45,22 @@ export interface AnswerReading<C> {
   readonly glyphs: Readonly<Record<number, string>>;
   /** The clue kinds that sit at lines, printed past each line's end. */
   readonly lineClues: readonly (keyof C)[];
+  /** The clue kinds written as numbers on their cells, printed there in
+   * place of the cell's value. */
+  readonly numbers?: readonly (keyof C)[];
 }
 
-/** The board as dealt: its fixed cells alone, and no marks. */
-export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
-  return {
-    ...board,
-    values: Uint8Array.from(board.values, (v, c) => (board.fixed[c] ? v : 0)),
-    mark: new Int32Array(board.mark.length).fill(-1),
-  };
-}
-
-/** The answer the clues alone reach at the top tier, or `null` where the
- * ladder does not reach one. */
+/** The board's one answer: where the game searches, the search's; in any
+ * other, the one the clues alone reach at the top tier. `null` where there
+ * is none to compare with. */
 export function answerOf<C>(
-  module: LadderedFillModule<C>,
+  module: SearchedFillModule<C>,
   board: FillBoard<C>,
 ): Uint8Array | null {
+  if (searches(module)) {
+    const found = answerSearched(module, board);
+    return found.kind === "one" ? found.solution : null;
+  }
   const got = solveBoard(module, asDealt(board), module.tiers.length - 1);
   return got.verdict === "solved" ? got.values : null;
 }
@@ -104,13 +105,15 @@ function fillWith<C>(board: FillBoard<C>, answer: Uint8Array): Edit {
 }
 
 export function solve<C>(
-  module: LadderedFillModule<C>,
+  module: SearchedFillModule<C>,
   orig: FillBoard<C>,
   curr: FillBoard<C>,
   aux?: string,
 ): SolveResult<Edit> {
   const given = aux === undefined ? null : decodeAnswer(aux, orig.values.length);
   if (given !== null) return { ok: true, move: fillWith(curr, given) };
+  if (searches(module))
+    return solveFromAnswer(answerSearched(module, orig), (a) => fillWith(curr, a));
   const got = solveBoard(module, asDealt(orig), module.tiers.length - 1);
   if (got.verdict !== "solved")
     return {
@@ -128,7 +131,7 @@ export function solve<C>(
  * finish, which has no answer to compare with.
  */
 export function findMistakes<C>(
-  module: LadderedFillModule<C>,
+  module: SearchedFillModule<C>,
   board: FillBoard<C>,
 ): readonly FillMistake[] {
   const answer = answerOf(module, board);
@@ -218,6 +221,10 @@ export function textFormat<C extends Clues<C>>(
       // A row's line is its index; a column's comes after the rows.
       if (x === w) return clue(y);
       if (y === h) return clue(h + x);
+      for (const kind of reading.numbers ?? []) {
+        const n = dealt[kind].valueAt[y * w + x];
+        if (n >= 0) return ` ${n} `;
+      }
       const v = values[y * w + x];
       return v === 0 ? " . " : (reading.glyphs[v] ?? " ? ");
     },

@@ -10,8 +10,13 @@
  * 4. the live errors: two cells that break a rule together get a diamond on
  *    the side or corner they share, and a cell any other rule breaks at turns
  *    its piece red;
- * 5. the outline of a mistake Check & Save found;
- * 6. the cursor.
+ * 5. a number dealt on the cell (a cell kind the player does not fill): light
+ *    on a dark piece, faint once every cell it counts is decided, and a red
+ *    badge where it is broken;
+ * 6. the hint's outline round a number's cells, and its circle round the
+ *    number;
+ * 7. the outline of a mistake Check & Save found;
+ * 8. the cursor.
  *
  * After the tiles come the hint's rings and outlines, the ring round a link
  * the hint asks for, and the margins: each line's clue past its end, red
@@ -19,7 +24,9 @@
  * it, and each line's fixed label (`labels:`) before its start.
  */
 
+import { GRAY_WASH, WHITE } from "../color/colors.ts";
 import {
+  CLEAR_MARK,
   cellSurface,
   ERROR_TEXT,
   GRID_DARK,
@@ -38,26 +45,29 @@ import {
 import type { Frame, GameDrawing } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
 import type { Color, Rect, Size } from "../contract/types.ts";
-import { drawRectCorners, drawThickRectOutline } from "../render/draw.ts";
+import { drawRectCorners, drawThickRectOutline, glyphFont } from "../render/draw.ts";
 import { hatchPeriod } from "../render/hatch.ts";
 import {
+  drawMarkSides,
   type HintMarkStyle,
   HintMarks,
+  MARK_ALL,
   type MarkBand,
   type MarkCell,
   MarkOutlines,
 } from "../render/hint-mark.ts";
 import { liveErrors } from "../render/live-errors.ts";
 import { PAINTERS, type Painter, type PainterName } from "../render/pieces/index.ts";
-import { NOTHING_TO_CLEAR } from "../render/ring.ts";
+import { NOTHING_TO_CLEAR, textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../render/win-wave.ts";
 import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
 import { type FillMistake, rulesOf } from "./answer.ts";
-import type { FillBoard, FillModule } from "./board.ts";
+import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import type { Edit } from "./edit.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import type { FillPlay, FillUi } from "./play.ts";
+import type { NumberedModule } from "./search.ts";
 
 /** A board's clues, by kind. */
 type Clues<C> = { readonly [K in keyof C]: ClueList };
@@ -92,6 +102,8 @@ export interface FillRender<C> {
   colors(background: Color): Color[];
   newDrawState(board: FillBoard<C>, tileSize: number): FillDrawState;
   redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void;
+  /** The numbers on cells not yet done, for the status bar. */
+  numbersLeft(board: FillBoard<C>): number;
 }
 
 const PREFERRED_TILE_SIZE = 32;
@@ -133,7 +145,7 @@ const COL_GRID = FIRST_GAME_SLOT;
 const COL_CELL = FIRST_GAME_SLOT + 1;
 /** The clues, and a link: the player's own notation is drawn in the clues'
  * ink. */
-const COL_INK = FIRST_GAME_SLOT + 2;
+export const COL_INK = FIRST_GAME_SLOT + 2;
 const COL_ERRTEXT = FIRST_GAME_SLOT + 3;
 /** A line's fixed label, quieter than its clue. */
 const COL_LABEL = FIRST_GAME_SLOT + 4;
@@ -165,6 +177,12 @@ const HINT_LINE = 1 << 8;
 /** The link a step asks for from this cell, a bit a direction: the ring round
  * it lies over the tile, which repaints when it moves. */
 const HINT_LINK_SHIFT = 9;
+/** The sides of the outline of a number's cells a step reasons from, its
+ * block, which lies inside the tile: each number's whole, so two that
+ * overlap read as two blocks. */
+const BLOCK_SHIFT = 13;
+/** The number on the cell is one a step reasons from: circled. */
+const HINT_NUMBER = 1 << 17;
 
 // --- the line word: a rule broken along a line -----------------------------
 /** A run the rules forbid passes through the cell: a bar along it, which
@@ -175,6 +193,10 @@ const RUN_SHIFT = 0;
  * together: a bar across the whole line. */
 const ACROSS_ROW = 1 << 4;
 const ACROSS_COLUMN = 1 << 5;
+/** The number on the cell is done: its cells are all decided, and agree. */
+const NUMBER_DONE = 1 << 6;
+/** The number on the cell is broken: its cells can no longer agree. */
+const NUMBER_BROKEN = 1 << 7;
 
 /** The step to each of a cell's four sides, up, right, down, left. */
 const DIRS: readonly (readonly [number, number])[] = [
@@ -208,18 +230,23 @@ const DIAMOND_AT: readonly (readonly [number, number])[] = [
 const diamondBit = (hx: number, hy: number): number =>
   1 << (DIAMOND_SHIFT + DIAMOND_AT.findIndex(([x, y]) => x * 2 === hx && y * 2 === hy));
 
-export function fillRender<C extends Clues<C>>(
-  module: FillModule<C>,
-  look: FillLook<C>,
-  previewed: (board: FillBoard<C>, ui: FillUi) => FillBoard<C>,
-): FillRender<C> {
-  const { play, lineClues, labels } = look;
-  const labelStart = labels?.start;
-  const rules = rulesOf(module);
+/** A value's painter and the slot of each of its colors. */
+type Placed = { readonly painter: Painter; readonly slot: readonly number[] };
 
-  // Each value's painter, and the slot of each of its colors: one slot a
-  // named color, however many painters draw in it.
-  type Placed = { painter: Painter; slot: readonly number[] };
+/**
+ * The palette's slots past the board's own: each painter's colors, one slot
+ * a named color however many painters draw in it; then the lifted surface
+ * under a value the cell was dealt, after the painters' so a board without
+ * one numbers them as before; then a number's over a dark piece
+ * (`COL_NUMBER_LIGHT`) and its two done colors, which only a board with
+ * numbers fills. The board's ink is {@link COL_INK}.
+ */
+export function fillSlots(play: FillPlay): {
+  painted: ReadonlyMap<PainterName, Placed>;
+  byValue: ReadonlyMap<number, Placed>;
+  COL_GIVEN: number;
+  COL_NUMBER_LIGHT: number;
+} {
   const painted = new Map<PainterName, Placed>();
   const byValue = new Map<number, Placed>();
   const slotOf = new Map<Color, number>();
@@ -244,9 +271,74 @@ export function fillRender<C extends Clues<C>>(
     }
     byValue.set(Number(v), got);
   }
-  /** The lifted surface under a value the cell was dealt, after the painters'
-   * slots so a board without one numbers them as before. */
-  const COL_GIVEN = next;
+  return { painted, byValue, COL_GIVEN: next, COL_NUMBER_LIGHT: next + 1 };
+}
+
+export function fillRender<C extends Clues<C>>(
+  module: FillModule<C> & NumberedModule,
+  look: FillLook<C>,
+  previewed: (board: FillBoard<C>, ui: FillUi) => FillBoard<C>,
+): FillRender<C> {
+  const { play, lineClues, labels } = look;
+  const labelStart = labels?.start;
+  const rules = rulesOf(module);
+  const numbers = (module.numbers ?? []) as readonly (keyof C & string)[];
+  const clueCells = module.clueCells ?? {};
+
+  /** The number on cell `c`, its kind and its index in the kind's list, or
+   * `null`. */
+  const numberAt = (
+    b: FillBoard<C>,
+    c: number,
+  ): { kind: keyof C & string; k: number } | null => {
+    for (const kind of numbers) {
+      const k = b.dealt[kind].byAt[c];
+      if (k >= 0) return { kind, k };
+    }
+    return null;
+  };
+
+  /** Each number's state on the board: done, broken or neither, by its
+   * cell. A number is broken where the rules say its cells can no longer
+   * agree with it, and done where they are all decided and do. */
+  function numberStates(b: FillBoard<C>): Map<number, number> {
+    const out = new Map<number, number>();
+    if (numbers.length === 0) return out;
+    const broken = liveErrors(rules, b).clues;
+    const sp = spaceOf(module, b);
+    for (const kind of numbers) {
+      const list = b.dealt[kind];
+      const bad = new Set(broken.get(kind) ?? []);
+      list.at.forEach((c, k) => {
+        if (bad.has(k)) out.set(c, NUMBER_BROKEN);
+        else if (clueCells[kind](sp, c).every((d) => b.values[d] !== 0))
+          out.set(c, NUMBER_DONE);
+      });
+    }
+    return out;
+  }
+
+  /** The numbers not yet done. */
+  const numbersLeft = (b: FillBoard<C>): number => {
+    const states = numberStates(b);
+    let left = 0;
+    for (const kind of numbers)
+      for (const c of b.dealt[kind].at) if (states.get(c) !== NUMBER_DONE) left++;
+    return left;
+  };
+
+  /** Where a number on a tile at `(tx, ty)` is written, and its font: three
+   * fifths of the tile, and a pixel less on a tile of 6 px or under, where a
+   * ring fits between a 3 px number and its neighbors' by no step of its
+   * search (measured 2026-10-28, `keep-rings-off-a-cells-numbers`). */
+  const numberText = (ts: number, tx: number, ty: number) => ({
+    origin: { x: tx + Math.floor(ts / 2), y: ty + Math.floor(ts / 2) },
+    options: glyphFont(Math.floor((ts * 3) / 5) - (ts <= 6 ? 1 : 0)),
+  });
+
+  const { painted, byValue, COL_GIVEN, COL_NUMBER_LIGHT } = fillSlots(play);
+  const COL_NUMBER_LIGHT_DONE = COL_GIVEN + 2;
+  const COL_NUMBER_DONE = COL_GIVEN + 3;
 
   const start = (ts: number): number => (labelStart === undefined ? 1 : ts);
   const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : 1);
@@ -260,6 +352,14 @@ export function fillRender<C extends Clues<C>>(
     out[COL_ERRTEXT] = ERROR_TEXT;
     out[COL_LABEL] = GRID_DARK;
     out[COL_GIVEN] = givenSurface(bg);
+    if (numbers.length > 0) {
+      // Pinned and not ink: it is read against the piece, whose own
+      // lightness barely moves between the schemes.
+      out[COL_NUMBER_LIGHT] = WHITE;
+      // A gray between the piece and its white number in both schemes.
+      out[COL_NUMBER_LIGHT_DONE] = GRAY_WASH;
+      out[COL_NUMBER_DONE] = CLEAR_MARK;
+    }
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
         out[slot[i]] = c;
@@ -355,6 +455,8 @@ export function fillRender<C extends Clues<C>>(
     word: number,
     hintWord: number,
     lineWord: number,
+    // The number on the cell, `-1` where it has none.
+    n: number,
     // A piece placed or taken away a moment ago: the value it grows from or
     // shrinks into, and how far it has got, 0 to 1.
     anim: { readonly from: number; readonly frac: number } | null = null,
@@ -384,9 +486,17 @@ export function fillRender<C extends Clues<C>>(
     // A piece taken away shrinks into its cell; one placed grows alone, since
     // two pieces in one cell read as neither.
     const shrinking = anim !== null && v === 0 ? byValue.get(anim.from) : undefined;
+    const occupied = n >= 0;
     if (shrinking !== undefined && anim !== null)
-      shrinking.painter.paint(dr, tile, shrinking.slot, false, 1 - anim.frac);
-    piece?.painter.paint(dr, tile, piece.slot, (word & ERR_AT) !== 0, anim?.frac ?? 1);
+      shrinking.painter.paint(dr, tile, shrinking.slot, false, 1 - anim.frac, occupied);
+    piece?.painter.paint(
+      dr,
+      tile,
+      piece.slot,
+      (word & ERR_AT) !== 0,
+      anim?.frac ?? 1,
+      occupied,
+    );
 
     // A run's bar reaches half a tile toward each end it continues to, the
     // clip keeping each tile to its own part.
@@ -426,6 +536,39 @@ export function fillRender<C extends Clues<C>>(
       if (word & (1 << (DIAMOND_SHIFT + i)))
         drawDiamond(dr, ts, tx + Math.floor(ts * fx), ty + Math.floor(ts * fy));
     });
+
+    // A number over whatever its cell holds: light over a dark piece; faint
+    // once done; and broken, a badge on a decided cell, where red ink on a
+    // piece would differ in hue with little of lightness in the dark scheme.
+    if (n >= 0) {
+      const text = numberText(ts, tx, ty);
+      const dark = piece?.painter.dark === true;
+      let color = dark ? COL_NUMBER_LIGHT : COL_INK;
+      if (lineWord & NUMBER_BROKEN) {
+        if (piece !== undefined)
+          dr.drawCircle(text.origin, ts * 0.32, COL_ERROR, COL_ERROR);
+        color = piece !== undefined ? COL_ERRTEXT : COL_ERROR;
+      } else if (lineWord & NUMBER_DONE)
+        color = dark ? COL_NUMBER_LIGHT_DONE : COL_NUMBER_DONE;
+      dr.drawText(text.origin, text.options, color, String(n));
+    }
+    // The block of a number a step reasons from, inside the tile so its own
+    // repaint undoes it, and the number circled, clear of the tile's edge so
+    // it shows on a cell the step also rings. On a dark piece the circle
+    // takes the number's own ink: the evidence color against it is a
+    // difference of hue with little of lightness.
+    const band = markBand(ts, x, y);
+    drawMarkSides(dr, band, (hintWord >> BLOCK_SHIFT) & MARK_ALL, COL_HINT_OUTLINE);
+    if (hintWord & HINT_NUMBER) {
+      const center = numberText(ts, tx, ty).origin;
+      for (let i = 0; i < band.inner; i++)
+        dr.drawCircle(
+          center,
+          ts * 0.33 - i,
+          -1,
+          piece?.painter.dark ? COL_NUMBER_LIGHT : COL_HINT_OUTLINE,
+        );
+    }
 
     if (word & MISTAKE) {
       const thick = Math.max(1, Math.floor(ts / 16));
@@ -538,11 +681,12 @@ export function fillRender<C extends Clues<C>>(
           });
       }
     const lineErrors = new Set<number>();
+    // A broken number is drawn as a badge (`numberStates`), not on the piece.
     for (const [kind, broken] of errors.clues)
       for (const q of broken) {
         const at = state.dealt[kind as keyof C].at[q];
         if (lineClues.includes(kind as keyof C)) lineErrors.add(at);
-        else word[at] |= ERR_AT;
+        else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
       }
     return { word, lineWord, lineErrors };
   }
@@ -609,7 +753,11 @@ export function fillRender<C extends Clues<C>>(
     const byReading = (cells: readonly MarkCell[]): MarkCell[] =>
       [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
     const targets = byReading(marks.of("ring", CELL));
-    const area = byReading(marks.of("outline", CELL));
+    // An outlined number is the number the step reasons from: it is circled,
+    // and its block outlined whole, apart from the rest of the area.
+    const outlined = byReading(marks.of("outline", CELL));
+    const named = outlined.filter((c) => numberAt(state, c.y * w + c.x) !== null);
+    const area = outlined.filter((c) => numberAt(state, c.y * w + c.x) === null);
     // A game without links has no step that rings one.
     const askedLinks = linkClues === null ? [] : marks.of("ring", LINK);
     const hintWord = new Int32Array(w * h);
@@ -618,10 +766,37 @@ export function fillRender<C extends Clues<C>>(
       hintWord[l.cell] |= 1 << (HINT_LINK_SHIFT + d);
       hintWord[l.to] |= 1 << (HINT_LINK_SHIFT + ((d + 2) % 4));
     }
+    if (named.length > 0) {
+      const sp = spaceOf(module, state);
+      for (const c of named) {
+        const at = c.y * w + c.x;
+        const { kind } = numberAt(state, at) as { kind: keyof C & string };
+        const block = new MarkOutlines(
+          [],
+          clueCells[kind](sp, at).map((d) => ({ x: d % w, y: Math.floor(d / w) })),
+          {},
+        );
+        hintWord[at] |= HINT_NUMBER;
+        for (const d of clueCells[kind](sp, at))
+          hintWord[d] |= block.evidenceSides(d % w, Math.floor(d / w)) << BLOCK_SHIFT;
+      }
+    }
     const markStyle: HintMarkStyle = {
       band: (x, y) => markBand(ts, x, y),
-      // A cell holds a piece, never text; the clues lie past any ring's reach.
-      text: () => NOTHING_TO_CLEAR,
+      // A ring keeps its cell's number inside it and its neighbors' outside;
+      // the line clues lie past any ring's reach.
+      text: (x, y) => {
+        if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
+        const n = numberAt(state, y * w + x);
+        if (n === null) return NOTHING_TO_CLEAR;
+        const text = numberText(ts, coord(x, ts), coord(y, ts));
+        return {
+          enclose: [
+            textBox(text.origin, text.options, String(state.dealt[n.kind].v[n.k])),
+          ],
+          avoid: [],
+        };
+      },
       words: marks,
       evidenceColor: COL_HINT_OUTLINE,
     };
@@ -648,6 +823,7 @@ export function fillRender<C extends Clues<C>>(
     // A cell whose value just changed, while the engine drives timed redraws.
     const before = animTime > 0 && prev !== null ? prev.values : null;
     const frac = Math.min(1, animTime / PLACE_ANIM_TIME);
+    const states = numberStates(shown);
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         const i = y * w + x;
@@ -655,12 +831,14 @@ export function fillRender<C extends Clues<C>>(
         if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
         k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
         const hk = hintWord[i] | outlines.packed(x, y);
+        const lk = lineWord[i] | (states.get(i) ?? 0);
+        const at = numberAt(state, i);
+        const n = at === null ? -1 : state.dealt[at.kind].v[at.k];
         // A growing piece is no key's: its tile is drawn every frame.
         if (before !== null && before[i] !== shown.values[i]) {
           ds.tiles.forget(i);
-          drawTile(dr, ts, x, y, k, hk, lineWord[i], { from: before[i], frac });
-        } else if (ds.tiles.changed(i, k, hk, lineWord[i]))
-          drawTile(dr, ts, x, y, k, hk, lineWord[i]);
+          drawTile(dr, ts, x, y, k, hk, lk, n, { from: before[i], frac });
+        } else if (ds.tiles.changed(i, k, hk, lk)) drawTile(dr, ts, x, y, k, hk, lk, n);
       }
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
@@ -714,5 +892,6 @@ export function fillRender<C extends Clues<C>>(
       marks: new HintMarks(),
     }),
     redraw,
+    numbersLeft,
   };
 }

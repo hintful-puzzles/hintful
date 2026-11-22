@@ -14,6 +14,7 @@ import { transposeDimensions } from "../game-id/params.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
 import { verbClicks } from "../input/target-verb.ts";
 import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
+import { searchTiers } from "../solve/answer-search.ts";
 import type { ClueList } from "../solve/describe-runtime.ts";
 import {
   type AnswerReading,
@@ -37,6 +38,7 @@ import {
   type FillParams,
   fillParams,
   variationsOf,
+  withThorough,
 } from "./game-id.ts";
 import { type FillHint, type FillHintModule, fillHint, linkedCell } from "./hint.ts";
 import {
@@ -52,6 +54,7 @@ import {
   fillRender,
   PLACE_ANIM_TIME,
 } from "./render.ts";
+import { answerSearched, searches } from "./search.ts";
 
 /** A board's clues, by kind. */
 type Clues<C> = { readonly [K in keyof C]: ClueList };
@@ -99,12 +102,14 @@ export function fillGame<C extends Clues<C> & object>(
 ): FillGame<C> {
   const { play, deal, boards } = module;
   const byDefault = module.menu?.default ?? boards[0];
-  const defaultParams = (): FillParams => ({ w: byDefault.w, h: byDefault.h, diff: 0 });
+  const sized = ({ w, h }: Size, diff = 0): FillParams =>
+    withThorough(deal, { w, h, diff });
+  const defaultParams = (): FillParams => sized(byDefault);
   const params = fillParams(deal, module.tiers, defaultParams, module.modifiers);
   const boardTiers = module.menu?.tiers ?? [];
   const variants = module.menu?.variants ?? [];
   const menu: PresetBoards<FillParams> = {
-    boards: boards.map(({ w, h }) => ({ w, h, diff: 0 })),
+    boards: boards.map((b) => sized(b)),
     ...(boardTiers.length === 0
       ? {}
       : {
@@ -117,15 +122,15 @@ export function fillGame<C extends Clues<C> & object>(
       ? {}
       : {
           variants: variants.map(({ w, h, variations, diff }) => ({
-            w,
-            h,
-            diff,
+            ...sized({ w, h }, diff),
             variations,
           })),
         }),
   };
+  const numbered = module.numbers ?? [];
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
+    numbers: numbered as readonly (keyof C)[],
     glyphs: Object.fromEntries(
       Object.entries({ ...play.given, ...play.values }).map(([v, { glyph }]) => [
         Number(v),
@@ -185,13 +190,30 @@ export function fillGame<C extends Clues<C> & object>(
 
     solve: (orig, curr, aux) => solve(module, orig, curr, aux),
     rules: rulesOf(module),
-    difficulty: {
-      solveAtCap: (p, desc, cap) => solveBoard(module, newState(p, desc), cap).verdict,
-    },
+    difficulty: searches(module)
+      ? searchTiers(module.tiers).contract({
+          newState,
+          deductionFinishes: (b, cap) =>
+            solveBoard(module, b, cap).verdict === "solved",
+          answerOf: (b) => answerSearched(module, b),
+        })
+      : {
+          solveAtCap: (p, desc, cap) =>
+            solveBoard(module, newState(p, desc), cap).verdict,
+        },
     findMistakes: (b) => findMistakes(module, b),
     clearMistakes,
     revealOne,
     textFormat: (b) => textFormat(reading, b),
+    ...(numbered.length === 0
+      ? {}
+      : {
+          // The numbers not yet done, while any is left.
+          statusbarText: (b: FillBoard<C>) => {
+            const left = render.numbersLeft(b);
+            return left > 0 ? `Clues left: ${left}` : "";
+          },
+        }),
     ...(rulesOut === undefined ? {} : { rulesOut }),
     hint: {
       ...hint,

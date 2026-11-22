@@ -30,8 +30,8 @@ import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import type { CellMarks } from "../solve/cell-marks.ts";
 import { type ClueList, MARK } from "../solve/describe-runtime.ts";
 import { TIERS } from "../solve/ladder-runtime.ts";
-import { asDealt } from "./answer.ts";
 import {
+  asDealt,
   type FillBoard,
   isAnswerOf,
   type LadderedFillModule,

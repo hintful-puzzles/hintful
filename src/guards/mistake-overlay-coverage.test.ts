@@ -121,7 +121,6 @@ const NO_OVERLAY_TEST = [
   "dominosa",
   "filling",
   "group",
-  "mosaic",
   "palisade",
   "pattern",
   // Range renders the overlay from a hand-written mistake list, not one the

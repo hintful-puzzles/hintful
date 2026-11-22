@@ -3,10 +3,11 @@
 import { ground, tent, tree } from "./camp.ts";
 import type { Painter } from "./painter.ts";
 import { block, disc } from "./pair.ts";
-import { cross, shade } from "./stock.ts";
+import { clear, cross, shade } from "./stock.ts";
 
 export const PAINTERS = {
   block,
+  clear,
   cross,
   disc,
   ground,

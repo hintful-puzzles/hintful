@@ -132,6 +132,15 @@ export function newBoard<C>(
   };
 }
 
+/** The board as dealt: its fixed cells alone, and no marks. */
+export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
+  return {
+    ...board,
+    values: Uint8Array.from(board.values, (v, c) => (board.fixed[c] ? v : 0)),
+    mark: new Int32Array(board.mark.length).fill(-1),
+  };
+}
+
 /** Every value any cell of the board may hold, as a bitmask. */
 function domainMask<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
   let mask = 0;

@@ -961,6 +961,13 @@
               },
               {
                 "type": "object",
+                "required": ["digits"],
+                "additionalProperties": false,
+                "description": "A clue kind of the values 0 to 9 at cells as upstream's run code of Mosaic: a digit a cell's clue, a letter `a`-`z` a run of 1 to 26 cells without one, the last run written too.",
+                "properties": { "digits": { "type": "string" } }
+              },
+              {
+                "type": "object",
                 "required": ["numbers"],
                 "additionalProperties": false,
                 "properties": {
@@ -983,7 +990,20 @@
           "properties": {
             "hide": {
               "type": "string",
-              "description": "A clue kind the deal hides from the answer's: each clue of it, in a random order, is taken off while the board still finishes at the tier."
+              "description": "A clue kind the deal hides from the answer's, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier."
+            },
+            "thorough": {
+              "type": "object",
+              "description": "A setting the player may turn off, written in the params as its letter and 1 or 0: on, the hide tries every clue; off, as many as the board's shorter side, which deals a large board sooner. It is on by default on a board narrower than `offFrom` squares.",
+              "required": ["letter", "kw", "name", "doc", "offFrom"],
+              "additionalProperties": false,
+              "properties": {
+                "letter": { "type": "string", "pattern": "^[a-z]$" },
+                "kw": { "type": "string" },
+                "name": { "type": "string" },
+                "doc": { "type": "string" },
+                "offFrom": { "type": "integer", "minimum": 1 }
+              }
             },
             "sample": {
               "oneOf": [
@@ -1011,7 +1031,11 @@
                           "exclusiveMinimum": 0,
                           "maximum": 1
                         },
-                        "apart": { "enum": ["adj4", "adj8"] }
+                        "apart": { "enum": ["adj4", "adj8"] },
+                        "each": {
+                          "const": true,
+                          "description": "Each cell takes the value at `share`'s chance, so how many do varies from answer to answer; with no `apart` and no `partner`."
+                        }
                       }
                     },
                     "partner": {

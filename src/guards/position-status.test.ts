@@ -72,7 +72,6 @@ const UNBREAKABLE: Record<string, string> = {
   cube: "a solid with every face painted rolls freely, and moves no paint",
   flood: "a flooded board accepts no fill",
   inertia: "a collected gem stays collected, and the gems are all that solved counts",
-  mosaic: "a solved board accepts only the cursor keys",
   net: "Solve locks every tile, a locked tile does not turn, and unlocking is a notes-mode tap",
   pegs: "a solved board has one peg left, and one peg has nothing to jump over",
   samegame: "a solved board is empty, and an empty board has no group to remove",

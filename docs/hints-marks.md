@@ -155,7 +155,7 @@ one"; the owner, 2026-10-25: "a ring should actually be round", and
 2026-10-28: "it doesn't write over numbers"). A game hands `drawRing` the
 boxes from `textBox`, called with what it passes `drawText`, so it never
 estimates a glyph. Where nothing round fits, it throws, and the game makes
-room for it (Mosaic's `ringFits`) or marks the element in another role.
+room for it or marks the element in another role.
 
 **A cell's text leaves the ring room, in every frame.** Notes and a corner
 clue reach the corners a round ring passes through, so a cell lays its text

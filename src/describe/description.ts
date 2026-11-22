@@ -212,21 +212,48 @@ export interface CatalogJson {
 export type IdSegmentJson =
   | { runs: string }
   | { dots: string; cases: [number, number] }
+  | { digits: string }
   | { numbers: string; before?: string; order?: "columns" };
 
 /** The clue kind an ID segment writes. */
 export const segmentKind = (seg: IdSegmentJson): string =>
-  "runs" in seg ? seg.runs : "dots" in seg ? seg.dots : seg.numbers;
+  "runs" in seg
+    ? seg.runs
+    : "dots" in seg
+      ? seg.dots
+      : "digits" in seg
+        ? seg.digits
+        : seg.numbers;
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
- * ({@link sampleOf}). */
-type DealJson = Record<string, string | SampleJson>;
+ * ({@link sampleOf}), and the setting that makes its hiding thorough
+ * ({@link thoroughOf}). */
+type DealJson = Record<string, string | SampleJson | ThoroughJson>;
 
 /** How a description's deal samples an answer, or `null` where it does not. */
 export function sampleOf(json: DescriptionJson): SampleJson | null {
   const sample = json.deal?.["sample"];
-  return typeof sample === "object" ? sample : null;
+  return typeof sample === "object" && !("letter" in sample) ? sample : null;
+}
+
+/** The deal's setting for hiding every clue it can (`deal.thorough`), or
+ * `null` where it always does. */
+export function thoroughOf(json: DescriptionJson): ThoroughJson | null {
+  const t = json.deal?.["thorough"];
+  return typeof t === "object" && "letter" in t ? t : null;
+}
+
+/** A deal setting the player may turn off, by its params letter (`h1`,
+ * `h0`): the hide tries every clue where it is on, and as many as the
+ * board's shorter side where it is off. It is on by default below
+ * `offFrom` squares across. */
+export interface ThoroughJson {
+  letter: string;
+  kw: string;
+  name: string;
+  doc: string;
+  offFrom: number;
 }
 
 /** How a deal samples an answer: built by the ladder (`build`), or
@@ -237,7 +264,7 @@ export function sampleOf(json: DescriptionJson): SampleJson | null {
 export type SampleJson =
   | { build: true }
   | {
-      scatter: { value: number; share: number; apart?: "adj4" | "adj8" };
+      scatter: { value: number; share: number; apart?: "adj4" | "adj8"; each?: true };
       partner?: { value: number; along: "adj4" | "adj8" };
       rest: number;
       noBareLine?: boolean;

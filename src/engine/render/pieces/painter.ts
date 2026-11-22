@@ -24,12 +24,15 @@ export interface Painter {
   /** Whether {@link paint} draws a piece just placed by its `grown`, so a
    * placement of it is worth an animation. */
   readonly grows?: boolean;
+  /** Whether the piece is dark, so a number written over it is light. */
+  readonly dark?: boolean;
   /**
    * Draw the piece in `tile`, the cell's whole box, the color at index `i`
    * of {@link colors} in slot `slot[i]`. `error` where a rule breaks at the
    * cell, which a piece shows in the error role. `grown`, from 0 to 1, is
    * how far a piece just placed has grown from the middle of its cell; a
-   * piece that does not grow is drawn whole.
+   * piece that does not grow is drawn whole. `occupied` where a number
+   * takes the middle of the cell, which a mark that is no piece leaves to it.
    */
   paint(
     dr: GameDrawing,
@@ -37,6 +40,7 @@ export interface Painter {
     slot: readonly number[],
     error: boolean,
     grown?: number,
+    occupied?: boolean,
   ): void;
 }
 

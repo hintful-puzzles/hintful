@@ -10,6 +10,9 @@ help:
   controls: |-
     {{controls}}
 
+    Clicking a decided square again moves it on round shaded, clear and
+    empty, and a right-click goes round the other way.
+
     The drag works for clearing too: start on a shaded square and the
     shaded squares you pass over are cleared with it. A whole drag is one
     step of Undo.
@@ -63,6 +66,14 @@ help:
     numbers settles no square either, and the hint says that nothing further
     follows by deduction instead of choosing for you. Save your position and try a square beside a number with few
     squares left. The hint carries on from whatever you mark.
+catalog:
+  name: Mosaic
+  aliases: [Fill-a-Pix]
+  description: Grid-filling puzzle
+  objective: Fill in the grid given clues about the number of nearby shaded squares.
+  collection: original
+  family: shading
+  similar: ArtMosaico, Cuenta y Sombera, Komsu Karala, Majipiku, Voisimage, etc.
 produces: shading
 sizes:
   # At most 10,000 squares.
@@ -87,9 +98,62 @@ define:
 clues:
   count: { at: cell, value: "range(0, 9)", means: "count(d in block(at) where value(d) = 1) = v" }
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: make it clear, key: X, glyph: " x ", paint: clear }
+  primary: 1
+  secondary: 2
+  # A click goes round empty, the button's mark and the other one.
+  click: cycle
+  stroke: sweep
+  # Upstream's six sizes, three of them made upright boards of about the same
+  # area. The two smallest and the largest are on the menu at Easy alone,
+  # since six sizes at three tiers are more lines than a section holds: a
+  # Normal board of the two smallest has a comparison or two in it, against
+  # seven at 10x10, and at Unreasonable the hint has nothing to say from the
+  # start on most 3x3 boards and one 5x5 board in four.
+  boards: [3x3, 5x5, 8x10, 12x15, 20x25, 50x50]
+  default: 8x10
+  boardTiers: { 3x3: [Easy, Easy], 5x5: [Easy, Easy], 50x50: [Easy, Easy] }
+  hintMarks:
+    ring: >-
+      the squares the step decides; the sentence says whether they must be
+      shaded or clear.
+    outline: >-
+      the block of each number the step reasons from: the number's own square
+      and the eight around it. The number itself is circled.
 deal:
-  clues: which squares show their number, fewer at higher tiers
-  tier: one of the tiers
+  answer: each square shaded at even odds
+  count: >-
+    every square's number, then those the deduction never read hidden, then
+    each other hidden in a random order while the board still finishes at the
+    tier, a tier at a time from Easy
+  tier: >-
+    one of the tiers, the board finished at it and not at the tier below; an
+    Unreasonable board is an Easy one with numbers hidden while a search still
+    proves it has one answer
+  sample:
+    scatter: { value: 1, share: 0.5, each: true }
+    rest: 2
+  hide: count
+  # Upstream recommends it off from about 30x30, and its presets turn it off
+  # at 50x50.
+  thorough:
+    letter: h
+    kw: aggressive-generation
+    name: Aggressive generation
+    doc: >-
+      Every puzzle hides the numbers the game never used while solving it.
+      When on, the game also tries taking away each number that remains, and
+      keeps it away whenever the puzzle still has its one solution at its
+      difficulty without it, so fewer numbers are shown, which usually makes
+      the puzzle harder; when off, it tries only a few. On, a large puzzle
+      takes much longer to find.
+    offFrom: 50
+# Upstream's game ID: a digit a shown number, a letter a run of hidden ones.
+id:
+  - digits: count
 tiers: [Easy, Normal, Unreasonable]
 # A number's count over its block, which the hint names by the number and
 # reads whole: the group a count kind reads.

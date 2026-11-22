@@ -85,7 +85,14 @@ function hatchColor(id: string): number | null {
 }
 
 describe("the hint's line hatch", () => {
-  const hatching = gamesCallingMethod(REGISTERED_IDS, "drawHatch");
+  // A game whose legend of marks names no stripes never hatches, though the
+  // renderer it shares draws the hatch for others (Mosaic's fill renderer,
+  // Tents' and Unruly's lines).
+  const striping = (id: string): boolean => {
+    const roles = HINT_GAMES.find(([g]) => g === id)?.[1].hint.marks?.roles ?? {};
+    return Object.keys(roles).length === 0 || "stripes" in roles;
+  };
+  const hatching = gamesCallingMethod(REGISTERED_IDS, "drawHatch").filter(striping);
 
   it("finds the games that draw it", () => {
     // A scan keyed on the call; Magnets is the known positive.

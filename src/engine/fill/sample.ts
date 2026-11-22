@@ -11,7 +11,7 @@
  * scattered cells to the cells beside them.
  */
 
-import { type RandomState, randomUpto } from "../random/index.ts";
+import { type RandomState, randomBits, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { matching } from "../solve/latin.ts";
 
@@ -26,6 +26,10 @@ export interface ScatterSample {
     readonly value: number;
     readonly share: number;
     readonly apart?: Near;
+    /** Each cell takes the value at `share`'s chance, so the count varies
+     * from answer to answer: a small board then draws from every picture
+     * (Mosaic's 3x3 has 512, and those with four shaded cells, 126). */
+    readonly each?: true;
   };
   readonly partner?: { readonly value: number; readonly along: Near };
   readonly rest: number;
@@ -49,6 +53,15 @@ export function sampleAnswer(
   const n = sp.cells.length;
   const { scatter, partner } = sample;
   const g = new Uint8Array(n);
+  if (scatter.each === true) {
+    if (scatter.apart !== undefined || partner !== undefined)
+      throw new Error("sample: a value at each cell's chance keeps no distance");
+    // A chance in 2^16, the share's own where it is a half.
+    const odds = Math.round(scatter.share * 65536);
+    for (const c of sp.cells)
+      g[c] = randomBits(rs, 16) < odds ? scatter.value : sample.rest;
+    return g;
+  }
   const order = Int32Array.from(sp.cells);
   let left = shareOf(scatter.share, n);
   for (let i = 0; left > 0 && i + left <= n; i++) {

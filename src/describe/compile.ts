@@ -16,7 +16,13 @@
  */
 
 import { compileExpr } from "./compile-expr.ts";
-import { dealOf, derivedClues, markWhileOf, playOf } from "./compile-fill.ts";
+import {
+  dealOf,
+  derivedClues,
+  markWhileOf,
+  numbersOf,
+  playOf,
+} from "./compile-fill.ts";
 import {
   answerSet,
   type ClueKind,
@@ -360,6 +366,7 @@ export function compileGame(
     ...derivedClues(json, d, env, measured),
     ...playOf(json, d, env, measured),
     ...dealOf(json, d, env, measured),
+    ...numbersOf(json, d, env, measured),
   ]);
   // Kept by a technique or by the rules alone (Signpost's `nextGiven`).
   const kept = env.kept?.defs ?? new Map();
@@ -513,9 +520,15 @@ export function compileGame(
     "",
     "/** Each of the description's own techniques, by id, and whether it reads",
     " * what the board deals: the engine runs each on the board's clues where it",
-    " * does (`describedLadder`). */",
+    " * does (`describedLadder`). A fill game's names the bindings of a firing",
+    " * that name a clue it reads: a cell's, or a clue's index by its kind. */",
     "export const techniques = {",
-    ...compiled.map((c) => `  ${c.id}: { dealt: ${c.clues}, run: ${c.id} },`),
+    ...compiled.map(
+      (c) =>
+        `  ${c.id}: { dealt: ${c.clues}, run: ${c.id}${
+          json.play === undefined ? "" : `, reads: ${JSON.stringify(c.reads)}`
+        } },`,
+    ),
     "} as const;",
     "",
     "/** The ladder: each technique's tier, on its scale where that is not the",

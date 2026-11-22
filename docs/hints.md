@@ -448,7 +448,7 @@ the glyph is the game's. Put the glyph:
   hardly differs in lightness from the surface, the glyph takes the number's
   own ink: the shape is the mark, not the color.
 - **Under one reference with the area.** The block and the circle are one
-  reference (`BLOCK` in `mosaic/kinds.ts`), so the binding check holds
+  reference (a fill game's outlined number, `engine/fill/render.ts`), so the binding check holds
   them together and no word names them apart.
 
 `scripts/checks/hint-area-names.test.ts` (`npm run diff`, writes

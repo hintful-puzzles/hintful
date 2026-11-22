@@ -202,7 +202,7 @@ research tools all read through it; the app never does.
   gives every cell the board's domain. A step's line is its `stripes`,
   which hatch the line's clue in the margin too.
 - **A fill game born from its description declares the rest of a game**
-  (Kakurasu, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
+  (Kakurasu, Mosaic, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
   (the first the default unless `default:` names another, `boardTiers:` a
   board that stops short of a tier, `variants:` the boards after the grid),
   `play.hintMarks` its legend, `id:` its game ID's grammar and
@@ -216,9 +216,23 @@ research tools all read through it; the app never does.
   rules nothing out. `deal.sample` draws the answer: `build`, a random
   value on a random cell and then what the whole ladder decides, until the
   board is full; or `scatter`, `partner`, `rest`, and `noBareLine` where no
-  line may hold the rest value alone. `deal.hide` then takes each of a
-  kind's clues off, in a random order, while the board still finishes. The
-  compiler writes `<id>.game.ts`, `fillGame` of the module, and
+  line may hold the rest value alone, with `scatter.each` where each cell
+  takes the value at the share's odds and the count varies (a small board
+  then draws from every picture). `deal.hide` then takes a kind's clues off
+  a tier at a time from the lowest: first every clue no firing's bindings
+  read, then each other in a random order while the board still finishes at
+  that tier. `deal.thorough` is the setting that tries every clue at each
+  tier, by its letter in the params; off, from a width of `offFrom` by
+  default, the lowest tier tries none and each above it as many as the
+  board's shorter side. A last tier named Unreasonable is the search's: its
+  deal strips clues while the search proves one answer and the ladder stops
+  short (`engine/fill/search.ts`). A cell kind the player does not fill and
+  that is not `play.dealt` is a number drawn on its cell, its cells read
+  off the sets its meaning ranges over (`clueCells`): the hint outlines
+  them and circles the number, the number fades once they are all decided,
+  and the status bar counts the numbers left. `id:`'s `digits` writes such
+  a kind as upstream does, a digit a number and a letter a run without one.
+  The compiler writes `<id>.game.ts`, `fillGame` of the module, and
   `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations

@@ -14,18 +14,19 @@
  */
 import { describe, expect, it } from "vitest";
 import "../games/index.ts";
+import { COL_INK, fillSlots } from "../engine/fill/render.ts";
 import type { DrawOp } from "../engine/testing/recording-drawing.ts";
 import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";
 import * as ballsort from "../games/ballsort/render.ts";
 import * as boats from "../games/boats/render.ts";
 import * as dominosa from "../games/dominosa/render.ts";
 import * as galaxies from "../games/galaxies/render.ts";
-import * as mosaic from "../games/mosaic/render.ts";
 import * as path from "../games/path/render.ts";
 import * as salad from "../games/salad/render.ts";
 import * as sticks from "../games/sticks/render.ts";
 import * as untangle from "../games/untangle/render.ts";
 import * as wordtrail from "../games/wordtrail/render.ts";
+import * as mosaic from "../generated/games/mosaic/mosaic.compiled.ts";
 import { puzzleIds } from "./catalog.ts";
 import {
   alike,
@@ -92,8 +93,8 @@ const DECLARED: Record<string, Declared[]> = {
   ],
   mosaic: [
     {
-      among: [mosaic.COL_TEXT],
-      against: [mosaic.COL_TEXT_ON_PIECE],
+      among: [COL_INK],
+      against: [fillSlots(mosaic.play).COL_NUMBER_LIGHT],
       why: NUMBER_ON_A_PIECE,
     },
   ],

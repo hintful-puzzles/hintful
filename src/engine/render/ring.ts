@@ -129,9 +129,8 @@ export function ringShape(
   return shape;
 }
 
-/** The ring {@link ringShape} draws, or `null` where none fits: for a game
- * that has a second way to ring an element where the first leaves no room. */
-export function ringFits(
+/** The ring {@link ringShape} draws, or `null` where none fits. */
+function ringFits(
   box: Rect,
   clear: RingClear,
   thickness: number,

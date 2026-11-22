@@ -1,27 +1,70 @@
 /**
  * A fill game's deal: draw an answer, check it is one, derive its clues,
  * hide what `deal.hide` says may go, and keep the board the ladder finishes
- * at the asked tier and not at the tier below. Its desc is the clues, and
- * its `aux` the answer (`openspec/changes/a-game-from-its-description-alone`,
- * design.md § 7).
+ * at the asked tier and not at the tier below; or, at a search tier, the
+ * board with one answer that the search proves and the ladder does not
+ * reach. Its desc is the clues, and its `aux` the answer
+ * (`openspec/changes/a-game-from-its-description-alone`, design.md § 7).
  */
 
 import { shuffle } from "../board/shuffle.ts";
 import { retryLimit } from "../contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
+import { dealUnreasonable } from "../solve/answer-search.ts";
 import { type ClueList, clueList, type GridSpace } from "../solve/describe-runtime.ts";
+import {
+  ladderTechniques,
+  runLadder,
+  type Said,
+  TIERS,
+} from "../solve/ladder-runtime.ts";
 import { encodeAnswer } from "./answer.ts";
-import { type LadderedFillModule, newBoard, solveBoard, spaceOf } from "./board.ts";
+import {
+  type FillBoard,
+  ladderOf,
+  marksOf,
+  newBoard,
+  solveBoard,
+  spaceOf,
+} from "./board.ts";
 import { encodeDesc, type FillDeal, type FillParams, variationsOf } from "./game-id.ts";
 import { sampleAnswer } from "./sample.ts";
+import { type SearchedFillModule, searchBoard, searches } from "./search.ts";
 
 /** A board's clues, by kind. */
 type Clues<C> = { readonly [K in keyof C]: ClueList };
 
+/** What a firing of a technique reads of the clues, by its bindings: the
+ * clue at each cell named, and each clue named by its index in its kind
+ * (`techniques`' `reads`). */
+interface Reads {
+  readonly cells: readonly string[];
+  readonly clues: Readonly<Record<string, string>>;
+}
+
 /** A fill module whose deal samples its answer. */
-export type DealtFillModule<C> = LadderedFillModule<C> & {
+export type DealtFillModule<C> = SearchedFillModule<C> & {
   deriveClues(g: ArrayLike<number>, sp: GridSpace): C;
 };
+
+/**
+ * Which try of a search tier's deal starts from every clue and not from a
+ * board of the lowest tier. A board stripped from every clue is left with
+ * more undecided (Mosaic's 10x10: a median of 62 squares of 100, against 41),
+ * but no board of the lowest tier strips to some of the smallest boards
+ * (none of Mosaic's 3x3 in five million tries), so one try in this many
+ * gives them a deal and leaves the larger boards as they were.
+ */
+const EVERY_CLUE_DRAW = 8;
+
+/**
+ * Where the deal is not thorough, the clues a search tier's strip hides at
+ * once before it asks the ladder, going through a run a clue at a time only
+ * where the ladder stops without it: a long run pays only while most pass.
+ * Mosaic's, measured 2026-10-11 at 100x100: a board took 10 s a clue at a
+ * time, 5 s in runs of 16 and 1 to 3 s in runs of 6.
+ */
+const HIDING_RUN = 6;
 
 export function dealFill<C extends Clues<C>>(
   module: DealtFillModule<C>,
@@ -33,27 +76,199 @@ export function dealFill<C extends Clues<C>>(
   if (sample === null) throw new Error("deal: the description samples no answer");
   const sp = spaceOf(module, p);
   const variations = variationsOf(p);
+  const board = (clues: C): FillBoard<C> =>
+    newBoard(module, p.w, p.h, clues, variations);
   const finishes = (clues: C, cap: number): boolean =>
-    solveBoard(module, newBoard(module, p.w, p.h, clues, variations), cap).verdict ===
-    "solved";
+    solveBoard(module, board(clues), cap).verdict === "solved";
+  const thorough = p.thorough ?? true;
+  const kind = deal.hide as keyof C | undefined;
+  const elements = kind === undefined ? 0 : sp[deal.universes[kind as string]].length;
+  /** An answer and its clues, every one shown, or `null` where this draw
+   * gave none. */
+  const draw = (): { g: Uint8Array; clues: C } | null => {
+    const g =
+      "build" in sample ? buildAnswer(module, sp, p, rs) : sampleAnswer(sample, sp, rs);
+    if (g === null) return null;
+    const clues = module.deriveClues(g, sp);
+    return module.isAnswer(g, sp, clues, variations) ? { g, clues } : null;
+  };
+  /**
+   * The clues with each of `kind`'s that may go hidden, a tier at a time from
+   * the lowest up to `tier`, or `null` where the lowest does not finish the
+   * board with every clue shown. A board of a tier is one of the tier below
+   * with more hidden: one whose every clue the lowest tier does not finish is
+   * slow to hide from, each try asking the higher tier (Mosaic's 10x10 Normal
+   * deal took twice as long and its 20x25 three times, measured 2026-11-22).
+   * Thorough, every clue is tried at each tier; otherwise none at the lowest
+   * and as many as the board's shorter side at each above it.
+   */
+  const hideUpTo = (clues: C, tier: number): C | null => {
+    if (kind === undefined) return clues;
+    if (!finishes(clues, 0)) return null;
+    let shown = shownOf(clues[kind]);
+    // A firing reads only the clues its bindings name, so the board finishes
+    // without the clues the ladder never read; where a technique reads one
+    // its bindings do not name, it does not, and every clue is tried.
+    const read = cluesRead(module, board(clues), 0, kind as string);
+    const pruned = shown.filter((i) => read.has(i));
+    if (finishes(keeping(clues, kind, pruned, elements), 0)) shown = pruned;
+    for (let t = 0; t <= tier; t++) {
+      const order = shown.slice();
+      shuffle(order, rs);
+      const tries = thorough ? order : order.slice(0, t === 0 ? 0 : Math.min(p.w, p.h));
+      for (const i of tries) {
+        const without = shown.filter((j) => j !== i);
+        if (finishes(keeping(clues, kind, without, elements), t)) shown = without;
+      }
+    }
+    return keeping(clues, kind, shown, elements);
+  };
+
+  if (searches(module) && p.diff === module.tiers.length - 1) {
+    if (kind === undefined) throw new Error("deal: a search tier hides no clue");
+    const top = p.diff - 1;
+    let draws = 0;
+    let answer: Uint8Array = new Uint8Array(0);
+    type Held = { all: C; shown: number[] };
+    const held = (b: Held): C => keeping(b.all, kind, b.shown, elements);
+    const got = dealUnreasonable<Held>({
+      label: `fill: ${module.tiers[p.diff]} deal (${p.w}x${p.h})`,
+      draw() {
+        // A board of the lowest tier is drawn until there is one, so the
+        // every-clue try is one in its count of boards and not of pictures,
+        // most of which the lowest tier does not finish (the miscount took
+        // Mosaic's 10x10 median left undecided from 43 to 65).
+        const every = ++draws % EVERY_CLUE_DRAW === 0;
+        const attempt = retryLimit(`fill: ${module.tiers[0]} board to strip`);
+        for (;;) {
+          attempt();
+          const drawn = draw();
+          if (drawn === null) continue;
+          const clues = every ? drawn.clues : hideUpTo(drawn.clues, 0);
+          if (clues === null) continue;
+          answer = drawn.g;
+          return { all: clues, shown: shownOf(clues[kind]) };
+        }
+      },
+      strip(b, one) {
+        const order = b.shown.slice();
+        shuffle(order, rs);
+        const hide = (run: readonly number[]) => {
+          b.shown = b.shown.filter((j) => !run.includes(j));
+        };
+        const show = (run: readonly number[]) => {
+          b.shown = [...b.shown, ...run].sort((x, y) => x - y);
+        };
+        if (thorough) {
+          for (const i of order) {
+            hide([i]);
+            if (!one()) show([i]);
+          }
+          return;
+        }
+        // The search is asked only of the clue whose loss stops the ladder,
+        // and hiding stops at the first it keeps hidden, so the board keeps
+        // the rest of its clues.
+        const ladderFinishes = () => finishes(held(b), top);
+        for (let from = 0; from < order.length; from += HIDING_RUN) {
+          const run = order.slice(from, from + HIDING_RUN);
+          hide(run);
+          if (ladderFinishes()) continue;
+          show(run);
+          for (const i of run) {
+            hide([i]);
+            if (ladderFinishes()) continue;
+            if (one()) return;
+            show([i]);
+          }
+        }
+      },
+      deduced: (b) => finishes(held(b), top),
+      answer: (b, budget) => searchBoard(module, board(held(b)), budget),
+    });
+    return { desc: encodeDesc(deal, sp, held(got)), aux: encodeAnswer(answer) };
+  }
+
   const attempt = retryLimit("fill: deal");
   for (;;) {
     attempt();
-    const g =
-      "build" in sample ? buildAnswer(module, sp, p, rs) : sampleAnswer(sample, sp, rs);
-    if (g === null) continue;
-    let clues = module.deriveClues(g, sp);
-    if (!module.isAnswer(g, sp, clues, variations)) continue;
-    if (deal.hide !== undefined) {
-      const kind = deal.hide as keyof C;
-      clues = hidden(clues, kind, sp[deal.universes[deal.hide]].length, rs, (c) =>
-        finishes(c, p.diff),
-      );
-    }
-    if (!finishes(clues, p.diff)) continue;
+    const drawn = draw();
+    if (drawn === null) continue;
+    const clues = hideUpTo(drawn.clues, p.diff);
+    if (clues === null || !finishes(clues, p.diff)) continue;
     if (p.diff > 0 && finishes(clues, p.diff - 1)) continue;
-    return { desc: encodeDesc(deal, sp, clues), aux: encodeAnswer(g) };
+    return { desc: encodeDesc(deal, sp, clues), aux: encodeAnswer(drawn.g) };
   }
+}
+
+/** The indices of a list's clues. */
+const shownOf = (list: ClueList): number[] => Array.from(list.at.keys());
+
+/** The clues with only the clues `shown` of kind `kind`, by their indices
+ * in its list. */
+function keeping<C extends Clues<C>>(
+  clues: C,
+  kind: keyof C,
+  shown: readonly number[],
+  elements: number,
+): C {
+  const all = clues[kind];
+  return {
+    ...clues,
+    [kind]: clueList(
+      shown.map((i) => all.at[i]),
+      shown.map((i) => all.v[i]),
+      elements,
+    ),
+  };
+}
+
+/**
+ * The clues of kind `kind`, by index, that a firing of the ladder read on its
+ * way to finishing `board` at tier `cap`: each one a binding of the firing
+ * names, by its cell or by its index.
+ */
+function cluesRead<C extends Clues<C>>(
+  module: SearchedFillModule<C>,
+  board: FillBoard<C>,
+  cap: number,
+  kind: string,
+): ReadonlySet<number> {
+  const list = board.dealt[kind as keyof C];
+  const reads = module.techniques as unknown as Readonly<
+    Record<string, { readonly reads?: Reads }>
+  >;
+  const read = new Set<number>();
+  const { marks } = marksOf(module, board);
+  let current: Reads | null = null;
+  marks.recorder = (rec) => {
+    if (current === null) return;
+    const binding = (rec.reason as Said<Readonly<Record<string, number>>, unknown>)
+      .binding;
+    for (const name of current.cells) {
+      const k = list.byAt[binding[name]];
+      if (k >= 0) read.add(k);
+    }
+    for (const [name, of] of Object.entries(current.clues))
+      if (of === kind) read.add(binding[name]);
+  };
+  // Every firing of a pass, as the solve makes them: one a pass would read
+  // the whole board again for each.
+  marks.wholePasses = true;
+  runLadder(
+    marks,
+    ladderTechniques(
+      marks,
+      ladderOf(module, board).entries,
+      { [TIERS]: cap },
+      {},
+      (e) => {
+        current = reads[e.id]?.reads ?? null;
+        return 0;
+      },
+    ),
+  );
+  return read;
 }
 
 /**
@@ -87,37 +302,4 @@ function buildAnswer<C extends Clues<C>>(
     g.set(got.values);
   }
   return g;
-}
-
-/**
- * The clues with each of kind `kind`'s taken off, in a random order, where
- * the board still `finishes` without it: upstream's winnowing of a full
- * board's givens.
- */
-function hidden<C extends Clues<C>>(
-  clues: C,
-  kind: keyof C,
-  elements: number,
-  rs: RandomState,
-  finishes: (clues: C) => boolean,
-): C {
-  const all = clues[kind];
-  const kept = new Uint8Array(all.at.length).fill(1);
-  const order = Array.from(all.at.keys());
-  shuffle(order, rs);
-  const keeping = (): C => {
-    const at: number[] = [];
-    const v: number[] = [];
-    kept.forEach((k, i) => {
-      if (k === 0) return;
-      at.push(all.at[i]);
-      v.push(all.v[i]);
-    });
-    return { ...clues, [kind]: clueList(at, v, elements) };
-  };
-  for (const i of order) {
-    kept[i] = 0;
-    if (!finishes(keeping())) kept[i] = 1;
-  }
-  return keeping();
 }

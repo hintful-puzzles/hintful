@@ -19,15 +19,17 @@ import {
   Out,
   type Val,
 } from "./compile-sorts.ts";
+import { freeNames } from "./compile-terms.ts";
 import {
   type Description,
   type DescriptionJson,
   type PlayJson,
   sampleOf,
   segmentKind,
+  thoroughOf,
 } from "./description.ts";
 import type { Binder, Expr } from "./expr.ts";
-import { parse } from "./expr.ts";
+import { children, parse } from "./expr.ts";
 
 /** A compiling environment that reads a whole board `g`, as the answer
  * check does. */
@@ -364,10 +366,31 @@ export function dealOf(
       );
     if ("dots" in seg && i !== id.length - 1)
       throw new CompileError(`id: dots of ${kind} end the desc, and come last`);
+    // A digit is a clue's value, so every value is one.
+    if (
+      "digits" in seg &&
+      (c.at !== "cell" || values === null || values[0] < 0 || values[1] > 9)
+    )
+      throw new CompileError(
+        `id: digits of ${kind}, which is not a cell's clue of the values 0 to 9`,
+      );
   }
   const hide = json.deal?.["hide"];
   if (typeof hide === "string" && !d.clueKinds.has(hide))
     throw new CompileError(`deal hide: no clue kind ${hide}`);
+  const thorough = thoroughOf(json);
+  if (thorough !== null) {
+    if (typeof hide !== "string")
+      throw new CompileError(
+        "deal thorough: a setting of how the deal hides, and no hide",
+      );
+    const taken = [
+      "d",
+      ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
+    ];
+    if (taken.includes(thorough.letter))
+      throw new CompileError(`deal thorough: the letter ${thorough.letter} is taken`);
+  }
   const tiers = json.tiers ?? [];
   const tierLetters =
     json.tierLetters ?? tiers.map((t) => t[0]?.toLowerCase() ?? "").join("");
@@ -386,6 +409,7 @@ export function dealOf(
   const deal = {
     sample: sampleOf(json),
     ...(typeof hide === "string" ? { hide } : {}),
+    ...(thorough === null ? {} : { thorough }),
     id,
     universes,
     tierLetters,
@@ -467,6 +491,92 @@ function labelsOf(labels: PlayJson["labels"], env: Env): string[] {
     "  start(i: number): string {",
     ...body.map((l) => `  ${l}`),
     "  },",
+    "};",
+  ];
+}
+
+/**
+ * `numbers`, the clue kinds a fill game writes as a number on their cell:
+ * each at a cell, of more than one value, and not the kind the board is
+ * dealt holding (`play.dealt`, drawn as its value); and `clueCells`, the
+ * cells each one's meaning reads, the sets its `means` ranges over with `at`
+ * its cell. The engine draws a number's cells as its block, judges it done
+ * where they are all decided, and searches the cells of the number with
+ * fewest open. A number whose meaning ranges over no set, or over one its
+ * own binders choose, is refused.
+ */
+export function numbersOf(
+  json: DescriptionJson,
+  d: Description,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
+  if (json.play === undefined) return [];
+  const oneValued = (value: Expr | null): boolean => {
+    const [lo, hi] = value?.k === "call" ? value.args : [];
+    return lo?.k === "num" && hi?.k === "num" && lo.v === hi.v;
+  };
+  const numbers = [...d.clueKinds].filter(
+    ([kind, c]) => c.at === "cell" && kind !== json.play?.dealt && !oneValued(c.value),
+  );
+  if (numbers.length === 0) return [];
+  const cells: string[] = [];
+  for (const [kind, c] of numbers) {
+    const sorts = env.clues.get(kind) as ClueKind;
+    const sets: Expr[] = [];
+    // A set its own binders choose, or one that reads the clue's value, is
+    // no set of cells the clue reads.
+    const walk = (e: Expr, bound: ReadonlySet<string>): void => {
+      if (e.k === "quant" || e.k === "agg") {
+        const inner = new Set(bound);
+        for (const b of e.binders) {
+          const free = new Set<string>();
+          freeNames(b.of, free, new Set());
+          if (b.kind === "in" && ![...free].some((n) => inner.has(n))) sets.push(b.of);
+          inner.add(b.name);
+        }
+        for (const x of children(e)) walk(x, inner);
+        return;
+      }
+      for (const x of children(e)) walk(x, bound);
+    };
+    walk(measured(c.means), new Set(["v"]));
+    if (sets.length === 0)
+      throw new CompileError(
+        `clue ${kind}: a number on its cell ranges over the cells it counts, and this one ranges over none`,
+      );
+    const all = sets.reduce((a, b) => ({ k: "bin", op: "+", a, b }));
+    const scratch: string[] = [];
+    const out = new Out(2);
+    const v = compileExpr(
+      all,
+      new Map<string, Val>([["at", { code: "at", sort: sorts.at }]]),
+      answerEnv(env, { yes: false }, scratch),
+      out,
+    );
+    if (v.sort.k !== "set" || v.sort.of.k !== "elem" || v.sort.of.e !== "cell")
+      throw new CompileError(
+        `clue ${kind}: the sets its meaning ranges over are not cells`,
+      );
+    const body = [
+      ...scratch.map((s) => `    ${s}`),
+      ...out.text(),
+      `    return ${v.code};`,
+    ];
+    cells.push(
+      `  ${kind}(${param("sp", "GridSpace", body)}, at: number): readonly number[] {`,
+      ...body,
+      "  },",
+    );
+  }
+  return [
+    "",
+    "/** The clue kinds written as a number on their cell. */",
+    `export const numbers = ${JSON.stringify(numbers.map(([k]) => k))} as const;`,
+    "",
+    "/** The cells each number's meaning reads, its block. */",
+    "export const clueCells = {",
+    ...cells,
     "};",
   ];
 }

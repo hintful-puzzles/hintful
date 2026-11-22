@@ -10,8 +10,8 @@ directory SHALL hold no TypeScript but its tests.
 #### Scenario: Tents is its description
 
 - **WHEN** the catalog and the registry are read
-- **THEN** Tents, Kakurasu and Unruly are in all of them, and no one of
-  their directories holds a TypeScript file that is not a test
+- **THEN** Tents, Kakurasu, Unruly and Mosaic are in all of them, and no one
+  of their directories holds a TypeScript file that is not a test
 
 ## ADDED Requirements
 
@@ -19,13 +19,58 @@ directory SHALL hold no TypeScript but its tests.
 
 Where `deal.sample` is `build`, the answer SHALL be built a random value on a
 random undecided cell at a time, each followed by what the whole ladder then
-decides. Where `deal.hide` names a clue kind, each of its clues SHALL be taken
-away in a random order while the board still finishes at its tier.
+decides. Where `deal.hide` names a clue kind, its clues SHALL be taken away a
+tier at a time from the lowest: first those no firing's bindings read, then
+the others in a random order while the board still finishes at that tier;
+with `deal.thorough` off, none at the lowest and at most the board's shorter
+side at each above.
 
 #### Scenario: An Unruly board keeps only the givens it needs
 
 - **WHEN** an Unruly board is dealt and any one of its givens is taken away
 - **THEN** the board no longer finishes at its tier
+
+### Requirement: A born game's deal setting is a param by its letter
+
+`deal.thorough` SHALL be a setting in the params by its letter, written only
+where it is off and read as on where it is absent, so an upstream ID reads
+as upstream reads it. A menu board SHALL have it on where it is narrower
+than `offFrom`.
+
+#### Scenario: Mosaic's largest board is dealt quickly
+
+- **WHEN** Mosaic's menu boards are encoded in full
+- **THEN** the 50×50 board carries `h0` and no other board an `h`
+
+### Requirement: A born game's last tier may be the answer search's
+
+Where the last tier is named Unreasonable, a board SHALL be of it where the
+ladder does not finish it and a search, assuming each value in an open cell
+of the number with fewest open cells, proves it one answer. Its deal SHALL
+strip a board of the lowest tier, or on one try in eight every clue, while
+the search proves one answer; and Solve and Check SHALL read the searched
+answer.
+
+#### Scenario: An Unreasonable Mosaic board
+
+- **WHEN** an 8×10 Mosaic board is dealt at Unreasonable and its hint is
+  followed
+- **THEN** the hint stops short of the answer, and Solve finishes it
+
+### Requirement: A born game draws its numbers on their cells
+
+A cell clue kind the player does not fill and the deal does not place SHALL
+be drawn as a number on its cell, light on a dark piece, faint once every
+cell its meaning ranges over is decided, and a badge where broken. A step's outlined number SHALL have those
+cells outlined as one block and the number circled. The status bar SHALL
+count the numbers not yet faint. The `digits` ID segment SHALL write the
+kind as upstream does, a digit a number and a letter a run without one.
+
+#### Scenario: Mosaic's numbers
+
+- **WHEN** the 3×3 Mosaic board `d7a2a4` is opened, and its hint followed
+- **THEN** the status bar reads "Clues left: 3", each step circles the number
+  it names and outlines its block, and the status bar is empty at the end
 
 ### Requirement: A born game's dealt cells and modifiers are its description's
 

@@ -491,19 +491,24 @@ function freshChecked(r: Recheck, id: string, env: Env): void {
   }
 }
 
-export function compileTechnique(
-  t: Technique,
-  env: Env,
-): { code: string; clues: boolean } {
+/** A technique compiled: its function, whether it reads the board's clues,
+ * and the bindings that name a clue: each a cell's, whose clue is the one at
+ * it, and each a clue's index in its kind's list, by the kind. */
+export interface CompiledTechnique {
+  readonly code: string;
+  readonly clues: boolean;
+  readonly reads: {
+    readonly cells: readonly string[];
+    readonly clues: Readonly<Record<string, string>>;
+  };
+}
+
+export function compileTechnique(t: Technique, env: Env): CompiledTechnique {
   const fnName = t.id.includes(".") ? t.id.slice(t.id.indexOf(".") + 1) : t.id;
   return Out.own(fnName, () => techniqueFunction(t, fnName, env));
 }
 
-function techniqueFunction(
-  t: Technique,
-  fnName: string,
-  env: Env,
-): { code: string; clues: boolean } {
+function techniqueFunction(t: Technique, fnName: string, env: Env): CompiledTechnique {
   const bindingType = `${capitalized(fnName)}Binding`;
   const saysType = `${capitalized(fnName)}Says`;
   const readsClues = { yes: false };
@@ -1127,7 +1132,21 @@ function techniqueFunction(
     ...text,
     "}",
   ];
-  return { code: lines.join("\n"), clues: readsClues.yes };
+  const named = (s: { sort: Sort }): string | null =>
+    s.sort.k === "elem" ? s.sort.e : null;
+  return {
+    code: lines.join("\n"),
+    clues: readsClues.yes,
+    reads: {
+      cells: sorts.filter((s) => named(s) === "cell").map((s) => s.name),
+      clues: Object.fromEntries(
+        sorts.flatMap((s) => {
+          const e = named(s);
+          return e?.startsWith("clue ") ? [[s.name, e.slice("clue ".length)]] : [];
+        }),
+      ),
+    },
+  };
 }
 
 /** Whether `e` makes a placement, in a definition it calls included. */

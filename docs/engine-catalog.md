@@ -874,7 +874,7 @@ and every drawing strokes the shape
 `ringShape` fits, the one nearest `box` at the roundest that clears the
 text: a circle or a pill where it can, a rounded square where text sits in
 the corners, and a throw where nothing at least `RING_MIN_ROUNDNESS` round
-fits (`ringFits` asks without throwing). `centered` keeps it on the box's
+fits. `centered` keeps it on the box's
 middle; `ringContentBox` is the box text keeps inside for a centered ring to
 go round it. `clear` is `{ enclose, avoid }`, built from `textBox`, which takes what
 a game passes `drawText`; `NOTHING_TO_CLEAR` where there is no text.
@@ -1433,7 +1433,8 @@ the tiers Easy and Unreasonable), or where a generator wants a second answer
 ([`solver-and-generator.md`](./solver-and-generator.md) § "Giving a
 deductive game an Unreasonable tier"). The deduction, what to assume where
 it stops, the search's budget and what a deal draws and strips stay the
-game's. Exemplar: `mosaic/solver.ts`.
+game's. Exemplar: `engine/fill/search.ts`, the search tier of every fill
+game born from its description.
 
 - `searchAnswers({ start, deduce, assume, solution, budget })` counts a
   board's answers to two over the game's own deduction and returns an
