@@ -18,6 +18,8 @@
  */
 
 import { D, dirX, dirY, L, R, U } from "../../engine/board/square-edges.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
+import type { GameStatus } from "../../engine/contract/types.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
@@ -27,6 +29,7 @@ import {
   perBoard,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -37,12 +40,10 @@ import {
 import * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import {
   type Board,
-  checkCompletion,
   E_NOTRACK,
   E_TRACK,
   inGrid,
   S_CLUE,
-  S_ERROR,
   S_MARK,
   S_NOTRACK,
   S_TRACK,
@@ -50,6 +51,8 @@ import {
   sEDirs,
   sEFlags,
   sESet,
+  stateToBoard,
+  type TracksState,
 } from "./state.ts";
 
 /** What the description reads an edge the track crosses as, and one it does
@@ -171,6 +174,89 @@ export function finished(m: CellMarks, kept: Kept): boolean {
   return tracks.isAnswer(g, kept.sp, kept.dl);
 }
 
+/** The squares' marks as the rules read them: a mask of the values each
+ * allows, track or none. */
+function squareMarks(sflags: Int32Array): Uint8Array {
+  return Uint8Array.from(sflags, (f) =>
+    f & S_TRACK ? 1 << TRACK : f & S_NOTRACK ? 1 << NONE : EITHER,
+  );
+}
+
+/**
+ * The edges as the rules read them: a rail is track and a cross none, and so
+ * is every open side of a square marked none or holding both its rails
+ * already, an end counting as one. Once the rails join the two ends the
+ * track is that path, so every open side is none, and a rail apart from it
+ * is a piece of its own that the rules break.
+ */
+function rulesGrid(
+  s: Pick<TracksState, "w" | "h" | "sflags" | "numbers">,
+  sp: GridSpace,
+): Uint8Array {
+  const { w, h, sflags } = s;
+  const g = new Uint8Array(sp.edges.length);
+  const rails = new Int32Array(w * h);
+  const a = s.numbers.rowS * w;
+  const b = (h - 1) * w + s.numbers.colS;
+  rails[a]++;
+  rails[b]++;
+  const parent = Int32Array.from({ length: w * h }, (_, i) => i);
+  const root = (c: number): number => {
+    while (parent[c] !== c) c = parent[c] = parent[parent[c]];
+    return c;
+  };
+  for (const e of sp.edges) {
+    const { x, y, dir } = edgeSide(sp, e);
+    const f = sEFlags(s, x, y, dir);
+    g[e] = f & E_TRACK ? TRACK : f & E_NOTRACK ? NONE : 0;
+    if (g[e] !== TRACK) continue;
+    const [p, q] = [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
+    rails[p]++;
+    rails[q]++;
+    parent[root(p)] = root(q);
+  }
+  const joined = root(a) === root(b);
+  const shut = (c: number): boolean => rails[c] >= 2 || (sflags[c] & S_NOTRACK) !== 0;
+  for (const e of sp.edges)
+    if (
+      g[e] === 0 &&
+      (joined || shut(sp.edgeEnds[2 * e]) || shut(sp.edgeEnds[2 * e + 1]))
+    )
+      g[e] = NONE;
+  return g;
+}
+
+export const spaceOf = (s: { w: number; h: number }): GridSpace =>
+  describedSpace(tracks.units, s.w, s.h);
+
+export const rules: RulesOf<TracksState> = describedRules(tracks, {
+  grid: (s) => rulesGrid(s, spaceOf(s)),
+  size: (s) => [s.w, s.h],
+  deals: (s): [tracks.Dealt, Uint8Array] => [
+    dealtOf(stateToBoard(s)),
+    squareMarks(s.sflags),
+  ],
+});
+
+/** Whether a board is solved: its rails, every open side read as none, are
+ * an answer, and every square marked track is on it. */
+function solvedBoard(b: Board): boolean {
+  const sp = spaceOf(b);
+  const g = new Uint8Array(sp.edges.length);
+  for (const e of sp.edges) {
+    const { x, y, dir } = edgeSide(sp, e);
+    g[e] = sEFlags(b, x, y, dir) & E_TRACK ? TRACK : NONE;
+  }
+  const dl = dealtOf(b);
+  const marks = squareMarks(b.sflags);
+  return tracks.isAnswer(g, sp, dl) && tracks.marksHold(g, sp, dl, marks);
+}
+
+/** Solved where the player's rails are the track. */
+export function status(state: TracksState): GameStatus {
+  return solvedBoard(stateToBoard(state)) ? "solved" : "ongoing";
+}
+
 /**
  * Write what the marks settled back onto the board's flags, with what they
  * imply as upstream's ladder recorded it: a square with a rail holds track,
@@ -243,7 +329,7 @@ export function tracksSolve(
   if (impossible) return { ret: -1, maxDiff };
   const done = finished(m, kept);
   writeBack(b, m, kept, done);
-  if (done && !checkCompletion(b, false))
+  if (done && !solvedBoard(b))
     throw new Error("tracks: the ladder finished a board the game does not");
   return { ret: done ? 1 : 0, maxDiff };
 }
@@ -263,12 +349,11 @@ export function copyAndStrip(b: Board, flipClueI: number): Board {
     numbers: b.numbers,
     rowS: b.rowS,
     colS: b.colS,
-    numErrors: new Uint8Array(w + h),
   };
   if (flipClueI !== -1) ret.sflags[flipClueI] ^= S_CLUE;
   for (let i = 0; i < w * h; i++) {
     if (ret.sflags[i] & S_CLUE) continue;
-    ret.sflags[i] &= ~(S_TRACK | S_NOTRACK | S_ERROR | S_MARK);
+    ret.sflags[i] &= ~(S_TRACK | S_NOTRACK | S_MARK);
     const x = i % w;
     const y = Math.floor(i / w);
     for (let j = 0; j < 4; j++) {

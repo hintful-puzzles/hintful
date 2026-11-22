@@ -1,7 +1,6 @@
 /**
- * Tracks (Train Tracks) state, params, desc codec, the shared-edge board
- * model, and the live error/completion analysis: the state half of the port
- * of `tracks.c`.
+ * Tracks (Train Tracks) state, params, desc codec and the shared-edge board
+ * model: the state half of the port of `tracks.c`.
  *
  * Lay a single continuous train track from an entrance on the left edge to an
  * exit on the bottom edge of a `w × h` grid, using only straight and curved
@@ -14,8 +13,6 @@
  * onto the adjacent cell, so the two never disagree.
  */
 
-import { Dsf } from "../../engine/board/dsf.ts";
-import { findLoops } from "../../engine/board/findloop.ts";
 import { gridText } from "../../engine/board/grid-text.ts";
 import {
   D,
@@ -36,7 +33,6 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
-import type { GameStatus } from "../../engine/contract/types.ts";
 import {
   c2nUpper,
   n2cUpper,
@@ -63,7 +59,6 @@ export const DIRS = [U, D, L, R] as const; // upstream dirs_const order
 // --- square + edge flag bits (upstream layout) ----------------------------
 export const S_TRACK = 1;
 export const S_NOTRACK = 2;
-export const S_ERROR = 4;
 export const S_CLUE = 8;
 export const S_MARK = 16;
 export const S_TRACK_SHIFT = 16;
@@ -101,8 +96,6 @@ export interface TracksState {
   readonly sflags: Int32Array;
   /** Shared clue numbers + stations. */
   readonly numbers: TracksNumbers;
-  /** Per-clue error flag (length w + h), recomputed each move. */
-  readonly numErrors: Uint8Array;
 }
 
 /** One flag change: set/clear a track/no-track flag on a square or one of its
@@ -151,7 +144,6 @@ export interface Board {
   numbers: Int32Array; // length w + h
   rowS: number;
   colS: number;
-  numErrors: Uint8Array; // length w + h
 }
 
 export function blankBoard(w: number, h: number): Board {
@@ -162,7 +154,6 @@ export function blankBoard(w: number, h: number): Board {
     numbers: new Int32Array(w + h),
     rowS: -1,
     colS: -1,
-    numErrors: new Uint8Array(w + h),
   };
 }
 
@@ -175,7 +166,6 @@ export function stateToBoard(s: TracksState): Board {
     numbers: Int32Array.from(s.numbers.numbers),
     rowS: s.numbers.rowS,
     colS: s.numbers.colS,
-    numErrors: Uint8Array.from(s.numErrors),
   };
 }
 
@@ -411,14 +401,7 @@ export function newState(p: TracksParams, desc: string): TracksState {
     singleOnes: p.singleOnes,
     sflags: b.sflags,
     numbers: { numbers: b.numbers, rowS: b.rowS, colS: b.colS },
-    numErrors: b.numErrors,
   };
-}
-
-/** The marking check, on a copy: only the marking pass asks whether the
- * track is one connected path from entrance to exit. */
-export function status(s: TracksState): GameStatus {
-  return checkCompletion(stateToBoard(s), true) ? "solved" : "ongoing";
 }
 
 // --- the completion flash's route (upstream set_flash_data) ---------------
@@ -448,128 +431,6 @@ export function trackOrder(b: Board): Int32Array {
     y += dirY(d);
   }
   return order;
-}
-
-// --- completion / error analysis (upstream check_completion) --------------
-
-/** Union every pair of squares joined by a laid track edge. */
-function trackDsf(b: Board): Dsf {
-  const { w, h } = b;
-  const dsf = new Dsf(w * h);
-  for (let x = 0; x < w; x++) {
-    for (let y = 0; y < h; y++) {
-      const i = y * w + x;
-      // Guard the grid boundary (upstream `dsf_update_completion` checks
-      // INGRID): the exit cell's outward edge must not merge off-grid.
-      if (x < w - 1 && sEDirs(b, x, y, E_TRACK) & R) dsf.merge(i, i + 1);
-      if (y < h - 1 && sEDirs(b, x, y, E_TRACK) & D) dsf.merge(i, i + w);
-    }
-  }
-  return dsf;
-}
-
-function* tracksNeighbors(b: Board, vertex: number): Iterable<number> {
-  const { w } = b;
-  const x = vertex % w;
-  const y = Math.floor(vertex / w);
-  const dirs = sEDirs(b, x, y, E_TRACK);
-  for (let j = 0; j < 4; j++) {
-    const dir = 1 << j;
-    if (dirs & dir) {
-      const nx = x + dirX(dir);
-      const ny = y + dirY(dir);
-      if (inGrid(b, nx, ny)) yield ny * w + nx;
-    }
-  }
-}
-
-/**
- * Recompute error state and completion (upstream `check_completion`). With
- * `mark`, sets S_ERROR per cell and numErrors per clue. Returns whether the
- * board is a finished, correct solution.
- */
-export function checkCompletion(b: Board, mark: boolean): boolean {
-  const { w, h } = b;
-  let ret = true;
-
-  if (mark) {
-    b.numErrors.fill(0);
-    for (let i = 0; i < w * h; i++) {
-      b.sflags[i] &= ~S_ERROR;
-      if (sECount(b, i % w, Math.floor(i / w), E_TRACK) > 2) {
-        ret = false;
-        b.sflags[i] |= S_ERROR;
-      }
-    }
-  }
-
-  const dsf = trackDsf(b);
-
-  // No loop allowed.
-  const loops = findLoops(w * h, (v) => tracksNeighbors(b, v));
-  if (loops.anyLoop) {
-    ret = false;
-    if (mark) {
-      for (let x = 0; x < w; x++) {
-        for (let y = 0; y < h; y++) {
-          const u = y * w + x;
-          for (const v of tracksNeighbors(b, u)) {
-            if (loops.isLoopEdge(u, v)) b.sflags[u] |= S_ERROR;
-          }
-        }
-      }
-    }
-  }
-
-  if (mark) {
-    const pathclass = dsf.canonify(b.rowS * w);
-    if (pathclass === dsf.canonify((h - 1) * w + b.colS)) {
-      // A continuous entrance→exit path exists: any other track is an error.
-      for (let i = 0; i < w * h; i++) {
-        if (
-          dsf.canonify(i) !== pathclass &&
-          (b.sflags[i] & S_TRACK || sECount(b, i % w, Math.floor(i / w), E_TRACK) > 0)
-        ) {
-          ret = false;
-          b.sflags[i] |= S_ERROR;
-        }
-      }
-    } else {
-      ret = false;
-    }
-  }
-
-  const pathret = ret; // do we have a plausible solution so far?
-
-  // Each clue, columns (`0..w-1`) then rows.
-  for (let line = 0; line < w + h; line++) {
-    const isCol = line < w;
-    const len = isCol ? h : w;
-    const target = b.numbers[line];
-    let ntrack = 0;
-    let nnotrack = 0;
-    let ntrackcomplete = 0;
-    for (let k = 0; k < len; k++) {
-      const x = isCol ? line : k;
-      const y = isCol ? k : line - w;
-      const edges = sECount(b, x, y, E_TRACK);
-      if (edges > 0 || b.sflags[y * w + x] & S_TRACK) ntrack++;
-      if (edges === 2) ntrackcomplete++;
-      if (b.sflags[y * w + x] & S_NOTRACK) nnotrack++;
-    }
-    if (
-      mark &&
-      (ntrack > target ||
-        nnotrack > len - target ||
-        (pathret && ntrackcomplete !== target))
-    ) {
-      b.numErrors[line] = 1;
-      ret = false;
-    }
-    if (ntrackcomplete !== target) ret = false;
-  }
-
-  return ret;
 }
 
 // --- text format (upstream game_text_format) ------------------------------

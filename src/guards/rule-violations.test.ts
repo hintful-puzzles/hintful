@@ -135,6 +135,11 @@ for (const [id, game] of RULED) {
             wrong,
             `${id}/${b.title}: step ${i} reads these unlike the answer`,
           ).toEqual([]);
+          if (rules.marksHold !== undefined)
+            expect(
+              rules.marksHold(state, answer),
+              `${id}/${b.title}: step ${i}'s marks the rules read hold of the answer`,
+            ).toBe(true);
           expect(rules.violations(state, g), `${id}/${b.title}: step ${i}`).toEqual([]);
           checked++;
         },

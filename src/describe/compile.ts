@@ -36,7 +36,7 @@ import {
 import { statedTable, stepsBlock } from "./compile-stated.ts";
 import { capitalized, compileTechnique } from "./compile-technique.ts";
 import { freeNames, reads } from "./compile-terms.ts";
-import { violationCheck } from "./compile-violations.ts";
+import { type MarkRead, violationCheck } from "./compile-violations.ts";
 import {
   cellMarkOf,
   type ClueKind as DescribedClueKind,
@@ -825,7 +825,40 @@ function violationsOf(json: DescriptionJson, d: Description, env: Env): string[]
     measured,
     d.repeat,
     { ...env, answer: { repeats: d.repeat !== null } },
+    markRead(json, env),
   );
+}
+
+/**
+ * The mark the violation check reads, where its term reads the answer
+ * through one definition at its element (Tracks' `drawn(at)`), or `null`.
+ */
+function markRead(json: DescriptionJson, env: Env): MarkRead | null {
+  const m = edgeMarkOf(json);
+  if (m === null || (m.sort !== "cell" && m.sort !== "edge")) return null;
+  const of = parse(m.of);
+  const calls: Expr[] = [];
+  const visit = (x: unknown): void => {
+    if (Array.isArray(x)) for (const y of x) visit(y);
+    else if (x !== null && typeof x === "object") {
+      const e = x as Expr;
+      if (e.k === "call" && env.defs.has(e.fn)) calls.push(e);
+      else for (const y of Object.values(x)) visit(y);
+    }
+  };
+  visit(of);
+  const at: Expr = { k: "name", name: "at" };
+  if (calls.length !== 1) return null;
+  const [call] = calls;
+  if (call.k !== "call" || JSON.stringify(call.args) !== JSON.stringify([at]))
+    return null;
+  const ofDef = JSON.parse(
+    JSON.stringify(of).replaceAll(
+      JSON.stringify(call),
+      JSON.stringify({ k: "name", name: "_d" }),
+    ),
+  ) as Expr;
+  return { def: call.fn, sort: m.sort, of, ofDef };
 }
 
 /**

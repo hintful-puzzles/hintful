@@ -176,6 +176,7 @@ export {
   decidedIf,
   heldIn,
   knownIn,
+  markRange,
   overDomain,
   stoppedAt,
   undecided,

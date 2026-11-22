@@ -246,6 +246,31 @@ export function apartThrough(
 }
 
 /**
+ * The bounds `lo`..`hi` of a definition the player's mark on its element
+ * narrows: the least and greatest value whose mark term `of` the mark's
+ * values `mask` hold (a Tracks square marked track has two rails). Where no
+ * value is left the mark disagrees with the board, and the board's own
+ * bounds stand.
+ */
+export function markRange(
+  lo: number,
+  hi: number,
+  mask: number,
+  of: (d: number) => number,
+): readonly [number, number] {
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return [lo, hi];
+  let least = Infinity;
+  let most = -Infinity;
+  for (let d = lo; d <= hi; d++) {
+    const v = of(d);
+    if (v < 0 || v > 31 || !((mask >> v) & 1)) continue;
+    least = Math.min(least, d);
+    most = d;
+  }
+  return least > most ? [lo, hi] : [least, most];
+}
+
+/**
  * The edges of `E` that lie on a cycle of `E`'s edges: each joins two cells
  * the rest of `E` joins too, so "no edge of E closes a loop" breaks at each
  * (Path's loop, every line of it). Every edge that is not a bridge of the

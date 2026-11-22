@@ -76,7 +76,7 @@ import {
   redraw,
   type TracksDrawState,
 } from "./render.ts";
-import { copyAndStrip, tracksSolve } from "./solver.ts";
+import { copyAndStrip, rules, status, tracksSolve } from "./solver.ts";
 import {
   type Board,
   DIFF_COUNT,
@@ -95,7 +95,6 @@ import {
   sEDirs,
   sEFlags,
   stateToBoard,
-  status,
   type TracksMove,
   type TracksOp,
   type TracksParams,
@@ -628,6 +627,7 @@ export const tracksGame: Game<
   interpretMove,
   executeMove,
   status,
+  rules,
 
   solve,
   difficulty,

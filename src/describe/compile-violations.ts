@@ -60,6 +60,22 @@ const WITNESS = "_wit";
  * code may compare it with either verdict. */
 const SURE = "_sure";
 
+/**
+ * A mark the player sets that says something of the answer through one
+ * definition at its element (Tracks' square marked track: `2 - drawn(at) /
+ * 2`). The check bounds that definition by the values the mark allows.
+ */
+export interface MarkRead {
+  /** The definition the mark's term reads. */
+  def: string;
+  /** What the mark sits on. */
+  sort: "cell" | "edge";
+  /** The mark's term, `at` its element. */
+  of: Expr;
+  /** The same with the definition's call read as the name `_d`. */
+  ofDef: Expr;
+}
+
 export interface Statement {
   /** The violation's `rule`. */
   name: string;
@@ -85,6 +101,7 @@ export function violationCheck(
   measured: (e: Expr) => Expr,
   repeat: Repeat,
   env: Env,
+  mark: MarkRead | null = null,
 ): string[] {
   const readsClues = { yes: false };
   const scratch: string[] = [];
@@ -144,6 +161,7 @@ export function violationCheck(
             return `domainOf(sp, cl, ${x})`;
           }
         : () => domain.mask,
+    mark,
   );
   for (const s of statements) {
     const from = out.entries.length;
@@ -222,12 +240,29 @@ export function violationCheck(
   out.emit("return _out;");
   if (c.triesValues)
     out.entries.unshift({ indent: 1, text: "const g = Int32Array.from(g0);" });
+  const holds = c.readsMarks && mark !== null ? marksHold(mark, cenv, readsClues) : [];
+  if (c.readsMarks && mark !== null) {
+    // `_at` is a name the code may leave unread (Tracks' term reads only `_d`).
+    const at = { code: "_at", sort: elem(mark.sort) };
+    const of = compileExpr(
+      mark.ofDef,
+      new Map<string, Val>([
+        ["at", at],
+        ["_d", { code: "_d", sort: { k: "num" } }],
+      ]),
+      cenv,
+      new Out(0),
+    );
+    scratch.unshift(`const _ofMark = (_at: number, _d: number): number => ${of.code};`);
+  }
   const params = [
     c.triesValues ? "g0: ArrayLike<number>" : "g: ArrayLike<number>",
     "sp: GridSpace",
     ...(readsClues.yes ? ["cl: Dealt"] : []),
     ...(statements.some((s) => s.on !== null) ? ["variations: readonly string[]"] : []),
+    ...(c.readsMarks ? ["marks: ArrayLike<number>"] : []),
   ];
+  const plain = params.map((p) => p.replace(/^g0:/, "g:"));
   return [
     "/** Each statement the board `g`, a value an element and 0 where it is",
     " * undecided, already breaks: false on every completion of it. */",
@@ -235,6 +270,49 @@ export function violationCheck(
     ...scratch.map((s) => `  ${s}`),
     ...out.text(),
     "}",
+    ...(holds.length === 0
+      ? []
+      : [
+          "",
+          "/** Whether the player's `marks` on the elements, each a mask of the",
+          " * values the mark allows, hold of the whole board `g`. */",
+          `export function marksHold(${plain.join(", ")}): boolean {`,
+          ...holds,
+          "}",
+        ]),
+  ];
+}
+
+/** The body of `marksHold`: each mark's term read on the whole board, and
+ * the mark holding that value. */
+function marksHold(mark: MarkRead, env: Env, readsClues: { yes: boolean }): string[] {
+  const scratch: string[] = [];
+  const henv: Env = {
+    ...env,
+    answer: { repeats: env.answer?.repeats ?? false },
+    readsClues,
+    scratch,
+    memo: false,
+    hoist: null,
+    boardRoot: null,
+    epoch: null,
+    concluding: false,
+  };
+  const out = new Out(2);
+  const of = compileExpr(
+    mark.of,
+    new Map([["at", { code: "at", sort: elem(mark.sort) }]]),
+    henv,
+    out,
+  );
+  expect(of, "num", "a mark's term");
+  return [
+    ...scratch.map((s) => `  ${s}`),
+    `  for (const at of sp.${mark.sort === "cell" ? "cells" : "edges"}) {`,
+    ...out.text(),
+    `    if (!((marks[at] >> (${of.code})) & 1)) return false;`,
+    "  }",
+    "  return true;",
   ];
 }
 
@@ -252,18 +330,23 @@ class Check {
   /** The code of the mask of values element `x` may hold, where the check
    * can read one. */
   private readonly domainOf: ((x: string) => string) | null;
+  private readonly mark: MarkRead | null;
+  /** Whether a bound read the player's marks, so the check takes them. */
+  readsMarks = false;
   constructor(
     env: Env,
     out: Out,
     measured: (e: Expr) => Expr,
     repeat: Repeat,
     domainOf: ((x: string) => string) | null,
+    mark: MarkRead | null,
   ) {
     this.env = env;
     this.out = out;
     this.measured = measured;
     this.repeat = repeat;
     this.domainOf = domainOf;
+    this.mark = mark;
   }
 
   /** Each violation of `e`, a statement named `rule` (of clue `clue`, or
@@ -776,8 +859,27 @@ class Check {
 
   /** The bounds on a numeric term over every completion. */
   private bounds(e0: Expr, scope: Scope): Bounds {
-    const e = inlined(e0, scope, this.env);
     const { out } = this;
+    if (
+      this.mark !== null &&
+      e0.k === "call" &&
+      e0.fn === this.mark.def &&
+      e0.args.length === 1 &&
+      !scope.has(e0.fn)
+    ) {
+      // The definition the player's mark speaks of, narrowed to what the
+      // mark allows: a Tracks square marked track counts as track.
+      const x = once(compileExpr(e0.args[0], scope, this.env, out), out).code;
+      const inner = this.bounds(inlined(e0, scope, this.env), scope);
+      this.readsMarks = true;
+      this.env.used.add("markRange");
+      const r = Out.fresh("_mr");
+      out.emit(
+        `const ${r} = markRange(${inner.lo}, ${inner.hi}, marks[${x}], (d) => _ofMark(${x}, d));`,
+      );
+      return { lo: `${r}[0]`, hi: `${r}[1]`, yes: inner.yes, no: inner.no };
+    }
+    const e = inlined(e0, scope, this.env);
     const lo = Out.fresh("_lo");
     const hi = Out.fresh("_hi");
     const aCounted = e.k === "bin" && counted(e.a, scope, this.env);

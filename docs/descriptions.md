@@ -1086,6 +1086,16 @@ says how each form is read; what a description's author acts on:
   decided elements needs nothing: a rule is reported once its elements are
   decided, and bounding it earlier is that form's work in the compiler,
   never a game's.
+- **A player's mark is read where its `of` names one definition** at its
+  element (Tracks' `2 - drawn(at) / 2`): the check then takes the marks,
+  each a mask of the values it allows, after the board's other inputs, and
+  bounds that definition by the values whose term the mark allows, so a
+  square marked track counts as track. The module's `marksHold` says
+  whether marks hold of a whole board, which the guard asks of the answer.
+  A mark no such term reads, or a mark that rules a value out of one
+  element of a disjunction, is the game's reading's (`rules.grid`) to
+  turn into decided elements where certain (a square marked no track has
+  no rail).
 - **A statement that reads nothing of the board is left out**: it is the
   same of every board the deal makes, so it says whether the board was
   dealt right, which the deal and the answer check settle, and never where
@@ -1130,7 +1140,13 @@ says how each form is read; what a description's author acts on:
   statement reads is written in place. A network is said as the through form over every pair of
   squares and the cycle form, never as "one fewer line than squares, every
   square reached from the first": the count names every line, and the reach
-  every square the first one's group does not hold (Net).
+  every square the first one's group does not hold (Net). Where a rule
+  names two pieces alike and the rules make one of them certain, a
+  statement said of the other's elements names it: Tracks' `reachesEnd`,
+  implied, every rail reaching an end, where `path` names the finished
+  track and a stray rail apart from it alike. A set a binder names is
+  evaluated whole, so a set a walk reads is written in place (`through(c,
+  {x in edges where P})`), never bound by `forall R = ...` first.
   A number counted along a chain is said between two given numbers, counted
   from each end with `onward`: Signpost's square some numbers on from one
   given must be the square as many short of the next, so two runs that

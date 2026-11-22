@@ -38,11 +38,13 @@ describeAbsentTiers(tracksGame, ["4x4dt", "4x4dh"]);
 // The size beside it, which deals both.
 describeDealtTiers(tracksGame, ["4x5dt", "4x5dh"], { deals: 8 });
 
+import { D, R } from "../../engine/board/square-edges.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
 import { NO_FLASH } from "../../engine/render/win-wave.ts";
 import { executeMove, uiCanFlipSquare } from "./moves.ts";
 import {
   centeredCoord,
+  errorsOf,
   metrics,
   newDrawState,
   PREFERRED_TILE_SIZE,
@@ -54,12 +56,15 @@ import {
   DIFF_NORMAL,
   DIFF_TRICKY,
   decodeParams,
+  E_TRACK,
   encodeParams,
   newState,
   S_CLUE,
   S_TRACK,
+  sECount,
   stateToBoard,
   type TracksParams,
+  type TracksState,
 } from "./state.ts";
 
 const DEFAULT_BACKGROUND: [number, number, number] = [0.9, 0.9, 0.9];
@@ -226,6 +231,66 @@ describe("tracks findMistakes + solve", () => {
 
   it("findMistakes returns [] on an untouched board", () => {
     expect(tracksGame.findMistakes?.(newState(SMALL.p, SMALL.desc)) ?? []).toEqual([]);
+  });
+});
+
+describe("tracks live errors", () => {
+  const rail = (x: number, y: number, dir: number) => ({
+    kind: "edge" as const,
+    x,
+    y,
+    dir,
+    track: true,
+    set: true,
+  });
+  /** The squares drawn red, and the clues by the game's index (columns
+   * first). */
+  const broken = (s: TracksState) => {
+    const { cell, num } = errorsOf(s);
+    return {
+      squares: [...cell.keys()].filter((i) => cell[i]),
+      counts: [...num.keys()].filter((i) => num[i]),
+    };
+  };
+
+  it("reads a square marked track as track in its line's count", () => {
+    // Row 0 asks for 3; four squares marked track, with no rail among them.
+    const row0 = SMALL.p.w;
+    let s = newState(SMALL.p, SMALL.desc);
+    s = executeMove(s, { ops: [0, 1, 2].map((x) => sq(x, 0, true, true)) });
+    expect(broken(s).counts).not.toContain(row0);
+    s = executeMove(s, { ops: [sq(3, 0, true, true)] });
+    expect(broken(s).counts).toContain(row0);
+  });
+
+  it("marks a closed loop of rails", () => {
+    const s = executeMove(newState(SMALL.p, SMALL.desc), {
+      ops: [rail(2, 3, R), rail(2, 3, D), rail(3, 3, D), rail(2, 4, R)],
+      solve: true,
+    });
+    const w = SMALL.p.w;
+    expect(broken(s).squares).toEqual([3 * w + 2, 3 * w + 3, 4 * w + 2, 4 * w + 3]);
+  });
+
+  it("marks a rail apart from a finished track", () => {
+    const st = newState(SMALL.p, SMALL.desc);
+    const solved = tracksGame.solve(st, st);
+    if (!solved.ok) throw new Error("the fixture has no solution");
+    const done = executeMove(st, solved.move);
+    expect(broken(done).squares).toEqual([]);
+    // A rail between two squares the track leaves empty.
+    const b = stateToBoard(done);
+    const w = SMALL.p.w;
+    const empty = (i: number) => sECount(b, i % w, (i / w) | 0, E_TRACK) === 0;
+    const i = [...Array(w * SMALL.p.h).keys()].find(
+      (c) => c % w < w - 1 && empty(c) && empty(c + 1),
+    );
+    if (i === undefined) throw new Error("no two empty squares side by side");
+    const stray = executeMove(done, {
+      ops: [rail(i % w, (i / w) | 0, R)],
+      solve: true,
+    });
+    expect(broken(stray).squares).toEqual([i, i + 1]);
   });
 });
 

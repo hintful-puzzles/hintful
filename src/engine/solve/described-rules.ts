@@ -23,6 +23,9 @@ export interface RulesModule<Deals extends readonly unknown[]> {
   readonly edgeGeometry?: EdgeGeometry;
   violations(g: ArrayLike<number>, sp: GridSpace, ...deals: Deals): Violation[];
   isAnswer(g: ArrayLike<number>, sp: GridSpace, ...deals: Deals): boolean;
+  /** Where the checks read the player's marks, the last of `Deals`: whether
+   * they hold of a whole board. */
+  marksHold?(g: ArrayLike<number>, sp: GridSpace, ...deals: Deals): boolean;
 }
 
 /** How a game's state reads as its description's board. */
@@ -128,9 +131,16 @@ export function describedRules<State, Deals extends readonly unknown[]>(
       module.edgeGeometry,
     );
   };
+  const { marksHold } = module;
   return {
     grid: read.grid,
     violations: (s, g) => module.violations(g, space(s), ...read.deals(s)),
     isAnswer: (s, g) => module.isAnswer(g, space(s), ...read.deals(s)),
+    ...(marksHold === undefined
+      ? {}
+      : {
+          marksHold: (s: State, g: ArrayLike<number>) =>
+            marksHold(g, space(s), ...read.deals(s)),
+        }),
   };
 }

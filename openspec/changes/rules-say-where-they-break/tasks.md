@@ -179,18 +179,20 @@
       declaration. Its `loopErrors`, `vertexErrors` and `grounded` leave the
       State, the fade reading `groundedOf` at redraw; a border number both
       its squares miss is red, which the old check, counting four squares
-      round every point, never showed. Tracks
-      also reads its cell marks (track, no track) in its clue counts, which
-      edges alone cannot hold: a cell marked no track reads its edges as
-      none, but a cell marked track needs the per-element mask Bridges does
-      (above), or a bound from a mark's declared `of` term. (2026-11-22)
-      The mask does not cover it: a square marked track says one of its
-      sides holds a rail, a disjunction over edges no per-edge mask holds,
-      so Tracks needs the mark read through its `of` (`2 - drawn(at) / 2`
-      is 1, so `drawn(at)` is 2). Its path rule is already the through form,
-      and its "every other track is wrong once A meets B" is a reading like
-      `oneLoopHeld`: once the lines join the two ends, every open edge is
-      none. Rome's goal
+      round every point, never showed.
+      Moved (2026-11-22): tracks. A mark whose `of` reads one definition at
+      its element is read by the check: the marks come last in `deals`, a
+      mask per element, and a call of that definition is bounded to the
+      values whose term the mark allows (`markRange`), so a square marked
+      track counts as track; the module's `marksHold` says whether marks
+      hold of a whole board, and the guard asks it of the answer on each
+      board a hint walk passes. Its board reads an open side as none at a
+      square marked none or with both rails, and everywhere once the rails
+      join A to B. `path` names a finished track and a stray piece alike,
+      so `reachesEnd`, implied, says every rail reaches an end, and the
+      render draws it and the shape in place of `path`. Its
+      `checkCompletion`, `numErrors` and `S_ERROR` go; status asks the
+      rules, marks included. Rome's goal
       chain and wordtrail's pieces are to be read before their batch.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.

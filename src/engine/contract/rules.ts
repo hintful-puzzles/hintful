@@ -18,4 +18,8 @@ export interface RulesOf<State> {
   /** Whether `g`, every element decided, is an answer to the board `state`
    * deals: the compiled module's `isAnswer`. */
   isAnswer(state: State, g: ArrayLike<number>): boolean;
+  /** Where the rules read the player's marks as well as `grid` (a Tracks
+   * square marked track counts as track): whether those marks hold of `g`,
+   * a whole board, which the violation guard asks of the answer. */
+  marksHold?(state: State, g: ArrayLike<number>): boolean;
 }

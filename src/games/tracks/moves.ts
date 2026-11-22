@@ -9,7 +9,6 @@ import { dirX, dirY } from "../../engine/board/square-edges.ts";
 import { assertNever, rejectMove } from "../../engine/contract/assert-never.ts";
 import {
   type Board,
-  checkCompletion,
   E_NOTRACK,
   E_TRACK,
   inGrid,
@@ -129,8 +128,8 @@ export function moveDiff(before: Board, after: Board, solve: boolean): TracksMov
 }
 
 /** Apply a move (upstream `execute_move`): each op is guarded by the flip
- * predicate unless the move is a solve; then live errors + completion are
- * recomputed. Throws on an illegal (non-solve) op, faithful to `badmove`. */
+ * predicate unless the move is a solve. Throws on an illegal (non-solve) op,
+ * faithful to `badmove`. */
 export function executeMove(state: TracksState, move: TracksMove): TracksState {
   // A move is an op list, not a union, so there is no discriminant to narrow to
   // `never`: check the one field the dispatch reads (see `rejectMove`).
@@ -161,7 +160,5 @@ export function executeMove(state: TracksState, move: TracksMove): TracksState {
       else sEClear(b, op.x, op.y, dir, f);
     }
   }
-  // For its marks: the error flags and the win flash's ripple order.
-  checkCompletion(b, true);
-  return { ...state, sflags: b.sflags, numErrors: b.numErrors };
+  return { ...state, sflags: b.sflags };
 }

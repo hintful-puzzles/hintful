@@ -1935,6 +1935,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint",
       "hint.judgeMove",
       "hint.targets",
+      "rules",
       "targetVerbs",
       "textFormat",
       "transposeParams",

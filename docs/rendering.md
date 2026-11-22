@@ -599,6 +599,11 @@ grid while a gesture is live, and paints only what they say:
   edge is once a loop closes, so the loop and the lines apart from it are
   each finished, and a clue it leaves short shows. A game whose space is
   no grid passes `space` instead of `size` (Loopy's tiling).
+- **A mark the description reads through its `of` goes in as the last of
+  `deals`**, a mask of values per element (Tracks' square marked track),
+  and the rules then offer `marksHold`, which the guard asks of the
+  answer at each board a hint walk passes ([`descriptions.md`](./descriptions.md)
+  § "Where a rule breaks").
 - **A reading the player opts into is passed to `liveErrors`, never made
   `rules.grid`**, which the guard holds to the answer: Net's loops through
   unlocked tiles read the tiles as turned, for one rule's marks, where the

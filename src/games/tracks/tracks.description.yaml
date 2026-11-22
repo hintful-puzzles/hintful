@@ -111,6 +111,15 @@ rules:
     forall R = {e in edges where value(e) = 1},
     a in cells where drawn(a) > 0, b in cells where drawn(b) > 0:
     b in through(a, R)
+implied:
+  # Every rail reaches an end along the track: with the shape and the two
+  # ends, the same as `path` on a whole board. Said of each rail, so the
+  # rails of a piece that can no longer reach an end are where it breaks,
+  # where `path` names that piece and the track it is apart from alike. The
+  # set is written in place, where the check reads it as a walk.
+  reachesEnd: >-
+    forall e in edges where value(e) = 1: exists q in clues(end):
+    at(q) in through(end1(e), {x in edges where value(x) = 1})
 clues:
   # A number beside a row or column: how many of its squares hold track.
   count:

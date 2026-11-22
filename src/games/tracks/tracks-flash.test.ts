@@ -107,7 +107,6 @@ function serpentine(n: number): TracksState {
     singleOnes: true,
     sflags: b.sflags,
     numbers: { numbers: b.numbers, rowS: 0, colS: 0 },
-    numErrors: b.numErrors,
   };
   // Through a move, so the state is one `executeMove` made.
   return tracksGame.executeMove(state, { ops: [] });

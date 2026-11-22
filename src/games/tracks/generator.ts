@@ -32,7 +32,6 @@ import {
 function clearBoard(b: Board): void {
   b.sflags.fill(0);
   b.numbers.fill(0);
-  b.numErrors.fill(0);
   b.rowS = -1;
   b.colS = -1;
 }

@@ -63,21 +63,23 @@ import {
   evidenceSidesOf,
   MARK_ALL,
 } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { OverlaySidecar } from "../../engine/render/overlay-sidecar.ts";
 import { drawRuledOutCross } from "../../engine/render/piece.ts";
 import { NOTHING_TO_CLEAR } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { WIN_LEAD, WIN_NONE } from "../../engine/render/win-wave.ts";
+import type * as tracks from "../../generated/games/tracks/tracks.compiled.ts";
 import { pieceOfOp } from "./hint.ts";
 import { LINE, PIECE, type Piece } from "./kinds.ts";
 import { copyAndApplyDrag } from "./moves.ts";
+import { clueLine, rules, spaceOf } from "./solver.ts";
 import {
   ALLDIR,
   type Board,
   E_NOTRACK,
   E_TRACK,
   S_CLUE,
-  S_ERROR,
   S_NOTRACK,
   S_TRACK,
   sECount,
@@ -747,13 +749,54 @@ function drawLoopEnds(
   label({ x: centeredCoord(state.numbers.colS, m), y: centeredCoord(state.h, m) }, "B");
 }
 
+// --- live errors ----------------------------------------------------------
+
+const SHAPE: tracks.RuleName = "shape.0";
+/** One piece: its breach names the track and the piece apart from it alike,
+ * so the piece is shown by `reachesEnd` and the shape, which on a whole
+ * board say the same. */
+const PATH: tracks.RuleName = "path";
+
+/** Where the rules break, per square and per clue (by the game's clue
+ * index): a square's shape at the square, a piece that reaches no end and
+ * an end at every square they touch, and a line's count at its clue. */
+export function errorsOf(state: TracksState): { cell: Uint8Array; num: Uint8Array } {
+  const { w, h } = state;
+  const sp = spaceOf(state);
+  const cell = new Uint8Array(w * h);
+  const num = new Uint8Array(w + h);
+  const live = liveErrors(rules, state);
+  const ends = (e: number): number[] => [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
+  for (const [rule, list] of live.byRule)
+    for (const at of rule === PATH ? [] : list) {
+      // A square's shape names the sides it read, which only it shares.
+      const sides = at.map(ends);
+      const touched =
+        rule === SHAPE
+          ? (sides[0] ?? []).filter((c) => sides.every((s) => s.includes(c)))
+          : sides.flat();
+      for (const c of touched) cell[c] = 1;
+    }
+  const { rowS, colS } = state.numbers;
+  const endCells = [rowS * w, (h - 1) * w + colS];
+  for (const k of live.clues.get("end") ?? []) cell[endCells[k]] = 1;
+  for (const L of live.clues.get("count") ?? []) num[clueLine(w, h, L)] = 1;
+  return { cell, num };
+}
+
 // --- per-tile draw flags (upstream s2d_flags) -----------------------------
 
-function s2dFlags(b: Board, x: number, y: number, ui: TracksUi): number {
+function s2dFlags(
+  b: Board,
+  x: number,
+  y: number,
+  ui: TracksUi,
+  errors: Uint8Array,
+): number {
   let f = sEDirs(b, x, y, E_TRACK);
   f |= sEDirs(b, x, y, E_NOTRACK) << DS_NSHIFT;
   const sf = b.sflags[y * b.w + x];
-  if (sf & S_ERROR) f |= DS_ERROR;
+  if (errors[y * b.w + x]) f |= DS_ERROR;
   if (sf & S_CLUE) f |= DS_CLUE;
   if (sf & S_NOTRACK) f |= DS_NOTRACK;
   if (sf & S_TRACK || sECount(b, x, y, E_TRACK) > 0) f |= DS_TRACK;
@@ -810,9 +853,10 @@ export function redraw(
   // per-tile one.
   // The hatched line runs on through its clue, so that is in the key as well.
   const hatchedLines = new Set(marks.of("stripes", LINE));
+  const errors = errorsOf(state);
   for (let i = 0; i < w + h; i++) {
     const key =
-      state.numErrors[i] | (hintedClues.has(i) ? 2 : 0) | (hatchedLines.has(i) ? 4 : 0);
+      errors.num[i] | (hintedClues.has(i) ? 2 : 0) | (hatchedLines.has(i) ? 4 : 0);
     if (ds.clues.changed(i, key)) {
       drawClue(
         dr,
@@ -831,6 +875,8 @@ export function redraw(
   // `drag.live` as well as `painting`: the engine ends a live drag when the
   // board changes under it, and the preview must go with it.
   const dragBoard = ui.drag.live && ui.painting ? copyAndApplyDrag(board, ui) : null;
+  const dragErrors =
+    dragBoard === null ? errors : errorsOf({ ...state, sflags: dragBoard.sflags });
 
   ds.wrong.packCells(mistakes ?? null, (x, y) => y * w + x);
 
@@ -844,8 +890,8 @@ export function redraw(
       const tone = along !== null && along[i] >= 0 ? flash.win(along[i]) : WIN_NONE;
       const flashing =
         tone === WIN_NONE ? 0 : tone === WIN_LEAD ? DS_FLASH | DS_FLASH_LEAD : DS_FLASH;
-      const f = s2dFlags(board, x, y, ui) | flashing;
-      const fD = dragBoard ? s2dFlags(dragBoard, x, y, ui) : f;
+      const f = s2dFlags(board, x, y, ui, errors.cell) | flashing;
+      const fD = dragBoard ? s2dFlags(dragBoard, x, y, ui, dragErrors.cell) : f;
       const hf = hintMarks[i];
       if (ds.tiles.changed(i, f, fD, hf))
         drawSquare(dr, m, x, y, f, fD, ds.wrong.at(i), hf);
