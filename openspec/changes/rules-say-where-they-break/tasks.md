@@ -145,6 +145,19 @@
       `describedRules` takes `space` for a tiling. Loopy's `checkCompletion`,
       `lineErrors` and `exactlyOneLoop`, and Pearl's `markErrors` and
       `errors`, go.
+      Next (2026-11-22, a plan, not yet built): bound `x in through(a, S)`
+      generically, true where sure members of S join them and false where
+      possible ones cannot; then an acyclic rule can be stated, implied
+      where the rule's own form is a count (Net's `|L| = |cells| - 1` with
+      connectivity), as "every line is a bridge": `forall e in L: end2(e)
+      not in through(end1(e), L - {e})`, named by each line on a cycle.
+      That serves net, tracks (a cycle), bridges and path; slant's shape
+      reads `linked(k)`, which needs the same sure/possible reading. Tracks
+      also reads its cell marks (track, no track) in its clue counts, which
+      edges alone cannot hold: a cell marked no track reads its edges as
+      none, but a cell marked track needs the per-element mask Bridges does
+      (above), or a bound from a mark's declared `of` term. Rome's goal
+      chain and wordtrail's pieces are to be read before their batch.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
 - [x] 2.4 Plant a broken rule and see its mark appear in a game that wrote
