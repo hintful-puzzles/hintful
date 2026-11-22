@@ -1,0 +1,374 @@
+/**
+ * How a fill game is played, built from its description's `play:`: the
+ * engine's `Ui`, the verbs each button and key applies, the drag, the
+ * Shift/Ctrl-arrow stroke and the link gesture. Every move is an `Edit`, so
+ * no game writes its own input (`openspec/changes/a-game-from-its-description-alone`,
+ * design.md § 5).
+ */
+
+import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
+import type { Point } from "../contract/types.ts";
+import {
+  cursorDelta,
+  endDrag,
+  type GridCursor,
+  type GridDrag,
+  isCursorMove,
+  isMouseDown,
+  isMouseDrag,
+  isMouseRelease,
+  LEFT_BUTTON,
+  MOD_CTRL,
+  MOD_SHFT,
+  moveCursor,
+  moveDrag,
+  newCursor,
+  newDrag,
+  RIGHT_BUTTON,
+  startDrag,
+  stripModifiers,
+} from "../input/pointer.ts";
+import {
+  buttonVerb,
+  ERASE_KEYS,
+  interpretTargetVerbs,
+  type KeyOnlyVerb,
+  letterKey,
+  pressTarget,
+  rulingOut,
+  squareGrid,
+  type TargetVerb,
+  type TargetVerbs,
+} from "../input/target-verb.ts";
+import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
+import type { FillBoard, FillModule } from "./board.ts";
+import { applyEdit, type Edit } from "./edit.ts";
+
+/** A value the player places: what its verb does, as the Controls paragraph
+ * completes "Click a square to …", the letter that places it, and how it is
+ * printed and painted. */
+export interface PlayValue {
+  readonly does: string;
+  readonly key: string;
+  readonly glyph: string;
+  readonly paint: string;
+}
+
+/** A fill game's `play:`, as its compiled module exports it. */
+export interface FillPlay {
+  /** The values the player places, by the description's value. */
+  readonly values: Readonly<Record<number, PlayValue>>;
+  /** The values only the deal places, a fixed cell's. */
+  readonly given?: Readonly<Record<number, Pick<PlayValue, "glyph" | "paint">>>;
+  /** The left button's value, which a click toggles with open. */
+  readonly primary: number;
+  /** The right button's, which rules a cell out. */
+  readonly secondary: number;
+  /** The value an open cell reads as for the answer check, where the answer is
+   * the other values alone; absent where every cell must be filled. */
+  readonly blank?: number;
+  /** A letter that empties a cell, beside Backspace and Delete. */
+  readonly erase?: string;
+  /** What a drag does: `line` paints the secondary value along one row or
+   * column, `sweep` repeats the pressed verb on every cell it passes that
+   * held what the pressed one held. */
+  readonly stroke: "line" | "sweep";
+  /** The clue kind the cell mark names, where the player draws it as a link
+   * between a cell and the clue's cell beside it. */
+  readonly links?: { readonly clue: string };
+}
+
+/** A board's clues, by kind. */
+type Clues<C> = { readonly [K in keyof C]: ClueList };
+
+/** The engine's `Ui` for a fill game. */
+export interface FillUi {
+  cursor: GridCursor;
+  drag: GridDrag;
+  /** The button the live drag began with, `-1` where none did. */
+  dragButton: number;
+  /** Whether the dragging pointer is over the board. */
+  dragOk: boolean;
+  /** Whether `L` armed a link, which the next arrow draws. */
+  linkArmed: boolean;
+}
+
+export function newFillUi(): FillUi {
+  return {
+    cursor: newCursor(),
+    drag: newDrag(),
+    dragButton: -1,
+    dragOk: false,
+    linkArmed: false,
+  };
+}
+
+const KEY_L = [..."Ll"].map((ch) => ch.charCodeAt(0));
+
+/** What an arm of the input answers where the button is not its own, so the
+ * next arm takes it: `null` is an answer, "nothing happened". */
+const PASS = "pass";
+type Arm = Edit | UiUpdate | null | typeof PASS;
+
+/** What a fill game's input reads of its draw state. */
+interface Tiled {
+  readonly tileSize: number;
+}
+
+/** A fill game's input: its verbs, `interpretMove`, and the edit a live drag
+ * would make, which the renderer previews. */
+export interface FillInput<C, D> {
+  readonly targetVerbs: TargetVerbs<FillBoard<C>, FillUi, D, Point, Edit>;
+  interpretMove(
+    board: FillBoard<C>,
+    ui: FillUi,
+    ds: D,
+    p: Point,
+    button: number,
+  ): Edit | UiUpdate | null;
+  /** The edit releasing the live drag where it is now would make, `null`
+   * where it would make none. */
+  pendingEdit(board: FillBoard<C>, ui: FillUi): Edit | null;
+  /** The board as the live drag would leave it, for the renderer. */
+  previewed(board: FillBoard<C>, ui: FillUi): FillBoard<C>;
+  /** The link edit joining cell `c` to the clue `q`'s cell, or parting them:
+   * what a link drag between them makes. */
+  linkEdit(board: FillBoard<C>, c: number, q: number): Edit;
+}
+
+/**
+ * The input `play` declares, on a board drawn `origin(tileSize)` pixels in
+ * from the top and left of the canvas.
+ */
+export function fillInput<C extends Clues<C>, D extends Tiled>(
+  module: FillModule<C>,
+  play: FillPlay,
+  origin: (tileSize: number) => number,
+): FillInput<C, D> {
+  const { primary, secondary } = play;
+  type Verb = TargetVerb<FillBoard<C>, FillUi, Point, Edit>;
+
+  /** A verb that sets a cell to `to(v)` from `v`, or means nothing on a fixed
+   * cell or where it would leave the cell as it is. */
+  const setting =
+    (to: (v: number) => number) =>
+    (b: FillBoard<C>, { x, y }: Point): Edit | null => {
+      const c = y * b.w + x;
+      const v = to(b.values[c]);
+      return b.fixed[c] || v === b.values[c] ? null : { set: [c, v] };
+    };
+  const toggling = (value: number): Verb => ({
+    does: `${play.values[value].does}, or empty it if it is already filled`,
+    apply: setting((v) => (v === 0 ? value : 0)),
+  });
+  const keyOnly: KeyOnlyVerb<FillBoard<C>, FillUi, Point, Edit>[] = [
+    ...Object.entries(play.values).map(([k, pv]) => {
+      const value = Number(k);
+      return {
+        does: pv.does,
+        keys: [letterKey(pv.key)],
+        apply: setting(() => value),
+        pointer: {
+          kind: "cycle" as const,
+          button: value === secondary ? ("secondary" as const) : ("primary" as const),
+        },
+      };
+    }),
+    {
+      does: "empty it",
+      keys:
+        play.erase === undefined ? ERASE_KEYS : [letterKey(play.erase), ...ERASE_KEYS],
+      apply: setting(() => 0),
+      pointer: { kind: "cycle", button: "primary" },
+    },
+  ];
+  const targetVerbs: TargetVerbs<FillBoard<C>, FillUi, D, Point, Edit> = {
+    geometry: squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin }),
+    primary: toggling(primary),
+    secondary: rulingOut(toggling(secondary)),
+    keyOnly,
+    ...(play.stroke === "sweep"
+      ? { sweep: { holds: (b: FillBoard<C>, t: Point) => b.values[t.y * b.w + t.x] } }
+      : {}),
+  };
+
+  const links = play.links;
+  const cluesOf = (b: FillBoard<C>): ClueList | null =>
+    links === undefined ? null : b.dealt[links.clue as keyof C];
+  /** Whether cell `c` may hold the link's near end: open, or the primary
+   * value, and not dealt. */
+  const linkable = (b: FillBoard<C>, c: number): boolean =>
+    !b.fixed[c] && (b.values[c] === 0 || b.values[c] === primary);
+  /** The link two orthogonal neighbors `a` and `b` make, as its near cell and
+   * the clue's index, or `null` where they make none. */
+  const joining = (
+    b: FillBoard<C>,
+    a: number,
+    z: number,
+  ): { c: number; q: number } | null => {
+    const clues = cluesOf(b);
+    if (clues === null) return null;
+    const ax = a % b.w;
+    const zx = z % b.w;
+    if (Math.abs(ax - zx) + Math.abs((a - ax) / b.w - (z - zx) / b.w) !== 1)
+      return null;
+    for (const [c, t] of [
+      [a, z],
+      [z, a],
+    ]) {
+      if (clueAt(clues, t) < 0 || !linkable(b, c)) continue;
+      return { c, q: clues.at.indexOf(t) };
+    }
+    return null;
+  };
+  function linkEdit(b: FillBoard<C>, c: number, q: number): Edit {
+    if (b.mark[c] === q) return { mark: [c, -1] };
+    // A link pairs: the clue lets go of any other cell that named it.
+    const mark: number[] = [];
+    for (let o = 0; o < b.mark.length; o++)
+      if (o !== c && b.mark[o] === q) mark.push(o, -1);
+    mark.push(c, q);
+    return b.values[c] === 0 ? { set: [c, primary], mark } : { mark };
+  }
+
+  /** The link the live drag draws: a left drag between a cell and the clue
+   * beside it. */
+  function dragLink(b: FillBoard<C>, ui: FillUi): Edit | null {
+    const { live, sx, sy, ex, ey } = ui.drag;
+    if (!live || ui.dragButton !== LEFT_BUTTON) return null;
+    const got = joining(b, sy * b.w + sx, ey * b.w + ex);
+    return got === null ? null : linkEdit(b, got.c, got.q);
+  }
+
+  function pendingEdit(b: FillBoard<C>, ui: FillUi): Edit | null {
+    if (!ui.drag.live || !ui.dragOk || ui.dragButton < 0) return null;
+    const link = dragLink(b, ui);
+    if (link !== null) return link;
+    const { sx, sy, ex, ey } = ui.drag;
+    // A left drag acts as a click where it began, and a right drag that never
+    // left its cell is a right click: each its button's verb.
+    if (ui.dragButton === LEFT_BUTTON || (sx === ex && sy === ey)) {
+      const made = buttonVerb(targetVerbs, ui.dragButton)?.apply(
+        b,
+        { x: sx, y: sy },
+        ui,
+      );
+      return made === undefined || made === null || made === UI_UPDATE ? null : made;
+    }
+    // A right drag paints the open cells along its line.
+    const set: number[] = [];
+    for (let y = Math.min(sy, ey); y <= Math.max(sy, ey); y++)
+      for (let x = Math.min(sx, ex); x <= Math.max(sx, ex); x++) {
+        const c = y * b.w + x;
+        if (!b.fixed[c] && b.values[c] === 0) set.push(c, secondary);
+      }
+    return set.length === 0 ? null : { set };
+  }
+
+  /** The line stroke: a press starts a drag, which keeps to one row or
+   * column, and its release makes the edit it previewed. */
+  function lineDrag(b: FillBoard<C>, ui: FillUi, ds: D, p: Point, button: number): Arm {
+    const at = targetVerbs.geometry.pointerTarget(b, ds, p, ui);
+    if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
+      if (at === null) return null;
+      ui.dragButton = button;
+      startDrag(ui.drag, at.x, at.y);
+      ui.dragOk = true;
+      ui.linkArmed = false;
+      pressTarget(targetVerbs, ui, at);
+      return UI_UPDATE;
+    }
+    if (!(isMouseDrag(button) || isMouseRelease(button)) || ui.dragButton < 0)
+      return PASS;
+    // The engine ends a drag the board changed under: the gesture goes on, but
+    // commits nothing from an anchor the change made stale.
+    if (!ui.drag.live) {
+      if (isMouseRelease(button)) ui.dragButton = -1;
+      return UI_UPDATE;
+    }
+    if (at === null) ui.dragOk = false;
+    else {
+      // The coordinate that moved less goes back to the drag's start.
+      const { sx, sy } = ui.drag;
+      if (Math.abs(at.x - sx) < Math.abs(at.y - sy)) moveDrag(ui.drag, sx, at.y);
+      else moveDrag(ui.drag, at.x, sy);
+      ui.dragOk = true;
+    }
+    if (isMouseDrag(button)) return UI_UPDATE;
+    const edit = pendingEdit(b, ui);
+    ui.dragButton = -1;
+    endDrag(ui.drag);
+    return edit ?? UI_UPDATE;
+  }
+
+  /** `L` arms a link at the cursor, and the next arrow draws it to the
+   * neighbor that way, or parts the two, taking the cursor along. */
+  function linkKey(b: FillBoard<C>, ui: FillUi, button: number): Arm {
+    if (links === undefined) return PASS;
+    const isL = KEY_L.includes(button);
+    if (ui.linkArmed) {
+      ui.linkArmed = false;
+      const delta = cursorDelta(button);
+      if (delta !== null) {
+        const { x, y } = ui.cursor;
+        const x2 = x + delta.dx;
+        const y2 = y + delta.dy;
+        const got =
+          x2 >= 0 && x2 < b.w && y2 >= 0 && y2 < b.h
+            ? joining(b, y * b.w + x, y2 * b.w + x2)
+            : null;
+        if (got !== null) {
+          moveCursor(ui.cursor, button, b.w, b.h);
+          return linkEdit(b, got.c, got.q);
+        }
+        return UI_UPDATE;
+      }
+      if (isL) return UI_UPDATE;
+    }
+    if (!isL || !ui.cursor.visible) return PASS;
+    const c = ui.cursor.y * b.w + ui.cursor.x;
+    const clues = cluesOf(b) as ClueList;
+    if (clueAt(clues, c) < 0 && !linkable(b, c)) return null;
+    ui.linkArmed = true;
+    return UI_UPDATE;
+  }
+
+  /** Shift or Ctrl with an arrow paints the cells the cursor leaves and
+   * enters with the secondary value: Shift the open ones, Ctrl the primary
+   * ones as well. A bare arrow only moves the cursor. */
+  function strokeKey(b: FillBoard<C>, ui: FillUi, raw: number): Edit | UiUpdate | null {
+    const c0 = ui.cursor.y * b.w + ui.cursor.x;
+    const moved = moveCursor(ui.cursor, stripModifiers(raw), b.w, b.h);
+    const c1 = ui.cursor.y * b.w + ui.cursor.x;
+    const set: number[] = [];
+    for (const c of c0 === c1 ? [c0] : [c0, c1]) {
+      const v = b.values[c];
+      if (!b.fixed[c] && (v === 0 || (raw & MOD_CTRL && v === primary)))
+        set.push(c, secondary);
+    }
+    if (set.length > 0) return { set };
+    return moved ? UI_UPDATE : null;
+  }
+
+  return {
+    targetVerbs,
+    pendingEdit,
+    linkEdit,
+    previewed(b, ui) {
+      const edit = pendingEdit(b, ui);
+      return edit === null ? b : applyEdit(module, b, edit);
+    },
+    interpretMove(b, ui, ds, p, raw) {
+      const button = stripModifiers(raw);
+      if (play.stroke === "line" && (isMouseDown(button) || ui.dragButton >= 0)) {
+        const got = lineDrag(b, ui, ds, p, button);
+        if (got !== PASS) return got;
+      }
+      const linked = linkKey(b, ui, button);
+      if (linked !== PASS) return linked;
+      if (isCursorMove(button) && raw & (MOD_SHFT | MOD_CTRL))
+        return strokeKey(b, ui, raw);
+      return interpretTargetVerbs(targetVerbs, b, ui, ds, p, raw);
+    },
+  };
+}

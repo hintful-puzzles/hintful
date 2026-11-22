@@ -34,8 +34,14 @@ engine commit.
       those three glob the generated games beside. The compiler: `catalog:`,
       and the generated `<id>.game.ts`. Needs `fillGame`, so it is done
       after 2.7, with 3.1.
-- [ ] 2.4 `FillUi`, `newUi`, `changedState`, and input from `play` (verbs,
-      keys, Shift/Ctrl painting, `stroke`, `links`). The compiler: `play:`.
+- [x] 2.4 `FillUi`, `newUi`, and input from `play` (verbs, keys,
+      Shift/Ctrl painting, `stroke`, `links`): `engine/fill/play.ts`, tested
+      on Tents' compiled `play`. The compiler: `play:`. No `changedState`
+      (design.md § 5). The renderer previews a drag by `previewed`, and the
+      hint's link gesture is a drag between the two ends of `linkEdit`'s
+      mark, in 2.7. Shift/Ctrl painting is Tents' (Shift the open cells,
+      Ctrl the primary ones too); Boats' differs (Ctrl places boats), which
+      is stage 4's question when Boats moves.
 - [ ] 2.5 Render by layers: the engine walk, painters in
       `engine/render/pieces/`, margins, labels. The compiler: `labels:`.
 - [ ] 2.6 The deal: `scatter`/`partner` samplers reading `deal.sample`, the

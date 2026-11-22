@@ -732,6 +732,72 @@
           "description": "Formulas over the position, any true of a lost one."
         },
         "deadEnds": { "$ref": "#/$defs/deadEnds" },
+        "play": {
+          "type": "object",
+          "description": "How the player fills the board, for a fill game the engine plays (`engine/fill/play.ts`): each value they place, the two buttons' values, the drag, and the link drawn as the one cell mark.",
+          "required": ["values", "primary", "secondary", "stroke"],
+          "additionalProperties": false,
+          "properties": {
+            "values": {
+              "type": "object",
+              "description": "The values the player places, by the description's value: what its verb does (\"place a tent\"), the letter that places it, its three-character glyph in the text format, and the painter that draws it.",
+              "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+              "additionalProperties": {
+                "type": "object",
+                "required": ["does", "key", "glyph", "paint"],
+                "additionalProperties": false,
+                "properties": {
+                  "does": { "type": "string" },
+                  "key": { "type": "string", "pattern": "^[A-Z]$" },
+                  "glyph": { "type": "string", "minLength": 3, "maxLength": 3 },
+                  "paint": { "type": "string" }
+                }
+              }
+            },
+            "given": {
+              "type": "object",
+              "description": "The values only the deal places, a fixed cell's: their glyph and painter.",
+              "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+              "additionalProperties": {
+                "type": "object",
+                "required": ["glyph", "paint"],
+                "additionalProperties": false,
+                "properties": {
+                  "glyph": { "type": "string", "minLength": 3, "maxLength": 3 },
+                  "paint": { "type": "string" }
+                }
+              }
+            },
+            "primary": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The left button's value, which a click toggles with open."
+            },
+            "secondary": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The right button's value, which rules a cell out."
+            },
+            "blank": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "The value an open cell reads as for the answer check, where the answer is the other values alone (Tents' grass)."
+            },
+            "erase": {
+              "type": "string",
+              "pattern": "^[A-Z]$",
+              "description": "A letter that empties a cell, beside Backspace and Delete."
+            },
+            "stroke": {
+              "enum": ["line", "sweep"],
+              "description": "What a drag does: `line` paints the secondary value along one row or column, `sweep` repeats the pressed verb."
+            },
+            "links": {
+              "type": "string",
+              "description": "The cell mark naming a clue, drawn as a link between a cell and the clue's cell beside it."
+            }
+          }
+        },
         "deal": {
           "type": "object",
           "additionalProperties": { "type": "string" },

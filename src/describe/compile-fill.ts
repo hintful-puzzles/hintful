@@ -88,6 +88,37 @@ export function markWhileOf(
   ];
 }
 
+/**
+ * `play`, the engine's `FillPlay`, from the description's `play:`: its link
+ * named by the clue kind the cell mark names. Nothing where there is no
+ * `play:`. A button whose value the player cannot place, or a link that is
+ * not the cell mark naming a clue, is refused.
+ */
+export function playOf(json: DescriptionJson, env: Env): string[] {
+  const p = json.play;
+  if (p === undefined) return [];
+  for (const [button, v] of [
+    ["primary", p.primary],
+    ["secondary", p.secondary],
+  ] as const)
+    if (p.values[v] === undefined)
+      throw new CompileError(
+        `play: the ${button} value ${v} is not one the player places`,
+      );
+  if (p.links !== undefined && p.links !== env.cellMark?.name)
+    throw new CompileError(
+      `play: links names ${p.links}, not the cell mark naming a clue`,
+    );
+  const { links, ...rest } = p;
+  const play =
+    links === undefined ? rest : { ...rest, links: { clue: env.cellMark?.kind } };
+  return [
+    "",
+    "/** How the player fills the board: the engine's `FillPlay`. */",
+    `export const play = ${JSON.stringify(play)} as const;`,
+  ];
+}
+
 /** The elements a clue may sit at, as the description names them. */
 const UNIVERSE: Readonly<Record<string, string>> = { cell: "cells", line: "lines" };
 

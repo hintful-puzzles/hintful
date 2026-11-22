@@ -130,6 +130,18 @@ clues:
     complete: true
     means: "count(c in cells(at) where value(c) = 1) = v"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: place a tent, key: T, glyph: "//\\", paint: tent }
+    2: { does: mark it as grass, key: N, glyph: "   ", paint: ground }
+  given: { 3: { glyph: " T ", paint: tree } }
+  primary: 1
+  secondary: 2
+  # The answer is the tents alone: an open square is grass.
+  blank: 2
+  erase: B
+  stroke: line
+  links: link
 deal:
   answer: a fifth of the squares tents, at random, none touching, and a tree beside each, paired at random
   tree: beside each tent, as the pairing put it

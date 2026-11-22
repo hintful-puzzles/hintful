@@ -189,7 +189,10 @@ research tools all read through it; the app never does.
   samples an answer says how in `deal.sample`, and the compiler then writes
   `deriveClues`: each kind at each cell or line where one of its values
   holds of the answer, by its `means`. A clue whose `means` reads other
-  clues cannot be derived, and is refused.
+  clues cannot be derived, and is refused. `play:` is how the player fills
+  the board, which the engine's input is built from (`engine/fill/play.ts`):
+  the right button's value is always the one that rules a cell out, and
+  `links:` names the cell mark, drawn as a link to the clue beside the cell.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's

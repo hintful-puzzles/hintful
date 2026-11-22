@@ -108,6 +108,8 @@ export interface DescriptionJson {
   >;
   freedom: { kind: string };
   deal?: DealJson;
+  /** How the player fills the board, for a fill game the engine plays. */
+  play?: PlayJson;
   tiers?: string[];
   /** What a placement rules out at a glance, which the engine's `auto-cross`
    * preference makes for the player: the preference's words, and the
@@ -130,6 +132,19 @@ export interface DescriptionJson {
    * recorded under: what Check & save names a move by. */
   names?: Record<string, string>;
   variations?: Record<string, VariationJson>;
+}
+
+/** A fill game's `play:`: the engine's `FillPlay` (`engine/fill/play.ts`),
+ * with its link named by the cell mark it draws. */
+export interface PlayJson {
+  values: Record<string, { does: string; key: string; glyph: string; paint: string }>;
+  given?: Record<string, { glyph: string; paint: string }>;
+  primary: number;
+  secondary: number;
+  blank?: number;
+  erase?: string;
+  stroke: "line" | "sweep";
+  links?: string;
 }
 
 /** What the generator chooses, in words, and, where the deal samples an

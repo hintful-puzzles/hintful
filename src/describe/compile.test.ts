@@ -840,4 +840,19 @@ describe("what the fill board reads of a description", () => {
       }),
     ).toThrow(/`while` is the one cell mark's/);
   });
+
+  it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
+    expect(() =>
+      compileTents((j: { play: { secondary: number } }) => {
+        j.play.secondary = 3;
+        return j;
+      }),
+    ).toThrow(/secondary value 3 is not one the player places/);
+    expect(() =>
+      compileTents((j: { play: { links: string } }) => {
+        j.play.links = "pair";
+        return j;
+      }),
+    ).toThrow(/links names pair/);
+  });
 });

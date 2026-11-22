@@ -1135,7 +1135,8 @@ Being built by `openspec/changes/a-game-from-its-description-alone`, whose
 values in the space's own order, one mark a cell and the dealt clues, so
 the ladder reads it with no adapter. `edit.ts` is the one move, and
 `answer.ts` the hooks that judge a board against its answer and its rules.
-A game reaches them through `fillGame` once that lands; until then no game
+`play.ts` is the input the description's `play:` declares, and the engine's
+`FillUi`. A game reaches them through `fillGame` once that lands; until then no game
 uses them.
 
 ### `edge-hint.ts` — a hint on an edge between squares

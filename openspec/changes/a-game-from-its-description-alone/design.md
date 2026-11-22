@@ -167,17 +167,23 @@ type Edit = {
 ```yaml
 play:
   values:                 # what the player places, in the description's values
-    1: { name: tent, key: T, glyph: "//\\", paint: tent }
-    2: { name: grass, key: N, glyph: "   ", paint: ground, rulesOut: true }
+    1: { does: place a tent, key: T, glyph: "//\\", paint: tent }
+    2: { does: mark it as grass, key: N, glyph: "   ", paint: ground }
   given: { 3: { glyph: " T ", paint: tree } }
   primary: 1              # left click: open <-> 1
-  secondary: 2            # right click: open <-> 2
+  secondary: 2            # right click: open <-> 2, the value that rules out
+  blank: 2                # an open cell reads as grass for the answer check
+  erase: B                # beside Backspace and Delete
   stroke: line            # a secondary drag paints along one row or column
-  links: link             # a mark kind joined by a drag between its two ends
+  links: link             # the cell mark, drawn as a link to the clue beside
 ```
 
 - **The Ui.** `FillUi` holds the cursor, the drag (button, anchor, `ok`)
-  and the armed mark key.
+  and the armed link key. No `changedState`: the armed key names a cell,
+  and the arrow that fires it reads the board it is handed, which the
+  contract calls safe (`Game.changedState`).
+- **The secondary value always rules out**, so `play` has no flag for it:
+  the engine's convention is that the right button rules a target out.
 - **Input.** The engine builds the `TargetVerbs` from `play`:
   - the primary and secondary verbs, the latter `rulingOut`;
   - a key per value, and erase;
