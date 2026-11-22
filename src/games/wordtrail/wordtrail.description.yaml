@@ -23,7 +23,8 @@ help:
     first and the rest later. A drag that runs only along lines you have
     drawn, either way, takes them up. A line stops where it would run into a
     word's first letter from another way, into its last letter, or into a
-    dark square, or would close a loop.
+    dark square, or would close a loop. A line no word of the board can run
+    along, the way it points and with the lines beside it, turns red.
 
     You can also click near the edge between two letters to draw a line
     there: beside the end of a word, it carries the word on; anywhere else it
@@ -147,6 +148,13 @@ shape:
   # Each letter's word is a trail the deal lists: its lines are the trail's,
   # and only the trail's.
   - "forall c in cells where open(c): exists k in clues(trail): pos(k, c) > 0 and fits(k)"
+implied:
+  # Each line is on a trail that still fits: the shape, said of each line,
+  # so the lines no word can take are where it breaks (a piece longer than
+  # every word, or a loop), where said of a letter it names what it read.
+  onWord: >-
+    forall e in edges where lined(e): exists k in clues(trail):
+    joins(k, end1(e), end2(e)) and fits(k)
 clues:
   # A dark square, which holds no letter.
   block: { at: cell, value: "range(0, 0)", means: "lines(at) = 0" }

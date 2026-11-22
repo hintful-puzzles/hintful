@@ -46,6 +46,7 @@ import {
 import {
   answerOf,
   isComplete,
+  rules,
   solveWordtrail,
   WORDTRAIL_RUNGS,
   type WordtrailRung,
@@ -152,6 +153,7 @@ export const wordtrailGame: Game<
   interpretMove,
   executeMove,
   status,
+  rules,
 
   solve,
   difficulty,

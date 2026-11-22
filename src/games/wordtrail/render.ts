@@ -71,7 +71,7 @@ import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../../engine/render/win-wave.ts";
 import type { WordtrailHighlights } from "./hint.ts";
 import { withChanges, wordtrailLines } from "./moves.ts";
-import { fittingTrails } from "./solver.ts";
+import { fittingTrails, strayLines } from "./solver.ts";
 import {
   LINE_BACK,
   type WordtrailMove,
@@ -85,7 +85,7 @@ export const PREFERRED_TILE_SIZE = 48;
 
 // --- palette ----------------------------------------------------------------
 
-// A line that breaks a rule already (it closes a loop, or makes a trail
+// A line no word that still fits can take (a loop's, or one of a trail
 // longer than any listed word) is `COL_ERROR`. The letter a hint step reasons
 // from, and the letters of the words it finds, are `COL_HINT_OUTLINE`; the
 // edges it decides are ringed by the engine (`drawEdgeHints`).
@@ -159,8 +159,6 @@ export function centerOf(state: WordtrailState, ts: number, i: number): Point {
 interface Pieces {
   /** Each square's piece's root. */
   root: Int32Array;
-  /** The roots of the pieces whose lines break a rule. */
-  broken: Set<number>;
   /** The pieces that spell a word, by root, with the word. */
   words: Map<number, string>;
 }
@@ -175,11 +173,10 @@ const fromOf = (g: SquareEdges, e: number, code: number): number =>
 /**
  * The pieces `edges` make. A piece spells a word where it is a trail of the
  * board, one of those that spell a word, its lines running the way the
- * trail reads; it is broken where its lines close a loop or it is longer
- * than every listed word.
+ * trail reads.
  */
 function piecesOf(state: WordtrailState, edges: Uint8Array): Pieces {
-  const { w, h, letters, lengths, trails } = state;
+  const { w, h, letters, trails } = state;
   const g = squareEdges(w, h);
   const dsf = new Dsf(g.cells);
   for (let e = 0; e < g.edgeCount; e++) if (isLine(edges[e])) dsf.merge(g.a[e], g.b[e]);
@@ -187,13 +184,6 @@ function piecesOf(state: WordtrailState, edges: Uint8Array): Pieces {
   const lines = new Int32Array(g.cells);
   for (let i = 0; i < g.cells; i++) root[i] = dsf.canonify(i);
   for (let e = 0; e < g.edgeCount; e++) if (isLine(edges[e])) lines[root[g.a[e]]]++;
-  const longest = Math.max(...lengths);
-  const broken = new Set<number>();
-  for (let i = 0; i < g.cells; i++) {
-    const r = root[i];
-    if (r !== i) continue;
-    if (lines[r] >= dsf.size(r) || dsf.size(r) > longest) broken.add(r);
-  }
   const words = new Map<number, string>();
   for (const trail of trails) {
     const r = root[trail[0]];
@@ -212,7 +202,7 @@ function piecesOf(state: WordtrailState, edges: Uint8Array): Pieces {
     }
     if (own) words.set(r, Array.from(trail, (i) => letterChar(letters[i])).join(""));
   }
-  return { root, broken, words };
+  return { root, words };
 }
 
 /** The squares of the trails spelling `word` that still fit. */
@@ -596,6 +586,7 @@ export function redraw(
   const edges = withChanges(state, drag);
   const dragged = new Map(drag.map((c) => [c.edge, c.mark]));
   const pieces = piecesOf(state, edges);
+  const stray = strayLines(state, edges);
   const wrong = new Set(mistakes?.map((m) => m.edge));
   const listed = listedRoots(state, pieces);
   const hueOf = new Map(
@@ -652,7 +643,7 @@ export function redraw(
         const s =
           (line ? LINE : edges[e]) |
           (out ? S_OUT : 0) |
-          (line && pieces.broken.has(pieces.root[i]) ? S_ERROR : 0) |
+          (line && stray.has(e) ? S_ERROR : 0) |
           (wrong.has(e) && was === undefined ? S_WRONG : 0) |
           (was === LINE ? S_DRAG_ADD : 0) |
           (was !== undefined && was !== LINE && isLine(state.edges[e])

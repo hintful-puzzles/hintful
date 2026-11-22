@@ -434,16 +434,22 @@ describe("wordtrail frame", () => {
     expect(recording.ops.some((op) => paintsWith(op, COL_DARK))).toBe(true);
   });
 
-  it("draws a loop red once it closes, and not before", () => {
-    // The engine's drag never closes one; a solve or a save could.
+  it("draws a line red where no word can take it, a loop's included", () => {
     const red = (path: number[]): boolean =>
       renderScenario({
         game: wordtrailGame,
         id: ID,
         moves: [draw(path)],
       }).recording.ops.some((op) => paintsWith(op, COL_ERROR));
-    expect(red([0, 1, 5, 4])).toBe(false);
-    expect(red([0, 1, 5, 4, 0])).toBe(true);
+    expect(red(GLAND)).toBe(false);
+    // Part of a word, its last letter with one line: the hint walk draws
+    // whole words, so the rules guard never reads a board like this.
+    expect(red(GLAND.slice(0, 3))).toBe(false);
+    // NALD: GLAND runs from A to N, never the other way.
+    expect(red([0, 1, 5, 4])).toBe(true);
+    // GLAND, and a line from D back to L, closing a loop. The engine's drag
+    // never closes one; a solve or a save could.
+    expect(red([...GLAND, 5])).toBe(true);
   });
 
   it("draws a mistake red, and rings a hint's edges", () => {

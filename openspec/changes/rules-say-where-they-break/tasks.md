@@ -126,7 +126,7 @@
       diagonal crosses, or of a full hub, reads as no line; two crossing
       lines are red, where nothing was; its tallies go). Bridges moves with
       batch 3, 2.3d.
-- [ ] 2.3d Bound the loop and acyclic forms; then batch 3. Loopy's and
+- [x] 2.3d Bound the loop and acyclic forms; then batch 3. Loopy's and
       Pearl's "largest piece" guess goes (`design.md` § "Census").
       Moved: loopy, pearl. Their loop rule is the through form, bounded in
       2.3c; what they needed was the reading `oneLoopHeld` gives (an open
@@ -207,7 +207,17 @@
       desc check ask `validity`; marks unchanged in the app and in every
       render snapshot. Planted: `x in chain(c)` read true at an undecided
       link fails both guard tests (a rule false of every whole board instead
-      hangs the deal). Next: wordtrail's pieces, read before its batch.
+      hangs the deal).
+      Moved (2026-11-22): wordtrail. `onWord`, implied, says each line is on
+      a trail that still fits, so the lines are named, where the letter's
+      shape names the edges it read. Its board reads an open edge as none at
+      a letter with two lines, and everywhere once the lines are an answer
+      (a line more would join two words and break the counts). New: a line
+      no word runs along is red at once, where the old check marked only a
+      loop or a piece longer than every word; a word drawn part-way stays
+      plain (its test, since the walk draws words whole and the guard never
+      reads one: a reading planted unsound there passed the guard). Its
+      `broken` pieces go; 0.8 ms a redraw on 7×7.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
 - [x] 2.4 Plant a broken rule and see its mark appear in a game that wrote

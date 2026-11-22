@@ -1147,7 +1147,11 @@ says how each form is read; what a description's author acts on:
   shuts in. Where each square names the next by its value, the same is
   `forall c in cells where to(c) != none: c not in chain(to(c))`, so a
   loop's squares are where it breaks and not those leading into it, which
-  the shape's `exists g in chain(c)` names alike (Rome's). A rule false of
+  the shape's `exists g in chain(c)` names alike (Rome's). A shape said of
+  a square that the answer's edges decide names the edges it read, around
+  the square and past it; said again of each line, implied, it names the
+  lines: WordTrail's `onWord`, each line on a trail that still fits, so
+  every line of a piece no word can be is red, and nothing beside it. A rule false of
   every whole board keeps a generator that asks the rules from ever
   finishing, so a defect planted to see the guard fail is planted where it
   is false only on a board still being filled. An implied statement is in no technique's soundness
@@ -1183,7 +1187,9 @@ answers at random and must report nothing, and must report an answer with
 one value changed exactly where `isAnswer` refuses it. It also walks each board's hints, and every board on the
 way must report nothing and read, where `rules.grid` decides an element, as
 the answer does: so a game's reading of its own state (Light Up's lit square
-as holding no bulb) is checked as well as the compiler's.
+as holding no bulb) is checked as well as the compiler's. Only on the boards
+a hint walk passes, though: a board only a player draws (a WordTrail word
+drawn part-way, where the hint draws words whole) the game's own tests read.
 
 ## A kind of rule places its techniques
 

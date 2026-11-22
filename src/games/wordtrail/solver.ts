@@ -20,12 +20,14 @@
 
 import { type SquareEdges, squareEdges } from "../../engine/board/square-edges.ts";
 import type { DifficultyVerdict } from "../../engine/contract/difficulty.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import {
   CROSS,
   type EdgeChange,
   LINE,
   OPEN,
 } from "../../engine/mechanics/line-drawing.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
@@ -35,6 +37,7 @@ import {
   perBoard,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -189,6 +192,51 @@ function writeBack(d: Deduction, board: WordtrailBoard): void {
           ? CROSS
           : OPEN;
   }
+}
+
+/**
+ * `edges`, a board's or a drag's preview of them, as the rules read them: a
+ * line the way it runs, none for a cross or an edge beside a dark square,
+ * and none for an open edge at a letter with its two lines, which a word
+ * runs through at most once; nothing for any other open edge, until the
+ * lines are an answer with every open edge none. Then every open edge is
+ * none: a line more would join two words into one, and the count of words
+ * of each length would no longer hold.
+ */
+function rulesGrid(board: WordtrailBoard, edges: Uint8Array): Uint8Array {
+  const geo = geometryOf(board.w, board.h);
+  const g = new Uint8Array(geo.sp.edges.length);
+  const lines = new Uint8Array(board.w * board.h);
+  for (let e = 0; e < geo.g.edgeCount; e++) {
+    const v = darkEdge(board, geo.g, e) ? NONE : spaceValue(geo, e, edges[e]);
+    g[geo.toSp[e]] = v;
+    if (v === FORTH || v === BACK) {
+      lines[geo.g.a[e]]++;
+      lines[geo.g.b[e]]++;
+    }
+  }
+  for (let e = 0; e < geo.g.edgeCount; e++)
+    if (g[geo.toSp[e]] === 0 && (lines[geo.g.a[e]] === 2 || lines[geo.g.b[e]] === 2))
+      g[geo.toSp[e]] = NONE;
+  const whole = g.map((v) => v || NONE);
+  return wordtrail.isAnswer(whole, geo.sp, dealtOf(board)) ? whole : g;
+}
+
+/** The board as its description's rules read it. */
+export const rules: RulesOf<WordtrailBoard> = describedRules(wordtrail, {
+  grid: (s) => rulesGrid(s, s.edges),
+  space: (s) => geometryOf(s.w, s.h).sp,
+  deals: (s) => [dealtOf(s)],
+});
+
+const ON_WORD: wordtrail.RuleName = "onWord";
+
+/** The game's edges whose lines no word that still fits can take, with
+ * `edges` on the board: the lines the board draws red. */
+export function strayLines(board: WordtrailBoard, edges: Uint8Array): Set<number> {
+  const { toGame } = geometryOf(board.w, board.h);
+  const live = liveErrors(rules, board, rulesGrid(board, edges));
+  return new Set((live.byRule.get(ON_WORD) ?? []).map(([se]) => toGame[se]));
 }
 
 /** Whether the lines divide the letters into words of the listed lengths,
