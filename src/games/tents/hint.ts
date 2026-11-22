@@ -38,6 +38,7 @@ import {
   readsOf,
   reasonOf,
   settleLinks,
+  type TentsKind,
   type TentsReason,
   type TentsRung,
   type TentsWalkContext,
@@ -100,11 +101,14 @@ const lineMarks = (c: Counted) => ({
 /** Every sentence Tents' hint speaks, from what its firing's reading found. */
 export const say = {
   noTree: (cells: readonly Point[]): Sentence =>
-    speak.sentence("noTree", { ring: cells }),
+    speak.sentence("noTreeStep", { ring: cells }),
 
   /** Squares every tree beside which already has its tent, shown in `area`. */
   treesDone: (cells: readonly Point[], area: readonly Point[]): Sentence =>
-    speak.sentence("treesDone", { ring: cells, marks: { outline: { tents: area } } }),
+    speak.sentence("treesDoneStep", {
+      ring: cells,
+      marks: { outline: { tents: area } },
+    }),
 
   /** The open squares round one tent, in `peer.touch`'s sentence. */
   nextToTent: (cells: readonly Point[], tent: Point): Sentence => {
@@ -124,7 +128,7 @@ export const say = {
   },
 
   treeDiagonal: (cell: Point, tree: Point, pair: readonly Point[]): Sentence =>
-    speak.sentence("treeDiagonal", {
+    speak.sentence("treeDiagonalStep", {
       ring: [cell],
       marks: { outline: { tree: [tree], pair } },
     }),
@@ -137,7 +141,7 @@ export const say = {
     taken: readonly Point[],
     link: HintLink,
   ): Sentence =>
-    speak.sentence("treeSingle", {
+    speak.sentence("treeSingleStep", {
       ring: { square: [square], link: [link] },
       marks: { outline: { tree: [tree], taken } },
     }),
@@ -151,7 +155,7 @@ export const say = {
     area: readonly Point[],
     link: HintLink,
   ): Sentence =>
-    speak.sentence("tentLink", {
+    speak.sentence("tentLinkStep", {
       ring: { tent: [tent], tree: [tree], link: [link] },
       terms: { to },
       marks: { outline: { area } },
@@ -168,7 +172,7 @@ export const say = {
     others: number,
     link: HintLink,
   ): Sentence =>
-    speak.sentence("treeLink", {
+    speak.sentence("treeLinkStep", {
       ring: { tree: [tree], tent: [tent], link: [link] },
       terms: { to, many: others > 1 },
       marks: { outline: { area } },
@@ -273,7 +277,7 @@ export const { plan: tentsHint, judgeMove: tentsJudgeMove } = describedEdgeHint<
   TentsMarked,
   TentsWalkContext,
   tents.SaysById,
-  TentsRung
+  TentsKind
 >({
   name: "tents hint",
   walk: tentsWalk,

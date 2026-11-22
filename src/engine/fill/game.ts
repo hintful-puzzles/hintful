@@ -9,7 +9,10 @@
 import { descValue } from "../contract/desc-error.ts";
 import type { Game, PresetBoards } from "../contract/game.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
 import { transposeDimensions } from "../game-id/params.ts";
+import { drag, type PointerAction } from "../input/hint-gesture.ts";
+import { verbClicks } from "../input/target-verb.ts";
 import type { ClueList } from "../solve/describe-runtime.ts";
 import {
   type AnswerReading,
@@ -32,7 +35,7 @@ import {
   type FillParams,
   fillParams,
 } from "./game-id.ts";
-import { type FillHint, type FillHintModule, fillHint } from "./hint.ts";
+import { type FillHint, type FillHintModule, fillHint, linkedCell } from "./hint.ts";
 import {
   type FillInput,
   type FillPlay,
@@ -137,7 +140,44 @@ export function fillGame<C extends Clues<C> & object>(
     revealOne,
     textFormat: (b) => textFormat(reading, b),
     ...(rulesOut === undefined ? {} : { rulesOut }),
-    hint: { ...hint, marks: { roles: module.hintMarks } },
+    hint: {
+      ...hint,
+      marks: { roles: module.hintMarks },
+      // A square is clicked with the button whose verb the step keeps, and a
+      // link is dragged from its square to its clue, which places the
+      // square's value too.
+      gesture: (b, ui, ds, move, step) => {
+        const { geometry } = input.targetVerbs;
+        const at = (c: number) =>
+          geometry.pointAt(b, ds, { x: c % b.w, y: Math.floor(c / b.w) }, ui);
+        const marks = move.mark ?? [];
+        const linked = new Set(marks.filter((_, i) => i % 2 === 0));
+        const set = move.set ?? [];
+        const clicks: Point[] = [];
+        for (let i = 0; i < set.length; i += 2)
+          if (!linked.has(set[i]))
+            clicks.push({ x: set[i] % b.w, y: Math.floor(set[i] / b.w) });
+        const drags: PointerAction[] = [];
+        if (play.links !== undefined)
+          for (let i = 0; i < marks.length; i += 2)
+            drags.push(drag(at(marks[i]), at(linkedCell(b, play.links, marks[i + 1]))));
+        return [
+          ...verbClicks(
+            input.targetVerbs,
+            {
+              executeMove: (s, m) => applyEdit(module, s, m),
+              keepTrack: hint.keepTrack,
+            },
+            b,
+            ui,
+            ds,
+            step,
+            clicks,
+          ),
+          ...drags,
+        ];
+      },
+    },
 
     colors: render.colors,
     preferredTileSize: render.preferredTileSize,

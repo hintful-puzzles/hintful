@@ -104,6 +104,9 @@ export interface StatedContext<E, R = E> {
   /** What the step's placing techniques follow with, which it shows and makes
    * but does not decide, for `{ring then}`. */
   readonly consequences?: readonly R[];
+  /** The marks the step sets, for `{ring mark}`, and the kind they are drawn
+   * on: a link, not the cell it is set on. */
+  readonly marking?: { readonly kind: MarkKind<E>; readonly els: readonly E[] };
   /** The elements the step marks in each other role, and its ring by sort
    * where a planner's step decides elements of several. */
   readonly marks: Readonly<
@@ -393,7 +396,12 @@ function word<E>(name: string, cx: StatedContext<E>, els: readonly E[] | null): 
 /** The squares a `ring` reference or a `has` slot names (`ringNames`). */
 function squaresNamed<E>(name: string, cx: StatedContext<E>): readonly E[] {
   return (ringNames(name) as readonly string[]).flatMap((n) => {
-    const els = n === "then" ? cx.consequences : cx.placing?.(Number(n));
+    const els =
+      n === "then"
+        ? cx.consequences
+        : n === "mark"
+          ? cx.marking?.els
+          : cx.placing?.(Number(n));
     if (els === undefined)
       throw new Error(`stated clause: {… ${n}} needs the squares the step places`);
     return els;
@@ -418,6 +426,11 @@ function reference<E>(
       );
     els = bySort[p.name];
     kind = cx.kinds?.[p.name] ?? cx.kind;
+  } else if (role === "ring" && p.name === "mark") {
+    if (cx.marking === undefined)
+      throw new Error("stated clause: {ring mark} needs the marks the step sets");
+    els = cx.marking.els;
+    kind = cx.marking.kind;
   } else if (role === "ring" && ringNames(p.name) !== null)
     els = squaresNamed(p.name, cx);
   else if (p.name !== "") {

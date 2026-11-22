@@ -105,6 +105,34 @@ engine commit.
       an `Edit`'s marks, rung as `LINK`, and a line's clue outlined as
       `LINE` (Tents' "its number"). Checked in the app, including links,
       drags, hints and dark mode. List the capabilities added.
+      In parts (2026-11-22), each its own commit, the hand-written Tents
+      playing on until the last:
+  - [x] 3.2.1 The fill hint asks for a mark, and every Tents technique
+        states its words (one part: the hint runs on no technique left
+        unstated). A firing's `MARK` facts are targets beside its `PLACE`
+        facts, followed by slot (a cell's value, or its mark past every
+        cell), made by an `Edit`'s `mark` and dragged as the link; a clause
+        rings them as `{ring mark}`, drawn as `LINK`. `fillGame`'s hint has a
+        `gesture` (clicks, then a link's drag) in place of `targets`.
+        `lineCount` is split by `says.arms` into `countMet`, `allOpen` and
+        `noSpareRoom`; `betweenThem` is no leg of its own but
+        `noSpareRoom`'s `{has 2: …}`. Decided against the plan: a line's
+        clue is not outlined as `LINE`; the striped line hatches its clue,
+        as Kakurasu's does, so the words say "this row" and not "its
+        number" (consistency, pre-approved). "The tree above it" became the
+        ringed tree. Each `reads` states Tents' own premise, since the
+        hand-written hint's walk unions the two: a scan of HEAD in a scratch
+        worktree walks the same 2589 positions with the same count for
+        every kind. The hand-written steps the stated techniques share a
+        name with carry `Step` until `steps:` goes; its rungs are the
+        description's kinds (`SAYS_KINDS`), arms included.
+  - [ ] 3.2.3 The walk's link reading as engine capabilities: techniques
+        read once on the drawn marks before each firing (`readLinks`), and
+        a mark offered only where it lets a later technique fire
+        (`linkFor`), declared in the description.
+  - [ ] 3.2.4 The flip: Tents born (its TypeScript gone, its catalog and
+        help from the description), its tests on the engine's moves, the
+        upstream-descs guard, run in the app.
 - [ ] 3.3 Measure lines, frame time, hint-walk time and capabilities added
       per game, against the baseline; record the figures in design.md.
 

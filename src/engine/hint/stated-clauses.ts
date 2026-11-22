@@ -16,7 +16,9 @@
  *   counts as a fact of its own (`derived`'s `"each"`).
  * - `{ring 1}`, `{ring then}`, `{ring 2+then: words}`: a reference to the squares
  *   the step places that value on (`1`, `2`, ...), or to those its placing
- *   techniques follow with (`then`), or both (`+`). {@link ringNames}
+ *   techniques follow with (`then`), or both (`+`). `{ring mark: words}` is
+ *   the marks the step sets (Tents' link), drawn on the hint's mark kind.
+ *   {@link ringNames}
  * - `{has 2+then: , with {ring 2+then: its water}}`: words, references among
  *   them, said only where those squares are there.
  * - `{piece term}`: the word for the piece of the two-state pair the number
@@ -121,9 +123,11 @@ export const DEFAULT_FORMS: Readonly<Record<string, readonly string[]>> = {
 
 /** The squares a `ring` reference or a `has` slot is over, by name: `1`, `2`
  * and so on are the squares the step places that value on, `then` the squares
- * its placing techniques follow with, and `+` joins them (`2+then`); `null`
- * where the name is none of these. */
+ * its placing techniques follow with, and `+` joins them (`2+then`); `mark`,
+ * alone, the marks the step sets, drawn on a kind of their own; `null` where
+ * the name is none of these. */
 export function ringNames(name: string): readonly string[] | null {
+  if (name === "mark") return [name];
   const names = name.split("+");
   return names.every((n) => n === "then" || /^[0-9]+$/.test(n)) ? names : null;
 }

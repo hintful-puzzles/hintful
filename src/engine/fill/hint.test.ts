@@ -6,11 +6,19 @@
 
 import { describe, expect, it } from "vitest";
 import * as kakurasu from "../../generated/games/kakurasu/kakurasu.compiled.ts";
+import * as tents from "../../generated/games/tents/tents.compiled.ts";
+import type { HintStep } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
+import { click, drag } from "../input/hint-gesture.ts";
 import { status } from "./answer.ts";
 import { type FillBoard, newBoard, spaceOf } from "./board.ts";
-import { applyEdit } from "./edit.ts";
-import { fillHint } from "./hint.ts";
+import { applyEdit, type Edit } from "./edit.ts";
+import { fillGame } from "./game.ts";
+import { type FillHint, fillHint } from "./hint.ts";
+import { LINK } from "./marks.ts";
+
+const TS = 32;
 
 const SHADED = 1;
 const CROSSED = 2;
@@ -81,11 +89,16 @@ describe("a fill game's hint", () => {
     expect(hint.keepTrack(wrong, step, after)).toBe("off");
   });
 
-  it("clicks the squares its move sets", () => {
+  it("clicks the squares its move sets, each with the button that makes it", () => {
+    const game = fillGame("kakurasu", kakurasu);
     const board = dealt();
     const [step] = plan(board);
-    expect(hint.targets(board, step.move, step)).toEqual(
-      (step.highlights?.targets ?? []).map(({ x, y }) => ({ x, y })),
+    const ds = game.newDrawState(board, TS);
+    const ui = game.newUi(board);
+    const at = (t: Point) =>
+      game.targetVerbs?.geometry.pointAt(board, ds, { x: t.x, y: t.y }, ui);
+    expect(game.hint?.gesture?.(board, ui, ds, step.move, step)).toEqual(
+      (step.highlights?.targets ?? []).map((t) => click(at(t) as Point, "secondary")),
     );
   });
 
@@ -94,5 +107,91 @@ describe("a fill game's hint", () => {
     const [step] = plan(board);
     const verdict = hint.judgeMove(board, applyEdit(kakurasu, board, step.move));
     expect(verdict).not.toBeNull();
+  });
+});
+
+describe("a fill game's hint that asks for a link", () => {
+  // Tents (T), trees (R) and grass (.): each tent's tree is beside it, the
+  // trees at 1, 11 and 12.
+  const TENTS = ["TR..", "...T", "...R", "RT.."];
+  const tentsGame = fillGame("tents", {
+    ...tents,
+    boards: [{ w: W, h: W }],
+    hintMarks: {},
+  });
+  const TENT = 1;
+  type Step = HintStep<Edit, FillHint>;
+
+  function tentsBoard(): FillBoard<tents.Dealt> {
+    const g = Uint8Array.from(TENTS.join(""), (ch) => "_T.R".indexOf(ch));
+    return newBoard(tents, W, W, tents.deriveClues(g, spaceOf(tents, { w: W, h: W })));
+  }
+
+  /** The first step that sets a mark, on the board the plan was asked on,
+   * every step before it made. */
+  function firstLink(): { board: FillBoard<tents.Dealt>; step: Step } {
+    let board = tentsBoard();
+    for (let asked = 0; asked < 40; asked++) {
+      const got = tentsGame.hint?.plan(board);
+      if (!got?.ok) throw new Error("no hint");
+      const [step] = got.steps;
+      if (step.move.mark !== undefined) return { board, step };
+      board = applyEdit(tents, board, step.move);
+    }
+    throw new Error("no step asked for a link");
+  }
+
+  it("places a tree's tent and rings the link it asks for, in the words", () => {
+    const { board, step } = firstLink();
+    const mark = step.move.mark ?? [];
+    expect(mark).toHaveLength(2);
+    const [cell, q] = mark;
+    const tree = board.dealt.tree.at[q];
+    expect(stepMarks(step).of("ring", LINK)).toEqual([{ cell, to: tree }]);
+    expect(step.explanation).toMatch(/the link\.$/);
+    // Its move sets the tent where the square is open, and the gesture is the
+    // link's drag, which places it.
+    if (board.values[cell] === 0) expect(step.move.set).toEqual([cell, TENT]);
+    const ds = tentsGame.newDrawState(board, TS);
+    const ui = tentsGame.newUi(board);
+    const at = (c: number) =>
+      tentsGame.targetVerbs?.geometry.pointAt(
+        board,
+        ds,
+        { x: c % W, y: Math.floor(c / W) },
+        ui,
+      );
+    expect(tentsGame.hint?.gesture?.(board, ui, ds, step.move, step)).toEqual([
+      drag(at(cell) as Point, at(tree) as Point),
+    ]);
+  });
+
+  it("follows the tent placed alone, then completes on the link", () => {
+    const { board, step } = firstLink();
+    const [cell, q] = step.move.mark ?? [];
+    if (board.values[cell] !== 0) throw new Error("the first link's tent is placed");
+    const hint = tentsGame.hint;
+    if (hint === undefined) throw new Error("no hint");
+    const tent = { set: [cell, TENT] };
+    expect(hint.keepTrack(tent, step, board)).toBe("onTrack");
+    expect(step.move).toEqual({ mark: [cell, q] });
+    const after = applyEdit(tents, board, tent);
+    expect(hint.keepTrack({ mark: [cell, q] }, step, after)).toBe("completed");
+    // A link to another tree, or none, is off the step.
+    expect(hint.keepTrack({ set: [cell, 2] }, step, after)).toBe("off");
+  });
+
+  it("leaves every tent linked to its tree when each step's move is made", () => {
+    let board = tentsBoard();
+    for (let asked = 0; asked < 40; asked++) {
+      const got = tentsGame.hint?.plan(board);
+      if (!got?.ok) break;
+      board = applyEdit(tents, board, got.steps[0].move);
+    }
+    expect(tentsGame.status(board)).toBe("solved");
+    // Each tent names the tree it was dealt beside.
+    expect([0, 7, 13].map((c) => board.dealt.tree.at[board.mark[c]])).toEqual([
+      1, 11, 12,
+    ]);
   });
 });

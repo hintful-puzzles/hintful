@@ -71,8 +71,11 @@ export interface SolveResult {
   links: Int8Array;
 }
 
-/** The rungs a step can be, cheapest first: the ladder's techniques. */
-export const TENTS_RUNGS = tents.ladder.map((e) => e.id);
+/** The rungs a step can be: the ladder's techniques, a line's count by the
+ * arm of it that held. */
+export const TENTS_RUNGS = tents.SAYS_KINDS;
+export type TentsKind = (typeof tents.SAYS_KINDS)[number];
+/** A technique of the ladder. */
 export type TentsRung = tents.LadderId;
 
 /** Why a hint firing holds. Squares are indices; the rest of what a sentence

@@ -70,7 +70,7 @@ import {
   type TentsDrawState,
   TLBORDER,
 } from "./render.ts";
-import { rules, status, TENTS_RUNGS, type TentsRung, tentsSolve } from "./solver.ts";
+import { rules, status, TENTS_RUNGS, type TentsKind, tentsSolve } from "./solver.ts";
 import {
   BLANK,
   canJoin,
@@ -489,7 +489,7 @@ export const tentsGame: Game<
   TentsDrawState,
   TentsMistake,
   unknown,
-  TentsRung
+  TentsKind
 > = {
   id: "tents",
 

@@ -6,11 +6,12 @@
  * teaches what the board needs. No game writes a hook
  * (`openspec/changes/a-game-from-its-description-alone`, design.md § 5).
  *
- * A step decides values: the firing hint reads a firing's `PLACE` facts, so a
- * technique that only marks a cell (Tents' link) is not hinted from here yet.
+ * A step decides values and, where the game's mark is a link, marks: a link
+ * the step asks for is ringed as `LINK`, and drawn by the link's drag.
  */
 
-import type { HintStep, RulesOut } from "../contract/game.ts";
+import type { RulesOut } from "../contract/game.ts";
+import type { MarkKind } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import {
   describedFiringHint,
@@ -19,6 +20,7 @@ import {
 } from "../hint/described-firing-hint.ts";
 import type { DescribedRulesOut } from "../hint/described-rules-out.ts";
 import type { Clauses } from "../hint/stated.ts";
+import type { ClueList } from "../solve/describe-runtime.ts";
 import { describedLadder } from "../solve/ladder-runtime.ts";
 import { asDealt } from "./answer.ts";
 import {
@@ -28,10 +30,14 @@ import {
   solveBoard,
 } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
+import { type FillLink, LINK } from "./marks.ts";
+import type { FillPlay } from "./play.ts";
 
-/** A square a step decides, and the value it asks. */
+/** A square a step decides, and the value it asks; or, as a `mark`, the
+ * element it asks the square's mark to name. */
 export interface FillTarget extends Point {
   readonly value: number;
+  readonly mark?: true;
 }
 
 export type FillHint = FiringHint<FillTarget>;
@@ -49,21 +55,31 @@ export interface FillHintModule<C> extends LadderedFillModule<C> {
   readonly SAYS_EACH?: readonly string[];
   readonly SAYS_LEGS?: readonly string[];
   readonly RULES_OUT?: DescribedRulesOut;
+  /** How the game is played: where a cell's mark is a link, the kind of clue
+   * it names. */
+  readonly play?: FillPlay;
 }
 
-/** A fill game's `Game.hint`, but for its legend of marks, and what a
- * placement rules out where the description says. */
+/** A fill game's `Game.hint`, but for its legend of marks, its gesture, and
+ * what a placement rules out where the description says. */
 export interface FillHintHooks<C>
   extends FiringHintParts<FillBoard<C>, Edit, FillHint, string> {
   readonly rungs: readonly string[];
-  /** The squares the step's move sets, in order: the engine clicks each with
-   * the button whose verb keeps the step on track. */
-  targets(board: FillBoard<C>, move: Edit, step: HintStep<Edit, FillHint>): Point[];
+}
+
+/** The cell of clue `q` of the kind `links` names: a link's far end. */
+export function linkedCell<C>(
+  board: FillBoard<C>,
+  links: { readonly clue: string },
+  q: number,
+): number {
+  return (board.dealt[links.clue as keyof C] as ClueList).at[q];
 }
 
 export function fillHint<C extends object>(
   module: FillHintModule<C>,
 ): { hint: FillHintHooks<C>; rulesOut?: RulesOut<FillBoard<C>, Edit> } {
+  const links = module.play?.links;
   // A board's tier is its deal's, which no move changes: every board of one
   // game shares its `dealt`.
   const lowest = new WeakMap<C, number>();
@@ -103,22 +119,40 @@ export function fillHint<C extends object>(
     foreign: () => false,
     target: (at, n) => ({ ...at, value: n }),
     want: (t) => t.value,
-    move: (targets, b) => ({ set: targets.flatMap((t) => [t.y * b.w + t.x, t.value]) }),
+    ...(links === undefined
+      ? {}
+      : {
+          marks: {
+            target: (at: Point, q: number): FillTarget => ({
+              ...at,
+              value: q,
+              mark: true,
+            }),
+            isMark: (t: FillTarget) => t.mark === true,
+            markAt: (b: FillBoard<C>, c: number) => b.mark[c],
+            ring: {
+              kind: LINK as MarkKind<unknown>,
+              of: (t: FillTarget, b: FillBoard<C>): FillLink => {
+                const cell = t.y * b.w + t.x;
+                return { cell, to: linkedCell(b, links, t.value) };
+              },
+            },
+          },
+        }),
+    move: (targets, b) => {
+      const at = (t: FillTarget) => [t.y * b.w + t.x, t.value];
+      const set = targets.filter((t) => t.mark !== true).flatMap(at);
+      const mark = targets.filter((t) => t.mark === true).flatMap(at);
+      return {
+        ...(set.length > 0 ? { set } : {}),
+        ...(mark.length > 0 ? { mark } : {}),
+      };
+    },
     ...(module.STATED === undefined ? {} : { stated: module.STATED }),
     say: {},
   });
   return {
-    hint: {
-      ...described.hint,
-      rungs: module.SAYS_KINDS,
-      targets: (b, move) => {
-        const set = move.set ?? [];
-        const out: Point[] = [];
-        for (let i = 0; i < set.length; i += 2)
-          out.push({ x: set[i] % b.w, y: Math.floor(set[i] / b.w) });
-        return out;
-      },
-    },
+    hint: { ...described.hint, rungs: module.SAYS_KINDS },
     ...(described.rulesOut === undefined ? {} : { rulesOut: described.rulesOut }),
   };
 }

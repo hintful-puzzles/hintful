@@ -1151,8 +1151,10 @@ names, and `marks.ts` holds the hint's mark kinds beside the cells.
 `game-id.ts` is its params and desc, from the description's `id:`.
 `hint.ts` is the hint, `describedFiringHint`'s hooks read off the board,
 the walk begun at the lowest tier that finishes the board as dealt; a step
-decides values only (`PLACE` facts). A game reaches them through `fillGame`
-once that lands; until then no game uses them.
+decides values (`PLACE` facts) and, where the game's mark is a link, marks
+(`MARK` facts), which its words ring as `{ring mark}` and its gesture drags.
+`game.ts` is `fillGame`, every hook of the contract from these, which a
+game born from its description registers.
 
 ### `edge-hint.ts` — a hint on an edge between squares
 

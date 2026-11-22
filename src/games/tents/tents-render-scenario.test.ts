@@ -52,7 +52,7 @@ const pinned = describeHintKindPins({
   game: tentsGame,
   params: [{ w: 10, h: 10, diff: DIFF_NORMAL }],
   kinds: {
-    lineCount: (step) => step.rung === "lineCount",
+    lineCount: (step) => step.rung.startsWith("lineCount."),
     lineNeighbors: (step) => step.rung === "lineNeighbors",
     tentLink: (step) => step.rung === "tentLink",
   },
