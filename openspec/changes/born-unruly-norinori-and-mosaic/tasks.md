@@ -3,7 +3,7 @@
 - [x] 1.1 Read `a-game-from-its-description-alone` in the archive (its
       design.md § 9 and its tasks' as-built notes) and `docs/new-game.md`
       § "A game born from its description".
-- [ ] 1.2 Per game, the gap list: what its description already states, what
+- [x] 1.2 Per game, the gap list: what its description already states, what
       `fillGame` lacks (Unruly's optional unique-lines rule and its params,
       Norinori's regions in the desc and the render, Mosaic's clue on a
       cell and its counting marks), its ID grammar, and its saves. Ask the
@@ -11,7 +11,8 @@
       `design.md`. Written 2026-11-22 (§ "The gap list", § 4: sixteen
       capabilities named before any is built). Asked the owner the saves
       question and, since the list already shows more engine work than
-      Tents needed, whether to go on; their answers go here.
+      Tents needed, whether to go on. The owner (2026-11-22): break the
+      three games' saves; go on with all three, in § 1's order.
 
 ## 2. The games
 

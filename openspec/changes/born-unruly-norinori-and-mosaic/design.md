@@ -98,7 +98,7 @@ declaration the engine reads, not a change to what a player does: three of
 the five fill games cycle, and making them toggle is a player-visible
 change no game asks for.
 
-### 3. IDs and links keep loading; saves break if the owner agrees
+### 3. IDs and links keep loading; saves break
 
 Each game's `id:` keeps its grammar, so every upstream desc and shared link
 still loads. A save holds the hand-written game's moves
@@ -106,8 +106,8 @@ still loads. A save holds the hand-written game's moves
 `editOf` refuses. Keeping them would take a per-game translation of old
 moves into `Edit`s: code that only an old save reads, about 30-60 lines a
 game, written in the engine as a declared move grammar or kept beside the
-description. The owner accepted the break for Tents (2026-11-21); asked
-for these three in 1.2.
+description. The owner accepted the break for Tents (2026-11-21) and for
+these three (2026-11-22).
 
 ### 4. What the engine gains, named before it is built
 
@@ -153,7 +153,8 @@ flip records what it actually added.
   three more. Plain-cell games are not little engine work. What they need
   is what the plain-cell family needs (givens, hidden clues, regions, cell
   clues, the cycle), so the work serves the family's migration either way.
-  The figures in 3.1 judge it; the owner was asked in 1.2 whether to go on.
+  The figures in 3.1 judge it. Asked whether to go on, the owner chose all
+  three (2026-11-22).
 - **Mosaic's huge boards.** Sizes reach 100x100; the generic renderer and
   deal must hold within 10% of the hand-written times there too.
 - **Unreasonable.** The fill hint stops where the ladder does, as Mosaic's
@@ -161,5 +162,5 @@ flip records what it actually added.
 
 ## Open questions
 
-Asked of the owner in 1.2 (2026-11-22): breaking these games' saves, and
-whether to go on given the gap list.
+None. Both of 1.2's were answered by the owner on 2026-11-22: the saves
+break, and all three games move.
