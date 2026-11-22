@@ -164,6 +164,10 @@ export interface PlayJson {
   boardTiers?: Record<string, [string, string]>;
   /** The boards after the menu's grid: a size, its variations and its tier. */
   variants?: { board: string; with: string[]; tier: string }[];
+  /** What the sizes alone cannot say of a board, and of a board of a tier. */
+  bounds?: SizeBoundsJson & { tiers?: Record<string, SizeBoundsJson> };
+  /** The numbers on cells drawn plain: no block, never faint, not counted. */
+  plain?: string[];
   /** Each variation the player may switch on, by its name. */
   modifiers?: Record<string, ModifierJson>;
   links?: string;
@@ -179,6 +183,12 @@ export interface PlayJson {
   /** What each mark of the hint means here (`Game.hint.marks`). */
   hintMarks?: Partial<Record<"ring" | "outline" | "stripes" | "strike", string>>;
 }
+
+/** Bounds on a board's two sides together: their sum, their product, the
+ * shorter and the longer. */
+export type SizeBoundsJson = Partial<
+  Record<"sum" | "area" | "shorter" | "longer", { min?: number; max?: number }>
+>;
 
 /** A variation the player may switch on: its params letter, its Custom
  * field, its words and rule (`engine/game-id/modifier.ts`), and where it
@@ -213,7 +223,7 @@ export type IdSegmentJson =
   | { runs: string }
   | { walls: string }
   | { dots: string; cases: [number, number] }
-  | { digits: string }
+  | { digits: string; apart?: string }
   | { numbers: string; before?: string; order?: "columns" };
 
 /** The clue kind or dealt partition an ID segment writes. */
@@ -292,7 +302,14 @@ export type SampleJson =
   | { build: true }
   | { dominoes: { value: number }; rest: number }
   | {
-      scatter: { value: number; share: number; apart?: "adj4" | "adj8"; each?: true };
+      scatter: {
+        value: number;
+        share: number;
+        apart?: "adj4" | "adj8";
+        each?: true;
+        tried?: true;
+        joinedRest?: true;
+      };
       partner?: { value: number; along: "adj4" | "adj8" };
       rest: number;
       noBareLine?: boolean;

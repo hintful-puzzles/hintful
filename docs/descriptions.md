@@ -202,14 +202,19 @@ research tools all read through it; the app never does.
   gives every cell the board's domain. A step's line is its `stripes`,
   which hatch the line's clue in the margin too.
 - **A fill game born from its description declares the rest of a game**
-  (Kakurasu, Mosaic, Norinori, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
+  (Kakurasu, Mosaic, Norinori, Range, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
   (the first the default unless `default:` names another, `boardTiers:` a
   board that stops short of a tier, `variants:` the boards after the grid),
   `play.hintMarks` its legend, `id:` its game ID's grammar and
   `tierLetters:` its params' tier letters, so upstream's IDs still load.
+  A hand-written game's saves may break when it is moved onto a
+  description: the owner approved that for the whole initiative
+  (2026-11-22), so a later change states the break and does not ask.
   `play.modifiers` puts a variation in the params by its letter, with the
   `most` lines a board of each width may have where the rule bounds the
-  size, and `sizes.step` holds a side to a multiple. `play.dealt` names a
+  size, and `sizes.step` holds a side to a multiple. `play.bounds` says
+  what the sizes alone cannot: the sides' sum, product, shorter and longer,
+  and in `tiers` a tier's own (Range's `w + h` and its strips). `play.dealt` names a
   clue kind meaning `value(at) = v` that the cell is dealt holding (Unruly's
   givens, which `id:` writes as `dots`). `play.click: cycle` goes round
   empty and both buttons' values. The right button rules out unless its
@@ -220,7 +225,9 @@ research tools all read through it; the app never does.
   at corners, the rest `rest`; or `scatter`, `partner`, `rest`, and `noBareLine` where no
   line may hold the rest value alone, with `scatter.each` where each cell
   takes the value at the share's odds and the count varies (a small board
-  then draws from every picture). A region the space deals (`regions:
+  then draws from every picture), `scatter.tried` where the share is of the
+  cells tried, each taken where it may be, and `scatter.joinedRest` where
+  the cells not taken stay one group (Range's). A region the space deals (`regions:
   { r: dealt }`) is a partition: `id:`'s `walls` writes it as upstream's
   wall runs, the board draws it as walls and fills, a rule over its parts
   breaks on the squares it counts, never as a run, and `deal.grow` grows it
@@ -240,8 +247,14 @@ research tools all read through it; the app never does.
   that is not `play.dealt` is a number drawn on its cell, its cells read
   off the sets its meaning ranges over (`clueCells`): the hint outlines
   them and circles the number, the number fades once they are all decided,
-  and the status bar counts the numbers left. `id:`'s `digits` writes such
-  a kind as upstream does, a digit a number and a letter a run without one.
+  and the status bar counts the numbers left. A number whose meaning reads
+  no block (Range's, which sees along its lines) is named in `play.plain`:
+  no block, never faint, never counted, and outlined as any square of an
+  area. `id:`'s `digits` writes such a kind as upstream does, a digit a
+  number and a letter a run without one; with `apart`, a whole number, and
+  `apart` between two side by side (Range's `_`). `deal.symmetric:
+  halfTurn` hides a clue with its partner under a half turn, so the clues
+  shown stay symmetric.
   The compiler writes `<id>.game.ts`, `fillGame` of the module, and
   `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One

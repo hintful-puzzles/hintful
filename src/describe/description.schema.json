@@ -8,6 +8,15 @@
   "else": { "$ref": "#/$defs/game" },
   "$defs": {
     "formula": { "type": "string", "minLength": 1, "description": "A formula." },
+    "sizeBound": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "integer", "minimum": 1 },
+        "max": { "type": "integer", "minimum": 1 }
+      }
+    },
     "saidMark": {
       "description": "A set of elements, or where the step marks elements of several sorts in one role, a set of each by its sort's name (`{ face: \"{f}\", cell: \"{c}\" }`), or `{ supplied: elements }` where only the game's code can find them.",
       "oneOf": [
@@ -834,6 +843,35 @@
                 "items": { "type": "string" }
               }
             },
+            "plain": {
+              "type": "array",
+              "description": "The clue kinds written as a number on their cell that are drawn plain: a number whose meaning reads no block of cells (Range's, which sees along its row and column), so it has no block to outline, never turns faint, and is not counted in the status bar.",
+              "items": { "type": "string" }
+            },
+            "bounds": {
+              "type": "object",
+              "description": "What the size alone cannot say of a board: bounds on its two sides together, `sum` (w + h), `area` (w × h), `shorter` and `longer`; and in `tiers`, by a tier's name, further bounds on a board of that tier. A board outside them is refused, a tier's as having no such tier.",
+              "additionalProperties": false,
+              "properties": {
+                "sum": { "$ref": "#/$defs/sizeBound" },
+                "area": { "$ref": "#/$defs/sizeBound" },
+                "shorter": { "$ref": "#/$defs/sizeBound" },
+                "longer": { "$ref": "#/$defs/sizeBound" },
+                "tiers": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "sum": { "$ref": "#/$defs/sizeBound" },
+                      "area": { "$ref": "#/$defs/sizeBound" },
+                      "shorter": { "$ref": "#/$defs/sizeBound" },
+                      "longer": { "$ref": "#/$defs/sizeBound" }
+                    }
+                  }
+                }
+              }
+            },
             "variants": {
               "type": "array",
               "description": "The boards after the menu's grid, one for each modifier: a size of `boards`, the variations on, and its tier.",
@@ -970,8 +1008,11 @@
                 "type": "object",
                 "required": ["digits"],
                 "additionalProperties": false,
-                "description": "A clue kind of the values 0 to 9 at cells as upstream's run code of Mosaic: a digit a cell's clue, a letter `a`-`z` a run of 1 to 26 cells without one, the last run written too.",
-                "properties": { "digits": { "type": "string" } }
+                "description": "A clue kind at cells as upstream's run code of Mosaic: a digit a cell's clue, a letter `a`-`z` a run of 1 to 26 cells without one, the last run written too. With `apart`, a clue is a whole number and `apart` comes between two with no run between them (Range's `_`).",
+                "properties": {
+                  "digits": { "type": "string" },
+                  "apart": { "type": "string", "minLength": 1, "maxLength": 1 }
+                }
               },
               {
                 "type": "object",
@@ -1021,6 +1062,10 @@
                   }
                 }
               }
+            },
+            "symmetric": {
+              "enum": ["halfTurn"],
+              "description": "The clues `hide` leaves are symmetric under a half turn of the board: a clue whose partner square has none goes first, and each other goes with its partner."
             },
             "thorough": {
               "type": "object",
@@ -1080,6 +1125,14 @@
                         "each": {
                           "const": true,
                           "description": "Each cell takes the value at `share`'s chance, so how many do varies from answer to answer; with no `apart` and no `partner`."
+                        },
+                        "tried": {
+                          "const": true,
+                          "description": "The share is of the cells tried, in a random order, each taken where it may be: how many are taken varies, and a draw never fails for want of room."
+                        },
+                        "joinedRest": {
+                          "const": true,
+                          "description": "A cell is taken only where the cells not taken stay one group, side by side."
                         }
                       }
                     },

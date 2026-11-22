@@ -230,7 +230,9 @@ compatibility break, so every game's `id:` must read upstream's grammar.
 Saves of the hand-written games hold their own moves, which a born game
 does not read. Asked with the cost (§ "The gap list (1.1)", "Saves"), the
 owner chose on 2026-11-22 to break them for all nine games, as for the
-pilots.
+pilots, and approved the same for every later game moved onto its
+description, so later changes in this initiative do not ask
+(`docs/descriptions.md`).
 
 ## Risks / Trade-offs
 

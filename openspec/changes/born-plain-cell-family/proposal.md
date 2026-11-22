@@ -26,8 +26,10 @@ tests excluded, as of 2026-11-22:
 
 That is 15,661 lines. Each game's TypeScript goes. Its tests become one
 file of hint pins plus what only it decides, as for the pilots. Game IDs
-and links keep loading. Saves break, as the pilots' did (the owner,
-2026-11-22).
+and links keep loading. Saves break, as the pilots' did. The owner
+approved breaking saves for this whole initiative on 2026-11-22: this
+change, and every later one that moves a game onto its description (the
+candidate family's included), breaks them without asking.
 
 Out of scope:
 - Map, whose colors fill regions, not cells.

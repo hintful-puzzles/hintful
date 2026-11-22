@@ -25,11 +25,12 @@ export type SearchedFillModule<C> = LadderedFillModule<C> &
   NumberedModule & { readonly deal?: FillDeal };
 
 /** The clue kinds written as numbers on their cells, and the cells each
- * number's meaning reads (`clueCells_<kind>`): its block. */
+ * number's meaning reads (`clueCells_<kind>`): its block, which a plain
+ * number (`play.plain`) has none of. */
 export interface NumberedModule {
   readonly numbers?: readonly string[];
   readonly clueCells?: Readonly<
-    Record<string, (sp: GridSpace, at: number) => readonly number[]>
+    Partial<Record<string, (sp: GridSpace, at: number) => readonly number[]>>
   >;
 }
 
@@ -56,10 +57,12 @@ function groupsOf<C>(
 ): (readonly number[])[] {
   const out: (readonly number[])[] = [];
   const { clueCells } = module;
-  if (clueCells !== undefined)
-    for (const kind of module.numbers ?? [])
-      for (const c of (board.dealt[kind as keyof C] as ClueList).at)
-        out.push(clueCells[kind](sp, c));
+  for (const kind of module.numbers ?? []) {
+    const cellsOf = clueCells?.[kind];
+    if (cellsOf === undefined) continue;
+    for (const c of (board.dealt[kind as keyof C] as ClueList).at)
+      out.push(cellsOf(sp, c));
+  }
   for (const kind of module.deal?.partitions ?? [])
     out.push(...(board.dealt[kind as keyof C] as Partition).cells);
   return out;

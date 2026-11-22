@@ -48,11 +48,12 @@ export const clear: Painter = {
   },
 };
 
-/** A cell the player has ruled out: the engine's cross. */
+/** A cell the player has ruled out: the engine's cross, none where a number
+ * takes the middle (a numbered square dealt clear, Range's). */
 export const cross: Painter = {
   colors: () => [RULED_OUT],
   surface: null,
-  paint(dr, tile, slot, error) {
-    drawRuledOutCross(dr, surfaceOf(tile), error ? COL_ERROR : slot[0]);
+  paint(dr, tile, slot, error, _grown, occupied = false) {
+    if (!occupied) drawRuledOutCross(dr, surfaceOf(tile), error ? COL_ERROR : slot[0]);
   },
 };

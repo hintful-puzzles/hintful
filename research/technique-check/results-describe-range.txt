@@ -1,16 +1,12 @@
 ok  range      besideShaded                   3  sound    (want sound   )     9 queries    0.1s
 ok  range      besideShaded (planted)         3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  range      besideShaded                   4  sound    (want sound   )    16 queries    0.1s
-ok  range      besideShaded (planted)         4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/range/range.description.yaml#besideShaded: recorded sound, proved whole on all 1 boards
 ok  range      capped                         3  sound    (want sound   )     9 queries    0.1s
 ok  range      capped (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  range      capped                         4  sound    (want sound   )    16 queries    0.4s
-ok  range      capped (planted)               4  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  range      reach                          3  sound    (want sound   )     9 queries    0.1s
+ok  src/games/range/range.description.yaml#capped: recorded sound, proved whole on all 1 boards
+ok  range      reach                          3  sound    (want sound   )     9 queries    0.2s
 ok  range      reach (planted)                3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  range      reach                          4  sound    (want sound   )    16 queries    0.6s
-ok  range      reach (planted)                4  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/range/range.description.yaml#reach: recorded sound, proved whole on all 1 boards
 ok  range      cut                            3  sound    (want sound   )     1 queries    0.0s
 ok  range      cut (planted)                  3  unsound  (want unsound )     1 queries    0.0s   at eset
-ok  range      cut                            4  sound    (want sound   )     1 queries    0.3s
-ok  range      cut (planted)                  4  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  src/games/range/range.description.yaml#cut: recorded sound, proved whole on all 1 boards

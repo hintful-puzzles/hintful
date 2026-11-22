@@ -32,6 +32,7 @@ import { applyEdit, type Edit, editOf } from "./edit.ts";
 import {
   type ClueMax,
   decodeDesc,
+  type FillBounds,
   type FillDeal,
   type FillModifier,
   type FillParams,
@@ -76,6 +77,8 @@ export interface BornModule<C> extends FillHintModule<C>, DealtFillModule<C> {
     })[];
   };
   readonly modifiers?: Readonly<Record<string, FillModifier>>;
+  /** What the sizes alone cannot say of a board (`play.bounds`). */
+  readonly bounds?: FillBounds;
   readonly hintMarks: Readonly<Partial<Record<MarkRole, string>>>;
 }
 
@@ -101,7 +104,13 @@ export function fillGame<C extends Clues<C> & object>(
   const sized = ({ w, h }: Size, diff = 0): FillParams =>
     withThorough(deal, { w, h, diff });
   const defaultParams = (): FillParams => sized(byDefault);
-  const params = fillParams(deal, module.tiers, defaultParams, module.modifiers);
+  const params = fillParams(
+    deal,
+    module.tiers,
+    defaultParams,
+    module.modifiers,
+    module.bounds,
+  );
   const boardTiers = module.menu?.tiers ?? [];
   const variants = module.menu?.variants ?? [];
   const menu: PresetBoards<FillParams> = {
@@ -204,7 +213,8 @@ export function fillGame<C extends Clues<C> & object>(
     clearMistakes,
     revealOne,
     textFormat: (b) => textFormat(reading, b),
-    ...(numbered.length === 0
+    // A plain number has no cells to be done with, so is never counted.
+    ...(!numbered.some((k) => module.clueCells?.[k] !== undefined)
       ? {}
       : {
           // The numbers not yet done, while any is left.

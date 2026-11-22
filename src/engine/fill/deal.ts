@@ -162,8 +162,36 @@ export function dealFill<C extends Clues<C>>(
     if (g === null) return null;
     const grown = grownRound(g, tier);
     if (grown === null) return null;
-    const clues = module.deriveClues(g, sp, grown);
-    return module.isAnswer(g, sp, clues, variations) ? { g, clues } : null;
+    const derived = module.deriveClues(g, sp, grown);
+    if (!module.isAnswer(g, sp, derived, variations)) return null;
+    // A clue whose partner square has none cannot be shown symmetrically.
+    if (kind === undefined || deal.symmetric === undefined)
+      return { g, clues: derived };
+    const list = derived[kind] as ClueList;
+    const paired = shownOf(list).filter((i) => partnerOf(list, i) >= 0);
+    return { g, clues: keeping(derived, kind, paired, elements) };
+  };
+  /** The index of the clue at clue `i`'s partner square under the deal's
+   * symmetry, `-1` where it has none: a half turn takes a cell to the cell
+   * as far from the end as it is from the start. */
+  const partnerOf = (list: ClueList, i: number): number => {
+    if (deal.universes[kind as string] !== "cells")
+      throw new Error("deal: a symmetric hide is of clues at cells");
+    return list.byAt[sp.cells.length - 1 - list.at[i]];
+  };
+  /** The clues `shown` in the units they are hidden in: each with its
+   * partner where the deal is symmetric, alone otherwise. */
+  const unitsOf = (clues: C, shown: readonly number[]): number[][] => {
+    if (deal.symmetric === undefined) return shown.map((i) => [i]);
+    const list = clues[kind as keyof C] as ClueList;
+    const of = new Set(shown);
+    const out: number[][] = [];
+    for (const i of shown) {
+      const j = partnerOf(list, i);
+      if (j === i || !of.has(j)) out.push([i]);
+      else if (i < j) out.push([i, j]);
+    }
+    return out;
   };
   /**
    * The clues with each of `kind`'s that may go hidden, a tier at a time from
@@ -181,16 +209,20 @@ export function dealFill<C extends Clues<C>>(
     let shown = shownOf(clues[kind] as ClueList);
     // A firing reads only the clues its bindings name, so the board finishes
     // without the clues the ladder never read; where a technique reads one
-    // its bindings do not name, it does not, and every clue is tried.
+    // its bindings do not name, it does not, and every clue is tried. A unit
+    // goes only where none of it was read.
     const read = cluesRead(module, board(clues), 0, kind as string);
-    const pruned = shown.filter((i) => read.has(i));
+    const pruned = unitsOf(clues, shown)
+      .filter((u) => u.some((i) => read.has(i)))
+      .flat()
+      .sort((a, b) => a - b);
     if (finishes(keeping(clues, kind, pruned, elements), 0)) shown = pruned;
     for (let t = 0; t <= tier; t++) {
-      const order = shown.slice();
+      const order = unitsOf(clues, shown);
       shuffle(order, rs);
       const tries = thorough ? order : order.slice(0, t === 0 ? 0 : Math.min(p.w, p.h));
-      for (const i of tries) {
-        const without = shown.filter((j) => j !== i);
+      for (const unit of tries) {
+        const without = shown.filter((j) => !unit.includes(j));
         if (finishes(keeping(clues, kind, without, elements), t)) shown = without;
       }
     }
@@ -224,7 +256,7 @@ export function dealFill<C extends Clues<C>>(
         }
       },
       strip(b, one) {
-        const order = b.shown.slice();
+        const order = unitsOf(b.all, b.shown);
         shuffle(order, rs);
         const hide = (run: readonly number[]) => {
           b.shown = b.shown.filter((j) => !run.includes(j));
@@ -233,26 +265,26 @@ export function dealFill<C extends Clues<C>>(
           b.shown = [...b.shown, ...run].sort((x, y) => x - y);
         };
         if (thorough) {
-          for (const i of order) {
-            hide([i]);
-            if (!one()) show([i]);
+          for (const unit of order) {
+            hide(unit);
+            if (!one()) show(unit);
           }
           return;
         }
-        // The search is asked only of the clue whose loss stops the ladder,
+        // The search is asked only of the unit whose loss stops the ladder,
         // and hiding stops at the first it keeps hidden, so the board keeps
         // the rest of its clues.
         const ladderFinishes = () => finishes(held(b), top);
         for (let from = 0; from < order.length; from += HIDING_RUN) {
           const run = order.slice(from, from + HIDING_RUN);
-          hide(run);
+          hide(run.flat());
           if (ladderFinishes()) continue;
-          show(run);
-          for (const i of run) {
-            hide([i]);
+          show(run.flat());
+          for (const unit of run) {
+            hide(unit);
             if (ladderFinishes()) continue;
             if (one()) return;
-            show([i]);
+            show(unit);
           }
         }
       },

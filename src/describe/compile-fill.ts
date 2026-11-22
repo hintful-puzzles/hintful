@@ -143,6 +143,8 @@ export function playOf(
     boardTiers,
     variants,
     modifiers,
+    bounds,
+    plain: _plain,
     ...rest
   } = p;
   const rungs = d.techniques.filter((t) => t.on === null).map((t) => t.id);
@@ -208,6 +210,7 @@ export function playOf(
           `export const boards = ${JSON.stringify(boards.map(sizeOf))} as const;`,
         ]),
     ...menuOf(json, { boards, byDefault, boardTiers, variants }),
+    ...boundsOf(json, bounds),
     ...(modifiers === undefined
       ? []
       : [
@@ -279,6 +282,30 @@ function menuOf(
     "/** The preset menu beside its grid: the default board, the tiers a board",
     " * stops at, and the variant boards. */",
     `export const menu = ${JSON.stringify(menu)} as const;`,
+  ];
+}
+
+/**
+ * `bounds`, what the sizes alone cannot say of a board (`play.bounds`), a
+ * tier's by its index. Nothing where the description states none; a tier
+ * not in `tiers` is refused.
+ */
+function boundsOf(json: DescriptionJson, bounds: PlayJson["bounds"]): string[] {
+  if (bounds === undefined) return [];
+  const { tiers: byTier, ...all } = bounds;
+  const tiers = json.tiers ?? [];
+  const out = {
+    all,
+    tiers: Object.entries(byTier ?? {}).map(([name, b]) => {
+      const tier = tiers.indexOf(name);
+      if (tier < 0) throw new CompileError(`play bounds: ${name} is no tier`);
+      return { tier, ...b };
+    }),
+  };
+  return [
+    "",
+    "/** What the sizes alone cannot say of a board, and of a board of a tier. */",
+    `export const bounds = ${JSON.stringify(out)} as const;`,
   ];
 }
 
@@ -391,14 +418,18 @@ export function dealOf(
       );
     if ("dots" in seg && i !== id.length - 1)
       throw new CompileError(`id: dots of ${kind} end the desc, and come last`);
-    // A digit is a clue's value, so every value is one.
+    // A digit is a clue's value, so every value is one; with a mark between
+    // two side by side, a clue is a whole number of any size.
     if (
       "digits" in seg &&
+      seg.apart === undefined &&
       (c.at !== "cell" || values === null || values[0] < 0 || values[1] > 9)
     )
       throw new CompileError(
         `id: digits of ${kind}, which is not a cell's clue of the values 0 to 9`,
       );
+    if ("digits" in seg && seg.apart !== undefined && c.at !== "cell")
+      throw new CompileError(`id: digits of ${kind}, which is not a cell's clue`);
   }
   const hide = json.deal?.["hide"];
   if (typeof hide === "string" && !d.clueKinds.has(hide))
@@ -416,6 +447,11 @@ export function dealOf(
     if (taken.includes(thorough.letter))
       throw new CompileError(`deal thorough: the letter ${thorough.letter} is taken`);
   }
+  const symmetric = json.deal?.["symmetric"];
+  if (symmetric !== undefined && typeof hide !== "string")
+    throw new CompileError(
+      "deal symmetric: the symmetry of the clues left, and no hide",
+    );
   const tiers = json.tiers ?? [];
   const tierLetters =
     json.tierLetters ?? tiers.map((t) => t[0]?.toLowerCase() ?? "").join("");
@@ -449,6 +485,7 @@ export function dealOf(
   const deal = {
     sample,
     ...(typeof hide === "string" ? { hide } : {}),
+    ...(symmetric === undefined ? {} : { symmetric }),
     ...(thorough === null ? {} : { thorough }),
     ...(grow === null
       ? {}
@@ -470,6 +507,8 @@ export function dealOf(
     sizes: json.sizes,
   };
   const max: string[] = [];
+  // Each kind's smallest value, which the ID refuses below.
+  const least: Record<string, number> = {};
   for (const [kind, c] of d.clueKinds) {
     const sorts = env.clues.get(kind) as ClueKind;
     const range = c.value === null ? null : measured(c.value);
@@ -482,6 +521,12 @@ export function dealOf(
       throw new CompileError(
         `clue ${kind}: a fill game's clue values are a range(lo, hi)`,
       );
+    const [lo] = range.args;
+    if (lo.k !== "num")
+      throw new CompileError(
+        `clue ${kind}: a fill game's clue values start at a number`,
+      );
+    least[kind] = lo.v;
     const scratch: string[] = [];
     const out = new Out(2);
     const hi = compileExpr(
@@ -504,7 +549,7 @@ export function dealOf(
   return [
     "",
     "/** How the engine deals the board and writes its game ID. */",
-    `export const deal = ${JSON.stringify(deal)} as const;`,
+    `export const deal = ${JSON.stringify({ ...deal, least })} as const;`,
     "",
     "/** Each clue kind's largest value at an element. */",
     "export const clueMax = {",
@@ -574,8 +619,13 @@ export function numbersOf(
     ([kind, c]) => c.at === "cell" && kind !== json.play?.dealt && !oneValued(c.value),
   );
   if (numbers.length === 0) return [];
+  const plain = json.play.plain ?? [];
+  for (const kind of plain)
+    if (!numbers.some(([k]) => k === kind))
+      throw new CompileError(`play plain: ${kind} is no number on a cell`);
   const cells: string[] = [];
   for (const [kind, c] of numbers) {
+    if (plain.includes(kind)) continue;
     const sorts = env.clues.get(kind) as ClueKind;
     const sets: Expr[] = [];
     // A set its own binders choose, or one that reads the clue's value, is
@@ -628,7 +678,7 @@ export function numbersOf(
     "/** The clue kinds written as a number on their cell. */",
     `export const numbers = ${JSON.stringify(numbers.map(([k]) => k))} as const;`,
     "",
-    "/** The cells each number's meaning reads, its block. */",
+    "/** The cells each number's meaning reads, its block; none for a plain one. */",
     "export const clueCells = {",
     ...cells,
     "};",

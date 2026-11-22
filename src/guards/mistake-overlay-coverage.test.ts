@@ -123,9 +123,6 @@ const NO_OVERLAY_TEST = [
   "group",
   "palisade",
   "pattern",
-  // Range renders the overlay from a hand-written mistake list, not one the
-  // game's `findMistakes` flagged, so none of the spellings above match it.
-  "range",
   "undead",
 ];
 

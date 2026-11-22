@@ -339,9 +339,10 @@ export function fillRender<C extends Clues<C>>(
     for (const kind of numbers) {
       const list = listOf(b.dealt, kind);
       const bad = new Set(broken.get(kind) ?? []);
+      const cellsOf = clueCells[kind];
       list.at.forEach((c, k) => {
         if (bad.has(k)) out.set(c, NUMBER_BROKEN);
-        else if (clueCells[kind](sp, c).every((d) => b.values[d] !== 0))
+        else if (cellsOf?.(sp, c).every((d) => b.values[d] !== 0))
           out.set(c, NUMBER_DONE);
       });
     }
@@ -377,13 +378,14 @@ export function fillRender<C extends Clues<C>>(
     return out;
   };
 
-  /** The numbers not yet done. */
+  /** The numbers not yet done, of those that can be. */
   const numbersLeft = (b: FillBoard<C>): number => {
     const states = numberStates(b);
     let left = 0;
     for (const kind of numbers)
-      for (const c of listOf(b.dealt, kind).at)
-        if (states.get(c) !== NUMBER_DONE) left++;
+      if (clueCells[kind] !== undefined)
+        for (const c of listOf(b.dealt, kind).at)
+          if (states.get(c) !== NUMBER_DONE) left++;
     return left;
   };
 
@@ -858,10 +860,16 @@ export function fillRender<C extends Clues<C>>(
       [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
     const targets = byReading(marks.of("ring", CELL));
     // An outlined number is the number the step reasons from: it is circled,
-    // and its block outlined whole, apart from the rest of the area.
+    // and its block outlined whole, apart from the rest of the area. A plain
+    // number has no block, and outlined is a square of the area like any
+    // other: the step names the one it counts from by its term.
     const outlined = byReading(marks.of("outline", CELL));
-    const named = outlined.filter((c) => numberAt(state, c.y * w + c.x) !== null);
-    const area = outlined.filter((c) => numberAt(state, c.y * w + c.x) === null);
+    const blocked = (c: { x: number; y: number }): boolean => {
+      const kind = numberAt(state, c.y * w + c.x)?.kind;
+      return kind !== undefined && clueCells[kind] !== undefined;
+    };
+    const named = outlined.filter(blocked);
+    const area = outlined.filter((c) => !blocked(c));
     // A game without links has no step that rings one.
     const askedLinks = linkClues === null ? [] : marks.of("ring", LINK);
     const hintWord = new Int32Array(w * h);
@@ -875,13 +883,14 @@ export function fillRender<C extends Clues<C>>(
       for (const c of named) {
         const at = c.y * w + c.x;
         const { kind } = numberAt(state, at) as { kind: keyof C & string };
+        hintWord[at] |= HINT_NUMBER;
+        const cells = (clueCells[kind] ?? (() => []))(sp, at);
         const block = new MarkOutlines(
           [],
-          clueCells[kind](sp, at).map((d) => ({ x: d % w, y: Math.floor(d / w) })),
+          cells.map((d) => ({ x: d % w, y: Math.floor(d / w) })),
           {},
         );
-        hintWord[at] |= HINT_NUMBER;
-        for (const d of clueCells[kind](sp, at))
+        for (const d of cells)
           hintWord[d] |= block.evidenceSides(d % w, Math.floor(d / w)) << BLOCK_SHIFT;
       }
     }

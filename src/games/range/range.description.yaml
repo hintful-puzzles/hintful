@@ -1,6 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: range
+catalog:
+  name: Range
+  aliases: [Kurodoko]
+  description: Visible-distance puzzle
+  objective: Place black squares to limit the visible distance from each numbered cell.
+  collection: original
+  family: shading
+  similar: Kurodoko (黒どこ), Kuromasu
 help:
   rules: |-
     Shade some squares, so as to meet the following conditions. Every
@@ -101,12 +109,63 @@ clues:
   number:
     at: cell
     value: "range(1, |cells(row(at))| + |cells(col(at))| - 1)"
-    means: "sees(at) = v"
+    means: "value(at) = 2 and sees(at) = v"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  # The answer is the shaded squares alone: an open square is clear.
+  blank: 2
+  # A click goes round empty, the button's mark and the other one.
+  click: cycle
+  stroke: sweep
+  # A number sees along its row and its column as far as the shaded squares
+  # let it, which is no block of squares.
+  plain: [number]
+  # Upstream's four sizes, each at both tiers.
+  boards: [6x9, 8x12, 9x13, 11x16]
+  # A number is at most the width and the height less one, which upstream's
+  # desc keeps below 128. On a strip a shaded square anywhere but an end cuts
+  # the clear squares in two, so the rules settle every strip that has one
+  # answer.
+  bounds:
+    sum: { max: 128 }
+    longer: { min: 3 }
+    tiers: { Unreasonable: { shorter: { min: 2 } } }
+  hintMarks:
+    ring: the square the step decides.
+    outline: >-
+      what the step reasons from: the squares a number already sees, the
+      squares around one that shading it would cut off, or a shaded square
+      beside it. The number the step counts from is outlined apart, in the
+      color of the words that name it.
+    stripes: >-
+      the run a number has to see along, from the number as far as the ringed
+      square.
 deal:
   answer: squares shaded at random, none side by side, while the clear squares stay one group
   number: on every clear square, then as many hidden as the board stays at its tier
   tier: one of the tiers
+  # A third of the squares tried in a random order, each shaded where it
+  # touches no shaded square and leaves the clear squares one group:
+  # upstream's range.c.
+  sample:
+    scatter: { value: 1, share: 0.3333333333, apart: adj4, tried: true, joinedRest: true }
+    rest: 2
+  hide: number
+  # The numbers shown are symmetric under a half turn, as upstream deals
+  # them: a number whose partner square is shaded goes first, and each other
+  # goes with its partner.
+  symmetric: halfTurn
+# Upstream's game ID: a number a shown clue, `_` between two side by side,
+# and a letter a run of squares without one.
+id:
+  - digits: number
+    apart: "_"
+tierLetters: eu
 tiers: [Easy, Unreasonable]
 names:
   besideShaded: "shaded squares never touching"

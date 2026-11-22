@@ -1,222 +1,156 @@
+/**
+ * Range, born from its description: what only this game's statements decide.
+ * The engine's own tests read fill games for the board, the input, the deal,
+ * the hide and the search tier (`engine/fill/*.test.ts`), and the cross-game
+ * guards reach it as a registered game. What is left here is a position for
+ * every kind of step its hint takes, upstream's IDs read as the right
+ * numbers, the size bounds, a symmetric deal, a plain number, and a wrong
+ * square outlined.
+ */
+
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import {
   DESC_NOT_UNIQUE,
   loadVerdict,
   validateDesc,
 } from "../../engine/contract/desc-error.ts";
-import type { Point } from "../../engine/contract/types.ts";
-import { presetMenu } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { LEFT_BUTTON, newCursor, RIGHT_BUTTON } from "../../engine/input/pointer.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { DIFF_EASY } from "../../engine/solve/answer-search.ts";
-import { type RangeMistake, rangeGame } from "./index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import {
-  BLACK,
-  decodeParams,
-  EMPTY,
-  encodeDesc,
-  encodeParams,
-  idx,
-  newState,
-  type RangeMove,
-  type RangeParams,
-  type RangeState,
-  type RangeUi,
-  WHITE,
-} from "./state.ts";
+  renderPinnedHint,
+  renderScenario,
+} from "../../engine/testing/render-scenario.ts";
+import { game } from "../../generated/games/range/range.game.ts";
 
-const TS = 32;
-const BORDER = 16;
+const SHADED = 1;
+const CLEAR = 2;
 
-function cellPoint(r: number, c: number): Point {
-  return { x: BORDER + TS * c + TS / 2, y: BORDER + TS * r + TS / 2 };
-}
-
-function makeState(w: number, h: number, grid: number[]): RangeState {
-  return {
-    w,
-    h,
-    grid: Int8Array.from(grid),
-    clues: Int8Array.from(grid, (v) => (v > 0 ? v : 0)),
-  };
-}
-
-const ds = { tileSize: TS } as never;
-
-describe("params", () => {
-  it("round-trips presets and the bare-width form", () => {
-    expect(encodeParams({ w: 13, h: 9, diff: DIFF_EASY }, true)).toBe("13x9de");
-    expect(encodeParams({ w: 13, h: 9, diff: DIFF_EASY }, false)).toBe("13x9");
-    // A string from before the tiers reads as Easy.
-    expect(decodeParams("13x9")).toEqual({ w: 13, h: 9, diff: DIFF_EASY });
-    expect(decodeParams("13x9de")).toEqual({ w: 13, h: 9, diff: DIFF_EASY });
-    expect(decodeParams("12")).toEqual({ w: 12, h: 12, diff: DIFF_EASY });
-  });
-
-  it("rejects degenerate and non-positive sizes when full", () => {
-    const error = (p: RangeParams, full: boolean) => paramsError(rangeGame, p, full);
-    expect(error({ w: 2, h: 2, diff: DIFF_EASY }, true)).not.toBeNull();
-    expect(error({ w: 1, h: 2, diff: DIFF_EASY }, true)).not.toBeNull();
-    expect(error({ w: 0, h: 5, diff: DIFF_EASY }, true)).toBe(
-      "Width must be at least 1.",
-    );
-    // 2x2 is allowed when not generating a full puzzle.
-    expect(error({ w: 2, h: 2, diff: DIFF_EASY }, false)).toBeNull();
-    expect(error({ w: 9, h: 6, diff: DIFF_EASY }, true)).toBeNull();
-  });
-
-  it("titles a preset by its size alone", () => {
-    expect(presetMenu(rangeGame).submenu?.[0]?.title).toBe("6x9 Easy");
-  });
+/** A position for every kind of step. */
+const pinned = describeHintPins({
+  game,
+  params: [{ w: 9, h: 6, diff: 0 }],
+  pins: {
+    besideShaded: {
+      id: "9x6de:f3a8e2b7b7e8_7e3b5b6e4a7f",
+      moves: [{ set: [46, SHADED] }],
+    },
+    "capped.satisfied": {
+      id: "9x6de:9a9g2c7k12_5k3c5g4a6",
+      moves: [{ set: [1, CLEAR] }],
+    },
+    "capped.overrun": "9x6de:f3a8e2b7b7e8_7e3b5b6e4a7f",
+    reach: "9x6de:a4d6a4_9e7e7j6e10e4_6a5d8a",
+    cut: {
+      id: "9x6de:3e11h9a5c10j6c5a8h11e12",
+      moves:
+        '[{"set":[24,2,5,2,4,2,3,2,9,2,14,2,22,2,29,2,48,2,49,2,50,2,44,2,35,2,26,2,8,1,7,2,16,1,25,2,33,2,2,2,1,1,10,2,18,2,27,1,28,2,42,2,51,2,13,2,12,2,11,1,20,2,37,2,39,2,40,2,41,1,45,1,46,2,52,2]}]',
+    },
+  },
 });
 
-describe("desc codec", () => {
-  it("round-trips a hand-built clue grid", () => {
-    // 3x3 with clues 2 (top-left) and 5 (center), rest blank.
-    const grid = [2, 0, 0, 0, 5, 0, 0, 0, 0];
-    const desc = encodeDesc(9, Int8Array.from(grid));
-    const p = { w: 3, h: 3, diff: DIFF_EASY };
-    expect(validateDesc(rangeGame, p, desc)).toBeNull();
-    const st = newState(p, desc);
-    expect(Array.from(st.grid)).toEqual(grid);
-    expect(encodeDesc(9, st.grid)).toBe(desc);
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
+};
+
+describe("range", () => {
+  it("reads upstream's run code, a `_` between two numbers side by side", () => {
+    const board = loaded("9x6:9a9g2c7k12_5k3c5g4a6");
+    const { at, v } = board.dealt.number;
+    expect(Array.from(at.slice(0, 5))).toEqual([0, 2, 10, 14, 26]);
+    expect(Array.from(v.slice(0, 6))).toEqual([9, 9, 2, 7, 12, 5]);
+    // A numbered square is dealt clear, and no move changes it.
+    expect(board.values[0]).toBe(CLEAR);
+    expect(board.fixed[0]).toBe(1);
   });
 
-  it("rejects malformed or wrong-length descs", () => {
-    const p = { w: 3, h: 3, diff: DIFF_EASY };
-    expect(validateDesc(rangeGame, p, "i")).toBeNull(); // 9 blanks exactly
-    expect(validateDesc(rangeGame, p, "h")).not.toBeNull(); // 8 cells — too few
-    expect(validateDesc(rangeGame, p, "j")).not.toBeNull(); // 10 cells — too many
-    expect(validateDesc(rangeGame, p, "2!2")).not.toBeNull(); // invalid char
-    expect(validateDesc(rangeGame, p, "99i")).not.toBeNull(); // clue > w+h-1 (=5)
+  it("refuses what upstream never writes", () => {
+    const p = game.decodeParams("3x3");
+    expect(validateDesc(game, p, "2c5d")).toBeNull();
+    expect(validateDesc(game, p, "2_5g")).toBeNull();
+    expect(validateDesc(game, p, "2c5d,x")).toMatch(/too long/);
+    // A `_` anywhere but between two numbers side by side.
+    expect(validateDesc(game, p, "_2c5d")).toMatch(/"_"/);
+    expect(validateDesc(game, p, "2_c5d")).toMatch(/"c"/);
+    expect(validateDesc(game, p, "2c_5d")).toMatch(/"_"/);
+    // A number past what its row and column hold, and a 0.
+    expect(validateDesc(game, p, "25g")).toMatch(/out of range/);
+    expect(validateDesc(game, p, "0h")).toMatch(/out of range/);
+    expect(validateDesc(game, p, "j2")).toMatch(/too long/);
   });
 
   it("loads only a board with one answer", () => {
-    const p = { w: 4, h: 4, diff: DIFF_EASY };
-    // Three answers: the squares at (2,1) and (2,2) can each be shaded or
-    // neither, and Check would call a mark that fits another answer a mistake.
-    expect(validateDesc(rangeGame, p, "c6h3_6b")).toBeNull();
-    expect(loadVerdict(rangeGame, p, "c6h3_6b")).toBe(DESC_NOT_UNIQUE);
-    // Every board the generator deals passed the same test.
-    for (let seed = 0; seed < 20; seed++) {
-      const { desc } = rangeGame.newDesc(p, randomNew(`range-load-${seed}`));
-      expect(loadVerdict(rangeGame, p, desc), desc).toBeNull();
+    const p = game.decodeParams("4x4");
+    expect(validateDesc(game, p, "c6h3_6b")).toBeNull();
+    expect(loadVerdict(game, p, "c6h3_6b")).toBe(DESC_NOT_UNIQUE);
+  });
+
+  it("refuses the sizes upstream refuses", () => {
+    const refused = (s: string) => paramsError(game, game.decodeParams(s), true);
+    expect(refused("6x9de")).toBeNull();
+    expect(refused("64x65de")).toMatch(/at most 128/);
+    expect(refused("2x2de")).toMatch(/at least 3/);
+    expect(refused("1x5de")).toBeNull();
+    // On a strip the rules settle every board with one answer.
+    expect(refused("1x5du")).toMatch(/No 1x5 puzzle is Unreasonable/);
+  });
+
+  it("deals numbers symmetric under a half turn", () => {
+    for (const diff of [0, 1]) {
+      const p = { w: 6, h: 9, diff };
+      const { desc } = game.newDesc(p, randomNew(`range-symmetric-${diff}`));
+      const board = game.newState(p, desc);
+      const at = new Set(board.dealt.number.at);
+      const n = p.w * p.h;
+      for (const c of at) expect(at.has(n - 1 - c), `${desc} at ${c}`).toBe(true);
     }
   });
 
-  it("refuses what encodeDesc never writes", () => {
-    const p = { w: 3, h: 3, diff: DIFF_EASY };
-    expect(validateDesc(rangeGame, p, "2c5d")).toBeNull();
-    // Text after the grid, including after a comma.
-    expect(validateDesc(rangeGame, p, "2c5d,x")).toMatch(/too long/);
-    // A `_` anywhere but between two adjacent clues.
-    expect(validateDesc(rangeGame, p, "_2c5d")).toMatch(/"_"/);
-    expect(validateDesc(rangeGame, p, "2_c5d")).toMatch(/"c"/);
-    expect(validateDesc(rangeGame, p, "2c_5d")).toMatch(/"_"/);
-    expect(validateDesc(rangeGame, p, "2_5g")).toBeNull();
-    expect(validateDesc(rangeGame, p, "25g")).toMatch(/out of range/);
-    expect(validateDesc(rangeGame, p, "0h")).toMatch(/out of range/);
-    // A run overshooting the grid partway through.
-    expect(validateDesc(rangeGame, p, "j2")).toMatch(/too long/);
+  it.each([
+    "capped.satisfied",
+    "capped.overrun",
+    "reach",
+    "cut",
+  ] as const)("circles no number a %s step outlines, which has no block", (rung) => {
+    const { recording } = renderPinnedHint(game, pinned(rung));
+    const texts = recording.ops.flatMap((o) =>
+      o.op === "text" && /^\d+$/.test(o.text) ? [`${o.x},${o.y}`] : [],
+    );
+    expect(texts.length).toBeGreaterThan(0);
+    const circled = recording.ops.filter(
+      (o) => o.op === "circle" && texts.includes(`${o.cx},${o.cy}`),
+    );
+    expect(circled).toEqual([]);
   });
-});
 
-describe("interpretMove cycling", () => {
-  it("left-button cycles empty -> black -> white -> empty", () => {
-    let st = makeState(3, 1, [0, 0, 0]);
-    const ui: RangeUi = { cursor: newCursor() };
-    for (const expected of [BLACK, WHITE, EMPTY]) {
-      const mv = rangeGame.interpretMove(st, ui, ds, cellPoint(0, 0), LEFT_BUTTON);
-      st = rangeGame.executeMove(st, mv as RangeMove);
-      expect(st.grid[idx(0, 0, 3)]).toBe(expected);
+  it("never fades or counts a number", () => {
+    const board = loaded("9x6de:a4d6a4_9e7e7j6e10e4_6a5d8a");
+    expect(game.statusbarText).toBeUndefined();
+    const solved = game.solve(board, board);
+    if (!solved.ok) throw new Error("no answer");
+    expect(game.status(game.executeMove(board, solved.move))).toBe("solved");
+  });
+
+  it("outlines a square Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = "9x6de:a4d6a4_9e7e7j6e10e4_6a5d8a";
+    const fresh = loaded(id);
+    const solved = game.solve(fresh, fresh);
+    if (!solved.ok) throw new Error("no answer");
+    const answer = game.executeMove(fresh, solved.move).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < answer.length; c++) {
+      if (fresh.fixed[c]) continue;
+      const moves = [{ set: [c, answer[c] === SHADED ? CLEAR : SHADED] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
     }
-  });
-
-  it("right-button cycles empty -> white -> black -> empty", () => {
-    let st = makeState(3, 1, [0, 0, 0]);
-    const ui: RangeUi = { cursor: newCursor() };
-    for (const expected of [WHITE, BLACK, EMPTY]) {
-      const mv = rangeGame.interpretMove(st, ui, ds, cellPoint(0, 0), RIGHT_BUTTON);
-      st = rangeGame.executeMove(st, mv as RangeMove);
-      expect(st.grid[idx(0, 0, 3)]).toBe(expected);
-    }
-  });
-
-  it("treats clue cells as inert", () => {
-    const st = makeState(3, 1, [2, 0, 0]);
-    const ui: RangeUi = { cursor: newCursor() };
-    expect(
-      rangeGame.interpretMove(st, ui, ds, cellPoint(0, 0), LEFT_BUTTON),
-    ).toBeNull();
+    throw new Error("no wrong square that breaks no rule");
   });
 });
-
-describe("executeMove", () => {
-  it("throws on a clue-cell or out-of-bounds target", () => {
-    const st = makeState(3, 1, [2, 0, 0]);
-    expect(() =>
-      rangeGame.executeMove(st, { sets: [{ r: 0, c: 0, value: "black" }] }),
-    ).toThrow();
-    expect(() =>
-      rangeGame.executeMove(st, { sets: [{ r: 9, c: 9, value: "black" }] }),
-    ).toThrow();
-  });
-
-  it("detects completion via the error-free rule, from the position alone", () => {
-    // 1x3: clue 3 in the middle means both ends are white and visible.
-    // A single white run of 3 satisfies the clue; no blacks needed.
-    const st = makeState(3, 1, [0, 3, 0]);
-    // The board as dealt already has the clue's run satisfied (empties
-    // count as white), so it is solved before any move.
-    expect(rangeGame.status(st)).toBe("solved");
-    const after = rangeGame.executeMove(st, { sets: [{ r: 0, c: 0, value: "white" }] });
-    expect(rangeGame.status(after)).toBe("solved");
-    // Blacking an end hides the clue's run: no longer solved.
-    const broken = rangeGame.executeMove(after, {
-      sets: [{ r: 0, c: 2, value: "black" }],
-    });
-    expect(rangeGame.status(broken)).toBe("ongoing");
-  });
-});
-
-describe("solve + findMistakes", () => {
-  it("solves a generated board and clears all undecided cells", () => {
-    const id = "9x6#range-solve";
-    const st = makeFromId(id);
-    const res = rangeGame.solve(st, st);
-    expect(res?.ok).toBe(true);
-    if (!res?.ok) return;
-    const solved = rangeGame.executeMove(st, res.move);
-    // every non-clue cell is now decided
-    for (const v of solved.grid) expect(v).not.toBe(EMPTY);
-    expect(rangeGame.status(solved)).toBe("solved");
-  });
-
-  it("flags a wrong black and clears on a consistent board", () => {
-    const id = "9x6#range-mistake";
-    const st = makeFromId(id);
-    const res = rangeGame.solve(st, st);
-    if (!res?.ok) throw new Error("expected solvable");
-    const solved = rangeGame.executeMove(st, res.move);
-    // A consistent (fully solved) board has no mistakes.
-    expect(rangeGame.findMistakes?.(solved)).toEqual([]);
-
-    // Flip the first solution-black cell to white (a dot) → a mistake.
-    const blackCell = solved.grid.indexOf(BLACK);
-    const r = Math.floor(blackCell / st.w);
-    const c = blackCell % st.w;
-    const wrong = rangeGame.executeMove(st, { sets: [{ r, c, value: "white" }] });
-    const mistakes = rangeGame.findMistakes?.(wrong) as RangeMistake[];
-    expect(mistakes).toContainEqual({ r, c, kind: "cell" });
-  });
-});
-
-function makeFromId(id: string): RangeState {
-  // Generate a fresh board the same way the midend does, from a seed.
-  const hashIdx = id.indexOf("#");
-  const params = decodeParams(id.slice(0, hashIdx));
-  const seed = id.slice(hashIdx + 1);
-  const { desc } = rangeGame.newDesc(params, randomNew(seed));
-  return newState(params, desc);
-}

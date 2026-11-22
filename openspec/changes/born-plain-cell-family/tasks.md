@@ -18,7 +18,23 @@ added here, lowers the `game-lines` ceiling, writes its spec deltas, and
 runs `npm run test:hint-sweeps` before its commit. In design.md § 1's
 order.
 
-- [ ] 2.1 Range born.
+- [x] 2.1 Range born. Done 2026-11-22, 1,381 hand-written lines gone.
+      Added, each the engine's: `play.bounds` (the sides' sum, product,
+      shorter and longer, and a tier's own, refused as no such tier);
+      `play.plain`, a number with no block (never faint, never counted,
+      outlined as a square of the area and not circled; found in the app,
+      where a number the step only passed through was circled as if it
+      counted from it); `scatter.tried` and `scatter.joinedRest`
+      (upstream's range.c); `deal.symmetric: halfTurn`, the hide and the
+      search tier's strip in units of a clue and its partner; `digits`
+      with `apart`, whole numbers and `_` between two side by side, and
+      each kind's least value refused below (`deal.least`); the `cross`
+      painter drawing nothing under a number. Differences a player sees,
+      for consistency with the born games: `S` and `X` keys; two shaded
+      squares side by side take a diamond, not a frame each; the number a
+      step counts from is outlined apart in its words' color, where its
+      digit was redrawn in the outline's ink; a 2x2 or smaller ID is
+      refused on load too, where it was refused only when dealt.
 - [ ] 2.2 Star Battle born.
 - [ ] 2.3 Clusters born.
 - [ ] 2.4 Light Up born.

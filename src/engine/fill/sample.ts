@@ -38,6 +38,12 @@ export interface ScatterSample {
      * from answer to answer: a small board then draws from every picture
      * (Mosaic's 3x3 has 512, and those with four shaded cells, 126). */
     readonly each?: true;
+    /** The share is of the cells tried, in a random order, each taken where
+     * it may be, so how many are taken varies and a draw always has room
+     * (upstream's range.c). */
+    readonly tried?: true;
+    /** A cell is taken only where the cells not taken stay one group. */
+    readonly joinedRest?: true;
   };
   readonly partner?: { readonly value: number; readonly along: Near };
   readonly rest: number;
@@ -71,8 +77,11 @@ export function sampleAnswer(
     return g;
   }
   const order = Int32Array.from(sp.cells);
-  let left = shareOf(scatter.share, n);
-  for (let i = 0; left > 0 && i + left <= n; i++) {
+  const share = shareOf(scatter.share, n);
+  // Tried, the share is of the cells tried, and none need be taken.
+  let left = scatter.tried === true ? 0 : share;
+  let taken = 0;
+  for (let i = 0; scatter.tried === true ? i < share : left > 0 && i + left <= n; i++) {
     const which = i + randomUpto(rs, n - i);
     [order[i], order[which]] = [order[which], order[i]];
     const c = order[i];
@@ -82,6 +91,14 @@ export function sampleAnswer(
     )
       continue;
     g[c] = scatter.value;
+    if (
+      scatter.joinedRest === true &&
+      !restJoined(sp, g, scatter.value, n - taken - 1)
+    ) {
+      g[c] = 0;
+      continue;
+    }
+    taken++;
     left--;
   }
   if (left > 0) return null;
@@ -120,6 +137,31 @@ export function sampleAnswer(
   )
     return null;
   return g;
+}
+
+/** Whether the `count` cells of `g` not holding `value` are one group, side
+ * by side. */
+function restJoined(
+  sp: GridSpace,
+  g: Uint8Array,
+  value: number,
+  count: number,
+): boolean {
+  const start = sp.cells.find((c) => g[c] !== value);
+  if (start === undefined) return true;
+  const seen = new Uint8Array(g.length);
+  seen[start] = 1;
+  const stack = [start];
+  let reached = 0;
+  for (let c = stack.pop(); c !== undefined; c = stack.pop()) {
+    reached++;
+    for (const o of sp.adj4[c])
+      if (!seen[o] && g[o] !== value) {
+        seen[o] = 1;
+        stack.push(o);
+      }
+  }
+  return reached === count;
 }
 
 /** The rounds of {@link sampleDominoes}' refill. A greedy fill alone stops

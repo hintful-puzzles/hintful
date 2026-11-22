@@ -13,7 +13,7 @@ import {
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
 } from "../contract/desc-error.ts";
-import { difficultyItem } from "../contract/difficulty.ts";
+import { difficultyItem, noSuchTier } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
 import { isDigit } from "../game-id/decimal.ts";
 import { readDesc } from "../game-id/desc-reader.ts";
@@ -46,7 +46,7 @@ export type IdSegment =
   | { readonly runs: string }
   | { readonly walls: string }
   | { readonly dots: string; readonly cases: readonly [number, number] }
-  | { readonly digits: string }
+  | { readonly digits: string; readonly apart?: string }
   | { readonly numbers: string; readonly before?: string; readonly order?: "columns" };
 
 /** A deal setting the player may turn off (`deal.thorough`): on, the hide
@@ -65,6 +65,9 @@ export interface FillDeal {
   readonly sample: Sample | null;
   /** The clue kind the deal hides while the board still finishes. */
   readonly hide?: string;
+  /** The symmetry the clues it leaves keep: a clue and its partner under a
+   * half turn are hidden together. */
+  readonly symmetric?: "halfTurn";
   readonly thorough?: FillThorough;
   /** How it grows a dealt partition round the answer. */
   readonly grow?: FillGrow;
@@ -74,6 +77,8 @@ export interface FillDeal {
   /** The dealt partitions, by name: Norinori's regions. */
   readonly partitions?: readonly string[];
   readonly tierLetters: string;
+  /** Each clue kind's smallest value, which a desc may not go below. */
+  readonly least?: Readonly<Record<string, number>>;
   readonly sizes: Readonly<
     Record<
       string,
@@ -155,6 +160,65 @@ export function partitionOf(parts: ArrayLike<number>): Partition {
   return partition(cells, parts.length);
 }
 
+type Bound = { readonly min?: number; readonly max?: number };
+
+/** Bounds on a board's two sides together (`play.bounds`). */
+export interface SizeBounds {
+  readonly sum?: Bound;
+  readonly area?: Bound;
+  readonly shorter?: Bound;
+  readonly longer?: Bound;
+}
+
+/** What the sizes alone cannot say of a board, and of a board of a tier, by
+ * the tier's index. */
+export interface FillBounds {
+  readonly all: SizeBounds;
+  readonly tiers: readonly (SizeBounds & { readonly tier: number })[];
+}
+
+/** Each bound's measure of a board, and the start of what a board below or
+ * above it is told, which ends with the bound. */
+const MEASURES: Readonly<
+  Record<
+    keyof SizeBounds,
+    { of(w: number, h: number): number; below: string; above: string }
+  >
+> = {
+  sum: {
+    of: (w, h) => w + h,
+    below: "Width plus height must be at least",
+    above: "Width plus height must be at most",
+  },
+  area: {
+    of: (w, h) => w * h,
+    below: "The number of squares must be at least",
+    above: "The number of squares must be at most",
+  },
+  shorter: {
+    of: Math.min,
+    below: "Width and height must both be at least",
+    above: "Width or height must be at most",
+  },
+  longer: {
+    of: Math.max,
+    below: "Width or height must be at least",
+    above: "Width and height must both be at most",
+  },
+};
+
+/** What a board `p` past one of `bounds` is told, or `null` within them. */
+function beyond(bounds: SizeBounds, p: FillParams): string | null {
+  for (const [name, m] of Object.entries(MEASURES)) {
+    const b = bounds[name as keyof SizeBounds];
+    if (b === undefined) continue;
+    const n = m.of(p.w, p.h);
+    if (b.min !== undefined && n < b.min) return `${m.below} ${b.min}.`;
+    if (b.max !== undefined && n > b.max) return `${m.above} ${b.max}.`;
+  }
+  return null;
+}
+
 /**
  * The params' custom form and codec: the size within the description's
  * `sizes`, each modifier by its letter, and the tier by its letter, which
@@ -166,11 +230,12 @@ export function fillParams(
   tiers: readonly string[],
   defaults: () => FillParams,
   modifiers: Readonly<Record<string, FillModifier>> = {},
+  bounds: FillBounds = { all: {}, tiers: [] },
 ): {
   paramConfig: ParamConfigItem<FillParams>[];
   encodeParams(p: FillParams, full: boolean): string;
   decodeParams(s: string): FillParams;
-  validateParams(p: FillParams): string | null;
+  validateParams(p: FillParams, full: boolean): string | null;
 } {
   const w = deal.sizes["w"];
   const step = w?.step;
@@ -257,7 +322,14 @@ export function fillParams(
           ]),
       choice(paramConfig, "d", "difficulty", deal.tierLetters, { full: true }),
     ]),
-    validateParams(p) {
+    validateParams(p, full) {
+      if (beyond(bounds.all, p) !== null) return beyond(bounds.all, p);
+      // A tier's own bounds hold of the board a deal makes, which only a full
+      // ID's tier names.
+      if (full)
+        for (const { tier, ...b } of bounds.tiers)
+          if (tier === p.diff && beyond(b, p) !== null)
+            return noSuchTier(`${p.w}x${p.h} puzzle`, tiers[tier]);
       if (step !== undefined && (p.w % step !== 0 || p.h % step !== 0))
         return step === 2
           ? "Width and height must both be even."
@@ -339,9 +411,12 @@ export function encodeDesc<C extends Clues<C>>(
     }
     if ("digits" in seg) {
       const list = listOf(seg.digits);
+      // Two clues side by side have no run between them, so `apart` there.
+      const apart = (c: number): string =>
+        seg.apart !== undefined && c > 0 && list.valueAt[c - 1] >= 0 ? seg.apart : "";
       out += encodeRunLength(
         sp.cells.length,
-        (c) => (list.valueAt[c] >= 0 ? String(list.valueAt[c]) : null),
+        (c) => (list.valueAt[c] >= 0 ? apart(c) + String(list.valueAt[c]) : null),
         { keepTrailingBlanks: true },
       );
       continue;
@@ -417,22 +492,35 @@ export function decodeDesc<C extends Clues<C>>(
       }
       if ("digits" in seg) {
         // A digit is one cell's clue, a letter a run of 1 to 26 without one;
-        // the last run is written, so the cells end with the segment.
+        // the last run is written, so the cells end with the segment. With
+        // `apart`, a clue is a whole number, and `apart` is between two with
+        // no run between them, exactly there.
         const kind = seg.digits as keyof C;
+        const least = deal.least?.[seg.digits] ?? 0;
         const n = sp.cells.length;
         const at: number[] = [];
         const v: number[] = [];
+        const isRun = (x: string) => x >= "a" && x <= "z";
+        let afterClue = false;
         for (let pos = 0; pos < n; ) {
-          const ch = r.char((x) => isDigit(x) || (x >= "a" && x <= "z"));
-          if (!isDigit(ch)) {
-            pos += ch.charCodeAt(0) - 96;
+          if (r.peekIs(isRun)) {
+            pos += r.char().charCodeAt(0) - 96;
             if (pos > n) r.fail(DESC_TOO_LONG);
+            afterClue = false;
             continue;
           }
-          const value = Number(ch);
-          if (value > maxOf(clueMax, kind, sp, pos)) r.fail(DESC_OUT_OF_RANGE);
+          const max = maxOf(clueMax, kind, sp, pos);
+          let value: number;
+          if (seg.apart === undefined) {
+            value = Number(r.char(isDigit));
+            if (value < least || value > max) r.fail(DESC_OUT_OF_RANGE);
+          } else {
+            if (afterClue) r.expect(seg.apart);
+            value = r.int(least, max);
+          }
           at.push(pos++);
           v.push(value);
+          afterClue = true;
         }
         out[kind] = clueList(at, v, n);
         continue;

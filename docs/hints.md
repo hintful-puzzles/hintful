@@ -384,7 +384,7 @@ Tie by something the code guarantees, cheapest first:
 Guard it in the game's test: a second mark displayed implies the explanation
 contains the tie. See the guard fail first, and give it a `checked` floor and
 the set of reason kinds the sweep must have reached. Exemplars: the hint
-tests of Clusters, Bricks, Range and Light Up.
+tests of Clusters, Bricks and Light Up.
 
 `scripts/checks/hint-deixis.test.ts` (`npm run diff`, writes
 `metrics/hint-deixis.md`) reads every frame for a bare deictic beside a second
@@ -442,8 +442,9 @@ The clue is what the step reasons from, so it is an outline reference, and
 the glyph is the game's. Put the glyph:
 
 - **On the clue's square, and inside it**, because the square can also be one
-  the step decides and a ring owns the border. Mosaic circles the number;
-  Range redraws the digit in the outline's ink.
+  the step decides and a ring owns the border. Mosaic circles the number.
+  A square no step decides, a numbered square dealt clear, may take the
+  outline itself (Range's).
 - **Legible on every surface the clue is drawn on.** Where the outline's ink
   hardly differs in lightness from the surface, the glyph takes the number's
   own ink: the shape is the mark, not the color.
