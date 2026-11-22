@@ -822,6 +822,28 @@
               "enum": ["line", "sweep"],
               "description": "What a drag does: `line` paints the secondary value along one row or column, `sweep` repeats the pressed verb."
             },
+            "sweepWith": {
+              "enum": ["secondary"],
+              "description": "The one button whose drag sweeps; the other's drag acts where it began alone (Light Up's bulbs, a row of which light each other). Both sweep where absent. With `stroke: sweep`."
+            },
+            "wash": {
+              "type": "object",
+              "description": "A wash over the open cells where `when` holds of the values, `c` the cell (Light Up's lit squares). An open washed cell reads as the secondary value to the live errors, and a placement's consequences there are what the board shows, so the hint neither makes nor says them. `pref`, where given, is a preference, on by default, that draws the secondary piece on a washed cell; off, it is left out.",
+              "required": ["when"],
+              "additionalProperties": false,
+              "properties": {
+                "when": { "$ref": "#/$defs/formula" },
+                "pref": {
+                  "type": "object",
+                  "required": ["kw", "name"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kw": { "type": "string" },
+                    "name": { "type": "string" }
+                  }
+                }
+              }
+            },
             "click": {
               "enum": ["toggle", "cycle"],
               "description": "What a click does: `toggle` (the default) sets the button's value or empties a cell holding it; `cycle` goes round empty, the button's value and the other button's, the right button the other way round."
@@ -1045,10 +1067,15 @@
                 "type": "object",
                 "required": ["digits"],
                 "additionalProperties": false,
-                "description": "A clue kind at cells as upstream's run code of Mosaic: a digit a cell's clue, a letter `a`-`z` a run of 1 to 26 cells without one, the last run written too. With `apart`, a clue is a whole number and `apart` comes between two with no run between them (Range's `_`).",
+                "description": "A clue kind at cells as upstream's run code of Mosaic: a digit a cell's clue, a letter `a`-`z` a run of 1 to 26 cells without one, the last run written too. With `apart`, a clue is a whole number and `apart` comes between two with no run between them (Range's `_`). `letters` names, by a capital letter, a one-valued kind at cells written in the same stream (Light Up's `B`, a wall with no number).",
                 "properties": {
                   "digits": { "type": "string" },
-                  "apart": { "type": "string", "minLength": 1, "maxLength": 1 }
+                  "apart": { "type": "string", "minLength": 1, "maxLength": 1 },
+                  "letters": {
+                    "type": "object",
+                    "propertyNames": { "pattern": "^[A-Z]$" },
+                    "additionalProperties": { "type": "string" }
+                  }
                 }
               },
               {
@@ -1068,6 +1095,16 @@
           "type": "string",
           "description": "A fill game's letter for each tier in its params' `d<letter>`, in the tiers' order; absent, each tier's initial, lowercased."
         },
+        "tierFlag": {
+          "type": "object",
+          "description": "A bare letter older game IDs write before the tier for a tier (Light Up's `r`, the recursive solver): read, and never written.",
+          "required": ["letter", "tier"],
+          "additionalProperties": false,
+          "properties": {
+            "letter": { "type": "string", "pattern": "^[a-z]$" },
+            "tier": { "type": "string" }
+          }
+        },
         "deal": {
           "type": "object",
           "additionalProperties": { "type": "string" },
@@ -1080,6 +1117,69 @@
             "hide": {
               "type": "string",
               "description": "A clue kind the deal hides from the answer's, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier."
+            },
+            "leaves": {
+              "type": "string",
+              "description": "A one-valued clue kind at cells that `hide`'s clue sits over: it is dealt only where no clue of `hide`'s is shown, so a clue hidden leaves it at its cell (Light Up's wall, under its number)."
+            },
+            "options": {
+              "type": "object",
+              "description": "Settings the params give that only the deal reads, by name, each written in a full game ID as its letter and a number: a number from `min` to `max`, or with `choices` the index of one, each choice with its `bounds` on the board's size, of which `square` asks a square board, and its `words` in a board's name. Neither is offered on the preset menu but as a board names it after its `WxH` (`7x7s4`).",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["letter", "kw", "name", "default", "doc"],
+                "additionalProperties": false,
+                "properties": {
+                  "letter": { "type": "string", "pattern": "^[a-z]$" },
+                  "kw": { "type": "string" },
+                  "name": { "type": "string" },
+                  "default": { "type": "integer", "minimum": 0 },
+                  "doc": { "type": "string" },
+                  "min": { "type": "integer", "minimum": 0 },
+                  "max": { "type": "integer", "minimum": 0 },
+                  "words": {
+                    "type": "string",
+                    "description": "A number's words in a board's name where it is not the default, `{n}` the number."
+                  },
+                  "choices": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "object",
+                      "required": ["name"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "name": { "type": "string" },
+                        "words": { "type": "string" },
+                        "bounds": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "square": { "const": true },
+                            "sum": { "$ref": "#/$defs/sizeBound" },
+                            "area": { "$ref": "#/$defs/sizeBound" },
+                            "shorter": { "$ref": "#/$defs/sizeBound" },
+                            "longer": { "$ref": "#/$defs/sizeBound" },
+                            "tiers": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                  "sum": { "$ref": "#/$defs/sizeBound" },
+                                  "area": { "$ref": "#/$defs/sizeBound" },
+                                  "shorter": { "$ref": "#/$defs/sizeBound" },
+                                  "longer": { "$ref": "#/$defs/sizeBound" }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             },
             "grow": {
               "type": "object",
@@ -1129,10 +1229,43 @@
               "oneOf": [
                 {
                   "type": "object",
-                  "description": "The answer built by the ladder: a random value on a random undecided cell, then every cell the whole ladder decides from those, until every cell is decided.",
+                  "description": "The answer built by the ladder: a random value on a random undecided cell, or `build.value` alone, then every cell the whole ladder decides from those, until every cell is decided. With `first`, a value is dealt first on the share of the cells option `share` gives, as a percentage, as symmetric as option `symmetry` asks (upstream's set_blacks, the choices none, 2-way mirror, 2-way rotational, 4-way mirror and 4-way rotational), and the build is on the clues those cells deal with every clue of `hide` hidden.",
                   "required": ["build"],
                   "additionalProperties": false,
-                  "properties": { "build": { "const": true } }
+                  "properties": {
+                    "build": {
+                      "oneOf": [
+                        { "const": true },
+                        {
+                          "type": "object",
+                          "required": ["value"],
+                          "additionalProperties": false,
+                          "properties": { "value": { "type": "integer", "minimum": 1 } }
+                        }
+                      ]
+                    },
+                    "first": {
+                      "type": "object",
+                      "required": ["value", "share", "symmetry"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "value": { "type": "integer", "minimum": 1 },
+                        "share": { "type": "string" },
+                        "symmetry": { "type": "string" },
+                        "ramp": {
+                          "type": "object",
+                          "description": "After each `every` draws the share goes up `step`, and past `top` starts over from the params' own: a layout few boards of the tier come from is left behind (upstream lightup.c's ramp of walls).",
+                          "required": ["every", "step", "top"],
+                          "additionalProperties": false,
+                          "properties": {
+                            "every": { "type": "integer", "minimum": 1 },
+                            "step": { "type": "integer", "minimum": 1 },
+                            "top": { "type": "integer", "minimum": 1 }
+                          }
+                        }
+                      }
+                    }
+                  }
                 },
                 {
                   "type": "object",

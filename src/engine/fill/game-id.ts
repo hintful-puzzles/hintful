@@ -20,7 +20,15 @@ import { readDesc } from "../game-id/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../game-id/dot-runs.ts";
 import { modifierItem } from "../game-id/modifier.ts";
 import { dimensionParamConfig, parseConfigInt } from "../game-id/params.ts";
-import { choice, dims, flag, num, paramsCodec, size } from "../game-id/params-codec.ts";
+import {
+  choice,
+  dims,
+  flag,
+  num,
+  type ParamsSegment,
+  paramsCodec,
+  size,
+} from "../game-id/params-codec.ts";
 import { rulesetItem } from "../game-id/ruleset.ts";
 import { encodeRunLength } from "../game-id/run-length.ts";
 import { encodeWallRuns, readRegionWalls } from "../game-id/wall-runs.ts";
@@ -47,7 +55,13 @@ export type IdSegment =
   | { readonly runs: string }
   | { readonly walls: string }
   | { readonly dots: string; readonly cases: readonly [number, number] }
-  | { readonly digits: string; readonly apart?: string }
+  | {
+      readonly digits: string;
+      readonly apart?: string;
+      /** A one-valued kind at cells written in the stream as its capital
+       * letter, by the letter. */
+      readonly letters?: Readonly<Record<string, string>>;
+    }
   | { readonly numbers: string; readonly before?: string; readonly order?: "columns" };
 
 /** A deal setting the player may turn off (`deal.thorough`): on, the hide
@@ -76,14 +90,49 @@ export interface FillSetting {
   }[];
 }
 
+/** Bounds on a board's size a choice of an option sets: on its sides, that
+ * it is square, and a tier's own, by the tier's index. */
+export type ChoiceBounds = SizeBounds & {
+  readonly square?: true;
+  readonly tiers?: readonly (SizeBounds & { readonly tier: number })[];
+};
+
+/** A setting the params give that only the deal reads (`deal.options`): a
+ * number from `min` to `max`, or with `choices` the index of one. A full ID
+ * writes it as its letter and the number. */
+export interface FillOption {
+  readonly letter: string;
+  readonly kw: string;
+  readonly name: string;
+  readonly default: number;
+  readonly doc: string;
+  readonly min: number;
+  readonly max: number;
+  /** A number's words in a board's name, `{n}` the number. */
+  readonly words?: string;
+  readonly choices?: readonly {
+    readonly name: string;
+    readonly words?: string;
+    readonly bounds?: ChoiceBounds;
+  }[];
+}
+
 /** What a compiled fill module says of its deal (`deal`). */
 export interface FillDeal {
   /** Whether the grid is as high as it is wide, so one size gives both. */
   readonly square?: true;
   readonly settings?: readonly FillSetting[];
+  /** The settings only the deal reads, by name. */
+  readonly options?: Readonly<Record<string, FillOption>>;
   readonly sample: Sample | null;
   /** The clue kind the deal hides while the board still finishes. */
   readonly hide?: string;
+  /** The one-valued kind at cells that `hide`'s clue sits over: dealt where
+   * none of `hide`'s is shown, so a clue hidden leaves it. */
+  readonly leaves?: string;
+  /** A bare letter older IDs write for a tier, by its index: read, never
+   * written. */
+  readonly tierFlag?: { readonly letter: string; readonly tier: number };
   /** The clue kind at a cell of which two side by side and alike are both
    * taken off, so the answer is the ladder's and not the sample. */
   readonly unpair?: string;
@@ -134,7 +183,18 @@ export interface FillParams {
   /** The sizes beyond the grid's, by name, in a game whose params give any
    * (`FillDeal.settings`); absent in any other. */
   sizes?: Readonly<Record<string, number>>;
+  /** The deal's options, by name, in a game whose deal has any
+   * (`FillDeal.options`); absent in any other. */
+  options?: Readonly<Record<string, number>>;
 }
+
+/** Option `name`'s value on a board of `p`, its default where `p` names
+ * none. */
+export const optionOf = (deal: FillDeal, p: FillParams, name: string): number => {
+  const o = deal.options?.[name];
+  if (o === undefined) throw new Error(`deal: no option ${name}`);
+  return p.options?.[name] ?? o.default;
+};
 
 /** The variations `p` has on. */
 export const variationsOf = (p: FillParams): readonly string[] => p.variations ?? [];
@@ -240,14 +300,15 @@ const MEASURES: Readonly<
   },
 };
 
-/** What a board `p` past one of `bounds` is told, or `null` within them. */
+/** What a board `p` past one of `bounds` is told, without its full stop, or
+ * `null` within them. */
 function beyond(bounds: SizeBounds, p: FillParams): string | null {
   for (const [name, m] of Object.entries(MEASURES)) {
     const b = bounds[name as keyof SizeBounds];
     if (b === undefined) continue;
     const n = m.of(p.w, p.h);
-    if (b.min !== undefined && n < b.min) return `${m.below} ${b.min}.`;
-    if (b.max !== undefined && n > b.max) return `${m.above} ${b.max}.`;
+    if (b.min !== undefined && n < b.min) return `${m.below} ${b.min}`;
+    if (b.max !== undefined && n > b.max) return `${m.above} ${b.max}`;
   }
   return null;
 }
@@ -264,6 +325,11 @@ export function fillParams(
   defaults: () => FillParams,
   modifiers: Readonly<Record<string, FillModifier>> = {},
   bounds: FillBounds = { all: {}, tiers: [] },
+  /** The value of option `name` a board of `p`'s size is dealt with unless
+   * it says otherwise: a preset's own, else the option's default. A board's
+   * name says an option only where it differs. */
+  usual: (p: FillParams, name: string) => number = (_p, name) =>
+    deal.options?.[name]?.default ?? 0,
 ): {
   paramConfig: ParamConfigItem<FillParams>[];
   encodeParams(p: FillParams, full: boolean): string;
@@ -274,6 +340,7 @@ export function fillParams(
   const step = w?.step;
   const named = Object.entries(modifiers);
   const settings = deal.settings ?? [];
+  const options = Object.entries(deal.options ?? {});
   const sizeBounds =
     w === undefined
       ? {}
@@ -316,6 +383,7 @@ export function fillParams(
         },
       }),
     ),
+    ...options.map(([name, o]) => optionItem(deal, name, o, usual)),
     difficultyItem(tiers, "diff"),
     ...named.map(([variation, m]) =>
       modifierItem<FillParams>({
@@ -373,6 +441,26 @@ export function fillParams(
           },
         }),
       ),
+      // An option only the deal reads, which only a full ID carries: absent,
+      // it is the option's default.
+      ...options.map(([name, o]) =>
+        num(
+          paramConfig,
+          o.letter,
+          {
+            get: (p) => optionOf(deal, p, name),
+            set: (p, v) => {
+              p.options = { ...p.options, [name]: v };
+            },
+          },
+          {
+            full: true,
+            whenAbsent: (p) => {
+              p.options = { ...p.options, [name]: o.default };
+            },
+          },
+        ),
+      ),
       ...named.map(([, m]) => flag(paramConfig, m.letter, m.kw)),
       // A deal setting, which only a full ID carries, and only where it is
       // off: absent, it is on whatever the size, as upstream reads it, so an
@@ -398,6 +486,7 @@ export function fillParams(
               },
             ),
           ]),
+      ...(deal.tierFlag === undefined ? [] : [tierFlagSegment(deal.tierFlag)]),
       choice(paramConfig, "d", "difficulty", deal.tierLetters, { full: true }),
     ]),
     validateParams(p, full) {
@@ -409,7 +498,32 @@ export function fillParams(
             ? `${ruleset.name}: the grid size must be at least ${ruleset.least}.`
             : `${ruleset.name}: width and height must both be at least ${ruleset.least}.`;
       }
-      if (beyond(bounds.all, p) !== null) return beyond(bounds.all, p);
+      const outside = beyond(bounds.all, p);
+      if (outside !== null) return `${outside}.`;
+      // An option is the deal's alone, so only a full ID's is held to its
+      // range and its choice's bounds.
+      if (full)
+        for (const [name, o] of options) {
+          const v = optionOf(deal, p, name);
+          if (v < o.min || v > o.max)
+            return o.choices === undefined
+              ? `${o.name} must be between ${o.min} and ${o.max}.`
+              : `There is no such ${o.name.toLowerCase()}.`;
+          const choice = o.choices?.[v];
+          const b = choice?.bounds;
+          if (choice === undefined || b === undefined) continue;
+          if (b.square === true && p.w !== p.h)
+            return `${choice.name}: the grid must be square.`;
+          const past = beyond(b, p);
+          if (past !== null)
+            return `${choice.name}: ${past[0].toLowerCase()}${past.slice(1)}.`;
+          for (const { tier, ...tb } of b.tiers ?? [])
+            if (tier === p.diff && beyond(tb, p) !== null)
+              return noSuchTier(
+                `${p.w}x${p.h} puzzle with ${choice.name} ${o.name.toLowerCase()}`,
+                tiers[tier],
+              );
+        }
       // A tier's own bounds hold of the board a deal makes, which only a full
       // ID's tier names.
       if (full)
@@ -435,6 +549,65 @@ export function fillParams(
       return null;
     },
   };
+}
+
+/** A bare letter older IDs write for a tier, before the tier's own `d`: read
+ * as that tier, and never written. */
+function tierFlagSegment(
+  flag: NonNullable<FillDeal["tierFlag"]>,
+): ParamsSegment<FillParams> {
+  return {
+    encode: () => "",
+    decode: (s, i, p) => {
+      if (s[i] !== flag.letter) return i;
+      p.diff = flag.tier;
+      return i + 1;
+    },
+  };
+}
+
+/** The Custom dialog's field for option `name`: a number, or a choice. A
+ * board's name says it where it is not what a board of its size is usually
+ * dealt with. */
+function optionItem(
+  deal: FillDeal,
+  name: string,
+  o: FillOption,
+  usual: (p: FillParams, name: string) => number,
+): ParamConfigItem<FillParams> {
+  const get = (p: FillParams) => optionOf(deal, p, name);
+  const set = (p: FillParams, v: number) => {
+    p.options = { ...p.options, [name]: v };
+  };
+  const words = (p: FillParams): string | null => {
+    const v = get(p);
+    if (v === usual(p, name)) return null;
+    const choice = o.choices?.[v];
+    if (choice !== undefined) return choice.words ?? choice.name;
+    return o.words?.replace("{n}", String(v)) ?? null;
+  };
+  const label = { slot: "tail" as const, words };
+  return o.choices === undefined
+    ? {
+        kw: o.kw,
+        name: o.name,
+        type: "string",
+        doc: o.doc,
+        bounds: { min: o.min, max: o.max },
+        label,
+        get: (p) => String(get(p)),
+        set: (p, v) => set(p, parseConfigInt(v)),
+      }
+    : {
+        kw: o.kw,
+        name: o.name,
+        type: "choices",
+        choices: o.choices.map((c) => c.name),
+        doc: o.doc,
+        label,
+        get,
+        set,
+      };
 }
 
 /** The elements a kind sits at, in the order a segment writes them: a cell's
@@ -497,12 +670,18 @@ export function encodeDesc<C extends Clues<C>>(
     }
     if ("digits" in seg) {
       const list = listOf(seg.digits);
+      const marked = Object.entries(seg.letters ?? {}).map(
+        ([letter, kind]) => [letter, listOf(kind)] as const,
+      );
       // Two clues side by side have no run between them, so `apart` there.
       const apart = (c: number): string =>
         seg.apart !== undefined && c > 0 && list.valueAt[c - 1] >= 0 ? seg.apart : "";
       out += encodeRunLength(
         sp.cells.length,
-        (c) => (list.valueAt[c] >= 0 ? apart(c) + String(list.valueAt[c]) : null),
+        (c) => {
+          if (list.valueAt[c] >= 0) return apart(c) + String(list.valueAt[c]);
+          return marked.find(([, l]) => l.valueAt[c] >= 0)?.[0] ?? null;
+        },
         { keepTrailingBlanks: true },
       );
       continue;
@@ -592,12 +771,22 @@ export function decodeDesc<C extends Clues<C>>(
         const n = sp.cells.length;
         const at: number[] = [];
         const v: number[] = [];
+        const letters = seg.letters ?? {};
+        const markedAt = new Map<string, number[]>(
+          Object.values(letters).map((k) => [k, []]),
+        );
         const isRun = (x: string) => x >= "a" && x <= "z";
+        const isLetter = (x: string) => x in letters;
         let afterClue = false;
         for (let pos = 0; pos < n; ) {
           if (r.peekIs(isRun)) {
             pos += r.char().charCodeAt(0) - 96;
             if (pos > n) r.fail(DESC_TOO_LONG);
+            afterClue = false;
+            continue;
+          }
+          if (r.peekIs(isLetter)) {
+            markedAt.get(letters[r.char()])?.push(pos++);
             afterClue = false;
             continue;
           }
@@ -615,6 +804,12 @@ export function decodeDesc<C extends Clues<C>>(
           afterClue = true;
         }
         out[kind] = clueList(at, v, n);
+        for (const [k, cells] of markedAt)
+          out[k as keyof C] = clueList(
+            cells,
+            cells.map(() => 0),
+            n,
+          );
         continue;
       }
       if ("dots" in seg) {

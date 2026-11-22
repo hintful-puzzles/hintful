@@ -9,6 +9,7 @@
 
 import { shuffle } from "../board/shuffle.ts";
 import { retryLimit } from "../contract/retry-limit.ts";
+import { placeSymmetricBlacks } from "../generate/symmetric-blacks.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 import { dealUnreasonable } from "../solve/answer-search.ts";
 import {
@@ -27,7 +28,6 @@ import { encodeAnswer } from "./answer.ts";
 import {
   type Clues,
   type FillBoard,
-  ladderOf,
   marksOf,
   newBoard,
   solveBoard,
@@ -37,12 +37,15 @@ import {
   encodeDesc,
   type FillDeal,
   type FillParams,
+  optionOf,
   partitionOf,
   sizesOf,
   variationsOf,
 } from "./game-id.ts";
 import { type GrowSizes, growPartition } from "./grow.ts";
 import {
+  type BuiltSample,
+  rampedShare,
   type ScatterSample,
   sampleAnswer,
   sampleDominoes,
@@ -124,6 +127,10 @@ export function dealFill<C extends Clues<C>>(
   const thorough = p.thorough ?? true;
   const kind = deal.hide as keyof C | undefined;
   const elements = kind === undefined ? 0 : sp[deal.universes[kind as string]].length;
+  const leaves = deal.leaves as keyof C | undefined;
+  /** The clues with only `shown` of the hidden kind, by index. */
+  const keeping = (clues: C, kind: keyof C, shown: readonly number[]): C =>
+    keepingOf(clues, kind, shown, elements, leaves);
   const spent = { moves: 0 };
   /** The partition grown round `g` for tier `tier`, by its name, where the
    * deal grows one; `null` where this draw grew none. */
@@ -170,10 +177,12 @@ export function dealFill<C extends Clues<C>>(
   };
   /** An answer and its clues, every one shown, or `null` where this draw
    * gave none. `tier` is the tier a grown partition is mended for. */
+  /** The draws so far, which a ramp of the `first` cells' share counts. */
+  let layouts = 0;
   const draw = (tier: number): { g: Uint8Array; clues: C } | null => {
     const g =
       "build" in sample
-        ? buildAnswer(module, sp, p, rs)
+        ? buildAnswer(module, deal, sample, sp, p, rs, layouts++)
         : "dominoes" in sample
           ? sampleDominoes(sample, sp, rs)
           : "lines" in sample
@@ -184,12 +193,14 @@ export function dealFill<C extends Clues<C>>(
     if (grown === null) return null;
     const derived = module.deriveClues(g, sp, grown, sizes);
     if (!module.isAnswer(g, sp, derived, variations)) return null;
-    // A clue whose partner square has none cannot be shown symmetrically.
-    if (kind === undefined || deal.symmetric === undefined)
-      return { g, clues: derived };
+    if (kind === undefined) return { g, clues: derived };
     const list = derived[kind] as ClueList;
-    const paired = shownOf(list).filter((i) => partnerOf(list, i) >= 0);
-    return { g, clues: keeping(derived, kind, paired, elements) };
+    // A clue whose partner square has none cannot be shown symmetrically.
+    const shown =
+      deal.symmetric === undefined
+        ? shownOf(list)
+        : shownOf(list).filter((i) => partnerOf(list, i) >= 0);
+    return { g, clues: keeping(derived, kind, shown) };
   };
   /** The index of the clue at clue `i`'s partner square under the deal's
    * symmetry, `-1` where it has none: a half turn takes a cell to the cell
@@ -236,17 +247,17 @@ export function dealFill<C extends Clues<C>>(
       .filter((u) => u.some((i) => read.has(i)))
       .flat()
       .sort((a, b) => a - b);
-    if (finishes(keeping(clues, kind, pruned, elements), 0)) shown = pruned;
+    if (finishes(keeping(clues, kind, pruned), 0)) shown = pruned;
     for (let t = 0; t <= tier; t++) {
       const order = unitsOf(clues, shown);
       shuffle(order, rs);
       const tries = thorough ? order : order.slice(0, t === 0 ? 0 : Math.min(p.w, p.h));
       for (const unit of tries) {
         const without = shown.filter((j) => !unit.includes(j));
-        if (finishes(keeping(clues, kind, without, elements), t)) shown = without;
+        if (finishes(keeping(clues, kind, without), t)) shown = without;
       }
     }
-    return keeping(clues, kind, shown, elements);
+    return keeping(clues, kind, shown);
   };
 
   if (searches(module) && p.diff === module.tiers.length - 1) {
@@ -255,7 +266,7 @@ export function dealFill<C extends Clues<C>>(
     let draws = 0;
     let answer: Uint8Array = new Uint8Array(0);
     type Held = { all: C; shown: number[] };
-    const held = (b: Held): C => keeping(b.all, kind, b.shown, elements);
+    const held = (b: Held): C => keeping(b.all, kind, b.shown);
     const got = dealUnreasonable<Held>({
       label: `fill: ${module.tiers[p.diff]} deal (${p.w}x${p.h})`,
       draw() {
@@ -477,26 +488,42 @@ function unpaired<C extends Clues<C>>(clues: C, kind: keyof C, sp: GridSpace): C
     }
   }
   const shown = shownOf(list).filter((i) => !off.has(i));
-  return keeping(clues, kind, shown, sp.cells.length);
+  return keepingOf(clues, kind, shown, sp.cells.length);
 }
 
 /** The indices of a list's clues. */
 const shownOf = (list: ClueList): number[] => Array.from(list.at.keys());
 
 /** The clues with only the clues `shown` of kind `kind`, by their indices
- * in its list. */
-function keeping<C extends Clues<C>>(
+ * in its list. Where kind `leaves` lies under `kind` (`deal.leaves`), it is
+ * dealt on each cell a clue of `kind` is hidden from, and on none it is shown
+ * on. */
+function keepingOf<C extends Clues<C>>(
   clues: C,
   kind: keyof C,
   shown: readonly number[],
   elements: number,
+  leaves?: keyof C,
 ): C {
   const all = clues[kind] as ClueList;
-  return {
+  const kept = {
     ...clues,
     [kind]: clueList(
       shown.map((i) => all.at[i]),
       shown.map((i) => all.v[i]),
+      elements,
+    ),
+  };
+  if (leaves === undefined) return kept;
+  const on = new Set(shown.map((i) => all.at[i]));
+  const under = [...(clues[leaves] as ClueList).at, ...all.at]
+    .filter((c, i, cs) => !on.has(c) && cs.indexOf(c) === i)
+    .sort((a, b) => a - b);
+  return {
+    ...kept,
+    [leaves]: clueList(
+      under,
+      under.map(() => 0),
       elements,
     ),
   };
@@ -518,12 +545,21 @@ function cluesRead<C extends Clues<C>>(
     Record<string, { readonly reads?: Reads }>
   >;
   const read = new Set<number>();
-  const { marks } = marksOf(module, board);
+  const { marks, entries } = marksOf(module, board);
   let current: Reads | null = null;
   marks.recorder = (rec) => {
     if (current === null) return;
-    const binding = (rec.reason as Said<Readonly<Record<string, number>>, unknown>)
-      .binding;
+    const binding = (
+      rec.reason as Partial<Said<Readonly<Record<string, number>>, unknown>>
+    ).binding;
+    // A technique run on placing strikes inside the placement, with no
+    // binding of its own: it reads the cell placed, which the firing that
+    // placed it named, and each cell it strikes.
+    if (binding === undefined) {
+      const k = list.byAt[rec.y * board.w + rec.x];
+      if (k >= 0) read.add(k);
+      return;
+    }
     for (const name of current.cells) {
       const k = list.byAt[binding[name]];
       if (k >= 0) read.add(k);
@@ -536,49 +572,88 @@ function cluesRead<C extends Clues<C>>(
   marks.wholePasses = true;
   runLadder(
     marks,
-    ladderTechniques(
-      marks,
-      ladderOf(module, board).entries,
-      { [TIERS]: cap },
-      {},
-      (e) => {
-        current = reads[e.id]?.reads ?? null;
-        return 0;
-      },
-    ),
+    ladderTechniques(marks, entries, { [TIERS]: cap }, {}, (e) => {
+      current = reads[e.id]?.reads ?? null;
+      return 0;
+    }),
   );
   return read;
 }
 
 /**
  * An answer built by the ladder (`sample: build`): a random value of its
- * domain on a random undecided cell, then every cell the whole ladder decides
- * from those, until none is left; `null` where a placement left no answer.
- * The board is built on the clues a blank board derives, which are none
- * where the clues are the placed cells (Unruly's givens). Upstream's
- * unruly.c `unruly_fill_game`.
+ * domain, or the build's one value, on a random undecided cell, then every
+ * cell the whole ladder decides from those, until none is left; `null` where
+ * a placement left no answer. The board is built on the clues a blank board
+ * derives, which are none where the clues are the placed cells (Unruly's
+ * givens). Upstream's unruly.c `unruly_fill_game`. With `first`, its value is
+ * dealt first on a share of the cells, as symmetric as the options ask, and
+ * the build is on the clues those cells derive with every clue of the hidden
+ * kind hidden (Light Up's walls, upstream's lightup.c `set_blacks`).
  */
 function buildAnswer<C extends Clues<C>>(
   module: DealtFillModule<C>,
+  deal: FillDeal,
+  sample: BuiltSample,
   sp: GridSpace,
   p: FillParams,
   rs: RandomState,
+  draw: number,
 ): Uint8Array | null {
-  const blank = module.deriveClues(new Uint8Array(sp.cells.length), sp, {}, sizesOf(p));
+  const start = new Uint8Array(sp.cells.length);
+  const { first } = sample;
+  if (first !== undefined)
+    placeSymmetricBlacks({
+      w: p.w,
+      h: p.h,
+      blackpc: rampedShare(first.ramp, optionOf(deal, p, first.share), draw),
+      symm: optionOf(deal, p, first.symmetry),
+      rs,
+      isBlack: (x, y) => start[y * p.w + x] === first.value,
+      setBlack: (x, y, on) => {
+        start[y * p.w + x] = on ? first.value : 0;
+      },
+    });
+  const derived = module.deriveClues(start, sp, {}, sizesOf(p));
+  const hidden = deal.hide as keyof C | undefined;
+  const blank =
+    first === undefined || hidden === undefined
+      ? derived
+      : keepingOf(
+          derived,
+          hidden,
+          [],
+          sp.cells.length,
+          deal.leaves as keyof C | undefined,
+        );
   const board = newBoard(module, p.w, p.h, blank, variationsOf(p));
-  const top = module.tiers.length - 1;
-  const g = board.values.slice();
+  // One set of marks the whole build, the ladder run again after each
+  // placement: a fresh solve each time cost a 12x16 Light Up deal seconds.
+  const { marks, ok, entries } = marksOf(module, board);
+  if (!ok) return null;
+  const ladder = ladderTechniques(
+    marks,
+    entries,
+    { [TIERS]: module.tiers.length - 1 },
+    {},
+  );
+  if (runLadder(marks, ladder)) return null;
   const order = Array.from(sp.cells);
   shuffle(order, rs);
+  const only = sample.build === true ? null : sample.build.value;
   for (const c of order) {
-    if (g[c] !== 0) continue;
+    if (marks.grid[c] !== 0) continue;
     const values: number[] = [];
-    for (let m = module.domainOf(sp, blank, c); m !== 0; m &= m - 1)
-      values.push(31 - Math.clz32(m & -m));
-    g[c] = values[randomUpto(rs, values.length)];
-    const got = solveBoard(module, { ...board, values: g }, top);
-    if (got.verdict === "impossible") return null;
-    g.set(got.values);
+    for (let m = module.domainOf(sp, blank, c); m !== 0; m &= m - 1) {
+      const v = 31 - Math.clz32(m & -m);
+      if (marks.has(c, v) && (only === null || v === only)) values.push(v);
+    }
+    if (values.length === 0) {
+      if (only === null) return null;
+      continue;
+    }
+    marks.place(c, values[randomUpto(rs, values.length)]);
+    if (runLadder(marks, ladder)) return null;
   }
-  return g;
+  return Uint8Array.from(marks.grid);
 }

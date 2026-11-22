@@ -1236,7 +1236,8 @@ Reach for `placeSymmetricBlacks` when black squares are placed
 symmetrically; the `SYMM_*` values and their Custom-dialog labels are beside
 it. It works through callbacks over the caller's board, and **the
 caller clears its board first**. Its order deals the boards, the
-`SYMM_ROT4` odd-center `<=` included. Exemplar: `lightup/generator.ts`.
+`SYMM_ROT4` odd-center `<=` included. Exemplar: `engine/fill/deal.ts`
+(`buildAnswer`, a description's `sample.first`).
 
 ### `loopgen.ts` — random loop generation
 
@@ -1476,7 +1477,7 @@ Reach for it when your hint records its ladder's firings through
 hint step. A candidate game records nothing: it runs its techniques on the
 notes ([`hints-candidates.md`](./hints-candidates.md) § "Deduce from the
 notes when the mistake check vouches for them"). Exemplar:
-`lightup/solver.ts`.
+`filling/solver.ts`.
 
 ### `wing.ts` — the XY- and XYZ-wing
 

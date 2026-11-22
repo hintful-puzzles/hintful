@@ -35,7 +35,6 @@ import {
   type FillBoard,
   isAnswerOf,
   type LadderedFillModule,
-  ladderOf,
   marksOf,
   solveBoard,
 } from "./board.ts";
@@ -126,9 +125,8 @@ export function fillHint<C extends object>(
   >({
     name: "fill hint",
     walk(board, cap) {
-      const { marks, ok } = marksOf(module, board);
+      const { marks, ok, entries } = marksOf(module, board);
       if (!ok) return null;
-      const { entries } = ladderOf(module, board);
       if (links?.glance === undefined) return { marks, entries };
       const walk = glanceWalk(
         entries,
@@ -171,6 +169,9 @@ export function fillHint<C extends object>(
             ),
         }),
     tiers: { lowest: tierOf, count: module.tiers.length },
+    // What a placement decides on is washed, which the board already shows:
+    // a bulb lights its lines, and a player does not cross each.
+    ...(module.washed === undefined ? {} : { consequences: false }),
     ...(module.SAYS_EACH === undefined ? {} : { each: module.SAYS_EACH }),
     ...(module.SAYS_LEGS === undefined ? {} : { legs: module.SAYS_LEGS }),
     ...(module.RULES_OUT === undefined ? {} : { rulesOut: module.RULES_OUT }),

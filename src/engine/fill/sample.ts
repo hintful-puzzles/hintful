@@ -21,11 +21,43 @@ type Near = "adj4" | "adj8";
 /** How a deal draws its answer: built by the ladder (`buildAnswer`),
  * scattered (`sampleAnswer`), as dominoes (`sampleDominoes`), or a count to
  * every line (`sampleLines`). */
-export type Sample =
-  | { readonly build: true }
-  | ScatterSample
-  | DominoSample
-  | LinesSample;
+export type Sample = BuiltSample | ScatterSample | DominoSample | LinesSample;
+
+/** An answer the ladder builds: any value of a cell's domain, or `value`
+ * alone, placed at random and the rest decided; with `first`, a value dealt
+ * on a share of the cells first, as symmetric as asked, each by the name of
+ * the option that gives it, the share going up by `ramp` as draws fail. */
+export interface BuiltSample {
+  readonly build: true | { readonly value: number };
+  readonly first?: {
+    readonly value: number;
+    readonly share: string;
+    readonly symmetry: string;
+    readonly ramp?: {
+      readonly every: number;
+      readonly step: number;
+      readonly top: number;
+    };
+  };
+}
+
+/** The share of `first` cells the draw numbered `draw` of a deal takes, from
+ * the params' own `asked`: up `ramp.step` after each `ramp.every` draws, and
+ * past `ramp.top` from `asked` again, since a small board nine-tenths walls
+ * has too few squares to need a tier above the lowest (upstream lightup.c's
+ * `new_game_desc` climbs and stays). */
+export function rampedShare(
+  ramp: NonNullable<BuiltSample["first"]>["ramp"],
+  asked: number,
+  draw: number,
+): number {
+  if (ramp === undefined || asked >= ramp.top) return asked;
+  const steps = Math.ceil((ramp.top - asked) / ramp.step) + 1;
+  return Math.min(
+    ramp.top,
+    asked + (Math.floor(draw / ramp.every) % steps) * ramp.step,
+  );
+}
 
 /** `count` cells of `value` in every row and column, none within `apart` of
  * another; `rest` on every other cell. `count` is a number, or the name of a

@@ -25,9 +25,13 @@ import {
   type DescriptionJson,
   type GrowJson,
   growOf,
+  type IdSegmentJson,
+  type OptionJson,
+  optionsOf,
   type PlayJson,
+  type SizeBoundsJson,
   sampleOf,
-  segmentKind,
+  segmentKinds,
   thoroughOf,
 } from "./description.ts";
 import type { Binder, Expr } from "./expr.ts";
@@ -169,8 +173,13 @@ export function playOf(
     bounds,
     plain: _plain,
     sizes: _sizes,
+    wash,
     ...rest
   } = p;
+  if (rest.sweepWith !== undefined && rest.stroke !== "sweep")
+    throw new CompileError(
+      "play sweepWith: a button sweeps only where the stroke does",
+    );
   const rungs = d.techniques.filter((t) => t.on === null).map((t) => t.id);
   for (const [key, ids] of [
     ["glance", glance],
@@ -188,7 +197,13 @@ export function playOf(
   for (const id of askBefore ?? [])
     if (glance?.includes(id))
       throw new CompileError(`play askBefore: ${id} is read at a glance`);
-  const plainPlay = dotted ? { ...rest, dotted } : rest;
+  const plainPlay = {
+    ...rest,
+    ...(dotted ? { dotted } : {}),
+    ...(wash === undefined
+      ? {}
+      : { wash: wash.pref === undefined ? {} : { pref: wash.pref } }),
+  };
   const play =
     links === undefined
       ? plainPlay
@@ -213,6 +228,7 @@ export function playOf(
   ];
   return [
     ...boardDomainOf(d, env, measured),
+    ...washedOf(wash?.when ?? null, env, measured),
     "",
     "/** How the player fills the board: the engine's `FillPlay`. */",
     `export const play = ${JSON.stringify(play)} as const;`,
@@ -253,29 +269,79 @@ export function playOf(
   ];
 }
 
-/** A board's `WxH` as its size, and each size beyond the grid's it gives
- * after it by its params letter (`8x8s2`, two stars), a size it does not
- * name at its least. A letter that is no size's is refused. */
+/**
+ * `washed(g, sp, cl, c)`: whether open cell `c` is washed on the values `g`,
+ * from `play.wash.when`. Nothing where there is no wash.
+ */
+function washedOf(
+  when: string | null,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
+  if (when === null) return [];
+  const scratch: string[] = [];
+  const out = new Out(1);
+  const v = compileExpr(
+    measured(parse(when)),
+    new Map<string, Val>([["c", { code: "c", sort: elem("cell") }]]),
+    answerEnv(env, { yes: false }, scratch),
+    out,
+  );
+  expect(v, "bool", "play wash when");
+  const body = [...scratch.map((s) => `  ${s}`), ...out.text(), `  return ${v.code};`];
+  return [
+    "",
+    "/** Whether cell `c` is washed on the values `g` (`play.wash`). */",
+    `export function washed(${[
+      "g: ArrayLike<number>",
+      param("sp", "GridSpace", body),
+      param("cl", "Dealt", body),
+      "c: number",
+    ].join(", ")}): boolean {`,
+    ...body,
+    "}",
+  ];
+}
+
+/** A board's `WxH` as its size, each size beyond the grid's it gives after
+ * it by its params letter (`8x8s2`, two stars), a size it does not name at
+ * its least, and each deal option it names by its letter (`7x7s4`). A letter
+ * that is neither's is refused. */
 const sizeOf =
   (json: DescriptionJson) =>
-  (b: string): { w: number; h: number; sizes?: Record<string, number> } => {
+  (
+    b: string,
+  ): {
+    w: number;
+    h: number;
+    sizes?: Record<string, number>;
+    options?: Record<string, number>;
+  } => {
     const m = /^(\d+)x(\d+)((?:[a-z]\d+)*)$/.exec(b);
     if (m === null) throw new CompileError(`play boards: ${b} is not WxH`);
     const sizes: Record<string, number> = Object.fromEntries(
       Object.keys(json.play?.sizes ?? {}).map((n) => [n, json.sizes[n]?.min ?? 0]),
     );
+    const options: Record<string, number> = {};
     for (const [, letter, n] of m[3].matchAll(/([a-z])(\d+)/g)) {
       const named = Object.entries(json.play?.sizes ?? {}).find(
         ([, s]) => s.letter === letter,
       );
-      if (named === undefined)
-        throw new CompileError(`play boards: ${b}: ${letter} is no size's letter`);
-      sizes[named[0]] = Number(n);
+      const option = Object.entries(optionsOf(json)).find(
+        ([, o]) => o.letter === letter,
+      );
+      if (named !== undefined) sizes[named[0]] = Number(n);
+      else if (option !== undefined) options[option[0]] = Number(n);
+      else
+        throw new CompileError(
+          `play boards: ${b}: ${letter} is no size's letter or option's`,
+        );
     }
     return {
       w: Number(m[1]),
       h: Number(m[2]),
       ...(Object.keys(sizes).length === 0 ? {} : { sizes }),
+      ...(Object.keys(options).length === 0 ? {} : { options }),
     };
   };
 
@@ -407,30 +473,27 @@ function boardDomainOf(
   ];
 }
 
-/**
- * `deal`, what the engine deals a fill game's board by and writes its game
- * ID with: the sample, the codec's segments, the tiers' letters and the
- * sizes; and `clueMax`, each clue kind's largest value at an element, from
- * its `value: range(lo, hi)`, which bounds what a game ID may say. Nothing
- * where there is no `play:`.
- */
-export function dealOf(
-  json: DescriptionJson,
-  d: Description,
-  env: Env,
-  measured: (e: Expr) => Expr,
-): string[] {
-  if (json.play === undefined) return [];
-  const kinds = [...d.clueKinds.keys()];
-  const partitions = [...env.regions];
-  const id =
-    json.id ?? kinds.map((k, i) => ({ numbers: k, ...(i > 0 ? { before: "," } : {}) }));
-  const named = id.map(segmentKind);
-  for (const kind of [...kinds, ...partitions])
-    if (named.filter((k) => k === kind).length !== 1)
-      throw new CompileError(`id: clue kind or partition ${kind} is not named once`);
+/** The values a kind's `range(lo, hi)` states, where both are numbers. */
+function valuesOf(d: Description, kind: string): number[] | null {
+  const c = d.clueKinds.get(kind);
+  if (c === undefined) throw new CompileError(`id: no clue kind ${kind}`);
+  return c.value !== null &&
+    c.value.k === "call" &&
+    c.value.args.every((a) => a.k === "num")
+    ? c.value.args.map((a) => (a.k === "num" ? a.v : 0))
+    : null;
+}
+
+/** Whether a kind is a cell's one-valued marker, which says where a clue is
+ * and never its value: one value, 0. */
+function markerKind(d: Description, kind: string): boolean {
+  return d.clueKinds.get(kind)?.at === "cell" && valuesOf(d, kind)?.join() === "0,0";
+}
+
+/** Refuses an `id:` segment that cannot write the kind it names. */
+function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): void {
   for (const [i, seg] of id.entries()) {
-    const kind = segmentKind(seg);
+    const [kind, ...more] = segmentKinds(seg);
     if ("walls" in seg) {
       if (!env.regions.has(kind))
         throw new CompileError(`id: walls of ${kind}, which is no dealt partition`);
@@ -438,18 +501,20 @@ export function dealOf(
     }
     const c = d.clueKinds.get(kind);
     if (c === undefined) throw new CompileError(`id: no clue kind ${kind}`);
-    // The values a kind's `range(lo, hi)` states, where both are numbers.
-    const values =
-      c.value !== null &&
-      c.value.k === "call" &&
-      c.value.args.every((a) => a.k === "num")
-        ? c.value.args.map((a) => (a.k === "num" ? a.v : 0))
-        : null;
-    // A run code says where a clue is, never its value: one value, 0.
-    if ("runs" in seg && (c.at !== "cell" || values?.join() !== "0,0"))
+    const values = valuesOf(d, kind);
+    if ("runs" in seg && !markerKind(d, kind))
       throw new CompileError(
         `id: runs of ${kind}, which is not a cell's one-valued marker`,
       );
+    for (const m of more)
+      if (!markerKind(d, m))
+        throw new CompileError(
+          `id: the letter of ${m}, which is not a cell's one-valued marker`,
+        );
+    if ("digits" in seg)
+      for (const letter of Object.keys(seg.letters ?? {}))
+        if (seg.apart === letter)
+          throw new CompileError(`id: the letter ${letter} is the digits' apart`);
     // A dot run's case is its value, one of two.
     if (
       "dots" in seg &&
@@ -476,6 +541,32 @@ export function dealOf(
     if ("digits" in seg && seg.apart !== undefined && c.at !== "cell")
       throw new CompileError(`id: digits of ${kind}, which is not a cell's clue`);
   }
+}
+
+/**
+ * `deal`, what the engine deals a fill game's board by and writes its game
+ * ID with: the sample, the codec's segments, the tiers' letters and the
+ * sizes; and `clueMax`, each clue kind's largest value at an element, from
+ * its `value: range(lo, hi)`, which bounds what a game ID may say. Nothing
+ * where there is no `play:`.
+ */
+export function dealOf(
+  json: DescriptionJson,
+  d: Description,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
+  if (json.play === undefined) return [];
+  const kinds = [...d.clueKinds.keys()];
+  const partitions = [...env.regions];
+  const id =
+    json.id ?? kinds.map((k, i) => ({ numbers: k, ...(i > 0 ? { before: "," } : {}) }));
+  const named = id.flatMap(segmentKinds);
+  for (const kind of [...kinds, ...partitions])
+    if (named.filter((k) => k === kind).length !== 1)
+      throw new CompileError(`id: clue kind or partition ${kind} is not named once`);
+  const isMarker = (kind: string): boolean => markerKind(d, kind);
+  checkSegments(id, d, env);
   const hide = json.deal?.["hide"];
   if (typeof hide === "string" && !d.clueKinds.has(hide))
     throw new CompileError(`deal hide: no clue kind ${hide}`);
@@ -557,12 +648,56 @@ export function dealOf(
         "deal sample: a climb keeps what the ladder decided, and a hide",
       );
   }
+  const leaves = json.deal?.["leaves"];
+  if (leaves !== undefined) {
+    if (typeof leaves !== "string" || !isMarker(leaves))
+      throw new CompileError(
+        `deal leaves: ${String(leaves)} is no cell's one-valued marker`,
+      );
+    if (typeof hide !== "string")
+      throw new CompileError("deal leaves: what a hidden clue leaves, and no hide");
+  }
+  const options = optionsJsonOf(json, tiers, [
+    ...settings.map((s) => s.letter),
+    ...(thorough === null ? [] : [thorough.letter]),
+    ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
+  ]);
+  if (sample !== null && "first" in sample && sample.first !== undefined) {
+    const { share, symmetry } = sample.first;
+    if (options[share] === undefined || options[share].choices !== undefined)
+      throw new CompileError(
+        `deal sample first: ${share} is no number the options give`,
+      );
+    if (options[symmetry]?.choices?.length !== SYMMETRIES)
+      throw new CompileError(
+        `deal sample first: ${symmetry} is no option of the ${SYMMETRIES} symmetries`,
+      );
+    if (typeof hide !== "string")
+      throw new CompileError(
+        "deal sample first: the build is on the first cells' clues with every hidden one hidden, and no hide",
+      );
+  }
+  const tierFlag =
+    json.tierFlag === undefined
+      ? null
+      : {
+          letter: json.tierFlag.letter,
+          tier: tierIndex(tiers, json.tierFlag.tier, "tierFlag"),
+        };
+  if (
+    tierFlag !== null &&
+    [...Object.values(options).map((o) => o.letter), "d"].includes(tierFlag.letter)
+  )
+    throw new CompileError(`tierFlag: the letter ${tierFlag.letter} is taken`);
   const { grid } = json.space;
   const deal = {
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
     ...(settings.length === 0 ? {} : { settings }),
+    ...(Object.keys(options).length === 0 ? {} : { options }),
     sample,
     ...(typeof hide === "string" ? { hide } : {}),
+    ...(typeof leaves === "string" ? { leaves } : {}),
+    ...(tierFlag === null ? {} : { tierFlag }),
     ...(typeof unpair === "string" ? { unpair } : {}),
     ...(symmetric === undefined ? {} : { symmetric }),
     ...(thorough === null ? {} : { thorough }),
@@ -672,6 +807,73 @@ function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
   if (out.length > 1)
     throw new CompileError("play sizes: a game has one field of rulesets");
   return out;
+}
+
+/** The symmetries a `first` sample's option chooses among, in upstream's
+ * order (`engine/generate/symmetric-blacks.ts`). */
+const SYMMETRIES = 5;
+
+/** The index of tier `name`, refused where there is no such tier. */
+function tierIndex(tiers: readonly string[], name: string, where: string): number {
+  const i = tiers.indexOf(name);
+  if (i < 0) throw new CompileError(`${where}: ${name} is no tier`);
+  return i;
+}
+
+/** Bounds as the engine holds them (`SizeBounds`), a tier's by its index. */
+type BoundsOut = SizeBoundsJson & {
+  square?: true;
+  tiers?: (SizeBoundsJson & { tier: number })[];
+};
+
+/**
+ * The deal's options as the engine holds them (`FillOption`): each choice's
+ * bounds with its tiers by index. A letter another field takes, a number
+ * with no range, or a default out of range, is refused.
+ */
+function optionsJsonOf(
+  json: DescriptionJson,
+  tiers: readonly string[],
+  taken: readonly string[],
+): Record<
+  string,
+  Omit<OptionJson, "choices"> & {
+    choices?: { name: string; words?: string; bounds?: BoundsOut }[];
+  }
+> {
+  const used = new Set(["d", ...taken]);
+  return Object.fromEntries(
+    Object.entries(optionsOf(json)).map(([name, o]) => {
+      if (used.has(o.letter))
+        throw new CompileError(`deal options: the letter ${o.letter} is taken`);
+      used.add(o.letter);
+      const [min, max] =
+        o.choices === undefined ? [o.min, o.max] : [0, o.choices.length - 1];
+      if (min === undefined || max === undefined)
+        throw new CompileError(`deal options: ${name} has no min and max`);
+      if (o.default < min || o.default > max)
+        throw new CompileError(`deal options: ${name}'s default is out of range`);
+      const choices = o.choices?.map(({ bounds, ...bare }) => {
+        if (bounds === undefined) return bare;
+        const { tiers: byTier, ...all } = bounds;
+        return {
+          ...bare,
+          bounds: {
+            ...all,
+            ...(byTier === undefined
+              ? {}
+              : {
+                  tiers: Object.entries(byTier).map(([t, b]) => ({
+                    tier: tierIndex(tiers, t, `deal options ${name}`),
+                    ...b,
+                  })),
+                }),
+          },
+        };
+      });
+      return [name, { ...o, min, max, ...(choices === undefined ? {} : { choices }) }];
+    }),
+  );
 }
 
 /** A size beyond the grid's as the deal holds it (`FillSetting`). */

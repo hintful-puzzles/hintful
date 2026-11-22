@@ -24,7 +24,7 @@
  * it, and each line's fixed label (`labels:`) before its start.
  */
 
-import { BLACK, GRAY_WASH, REGION_FILLS, WHITE } from "../color/colors.ts";
+import { BLACK, GRAY_WASH, REGION_FILLS, WHITE, YELLOW_WASH } from "../color/colors.ts";
 import {
   CLEAR_MARK,
   cellSurface,
@@ -218,6 +218,10 @@ const NUMBER_DONE = 1 << 6;
 const NUMBER_BROKEN = 1 << 7;
 /** The side of a joining piece its other half is on (`JOIN_*`, `piece.ts`). */
 const JOIN_SHIFT = 8;
+/** The cell is washed (`play.wash`): its surface takes the wash. */
+const WASHED = 1 << 12;
+/** The cell is washed and the preference leaves its secondary piece out. */
+const WASH_HIDES = 1 << 13;
 
 /** The step to each of a cell's four sides, up, right, down, left. */
 const DIRS: readonly (readonly [number, number])[] = [
@@ -378,6 +382,22 @@ export function fillRender<C extends Clues<C>>(
     return out;
   };
 
+  /** Each cell's wash bits: `WASHED` on a cell the board washes that was not
+   * dealt, and `WASH_HIDES` too where it holds the secondary value and the
+   * preference leaves that piece out. */
+  const washesOf = (b: FillBoard<C>, ui: FillUi): Uint16Array => {
+    const out = new Uint16Array(b.values.length);
+    const { washed } = module;
+    if (washed === undefined) return out;
+    const sp = spaceOf(module, b);
+    for (const c of sp.cells) {
+      if (b.fixed[c] || !washed(b.values, sp, b.dealt, c)) continue;
+      out[c] = WASHED;
+      if (!ui.washedMarks && b.values[c] === play.secondary) out[c] |= WASH_HIDES;
+    }
+    return out;
+  };
+
   /** The numbers not yet done, of those that can be. */
   const numbersLeft = (b: FillBoard<C>): number => {
     const states = numberStates(b);
@@ -410,6 +430,9 @@ export function fillRender<C extends Clues<C>>(
    * them, so a palette has no hole. */
   const COL_DOT = walled === undefined ? COL_WALL : COL_REGION + REGION_SURFACES.length;
   const COL_DOT_LIGHT = COL_DOT + 1;
+  /** A washed cell's surface (`play.wash`), after the dots' where the board
+   * has them. */
+  const COL_WASH = play.dotted === true ? COL_DOT + 2 : COL_DOT;
 
   const start = (ts: number): number => (labelStart === undefined ? 1 : ts);
   const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : 1);
@@ -443,6 +466,9 @@ export function fillRender<C extends Clues<C>>(
       out[COL_DOT] = BLACK;
       out[COL_DOT_LIGHT] = WHITE;
     }
+    // The wash step, not plain yellow: a washed cell is a large fill under the
+    // pieces and must read as the board, lit, not as an object on it.
+    if (play.wash !== undefined) out[COL_WASH] = YELLOW_WASH;
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
         out[slot[i]] = c;
@@ -551,14 +577,16 @@ export function fillRender<C extends Clues<C>>(
     const ty = coord(y, ts);
     const tile = { x: tx, y: ty, w: ts, h: ts };
     const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
-    const piece = v === 0 ? undefined : byValue.get(v);
+    const piece = v === 0 || lineWord & WASH_HIDES ? undefined : byValue.get(v);
     const ground = tone
       ? winSlot(tone)
       : piece !== undefined && piece.painter.surface !== null
         ? piece.slot[piece.painter.surface]
         : word & FIXED
           ? COL_GIVEN
-          : (part?.fill ?? COL_CELL);
+          : lineWord & WASHED
+            ? COL_WASH
+            : (part?.fill ?? COL_CELL);
     // Under the content, so the piece stays whole.
     const lay = (surface: Rect) => {
       dr.drawRect(surface, ground);
@@ -964,6 +992,7 @@ export function fillRender<C extends Clues<C>>(
     const frac = Math.min(1, animTime / PLACE_ANIM_TIME);
     const states = numberStates(shown);
     const joins = joinsOf(shown);
+    const washes = washesOf(shown, ui);
     const { parts } = ds;
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
@@ -972,7 +1001,8 @@ export function fillRender<C extends Clues<C>>(
         if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
         k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
         const hk = hintWord[i] | outlines.packed(x, y);
-        const lk = lineWord[i] | (states.get(i) ?? 0) | (joins[i] << JOIN_SHIFT);
+        const lk =
+          lineWord[i] | (states.get(i) ?? 0) | (joins[i] << JOIN_SHIFT) | washes[i];
         const at = numberAt(state, i);
         const n = at === null ? -1 : listOf(state.dealt, at.kind).v[at.k];
         const part =

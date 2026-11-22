@@ -23,6 +23,7 @@ import {
   listOf,
   solveBoard,
   spaceOf,
+  washedValues,
 } from "./board.ts";
 import type { Edit } from "./edit.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
@@ -103,12 +104,25 @@ export function status<C>(
   return isAnswerOf(module, board, g) ? "solved" : "ongoing";
 }
 
-/** The edit that fills every cell with the answer and clears every mark. */
-function fillWith<C>(board: FillBoard<C>, answer: Uint8Array): Edit {
+/** The edit that fills every cell with the answer and clears every mark. A
+ * cell the answer washes and leaves blank is left open, or as the player
+ * marked it: the wash already says it. */
+function fillWith<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+  answer: Uint8Array,
+): Edit {
   const set: number[] = [];
   const mark: number[] = [];
+  const { washed, play } = module;
+  const sp = spaceOf(module, board);
   for (let c = 0; c < answer.length; c++) {
-    if (!board.fixed[c] && board.values[c] !== answer[c]) set.push(c, answer[c]);
+    const shown =
+      washed !== undefined &&
+      answer[c] === play?.blank &&
+      washed(answer, sp, board.dealt, c);
+    const want = shown && board.values[c] !== answer[c] ? 0 : answer[c];
+    if (!board.fixed[c] && board.values[c] !== want) set.push(c, want);
     if (board.mark[c] >= 0) mark.push(c, -1);
   }
   return { set, mark };
@@ -121,16 +135,18 @@ export function solve<C>(
   aux?: string,
 ): SolveResult<Edit> {
   const given = aux === undefined ? null : decodeAnswer(aux, orig.values.length);
-  if (given !== null) return { ok: true, move: fillWith(curr, given) };
+  if (given !== null) return { ok: true, move: fillWith(module, curr, given) };
   if (searches(module))
-    return solveFromAnswer(answerSearched(module, orig), (a) => fillWith(curr, a));
+    return solveFromAnswer(answerSearched(module, orig), (a) =>
+      fillWith(module, curr, a),
+    );
   const got = solveBoard(module, asDealt(orig), module.tiers.length - 1);
   if (got.verdict !== "solved")
     return {
       ok: false,
       error: got.verdict === "impossible" ? NO_SOLUTION : PUZZLE_NOT_REASONABLE,
     };
-  return { ok: true, move: fillWith(curr, got.values) };
+  return { ok: true, move: fillWith(module, curr, got.values) };
 }
 
 /**
@@ -192,12 +208,13 @@ export function revealOne<C>(board: FillBoard<C>, solved: FillBoard<C>): Edit | 
  * undecided. */
 export function rulesOf<C>(module: FillModule<C>): RulesOf<FillBoard<C>> {
   // The live checks read the values alone: a mark is judged against the
-  // answer (`findMistakes`), never live.
+  // answer (`findMistakes`), never live. A washed cell holds the secondary
+  // value, which a piece there would break.
   const { units, violations, isAnswer } = module;
   return describedRules(
     { units, violations, isAnswer },
     {
-      grid: (b) => b.values,
+      grid: (b) => washedValues(module, b),
       size: (b) => [b.w, b.h],
       deals: (b) => [b.dealt, b.variations] as const,
     },

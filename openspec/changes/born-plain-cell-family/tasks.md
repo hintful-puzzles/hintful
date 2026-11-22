@@ -63,7 +63,29 @@ order.
       a block too, where Shift was red, Ctrl blue and both cleared; a broken
       piece takes the red badge, not a red frame; a mistake is outlined, not
       washed red; the catalog says blocks and discs, not red and blue.
-- [ ] 2.4 Light Up born.
+- [x] 2.4 Light Up born. Done 2026-11-22, 1,684 hand-written lines gone.
+      Added, each the engine's: `deal.options`, a number or a choice by
+      letter, with its bounds and its tier bounds, its label shown only
+      where unusual, a preset naming one after its size; `tierFlag`
+      (upstream's bare `r`); `digits`' `letters` and `deal.leaves`, a
+      numbered wall hidden leaving a bare one; `build: {value}` with a
+      `first` value laid symmetrically on a share of the cells, its `ramp`
+      upstream's walls added after 20 failures; the build made incremental,
+      one ladder run grown a placement at a time (a 12x16 Unreasonable deal
+      went from up to 50 s to under half a second, against the hand-written
+      generator's 40 to 275 ms); `play.wash` with its preference, a washed
+      cell read as the secondary value, left open by Solve and never a
+      hint's step; `play.sweepWith`; placing techniques run in fill games,
+      on seeded values too; the `wall` and `bulb` painters. Differences a
+      player sees: a click on a square holding the other mark empties it,
+      where it was refused; `L` places a bulb and `X` or `I` a cross; Solve
+      leaves lit squares open; a hint does not narrate its consequences;
+      the cursor stays on a finished board; a params string with no `s` on
+      a square grid is 2-way rotational, not 4-way; a 2x3 four-way mirror
+      Normal board is refused (neither generator had one); a 3x4 four-way
+      mirror Normal board and a 4x4 four-way mirror Unreasonable board are
+      no longer refused but their deals give up, since the born deal hides
+      at Easy first; saves are not read.
 - [ ] 2.5 Sticks born.
 - [ ] 2.6 Bricks born.
 - [ ] 2.7 Pattern born.

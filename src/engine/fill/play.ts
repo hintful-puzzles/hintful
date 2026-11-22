@@ -91,6 +91,12 @@ export interface FillPlay {
    * column, `sweep` repeats the pressed verb on every cell it passes that
    * held what the pressed one held. */
   readonly stroke: "line" | "sweep";
+  /** The one button whose drag sweeps, where the other's acts where it began
+   * alone; both sweep where absent. */
+  readonly sweepWith?: "secondary";
+  /** Where the open cells a definition holds of are washed (`washed`), the
+   * preference that draws the secondary piece on one, on by default. */
+  readonly wash?: { readonly pref?: { readonly kw: string; readonly name: string } };
   /** The clue kind the cell mark names, where the player draws it as a link
    * between a cell and the clue's cell beside it. */
   readonly links?: {
@@ -112,6 +118,9 @@ export interface FillUi {
   dragOk: boolean;
   /** Whether `L` armed a link, which the next arrow draws. */
   linkArmed: boolean;
+  /** The wash's preference (`FillPlay.wash`): whether the secondary piece is
+   * drawn on a washed cell. */
+  washedMarks: boolean;
 }
 
 export function newFillUi(stroke: FillPlay["stroke"] = "line"): FillUi {
@@ -121,6 +130,7 @@ export function newFillUi(stroke: FillPlay["stroke"] = "line"): FillUi {
     dragButton: -1,
     dragOk: false,
     linkArmed: false,
+    washedMarks: true,
   };
 }
 
@@ -223,7 +233,12 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
       : rulingOut(clicking(secondary, primary)),
     keyOnly,
     ...(play.stroke === "sweep"
-      ? { sweep: { holds: (b: FillBoard<C>, t: Point) => b.values[t.y * b.w + t.x] } }
+      ? {
+          sweep: {
+            holds: (b: FillBoard<C>, t: Point) => b.values[t.y * b.w + t.x],
+            ...(play.sweepWith === undefined ? {} : { buttons: [play.sweepWith] }),
+          },
+        }
       : {}),
   };
 

@@ -9,15 +9,6 @@
  * are `verdictOf`'s table.
  */
 import { describe, expect, it } from "vitest";
-import { lightupGame } from "../../games/lightup/index.ts";
-import { answerOf, holdsBulb } from "../../games/lightup/solver.ts";
-import {
-  F_BLACK,
-  F_LIGHT,
-  idx,
-  type LightupParams,
-  type LightupState,
-} from "../../games/lightup/state.ts";
 import { mapGame } from "../../games/map/index.ts";
 import { mathraxGame } from "../../games/mathrax/index.ts";
 import { pathGame } from "../../games/path/index.ts";
@@ -38,10 +29,11 @@ import {
   type TracksState,
 } from "../../games/tracks/state.ts";
 import { NAMES } from "../../generated/games/lightup/lightup.compiled.ts";
+import { game as lightupGame } from "../../generated/games/lightup/lightup.game.ts";
 import { NAMES as UNRULY_NAMES } from "../../generated/games/unruly/unruly.compiled.ts";
 import { game as unrulyGame } from "../../generated/games/unruly/unruly.game.ts";
 import { D, dirX, dirY, L, R, U } from "../board/square-edges.ts";
-import { SYMM_ROT4 } from "../generate/symmetric-blacks.ts";
+import type { FillParams } from "../fill/game-id.ts";
 import { randomNew } from "../random/index.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
 import type { Reads } from "../solve/describe-runtime.ts";
@@ -64,16 +56,27 @@ import {
   verdictOf,
 } from "./move-judge.ts";
 
-const EASY: LightupParams = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
-const UNREASONABLE: LightupParams = { ...EASY, difficulty: 2 };
+const EASY: FillParams = lightupGame.defaultParams();
+const UNREASONABLE: FillParams = { ...EASY, diff: 2 };
 
 const DIRECT = "Your last move follows from ";
 const CHAINED = "Your last move follows a few steps on, starting from ";
 
-function fresh(p: LightupParams, seed: string): LightupState {
-  const { desc } = lightupGame.newDesc(p, randomNew(seed));
-  return lightupGame.newState(p, desc);
+type LightupState = ReturnType<typeof lightupGame.newState>;
+
+/** A board dealt from `seed`, and its answer, a value a square (`1` a bulb). */
+function dealtWith(
+  p: FillParams,
+  seed: string,
+): { state: LightupState; answer: number[] } {
+  const { desc, aux } = lightupGame.newDesc(p, randomNew(seed));
+  return {
+    state: lightupGame.newState(p, desc),
+    answer: Array.from(aux ?? "", (ch) => Number.parseInt(ch, 36)),
+  };
 }
+
+const fresh = (p: FillParams, seed: string): LightupState => dealtWith(p, seed).state;
 
 /** What a player calls the technique of a Light Up step's rung. */
 const nameOf = (rung: string): string =>
@@ -163,23 +166,18 @@ describe("judgeMove", () => {
   });
 
   it("tells a right bulb nothing decided from a deduced one", () => {
-    let state = fresh(UNREASONABLE, "lh-unreasonable");
+    const dealt = dealtWith(UNREASONABLE, "lh-unreasonable");
+    let { state } = dealt;
     for (let moves = 0; moves < 200; moves++) {
       const res = lightupGame.hint.plan(state);
       if (!res?.ok) break;
       state = lightupGame.executeMove(state, res.steps[0].move);
     }
     expect(lightupGame.status(state)).toBe("ongoing");
-    const answer = answerOf(state);
-    if (answer.kind !== "one") throw new Error("board not uniquely solvable");
     let judged = 0;
     for (let i = 0; i < state.w * state.h; i++) {
-      if (state.flags[i] & (F_BLACK | F_LIGHT)) continue;
-      if (!holdsBulb(answer.solution, i)) continue;
-      const x = i % state.w;
-      const y = Math.floor(i / state.w);
-      expect(idx(x, y, state.w)).toBe(i);
-      const after = lightupGame.executeMove(state, { ops: [{ kind: "light", x, y }] });
+      if (state.values[i] !== 0 || dealt.answer[i] !== 1) continue;
+      const after = lightupGame.executeMove(state, { set: [i, 1] });
       const verdict = judge(state, after);
       expect(verdict?.followed).toBe(false);
       expect(verdict?.words.text).toBe(verdictOf({ kind: "unforced" }).words.text);
@@ -193,8 +191,11 @@ describe("judgeMove", () => {
     const res = lightupGame.hint.plan(state);
     if (!res?.ok) throw new Error("no hint");
     const marked = lightupGame.executeMove(state, res.steps[0].move);
-    // The same toggles again take the marks off.
-    const unmarked = lightupGame.executeMove(marked, res.steps[0].move);
+    // Each square the step set, emptied again.
+    const set = res.steps[0].move.set ?? [];
+    const unmarked = lightupGame.executeMove(marked, {
+      set: set.map((x, k) => (k % 2 === 0 ? x : 0)),
+    });
     expect(judge(marked, unmarked)).toBeNull();
   });
 });

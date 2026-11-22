@@ -145,6 +145,53 @@ short of where the search proves one answer.
   tier and not below, or at Unreasonable has one answer the ladder does not
   reach
 
+### Requirement: A born game's deal may take options
+
+A description's `deal.options` MAY name settings of the deal by letter: a
+number in a range, or one of named choices, each with a default, and a choice
+with the size bounds it alone binds, a tier's among them. The Custom dialog
+SHALL offer each and the params SHALL write each after the size. A label
+SHALL name one only where it is not a preset board's own (`7x7s4`), or the
+default on any other board. A `tierFlag` letter MAY stand for a tier.
+
+#### Scenario: Light Up's options
+
+- **WHEN** Light Up's Custom dialog is opened
+- **THEN** it offers the share of walls and the symmetry, and a 3×3 under
+  2-way rotational symmetry at Unreasonable is refused, naming the symmetry
+
+### Requirement: A born game's build may lay one value on a first one's cells
+
+A built sample MAY lay a `first` value on a share of the cells, as symmetric
+as an option asks, then build with one value alone, each on a random cell
+that may still hold it, the ladder deciding the rest, on the clues the first
+cells derive with every hidden one hidden. A `ramp` SHALL raise the share by
+its step after each `every` draws, past its top starting again. A hidden
+clue MAY leave a clue of another kind on its cell (`deal.leaves`).
+
+#### Scenario: Light Up's walls
+
+- **WHEN** a Light Up board is dealt at 20% walls with 2-way rotational
+  symmetry
+- **THEN** its walls are the same after a half turn, each number hidden
+  leaves a bare wall, and its answer lights every open square with no bulb
+  lighting another
+
+### Requirement: A born game's values may wash a cell
+
+`play.wash` MAY wash each open cell a formula holds of: it SHALL be drawn in
+the wash under its piece, read as holding the secondary value by the rules
+and the live errors, left open by Solve, and never a hint step's. Its
+preference SHALL say whether a secondary piece is drawn on it. A technique
+run on placing SHALL run on each value the board holds as well as on each
+the ladder places.
+
+#### Scenario: Light Up's light
+
+- **WHEN** a bulb is placed
+- **THEN** the squares it lights are washed, a cross there is drawn or not as
+  the preference says, and a hint never crosses them
+
 ## MODIFIED Requirements
 
 ### Requirement: A fill game is born from its description

@@ -87,8 +87,11 @@ export interface BornModule<C> extends FillHintModule<C>, DealtFillModule<C> {
 type Size = { readonly w: number; readonly h: number };
 
 /** A preset board: its size, and the sizes beyond the grid's it gives, by
- * name, where the params have any. */
-type Board = Size & { readonly sizes?: Readonly<Record<string, number>> };
+ * name, where the params have any, and the deal's options it names. */
+type Board = Size & {
+  readonly sizes?: Readonly<Record<string, number>>;
+  readonly options?: Readonly<Record<string, number>>;
+};
 
 /** Whether params `p` are those of the board `b`. */
 const isBoard = (p: FillParams, b: Board): boolean =>
@@ -113,8 +116,9 @@ export function fillGame<C extends Clues<C> & object>(
 ): FillGame<C> {
   const { play, deal, boards } = module;
   const byDefault = module.menu?.default ?? boards[0];
-  // A board gives each size beyond the grid's, its least where it names none.
-  const sized = ({ w, h, sizes }: Board, diff = 0): FillParams =>
+  // A board gives each size beyond the grid's, its least where it names none,
+  // and each option, its default where it names none.
+  const sized = ({ w, h, sizes, options }: Board, diff = 0): FillParams =>
     withThorough(deal, {
       w,
       h,
@@ -126,6 +130,16 @@ export function fillGame<C extends Clues<C> & object>(
               deal.settings.map((s) => [s.size, sizes?.[s.size] ?? s.min]),
             ),
           }),
+      ...(deal.options === undefined
+        ? {}
+        : {
+            options: Object.fromEntries(
+              Object.entries(deal.options).map(([n, o]) => [
+                n,
+                options?.[n] ?? o.default,
+              ]),
+            ),
+          }),
     });
   const defaultParams = (): FillParams => sized(byDefault);
   const params = fillParams(
@@ -134,6 +148,11 @@ export function fillGame<C extends Clues<C> & object>(
     defaultParams,
     module.modifiers,
     module.bounds,
+    // A preset's option where the board is one, else the option's default.
+    (p, name) =>
+      boards.find((b) => isBoard(p, b))?.options?.[name] ??
+      deal.options?.[name]?.default ??
+      0,
   );
   const boardTiers = module.menu?.tiers ?? [];
   const variants = module.menu?.variants ?? [];
@@ -240,6 +259,21 @@ export function fillGame<C extends Clues<C> & object>(
     clearMistakes,
     revealOne,
     textFormat: (b) => textFormat(reading, b),
+    ...(play.wash?.pref === undefined
+      ? {}
+      : {
+          prefs: [
+            {
+              kw: play.wash.pref.kw,
+              name: play.wash.pref.name,
+              type: "boolean" as const,
+              get: (ui: FillUi) => ui.washedMarks,
+              set: (ui: FillUi, v: boolean) => {
+                ui.washedMarks = v;
+              },
+            },
+          ],
+        }),
     // A plain number has no cells to be done with, so is never counted.
     ...(!numbered.some((k) => module.clueCells?.[k] !== undefined)
       ? {}

@@ -272,7 +272,22 @@ research tools all read through it; the app never does.
   number and a letter a run without one; with `apart`, a whole number, and
   `apart` between two side by side (Range's `_`). `deal.symmetric:
   halfTurn` hides a clue with its partner under a half turn, so the clues
-  shown stay symmetric.
+  shown stay symmetric. `deal.options` are settings of the deal by letter, a
+  number in a range or one of named choices, a choice with the size bounds
+  it binds; a preset board names one after its `WxH` (`7x7s4`), and a label
+  names one only where it is not that board's, or the default. `build:
+  { value }` lays that value alone, each on a cell that may still hold it,
+  and `first` lays another first on a share of the cells, as symmetric as an
+  option asks (Light Up's walls, `engine/generate/symmetric-blacks.ts`), its
+  `ramp` raising the share as draws are refused. `deal.leaves` names the
+  kind a hidden clue leaves on its cell (a numbered wall's bare wall), which
+  `digits`' `letters` writes as a capital. `play.wash` washes each open cell
+  its formula holds of: drawn under its piece, read as the secondary value
+  by the rules, left open by Solve and never a hint's step, with a
+  preference for drawing a secondary piece there. A technique run on
+  placing runs on each value the board holds too, so a bulb the player
+  placed shines. `play.sweepWith: secondary` makes the sweep stroke the
+  secondary button's alone, the primary placing one piece where it began.
   The compiler writes `<id>.game.ts`, `fillGame` of the module, and
   `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One

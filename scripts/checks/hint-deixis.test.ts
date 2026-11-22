@@ -71,8 +71,8 @@
  * cannot see: a role declared but never drawn, or drawn but never declared.
  *
  * So the gate lives per game, next to the vocabulary that can judge it —
- * `clusters-hint.test.ts`, `bricks-hint.test.ts`, `range-hint.test.ts`,
- * `lightup-hint.test.ts` — and this file is the periodic sweep that says where
+ * each game's own hint test, `bricks-hint.test.ts` among them — and this file
+ * is the periodic sweep that says where
  * to look next. Run it with:
  *
  *     npx vitest run -c scripts/checks/diff.vitest.config.mts hint-deixis

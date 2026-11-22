@@ -17,8 +17,8 @@ import {
 } from "../solve/describe-runtime.ts";
 import {
   type CompiledLadder,
-  type CompiledTechniquesOf,
   describedLadder,
+  type Ladder,
   ladderTechniques,
   runLadder,
   TIERS,
@@ -69,12 +69,36 @@ export interface FillModule<C> {
   /** Whether the mark on cell `c` may stand on the values `g`: the mark's
    * `while`. A mark with none stands on any. */
   markWhile?(g: ArrayLike<number>, sp: GridSpace, cl: C, c: number): boolean;
+  /** Whether cell `c` is washed on the values `g` (`play.wash`): an open one
+   * then reads as the secondary value, which a piece there would break. */
+  washed?(g: ArrayLike<number>, sp: GridSpace, cl: C, c: number): boolean;
 }
 
-/** A fill module with its ladder, as `describedLadder` reads it. None runs a
- * technique on placing or striking yet; the first that does widens this. */
+/** The board's values with each open washed cell read as the secondary
+ * value, as the rules and the live errors read them; the values themselves
+ * where nothing is washed. */
+export function washedValues<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+): Uint8Array {
+  const { washed, play } = module;
+  if (washed === undefined || play === undefined) return board.values;
+  const sp = spaceOf(module, board);
+  return Uint8Array.from(board.values, (v, c) =>
+    v === 0 && washed(board.values, sp, board.dealt, c) ? play.secondary : v,
+  );
+}
+
+/** A fill module with its ladder, as `describedLadder` reads it. Its ids are
+ * any string, and a technique runs as a rung or on a cell by the list its id
+ * is in (Light Up's bulb shines as it is placed), which `describedLadder`
+ * reads apart; the type cannot say so for an id that is any string. */
 export type LadderedFillModule<C> = FillModule<C> &
-  CompiledLadder<string, never, never, CompiledTechniquesOf<string, never, never>>;
+  Pick<CompiledLadder<string, never>, "ladder"> & {
+    readonly placing: readonly { readonly id: string; readonly variation?: string }[];
+    readonly striking: readonly { readonly id: string; readonly variation?: string }[];
+    readonly techniques: Readonly<Record<string, { readonly dealt: boolean }>>;
+  };
 
 export interface FillBoard<C> {
   readonly w: number;
@@ -158,18 +182,23 @@ function domainMask<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
   return mask;
 }
 
-/** The ladder's marks on the board's values and marks, copied, and whether
- * they hold of the board's clues. */
+/** The ladder's marks on the board's values and marks, copied, whether they
+ * hold of the board's clues, and the ladder's rungs. A value on the board
+ * runs the techniques that run on placing, unrecorded, as one the ladder
+ * places does: a bulb the player placed shines. */
 export function marksOf<C>(
-  module: FillModule<C>,
+  module: LadderedFillModule<C>,
   board: FillBoard<C>,
-): { marks: CellMarks; ok: boolean } {
+): { marks: CellMarks; ok: boolean; entries: Ladder["entries"] } {
   const sp = spaceOf(module, board);
   const values = board.values.slice();
   const marks = new CellMarks(sp, domainMask(module, sp, board.dealt), values);
+  const { entries, placing, striking } = ladderOf(module, board);
+  marks.placing = placing;
+  marks.striking = striking;
   const ok = marks.seed(values, (c) => module.domainOf(sp, board.dealt, c));
   marks.marked.set(board.mark);
-  return { marks, ok };
+  return { marks, ok, entries };
 }
 
 /** What the ladder made of a board: its verdict, and the values and marks
@@ -191,14 +220,13 @@ export function solveBoard<C>(
   board: FillBoard<C>,
   cap: number,
 ): Solved {
-  const { marks, ok } = marksOf(module, board);
+  const { marks, ok, entries } = marksOf(module, board);
   const out = (verdict: DifficultyVerdict): Solved => ({
     verdict,
     values: Uint8Array.from(marks.grid),
     mark: marks.marked.slice(),
   });
   if (!ok) return out("impossible");
-  const { entries } = ladderOf(module, board);
   if (runLadder(marks, ladderTechniques(marks, entries, { [TIERS]: cap }, {})))
     return out("impossible");
   if (marks.grid.includes(0)) return out("unsolved");
@@ -206,8 +234,14 @@ export function solveBoard<C>(
 }
 
 /** The ladder on the board's clues with its variations on. */
-export const ladderOf = <C>(module: LadderedFillModule<C>, board: FillBoard<C>) =>
-  describedLadder(module, board.dealt as never, {}, undefined, board.variations);
+const ladderOf = <C>(module: LadderedFillModule<C>, board: FillBoard<C>) =>
+  describedLadder(
+    module as unknown as CompiledLadder<string, string, string>,
+    board.dealt as never,
+    {},
+    undefined,
+    board.variations,
+  );
 
 /** Whether `g` is an answer to the board: its clues, its variations on. */
 export function isAnswerOf<C>(

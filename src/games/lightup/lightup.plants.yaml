@@ -13,12 +13,12 @@ techniques:
   # dark square may be ruled out.
   darkSet:
     conclude: >-
-      |S| > 0 and (forall d in rivals(first(S)) where not known(d), D =
-      lights(d) where (forall s in S: s in D): place(d, 2))
+      |S| > 0 and (forall d in rivals(first(S)) where floor(d) and not
+      known(d), D = lights(d) where (forall s in S: s in D): place(d, 2))
   # A number short of m bulbs read as having one in every f - m of its free
   # squares.
   clueSet:
     for: >-
       X in cols, k in cells(X), n = clue(number, k) where n > bulbs(k), F = {p
-      in adj4(k) where not known(p)}, m = n - bulbs(k) where m <= |F|, T in
-      subsets(F) where |T| = |F| - m
+      in adj4(k) where floor(p) and not known(p)}, m = n - bulbs(k) where m <=
+      |F|, T in subsets(F) where |T| = |F| - m

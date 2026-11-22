@@ -118,6 +118,8 @@ export interface DescriptionJson {
   id?: IdSegmentJson[];
   /** The letter of each tier in the params' `d<letter>`, in order. */
   tierLetters?: string;
+  /** A bare letter older game IDs write for a tier: read, never written. */
+  tierFlag?: { letter: string; tier: string };
   tiers?: string[];
   /** What a placement rules out at a glance, which the engine's `auto-cross`
    * preference makes for the player: the preference's words, and the
@@ -155,6 +157,11 @@ export interface PlayJson {
   blank?: number;
   erase?: string;
   stroke: "line" | "sweep";
+  /** The one button whose drag sweeps, where the other's does not. */
+  sweepWith?: "secondary";
+  /** A wash over the open cells where `when` holds, which read as the
+   * secondary value, and a preference that draws that value's piece on one. */
+  wash?: { when: string; pref?: { kw: string; name: string } };
   click?: "toggle" | "cycle";
   /** The clue kind at a cell that the cell is dealt holding. */
   dealt?: string;
@@ -234,48 +241,77 @@ export type IdSegmentJson =
   | { runs: string }
   | { walls: string }
   | { dots: string; cases: [number, number] }
-  | { digits: string; apart?: string }
+  | { digits: string; apart?: string; letters?: Record<string, string> }
   | { numbers: string; before?: string; order?: "columns" };
 
-/** The clue kind or dealt partition an ID segment writes. */
-export const segmentKind = (seg: IdSegmentJson): string =>
+/** The clue kinds or dealt partition an ID segment writes. */
+export const segmentKinds = (seg: IdSegmentJson): string[] =>
   "runs" in seg
-    ? seg.runs
+    ? [seg.runs]
     : "walls" in seg
-      ? seg.walls
+      ? [seg.walls]
       : "dots" in seg
-        ? seg.dots
+        ? [seg.dots]
         : "digits" in seg
-          ? seg.digits
-          : seg.numbers;
+          ? [seg.digits, ...Object.values(seg.letters ?? {})]
+          : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
  * ({@link sampleOf}), the setting that makes its hiding thorough
  * ({@link thoroughOf}), and the partition it grows round the answer
  * ({@link growOf}). */
-type DealJson = Record<string, string | SampleJson | ThoroughJson | GrowJson>;
+type DealJson = Record<
+  string,
+  string | SampleJson | ThoroughJson | GrowJson | Record<string, OptionJson>
+>;
+
+/** The settings the params give that only the deal reads (`deal.options`),
+ * by name. */
+export function optionsOf(json: DescriptionJson): Record<string, OptionJson> {
+  const o = json.deal?.["options"];
+  return typeof o === "object" ? (o as Record<string, OptionJson>) : {};
+}
+
+/** A setting the params give that only the deal reads: a number from `min`
+ * to `max`, or with `choices` one of them by its index. */
+export interface OptionJson {
+  letter: string;
+  kw: string;
+  name: string;
+  default: number;
+  doc: string;
+  min?: number;
+  max?: number;
+  words?: string;
+  choices?: {
+    name: string;
+    words?: string;
+    bounds?: SizeBoundsJson & {
+      square?: true;
+      tiers?: Record<string, SizeBoundsJson>;
+    };
+  }[];
+}
 
 /** How a description's deal samples an answer, or `null` where it does not. */
 export function sampleOf(json: DescriptionJson): SampleJson | null {
   const sample = json.deal?.["sample"];
-  return typeof sample === "object" && !("letter" in sample) && !("partition" in sample)
-    ? sample
-    : null;
+  return typeof sample === "object" ? (sample as SampleJson) : null;
 }
 
 /** The deal's setting for hiding every clue it can (`deal.thorough`), or
  * `null` where it always does. */
 export function thoroughOf(json: DescriptionJson): ThoroughJson | null {
   const t = json.deal?.["thorough"];
-  return typeof t === "object" && "letter" in t ? t : null;
+  return typeof t === "object" ? (t as ThoroughJson) : null;
 }
 
 /** The partition the deal grows round its answer (`deal.grow`), or `null`
  * where it grows none. */
 export function growOf(json: DescriptionJson): GrowJson | null {
   const g = json.deal?.["grow"];
-  return typeof g === "object" && "partition" in g ? g : null;
+  return typeof g === "object" ? (g as GrowJson) : null;
 }
 
 /** A dealt partition grown round the answer: a part round each cell of the
@@ -316,7 +352,15 @@ export interface ThoroughJson {
  * the other value until none does; with `climb`, a draw after a refused one
  * keeps what the ladder decided on it. */
 export type SampleJson =
-  | { build: true }
+  | {
+      build: true | { value: number };
+      first?: {
+        value: number;
+        share: string;
+        symmetry: string;
+        ramp?: { every: number; step: number; top: number };
+      };
+    }
   | { dominoes: { value: number }; rest: number }
   | {
       lines: { value: number; count: number | string; apart: "adj4" | "adj8" };

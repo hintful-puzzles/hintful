@@ -1,6 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: lightup
+catalog:
+  name: Light Up
+  aliases: [Akari]
+  description: Light-bulb placing puzzle
+  objective: Place bulbs to light up all the squares.
+  collection: original
+  family: objects
+  similar: Akari
 help:
   rules: |-
     Place light bulbs in the grid so as to light up all the blank
@@ -11,9 +19,9 @@ help:
   controls: |-
     {{controls}}
 
-    A square holding a cross takes no light until you remove the cross (right-click it again), and a square holding a light takes no cross.
+    A click on a square holding the other button's mark empties it, so a cross never turns straight into a light, nor a light into a cross. A right drag crosses out the squares it passes; a left drag places one light, where it began.
 
-    A light turns red when another lights it, a number when its lights are too many or it has no room left for them, and a cross when nothing can light its square any more.
+    A square a light shines on is washed yellow. A light turns red when another lights it, a number when its lights are too many or it has no room left for them, and a cross when nothing can light its square any more.
 
     A light that gives a numbered wall all its lights rules out the wall's other squares. {{rules-out}}
   hints: |-
@@ -37,10 +45,10 @@ space:
   grid: { w: "w", h: "h" }
   units: []
 answer:
-  # 1 is a bulb, 2 a square without one, which a wall is.
+  # 1 is a bulb, 2 a square without one, and 3 a wall.
   value:
     sort: cell
-    domain: "{d in range(1, 2) where d = 2 or floor(c)}"
+    domain: "{d in range(1, 3) where (d = 3 and not floor(c)) or (d < 3 and floor(c))}"
 define:
   # Whether c is a square, not a wall.
   floor(c): "clue(wall, c) < 0 and clue(number, c) < 0"
@@ -74,17 +82,130 @@ clues:
   wall:
     at: cell
     value: "range(0, 0)"
-    means: "value(at) = 2"
+    means: "value(at) = 3"
   # A numbered wall, with as many bulbs beside it.
   number:
     at: cell
     value: "range(0, 4)"
-    means: "value(at) = 2 and bulbs(at) = v"
+    means: "value(at) = 3 and bulbs(at) = v"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: place a light, key: L, glyph: " L ", paint: bulb }
+    2: { does: "place a cross, marking a square you think holds no light", key: [X, I], glyph: " x ", paint: cross }
+  given:
+    3: { glyph: "###", paint: wall }
+  primary: 1
+  secondary: 2
+  # The answer is the bulbs alone: an open square holds none.
+  blank: 2
+  # A right drag crosses out the squares it passes; a left drag places one
+  # bulb, where it began, since a row of bulbs light each other.
+  stroke: sweep
+  sweepWith: secondary
+  # A number counts the bulbs beside it, and the player need not cross the
+  # squares round it that hold none, so it is never done.
+  plain: [number]
+  # A square a bulb lights is washed, and holds none: a bulb there would
+  # light another.
+  wash:
+    when: "lit(c)"
+    pref: { kw: show-lit-blobs, name: Draw non-light marks even when lit }
+  # Upstream's 14x14, made an upright board of about its area; the small
+  # square board's walls turned a quarter round, as upstream's.
+  boards: [7x7s4, 10x10, 12x16]
+  # A 2x2 has only Easy boards, and a board needs nine squares to have an
+  # Unreasonable one; the symmetries' own are with their choices.
+  bounds:
+    tiers:
+      Normal: { area: { min: 5 } }
+      Unreasonable: { area: { min: 9 } }
+  hintMarks:
+    ring: >-
+      each square the step decides: it takes a bulb, or, when the sentence
+      says it "can't hold a bulb", a cross.
+    outline: >-
+      what the step reasons from: the clue or the dark square it is about,
+      outlined apart in the color of the words that name it, and the other
+      squares the reason rests on, such as a clue's bulbs.
 deal:
   answer: walls at random, as symmetric as asked, and bulbs laid until every square is lit
-  number: on each wall, then as many hidden as the board stays at its tier
+  wall: on each wall that shows no number
+  number: on each wall, then as many hidden as the board stays at its tier, each leaving its wall
   tier: one of the tiers
+  options:
+    walls:
+      letter: b
+      kw: percentage-of-black-squares
+      name: "%age of walls"
+      min: 5
+      max: 100
+      default: 20
+      words: "{n}% walls"
+      doc: >-
+        Roughly what share of the grid is walls, from 5 to 100. If no good
+        puzzle turns up with that many, the generator adds more, 5% at a time,
+        up to 90%, and then starts again.
+    symmetry:
+      letter: s
+      kw: symmetry
+      name: Symmetry
+      default: 2
+      doc: >-
+        How the walls are arranged: <em>None</em>, <em>2-way mirror</em> (the
+        bottom half reflects the top), <em>2-way rotational</em> (the same
+        after a half turn), <em>4-way mirror</em> (reflected both left to right
+        and top to bottom) or <em>4-way rotational</em> (the same after a
+        quarter turn). Only the walls follow the symmetry; the numbers in them
+        need not.
+      # A 3x3 has no Unreasonable board with symmetry, and none of Normal
+      # with 4-way symmetry, as a 2x3 has none mirrored both ways; the other
+      # boards of nine squares and more are longer. A 4x4 has no Unreasonable
+      # board mirrored both ways (none in 400,000 searched, 2026-11-02) and
+      # 3x4 and 3x5 have, so no bound refuses it: its deal gives up.
+      choices:
+        - { name: None, words: no symmetry }
+        - name: 2-way mirror
+          bounds: { tiers: { Unreasonable: { longer: { min: 4 } } } }
+        - name: 2-way rotational
+          bounds: { tiers: { Unreasonable: { longer: { min: 4 } } } }
+        - name: 4-way mirror
+          bounds:
+            longer: { min: 3 }
+            tiers:
+              Normal: { longer: { min: 4 } }
+              Unreasonable: { longer: { min: 4 } }
+        - name: 4-way rotational
+          bounds:
+            square: true
+            longer: { min: 3 }
+            tiers:
+              Normal: { longer: { min: 4 } }
+              Unreasonable: { longer: { min: 4 } }
+  # The walls first, at the share and the symmetry the params give (upstream's
+  # set_blacks), then a bulb on a random open square and what the ladder
+  # decides from it, until every square is decided.
+  sample:
+    # Twenty layouts refused raise the share of walls five points, to ninety:
+    # a 12x16 at a fifth walls finishes at Easy once in some five hundred
+    # draws, and a 3x3 at Normal not at all.
+    first:
+      value: 3
+      share: walls
+      symmetry: symmetry
+      ramp: { every: 20, step: 5, top: 90 }
+    build: { value: 1 }
+  hide: number
+  leaves: wall
+# Upstream's game ID: a digit a numbered wall, `B` a wall with none, and a
+# letter a run of squares.
+id:
+  - digits: number
+    letters: { B: wall }
+tierLetters: "012"
+# Upstream's IDs from before the tiers ask for the recursive solver with a
+# bare `r`.
+tierFlag: { letter: r, tier: Unreasonable }
 tiers: [Easy, Normal, Unreasonable]
 # What a bulb rules out at a glance: the other squares round a numbered wall
 # it gives all its lights.
@@ -93,10 +214,11 @@ rulesOut:
   placing: 1
   techniques: [clueFull]
 kindWords:
-  # A number counts the bulbs beside it. A step reads the squares beside it
-  # whether or not it outlines them.
+  # A number counts the bulbs on the squares beside it, a wall beside it
+  # holding none. A step reads the squares beside it whether or not it
+  # outlines them.
   group: "X in cols, c in cells(X) where clue(number, c) >= 0"
-  set: adj4(c)
+  set: "{p in adj4(c) where floor(p)}"
   need: "clue(number, c) - bulbs(c)"
   rest: 2
   fill: 1
@@ -177,8 +299,8 @@ techniques:
       S = {s in L where not known(s)}
     conclude: >-
       |S| > 0
-      and (forall d in rivals(first(S)) where not known(d), D = lights(d)
-      where (forall s in S: spoils(d, D, s)):
+      and (forall d in rivals(first(S)) where floor(d) and not known(d),
+      D = lights(d) where (forall s in S: spoils(d, D, s)):
       place(d, 2))
     says:
       shown: each
@@ -195,11 +317,11 @@ techniques:
     tier: Normal
     for: >-
       X in cols, k in cells(X), n = clue(number, k) where n > bulbs(k),
-      F = {p in adj4(k) where not known(p)}, m = n - bulbs(k) where m <= |F|,
-      T in subsets(F) where |T| = |F| - m + 1
+      F = {p in adj4(k) where floor(p) and not known(p)},
+      m = n - bulbs(k) where m <= |F|, T in subsets(F) where |T| = |F| - m + 1
     conclude: >-
-      forall d in rivals(first(T)) where not known(d), D = lights(d)
-      where (forall s in T: spoils(d, D, s)):
+      forall d in rivals(first(T)) where floor(d) and not known(d),
+      D = lights(d) where (forall s in T: spoils(d, D, s)):
       place(d, 2)
     says:
       shown: each

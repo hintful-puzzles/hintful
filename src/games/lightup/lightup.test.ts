@@ -1,697 +1,206 @@
 /**
- * Behavioral tests for the Light Up port: params/desc codecs (tier 1),
- * board mechanics and input (tier 1), solver difficulty coupling (tier 1),
- * findMistakes (tier 1), and render scenarios (tier 2/2.5).
- *
- * Deterministic boards are descs upstream's generator dealt, written inline.
+ * Light Up, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is a position for every
+ * kind of step its hint takes, upstream's IDs read as the right walls, the
+ * sizes each tier and symmetry refuses, symmetric walls, the wash a bulb
+ * casts and what it hides, and two bulbs that see each other drawn wrong.
  */
+
 import { describe, expect, it } from "vitest";
-import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
-import {
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  descBadCharacter,
-  validateDesc,
-} from "../../engine/contract/desc-error.ts";
-import { UI_UPDATE } from "../../engine/contract/game.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import { describeParams } from "../../engine/game-id/param-label.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { SYMM_ROT2, SYMM_ROT4 } from "../../engine/generate/symmetric-blacks.ts";
-import {
-  CURSOR_DOWN,
-  CURSOR_RIGHT,
-  CURSOR_SELECT,
-  LEFT_BUTTON,
-  RIGHT_BUTTON,
-} from "../../engine/input/pointer.ts";
-import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
-import {
-  describeAbsentTiers,
-  describeDealtTiers,
-} from "../../engine/testing/absent-tiers.ts";
-import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import {
-  DEFAULT_BACKGROUND,
-  renderScenario,
-} from "../../engine/testing/render-scenario.ts";
-import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { newLightupDesc } from "./generator.ts";
-import { type LightupMistake, lightupGame } from "./index.ts";
-import {
-  COL_BULB_RIM,
-  COL_ERROR_TEXT,
-  COL_LIGHT,
-  COL_LIT,
-  COL_RULED_OUT,
-  COL_WALL,
-} from "./render.ts";
-import { answerOf, holdsBulb } from "./solver.ts";
-import {
-  decodeParams,
-  encodeDesc,
-  encodeParams,
-  F_BLACK,
-  F_IMPOSSIBLE,
-  F_LIGHT,
-  idx,
-  type LightupMove,
-  type LightupState,
-  type LightupUi,
-  newState,
-  setLight,
-} from "./state.ts";
+import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { game } from "../../generated/games/lightup/lightup.game.ts";
 
-/** Boards upstream's generator dealt, as [w, h, blackpc, symm, difficulty, desc]. */
-const BOARDS = (
-  [
-    [7, 7, 20, 4, 0, "h00b3f1i0f1b01h"],
-    [7, 7, 20, 4, 1, "aBBf0c1e01c1c1Be0cBfBBa"],
-    [7, 7, 20, 4, 2, "e2a2h2aBk1a1h1aBe"],
-    [10, 10, 20, 2, 0, "aBdBe3eBbBaB2cBbBb0c3h3d2h2cBb1bBc1BaBb0e2e0dBa"],
-    [10, 10, 20, 2, 1, "c2eBaBd1hBa0bBlBbBa3b0aBbBlBbBa3h1d2a2eBc"],
-    [10, 10, 20, 2, 2, "cBa1dBh1a0aBc3d2b0c1c3cBdBcBc1c1bBd3cBaBa1h2d0aBc"],
-    [
-      14,
-      14,
-      20,
-      2,
-      0,
-      "BBe3hBeBb10gBd1bBc2cBdBb1aBb1eBa1B2BBaBa2zj0a1aBBBB2a1eBb1a3b1d3c1cBbBdBgB0bBe1h0eBB",
-    ],
-    [
-      14,
-      14,
-      20,
-      2,
-      1,
-      "d00c0fBfBc32bBBaBc1Bb0bBiBa1bBBbBi0e2f1b2a2j2aBbBfBeBiBb2Bb2a1i0bBbBBc1a20b0BcBf1f1c11d",
-    ],
-    [
-      14,
-      14,
-      20,
-      2,
-      2,
-      "2a2aBkBb2B2e0f2a1rBg0b2a3aBBbBf2aBaBb0B2aBjBaBB1b1a2aBf1b01a3a0b0gBr2aBf1eBBBbBkBa1aB",
-    ],
-    [10, 8, 25, 1, 1, "b0c0i1a0B1BlBaBBf1aB1b1Bn1a11b1cBc"],
-    [9, 9, 30, 0, 2, "B0d1iBg1i0b1a1a3aBBB0BcB2fBbBa2cBb1BBBf"],
-    [
-      11,
-      11,
-      20,
-      3,
-      0,
-      "bBaBaBaBcB1eBBa3cBa0c3aBg3e0a1eBgBeBa0eBgBa1cBaBcBaB1eBBcBaBa0a1b",
-    ],
-  ] as [number, number, number, number, number, string][]
-).map(([w, h, blackpc, symm, difficulty, desc]) => ({
-  w,
-  h,
-  blackpc,
-  symm,
-  difficulty,
-  desc,
-}));
+const BULB = 1;
+const CROSS = 2;
+const WALL = 3;
 
-/** A 7x7 Easy board. */
-const EASY = BOARDS[0];
+/** A position for every kind of step. */
+describeHintPins({
+  game,
+  params: [game.decodeParams("7x7b20s4d0"), game.decodeParams("10x10b20s2d1")],
+  pins: {
+    /** Held on 238 of 385 positions walked. */
+    clueFull: "7x7b20s4d0:e0a3c1cBqBc1c3a1e",
+    /** Held on 304 of 385 positions walked. */
+    clueExact: "10x10b20s2d1:eBgB2b2b3jBiBa3bBBd3Bb1aBi1j1b1bB1gBe",
+    /** Held on 380 of 385 positions walked. */
+    square: {
+      id: "7x7b20s4d0:bBf1g1aB1b1a2bB1aBg0fBb",
+      moves: [{ set: [32, 2, 40, 2, 38, 2] }],
+    },
+    /** Held on 173 of 385 positions walked. */
+    darkSet: {
+      id: "10x10b20s2d1:eBb1b1Ba0a1fBh1gBb2a3cBBc2a1bBg2hBfBa2aB2b2b2e",
+      moves: [{ set: [4, 2, 15, 2, 24, 2, 13, 2] }, { set: [3, 1] }],
+    },
+    /** Held on 107 of 385 positions walked. */
+    clueSet: {
+      id: "10x10b20s2d1:eBb1b1Ba0a1fBh1gBb2a3cBBc2a1bBg2hBfBa2aB2b2b2e",
+      moves: [{ set: [4, 2, 15, 2, 24, 2, 13, 2] }, { set: [3, 1] }, { set: [17, 2] }],
+    },
+  },
+});
 
-/** Whether each square of the board's one answer holds a bulb, or `null`
- * where it has not exactly one. */
-function solveUnique(state: LightupState): boolean[] | null {
-  const answer = answerOf(state);
-  if (answer.kind !== "one") return null;
-  return Array.from(answer.solution, (_, i) => holdsBulb(answer.solution, i));
-}
-const EASY_PARAMS = {
-  w: EASY.w,
-  h: EASY.h,
-  blackpc: EASY.blackpc,
-  symm: EASY.symm,
-  difficulty: EASY.difficulty,
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
 };
-const EASY_ID = `${EASY.w}x${EASY.h}b${EASY.blackpc}s${EASY.symm}d${EASY.difficulty}:${EASY.desc}`;
 
-function light(x: number, y: number): LightupMove {
-  return { ops: [{ kind: "light", x, y }] };
-}
-function mark(x: number, y: number): LightupMove {
-  return { ops: [{ kind: "impossible", x, y }] };
-}
-
-/** Pixel at the center of cell (x, y) at the preferred tile size 32. */
-function px(cell: number): number {
-  return 16 + cell * 32 + 16;
-}
-
-// The boards too small for a tier: a 2x2, fewer than nine squares at
-// Unreasonable, and the 3x3 under a symmetry.
-describeAbsentTiers(lightupGame, [
-  ...["2x2b20s0d1", "2x2b20s2d2", "2x3b20s0d2", "2x4b20s0d2", "4x2b20s2d2"],
-  ...["3x3b20s1d2", "3x3b20s2d2", "3x3b20s4d2", "3x3b20s3d1", "3x3b20s4d1"],
-  "4x4b20s3d2",
-]);
-
-// The cells beside them, and the rarest one dealt: a 3x3 turned half round
-// at Normal.
-describeDealtTiers(lightupGame, [
-  ...["2x3b20s0d1", "3x3b20s0d2", "2x5b20s0d2", "3x3b20s1d1"],
-  ...["3x3b20s2d1", "4x4b20s2d2", "5x5b20s4d2"],
-]);
-
-describe("lightup's 4x4 under a 4-way symmetry at Unreasonable", () => {
-  const refusal = (id: string): string | null =>
-    paramsError(lightupGame, decodeParams(id), true);
-
-  it("says absent mirrored, where no board was found, and deals turned", () => {
-    expect(refusal("4x4b20s3d2")).toBe(
-      "No 4x4 puzzle with 4-way mirror symmetry is Unreasonable.",
-    );
-    expect(refusal("4x4b20s4d2")).toBeNull();
-    expect(refusal("4x4b5s4d2")).toBeNull();
-  });
-});
-
-describe("lightup's ramp of black squares", () => {
-  it("starts over at the top, so a small board is found on a later climb", () => {
-    // A climb from 20% finds a 4x4 Unreasonable about nine times in ten, and
-    // a round at 90% never does: twenty deals all ending is the restart.
-    const p = decodeParams("4x4b20s2d2");
-    for (let seed = 0; seed < 20; seed++) {
-      expect(() => newLightupDesc(p, randomNew(`ramp-${seed}`))).not.toThrow();
-    }
-  });
-});
-
-describe("lightup params", () => {
-  it("full encode/decode round-trips", () => {
-    const p = { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, difficulty: 1 };
-    expect(encodeParams(p, true)).toBe("10x10b20s2d1");
-    expect(decodeParams("10x10b20s2d1")).toEqual(p);
-    expect(encodeParams(p, false)).toBe("10x10");
+describe("lightup", () => {
+  it("reads upstream's IDs: a digit a numbered wall, B a bare one, a letter a run", () => {
+    const board = loaded("3x4:Ba1f0a0");
+    expect(Array.from(board.values)).toEqual([
+      WALL,
+      0,
+      WALL,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      WALL,
+      0,
+      WALL,
+    ]);
+    expect(Array.from(board.dealt.number.at)).toEqual([2, 9, 11]);
+    expect(Array.from(board.dealt.number.v)).toEqual([1, 0, 0]);
+    expect(Array.from(board.dealt.wall.at)).toEqual([0]);
   });
 
-  it("bare WxH demotes incompatible 4-way symmetry (upstream quirk)", () => {
-    // Defaults carry SYMM_ROT4 (the 7x7 preset); a non-square bare id
-    // must not keep it.
-    const p = decodeParams("18x10");
-    expect(p.w).toBe(18);
-    expect(p.h).toBe(10);
-    expect(p.symm).toBe(SYMM_ROT2);
-    // A square bare id keeps the default 4-way.
-    expect(decodeParams("7x7").symm).toBe(SYMM_ROT4);
+  it("reads its params, and upstream's bare r as Unreasonable", () => {
+    for (const id of ["7x7b20s4d0", "10x10b25s0d1", "12x16b20s2d2"])
+      expect(game.encodeParams(game.decodeParams(id), true)).toBe(id);
+    expect(game.decodeParams("7x7b20s4r").diff).toBe(2);
+    expect(game.encodeParams(game.decodeParams("18x10"), true)).toBe("18x10b20s2d0");
   });
 
-  it("legacy 'r' suffix decodes as difficulty 2", () => {
-    expect(decodeParams("7x7b20s4r").difficulty).toBe(2);
-    // and difficulty resets to 0 when unspecified
-    expect(decodeParams("10x10b20s2").difficulty).toBe(0);
+  it("labels walls and symmetry only where they are not the board's usual", () => {
+    const label = (s: string) => describeParams(game, game.decodeParams(s));
+    expect(label("7x7b30s0d0")).toBe("7x7 Easy, 30% walls, no symmetry");
+    expect(label("7x7b20s4d0")).toBe("7x7 Easy");
+    expect(label("10x10b20s2d1")).toBe("10x10 Normal");
+    expect(label("10x10b20s4d1")).toBe("10x10 Normal, 4-way rotational");
   });
 
-  it("rejects invalid params", () => {
-    const base = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
-    const error = (p: typeof base) => paramsError(lightupGame, p, true);
-    expect(error({ ...base, w: 1 })).toBe("Width must be at least 2.");
-    expect(error({ ...base, blackpc: 4 })).not.toBeNull();
-    expect(error({ ...base, blackpc: 101 })).not.toBeNull();
-    expect(error({ ...base, w: 8 })).not.toBeNull(); // ROT4 non-square
-    expect(error({ ...base, symm: 9 })).toMatch(/^Symmetry must be one of/);
-    expect(error({ ...base, difficulty: 3 })).toMatch(/^Difficulty must be one of/);
-    expect(error(base)).toBeNull();
+  it("refuses the sizes no board of a tier or symmetry is dealt on", () => {
+    const refused = (s: string) => paramsError(game, game.decodeParams(s), true);
+    expect(refused("2x2b20s0d0")).toBeNull();
+    expect(refused("2x2b20s0d1")).toMatch(/No 2x2 puzzle is Normal/);
+    expect(refused("2x4b20s0d2")).toMatch(/is Unreasonable/);
+    expect(refused("3x3b20s0d2")).toBeNull();
+    expect(refused("3x3b20s2d2")).toMatch(/2-way rotational symmetry is Unreasonable/);
+    expect(refused("3x3b20s3d1")).toMatch(/4-way mirror symmetry is Normal/);
+    expect(refused("4x4b20s4d2")).toBeNull();
+    expect(refused("4x5b20s4d0")).toMatch(/must be square/);
+    expect(refused("7x7b4s0d0")).toMatch(/at least 5/);
   });
 
-  it("labels a custom game by what differs from the presets", () => {
-    const base = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT4, difficulty: 0 };
-    expect(describeParams(lightupGame, base)).toBe("7x7 Easy");
-    expect(describeParams(lightupGame, { ...base, blackpc: 30, symm: 0 })).toBe(
-      "7x7 Easy, 30% walls, no symmetry",
-    );
-    expect(describeParams(lightupGame, { ...base, w: 12, h: 8, symm: SYMM_ROT2 })).toBe(
-      "12x8 Easy",
-    );
-  });
-});
-
-describe("lightup desc codec", () => {
-  it("sample descs validate and round-trip through newState", () => {
-    for (const f of BOARDS) {
-      const p = {
-        w: f.w,
-        h: f.h,
-        blackpc: f.blackpc,
-        symm: f.symm,
-        difficulty: f.difficulty,
-      };
-      expect(validateDesc(lightupGame, p, f.desc)).toBeNull();
-      const state = newState(p, f.desc);
-      expect(encodeDesc(state)).toBe(f.desc);
-    }
-  });
-
-  it("rejects malformed descs", () => {
-    const p = EASY_PARAMS;
-    expect(validateDesc(lightupGame, p, "!")).toBe(descBadCharacter("!"));
-    expect(validateDesc(lightupGame, p, "a")).toBe(DESC_TOO_SHORT); // far too short
-    expect(validateDesc(lightupGame, p, `${EASY.desc}a`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(lightupGame, p, "5")).toBe(DESC_OUT_OF_RANGE); // clue out of range 0-4
-  });
-
-  it("refuses a final run that overshoots the grid", () => {
-    const p = { ...EASY_PARAMS, w: 2, h: 2 };
-    expect(validateDesc(lightupGame, p, "Bc")).toBeNull();
-    expect(validateDesc(lightupGame, p, "Bd")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(lightupGame, p, "e")).toBe(DESC_TOO_LONG);
-  });
-});
-
-describe("lightup board mechanics", () => {
-  it("a bulb lights its row and column up to black squares", () => {
-    const state = newState(EASY_PARAMS, EASY.desc);
-    // (0,0) is open on the fixture board; light it.
-    setLight(state, 0, 0, true);
-    expect(state.flags[idx(0, 0, state.w)] & F_LIGHT).toBeTruthy();
-    expect(state.lights[idx(0, 0, state.w)]).toBe(1);
-    // Row neighbor is lit; a cell beyond a black square is not. Row 1
-    // holds blacks at (1,1) and (2,1) on this board, so (0,1) is lit from
-    // (0,0) but (3,1) is not.
-    expect(state.lights[idx(1, 0, state.w)]).toBeGreaterThan(0);
-    expect(state.lights[idx(0, 1, state.w)]).toBeGreaterThan(0);
-    setLight(state, 0, 0, false);
-    expect(state.nlights).toBe(0);
-    expect(state.lights[idx(1, 0, state.w)]).toBe(0);
-  });
-
-  it("executeMove keeps bulb and mark mutually exclusive", () => {
-    const p = { ...EASY_PARAMS, w: 2, h: 2 };
-    const empty = newState(p, "d");
-    let s = lightupGame.executeMove(empty, mark(0, 0));
-    expect(s.flags[0] & F_IMPOSSIBLE).toBeTruthy();
-    // A light move on a marked square clears the mark (executeMove is the
-    // replay path; interpretMove refuses to *produce* this).
-    s = lightupGame.executeMove(s, light(0, 0));
-    expect(s.flags[0] & F_IMPOSSIBLE).toBeFalsy();
-    expect(s.flags[0] & F_LIGHT).toBeTruthy();
-    // And a mark move removes the bulb.
-    s = lightupGame.executeMove(s, mark(0, 0));
-    expect(s.flags[0] & F_LIGHT).toBeFalsy();
-    expect(s.flags[0] & F_IMPOSSIBLE).toBeTruthy();
-    expect(s.nlights).toBe(0);
-  });
-
-  it("detects completion", () => {
-    const p = { ...EASY_PARAMS, w: 2, h: 2 };
-    const empty = newState(p, "d"); // 2x2, all open
-    let s = lightupGame.executeMove(empty, light(0, 0));
-    expect(lightupGame.status(s)).toBe("ongoing");
-    s = lightupGame.executeMove(s, light(1, 1));
-    // Diagonal bulbs don't light each other: no overlap.
-    expect(lightupGame.status(s)).toBe("solved");
-  });
-
-  it("a broken win is not solved", () => {
-    const p = { ...EASY_PARAMS, w: 2, h: 2 };
-    const empty = newState(p, "d");
-    const mid = lightupGame.executeMove(empty, light(0, 0));
-    const won = lightupGame.executeMove(mid, light(1, 1));
-    expect(lightupGame.status(won)).toBe("solved");
-    const broken = lightupGame.executeMove(won, light(1, 1));
-    expect(lightupGame.status(broken)).toBe("ongoing");
-  });
-});
-
-describe("lightup input", () => {
-  const state = () => newState(EASY_PARAMS, EASY.desc);
-  const ui = (): LightupUi => lightupGame.newUi(state());
-
-  it("left-click toggles a bulb, right-click a mark", () => {
-    const m = lightupGame.interpretMove(
-      state(),
-      ui(),
-      preferredDrawState(lightupGame, state()),
-      { x: px(0), y: px(0) },
-      LEFT_BUTTON,
-    );
-    expect(m).toEqual(light(0, 0));
-    const m2 = lightupGame.interpretMove(
-      state(),
-      ui(),
-      preferredDrawState(lightupGame, state()),
-      { x: px(0), y: px(0) },
-      RIGHT_BUTTON,
-    );
-    expect(m2).toEqual(mark(0, 0));
-  });
-
-  it("clicks on black squares and out of bounds are inert", () => {
-    // (1,1) is black on the fixture board.
-    expect(
-      lightupGame.interpretMove(
-        state(),
-        ui(),
-        preferredDrawState(lightupGame, state()),
-        { x: px(1), y: px(1) },
-        LEFT_BUTTON,
-      ),
-    ).toBeNull();
-    expect(
-      lightupGame.interpretMove(
-        state(),
-        ui(),
-        preferredDrawState(lightupGame, state()),
-        { x: 5000, y: 5000 },
-        LEFT_BUTTON,
-      ),
-    ).toBeNull();
-  });
-
-  it("a left-click on a marked square (and right-click on a bulb) is refused", () => {
-    let s = state();
-    s = lightupGame.executeMove(s, mark(0, 0));
-    expect(
-      lightupGame.interpretMove(
-        s,
-        ui(),
-        preferredDrawState(lightupGame, s),
-        { x: px(0), y: px(0) },
-        LEFT_BUTTON,
-      ),
-    ).toBeNull();
-    let s2 = state();
-    s2 = lightupGame.executeMove(s2, light(0, 0));
-    expect(
-      lightupGame.interpretMove(
-        s2,
-        ui(),
-        preferredDrawState(lightupGame, s2),
-        { x: px(0), y: px(0) },
-        RIGHT_BUTTON,
-      ),
-    ).toBeNull();
-  });
-
-  it("cursor: an arrow moves (revealing if hidden); select acts at the cursor", () => {
-    const u = ui();
-    // Upstream move_cursor applies the delta *and* reveals on the first
-    // press, so the cursor appears already moved to (1,0).
-    expect(
-      lightupGame.interpretMove(
-        state(),
-        u,
-        preferredDrawState(lightupGame, state()),
-        { x: 0, y: 0 },
-        CURSOR_RIGHT,
-      ),
-    ).toBe(UI_UPDATE);
-    expect(u.cursor.visible).toBe(true);
-    expect(u.cursor.x).toBe(1);
-    expect(
-      lightupGame.interpretMove(
-        state(),
-        u,
-        preferredDrawState(lightupGame, state()),
-        { x: 0, y: 0 },
-        CURSOR_DOWN,
-      ),
-    ).toBe(UI_UPDATE);
-    // (1,1) is black: select there is inert.
-    expect(
-      lightupGame.interpretMove(
-        state(),
-        u,
-        preferredDrawState(lightupGame, state()),
-        { x: 0, y: 0 },
-        CURSOR_SELECT,
-      ),
-    ).toBeNull();
-    u.cursor.x = 0;
-    expect(
-      lightupGame.interpretMove(
-        state(),
-        u,
-        preferredDrawState(lightupGame, state()),
-        { x: 0, y: 0 },
-        CURSOR_SELECT,
-      ),
-    ).toEqual(light(0, 1));
-    // 'i' places a mark at the cursor.
-    expect(
-      lightupGame.interpretMove(
-        state(),
-        u,
-        preferredDrawState(lightupGame, state()),
-        { x: 0, y: 0 },
-        "i".charCodeAt(0),
-      ),
-    ).toEqual(mark(0, 1));
-  });
-
-  it("hiding the cursor via a pointer no-op is a UI update", () => {
-    const u = ui();
-    u.cursor.visible = true;
-    // Click on a black square: no move, but the cursor hides — repaint.
-    expect(
-      lightupGame.interpretMove(
-        state(),
-        u,
-        preferredDrawState(lightupGame, state()),
-        { x: px(1), y: px(1) },
-        LEFT_BUTTON,
-      ),
-    ).toBe(UI_UPDATE);
-    expect(u.cursor.visible).toBe(false);
-  });
-});
-
-describe("lightup solve", () => {
-  it("Solve through a real Midend completes the board", () => {
-    const me = new Midend(lightupGame);
-    expect(me.newGameFromId(EASY_ID)).toBeNull();
-    expect(me.solve()).toBeNull();
-    const st = (me as unknown as { state: LightupState }).state;
-    expect(lightupGame.status(st)).toBe("solved");
-  });
-
-  it("solve() recovers from a wrong mid-game position", () => {
-    const orig = newState(EASY_PARAMS, EASY.desc);
-    const solution = solveUnique(orig);
-    if (!solution) throw new Error("fixture board must be uniquely solvable");
-    // Place a bulb the solution doesn't have.
-    let wrongCell = -1;
-    for (let i = 0; i < solution.length; i++) {
-      if (!(orig.flags[i] & 1) && !solution[i]) {
-        wrongCell = i;
-        break;
+  it("deals walls as symmetric as asked, and every tier at its presets", () => {
+    for (const id of ["7x7b20s4d0", "7x7b20s4d1", "7x7b20s4d2", "10x10b20s2d1"]) {
+      const p = game.decodeParams(id);
+      const { desc } = game.newDesc(p, randomNew(`lightup-${id}`));
+      const board = game.newState(p, desc);
+      const walls = new Set(
+        Array.from(board.values.keys()).filter((c) => board.values[c] === WALL),
+      );
+      const n = p.w * p.h;
+      for (const c of walls) {
+        expect(walls.has(n - 1 - c), `${id} ${desc} at ${c}`).toBe(true);
+        if (p.options?.["symmetry"] === 4) {
+          const [x, y] = [c % p.w, Math.floor(c / p.w)];
+          expect(walls.has(x * p.w + (p.w - 1 - y)), `${id} ${desc} at ${c}`).toBe(
+            true,
+          );
+        }
       }
     }
-    const curr = lightupGame.executeMove(
-      orig,
-      light(wrongCell % orig.w, Math.floor(wrongCell / orig.w)),
+  });
+
+  it("washes the squares a bulb lights, which a cross there is drawn on or not as preferred", () => {
+    // A bulb at the right of the second row lights its row and the square
+    // under it, which is crossed.
+    const id = "3x4:Ba1f0a0";
+    const moves = [{ set: [5, BULB] }, { set: [8, CROSS] }];
+    const { midend, palette, recording } = renderScenario({ game, id, moves });
+    // The color of the bulb's square, 32 pixels a square.
+    const washed = recording.ops.find(
+      (o) => o.op === "rect" && o.x === 66 && o.y === 34 && o.w === 31,
     );
-    const res = lightupGame.solve(orig, curr);
-    if (!res?.ok) throw new Error("solve failed");
-    const solved = lightupGame.executeMove(curr, res.move);
-    expect(lightupGame.status(solved)).toBe("solved");
-  });
-});
-
-describe("lightup findMistakes", () => {
-  const setup = () => {
-    const orig = newState(EASY_PARAMS, EASY.desc);
-    const solution = solveUnique(orig);
-    if (!solution) throw new Error("fixture board must be uniquely solvable");
-    let bulbCell = -1;
-    let emptyCell = -1;
-    for (let i = 0; i < solution.length; i++) {
-      if (orig.flags[i] & 1) continue; // black
-      if (solution[i]) {
-        if (bulbCell < 0) bulbCell = i;
-      } else if (emptyCell < 0) {
-        emptyCell = i;
-      }
-    }
-    const at = (i: number) => ({ x: i % orig.w, y: Math.floor(i / orig.w) });
-    return { orig, bulbCell, emptyCell, at };
-  };
-
-  it("flags a bulb the unique solution doesn't have", () => {
-    const { orig, emptyCell, at } = setup();
-    const s = lightupGame.executeMove(orig, light(at(emptyCell).x, at(emptyCell).y));
-    const mistakes = lightupGame.findMistakes?.(s) as readonly LightupMistake[];
-    expect(mistakes).toEqual([{ ...at(emptyCell), kind: "light" }]);
-  });
-
-  it("flags a mark sitting on a solution bulb, but not an unhelpful mark", () => {
-    const { orig, bulbCell, emptyCell, at } = setup();
-    let s = lightupGame.executeMove(orig, mark(at(bulbCell).x, at(bulbCell).y));
-    s = lightupGame.executeMove(s, mark(at(emptyCell).x, at(emptyCell).y));
-    const mistakes = lightupGame.findMistakes?.(s) as readonly LightupMistake[];
-    expect(mistakes).toEqual([{ ...at(bulbCell), kind: "mark" }]);
-  });
-
-  it("a correct bulb is not flagged", () => {
-    const { orig, bulbCell, at } = setup();
-    const s = lightupGame.executeMove(orig, light(at(bulbCell).x, at(bulbCell).y));
-    expect(lightupGame.findMistakes?.(s)).toEqual([]);
-  });
-});
-
-describe("lightup save round-trip", () => {
-  it("saveGame -> loadGame restores an equivalent game", () => {
-    const me = new Midend(lightupGame);
-    expect(me.newGameFromId(EASY_ID)).toBeNull();
-    me.playMoves([light(0, 0), mark(3, 0)]);
-    const saved = me.saveGame();
-    const me2 = new Midend(lightupGame);
-    expect(me2.loadGame(saved)).toBeNull();
-    expect(me2.formatAsText()).toBe(me.formatAsText());
-  });
-});
-
-describe("lightup rendering", () => {
-  it("draws the opener frame: black tiles, clue digits, grid", () => {
-    const result = renderScenario({ game: lightupGame, id: EASY_ID });
-    const ops = result.recording.ops;
-    // Walls are filled COL_WALL.
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_WALL && o.w === 32)).toBe(
-      true,
-    );
-    // Clue digits (the fixture has 0/1/3 clues) in COL_LIGHT.
-    expect(
-      ops.some((o) => o.op === "text" && o.color === COL_LIGHT && o.text === "3"),
-    ).toBe(true);
-    expect(result.recording.ops).toMatchSnapshot();
-  });
-
-  it("the win flash sweeps the open squares from the bottom left to the top right", () => {
-    const orig = newState(EASY_PARAMS, EASY.desc);
-    const res = lightupGame.solve(orig, orig);
-    if (!res?.ok) throw new Error("the fixture does not solve");
-    const won = lightupGame.executeMove(orig, res.move);
-    expect(lightupGame.status(won)).toBe("solved");
-    /** The squares filled with one of the flash's two colors, as the pixel
-     * each starts at. */
-    const tones = new Set<number>();
-    const lit = (color: number) =>
-      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color) !== null;
-    const run = winFlashRun(
-      (flash: Flash) => {
-        const dr = new RecordingDrawing(lightupGame.colors(DEFAULT_BACKGROUND));
-        const ds = preferredDrawState(lightupGame, won);
-        lightupGame.redraw(dr, ds, {
-          prev: null,
-          state: won,
-          dir: 1,
-          ui: lightupGame.newUi(won),
-          animTime: 0,
-          flash,
-        });
-        return dr;
-      },
-      (dr) =>
-        dr.ops.flatMap((o) =>
-          o.op === "rect" && lit(o.color) ? [`${o.x},${o.y}`] : [],
-        ),
-    );
-    expect([...tones].sort()).toEqual([COL_FLASH, COL_FLASH_LEAD]);
-    // Every open square, and no wall.
-    const open = won.flags.filter((f) => !(f & F_BLACK)).length;
-    expect(open).toBeLessThan(won.flags.length);
-    expectWinFlashTravels(run, open, (key) => {
-      const [x, y] = key.split(",").map(Number);
-      return sweepStep(x, y);
-    });
-  });
-
-  it("a bulb draws as a circle and lights its corridor yellow", () => {
-    const { recording } = renderScenario({
-      game: lightupGame,
-      id: EASY_ID,
-      moves: [light(0, 0)],
-    });
-    expect(recording.ops.some((o) => o.op === "circle" && o.fill === COL_LIGHT)).toBe(
-      true,
-    );
-    expect(recording.ops.some((o) => o.op === "rect" && o.color === COL_LIT)).toBe(
-      true,
-    );
-  });
-
-  it("bulbs lighting each other draw in the error color", () => {
-    const { recording } = renderScenario({
-      game: lightupGame,
-      id: EASY_ID,
-      moves: [light(0, 0), light(3, 0)],
-    });
-    // A bulb keeps its rim, which tells it from a wrong clue's badge.
-    expect(
-      recording.ops.filter(
-        (o) => o.op === "circle" && o.fill === COL_ERROR && o.outline === COL_BULB_RIM,
-      ).length,
-    ).toBe(2);
-  });
-
-  it("a provably-wrong clue is a badge in the error color", () => {
-    // (1,1) holds clue 0; a bulb beside it exceeds the clue.
-    const { recording } = renderScenario({
-      game: lightupGame,
-      id: EASY_ID,
-      moves: [light(1, 0)],
-    });
-    const badge = recording.ops.findIndex(
-      (o) => o.op === "circle" && o.fill === COL_ERROR && o.outline === COL_ERROR,
-    );
-    expect(badge).toBeGreaterThanOrEqual(0);
-    const digit = recording.ops[badge + 1];
-    expect(digit).toMatchObject({ op: "text", color: COL_ERROR_TEXT, text: "0" });
-  });
-
-  it("Check & Save highlights a mistake even when the cell was already drawn", () => {
-    // Regression guard (docs/rendering.md § "Overlay sidecars"): the mistake overlay must be in the
-    // per-tile diff key, or a findMistakes() after the move's own paint
-    // repaints nothing.
-    const me = new Midend(lightupGame);
-    expect(me.newGameFromId(EASY_ID)).toBeNull();
-    const st = (me as unknown as { state: LightupState }).state;
-    const solution = solveUnique(st);
-    if (!solution) throw new Error("fixture board must be uniquely solvable");
-    let emptyCell = -1;
-    for (let i = 0; i < solution.length; i++) {
-      if (!(st.flags[i] & 1) && !solution[i]) {
-        emptyCell = i;
-        break;
-      }
-    }
-    me.playMoves([light(emptyCell % st.w, Math.floor(emptyCell / st.w))]);
-
-    const palette = lightupGame.colors(DEFAULT_BACKGROUND);
-    me.redraw(new RecordingDrawing(palette)); // first paint: no overlay yet
-    expect(me.findMistakes()).toBe(1);
-    const after = new RecordingDrawing(palette);
-    me.redraw(after);
-    // The doubled red inset ring records as line segments.
-    expect(after.ops.some((o) => o.op === "line" && o.color === COL_ERROR)).toBe(true);
-  });
-
-  it("the show-lit-blobs preference suppresses blobs on lit squares", () => {
-    // Mark (0,0), then light (3,0): the mark's square becomes lit.
-    const blobRect = (rec: RecordingDrawing) =>
-      rec.ops.some((o) => o.op === "line" && o.color === COL_RULED_OUT);
-    const me = new Midend(lightupGame);
-    expect(me.newGameFromId(EASY_ID)).toBeNull();
-    me.playMoves([mark(0, 0), light(3, 0)]);
-    const palette = lightupGame.colors(DEFAULT_BACKGROUND);
-    const on = new RecordingDrawing(palette);
-    me.redraw(on);
-    expect(blobRect(on)).toBe(true);
-
-    expect(me.setPreferences({ "show-lit-blobs": false })).toBeUndefined();
+    if (washed?.op !== "rect") throw new Error("no square under the bulb");
+    const crossed = (rec: RecordingDrawing) => rec.ops.some((o) => o.op === "line");
+    const lit = (rec: RecordingDrawing) =>
+      rec.ops.filter((o) => o.op === "rect" && o.color === washed.color).length;
+    // The bulb's square, the two left of it, and the one under it.
+    expect(lit(recording)).toBe(4);
+    expect(crossed(recording)).toBe(true);
+    expect(midend.setPreferences({ "show-lit-blobs": false })).toBeUndefined();
     const off = new RecordingDrawing(palette);
-    me.redraw(off);
-    expect(blobRect(off)).toBe(false);
+    midend.redraw(off);
+    // The board is drawn again, the crossed square washed and without its
+    // cross.
+    expect(lit(off)).toBe(4);
+    expect(crossed(off)).toBe(false);
+  });
+
+  it("reads a lit open square as holding no bulb, so the board is solved without crossing it", () => {
+    const board = loaded("3x4:Ba1f0a0");
+    const solved = game.solve(board, board);
+    if (!solved.ok) throw new Error("no answer");
+    const after = game.executeMove(board, solved.move);
+    expect(game.status(after)).toBe("solved");
+    // The squares the bulbs light are left open: the wash says they hold none.
+    expect(Array.from(after.values).filter((v) => v === 0).length).toBeGreaterThan(0);
+  });
+
+  it("draws a cross on a square nothing can light any more in the error color", () => {
+    // The open square of the top row sees only its column, all crossed.
+    const id = "3x4:Ba1f0a0";
+    const crosses = [1, 4, 7, 10].map((c) => ({ set: [c, CROSS] }));
+    const red = renderScenario({ game, id, moves: crosses }).recording.ops.filter(
+      (o) => o.op === "line" && o.color === COL_ERROR,
+    );
+    expect(red.length).toBeGreaterThan(0);
+    const fine = renderScenario({ game, id, moves: crosses.slice(1) }).recording.ops;
+    expect(fine.some((o) => o.op === "line" && o.color === COL_ERROR)).toBe(false);
+  });
+
+  it("loads a board too small for its tier when it comes with its description", () => {
+    expect(paramsError(game, game.decodeParams("2x2b20s0d1"), false)).toBeNull();
+    expect(game.newState(game.decodeParams("2x2b20s0d1"), "a1b").values[1]).toBe(WALL);
+  });
+
+  it("carries the hint on from the 4 to the 1 beside it", () => {
+    // The fourth row: 2, open, 1, open, 4, open, wall.
+    const board = loaded("7x7:c2mBc2a1a4aBc2m1c");
+    const plan = game.hint.plan(board);
+    if (!plan?.ok) throw new Error("no hint");
+    const [first, second] = plan.steps;
+    expect(first.rung).toBe("clueExact");
+    expect(first.move.set).toEqual([18, BULB, 26, BULB, 32, BULB, 24, BULB]);
+    // The 1's bulb is the 4's left one, so it crosses its other neighbors.
+    expect(second.rung).toBe("clueFull");
+    expect(second.move.set).toEqual([16, CROSS, 30, CROSS, 22, CROSS]);
+  });
+
+  it("draws two bulbs that light each other in the error color", () => {
+    const id = "3x4:Ba1f0a0";
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => o.op === "circle" && o.fill === COL_ERROR).length;
+    expect(count(renderScenario({ game, id, moves: [{ set: [3, BULB] }] }))).toBe(0);
+    expect(
+      count(
+        renderScenario({ game, id, moves: [{ set: [3, BULB] }, { set: [5, BULB] }] }),
+      ),
+    ).toBeGreaterThan(0);
   });
 });
