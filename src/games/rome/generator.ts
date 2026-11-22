@@ -30,7 +30,7 @@ import { shuffle } from "../../engine/board/shuffle.ts";
 import { retryLimit } from "../../engine/contract/retry-limit.ts";
 import { mergeNeighbors } from "../../engine/generate/divide.ts";
 import type { RandomState } from "../../engine/random/index.ts";
-import { romeSolve, validateGame } from "./solver.ts";
+import { romeSolve, validity } from "./solver.ts";
 import {
   cloneState,
   DIFF_EASY,
@@ -136,7 +136,7 @@ function generateArrows(board: RomeState, rng: RandomState): boolean {
   // Keep the number of goal squares to a minimum.
   const goals = grid.filter((c) => c & FM_GOAL).length;
   if (goals > Math.max(1, Math.floor(s / 25))) return false;
-  return validateGame(board, false) === STATUS_COMPLETE;
+  return validity(board) === STATUS_COMPLETE;
 }
 
 /**

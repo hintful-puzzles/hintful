@@ -101,7 +101,14 @@ import {
   type RomeDrawState,
   redraw,
 } from "./render.ts";
-import { isSolved, parseDesc, romeSolve, validateGame } from "./solver.ts";
+import {
+  isSolved,
+  parseDesc,
+  type RuleBreak,
+  romeSolve,
+  ruleBreaks,
+  rules,
+} from "./solver.ts";
 import {
   boardFromClues,
   cloneState,
@@ -111,9 +118,6 @@ import {
   dirBit,
   EMPTY,
   encodeParams,
-  FE_BOUNDS,
-  FE_DOUBLE,
-  FE_LOOP,
   FM_ARROWMASK,
   FM_DOWN,
   FM_FIXED,
@@ -149,7 +153,7 @@ import {
  */
 export interface RomeMistake {
   index: number;
-  kind: "bounds" | "double" | "loop" | EntryMistakeKind;
+  kind: RuleBreak | EntryMistakeKind;
 }
 
 // --- setup ------------------------------------------------------------------
@@ -527,8 +531,6 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
       if (grid[i] & FM_FIXED) continue;
       grid[i] = move.arrows[i] ?? EMPTY;
     }
-    // Run for the error and goal-path bits it leaves on the grid.
-    validateGame(next, true);
     return next;
   }
   // ## THE ADDITIVE RULE, stated once
@@ -575,9 +577,6 @@ function executeMove(state: RomeState, move: RomeMove): RomeState {
   else
     pencil[i] =
       move.dir === null ? EMPTY : (pencil[i] ^ move.dir) & legalDirs(x, y, w, h);
-
-  // Run for the error and goal-path bits it leaves on the grid.
-  validateGame(next, true);
   return next;
 }
 
@@ -611,7 +610,7 @@ function solve(orig: RomeState): SolveResult<RomeMove> {
  *
  * The **rule violations** — an off-grid arrow, an arrow duplicated inside a
  * region, an arrow on a loop — are what the board already paints as you play,
- * and the validity check has already computed them into the grid.
+ * read from the rules.
  *
  * But an arrow can break no rule and still contradict the puzzle's unique
  * answer, and Check & Save must not store that board. So the second layer
@@ -632,10 +631,12 @@ function findMistakes(state: RomeState): readonly RomeMistake[] {
   const out: RomeMistake[] = [];
   const { grid } = state;
 
+  // Off the grid before a repeat, a repeat before a loop.
+  const breaks = ruleBreaks(state);
+  const broken = (i: number): RuleBreak | null =>
+    (["bounds", "double", "loop"] as const).find((k) => breaks[k].has(i)) ?? null;
   for (let i = 0; i < grid.length; i++) {
-    const c = grid[i];
-    const kind =
-      c & FE_BOUNDS ? "bounds" : c & FE_DOUBLE ? "double" : c & FE_LOOP ? "loop" : null;
+    const kind = broken(i);
     if (kind) out.push({ index: i, kind });
   }
 
@@ -650,7 +651,7 @@ function findMistakes(state: RomeState): readonly RomeMistake[] {
           notes: state.pencil,
           enc: { bit: (arrow) => arrow },
           // A clue is never wrong, and a rule violation is already reported.
-          fixed: (i) => (grid[i] & (FM_FIXED | FE_BOUNDS | FE_DOUBLE | FE_LOOP)) !== 0,
+          fixed: (i) => (grid[i] & FM_FIXED) !== 0 || broken(i) !== null,
         },
         (index) => ({ index }),
       ),
@@ -724,6 +725,7 @@ export const romeGame: Game<
   interpretMove,
   executeMove,
   status,
+  rules,
 
   solve,
   difficulty,

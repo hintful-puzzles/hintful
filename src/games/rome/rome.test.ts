@@ -48,7 +48,8 @@ import {
   GOAL_NOT_ALONE,
   REGION_TOO_LARGE,
   romeSolve,
-  validateGame,
+  ruleBreaks,
+  validity,
 } from "./solver.ts";
 import {
   DIFF_EASY,
@@ -60,10 +61,6 @@ import {
   EMPTY,
   encodeDesc,
   encodeParams,
-  FD_TOGOAL,
-  FE_BOUNDS,
-  FE_DOUBLE,
-  FE_LOOP,
   FM_ARROWMASK,
   FM_DOWN,
   FM_FIXED,
@@ -72,6 +69,7 @@ import {
   FM_RIGHT,
   FM_UP,
   KEYMODE_MOVE,
+  leadsHome,
   type RomeMove,
   type RomeParams,
   type RomeState,
@@ -112,12 +110,10 @@ function stateOf(
   return (m as unknown as { state: RomeState }).state;
 }
 
-/** Decode a hand-written description, with the display-path error flags
- * computed exactly as `newState` does. */
+/** Decode a hand-written description, which `newState` would refuse where it
+ * already breaks a rule. */
 function board(w: number, h: number, desc: string): RomeState {
-  const b = descValue(readDesc(desc, (r) => readBoard(r, { w, h, diff: DIFF_EASY })));
-  validateGame(b, true);
-  return b;
+  return descValue(readDesc(desc, (r) => readBoard(r, { w, h, diff: DIFF_EASY })));
 }
 
 // A 3x3 board whose twelve inter-cell edges are all walls ("12"), so every
@@ -241,41 +237,38 @@ function cluesOnly(st: RomeState): Int32Array {
 
 // --- validity check ---------------------------------------------------------
 
-describe("validity check", () => {
+describe("where the rules break", () => {
   it("flags an arrow that points off the grid", () => {
     const st = board(3, 3, `${ALL_WALLS_3},bRf`);
-    expect(validateGame(st, true)).toBe(STATUS_INVALID);
-    expect(st.grid[2] & FE_BOUNDS).toBeTruthy();
-    expect(st.grid[0] & FE_BOUNDS).toBeFalsy();
+    expect(validity(st)).toBe(STATUS_INVALID);
+    expect([...ruleBreaks(st).bounds]).toEqual([2]);
   });
 
   it("flags both squares when one region repeats an arrow", () => {
     // Squares 0 and 1 share a region and both point down.
     const st = board(3, 3, "a10,DDg");
-    expect(validateGame(st, true)).toBe(STATUS_INVALID);
-    expect(st.grid[0] & FE_DOUBLE).toBeTruthy();
-    expect(st.grid[1] & FE_DOUBLE).toBeTruthy();
-    expect(st.grid[3] & FE_DOUBLE).toBeFalsy();
+    expect(validity(st)).toBe(STATUS_INVALID);
+    expect([...ruleBreaks(st).double].sort()).toEqual([0, 1]);
   });
 
-  it("paints every square of a loop, and stops when the walk closes", () => {
-    // 0→1→4→3→0, a four-square cycle in the top-left corner.
-    const st = board(3, 3, `${ALL_WALLS_3},RDaULd`);
-    expect(validateGame(st, true)).toBe(STATUS_INVALID);
-    for (const i of [0, 1, 3, 4]) expect(st.grid[i] & FE_LOOP).toBeTruthy();
-    for (const i of [2, 5, 6, 7, 8]) expect(st.grid[i] & FE_LOOP).toBeFalsy();
+  it("flags every square of a loop, and none leading into it", () => {
+    // 0→1→4→3→0, a four-square cycle in the top-left corner, and 2 pointing
+    // into it.
+    const st = board(3, 3, `${ALL_WALLS_3},RDLULd`);
+    expect(validity(st)).toBe(STATUS_INVALID);
+    expect([...ruleBreaks(st).loop].sort()).toEqual([0, 1, 3, 4]);
   });
 
   it("marks the squares whose arrows reach a goal — and only those", () => {
     // Goal at 4, an arrow at 1 pointing down into it; square 7 points nowhere.
     const st = board(3, 3, `${ALL_WALLS_3},aDbXd`);
-    expect(validateGame(st, true)).toBe(STATUS_INCOMPLETE);
-    expect(st.grid[4] & FD_TOGOAL).toBeTruthy();
-    expect(st.grid[1] & FD_TOGOAL).toBeTruthy();
-    // An empty square is never in a goal's component: the component grows only
-    // by adding squares whose *arrow* points into it.
-    expect(st.grid[0] & FD_TOGOAL).toBeFalsy();
-    expect(st.grid[7] & FD_TOGOAL).toBeFalsy();
+    expect(validity(st)).toBe(STATUS_INCOMPLETE);
+    const home = leadsHome(st);
+    expect(home[4]).toBe(1);
+    expect(home[1]).toBe(1);
+    // An empty square leads nowhere yet.
+    expect(home[0]).toBe(0);
+    expect(home[7]).toBe(0);
   });
 });
 
@@ -795,7 +788,8 @@ describe("findMistakes", () => {
     const oob = board(3, 3, `${ALL_WALLS_3},bRf`);
     expect(romeGame.findMistakes?.(oob)).toEqual([{ index: 2, kind: "bounds" }]);
 
-    const loop = board(3, 3, `${ALL_WALLS_3},RDaULd`);
+    // Square 2 points into the loop, and is not on it.
+    const loop = board(3, 3, `${ALL_WALLS_3},RDLULd`);
     expect(romeGame.findMistakes?.(loop)?.map((m) => m.index)).toEqual([0, 1, 3, 4]);
   });
 
@@ -810,7 +804,7 @@ describe("findMistakes", () => {
       dir: wrong,
     });
     // Nothing is broken yet — the live rules are all satisfied.
-    expect(validateGame(after, true)).toBe(STATUS_INCOMPLETE);
+    expect(validity(after)).toBe(STATUS_INCOMPLETE);
     expect(romeGame.findMistakes?.(after)).toEqual([{ index, kind: "cell" }]);
   });
 
@@ -860,7 +854,7 @@ function firstDeviatingPlacement(): {
           y: Math.floor(i / p.w),
           dir: wrong,
         });
-        if (validateGame(trial, true) !== STATUS_INCOMPLETE) continue;
+        if (validity(trial) !== STATUS_INCOMPLETE) continue;
         return { state, index: i, right: right as 4 | 8 | 16 | 32, wrong };
       }
     }

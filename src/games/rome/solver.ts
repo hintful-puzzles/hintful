@@ -1,8 +1,8 @@
 /**
  * Rome's solver: the ladder `rome.description.yaml` states, compiled, on the
  * engine's marks and runner (`engine/solve/cell-marks.ts` and `ladder-runtime.ts`);
- * the answer check its rules compile to; and the validity check the board paints as
- * it is played.
+ * and the answer check and the violation check its rules compile to, which the
+ * board paints as it is played.
  *
  * One ladder serves the generator, which lays its arrows on it and keeps a
  * blanked clue only while the board still solves, so its verdict on every
@@ -11,14 +11,16 @@
  * the ladder drives to its end is uniquely solved, at every tier.
  */
 
-import { Dsf } from "../../engine/board/dsf.ts";
+import type { Dsf } from "../../engine/board/dsf.ts";
 import {
   DESC_CONTRADICTORY,
   type DescError,
   type DescParse,
   puzzleDescError,
 } from "../../engine/contract/desc-error.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
@@ -28,6 +30,7 @@ import {
   perBoard,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -39,18 +42,8 @@ import * as rome from "../../generated/games/rome/rome.compiled.ts";
 import {
   dirBit,
   EMPTY,
-  FD_TOGOAL,
-  FE_BOUNDS,
-  FE_DOUBLE,
-  FE_LOOP,
-  FE_LOOPSTART,
-  FE_MASK,
   FM_ARROWMASK,
-  FM_DOWN,
   FM_GOAL,
-  FM_LEFT,
-  FM_RIGHT,
-  FM_UP,
   legalDirs,
   placedValues,
   type RomeBoard,
@@ -62,125 +55,42 @@ import {
   STATUS_INVALID,
 } from "./state.ts";
 
-// --- validity check ---------------------------------------------------------
+// --- the rules, read off the board ------------------------------------------
 
-/**
- * Upstream `rome_validate_game`, the board as it paints while played.
- * Recomputes every `FE_*` / `FD_TOGOAL` bit on `board.grid` in place and
- * returns `STATUS_COMPLETE` / `STATUS_INCOMPLETE` / `STATUS_INVALID`.
- *
- * It rebuilds the **arrow-connectivity forest** by merging each arrow with
- * the square it points at, flagging an arrow that points off the grid
- * (`FE_BOUNDS`) and one whose target is already in its own component
- * (`FE_LOOPSTART`, which sits on a directed cycle; see {@link markLoops});
- * flags an arrow placed twice in one region (`FE_DOUBLE`); and, where
- * `fullErrors` asks, paints whole loops and marks the squares that reach a
- * goal. Whether a board is solved is the rules' to say ({@link isSolved}).
- */
-export function validateGame(board: RomeBoard, fullErrors: boolean): number {
-  const { w, h, grid, regions } = board;
-  const s = w * h;
-  const dsf = new Dsf(s);
-  const sets = new Int32Array(s);
-  const seterrs = new Int32Array(s);
+/** The board as its description's rules read it: what the live error marks
+ * and Check & Save's rule layer are drawn from. */
+export const rules: RulesOf<RomeBoard> = describedRules(rome, {
+  grid: placedValues,
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s)],
+});
 
-  for (let i = 0; i < s; i++) grid[i] &= ~(FE_MASK | FD_TOGOAL);
+/** An arrow pointing off the grid, which no square's domain holds. */
+const OFF_GRID: rome.RuleName = "domain";
+/** An area holding an arrow twice. */
+const REPEATED: rome.RuleName = "shape.0";
+const LOOP: rome.RuleName = "noLoop";
 
-  // Merge every arrow with the square it points at. An arrow whose target is
-  // already in its own component closes a directed cycle, so flag it as the
-  // loop's entry point and leave the components alone.
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const i = y * w + x;
-      const c = grid[i];
-      if (c & FM_UP) {
-        if (y === 0) grid[i] |= FE_BOUNDS;
-        else if (dsf.equivalent(i, i - w)) grid[i] |= FE_LOOPSTART;
-        else dsf.merge(i, i - w);
-      }
-      if (c & FM_DOWN) {
-        if (y === h - 1) grid[i] |= FE_BOUNDS;
-        else if (dsf.equivalent(i, i + w)) grid[i] |= FE_LOOPSTART;
-        else dsf.merge(i, i + w);
-      }
-      if (c & FM_LEFT) {
-        if (x === 0) grid[i] |= FE_BOUNDS;
-        else if (dsf.equivalent(i, i - 1)) grid[i] |= FE_LOOPSTART;
-        else dsf.merge(i, i - 1);
-      }
-      if (c & FM_RIGHT) {
-        if (x === w - 1) grid[i] |= FE_BOUNDS;
-        else if (dsf.equivalent(i, i + 1)) grid[i] |= FE_LOOPSTART;
-        else dsf.merge(i, i + 1);
-      }
-    }
-  }
+/** The ways a square breaks a rule. */
+export type RuleBreak = "bounds" | "double" | "loop";
 
-  if (fullErrors) markLoops(board);
-
-  // Per-region arrow sets, and the arrows that appear twice in one region.
-  for (let i = 0; i < s; i++) {
-    if (grid[i] === EMPTY) continue;
-    const c = regions.canonify(i);
-    const arrow = grid[i] & FM_ARROWMASK;
-    if (arrow & sets[c]) seterrs[c] |= arrow;
-    else sets[c] |= arrow;
-  }
-  for (let i = 0; i < s; i++) {
-    const c = regions.canonify(i);
-    if (grid[i] & FM_ARROWMASK & seterrs[c]) grid[i] |= FE_DOUBLE;
-  }
-
-  if (fullErrors) {
-    // Mark every square whose arrows lead to a goal: upstream's
-    // `dsf_minimal(dsf, x) == dsf_minimal(dsf, i)` is a same-component test.
-    for (let i = 0; i < s; i++) {
-      if (!(grid[i] & FM_GOAL)) continue;
-      for (let x = 0; x < s; x++) {
-        if (dsf.equivalent(x, i)) grid[x] |= FD_TOGOAL;
-      }
-    }
-  }
-
-  let ret = STATUS_COMPLETE;
-  for (let i = 0; i < s; i++) {
-    if (grid[i] & FE_MASK) return STATUS_INVALID;
-    if (grid[i] === EMPTY) ret = STATUS_INCOMPLETE;
-  }
-  return ret;
+/** The squares where `board` breaks a rule, by the way each breaks it. A
+ * square leading into a loop breaks the shape too, but only the loop's
+ * squares are where it breaks. */
+export function ruleBreaks(board: RomeBoard): Record<RuleBreak, ReadonlySet<number>> {
+  const live = liveErrors(rules, board);
+  const at = (rule: rome.RuleName): ReadonlySet<number> =>
+    new Set((live.byRule.get(rule) ?? []).flat());
+  return { bounds: at(OFF_GRID), double: at(REPEATED), loop: at(LOOP) };
 }
 
-/**
- * Paint `FE_LOOP` on every square of every loop, walking each loop once from
- * its `FE_LOOPSTART` entry.
- *
- * The walk provably terminates. `FE_LOOPSTART` is set on `i` when `i`'s arrow
- * points at a square already in `i`'s component; since each square has at most
- * one outgoing arrow, every edge on the pre-existing path from `i` must be
- * directed *towards* `i`, so that path reads `j → … → i` and closing it with
- * `i → j` makes a directed cycle through `i`. Following arrows from `i`
- * therefore returns to `i`, which is itself a `FE_LOOPSTART`. The explicit
- * bound is a runaway guard for a port bug, not a real exit.
- */
-function markLoops(board: RomeBoard): void {
-  const { w, h, grid } = board;
-  const s = w * h;
-  for (let i = 0; i < s; i++) {
-    if (!(grid[i] & FE_LOOPSTART)) continue;
-    let x = i % w;
-    let y = (i / w) | 0;
-    for (let steps = 0; ; steps++) {
-      if (steps > s) throw new Error("rome: loop walk did not close");
-      const j = y * w + x;
-      grid[j] |= FE_LOOP;
-      const c = grid[j];
-      if (c & FM_UP) y--;
-      else if (c & FM_DOWN) y++;
-      else if (c & FM_LEFT) x--;
-      else if (c & FM_RIGHT) x++;
-      if (grid[y * w + x] & FE_LOOPSTART) break;
-    }
-  }
+/** `STATUS_INVALID` where `board` already breaks a rule, else
+ * `STATUS_COMPLETE` once every square is filled, and `STATUS_INCOMPLETE`
+ * before: a whole board that breaks none is an answer. */
+export function validity(board: RomeBoard): number {
+  const g = rules.grid(board);
+  if (rules.violations(board, g).length > 0) return STATUS_INVALID;
+  return g.includes(0) ? STATUS_INCOMPLETE : STATUS_COMPLETE;
 }
 
 // --- desc validation --------------------------------------------------------
@@ -199,18 +109,15 @@ export const GOAL_NOT_ALONE = puzzleDescError(
  * Upstream `validate_desc` and `new_game` in one reading: decode, reject a
  * description that is already finished or already broken, then reject a region
  * larger than the four distinct arrows it could hold, or a goal outside a
- * single-square region (the last offending square decides which). The board
- * comes back with its validity bits set. Lives here rather than beside the
- * codec because its central assertion is a validity verdict.
+ * single-square region (the last offending square decides which). Lives here
+ * rather than beside the codec because its central assertion is a validity
+ * verdict. The regions are judged first, since a goal not alone also breaks
+ * its clue's rule, and that error says why.
  */
 export function parseDesc(p: RomeParams, desc: string): DescParse<RomeState> {
   return readDesc(desc, (r) => {
     const board = readBoard(r, p);
     r.end();
-    const status = validateGame(board, true);
-    if (status === STATUS_COMPLETE) r.fail(ARROWS_ALREADY_SOLVED);
-    if (status !== STATUS_INCOMPLETE) r.fail(DESC_CONTRADICTORY);
-
     let result: DescError | null = null;
     for (let i = 0; i < p.w * p.h; i++) {
       const size = board.regions.size(i);
@@ -218,6 +125,10 @@ export function parseDesc(p: RomeParams, desc: string): DescParse<RomeState> {
       if (board.grid[i] & FM_GOAL && size > 1) result = GOAL_NOT_ALONE;
     }
     if (result) r.fail(result);
+
+    const status = validity(board);
+    if (status === STATUS_COMPLETE) r.fail(ARROWS_ALREADY_SOLVED);
+    if (status !== STATUS_INCOMPLETE) r.fail(DESC_CONTRADICTORY);
     return board;
   });
 }

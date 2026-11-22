@@ -197,8 +197,17 @@
       still needs, and what it has at an island marked done; "no loops" is
       the cycle form. Its `markWarnings`, `G_WARN` and `islandImpossible`
       go; the marks are what it drew (planted: the guard fails on a line
-      decided early and on candidates that rule out the answer). Next:
-      rome's goal chain and wordtrail's pieces, read before their batch.
+      decided early and on candidates that rule out the answer).
+      Moved (2026-11-22): rome. `noLoop`, implied, says no square's arrow
+      leads back to it (`c not in chain(to(c))`), so a loop's squares are
+      named and not the squares leading into it, which the goal shape names
+      alike. Its validity pass and `FE_*`/`FD_TOGOAL` bits go: the render
+      draws a repeat, an off-grid arrow and (by preference) a loop from the
+      rules, the goal tint from `leadsHome` at redraw, and the generator and
+      desc check ask `validity`; marks unchanged in the app and in every
+      render snapshot. Planted: `x in chain(c)` read true at an undecided
+      link fails both guard tests (a rule false of every whole board instead
+      hangs the deal). Next: wordtrail's pieces, read before its batch.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
 - [x] 2.4 Plant a broken rule and see its mark appear in a game that wrote

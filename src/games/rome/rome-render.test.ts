@@ -40,7 +40,7 @@ import {
   type RomeDrawState,
   redraw,
 } from "./render.ts";
-import { romeSolve, validateGame } from "./solver.ts";
+import { romeSolve, validity } from "./solver.ts";
 import {
   DIFF_EASY,
   DIFFCOUNT,
@@ -68,9 +68,7 @@ const PALETTE = romeGame.colors([0.827, 0.827, 0.827]);
 const RENDER_ID = "6x6de#rome-render";
 
 function board(w: number, h: number, desc: string): RomeState {
-  const b = descValue(readDesc(desc, (r) => readBoard(r, { w, h, diff: DIFF_EASY })));
-  validateGame(b, true);
-  return b;
+  return descValue(readDesc(desc, (r) => readBoard(r, { w, h, diff: DIFF_EASY })));
 }
 
 function newUi(): RomeUi {
@@ -462,7 +460,7 @@ function legalLookingMistake(): {
           y: Math.floor(i / p.w),
           dir: wrong,
         });
-        if (validateGame(trial, true) !== STATUS_INCOMPLETE) continue;
+        if (validity(trial) !== STATUS_INCOMPLETE) continue;
         return { desc, index: i, wrong };
       }
     }

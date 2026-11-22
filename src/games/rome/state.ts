@@ -4,27 +4,14 @@
  *
  * Fill every square with an arrow so that (1) every outlined region holds only
  * *distinct* arrows and (2) following the arrows from any square reaches a
- * circled goal. Upstream rewrites rule 2 into two local invariants that the
- * whole implementation turns on — **no arrow may point off the grid** and
- * **the arrows must not form a loop** — because a disjoint-set forest that
- * merges each arrow with the square it points at collapses a valid board into
- * components each holding exactly one goal (or one still-empty square).
+ * circled goal. Where a board breaks them is its rules' to say
+ * (`solver.ts` `rules`).
  *
- * So Rome carries **two** disjoint-set forests, and keeping them apart is the
- * single most important thing to know about this port:
+ * {@link RomeBoard.regions} is the *static region layout* (upstream
+ * `state->dsf`), built once from the desc's wall list and shared by
+ * reference through {@link cloneState}.
  *
- * - {@link RomeBoard.regions} — the *static region layout* (upstream
- *   `state->dsf`), built once from the desc's wall list and shared by
- *   reference through {@link cloneState}. Used to detect duplicate arrows.
- * - a *transient arrow-connectivity* forest, rebuilt from scratch on every
- *   validity check (see `solver.ts`) and never stored on a state.
- *
- * A cell is one packed `int`, as upstream's: the `FM_*` content bits plus the
- * `FE_*` rule-violation and `FD_*` display bits the validity check ORs back
- * in. The error bits are kept *in* the grid rather than recomputed on demand
- * because every consumer (renderer, `findMistakes`, the solver's `EMPTY`
- * tests) reads them, and the generator's comparisons run against cells
- * carrying them.
+ * A cell is one packed `int`, as upstream's: the `FM_*` content bits.
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
@@ -59,22 +46,10 @@ export const FM_DOWN = 0x0008;
 export const FM_LEFT = 0x0010;
 export const FM_RIGHT = 0x0020;
 
-/** Points outside the grid. */
-export const FE_BOUNDS = 0x0040;
-/** Duplicate arrow within one outlined region. */
-export const FE_DOUBLE = 0x0080;
-/** Part of a loop. */
-export const FE_LOOP = 0x0100;
-/** Loop entry point — bounds the loop walk so it cannot spin. */
-export const FE_LOOPSTART = 0x0200;
-
-/** Its arrow chain reaches a goal. */
-export const FD_TOGOAL = 0x2000;
 /** Mouse button held down on this square. */
 export const FD_ENTRY = 0x4000;
 
 export const FM_ARROWMASK = FM_UP | FM_DOWN | FM_LEFT | FM_RIGHT;
-export const FE_MASK = FE_LOOP | FE_LOOPSTART | FE_BOUNDS | FE_DOUBLE;
 
 /** One of the four arrow bits. */
 export type RomeDir = typeof FM_UP | typeof FM_DOWN | typeof FM_LEFT | typeof FM_RIGHT;
@@ -136,15 +111,9 @@ export function romeNotes(w: number, h: number): NoteEncoding {
  * The board as the shared candidate machinery reads a grid: one dense value per
  * square, `0` for undecided.
  *
- * Rome's own cells are packed bit-fields — an arrow OR'd with `FM_FIXED` and
- * whatever `FE_*` / `FD_*` bits the last validity check wrote — so they cannot
- * be read as values directly, and `0` is the only value the two spellings share.
- *
- * *An undecided square really is exactly `0`*, which is what makes that shared
- * `0` enough. Every `FE_*` bit requires an arrow to be wrong about, and
- * `FD_TOGOAL` cannot land on a blank square: a goal holds no arrow and neither
- * does a blank one, an arrow component is a forest, and a tree of `n` squares
- * spends `n - 1` arrows, so at most one of its squares can be without one.
+ * Rome's own cells are packed bit-fields, an arrow or a goal OR'd with
+ * `FM_FIXED`, so they cannot be read as values directly; an undecided square
+ * is exactly `0` in both spellings.
  */
 export function placedValues(board: RomeBoard): Uint8Array {
   const { grid } = board;
@@ -204,6 +173,55 @@ export function legalDirs(x: number, y: number, w: number, h: number): number {
   if (x === 0) mask &= ~FM_LEFT;
   if (x === w - 1) mask &= ~FM_RIGHT;
   return mask;
+}
+
+/** The square `board`'s square `i` points at, -1 where its arrow points
+ * off the grid or it holds none. */
+function pointedAt(board: RomeBoard, i: number): number {
+  const { w, h, grid } = board;
+  const x = i % w;
+  const y = (i / w) | 0;
+  const c = grid[i];
+  if (c & FM_UP) return y > 0 ? i - w : -1;
+  if (c & FM_DOWN) return y < h - 1 ? i + w : -1;
+  if (c & FM_LEFT) return x > 0 ? i - 1 : -1;
+  if (c & FM_RIGHT) return x < w - 1 ? i + 1 : -1;
+  return -1;
+}
+
+/**
+ * 1 at each square whose arrows already lead to a goal, the goals among
+ * them: the description's `home`, which the board shades by preference.
+ * Each square is walked once, its verdict shared with every square whose
+ * walk reaches it.
+ */
+export function leadsHome(board: RomeBoard): Uint8Array {
+  const { grid } = board;
+  const ON_WALK = 1;
+  const HOME = 2;
+  const ASTRAY = 3;
+  const seen = new Uint8Array(grid.length);
+  const walk: number[] = [];
+  for (let i = 0; i < grid.length; i++) {
+    walk.length = 0;
+    let verdict = ASTRAY;
+    for (let at = i; at >= 0; at = pointedAt(board, at)) {
+      if (seen[at] === HOME || seen[at] === ASTRAY) {
+        verdict = seen[at];
+        break;
+      }
+      // Back on this walk: a loop.
+      if (seen[at] === ON_WALK) break;
+      seen[at] = ON_WALK;
+      walk.push(at);
+      if (grid[at] & FM_GOAL) {
+        verdict = HOME;
+        break;
+      }
+    }
+    for (const at of walk) seen[at] = verdict;
+  }
+  return seen.map((v) => (v === HOME ? 1 : 0));
 }
 
 // --- difficulty -------------------------------------------------------------

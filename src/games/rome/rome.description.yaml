@@ -62,6 +62,11 @@ shape:
   - "forall r in area: distinct(value(c) over c in cells(r))"
   # Following the arrows from any square leads to a goal.
   - "forall c in cells: exists g in chain(c): value(g) = 5"
+implied:
+  # No arrow closes a loop: the square it points at does not lead back to
+  # it. Said of each square, so a loop's squares are where it breaks, where
+  # the shape names every square leading into one as well.
+  noLoop: "forall c in cells where to(c) != none: c not in chain(to(c))"
 clues:
   # A goal, alone in its area.
   goal:

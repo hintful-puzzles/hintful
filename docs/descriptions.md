@@ -1144,7 +1144,13 @@ says how each form is read; what a description's author acts on:
   each line in the cycle form above, so a loop's lines are where it breaks:
   Path's `noLoop`, implied, where a loop through numbers in order breaks no
   other statement, and Slant's, where the shape names the points a loop
-  shuts in. An implied statement is in no technique's soundness
+  shuts in. Where each square names the next by its value, the same is
+  `forall c in cells where to(c) != none: c not in chain(to(c))`, so a
+  loop's squares are where it breaks and not those leading into it, which
+  the shape's `exists g in chain(c)` names alike (Rome's). A rule false of
+  every whole board keeps a generator that asks the rules from ever
+  finishing, so a defect planted to see the guard fail is planted where it
+  is false only on a board still being filled. An implied statement is in no technique's soundness
   fingerprint and a definition is in every one, so a set only the
   statement reads is written in place. A network is said as the through form over every pair of
   squares and the cycle form, never as "one fewer line than squares, every

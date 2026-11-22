@@ -89,13 +89,10 @@ import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
 import type { RomeHint } from "./hint.ts";
 import type { RomeMistake } from "./index.ts";
+import { ruleBreaks } from "./solver.ts";
 import {
   EMPTY,
   FD_ENTRY,
-  FD_TOGOAL,
-  FE_BOUNDS,
-  FE_DOUBLE,
-  FE_LOOP,
   FM_ARROWMASK,
   FM_DOWN,
   FM_FIXED,
@@ -105,6 +102,7 @@ import {
   FM_UP,
   KEYMODE_MOVE,
   KEYMODE_PENCIL,
+  leadsHome,
   MOUSEMODE_PENCIL,
   MOUSEMODE_PLACE,
   type RomeMove,
@@ -337,9 +335,7 @@ function drawArrow(
         ? COL_ARROW_ENTRY
         : data & FM_FIXED
           ? COL_ARROW_FIXED
-          : data & FE_DOUBLE
-            ? COL_ERROR
-            : COL_ARROW_GUESS;
+          : COL_ARROW_GUESS;
 
   if (data & (FM_UP | FM_DOWN)) line(dr, thick, tx, ty - size, tx, ty + size, color);
   else line(dr, thick, tx - size, ty, tx + size, ty, color);
@@ -402,6 +398,9 @@ export function redraw(
     (m) => valueBit(m.n),
   );
 
+  const breaks = ruleBreaks(state);
+  const home = ui.sgoals ? leadsHome(state) : null;
+
   // The square showing the armed cursor's `?` this frame, for the ring.
   let armedAt: Point | null = null;
   for (let y = 0; y < h; y++) {
@@ -430,12 +429,28 @@ export function redraw(
       if (armed) armedAt = { x, y };
       highlight = winHighlight(flash.win(sweepStep(x, y))) ?? highlight;
 
+      // A given is told by the square under it.
+      const surface = grid[i1] & FM_FIXED ? COL_GIVEN : COL_CELL;
+      const color =
+        ui.sloops && breaks.loop.has(i1)
+          ? COL_ERRORBG
+          : home?.[i1]
+            ? COL_GOALBG
+            : breaks.bounds.has(i1)
+              ? COL_ERRORBG
+              : surface;
+      // A repeated arrow is red, a given's and a drag's preview aside.
+      const ink =
+        c === grid[i1] && !(c & FM_FIXED) && breaks.double.has(i1) ? COL_ERROR : -1;
+
       const key =
         (c & 0x7fff) |
         (((p >> 2) & 0xf) << 15) |
         ((p & FD_ENTRY ? 1 : 0) << 19) |
         (highlight << 20) |
-        ((armed ? 1 : 0) << 24);
+        ((armed ? 1 : 0) << 24) |
+        ((color === COL_ERRORBG ? 1 : color === COL_GOALBG ? 2 : 0) << 25) |
+        ((ink === COL_ERROR ? 1 : 0) << 27);
       if (!ds.tiles.changed(i1, key)) continue;
 
       let cx = ox + x * ts;
@@ -443,17 +458,6 @@ export function redraw(
       let cw = ts - 1;
       let ch = ts - 1;
       dr.drawUpdate({ x: cx, y: cy, w: ts, h: ts });
-
-      // A given is told by the square under it.
-      const surface = grid[i1] & FM_FIXED ? COL_GIVEN : COL_CELL;
-      const color =
-        ui.sloops && grid[i1] & FE_LOOP
-          ? COL_ERRORBG
-          : ui.sgoals && grid[i1] & FD_TOGOAL
-            ? COL_GOALBG
-            : grid[i1] & FE_BOUNDS
-              ? COL_ERRORBG
-              : surface;
 
       // Inset each side that meets a different region, leaving the outline.
       if (x === 0 || !regions.equivalent(i1, i1 - 1)) {
@@ -561,7 +565,7 @@ export function redraw(
       if (c & FM_GOAL) {
         dr.drawCircle({ x: midX, y: midY }, Math.floor(ts / 3), COL_GOAL, COL_GOAL);
       } else if (c & FM_ARROWMASK) {
-        drawArrow(dr, midX, midY, ts * 0.3, c, -1);
+        drawArrow(dr, midX, midY, ts * 0.3, c, ink);
       } else if (c & FD_ENTRY) {
         dr.drawRect({ x: midX - 2, y: midY - 2, w: 4, h: 4 }, COL_ARROW_ENTRY);
       }
