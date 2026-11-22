@@ -14,10 +14,16 @@ import {
   type Env,
   elem,
   expect,
+  NUM,
   Out,
   type Val,
 } from "./compile-sorts.ts";
-import { type Description, type DescriptionJson, sampleOf } from "./description.ts";
+import {
+  type Description,
+  type DescriptionJson,
+  type PlayJson,
+  sampleOf,
+} from "./description.ts";
 import type { Binder, Expr } from "./expr.ts";
 import { parse } from "./expr.ts";
 
@@ -94,7 +100,7 @@ export function markWhileOf(
  * `play:`. A button whose value the player cannot place, or a link that is
  * not the cell mark naming a clue, is refused.
  */
-export function playOf(json: DescriptionJson, env: Env): string[] {
+export function playOf(json: DescriptionJson, d: Description, env: Env): string[] {
   const p = json.play;
   if (p === undefined) return [];
   for (const [button, v] of [
@@ -109,13 +115,54 @@ export function playOf(json: DescriptionJson, env: Env): string[] {
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,
     );
-  const { links, ...rest } = p;
+  const { links, labels, ...rest } = p;
   const play =
     links === undefined ? rest : { ...rest, links: { clue: env.cellMark?.kind } };
+  const lineClues = [...d.clueKinds].filter(([, c]) => c.at === "line").map(([k]) => k);
   return [
     "",
     "/** How the player fills the board: the engine's `FillPlay`. */",
     `export const play = ${JSON.stringify(play)} as const;`,
+    "",
+    "/** The clue kinds at lines, drawn past each line's end. */",
+    `export const lineClues = ${JSON.stringify(lineClues)} as const;`,
+    ...labelsOf(labels, env),
+  ];
+}
+
+/**
+ * `labels`, the fixed text before each line's start, from `play`'s
+ * `labels:`: a formula of `i`, the line's index along its axis. It reads
+ * nothing of the board, so it is drawn once.
+ */
+function labelsOf(labels: PlayJson["labels"], env: Env): string[] {
+  const start = labels?.start;
+  if (start === undefined) return [];
+  const scratch: string[] = [];
+  const out = new Out(1);
+  const v = compileExpr(
+    parse(start),
+    new Map<string, Val>([["i", { code: "i", sort: NUM }]]),
+    answerEnv(env, { yes: false }, scratch),
+    out,
+  );
+  if (v.sort.k !== "int" && v.sort.k !== "num")
+    throw new CompileError(`play labels start: ${start} is not a number`);
+  const body = [
+    ...scratch.map((s) => `  ${s}`),
+    ...out.text(),
+    `  return String(${v.code});`,
+  ];
+  if (body.some((l) => /\b(g|sp|cl)\b/.test(l)))
+    throw new CompileError(`play labels start: ${start} reads more than \`i\``);
+  return [
+    "",
+    "/** The fixed text before each line's start, by its index along its axis. */",
+    "export const labels = {",
+    "  start(i: number): string {",
+    ...body.map((l) => `  ${l}`),
+    "  },",
+    "};",
   ];
 }
 

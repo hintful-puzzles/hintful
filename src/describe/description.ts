@@ -145,6 +145,7 @@ export interface PlayJson {
   erase?: string;
   stroke: "line" | "sweep";
   links?: string;
+  labels?: { start?: string };
 }
 
 /** What the generator chooses, in words, and, where the deal samples an

@@ -42,8 +42,11 @@ engine commit.
       mark, in 2.7. Shift/Ctrl painting is Tents' (Shift the open cells,
       Ctrl the primary ones too); Boats' differs (Ctrl places boats), which
       is stage 4's question when Boats moves.
-- [ ] 2.5 Render by layers: the engine walk, painters in
-      `engine/render/pieces/`, margins, labels. The compiler: `labels:`.
+- [x] 2.5 Render by layers: the engine walk, painters in
+      `engine/render/pieces/`, margins, labels. The compiler: `labels:`
+      (under `play:`) and `lineClues`. Tested on Tents' compiled module
+      with a recording; the warm-repaint and render-scenario guards reach
+      it once `fillGame` registers a game (2.3).
 - [ ] 2.6 The deal: `scatter`/`partner` samplers reading `deal.sample`, the
       tier gate, the codec combinators and the params codec. The compiler:
       `id:` and `tierLetters:`.

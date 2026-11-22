@@ -795,6 +795,14 @@
             "links": {
               "type": "string",
               "description": "The cell mark naming a clue, drawn as a link between a cell and the clue's cell beside it."
+            },
+            "labels": {
+              "type": "object",
+              "description": "Fixed text in the margin, which is not a clue: `start`, before each row and column, a formula of `i`, the line's index along its axis from 0 (Kakurasu's weights, `i + 1`).",
+              "additionalProperties": false,
+              "properties": {
+                "start": { "$ref": "#/$defs/formula" }
+              }
             }
           }
         },

@@ -855,4 +855,23 @@ describe("what the fill board reads of a description", () => {
       }),
     ).toThrow(/links names pair/);
   });
+
+  it("writes a label of the line's index, and refuses one that reads the board", () => {
+    const compiled = compileTents((j: { play: { labels?: { start: string } } }) => {
+      j.play.labels = { start: "2 * i + 1" };
+      return j;
+    });
+    const body = compiled.slice(compiled.indexOf("export const labels"));
+    const start = new Function(
+      "i",
+      body.slice(body.indexOf("{", body.indexOf("start(")) + 1, body.indexOf("\n  },")),
+    );
+    expect([0, 1, 2].map((i) => start(i))).toEqual(["1", "3", "5"]);
+    expect(() =>
+      compileTents((j: { play: { labels?: { start: string } } }) => {
+        j.play.labels = { start: "count(c in cells where value(c) = 1) + i" };
+        return j;
+      }),
+    ).toThrow(/reads more than `i`/);
+  });
 });

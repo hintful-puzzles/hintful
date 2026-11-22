@@ -264,6 +264,23 @@ index. Kakurasu writes `labels: { start: "i + 1" }`.
 the review's "a painter per value". The explicit walk stays for every game
 that does not fit.
 
+**As built (task 2.5, 2026-11-22):**
+
+- A ruled-out cell is the engine's cross (`cross`), not a dot: every
+  shading game draws its ruled-out mark that way
+  (`docs/rendering.md` § "When two games share a mechanic, they share its
+  look too").
+- The line clues sit past each line's end, and `labels:` (under `play:`)
+  has only `start`. No game yet asks for another side, so the description
+  names none.
+- The cursor is the skeleton's corners in the cursor role, heavier while
+  `L` has armed a link: Tents' own ink outline goes when it moves.
+- The live errors are read on the board as a drag would leave it, not on
+  its start cell alone as upstream did.
+- The hint's engine mark kinds are `LINE` (a line's clue) and `LINK` (a
+  cell and the clue's cell), in `engine/fill/marks.ts`; the hint in 2.7
+  emits them.
+
 ### 7. Clues derived from `means`; the deal
 
 **Deriving the clues.** The compiler emits `clueHolds_<kind>(g, sp, at, v)`

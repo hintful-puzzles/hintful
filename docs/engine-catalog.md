@@ -81,6 +81,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | `render/` — drawing, the tile cache and the hint's marks |
 | – `live-errors.ts` — the live error marks |
 | – `piece.ts` — a piece on its cell |
+| – `pieces/` — the painters a description names |
 | – `region-walls.ts` — the heavy walls round dealt regions |
 | – `ring.ts` — the round ring |
 | – `hint-mark.ts` — the ring and the outline |
@@ -847,6 +848,14 @@ the cross for a cell ruled out, and who takes it is in the same rendering
 section.
 Exemplar: `src/skeleton/grid/render.ts`.
 
+### `pieces/` — the painters a description names
+
+A painter draws one piece in a cell and declares the colors it is drawn
+in, so a board drawn from painters has no palette of its own. A fill
+game's `play:` names one per value by `paint:` (`PAINTERS`), and
+`fill/render.ts` gives each its slots. A new piece is a painter here,
+addressed to the piece, never to a game.
+
 ### `region-walls.ts` — the heavy walls round dealt regions
 
 Reach for it where a board's regions are dealt and drawn as heavy walls
@@ -1136,7 +1145,8 @@ values in the space's own order, one mark a cell and the dealt clues, so
 the ladder reads it with no adapter. `edit.ts` is the one move, and
 `answer.ts` the hooks that judge a board against its answer and its rules.
 `play.ts` is the input the description's `play:` declares, and the engine's
-`FillUi`. A game reaches them through `fillGame` once that lands; until then no game
+`FillUi`. `render.ts` draws the board by layers from the painters `play:`
+names, and `marks.ts` holds the hint's mark kinds beside the cells. A game reaches them through `fillGame` once that lands; until then no game
 uses them.
 
 ### `edge-hint.ts` — a hint on an edge between squares

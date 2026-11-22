@@ -358,7 +358,7 @@ export function compileGame(
   const fill = Out.own("", () => [
     ...markWhileOf(json, env, measured),
     ...derivedClues(json, d, env, measured),
-    ...playOf(json, env),
+    ...playOf(json, d, env),
   ]);
   // Kept by a technique or by the rules alone (Signpost's `nextGiven`).
   const kept = env.kept?.defs ?? new Map();
