@@ -15,7 +15,6 @@ import { drag, type PointerAction } from "../input/hint-gesture.ts";
 import { verbClicks } from "../input/target-verb.ts";
 import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import { searchTiers } from "../solve/answer-search.ts";
-import type { ClueList } from "../solve/describe-runtime.ts";
 import {
   type AnswerReading,
   clearMistakes,
@@ -27,7 +26,7 @@ import {
   status,
   textFormat,
 } from "./answer.ts";
-import { type FillBoard, newBoard, solveBoard, spaceOf } from "./board.ts";
+import { type Clues, type FillBoard, newBoard, solveBoard, spaceOf } from "./board.ts";
 import { type DealtFillModule, dealFill } from "./deal.ts";
 import { applyEdit, type Edit, editOf } from "./edit.ts";
 import {
@@ -55,9 +54,6 @@ import {
   PLACE_ANIM_TIME,
 } from "./render.ts";
 import { answerSearched, searches } from "./search.ts";
-
-/** A board's clues, by kind. */
-type Clues<C> = { readonly [K in keyof C]: ClueList };
 
 /** What a game born from its description's compiled module holds. */
 export interface BornModule<C> extends FillHintModule<C>, DealtFillModule<C> {
@@ -138,6 +134,9 @@ export function fillGame<C extends Clues<C> & object>(
       ]),
     ),
     lineClues: module.lineClues,
+    ...(deal.partitions === undefined
+      ? {}
+      : { partition: deal.partitions[0] as keyof C }),
   };
   const newState = (p: FillParams, desc: string): FillBoard<C> =>
     newBoard(

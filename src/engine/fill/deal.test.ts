@@ -29,7 +29,9 @@ const UPSTREAM = [
 ];
 
 const read = (w: number, h: number, desc: string) =>
-  descValue(decodeDesc(tents.deal, spaceOf(tents, { w, h }), tents.clueMax, desc));
+  descValue(
+    decodeDesc<tents.Dealt>(tents.deal, spaceOf(tents, { w, h }), tents.clueMax, desc),
+  );
 
 describe("a fill game's game ID", () => {
   it("reads upstream's Tents descs and writes them back", () => {

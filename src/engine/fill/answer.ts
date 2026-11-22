@@ -12,21 +12,20 @@ import type { RulesOf } from "../contract/rules.ts";
 import { NO_SOLUTION } from "../contract/solve-failure.ts";
 import type { GameStatus } from "../contract/types.ts";
 import { solveFromAnswer } from "../solve/answer-search.ts";
-import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
+import { clueAt, type Partition } from "../solve/describe-runtime.ts";
 import { describedRules } from "../solve/described-rules.ts";
 import {
   asDealt,
+  type Clues,
   type FillBoard,
   type FillModule,
   isAnswerOf,
+  listOf,
   solveBoard,
   spaceOf,
 } from "./board.ts";
 import type { Edit } from "./edit.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
-
-/** A board's clues, by kind: a compiled module's `Dealt`. */
-type Clues<C> = { readonly [K in keyof C]: ClueList };
 
 /** A cell the player's board holds against the answer: its value, or the
  * mark on it. */
@@ -48,6 +47,8 @@ export interface AnswerReading<C> {
   /** The clue kinds written as numbers on their cells, printed there in
    * place of the cell's value. */
   readonly numbers?: readonly (keyof C)[];
+  /** The dealt partition, printed as walls between its parts. */
+  readonly partition?: keyof C;
 }
 
 /** The board's one answer: where the game searches, the search's; in any
@@ -207,22 +208,40 @@ export function textFormat<C extends Clues<C>>(
   const margin = reading.lineClues.length > 0 ? 1 : 0;
   const clue = (line: number): string => {
     for (const kind of reading.lineClues) {
-      const v = clueAt(dealt[kind], line);
+      const v = clueAt(listOf(dealt, kind), line);
       if (v >= 0) return v >= 100 ? `${v}` : v >= 10 ? `${v} ` : ` ${v} `;
     }
     return "   ";
   };
+  // A dealt partition's walls alone, where there is one: each cell's part,
+  // `-1` off the grid, and a line only between two that differ.
+  const parts =
+    reading.partition === undefined ? null : (dealt[reading.partition] as Partition).of;
+  const part = (x: number, y: number): number =>
+    x < 0 || y < 0 || x >= w || y >= h ? -1 : (parts?.[y * w + x] ?? 0);
+  const walled = (x: number, y: number, x2: number, y2: number): boolean =>
+    parts === null || part(x, y) !== part(x2, y2);
   return boxedGridText(w + margin, h + margin, {
-    corner: (x, y) => (margin && x === w + 1 && y === h + 1 ? "" : "+"),
-    top: (x, y) => (margin && y === h + 1 && x === w ? "   " : "---"),
-    left: (x, y) => (margin && x === w + 1 && y === h ? " " : "|"),
+    corner: (x, y) =>
+      margin && x === w + 1 && y === h + 1
+        ? ""
+        : walled(x - 1, y - 1, x, y - 1) ||
+            walled(x - 1, y, x, y) ||
+            walled(x - 1, y - 1, x - 1, y) ||
+            walled(x, y - 1, x, y)
+          ? "+"
+          : " ",
+    top: (x, y) =>
+      margin && y === h + 1 && x === w ? "   " : walled(x, y - 1, x, y) ? "---" : "   ",
+    left: (x, y) =>
+      margin && x === w + 1 && y === h ? " " : walled(x - 1, y, x, y) ? "|" : " ",
     cell: (x, y) => {
       if (x === w && y === h) return "   ";
       // A row's line is its index; a column's comes after the rows.
       if (x === w) return clue(y);
       if (y === h) return clue(h + x);
       for (const kind of reading.numbers ?? []) {
-        const n = dealt[kind].valueAt[y * w + x];
+        const n = listOf(dealt, kind).valueAt[y * w + x];
         if (n >= 0) return ` ${n} `;
       }
       const v = values[y * w + x];

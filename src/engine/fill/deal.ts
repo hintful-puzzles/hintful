@@ -11,7 +11,12 @@ import { shuffle } from "../board/shuffle.ts";
 import { retryLimit } from "../contract/retry-limit.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 import { dealUnreasonable } from "../solve/answer-search.ts";
-import { type ClueList, clueList, type GridSpace } from "../solve/describe-runtime.ts";
+import {
+  type ClueList,
+  clueList,
+  type GridSpace,
+  type Partition,
+} from "../solve/describe-runtime.ts";
 import {
   ladderTechniques,
   runLadder,
@@ -20,6 +25,7 @@ import {
 } from "../solve/ladder-runtime.ts";
 import { encodeAnswer } from "./answer.ts";
 import {
+  type Clues,
   type FillBoard,
   ladderOf,
   marksOf,
@@ -27,12 +33,30 @@ import {
   solveBoard,
   spaceOf,
 } from "./board.ts";
-import { encodeDesc, type FillDeal, type FillParams, variationsOf } from "./game-id.ts";
-import { sampleAnswer } from "./sample.ts";
-import { type SearchedFillModule, searchBoard, searches } from "./search.ts";
+import {
+  encodeDesc,
+  type FillDeal,
+  type FillParams,
+  partitionOf,
+  variationsOf,
+} from "./game-id.ts";
+import { growPartition } from "./grow.ts";
+import { sampleAnswer, sampleDominoes } from "./sample.ts";
+import {
+  type SearchedFillModule,
+  searchBoard,
+  searchedPositions,
+  searches,
+} from "./search.ts";
 
-/** A board's clues, by kind. */
-type Clues<C> = { readonly [K in keyof C]: ClueList };
+/** The partitions a deal grew round its answer, by name: none where it grows
+ * none. */
+type Grown = Readonly<Record<string, Partition>>;
+
+/** The positions the mend's search for a second answer may try from where
+ * the ladder stops. Where it finds none in that many, the board is taken to
+ * have one answer the ladder does not reach (Norinori's, 2026-11-16). */
+const MEND_SEARCH_BUDGET = 24;
 
 /** What a firing of a technique reads of the clues, by its bindings: the
  * clue at each cell named, and each clue named by its index in its kind
@@ -42,9 +66,10 @@ interface Reads {
   readonly clues: Readonly<Record<string, string>>;
 }
 
-/** A fill module whose deal samples its answer. */
+/** A fill module whose deal samples its answer: its clues derived from it,
+ * beside the partitions grown round it. */
 export type DealtFillModule<C> = SearchedFillModule<C> & {
-  deriveClues(g: ArrayLike<number>, sp: GridSpace): C;
+  deriveClues(g: ArrayLike<number>, sp: GridSpace, grown: Grown): C;
 };
 
 /**
@@ -83,13 +108,61 @@ export function dealFill<C extends Clues<C>>(
   const thorough = p.thorough ?? true;
   const kind = deal.hide as keyof C | undefined;
   const elements = kind === undefined ? 0 : sp[deal.universes[kind as string]].length;
+  const spent = { moves: 0 };
+  /** The partition grown round `g` for tier `tier`, by its name, where the
+   * deal grows one; `null` where this draw grew none. */
+  const grownRound = (g: Uint8Array, tier: number): Grown | null => {
+    const { grow } = deal;
+    if (grow === undefined) return {};
+    const withParts = (parts: Int32Array): C =>
+      module.deriveClues(g, sp, { [grow.partition]: partitionOf(parts) });
+    const parts = growPartition(
+      grow,
+      sp,
+      g,
+      tier,
+      (parts) => ({
+        deduce() {
+          const got = solveBoard(module, board(withParts(parts)), tier);
+          const open = sp.cells.filter((c) => got.values[c] === 0);
+          return { open, position: got.values };
+        },
+        others: (position) =>
+          (
+            searchedPositions(
+              module,
+              board(withParts(parts)),
+              {
+                start: position,
+                cap: tier,
+                budget: MEND_SEARCH_BUDGET,
+                last: (c) => g[c],
+              },
+              2,
+            ) ?? []
+          )
+            .map((values) => sp.cells.filter((c) => values[c] === grow.value))
+            .filter((cells) => cells.some((c) => g[c] !== grow.value)),
+        tooEasy: tier === 0 ? null : () => finishes(withParts(parts), tier - 1),
+      }),
+      rs,
+      spent,
+    );
+    return parts === null ? null : { [grow.partition]: partitionOf(parts) };
+  };
   /** An answer and its clues, every one shown, or `null` where this draw
-   * gave none. */
-  const draw = (): { g: Uint8Array; clues: C } | null => {
+   * gave none. `tier` is the tier a grown partition is mended for. */
+  const draw = (tier: number): { g: Uint8Array; clues: C } | null => {
     const g =
-      "build" in sample ? buildAnswer(module, sp, p, rs) : sampleAnswer(sample, sp, rs);
+      "build" in sample
+        ? buildAnswer(module, sp, p, rs)
+        : "dominoes" in sample
+          ? sampleDominoes(sample, sp, rs)
+          : sampleAnswer(sample, sp, rs);
     if (g === null) return null;
-    const clues = module.deriveClues(g, sp);
+    const grown = grownRound(g, tier);
+    if (grown === null) return null;
+    const clues = module.deriveClues(g, sp, grown);
     return module.isAnswer(g, sp, clues, variations) ? { g, clues } : null;
   };
   /**
@@ -105,7 +178,7 @@ export function dealFill<C extends Clues<C>>(
   const hideUpTo = (clues: C, tier: number): C | null => {
     if (kind === undefined) return clues;
     if (!finishes(clues, 0)) return null;
-    let shown = shownOf(clues[kind]);
+    let shown = shownOf(clues[kind] as ClueList);
     // A firing reads only the clues its bindings name, so the board finishes
     // without the clues the ladder never read; where a technique reads one
     // its bindings do not name, it does not, and every clue is tried.
@@ -142,12 +215,12 @@ export function dealFill<C extends Clues<C>>(
         const attempt = retryLimit(`fill: ${module.tiers[0]} board to strip`);
         for (;;) {
           attempt();
-          const drawn = draw();
+          const drawn = draw(0);
           if (drawn === null) continue;
           const clues = every ? drawn.clues : hideUpTo(drawn.clues, 0);
           if (clues === null) continue;
           answer = drawn.g;
-          return { all: clues, shown: shownOf(clues[kind]) };
+          return { all: clues, shown: shownOf(clues[kind] as ClueList) };
         }
       },
       strip(b, one) {
@@ -192,7 +265,7 @@ export function dealFill<C extends Clues<C>>(
   const attempt = retryLimit("fill: deal");
   for (;;) {
     attempt();
-    const drawn = draw();
+    const drawn = draw(p.diff);
     if (drawn === null) continue;
     const clues = hideUpTo(drawn.clues, p.diff);
     if (clues === null || !finishes(clues, p.diff)) continue;
@@ -212,7 +285,7 @@ function keeping<C extends Clues<C>>(
   shown: readonly number[],
   elements: number,
 ): C {
-  const all = clues[kind];
+  const all = clues[kind] as ClueList;
   return {
     ...clues,
     [kind]: clueList(
@@ -234,7 +307,7 @@ function cluesRead<C extends Clues<C>>(
   cap: number,
   kind: string,
 ): ReadonlySet<number> {
-  const list = board.dealt[kind as keyof C];
+  const list = board.dealt[kind as keyof C] as ClueList;
   const reads = module.techniques as unknown as Readonly<
     Record<string, { readonly reads?: Reads }>
   >;
@@ -285,7 +358,7 @@ function buildAnswer<C extends Clues<C>>(
   p: FillParams,
   rs: RandomState,
 ): Uint8Array | null {
-  const blank = module.deriveClues(new Uint8Array(sp.cells.length), sp);
+  const blank = module.deriveClues(new Uint8Array(sp.cells.length), sp, {});
   const board = newBoard(module, p.w, p.h, blank, variationsOf(p));
   const top = module.tiers.length - 1;
   const g = board.values.slice();

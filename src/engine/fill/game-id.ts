@@ -6,8 +6,13 @@
  * (`openspec/changes/a-game-from-its-description-alone`, design.md § 8).
  */
 
+import { Dsf } from "../board/dsf.ts";
 import type { DescParse } from "../contract/desc-error.ts";
-import { DESC_OUT_OF_RANGE, DESC_TOO_LONG } from "../contract/desc-error.ts";
+import {
+  DESC_MALFORMED,
+  DESC_OUT_OF_RANGE,
+  DESC_TOO_LONG,
+} from "../contract/desc-error.ts";
 import { difficultyItem } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
 import { isDigit } from "../game-id/decimal.ts";
@@ -17,16 +22,29 @@ import { modifierItem } from "../game-id/modifier.ts";
 import { dimensionParamConfig } from "../game-id/params.ts";
 import { choice, dims, flag, num, paramsCodec } from "../game-id/params-codec.ts";
 import { encodeRunLength } from "../game-id/run-length.ts";
-import { type ClueList, clueList, type GridSpace } from "../solve/describe-runtime.ts";
+import { encodeWallRuns, readRegionWalls } from "../game-id/wall-runs.ts";
+import { regionNumbers } from "../generate/divide.ts";
+import {
+  type ClueList,
+  clueList,
+  type GridSpace,
+  type Partition,
+  partition,
+} from "../solve/describe-runtime.ts";
+import type { Clues } from "./board.ts";
+import type { FillGrow } from "./grow.ts";
 import type { Sample } from "./sample.ts";
 
 /** A segment of the desc: where a one-valued clue kind sits, as upstream's
- * run code; a two-valued kind at cells as upstream's dot runs, its value the
+ * run code; a dealt partition as the walls between its parts
+ * (`engine/game-id/wall-runs.ts`); a two-valued kind at cells as upstream's
+ * dot runs, its value the
  * letter's case (`cases`, lowercase then uppercase); or a kind's values, the
  * first after `before` and the rest after commas, in the space's order or
  * the columns first. */
 export type IdSegment =
   | { readonly runs: string }
+  | { readonly walls: string }
   | { readonly dots: string; readonly cases: readonly [number, number] }
   | { readonly digits: string }
   | { readonly numbers: string; readonly before?: string; readonly order?: "columns" };
@@ -48,9 +66,13 @@ export interface FillDeal {
   /** The clue kind the deal hides while the board still finishes. */
   readonly hide?: string;
   readonly thorough?: FillThorough;
+  /** How it grows a dealt partition round the answer. */
+  readonly grow?: FillGrow;
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
   readonly universes: Readonly<Record<string, "cells" | "lines">>;
+  /** The dealt partitions, by name: Norinori's regions. */
+  readonly partitions?: readonly string[];
   readonly tierLetters: string;
   readonly sizes: Readonly<
     Record<
@@ -95,13 +117,43 @@ const thoroughBy = (t: FillThorough, w: number): boolean => w < t.offFrom;
 export const withThorough = (deal: FillDeal, p: FillParams): FillParams =>
   deal.thorough === undefined ? p : { ...p, thorough: thoroughBy(deal.thorough, p.w) };
 
-/** A board's clues, by kind. */
-type Clues<C> = { readonly [K in keyof C]: ClueList };
-
-/** Each clue kind's largest value at an element (`clueMax`). */
+/** Each clue kind's largest value at an element (`clueMax`); a partition has
+ * none. */
 export type ClueMax<C> = {
-  readonly [K in keyof C]: (sp: GridSpace, at: number) => number;
+  readonly [K in keyof C]?: (sp: GridSpace, at: number) => number;
 };
+
+/** The largest value of kind `kind` at element `at`. */
+const maxOf = <C>(clueMax: ClueMax<C>, kind: keyof C, sp: GridSpace, at: number) => {
+  const max = clueMax[kind];
+  if (max === undefined) throw new Error(`id: ${String(kind)} has no values`);
+  return max(sp, at);
+};
+
+/** Each border between two cells side by side, 1 where it divides two parts
+ * of `p`: those inside the rows first, then those between them, as
+ * `encodeWallRuns` writes them. */
+function wallsOf(p: Partition, w: number, h: number): Uint8Array {
+  const out: number[] = [];
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w - 1; x++)
+      out.push(p.of[y * w + x] === p.of[y * w + x + 1] ? 0 : 1);
+  for (let y = 0; y < h - 1; y++)
+    for (let x = 0; x < w; x++)
+      out.push(p.of[y * w + x] === p.of[(y + 1) * w + x] ? 0 : 1);
+  return Uint8Array.from(out);
+}
+
+/** A partition from each cell's part, the parts numbered as `regionNumbers`
+ * numbers them: in the order their first cells are met. */
+export function partitionOf(parts: ArrayLike<number>): Partition {
+  const cells: number[][] = [];
+  for (let c = 0; c < parts.length; c++) {
+    cells[parts[c]] ??= [];
+    cells[parts[c]].push(c);
+  }
+  return partition(cells, parts.length);
+}
 
 /**
  * The params' custom form and codec: the size within the description's
@@ -256,12 +308,19 @@ export function encodeDesc<C extends Clues<C>>(
   dealt: C,
 ): string {
   let out = "";
+  const listOf = (kind: string): ClueList => dealt[kind as keyof C] as ClueList;
   for (const seg of deal.id) {
+    if ("walls" in seg) {
+      out += encodeWallRuns(
+        wallsOf(dealt[seg.walls as keyof C] as Partition, sp.w, sp.h),
+      );
+      continue;
+    }
     if ("runs" in seg) {
       // `_` a clue with no gap before it, `a` to `y` one after a gap of 1 to
       // 25, `z` 25 empty cells with more to come, and a last clue past the
       // end.
-      const list = dealt[seg.runs as keyof C];
+      const list = listOf(seg.runs);
       const n = sp.cells.length;
       let gap = 0;
       for (let c = 0; c <= n; c++) {
@@ -279,7 +338,7 @@ export function encodeDesc<C extends Clues<C>>(
       continue;
     }
     if ("digits" in seg) {
-      const list = dealt[seg.digits as keyof C];
+      const list = listOf(seg.digits);
       out += encodeRunLength(
         sp.cells.length,
         (c) => (list.valueAt[c] >= 0 ? String(list.valueAt[c]) : null),
@@ -288,7 +347,7 @@ export function encodeDesc<C extends Clues<C>>(
       continue;
     }
     if ("dots" in seg) {
-      const list = dealt[seg.dots as keyof C];
+      const list = listOf(seg.dots);
       const [lower, upper] = seg.cases;
       out += writeDotRuns(sp.cells.length, (c) => {
         const v = list.valueAt[c];
@@ -296,7 +355,7 @@ export function encodeDesc<C extends Clues<C>>(
       });
       continue;
     }
-    const list = dealt[seg.numbers as keyof C];
+    const list = listOf(seg.numbers);
     elements(sp, universeOf(deal, seg.numbers), seg.order).forEach((e, i) => {
       out += i === 0 ? (seg.before ?? "") : ",";
       const v = list.valueAt[e];
@@ -313,12 +372,25 @@ const isRunChar = (ch: string): boolean => ch === "_" || (ch >= "a" && ch <= "z"
 export function decodeDesc<C extends Clues<C>>(
   deal: FillDeal,
   sp: GridSpace,
-  clueMax: ClueMax<C>,
+  // Not read for `C`, which `ClueMax` cannot say: the caller's board says it.
+  clueMax: ClueMax<NoInfer<C>>,
   desc: string,
 ): DescParse<C> {
   return readDesc(desc, (r) => {
-    const out: Partial<Record<keyof C, ClueList>> = {};
+    const out: Partial<Record<keyof C, ClueList | Partition>> = {};
     for (const seg of deal.id) {
+      if ("walls" in seg) {
+        const n = sp.cells.length;
+        const joined = new Dsf(n);
+        readRegionWalls(r, joined, sp.w, sp.h);
+        const parts = partitionOf(regionNumbers(joined, n));
+        // A part too small to hold what the deal grows each part round has
+        // no answer.
+        const least = deal.grow?.partition === seg.walls ? deal.grow.holds : 1;
+        if (parts.cells.some((cs) => cs.length < least)) r.fail(DESC_MALFORMED);
+        out[seg.walls as keyof C] = parts;
+        continue;
+      }
       if ("runs" in seg) {
         const n = sp.cells.length;
         const at: number[] = [];
@@ -358,7 +430,7 @@ export function decodeDesc<C extends Clues<C>>(
             continue;
           }
           const value = Number(ch);
-          if (value > clueMax[kind](sp, pos)) r.fail(DESC_OUT_OF_RANGE);
+          if (value > maxOf(clueMax, kind, sp, pos)) r.fail(DESC_OUT_OF_RANGE);
           at.push(pos++);
           v.push(value);
         }
@@ -386,7 +458,7 @@ export function decodeDesc<C extends Clues<C>>(
         // An absent clue is written as nothing.
         if (!r.peekIs(isDigit)) return;
         at.push(e);
-        v.push(r.int(0, clueMax[kind](sp, e)));
+        v.push(r.int(0, maxOf(clueMax, kind, sp, e)));
       });
       // The elements in the space's order, as a list is held.
       const byAt = at.map((e, k) => [e, v[k]] as const).sort((a, b) => a[0] - b[0]);

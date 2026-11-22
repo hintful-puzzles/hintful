@@ -268,7 +268,7 @@ end are counted already, and `npm run deal-walk` prints them for a named
 cell ([`solver-and-generator.md`](./solver-and-generator.md) § "Bound a
 generator by its tail, not its median"). Where no census is taken, as in
 the app, a count costs one test of a `null`. Exemplar:
-`norinori/generator.ts`.
+`engine/fill/grow.ts`.
 
 ### `difficulty.ts` — the cross-game difficulty contract
 
@@ -864,7 +864,7 @@ inside a tile-cached grid. `regionWalls(w, h, regions)` in `newDrawState`
 keeps each square's walls; `drawWalledSquare` paints a square's box, its
 halves of the walls and its corners round the surface the game lays, and
 `walledBoxes` gives that surface, for a hint's band. Exemplars:
-`starbattle/render.ts`, `norinori/render.ts`.
+`starbattle/render.ts`, `engine/fill/render.ts`.
 
 ### `ring.ts` — the round ring
 

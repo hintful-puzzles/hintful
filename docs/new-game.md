@@ -234,7 +234,8 @@ is one to weigh against a pointer.
 A fill game, whose player sets each cell to one of a few values toward one
 answer, with clues on cells or lines and optionally a link from a cell to a
 clue beside it, is written as its description alone: no `index.ts`, no
-skeleton. Exemplars: Kakurasu (born new), Tents and Unruly (moved). Its directory holds
+skeleton. Exemplars: Kakurasu (born new); Tents, Unruly, Mosaic and
+Norinori (moved), Norinori with a dealt partition. Its directory holds
 `<game>.description.yaml`, `<game>.plants.yaml` and `<game>.test.ts`.
 
 1. **Write the description** whole: help, rules, clues, techniques and

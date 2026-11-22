@@ -70,7 +70,24 @@ Norinori's partition is its own.
       is the menu's 8x10, where it was a 10x10 off the menu: a born game's
       default is one of its boards. Hint-applied squares are one move
       each, as in every game whose hint plays its targets' clicks.
-- [ ] 2.3 Norinori born; its capabilities added listed here.
+- [x] 2.3 Norinori born; its capabilities added listed here. Done
+      2026-11-22, 1,291 hand-written lines gone. Added, each the engine's:
+      a dealt partition on the fill board (`regions: { r: dealt }`, a clue
+      list or a partition by kind); the `walls` ID segment, refusing a part
+      smaller than `grow.holds`; the `dominoes` sample (sen-ltd/norinori's
+      refill, credited); `deal.grow`, the partition grown round the answer
+      and mended (`engine/fill/grow.ts`); the search assuming in a part as
+      in a number's cells (`searchedPositions`, which the mend's judge
+      reuses); region walls and fills in the render and walls in the text
+      format; the `domino` painter, two alike pieces touching only each
+      other drawn joined; a rule over a partition's parts drawn on its
+      squares, never as a run or a pair (the compiler's `partRules`, found
+      in the app: three shaded in a row of one region drew as a run's bar).
+      The right button rules out unless its value is one of a pair of
+      alike pieces, which moves Mosaic's right button to ruling out too
+      (only the target-verb guard reads it). The born deal at 10x10 has a
+      median of 0.23-0.30 s a tier, the hand-written one's comment 0.5 s at
+      worst.
 
 ## 3. Finish
 

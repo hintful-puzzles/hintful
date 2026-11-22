@@ -10,7 +10,7 @@ directory SHALL hold no TypeScript but its tests.
 #### Scenario: Tents is its description
 
 - **WHEN** the catalog and the registry are read
-- **THEN** Tents, Kakurasu, Unruly and Mosaic are in all of them, and no one
+- **THEN** Tents, Kakurasu, Unruly, Mosaic and Norinori are in all of them, and no one
   of their directories holds a TypeScript file that is not a test
 
 ## ADDED Requirements
@@ -91,7 +91,8 @@ the params SHALL refuse a board its `most` bounds or one off `sizes.step`.
 A live violation SHALL be drawn by the shape of the cells it names, never by
 the rule's name: three or more in a row along part of a line as a bar along
 them, two or more whole parallel lines as a bar across each, and any other
-cells as their pieces in error.
+cells as their pieces in error. A rule over a dealt partition's parts SHALL
+be drawn as its cells' pieces in error however they lie.
 
 #### Scenario: A run of three and two lines alike
 
@@ -111,3 +112,42 @@ pieces are drawn whole, SHALL be instant.
 
 - **WHEN** a disc is placed on an Unruly cell, and a tent on a Tents one
 - **THEN** the disc's move animates and the tent's is instant
+
+### Requirement: A born game may deal a partition
+
+A region `space.regions` names `dealt` SHALL be a partition of the board.
+The `walls` ID segment SHALL write it as upstream's wall runs, refusing a
+part smaller than `deal.grow.holds`. The board SHALL draw it as heavy walls
+and a fill a part, and the text format as walls between parts. The search
+SHALL assume in the part or number with fewest open cells.
+
+#### Scenario: A part of one square
+
+- **WHEN** a Norinori ID walls off one square alone
+- **THEN** it is refused
+
+### Requirement: A born game's partition may be grown round its answer
+
+Where `deal.grow` names the partition, the deal SHALL grow it round the
+answer: the answer's pieces of its value sized `holds`, some closed as
+parts of their own by `closed.oneIn` a tier, each other grown from and
+joined while a part holds at most `holds` of them, no other part under
+`smallest`, and mended until the ladder alone finishes the board at its
+tier.
+
+#### Scenario: A Norinori board's regions
+
+- **WHEN** a Norinori board is dealt and its ID read back
+- **THEN** the regions are those dealt, each connected, and the board's
+  hint finishes it
+
+### Requirement: A born game's right button rules out unless it places a pair piece
+
+The secondary button SHALL be a ruling out, its value a mark of what the
+answer leaves out, unless that value's painter draws one of a pair of alike
+pieces, which is a placement.
+
+#### Scenario: Mosaic's and Unruly's right buttons
+
+- **WHEN** the target verbs of Mosaic and Unruly are read
+- **THEN** Mosaic's right button rules out and Unruly's does not

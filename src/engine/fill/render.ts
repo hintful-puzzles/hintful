@@ -24,7 +24,7 @@
  * it, and each line's fixed label (`labels:`) before its start.
  */
 
-import { GRAY_WASH, WHITE } from "../color/colors.ts";
+import { GRAY_WASH, REGION_FILLS, WHITE } from "../color/colors.ts";
 import {
   CLEAR_MARK,
   cellSurface,
@@ -45,6 +45,7 @@ import {
 import type { Frame, GameDrawing } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
 import type { Color, Rect, Size } from "../contract/types.ts";
+import { regionFills } from "../generate/region-fill.ts";
 import { drawRectCorners, drawThickRectOutline, glyphFont } from "../render/draw.ts";
 import { hatchPeriod } from "../render/hatch.ts";
 import {
@@ -57,20 +58,35 @@ import {
   MarkOutlines,
 } from "../render/hint-mark.ts";
 import { liveErrors } from "../render/live-errors.ts";
+import { joinToward } from "../render/piece.ts";
 import { PAINTERS, type Painter, type PainterName } from "../render/pieces/index.ts";
+import {
+  drawWalledSquare,
+  regionWalls,
+  walledBoxes,
+  wallHalf,
+} from "../render/region-walls.ts";
 import { NOTHING_TO_CLEAR, textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../render/win-wave.ts";
-import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
+import { clueAt, type Partition } from "../solve/describe-runtime.ts";
 import { type FillMistake, rulesOf } from "./answer.ts";
-import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import {
+  type Clues,
+  type FillBoard,
+  type FillModule,
+  listOf,
+  spaceOf,
+} from "./board.ts";
 import type { Edit } from "./edit.ts";
+import type { FillDeal } from "./game-id.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import type { NumberedModule } from "./search.ts";
 
-/** A board's clues, by kind. */
-type Clues<C> = { readonly [K in keyof C]: ClueList };
+/** The fills a dealt partition's parts take: the region palette's first four,
+ * as Star Battle's. */
+const REGION_SURFACES = REGION_FILLS.slice(0, 4);
 
 /** What a fill game is drawn from, beside its board: the compiled module's
  * `play`, `lineClues` and `labels`. */
@@ -87,6 +103,9 @@ export type FillFrame<C> = Frame<FillBoard<C>, FillUi, Edit, unknown, FillMistak
 
 export interface FillDrawState {
   readonly tileSize: number;
+  /** Each cell's walls (`regionWalls`) and the slot of the fill under it,
+   * where the board deals a partition; `null` where it deals none. */
+  readonly parts: { readonly walls: Uint8Array; readonly fills: Uint8Array } | null;
   /** Per cell, what it shows and the hint's marks on it. */
   readonly tiles: TileCache;
   /** Per line, its clue's error, hint and hatch. */
@@ -197,6 +216,8 @@ const ACROSS_COLUMN = 1 << 5;
 const NUMBER_DONE = 1 << 6;
 /** The number on the cell is broken: its cells can no longer agree. */
 const NUMBER_BROKEN = 1 << 7;
+/** The side of a joining piece its other half is on (`JOIN_*`, `piece.ts`). */
+const JOIN_SHIFT = 8;
 
 /** The step to each of a cell's four sides, up, right, down, left. */
 const DIRS: readonly (readonly [number, number])[] = [
@@ -275,12 +296,21 @@ export function fillSlots(play: FillPlay): {
 }
 
 export function fillRender<C extends Clues<C>>(
-  module: FillModule<C> & NumberedModule,
+  module: FillModule<C> &
+    NumberedModule & {
+      readonly deal?: FillDeal;
+      /** The rules over a dealt partition's parts, which break at the cells
+       * they count however those lie. */
+      readonly partRules?: readonly string[];
+    },
   look: FillLook<C>,
   previewed: (board: FillBoard<C>, ui: FillUi) => FillBoard<C>,
 ): FillRender<C> {
   const { play, lineClues, labels } = look;
   const labelStart = labels?.start;
+  // The dealt partition drawn as walls and fills: one, as no game deals two.
+  const walled = module.deal?.partitions?.[0] as (keyof C & string) | undefined;
+  const partRules: readonly string[] = module.partRules ?? [];
   const rules = rulesOf(module);
   const numbers = (module.numbers ?? []) as readonly (keyof C & string)[];
   const clueCells = module.clueCells ?? {};
@@ -292,7 +322,7 @@ export function fillRender<C extends Clues<C>>(
     c: number,
   ): { kind: keyof C & string; k: number } | null => {
     for (const kind of numbers) {
-      const k = b.dealt[kind].byAt[c];
+      const k = listOf(b.dealt, kind).byAt[c];
       if (k >= 0) return { kind, k };
     }
     return null;
@@ -307,7 +337,7 @@ export function fillRender<C extends Clues<C>>(
     const broken = liveErrors(rules, b).clues;
     const sp = spaceOf(module, b);
     for (const kind of numbers) {
-      const list = b.dealt[kind];
+      const list = listOf(b.dealt, kind);
       const bad = new Set(broken.get(kind) ?? []);
       list.at.forEach((c, k) => {
         if (bad.has(k)) out.set(c, NUMBER_BROKEN);
@@ -318,12 +348,42 @@ export function fillRender<C extends Clues<C>>(
     return out;
   }
 
+  /** Each cell's walls and the slot of its part's fill, where the board
+   * deals a partition. */
+  const partsOf = (b: FillBoard<C>): FillDrawState["parts"] => {
+    if (walled === undefined) return null;
+    const { of } = b.dealt[walled] as Partition;
+    const fills = regionFills(of, b.w, REGION_SURFACES.length);
+    return {
+      walls: regionWalls(b.w, b.h, of),
+      fills: Uint8Array.from(of, (r) => COL_REGION + fills[r]),
+    };
+  };
+
+  /** Each cell's join, the side its other half is on: a joining piece and
+   * one beside it alike, each beside no other. A run of three stays apart. */
+  const joinsOf = (b: FillBoard<C>): Uint8Array => {
+    const out = new Uint8Array(b.values.length);
+    const joins = (v: number) => byValue.get(v)?.painter.joins === true;
+    if (![...byValue.keys()].some(joins)) return out;
+    const sp = spaceOf(module, b);
+    const alike = (c: number) => sp.adj4[c].filter((d) => b.values[d] === b.values[c]);
+    for (const c of sp.cells) {
+      if (!joins(b.values[c])) continue;
+      const mine = alike(c);
+      if (mine.length === 1 && alike(mine[0]).length === 1)
+        out[c] = joinToward(b.w, c, mine[0]);
+    }
+    return out;
+  };
+
   /** The numbers not yet done. */
   const numbersLeft = (b: FillBoard<C>): number => {
     const states = numberStates(b);
     let left = 0;
     for (const kind of numbers)
-      for (const c of b.dealt[kind].at) if (states.get(c) !== NUMBER_DONE) left++;
+      for (const c of listOf(b.dealt, kind).at)
+        if (states.get(c) !== NUMBER_DONE) left++;
     return left;
   };
 
@@ -339,6 +399,10 @@ export function fillRender<C extends Clues<C>>(
   const { painted, byValue, COL_GIVEN, COL_NUMBER_LIGHT } = fillSlots(play);
   const COL_NUMBER_LIGHT_DONE = COL_GIVEN + 2;
   const COL_NUMBER_DONE = COL_GIVEN + 3;
+  /** A part's walls, and the first of the fills its cells take: after the
+   * numbers' slots, where the board fills them, so a palette has no hole. */
+  const COL_WALL = numbers.length > 0 ? COL_GIVEN + 4 : COL_GIVEN + 1;
+  const COL_REGION = COL_WALL + 1;
 
   const start = (ts: number): number => (labelStart === undefined ? 1 : ts);
   const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : 1);
@@ -360,6 +424,12 @@ export function fillRender<C extends Clues<C>>(
       out[COL_NUMBER_LIGHT_DONE] = GRAY_WASH;
       out[COL_NUMBER_DONE] = CLEAR_MARK;
     }
+    if (walled !== undefined) {
+      out[COL_WALL] = INK;
+      REGION_SURFACES.forEach((fill, k) => {
+        out[COL_REGION + k] = fill;
+      });
+    }
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
         out[slot[i]] = c;
@@ -371,7 +441,7 @@ export function fillRender<C extends Clues<C>>(
    * `-1`. */
   const lineClue = (b: FillBoard<C>, k: number): number => {
     for (const kind of lineClues) {
-      const v = clueAt(b.dealt[kind], k);
+      const v = clueAt(listOf(b.dealt, kind), k);
       if (v >= 0) return v;
     }
     return -1;
@@ -380,7 +450,7 @@ export function fillRender<C extends Clues<C>>(
   /** The cell a link from `c` names: the clue's own. */
   const linkClues = play.links === undefined ? null : (play.links.clue as keyof C);
   const linkTo = (b: FillBoard<C>, c: number): number =>
-    linkClues === null || b.mark[c] < 0 ? -1 : b.dealt[linkClues].at[b.mark[c]];
+    linkClues === null || b.mark[c] < 0 ? -1 : listOf(b.dealt, linkClues).at[b.mark[c]];
 
   function drawDiamond(dr: GameDrawing, ts: number, x: number, y: number): void {
     const d = Math.floor((ts * 2) / 5);
@@ -457,6 +527,8 @@ export function fillRender<C extends Clues<C>>(
     lineWord: number,
     // The number on the cell, `-1` where it has none.
     n: number,
+    // The cell's walls and fill, where the board deals a partition.
+    part: { readonly walls: number; readonly fill: number } | null,
     // A piece placed or taken away a moment ago: the value it grows from or
     // shrinks into, and how far it has got, 0 to 1.
     anim: { readonly from: number; readonly frac: number } | null = null,
@@ -465,24 +537,34 @@ export function fillRender<C extends Clues<C>>(
     const tx = coord(x, ts);
     const ty = coord(y, ts);
     const tile = { x: tx, y: ty, w: ts, h: ts };
-    const surface = { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 };
     const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
     const piece = v === 0 ? undefined : byValue.get(v);
+    const ground = tone
+      ? winSlot(tone)
+      : piece !== undefined && piece.painter.surface !== null
+        ? piece.slot[piece.painter.surface]
+        : word & FIXED
+          ? COL_GIVEN
+          : (part?.fill ?? COL_CELL);
+    // Under the content, so the piece stays whole.
+    const lay = (surface: Rect) => {
+      dr.drawRect(surface, ground);
+      if (hintWord & HINT_LINE) dr.drawHatch(surface, hatchPeriod(ts));
+    };
 
     dr.clip(tile);
-    dr.drawRect(tile, COL_GRID);
-    dr.drawRect(
-      surface,
-      tone
-        ? winSlot(tone)
-        : piece !== undefined && piece.painter.surface !== null
-          ? piece.slot[piece.painter.surface]
-          : word & FIXED
-            ? COL_GIVEN
-            : COL_CELL,
-    );
-    // Under the content, so the piece stays whole.
-    if (hintWord & HINT_LINE) dr.drawHatch(surface, hatchPeriod(ts));
+    if (part === null) {
+      dr.drawRect(tile, COL_GRID);
+      lay({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
+    } else
+      drawWalledSquare(
+        dr,
+        ts,
+        tile,
+        part.walls,
+        { grid: COL_GRID, wall: COL_WALL },
+        lay,
+      );
     // A piece taken away shrinks into its cell; one placed grows alone, since
     // two pieces in one cell read as neither.
     const shrinking = anim !== null && v === 0 ? byValue.get(anim.from) : undefined;
@@ -496,6 +578,7 @@ export function fillRender<C extends Clues<C>>(
       (word & ERR_AT) !== 0,
       anim?.frac ?? 1,
       occupied,
+      (lineWord >> JOIN_SHIFT) & 0xf,
     );
 
     // A run's bar reaches half a tile toward each end it continues to, the
@@ -557,7 +640,7 @@ export function fillRender<C extends Clues<C>>(
     // it shows on a cell the step also rings. On a dark piece the circle
     // takes the number's own ink: the evidence color against it is a
     // difference of hue with little of lightness.
-    const band = markBand(ts, x, y);
+    const band = markBand(ts, x, y, part?.walls ?? null);
     drawMarkSides(dr, band, (hintWord >> BLOCK_SHIFT) & MARK_ALL, COL_HINT_OUTLINE);
     if (hintWord & HINT_NUMBER) {
       const center = numberText(ts, tx, ty).origin;
@@ -581,23 +664,35 @@ export function fillRender<C extends Clues<C>>(
         dr,
         tx + Math.floor(ts / 2),
         ty + Math.floor(ts / 2),
-        Math.floor(ts / 2) - 3,
+        // Inside a wall, which a corner on the box's edge would paint over.
+        Math.floor(ts / 2) - 3 - (part === null ? 0 : wallHalf(ts)),
         COL_CURSOR,
         word & ARMED ? Math.max(3, ts >> 3) : Math.max(2, ts >> 4),
       );
 
     dr.unclip();
-    dr.drawUpdate(surface);
+    dr.drawUpdate(
+      part === null ? { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 } : tile,
+    );
   }
 
   /** Where a hint mark sits round cell `(x, y)`: inside its own box, over
    * the grid line it owns, so a cell whose marks change repaints itself and
-   * takes the old ones with it. */
-  const markBand = (ts: number, x: number, y: number): MarkBand => ({
-    box: { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts },
-    outer: 0,
-    inner: Math.max(2, ts >> 4),
-  });
+   * takes the old ones with it. On a walled cell, inside its walls: a band on
+   * the line between two cells would read as a wall. */
+  const markBand = (
+    ts: number,
+    x: number,
+    y: number,
+    walls: number | null,
+  ): MarkBand => {
+    const box = { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts };
+    return {
+      box: walls === null ? box : walledBoxes(ts, box.x, box.y, walls)[1],
+      outer: 0,
+      inner: Math.max(2, ts >> 4),
+    };
+  };
 
   /**
    * The ring round the link a step asks for, with the link inside it. Where
@@ -629,7 +724,8 @@ export function fillRender<C extends Clues<C>>(
       : across
         ? { x: mx - long / 2, y: my - short / 2, w: long, h: short }
         : { x: mx - short / 2, y: my - long / 2, w: short, h: long };
-    const band = markBand(ts, x, y);
+    // Its width alone, which walls do not change.
+    const band = markBand(ts, x, y, null);
     dr.drawRing(box, NOTHING_TO_CLEAR, Math.max(2, band.outer + band.inner), {
       room,
       inside: (ink) => {
@@ -646,7 +742,12 @@ export function fillRender<C extends Clues<C>>(
     const { w, h } = state;
     const errors = liveErrors(rules, shown);
     const word = new Int32Array(w * h);
-    for (const [a, b] of errors.pairs) {
+    // Two cells a rule breaks at together, but a part's: the two crosses
+    // that leave a region no room are no pair.
+    const pairs = [...errors.byRule].flatMap(([rule, list]) =>
+      partRules.includes(rule) ? [] : list.filter((at) => at.length === 2),
+    );
+    for (const [a, b] of pairs) {
       const [ax, ay, bx, by] = [a % w, Math.floor(a / w), b % w, Math.floor(b / w)];
       if (Math.abs(bx - ax) > 1 || Math.abs(by - ay) > 1) {
         word[a] |= ERR_AT;
@@ -666,10 +767,11 @@ export function fillRender<C extends Clues<C>>(
     // bar, two or more whole lines a bar across each, and any other cells
     // their pieces in error.
     const lineWord = new Int32Array(w * h);
-    for (const list of errors.byRule.values())
+    for (const [rule, list] of errors.byRule)
       for (const at of list) {
-        if (at.length === 2) continue;
-        const shape = lineShape(at, w, h);
+        const ofPart = partRules.includes(rule);
+        if (at.length === 2 && !ofPart) continue;
+        const shape = ofPart ? null : lineShape(at, w, h);
         if (shape === null) for (const c of at) word[c] |= ERR_AT;
         else if (shape.kind === "lines")
           for (const c of at) lineWord[c] |= shape.rows ? ACROSS_ROW : ACROSS_COLUMN;
@@ -684,7 +786,7 @@ export function fillRender<C extends Clues<C>>(
     // A broken number is drawn as a badge (`numberStates`), not on the piece.
     for (const [kind, broken] of errors.clues)
       for (const q of broken) {
-        const at = state.dealt[kind as keyof C].at[q];
+        const at = listOf(state.dealt, kind as keyof C).at[q];
         if (lineClues.includes(kind as keyof C)) lineErrors.add(at);
         else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
       }
@@ -698,9 +800,11 @@ export function fillRender<C extends Clues<C>>(
     const shown = ui.drag?.live ? previewed(state, ui) : state;
 
     if (ds.tiles.firstFrame()) {
+      // A walled board's frame is a wall: each cell paints its own top and
+      // left, so this is the bottom and right of the last row and column.
       dr.drawRect(
         { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
-        COL_GRID,
+        ds.parts === null ? COL_GRID : COL_WALL,
       );
       if (labelStart !== undefined) {
         const size = Math.floor((ts * 2) / 5);
@@ -782,7 +886,7 @@ export function fillRender<C extends Clues<C>>(
       }
     }
     const markStyle: HintMarkStyle = {
-      band: (x, y) => markBand(ts, x, y),
+      band: (x, y) => markBand(ts, x, y, ds.parts?.walls[y * w + x] ?? null),
       // A ring keeps its cell's number inside it and its neighbors' outside;
       // the line clues lie past any ring's reach.
       text: (x, y) => {
@@ -792,7 +896,11 @@ export function fillRender<C extends Clues<C>>(
         const text = numberText(ts, coord(x, ts), coord(y, ts));
         return {
           enclose: [
-            textBox(text.origin, text.options, String(state.dealt[n.kind].v[n.k])),
+            textBox(
+              text.origin,
+              text.options,
+              String(listOf(state.dealt, n.kind).v[n.k]),
+            ),
           ],
           avoid: [],
         };
@@ -824,6 +932,8 @@ export function fillRender<C extends Clues<C>>(
     const before = animTime > 0 && prev !== null ? prev.values : null;
     const frac = Math.min(1, animTime / PLACE_ANIM_TIME);
     const states = numberStates(shown);
+    const joins = joinsOf(shown);
+    const { parts } = ds;
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         const i = y * w + x;
@@ -831,14 +941,17 @@ export function fillRender<C extends Clues<C>>(
         if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
         k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
         const hk = hintWord[i] | outlines.packed(x, y);
-        const lk = lineWord[i] | (states.get(i) ?? 0);
+        const lk = lineWord[i] | (states.get(i) ?? 0) | (joins[i] << JOIN_SHIFT);
         const at = numberAt(state, i);
-        const n = at === null ? -1 : state.dealt[at.kind].v[at.k];
+        const n = at === null ? -1 : listOf(state.dealt, at.kind).v[at.k];
+        const part =
+          parts === null ? null : { walls: parts.walls[i], fill: parts.fills[i] };
         // A growing piece is no key's: its tile is drawn every frame.
         if (before !== null && before[i] !== shown.values[i]) {
           ds.tiles.forget(i);
-          drawTile(dr, ts, x, y, k, hk, lk, n, { from: before[i], frac });
-        } else if (ds.tiles.changed(i, k, hk, lk)) drawTile(dr, ts, x, y, k, hk, lk, n);
+          drawTile(dr, ts, x, y, k, hk, lk, n, part, { from: before[i], frac });
+        } else if (ds.tiles.changed(i, k, hk, lk))
+          drawTile(dr, ts, x, y, k, hk, lk, n, part);
       }
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
@@ -887,6 +1000,7 @@ export function fillRender<C extends Clues<C>>(
     colors,
     newDrawState: (b, tileSize) => ({
       tileSize,
+      parts: partsOf(b),
       tiles: new TileCache(b.w * b.h, { words: 3 }),
       clues: new TileCache(b.w + b.h),
       marks: new HintMarks(),

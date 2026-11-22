@@ -132,7 +132,7 @@ describe("neighbors stand apart in the dark scheme", () => {
   // a margin the scheme misplaced, would leave it exempting nothing.
   it("exempts a region fill at the margin where one is painted", () => {
     expect([...exemptedIn]).toEqual(
-      expect.arrayContaining(["map", "norinori", "starbattle"].filter(inSweep)),
+      expect.arrayContaining(["map", "starbattle"].filter(inSweep)),
     );
   });
 

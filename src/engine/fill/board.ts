@@ -12,6 +12,7 @@ import {
   type ClueList,
   describedSpace,
   type GridSpace,
+  type Partition,
   type Violation,
 } from "../solve/describe-runtime.ts";
 import {
@@ -23,6 +24,14 @@ import {
   TIERS,
 } from "../solve/ladder-runtime.ts";
 import type { FillPlay } from "./play.ts";
+
+/** A board's clues by kind, and its dealt partitions by name: a compiled
+ * module's `Dealt`. */
+export type Clues<C> = { readonly [K in keyof C]: ClueList | Partition };
+
+/** The clues of kind `kind`, which the caller knows is a clue kind and not a
+ * partition. */
+export const listOf = <C>(dealt: C, kind: keyof C): ClueList => dealt[kind] as ClueList;
 
 /** What a fill game's compiled module offers the engine, over its clues
  * `C`. */

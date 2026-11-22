@@ -72,11 +72,11 @@ built by `scripts/word-list.ts`) come from three lists:
 Where a technique here came from someone else's work, it is credited in the
 code that uses it and listed here.
 
-- **Norinori's domino placement**: the generator packs its dominoes by taking
-  one away and filling the grid again, which is how
+- **Norinori's domino placement**: the `dominoes` sample packs its dominoes
+  by taking one away and filling the grid again, which is how
   [sen-ltd/norinori](https://github.com/sen-ltd/norinori) (MIT) places
   them, and the measurement there that density decides how often a board
-  comes right. In `src/games/norinori/generator.ts`.
+  comes right. In `src/engine/fill/sample.ts`.
 
 ## This project
 

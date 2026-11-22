@@ -23,6 +23,7 @@ import { freeNames } from "./compile-terms.ts";
 import {
   type Description,
   type DescriptionJson,
+  growOf,
   type PlayJson,
   sampleOf,
   segmentKind,
@@ -172,6 +173,17 @@ export function playOf(
           },
         };
   const lineClues = [...d.clueKinds].filter(([, c]) => c.at === "line").map(([k]) => k);
+  // A rule over a dealt partition's parts breaks at the cells it counts, which
+  // may happen to lie in a row and still are no run.
+  const overParts = (src: string): boolean => {
+    const e = parse(src);
+    const of = e.k === "quant" ? e.binders[0]?.of : undefined;
+    return of?.k === "name" && env.regions.has(of.name);
+  };
+  const partRules = [
+    ...(json.shape ?? []).flatMap((s, i) => (overParts(s) ? [`shape.${i}`] : [])),
+    ...Object.entries(json.rules ?? {}).flatMap(([n, s]) => (overParts(s) ? [n] : [])),
+  ];
   return [
     ...boardDomainOf(d, env, measured),
     "",
@@ -180,6 +192,13 @@ export function playOf(
     "",
     "/** The clue kinds at lines, drawn past each line's end. */",
     `export const lineClues = ${JSON.stringify(lineClues)} as const;`,
+    ...(partRules.length === 0
+      ? []
+      : [
+          "",
+          "/** The rules over a dealt partition's parts, by name. */",
+          `export const partRules = ${JSON.stringify(partRules)} as const;`,
+        ]),
     ...labelsOf(labels, env),
     ...(boards === undefined
       ? []
@@ -331,14 +350,20 @@ export function dealOf(
 ): string[] {
   if (json.play === undefined) return [];
   const kinds = [...d.clueKinds.keys()];
+  const partitions = [...env.regions];
   const id =
     json.id ?? kinds.map((k, i) => ({ numbers: k, ...(i > 0 ? { before: "," } : {}) }));
   const named = id.map(segmentKind);
-  for (const kind of kinds)
+  for (const kind of [...kinds, ...partitions])
     if (named.filter((k) => k === kind).length !== 1)
-      throw new CompileError(`id: clue kind ${kind} is not named once`);
+      throw new CompileError(`id: clue kind or partition ${kind} is not named once`);
   for (const [i, seg] of id.entries()) {
     const kind = segmentKind(seg);
+    if ("walls" in seg) {
+      if (!env.regions.has(kind))
+        throw new CompileError(`id: walls of ${kind}, which is no dealt partition`);
+      continue;
+    }
     const c = d.clueKinds.get(kind);
     if (c === undefined) throw new CompileError(`id: no clue kind ${kind}`);
     // The values a kind's `range(lo, hi)` states, where both are numbers.
@@ -406,12 +431,41 @@ export function dealOf(
       return [k, u];
     }),
   );
+  const sample = sampleOf(json);
+  const grow = growOf(json);
+  if (grow !== null) {
+    if (!env.regions.has(grow.partition))
+      throw new CompileError(`deal grow: ${grow.partition} is no dealt partition`);
+    if (sample === null || "build" in sample)
+      throw new CompileError("deal grow: a partition is grown round a sampled value");
+    if (grow.closed.oneIn.length !== tiers.length)
+      throw new CompileError("deal grow: closed oneIn is not one number a tier");
+  }
+  for (const r of env.regions)
+    if (grow?.partition !== r)
+      throw new CompileError(
+        `${r}: a fill game's dealt partition is one the deal grows`,
+      );
   const deal = {
-    sample: sampleOf(json),
+    sample,
     ...(typeof hide === "string" ? { hide } : {}),
     ...(thorough === null ? {} : { thorough }),
+    ...(grow === null
+      ? {}
+      : {
+          grow: {
+            ...grow,
+            value:
+              sample === null || "build" in sample
+                ? 0
+                : "dominoes" in sample
+                  ? sample.dominoes.value
+                  : sample.scatter.value,
+          },
+        }),
     id,
     universes,
+    ...(partitions.length === 0 ? {} : { partitions }),
     tierLetters,
     sizes: json.sizes,
   };
@@ -600,9 +654,13 @@ export function derivedClues(
   measured: (e: Expr) => Expr,
 ): string[] {
   if (sampleOf(json) === null) return [];
-  if (env.regions.size + env.relations.size + env.sizes.read.size > 0)
+  const grown = growOf(json)?.partition;
+  if (
+    [...env.regions].some((r) => r !== grown) ||
+    env.relations.size + env.sizes.read.size > 0
+  )
     throw new CompileError(
-      `${json.game}: a sampled deal derives clues alone, and this board deals more`,
+      `${json.game}: a sampled deal derives clues and grows a partition, and this board deals more`,
     );
   const holds: string[] = [];
   const derive = new Out(1);
@@ -674,15 +732,24 @@ export function derivedClues(
     );
     dealt.push(`${kind}: clueList(${at}, ${vs}, sp.${universe}.length)`);
   }
-  env.used.add("clueList");
+  if (dealt.length > 0) env.used.add("clueList");
+  if (grown !== undefined) dealt.unshift(`${grown}: grown[${JSON.stringify(grown)}]`);
+  const body = [...derive.text(), `  return { ${dealt.join(", ")} };`];
   return [
     ...holds,
     "",
     "/** The clues the whole board `g` deals: each kind at each element where",
-    " * one of its values holds, the first in its values' order. */",
-    "export function deriveClues(g: ArrayLike<number>, sp: GridSpace): Dealt {",
-    ...derive.text(),
-    `  return { ${dealt.join(", ")} };`,
+    " * one of its values holds, the first in its values' order; and the",
+    " * partition the deal grew round it. */",
+    `export function deriveClues(${[
+      param("g", "ArrayLike<number>", body),
+      param("sp", "GridSpace", body),
+      // A board with no partition imports no `Partition`, and is grown none.
+      grown === undefined
+        ? "_grown: object = {}"
+        : param("grown", "Readonly<Record<string, Partition>>", body),
+    ].join(", ")}): Dealt {`,
+    ...body,
     "}",
   ];
 }

@@ -1204,9 +1204,9 @@ states what it wants:
   densely, so that the regions come small, since a region's room for a
   second answer grows with its size; check the density the draw reaches, as
   a greedy placement stops short of a target set above it. Exemplar:
-  `placeDominoes` and `regionsRound` in
-  [`norinori/generator.ts`](../src/games/norinori/generator.ts), which
-  together took a 10x10 deal from over a minute to under a second
+  `sampleDominoes` in [`fill/sample.ts`](../src/engine/fill/sample.ts) and
+  `growPartition` in [`fill/grow.ts`](../src/engine/fill/grow.ts), whose
+  hand-written forerunners together took a 10x10 deal from over a minute to under a second
   (2026-11-16).
 - **Moving a division onto a walk here keeps its boards only if the draws
   and their order are kept**, and a move that changes them is a divergence

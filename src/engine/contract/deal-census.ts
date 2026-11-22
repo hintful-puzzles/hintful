@@ -71,11 +71,11 @@ export function countTry(label: string): void {
 
 /**
  * A draw was thrown away at `stage`, which names it for a person reading the
- * census: `"norinori: a region under three squares"`. Returns `null`, so a
- * draw that comes to nothing says why in its return:
+ * census: `"fill: a part under 3 cells"`. Returns `null`, so a draw that
+ * comes to nothing says why in its return:
  *
  * ```ts
- * if (tooSmall) return drawRejected("norinori: a region under three squares");
+ * if (tooSmall) return drawRejected("fill: a part under 3 cells");
  * ```
  */
 export function drawRejected(stage: string): null {

@@ -211,30 +211,36 @@ export interface CatalogJson {
  * the space's order, or the columns first. */
 export type IdSegmentJson =
   | { runs: string }
+  | { walls: string }
   | { dots: string; cases: [number, number] }
   | { digits: string }
   | { numbers: string; before?: string; order?: "columns" };
 
-/** The clue kind an ID segment writes. */
+/** The clue kind or dealt partition an ID segment writes. */
 export const segmentKind = (seg: IdSegmentJson): string =>
   "runs" in seg
     ? seg.runs
-    : "dots" in seg
-      ? seg.dots
-      : "digits" in seg
-        ? seg.digits
-        : seg.numbers;
+    : "walls" in seg
+      ? seg.walls
+      : "dots" in seg
+        ? seg.dots
+        : "digits" in seg
+          ? seg.digits
+          : seg.numbers;
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
- * ({@link sampleOf}), and the setting that makes its hiding thorough
- * ({@link thoroughOf}). */
-type DealJson = Record<string, string | SampleJson | ThoroughJson>;
+ * ({@link sampleOf}), the setting that makes its hiding thorough
+ * ({@link thoroughOf}), and the partition it grows round the answer
+ * ({@link growOf}). */
+type DealJson = Record<string, string | SampleJson | ThoroughJson | GrowJson>;
 
 /** How a description's deal samples an answer, or `null` where it does not. */
 export function sampleOf(json: DescriptionJson): SampleJson | null {
   const sample = json.deal?.["sample"];
-  return typeof sample === "object" && !("letter" in sample) ? sample : null;
+  return typeof sample === "object" && !("letter" in sample) && !("partition" in sample)
+    ? sample
+    : null;
 }
 
 /** The deal's setting for hiding every clue it can (`deal.thorough`), or
@@ -242,6 +248,26 @@ export function sampleOf(json: DescriptionJson): SampleJson | null {
 export function thoroughOf(json: DescriptionJson): ThoroughJson | null {
   const t = json.deal?.["thorough"];
   return typeof t === "object" && "letter" in t ? t : null;
+}
+
+/** The partition the deal grows round its answer (`deal.grow`), or `null`
+ * where it grows none. */
+export function growOf(json: DescriptionJson): GrowJson | null {
+  const g = json.deal?.["grow"];
+  return typeof g === "object" && "partition" in g ? g : null;
+}
+
+/** A dealt partition grown round the answer: a part round each cell of the
+ * sample's value, joined until each holds `holds` of them, none but a closed
+ * piece smaller than `smallest`; one of the answer's pieces of `holds` cells
+ * in `closed.oneIn[tier]` closed as a part of its own, at most one part in
+ * `closed.atMostOneIn`; and the parts mended until the ladder finishes the
+ * board at the tier. */
+export interface GrowJson {
+  partition: string;
+  holds: number;
+  smallest: number;
+  closed: { oneIn: number[]; atMostOneIn: number };
 }
 
 /** A deal setting the player may turn off, by its params letter (`h1`,
@@ -256,13 +282,15 @@ export interface ThoroughJson {
   offFrom: number;
 }
 
-/** How a deal samples an answer: built by the ladder (`build`), or
- * `scatter`'s value on a share of the cells, optionally none within `apart`
+/** How a deal samples an answer: built by the ladder (`build`); `dominoes`
+ * of a value, packed, none touching another along a side; or `scatter`'s
+ * value on a share of the cells, optionally none within `apart`
  * of another; `partner`'s value beside each, along `along`, the two matched;
  * and `rest` on every other cell. With `noBareLine`, an answer with a row or
  * column all `rest` is drawn again. */
 export type SampleJson =
   | { build: true }
+  | { dominoes: { value: number }; rest: number }
   | {
       scatter: { value: number; share: number; apart?: "adj4" | "adj8"; each?: true };
       partner?: { value: number; along: "adj4" | "adj8" };

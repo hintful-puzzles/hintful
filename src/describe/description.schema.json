@@ -946,6 +946,13 @@
               },
               {
                 "type": "object",
+                "required": ["walls"],
+                "additionalProperties": false,
+                "description": "A dealt partition as the walls between its parts (`engine/game-id/wall-runs.ts`): every border between two cells side by side, those inside the rows first, a number a run of walls and a letter a run of gaps then a wall.",
+                "properties": { "walls": { "type": "string" } }
+              },
+              {
+                "type": "object",
                 "required": ["dots", "cases"],
                 "additionalProperties": false,
                 "description": "A clue kind of two values at cells as upstream's dot runs (`engine/game-id/dot-runs.ts`): a letter a clue, its offset the run of cells before it and its case its value, `cases` the values written lowercase and uppercase. It ends the desc.",
@@ -992,6 +999,29 @@
               "type": "string",
               "description": "A clue kind the deal hides from the answer's, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier."
             },
+            "grow": {
+              "type": "object",
+              "description": "A dealt partition grown round the sampled answer: a part round each cell of the sample's value, joined until each holds `holds` of them; one of the answer's pieces of `holds` cells in `closed.oneIn[tier]` dealt as a part of its own, at most one part in `closed.atMostOneIn`; no other part under `smallest` cells; then the parts mended until the ladder finishes the board at the tier and not at the tier below.",
+              "required": ["partition", "holds", "smallest", "closed"],
+              "additionalProperties": false,
+              "properties": {
+                "partition": { "type": "string" },
+                "holds": { "type": "integer", "minimum": 1 },
+                "smallest": { "type": "integer", "minimum": 1 },
+                "closed": {
+                  "type": "object",
+                  "required": ["oneIn", "atMostOneIn"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "oneIn": {
+                      "type": "array",
+                      "items": { "type": "integer", "minimum": 1 }
+                    },
+                    "atMostOneIn": { "type": "integer", "minimum": 1 }
+                  }
+                }
+              }
+            },
             "thorough": {
               "type": "object",
               "description": "A setting the player may turn off, written in the params as its letter and 1 or 0: on, the hide tries every clue; off, as many as the board's shorter side, which deals a large board sooner. It is on by default on a board narrower than `offFrom` squares.",
@@ -1013,6 +1043,21 @@
                   "required": ["build"],
                   "additionalProperties": false,
                   "properties": { "build": { "const": true } }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer as dominoes of `value`, two cells side by side, none touching another along a side, packed densely by a refill; `rest` on every other cell.",
+                  "required": ["dominoes", "rest"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "dominoes": {
+                      "type": "object",
+                      "required": ["value"],
+                      "additionalProperties": false,
+                      "properties": { "value": { "type": "integer", "minimum": 1 } }
+                    },
+                    "rest": { "type": "integer", "minimum": 1 }
+                  }
                 },
                 {
                   "type": "object",

@@ -53,7 +53,7 @@ itself is § "The file". A game whose techniques are stated:
    reads now (§ "Checking a technique sound").
 4. **Builds its ladder on the board's clues** with
    `describedLadder(module, dealt)`, or `latinLadder` where it places the
-   Latin library ([`norinori/solver.ts`](../src/games/norinori/solver.ts)).
+   Latin library ([`keen/solver.ts`](../src/games/keen/solver.ts)).
    The engine runs every technique on `dealt` where the module's
    `techniques` says it reads it, on placing and on striking too; a module
    none of whose techniques reads the clues takes `null`. The game names a
@@ -202,7 +202,7 @@ research tools all read through it; the app never does.
   gives every cell the board's domain. A step's line is its `stripes`,
   which hatch the line's clue in the margin too.
 - **A fill game born from its description declares the rest of a game**
-  (Kakurasu, Mosaic, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
+  (Kakurasu, Mosaic, Norinori, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
   (the first the default unless `default:` names another, `boardTiers:` a
   board that stops short of a tier, `variants:` the boards after the grid),
   `play.hintMarks` its legend, `id:` its game ID's grammar and
@@ -212,13 +212,23 @@ research tools all read through it; the app never does.
   size, and `sizes.step` holds a side to a multiple. `play.dealt` names a
   clue kind meaning `value(at) = v` that the cell is dealt holding (Unruly's
   givens, which `id:` writes as `dots`). `play.click: cycle` goes round
-  empty and both buttons' values, two pieces alike, so the right button
-  rules nothing out. `deal.sample` draws the answer: `build`, a random
+  empty and both buttons' values. The right button rules out unless its
+  value's painter is one of a pair of alike pieces (Unruly's disc), which
+  is a placement and not a ruling out. `deal.sample` draws the answer: `build`, a random
   value on a random cell and then what the whole ladder decides, until the
-  board is full; or `scatter`, `partner`, `rest`, and `noBareLine` where no
+  board is full; `dominoes`, a fill of its value's dominoes touching only
+  at corners, the rest `rest`; or `scatter`, `partner`, `rest`, and `noBareLine` where no
   line may hold the rest value alone, with `scatter.each` where each cell
   takes the value at the share's odds and the count varies (a small board
-  then draws from every picture). `deal.hide` then takes a kind's clues off
+  then draws from every picture). A region the space deals (`regions:
+  { r: dealt }`) is a partition: `id:`'s `walls` writes it as upstream's
+  wall runs, the board draws it as walls and fills, a rule over its parts
+  breaks on the squares it counts, never as a run, and `deal.grow` grows it
+  round the answer (`engine/fill/grow.ts`): parts of `holds` cells of the
+  answer's value, some closed whole by `closed.oneIn` a tier, merged and
+  mended until the ladder alone finishes the board at its tier. The
+  `domino` painter draws two alike pieces touching only each other as one.
+  `deal.hide` then takes a kind's clues off
   a tier at a time from the lowest: first every clue no firing's bindings
   read, then each other in a random order while the board still finishes at
   that tier. `deal.thorough` is the setting that tries every clue at each

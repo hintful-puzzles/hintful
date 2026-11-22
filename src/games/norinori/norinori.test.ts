@@ -1,208 +1,121 @@
 /**
- * Norinori's own behavior: the codecs, a move, the path from a solve to a
- * finished board, the mistake check, a save, and the frame.
- *
- * The board below is small enough to solve by eye. B and C are two squares
- * each, so both are shaded; A's two are the pair left on its top row that
- * touches neither:
- *
- *     A A A A      . . # #
- *     A B A A      . # . .
- *     A B A C  ->  . # . #
- *     A A A C      . . . #
+ * Norinori, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is a position for every
+ * kind of step its hint takes, the regions read from their walls, a domino
+ * drawn as one piece, a region's breach drawn on its squares, and a wrong
+ * square outlined.
  */
+
 import { describe, expect, it } from "vitest";
-import { Dsf } from "../../engine/board/dsf.ts";
 import { COL_ERROR } from "../../engine/color/roles.ts";
-import { paramsError } from "../../engine/game-id/params.ts";
-import { Midend } from "../../engine/midend/midend.ts";
-import { ringsOf } from "../../engine/testing/mark-shape.ts";
-import { paintsWith } from "../../engine/testing/recording-drawing.ts";
+import type { Partition } from "../../engine/solve/describe-runtime.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { norinoriGame } from "./index.ts";
-import { COL_SHADED, COL_WRONG } from "./render.ts";
-import {
-  BLANK,
-  CROSSED,
-  DIFF_EASY,
-  decodeParams,
-  encodeDesc,
-  encodeParams,
-  executeMove,
-  type NorinoriMove,
-  newState,
-  SHADED,
-  validateParams,
-} from "./state.ts";
+import { game } from "../../generated/games/norinori/norinori.game.ts";
 
-const P = { w: 4, h: 4, diff: DIFF_EASY };
-const DESC = "c1a2baeab";
-const ID = `${encodeParams(P, true)}:${DESC}`;
-/** The answer's shaded squares, as indices. */
-const ANSWER = [2, 3, 5, 9, 11, 15];
+const SHADED = 1;
+const CLEAR = 2;
 
-const mark = (index: number, to: 0 | 1 | 2): NorinoriMove => ({
-  kind: "mark",
-  cells: [{ index, mark: to }],
+/** A position for every kind of step. */
+describeHintPins({
+  game,
+  params: [
+    { w: 6, h: 6, diff: 1 },
+    { w: 6, h: 6, diff: 2 },
+  ],
+  seeds: 48,
+  pins: {
+    domino: "6x6dn:1c2aabeb2b2b2aa1c3daf",
+    partner: "6x6dn:eaacb1bbabb1b5a5aah",
+    between: "6x6dn:ebab1babaa1c2fa3ac1a1c",
+    alone: "6x6dn:eaacb1bbabb1b5a5aah",
+    claimed: "6x6dn:1abb2a2adeacaa1d3c3b2a",
+    fullRegion: "6x6dt:bca4b2a2fa2abaa1db2bb1",
+    exactRegion: "6x6dn:1c2aabeb2b2b2aa1c3daf",
+    neededRegion: "6x6dn:a1c4b1a1aaa1ib1b3adb1b1",
+    blocked: "6x6dn:2cada2aa1a2fcb1b1ac1aaba",
+    crowded: "6x6dt:f2aa3a4a2ada1aaadb1e1a",
+  },
 });
 
-describe("norinori params", () => {
-  it("round-trip through their string, tier included only in full", () => {
-    const p = { w: 6, h: 4, diff: DIFF_EASY + 2 };
-    expect(decodeParams(encodeParams(p, true))).toEqual(p);
-    // The brief form leaves the tier at the default's.
-    expect(decodeParams(encodeParams(p, false))).toEqual({ ...p, diff: DIFF_EASY });
-  });
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
+};
 
-  it("refuse a board too small or too large", () => {
-    expect(validateParams({ w: 3, h: 5, diff: DIFF_EASY }, true)).toMatch(/\.$/);
-    expect(
-      paramsError(norinoriGame, { w: 101, h: 100, diff: DIFF_EASY }, true),
-    ).toMatch(/\.$/);
-    expect(validateParams(P, true)).toBeNull();
-  });
-});
-
-describe("norinori desc", () => {
-  it("reads the regions from their walls", () => {
-    const s = newState(P, DESC);
-    expect(Array.from(s.regions)).toEqual([
-      0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0, 0, 0, 2,
-    ]);
-    expect(Array.from(s.grid)).toEqual(new Array(16).fill(BLANK));
-  });
-
-  it.each([
-    ["too short", "c1a2baea"],
-    ["too long", "c1a2baeabb"],
-    ["a stray character", "c1a2b!eab"],
-  ])("refuses a desc that is %s", (_why, desc) => {
-    expect(() => newState(P, desc)).toThrow();
+describe("norinori", () => {
+  it("reads its regions from their walls, numbered in reading order", () => {
+    // Two regions of a 4x4, the left two columns and the right two: a wall
+    // after one gap, then after two, three times, and thirteen gaps to the
+    // end.
+    const board = loaded("4x4:abbbm");
+    const { of } = board.dealt.region as Partition;
+    expect(Array.from(of)).toEqual([0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]);
   });
 
   it("refuses a region of one square, which cannot hold two shaded", () => {
-    // No square joined to another: sixteen regions of one square each.
-    expect(() => newState(P, encodeDesc(new Dsf(16), 4, 4))).toThrow();
-  });
-});
-
-describe("norinori moves", () => {
-  const start = newState(P, DESC);
-  const ui = norinoriGame.newUi(start);
-  const { primary, secondary } = norinoriGame.targetVerbs ?? {};
-
-  it("the left button shades, then crosses out, then clears", () => {
-    let s = start;
-    for (const want of [SHADED, CROSSED, BLANK]) {
-      s = executeMove(s, primary?.apply(s, { x: 1, y: 0 }, ui) as NorinoriMove);
-      expect(s.grid[1]).toBe(want);
-    }
+    // The top left square walled off alone.
+    expect(() => loaded("4x4:1kk")).toThrow();
   });
 
-  it("the right button crosses out first", () => {
-    const move = secondary?.apply(start, { x: 1, y: 0 }, ui) as NorinoriMove;
-    expect(executeMove(start, move).grid[1]).toBe(CROSSED);
+  it("draws two shaded squares side by side as one domino", () => {
+    // Each half of a domino reaches the side it shares with the other, where
+    // the other's begins; two squares apart each keep inside their own.
+    const id = "6x6dn:1c2aabeb2b2b2aa1c3daf";
+    const meet = (moves: { set: number[] }[]) => {
+      const xs = renderScenario({ game, id, moves }).recording.ops.flatMap((o) =>
+        o.op === "polygon" ? [o.points.map(([x]) => x)] : [],
+      );
+      return xs.some((a) => xs.some((b) => Math.max(...a) === Math.min(...b)));
+    };
+    expect(meet([{ set: [0, SHADED, 1, SHADED] }])).toBe(true);
+    expect(meet([{ set: [0, SHADED, 2, SHADED] }])).toBe(false);
   });
 
-  it("executeMove leaves the state it was given alone", () => {
-    const next = executeMove(start, mark(1, SHADED));
-    expect(start.grid[1]).toBe(BLANK);
-    expect(next.grid[1]).toBe(SHADED);
-    expect(next.regions).toBe(start.regions);
-  });
-});
-
-describe("norinori completion", () => {
-  const start = newState(P, DESC);
-
-  it("the solve move finishes the board", () => {
-    const solved = norinoriGame.solve(start, start);
-    if (!solved?.ok) throw new Error("expected a solution");
-    const end = executeMove(start, solved.move);
-    expect(norinoriGame.status(end)).toBe("solved");
-    expect(ANSWER.every((i) => end.grid[i] === SHADED)).toBe(true);
-  });
-
-  it("is reached by shading alone, with nothing crossed out", () => {
-    let s = start;
-    for (const i of ANSWER) {
-      expect(norinoriGame.status(s)).toBe("ongoing");
-      s = executeMove(s, mark(i, SHADED));
-    }
-    expect(norinoriGame.status(s)).toBe("solved");
-  });
-
-  it("is not reached by two dominoes that touch along a side", () => {
-    // A's two in its top left corner: every region holds two, but the one
-    // above B touches B's domino.
-    let s = start;
-    for (const i of [0, 1, 5, 9, 11, 15]) s = executeMove(s, mark(i, SHADED));
-    expect(norinoriGame.status(s)).toBe("ongoing");
-  });
-
-  it("a wrong mark is a mistake, and a right one is not", () => {
-    const right = executeMove(start, mark(2, SHADED));
-    expect(norinoriGame.findMistakes?.(right)).toEqual([]);
-    const wrong = executeMove(right, mark(0, SHADED));
-    expect(norinoriGame.findMistakes?.(wrong)).toEqual([{ x: 0, y: 0, kind: "cell" }]);
-  });
-});
-
-describe("norinori save", () => {
-  it("a saved game loads with its marks", () => {
-    const { midend } = renderScenario({
-      game: norinoriGame,
-      id: ID,
-      moves: [mark(2, SHADED), mark(0, CROSSED)],
-    });
-    const loaded = new Midend(norinoriGame);
-    expect(loaded.loadGame(midend.saveGame())).toBeNull();
-    expect(loaded.formatAsText()).toBe(
-      "Ax A. A# A.\nA. B. A. A.\nA. B. A. C.\nA. A. A. C.\n",
+  it("reddens every shaded square of a region with three, and draws no bar", () => {
+    // Three along the bottom row's region: a breach of the region that lies
+    // in a line and is no run.
+    const { ops } = renderScenario({
+      game,
+      id: "6x6dn:1c2aabeb2b2b2aa1c3daf",
+      moves: [{ set: [30, SHADED, 31, SHADED, 32, SHADED] }],
+    }).recording;
+    expect(ops.filter((o) => o.op === "polygon" && o.fill === COL_ERROR)).toHaveLength(
+      3,
     );
-  });
-});
-
-describe("norinori frame", () => {
-  it("draws the board", () => {
-    const { recording } = renderScenario({
-      game: norinoriGame,
-      id: ID,
-      moves: [mark(2, SHADED), mark(0, CROSSED)],
-    });
-    expect(recording.ops).toMatchSnapshot();
+    expect(ops.filter((o) => o.op === "rect" && o.color === COL_ERROR)).toHaveLength(0);
   });
 
-  it("shows a piece on a shaded square and none on a blank board", () => {
-    const shows = (moves: NorinoriMove[]): boolean =>
-      renderScenario({ game: norinoriGame, id: ID, moves }).recording.ops.some((op) =>
-        paintsWith(op, COL_SHADED),
-      );
-    expect(shows([])).toBe(false);
-    expect(shows([mark(2, SHADED)])).toBe(true);
+  it("reddens both crosses that leave a region no room, and draws no diamond", () => {
+    // The second row's third and fourth squares are a region of their own.
+    const { ops } = renderScenario({
+      game,
+      id: "6x6dn:1c2aabeb2b2b2aa1c3daf",
+      moves: [{ set: [8, CLEAR, 9, CLEAR] }],
+    }).recording;
+    expect(ops.some((o) => o.op === "polygon" && o.fill === COL_ERROR)).toBe(false);
+    expect(ops.filter((o) => o.op === "line" && o.color === COL_ERROR).length).toBe(4);
   });
 
-  it("reddens a shaded square beside two others, and no other", () => {
-    const reds = (moves: NorinoriMove[]): boolean =>
-      renderScenario({ game: norinoriGame, id: ID, moves }).recording.ops.some((op) =>
-        paintsWith(op, COL_ERROR),
-      );
-    expect(reds([mark(1, SHADED), mark(2, SHADED)])).toBe(false);
-    expect(reds([mark(1, SHADED), mark(2, SHADED), mark(3, SHADED)])).toBe(true);
-  });
-
-  it("washes a mistake and rings a hint's squares", () => {
-    const wrong = renderScenario({
-      game: norinoriGame,
-      id: ID,
-      moves: [mark(0, SHADED)],
-      showMistakes: true,
-    });
-    expect(wrong.mistakeCount).toBe(1);
-    expect(wrong.recording.ops.some((op) => paintsWith(op, COL_WRONG))).toBe(true);
-
-    const hinted = renderScenario({ game: norinoriGame, id: ID, showHint: true });
-    expect(hinted.hint).toBeDefined();
-    expect(ringsOf(hinted.recording.ops).length).toBeGreaterThan(0);
+  it("outlines a square Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = "6x6dn:1c2aabeb2b2b2aa1c3daf";
+    const fresh = loaded(id);
+    const solved = game.solve(fresh, fresh);
+    if (!solved.ok) throw new Error("no answer");
+    const answer = game.executeMove(fresh, solved.move).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < answer.length; c++) {
+      const moves = [{ set: [c, answer[c] === SHADED ? CLEAR : SHADED] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
+    }
+    throw new Error("no wrong square that breaks no rule");
   });
 });

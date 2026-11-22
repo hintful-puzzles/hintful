@@ -26,6 +26,9 @@ export interface Painter {
   readonly grows?: boolean;
   /** Whether the piece is dark, so a number written over it is light. */
   readonly dark?: boolean;
+  /** Whether two of the piece side by side, each beside no other, are drawn
+   * as one: {@link paint} is told the side its other half is on. */
+  readonly joins?: boolean;
   /**
    * Draw the piece in `tile`, the cell's whole box, the color at index `i`
    * of {@link colors} in slot `slot[i]`. `error` where a rule breaks at the
@@ -33,6 +36,8 @@ export interface Painter {
    * how far a piece just placed has grown from the middle of its cell; a
    * piece that does not grow is drawn whole. `occupied` where a number
    * takes the middle of the cell, which a mark that is no piece leaves to it.
+   * `joined`, for a piece that {@link joins}, is the side its other half is
+   * on (`JOIN_*`, `piece.ts`), or 0.
    */
   paint(
     dr: GameDrawing,
@@ -41,6 +46,7 @@ export interface Painter {
     error: boolean,
     grown?: number,
     occupied?: boolean,
+    joined?: number,
   ): void;
 }
 

@@ -8,8 +8,8 @@
  */
 
 import { SEARCH_TIER } from "../contract/difficulty.ts";
-import { type Answer, answerCache, searchAnswers } from "../solve/answer-search.ts";
-import type { ClueList, GridSpace } from "../solve/describe-runtime.ts";
+import { type Answer, answerCache, solvedPositions } from "../solve/answer-search.ts";
+import type { ClueList, GridSpace, Partition } from "../solve/describe-runtime.ts";
 import {
   asDealt,
   type FillBoard,
@@ -17,10 +17,12 @@ import {
   solveBoard,
   spaceOf,
 } from "./board.ts";
+import type { FillDeal } from "./game-id.ts";
 
-/** A fill module as the search reads it: its ladder, and where clues are
- * numbers on their cells, the cells each reads. */
-export type SearchedFillModule<C> = LadderedFillModule<C> & NumberedModule;
+/** A fill module as the search reads it: its ladder, where clues are
+ * numbers on their cells the cells each reads, and its deal's partitions. */
+export type SearchedFillModule<C> = LadderedFillModule<C> &
+  NumberedModule & { readonly deal?: FillDeal };
 
 /** The clue kinds written as numbers on their cells, and the cells each
  * number's meaning reads (`clueCells_<kind>`): its block. */
@@ -45,71 +47,108 @@ export const searches = (module: { readonly tiers: readonly string[] }): boolean
  */
 const SEARCH_BUDGET = 2_000;
 
-/** Every cell of `board` as numbers, the numbers' kinds and their lists. */
-function numbersOf<C>(
-  module: NumberedModule,
+/** The groups of cells a search assumes in: each number's cells, its block,
+ * and each part of a dealt partition. */
+function groupsOf<C>(
+  module: SearchedFillModule<C>,
   board: FillBoard<C>,
-): { cells: (sp: GridSpace, at: number) => readonly number[]; list: ClueList }[] {
+  sp: GridSpace,
+): (readonly number[])[] {
+  const out: (readonly number[])[] = [];
   const { clueCells } = module;
-  if (clueCells === undefined) return [];
-  return (module.numbers ?? []).map((kind) => ({
-    cells: clueCells[kind],
-    list: board.dealt[kind as keyof C] as ClueList,
-  }));
+  if (clueCells !== undefined)
+    for (const kind of module.numbers ?? [])
+      for (const c of (board.dealt[kind as keyof C] as ClueList).at)
+        out.push(clueCells[kind](sp, c));
+  for (const kind of module.deal?.partitions ?? [])
+    out.push(...(board.dealt[kind as keyof C] as Partition).cells);
+  return out;
+}
+
+/** Where a search starts, how far the ladder runs, and in what order it
+ * tries a cell's values. */
+interface SearchFrom {
+  /** The values to start from; the board as dealt where absent. */
+  readonly start?: Uint8Array;
+  /** The ladder's cap; the whole ladder below a search tier where absent. */
+  readonly cap?: number;
+  readonly budget?: number;
+  /** The value cell `c` is assumed to hold last, so another answer is met
+   * before one that has it; the domain's order where absent. */
+  readonly last?: (c: number) => number;
 }
 
 /**
- * The board's answers up to two, by trial and error over the whole ladder:
- * where it stops, an open cell is assumed each value its domain allows, in
- * order. The cell is the first open one among the cells of the number with
- * the fewest open, where either way is likeliest to settle the rest of
- * them; with no such number, the first open cell.
+ * The positions a search by trial and error over the ladder solves, up to
+ * `limit`, or `null` where the budget ran out first. Where the ladder stops,
+ * an open cell is assumed each value its domain allows. The cell is the
+ * first open one of the group with the fewest open, where either way is
+ * likeliest to settle the rest of it; with no group, the first open cell.
  */
+export function searchedPositions<C>(
+  module: SearchedFillModule<C>,
+  board: FillBoard<C>,
+  from: SearchFrom,
+  limit: number,
+): Uint8Array[] | null {
+  const cap = from.cap ?? module.tiers.length - 2;
+  const dealt = asDealt(board);
+  const sp = spaceOf(module, board);
+  const groups = groupsOf(module, board, sp);
+  return solvedPositions(
+    {
+      start: (from.start ?? dealt.values).slice(),
+      deduce(values) {
+        const got = solveBoard(module, { ...dealt, values }, cap);
+        values.set(got.values);
+        return got.verdict === "solved"
+          ? "solved"
+          : got.verdict === "impossible"
+            ? "contradiction"
+            : "stuck";
+      },
+      assume(values) {
+        let at = values.indexOf(0);
+        let fewest = Number.POSITIVE_INFINITY;
+        for (const group of groups) {
+          let open = 0;
+          for (const d of group) if (values[d] === 0) open++;
+          if (open === 0 || open >= fewest) continue;
+          fewest = open;
+          at = group.find((d) => values[d] === 0) as number;
+        }
+        if (at < 0) return [];
+        const vs: number[] = [];
+        for (let m = module.domainOf(sp, board.dealt, at); m !== 0; m &= m - 1)
+          vs.push(31 - Math.clz32(m & -m));
+        const last = from.last?.(at);
+        if (last !== undefined && vs.includes(last))
+          vs.sort((a, b) => (a === last ? 1 : b === last ? -1 : 0));
+        return vs.map((v) => {
+          const next = values.slice();
+          next[at] = v;
+          return next;
+        });
+      },
+      solution: (values) => values,
+      budget: from.budget ?? SEARCH_BUDGET,
+    },
+    limit,
+  );
+}
+
+/** The board's answers up to two, by {@link searchedPositions} from the
+ * board as dealt over the whole ladder. */
 export function searchBoard<C>(
   module: SearchedFillModule<C>,
   board: FillBoard<C>,
   budget: number = SEARCH_BUDGET,
 ): Answer<Uint8Array> {
-  // The tier below the search's is the whole ladder.
-  const cap = module.tiers.length - 2;
-  const dealt = asDealt(board);
-  const sp = spaceOf(module, board);
-  const numbers = numbersOf(module, board);
-  return searchAnswers({
-    start: dealt.values,
-    deduce(values) {
-      const got = solveBoard(module, { ...dealt, values }, cap);
-      values.set(got.values);
-      return got.verdict === "solved"
-        ? "solved"
-        : got.verdict === "impossible"
-          ? "contradiction"
-          : "stuck";
-    },
-    assume(values) {
-      let at = values.indexOf(0);
-      let fewest = Number.POSITIVE_INFINITY;
-      for (const { cells, list } of numbers)
-        for (const c of list.at) {
-          const block = cells(sp, c);
-          let open = 0;
-          for (const d of block) if (values[d] === 0) open++;
-          if (open === 0 || open >= fewest) continue;
-          fewest = open;
-          at = block.find((d) => values[d] === 0) as number;
-        }
-      if (at < 0) return [];
-      const out: Uint8Array[] = [];
-      for (let m = module.domainOf(sp, board.dealt, at); m !== 0; m &= m - 1) {
-        const next = values.slice();
-        next[at] = 31 - Math.clz32(m & -m);
-        out.push(next);
-      }
-      return out;
-    },
-    solution: (values) => values,
-    budget,
-  });
+  const found = searchedPositions(module, board, { budget }, 2);
+  if (found === null) return { kind: "out-of-reach" };
+  if (found.length === 0) return { kind: "none" };
+  if (found.length > 1) return { kind: "several" };
+  return { kind: "one", solution: found[0] };
 }
 
 /** Keyed on a board's clues, which every state of one game shares. */

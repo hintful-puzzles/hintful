@@ -1,6 +1,15 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: norinori
+catalog:
+  name: Norinori
+  aliases: []
+  description: Domino shading puzzle
+  objective: >-
+    Shade two squares in every region so that the shaded squares form dominoes
+    that never touch along a side.
+  collection: own
+  family: shading
 help:
   rules: |-
     You have a grid of squares divided into regions by heavy lines. Shade squares so that every region holds exactly two shaded squares, and every shaded square touches exactly one other along a side. The shaded squares therefore come in dominoes, pairs side by side, and no two dominoes touch along a side, though they may touch at a corner. A domino may cross from one region into another.
@@ -80,9 +89,52 @@ shape:
   - "forall r in region: count(c in cells(r) where value(c) = 1) = 2"
   - "forall c in cells where value(c) = 1: lit(c) = 1"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: domino }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  # The answer is the shaded squares alone: an open square is clear.
+  blank: 2
+  # A click goes round empty, the button's mark and the other one.
+  click: cycle
+  stroke: sweep
+  # Four sizes at three tiers, half of them rectangles, fill a section's
+  # twelve lines. A 10x10 board deals in a median of 0.5 s at worst and a
+  # 12x12 one, left as a Custom size, in 1 to 2 s (2026-11-16).
+  boards: [6x6, 6x8, 8x10, 10x10]
+  hintMarks:
+    ring: the squares the step decides. The sentence says what they must be.
+    stripes: >-
+      the region the step is about, or the open squares beside a shaded
+      square.
+    outline: >-
+      what else it reasons from: shaded squares, or the squares a tried one
+      would leave clear.
 deal:
-  region: the partition, grown round dominoes placed at random, two shaded squares to a region
-  tier: one of the tiers
+  answer: dominoes at random, none touching another along a side, packed densely
+  region: >-
+    a region grown round each shaded square, joined in twos, some dominoes
+    dealt as regions of their own, then mended until the board finishes at the
+    tier
+  tier: one of the tiers, the board finished at it and not at the tier below
+  sample: { dominoes: { value: 1 }, rest: 2 }
+  grow:
+    partition: region
+    holds: 2
+    # A region of two is both its shaded squares at a glance, and a mend left
+    # to make them deals boards that are little else.
+    smallest: 3
+    # An Easy board's steps read one region or one domino at a time, so it
+    # needs the most closed dominoes to start from; a harder tier's steps
+    # reach further from fewer. Uncapped, a 6x6 Easy board came with five of
+    # its seven regions closed and one of seventeen squares.
+    closed: { oneIn: [2, 3, 4], atMostOneIn: 3 }
+# The regions as the walls between them.
+id:
+  - walls: region
+tierLetters: ent
 tiers: [Easy, Normal, Tricky]
 # What a shaded square rules out at a glance: the squares beside a domino it
 # completes, and the rest of the region it fills.

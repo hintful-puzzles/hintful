@@ -711,6 +711,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "clues",
       "marks",
+      "parts",
       "tileSize",
       "tiles",
     ],
@@ -995,6 +996,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "clues",
       "marks",
+      "parts",
       "tileSize",
       "tiles",
     ],
@@ -1095,22 +1097,23 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
-      "hint",
+      "clues",
       "marks",
-      "surfaces",
+      "parts",
       "tileSize",
       "tiles",
-      "walls",
     ],
     "id": "norinori",
     "members": [
+      "animLength",
       "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
+      "hint.gesture",
       "hint.judgeMove",
       "hint.refreshStep",
-      "hint.targets",
+      "revealOne",
       "rules",
       "rulesOut",
       "targetVerbs",
@@ -1120,6 +1123,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "cursor",
+      "drag",
+      "dragButton",
+      "dragOk",
+      "linkArmed",
     ],
   },
   {
@@ -1894,6 +1901,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "clues",
       "marks",
+      "parts",
       "tileSize",
       "tiles",
     ],
@@ -2116,6 +2124,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     "drawState": [
       "clues",
       "marks",
+      "parts",
       "tileSize",
       "tiles",
     ],

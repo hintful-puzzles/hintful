@@ -59,7 +59,12 @@ function board(givens: Record<number, number> = {}, variations: string[] = []): 
 
 const read = (desc: string) =>
   descValue(
-    decodeDesc(unruly.deal, spaceOf(unruly, { w: W, h: W }), unruly.clueMax, desc),
+    decodeDesc<unruly.Dealt>(
+      unruly.deal,
+      spaceOf(unruly, { w: W, h: W }),
+      unruly.clueMax,
+      desc,
+    ),
   );
 
 describe("a fill game of two alike pieces", () => {

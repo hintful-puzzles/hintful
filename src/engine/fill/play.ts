@@ -43,8 +43,14 @@ import {
   type TargetVerbs,
   type VerbKey,
 } from "../input/target-verb.ts";
+import { PAINTERS } from "../render/pieces/index.ts";
 import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
-import type { FillBoard, FillModule } from "./board.ts";
+import { type Clues, type FillBoard, type FillModule, listOf } from "./board.ts";
+
+/** Whether the painter named `paint` draws one of a pair of alike pieces. */
+const paired = (paint: string): boolean =>
+  paint in PAINTERS && PAINTERS[paint as keyof typeof PAINTERS].pair !== undefined;
+
 import { applyEdit, type Edit } from "./edit.ts";
 
 /** A value the player places: what its verb does, as the Controls paragraph
@@ -91,9 +97,6 @@ export interface FillPlay {
     readonly askBefore?: readonly string[];
   };
 }
-
-/** A board's clues, by kind. */
-type Clues<C> = { readonly [K in keyof C]: ClueList };
 
 /** The engine's `Ui` for a fill game. */
 export interface FillUi {
@@ -210,12 +213,11 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   const targetVerbs: TargetVerbs<FillBoard<C>, FillUi, D, Point, Edit> = {
     geometry: squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin }),
     primary: clicking(primary, secondary),
-    // A cycle's two values are alike, each a piece, and neither rules a cell
-    // out.
-    secondary:
-      play.click === "cycle"
-        ? clicking(secondary, primary)
-        : rulingOut(clicking(secondary, primary)),
+    // One of a pair of alike pieces (Unruly's block and disc) is placed as
+    // the other is, and rules nothing out.
+    secondary: paired(play.values[secondary].paint)
+      ? clicking(secondary, primary)
+      : rulingOut(clicking(secondary, primary)),
     keyOnly,
     ...(play.stroke === "sweep"
       ? { sweep: { holds: (b: FillBoard<C>, t: Point) => b.values[t.y * b.w + t.x] } }
@@ -224,7 +226,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
 
   const links = play.links;
   const cluesOf = (b: FillBoard<C>): ClueList | null =>
-    links === undefined ? null : b.dealt[links.clue as keyof C];
+    links === undefined ? null : listOf(b.dealt, links.clue as keyof C);
   /** Whether cell `c` may hold the link's near end: open, or the primary
    * value, and not dealt. */
   const linkable = (b: FillBoard<C>, c: number): boolean =>
