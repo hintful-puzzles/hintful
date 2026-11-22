@@ -129,7 +129,13 @@ engine commit.
   - [ ] 3.2.3 The walk's link reading as engine capabilities: techniques
         read once on the drawn marks before each firing (`readLinks`), and
         a mark offered only where it lets a later technique fire
-        (`linkFor`), declared in the description.
+        (`linkFor`), declared in the description. Where to start: Tents'
+        `solver.ts` (`readLinks`, `linkFor`, `hintEntries`, `NEAR`/`LINES`)
+        is the behavior to state; `describedEdgeHint` has the `settle`
+        hook it runs on, which `describedFiringHint` lacks; the ladder
+        runtime's `keptRung` is the offering rung. Without these the
+        engine's walk asks for a link wherever the board shows one at a
+        glance (seen 2026-11-22 on an 8x8 walk).
   - [ ] 3.2.4 The flip: Tents born (its TypeScript gone, its catalog and
         help from the description), its tests on the engine's moves, the
         upstream-descs guard, run in the app.
