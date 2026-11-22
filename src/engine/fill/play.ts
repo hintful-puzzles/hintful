@@ -75,7 +75,12 @@ export interface FillPlay {
   readonly stroke: "line" | "sweep";
   /** The clue kind the cell mark names, where the player draws it as a link
    * between a cell and the clue's cell beside it. */
-  readonly links?: { readonly clue: string };
+  readonly links?: {
+    readonly clue: string;
+    /** The hint's reading of the links: `engine/hint/glance.ts`. */
+    readonly glance?: readonly string[];
+    readonly askBefore?: readonly string[];
+  };
 }
 
 /** A board's clues, by kind. */

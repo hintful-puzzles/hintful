@@ -135,6 +135,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `hint-plan.ts` — the plan-accumulation loop |
 | – `described-hint.ts` — a described game's hint, built from its firings |
 | – `described-firing-hint.ts` — the same, a step a firing |
+| – `glance.ts` — marks a board shows at a glance, and asking for a deeper one |
 | – `move-judge.ts` — whether the player's last move followed from the board |
 | – `described-rules-out.ts` — `Game.rulesOut` from the description |
 | – `described-edge-hint.ts` — the same, where the answer is on the edges |
@@ -1556,6 +1557,15 @@ makes some, and a sentence a technique, which an `arms` technique reads by
 `spoken.arm`. It returns the hint's part (`plan`, `judgeMove`, `keepTrack`,
 `refreshStep`) as `hint`, which the game spreads, and `rulesOut` beside it.
 Exemplar: `singles/index.ts`.
+
+### `glance.ts` — marks a board shows at a glance, and asking for a deeper one
+
+`glanceWalk` turns a ladder whose player draws marks as notes into the walk a
+hint takes: the description's `play.glance` techniques are read once on the
+drawn marks before each firing (the walk's `settle`), and stand in the ladder
+as asks that offer a deeper mark only where it lets a technique above them
+fire, one before each `play.askBefore` technique and one at the end. The fill
+hint builds it from the description; Tents is the first to declare one.
 
 ### `move-judge.ts` — whether the player's last move followed from the board
 

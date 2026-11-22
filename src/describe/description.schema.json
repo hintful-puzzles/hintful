@@ -796,6 +796,17 @@
               "type": "string",
               "description": "The cell mark naming a clue, drawn as a link between a cell and the clue's cell beside it."
             },
+            "glance": {
+              "type": "array",
+              "description": "The techniques that read a link the board shows at a glance, by id: the hint runs them once on the drawn links before each step, so it never asks for one of those, and asks for a deeper link only where it lets a later technique fire (`engine/hint/glance.ts`). Needs `links`.",
+              "minItems": 1,
+              "items": { "type": "string" }
+            },
+            "askBefore": {
+              "type": "array",
+              "description": "The techniques, by id, before which the hint asks for a deeper link where one lets a technique above them fire. It asks once more after the last technique, for any, and there for a link that lets nothing fire where no link does. Needs `glance`.",
+              "items": { "type": "string" }
+            },
             "labels": {
               "type": "object",
               "description": "Fixed text in the margin, which is not a clue: `start`, before each row and column, a formula of `i`, the line's index along its axis from 0 (Kakurasu's weights, `i + 1`).",

@@ -856,6 +856,22 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/links names pair/);
   });
 
+  it("refuses a glance or an ask at a technique the ladder lacks, and an ask at a glance", () => {
+    type Play = { play: { glance: string[]; askBefore: string[] } };
+    expect(() =>
+      compileTents((j: Play) => {
+        j.play.glance = ["tentLinks"];
+        return j;
+      }),
+    ).toThrow(/glance: tentLinks is no technique of the ladder/);
+    expect(() =>
+      compileTents((j: Play) => {
+        j.play.askBefore = ["treeLink"];
+        return j;
+      }),
+    ).toThrow(/askBefore: treeLink is read at a glance/);
+  });
+
   it("refuses a game ID that leaves a clue kind out, or writes a valued one as runs", () => {
     type Id = { id: Record<string, string>[] };
     expect(() =>

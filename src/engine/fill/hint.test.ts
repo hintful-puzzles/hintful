@@ -181,17 +181,36 @@ describe("a fill game's hint that asks for a link", () => {
     expect(hint.keepTrack({ set: [cell, 2] }, step, after)).toBe("off");
   });
 
-  it("leaves every tent linked to its tree when each step's move is made", () => {
-    let board = tentsBoard();
-    for (let asked = 0; asked < 40; asked++) {
+  /** The rungs of every step the hint walks from `board` to the end, each
+   * step's move made. */
+  function walkRungs(board: FillBoard<tents.Dealt>): {
+    rungs: string[];
+    board: FillBoard<tents.Dealt>;
+  } {
+    const rungs: string[] = [];
+    for (let asked = 0; asked < 80; asked++) {
       const got = tentsGame.hint?.plan(board);
       if (!got?.ok) break;
+      rungs.push(got.steps[0].rung);
       board = applyEdit(tents, board, got.steps[0].move);
     }
+    return { rungs, board };
+  }
+  const linkRungs = (rungs: string[]) =>
+    rungs.filter((r) => r === "tentLink" || r === "treeLink");
+
+  it("asks for no link the board shows at a glance, and stops at the answer", () => {
+    const { rungs, board } = walkRungs(tentsBoard());
     expect(tentsGame.status(board)).toBe("solved");
-    // Each tent names the tree it was dealt beside.
-    expect([0, 7, 13].map((c) => board.dealt.tree.at[board.mark[c]])).toEqual([
-      1, 11, 12,
-    ]);
+    expect(linkRungs(rungs)).toEqual([]);
+  });
+
+  it("asks for a link one reading deeper only where a step rests on it", () => {
+    // A dealt board on which one tent's tree takes two readings to see.
+    const params = tentsGame.decodeParams("8x8de");
+    const desc = "afcak_ahbiaha,2,1,2,1,2,2,0,2,3,1,2,1,1,1,2,1";
+    const { rungs, board } = walkRungs(tentsGame.newState(params, desc));
+    expect(tentsGame.status(board)).toBe("solved");
+    expect(linkRungs(rungs)).toEqual(["tentLink"]);
   });
 });

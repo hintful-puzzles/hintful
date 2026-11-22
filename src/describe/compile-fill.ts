@@ -121,9 +121,34 @@ export function playOf(
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,
     );
-  const { links, labels, boards, hintMarks, ...rest } = p;
+  const { links, glance, askBefore, labels, boards, hintMarks, ...rest } = p;
+  const rungs = d.techniques.filter((t) => t.on === null).map((t) => t.id);
+  for (const [key, ids] of [
+    ["glance", glance],
+    ["askBefore", askBefore],
+  ] as const)
+    for (const id of ids ?? [])
+      if (!rungs.includes(id))
+        throw new CompileError(`play ${key}: ${id} is no technique of the ladder`);
+  if (glance !== undefined && links === undefined)
+    throw new CompileError(
+      "play glance: a glance reads links, and there is no `links`",
+    );
+  if (askBefore !== undefined && glance === undefined)
+    throw new CompileError("play askBefore: a link is asked for only beside `glance`");
+  for (const id of askBefore ?? [])
+    if (glance?.includes(id))
+      throw new CompileError(`play askBefore: ${id} is read at a glance`);
   const play =
-    links === undefined ? rest : { ...rest, links: { clue: env.cellMark?.kind } };
+    links === undefined
+      ? rest
+      : {
+          ...rest,
+          links: {
+            clue: env.cellMark?.kind,
+            ...(glance === undefined ? {} : { glance, askBefore: askBefore ?? [] }),
+          },
+        };
   const lineClues = [...d.clueKinds].filter(([, c]) => c.at === "line").map(([k]) => k);
   return [
     ...boardDomainOf(d, env, measured),

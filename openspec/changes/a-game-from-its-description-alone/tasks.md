@@ -126,16 +126,21 @@ engine commit.
         every kind. The hand-written steps the stated techniques share a
         name with carry `Step` until `steps:` goes; its rungs are the
         description's kinds (`SAYS_KINDS`), arms included.
-  - [ ] 3.2.3 The walk's link reading as engine capabilities: techniques
-        read once on the drawn marks before each firing (`readLinks`), and
-        a mark offered only where it lets a later technique fire
-        (`linkFor`), declared in the description. Where to start: Tents'
-        `solver.ts` (`readLinks`, `linkFor`, `hintEntries`, `NEAR`/`LINES`)
-        is the behavior to state; `describedEdgeHint` has the `settle`
-        hook it runs on, which `describedFiringHint` lacks; the ladder
-        runtime's `keptRung` is the offering rung. Without these the
-        engine's walk asks for a link wherever the board shows one at a
-        glance (seen 2026-11-22 on an 8x8 walk).
+  - [x] 3.2.3 The walk's link reading as engine capabilities, declared as
+        `play.glance` (the techniques read once on the drawn links before
+        each firing) and `play.askBefore` (where a deeper link is offered,
+        for the techniques above; one more ask ends the ladder, for any):
+        `engine/hint/glance.ts`. `describedFiringHint`'s walk gains
+        `settle`, `fallback`, `writes` and `name`, and a `done` (a fill
+        game with `blank` ends its plan at the answer); a step's kind is its
+        technique's (`techniqueOf`), so an ask's step is `tentLink`'s or
+        `treeLink`'s. Capabilities added: those two declarations. Measured
+        2026-11-22 on 120 dealt 8x8 boards (60 Easy, 60 Normal), the engine
+        walk against the hand-written one: the same rungs in the same order
+        on 103; 13 link steps to its 14 (HEAD: no board the same, 676).
+        The 17 that differ are the fill hint's tier start (it walks an
+        Easy board at Easy, the hand-written at every tier, 14) and
+        `betweenThem` said within `noSpareRoom` (3.2.1, 3).
   - [ ] 3.2.4 The flip: Tents born (its TypeScript gone, its catalog and
         help from the description), its tests on the engine's moves, the
         upstream-descs guard, run in the app.

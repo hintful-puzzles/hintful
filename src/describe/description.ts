@@ -151,6 +151,12 @@ export interface PlayJson {
   erase?: string;
   stroke: "line" | "sweep";
   links?: string;
+  /** The techniques that read a link the board shows at a glance, run once on
+   * the drawn links before each step of the hint. */
+  glance?: string[];
+  /** The techniques before which the hint asks for a deeper link, for the
+   * techniques above them; it asks once more after the last, for any. */
+  askBefore?: string[];
   labels?: { start?: string };
   /** The preset menu's sizes, `WxH`; the first is the default. */
   boards?: string[];

@@ -37,9 +37,15 @@ import type { PairIndex } from "../render/piece.ts";
 import type { CellMarks } from "../solve/cell-marks.ts";
 import { MARK, PLACE } from "../solve/describe-runtime.ts";
 import { type LadderEntry, TIERS } from "../solve/ladder-runtime.ts";
-import { ladderWalk } from "../solve/ladder-walk.ts";
+import { ladderWalk, type Taken } from "../solve/ladder-walk.ts";
 import { stepBudget } from "../solve/step-budget.ts";
-import { DEFAULT_PLAN, filledBy, premiseOf, spokenOf } from "./described-hint.ts";
+import {
+  DEFAULT_PLAN,
+  filledBy,
+  premiseOf,
+  spokenOf,
+  techniqueOf,
+} from "./described-hint.ts";
 import { type DescribedRulesOut, describedRulesOut } from "./described-rules-out.ts";
 import { type Judging, judgeWalked } from "./move-judge.ts";
 import { type Clauses, statedSentence } from "./stated.ts";
@@ -139,11 +145,27 @@ interface FiringShape<
   /** A name for the walk's step budget. */
   name: string;
   /** What to walk: the state as the description's marks, and the ladder with
-   * no technique above tier `cap`; `null` where the marks clash. */
+   * no technique above tier `cap`; `null` where the marks clash. Where marks
+   * are read at a glance (`glance.ts`), the walk brings them up to what the
+   * board shows before each firing (`settle`, false where the board
+   * contradicts itself), takes the `fallback` techniques only where nothing
+   * else follows, goes on from what a firing `writes` beside its cells, and
+   * names a firing by its technique's `name`. */
   walk(
     state: State,
     cap: number,
-  ): { marks: CellMarks; entries: readonly LadderEntry[] } | null;
+  ): {
+    marks: CellMarks;
+    entries: readonly LadderEntry[];
+    settle?(marks: CellMarks): boolean;
+    fallback?: readonly string[];
+    writes?(taken: Taken): readonly number[];
+    name?(technique: string): string;
+  } | null;
+  /** Whether the marks already are the answer: a plan ends there, though the
+   * ladder may still have a mark to make (a link Tents' answer does not
+   * need). */
+  done?(state: State, marks: CellMarks): boolean;
   /** The walk begins at the lowest tier that solves the board and goes up a
    * tier only where one has nothing to say, so a hint teaches what the board
    * needs and does not move as the player plays. Without it every tier is
@@ -320,18 +342,16 @@ export function describedFiringHint<
   const stepsAt = (state: State, cap: number, judging?: Judging): Step[] => {
     const walked = spec.walk(state, cap);
     if (walked === null) return [];
-    const { marks: m, entries } = walked;
+    const { marks: m, entries, settle, fallback, writes } = walked;
     const w = spec.width(state);
     const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
     const index = (t: Point): number => t.y * w + t.x;
     m.budget = stepBudget(spec.name);
-    const walk = ladderWalk(
-      m,
-      entries,
-      { [TIERS]: cap },
-      premiseOf,
-      judging ? { aim: judging.aim } : {},
-    );
+    const walk = ladderWalk(m, entries, { [TIERS]: cap }, premiseOf, {
+      ...(fallback === undefined ? {} : { fallback }),
+      ...(writes === undefined ? {} : { writes }),
+      ...(judging ? { aim: judging.aim } : {}),
+    });
     if (judging)
       judging.traced = walk.trace(() => {
         const again = spec.walk(state, cap)?.marks ?? m;
@@ -339,7 +359,14 @@ export function describedFiringHint<
         return again;
       });
     const steps: Step[] = [];
-    for (let fired = 0; judging ? !judging.done(m) : fired < plan; fired++) {
+    for (
+      let fired = 0;
+      judging ? !judging.done(m) : fired < plan && !spec.done?.(state, m);
+      fired++
+    ) {
+      if (settle?.(m) === false) break;
+      // What the board shows may hold a fact before the next firing does.
+      if (judging?.done(m)) break;
       const before = m.grid.slice();
       const markedBefore = spec.marks === undefined ? null : m.marked.slice();
       const known = walk.graph.facts.length;
@@ -347,8 +374,10 @@ export function describedFiringHint<
       const f = walk.next();
       if (f === null || f === "contradiction") break;
       const { says } = spokenOf<SaysOf>(f);
+      // An ask's firing is its glance technique's.
+      const technique = techniqueOf(f);
       const kind = (
-        says.arm === undefined ? f.entry.id : `${f.entry.id}.${says.arm}`
+        says.arm === undefined ? technique : `${technique}.${says.arm}`
       ) as Kind;
       const { decided, seen, own } = decidedBy(f.facts, says, before, markedBefore, w);
       // The squares its placing techniques went on to decide.
@@ -360,9 +389,9 @@ export function describedFiringHint<
       const followedCells = new Set(followed.map((t) => t.y * w + t.x));
       // A step for the firing, or one for each square it decides, which is then
       // the only square the evidence is taken less.
-      const each = spec.each?.includes(f.entry.id) === true;
+      const each = spec.each?.includes(technique) === true;
       // A judged move quotes one step alone, so every leg is said as a first.
-      const continued = !judging && spec.legs?.includes(f.entry.id) === true;
+      const continued = !judging && spec.legs?.includes(technique) === true;
       for (const [leg, group] of (each
         ? decided.map((t) => [t])
         : [decided]
@@ -399,7 +428,7 @@ export function describedFiringHint<
         const clauses =
           stated[kind]?.step?.[says.wording ?? 0] ??
           (factClauses === undefined ? undefined : factClauses[ownFact?.wording ?? 0]);
-        const override = say[f.entry.id];
+        const override = say[technique];
         if (clauses === undefined && override === undefined)
           throw new Error(`${spec.name}: ${kind} is neither stated nor overridden`);
         const words =
@@ -491,7 +520,12 @@ export function describedFiringHint<
         for (const [i, move] of legs.entries())
           steps.push({ ...step, move, continuesPrevious: i > 0 });
       }
-      judging?.took(walk.graph, known, f.entry.name, steps.length > firstStep);
+      judging?.took(
+        walk.graph,
+        known,
+        walked.name?.(technique) ?? f.entry.name,
+        steps.length > firstStep,
+      );
     }
     return steps;
   };

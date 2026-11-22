@@ -7,7 +7,10 @@
  * (`openspec/changes/a-game-from-its-description-alone`, design.md § 5).
  *
  * A step decides values and, where the game's mark is a link, marks: a link
- * the step asks for is ringed as `LINK`, and drawn by the link's drag.
+ * the step asks for is ringed as `LINK`, and drawn by the link's drag. Where
+ * the description reads some links at a glance (`play.glance`), the walk
+ * reads them before each step and asks only for a deeper one that a step
+ * rests on (`engine/hint/glance.ts`).
  */
 
 import type { RulesOut } from "../contract/game.ts";
@@ -18,16 +21,20 @@ import {
   type FiringHint,
   type FiringHintParts,
 } from "../hint/described-firing-hint.ts";
+import { premiseOf } from "../hint/described-hint.ts";
 import type { DescribedRulesOut } from "../hint/described-rules-out.ts";
+import { glanceWalk } from "../hint/glance.ts";
 import type { Clauses } from "../hint/stated.ts";
-import type { ClueList } from "../solve/describe-runtime.ts";
-import { describedLadder } from "../solve/ladder-runtime.ts";
+import type { CellMarks } from "../solve/cell-marks.ts";
+import { type ClueList, MARK } from "../solve/describe-runtime.ts";
+import { describedLadder, TIERS } from "../solve/ladder-runtime.ts";
 import { asDealt } from "./answer.ts";
 import {
   type FillBoard,
   type LadderedFillModule,
   marksOf,
   solveBoard,
+  spaceOf,
 } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { type FillLink, LINK } from "./marks.ts";
@@ -102,11 +109,51 @@ export function fillHint<C extends object>(
     string
   >({
     name: "fill hint",
-    walk(board) {
+    walk(board, cap) {
       const { marks, ok } = marksOf(module, board);
       if (!ok) return null;
-      return { marks, entries: describedLadder(module, board.dealt as never).entries };
+      const { entries } = describedLadder(module, board.dealt as never);
+      if (links?.glance === undefined) return { marks, entries };
+      const walk = glanceWalk(
+        entries,
+        { glance: links.glance, askBefore: links.askBefore ?? [] },
+        board.mark.slice(),
+        { [TIERS]: cap },
+        premiseOf,
+      );
+      const names = new Map(entries.map((e) => [e.id, e.name]));
+      return {
+        marks,
+        entries: walk.entries,
+        settle: walk.settle,
+        fallback: walk.fallback,
+        // A link is written at both its ends, and an ask where the firing it
+        // was offered for reads, which is where the work goes next.
+        writes: (taken) => {
+          const out: number[] = [];
+          for (let i = 0; i < taken.facts.length; i += 3) {
+            const at = taken.facts[i + 1];
+            out.push(at);
+            if (taken.facts[i] === MARK)
+              out.push(linkedCell(board, links, taken.facts[i + 2]));
+          }
+          return [...out, ...walk.serves(taken)];
+        },
+        name: (technique) => names.get(technique) ?? technique,
+      };
     },
+    // Where an open cell reads as a value, the values can be the answer
+    // before every cell is decided, and a plan ends there.
+    ...(module.play?.blank === undefined
+      ? {}
+      : {
+          done: (board: FillBoard<C>, m: CellMarks): boolean =>
+            module.isAnswer(
+              Uint8Array.from(m.grid, (v) => (v === 0 ? (module.play?.blank ?? 0) : v)),
+              spaceOf(module, board),
+              board.dealt,
+            ),
+        }),
     tiers: { lowest: tierOf, count: module.tiers.length },
     ...(module.SAYS_EACH === undefined ? {} : { each: module.SAYS_EACH }),
     ...(module.SAYS_LEGS === undefined ? {} : { legs: module.SAYS_LEGS }),

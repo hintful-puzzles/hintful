@@ -193,7 +193,11 @@ research tools all read through it; the app never does.
   the board, which the engine's input is built from (`engine/fill/play.ts`):
   the right button's value is always the one that rules a cell out, and
   `links:` names the cell mark, drawn as a link to the clue beside the cell.
-  The board seeds each cell from `domainOf`, so a game with `play:` whose
+  Where some links show at a glance, `glance:` names the techniques that
+  read them: the hint reads them once on the drawn links before each step,
+  and asks for a deeper link only where it lets a later technique fire, at
+  each technique `askBefore:` names and once more at the end
+  (`engine/hint/glance.ts`). The board seeds each cell from `domainOf`, so a game with `play:` whose
   domain is the board's (Kakurasu's `range(1, 2)`) has one written that
   gives every cell the board's domain. A step's line is its `stripes`,
   which hatch the line's clue in the margin too.
