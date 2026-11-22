@@ -54,4 +54,5 @@
 
 ## 3. Finish
 
-- [ ] 3.1 Commit, push, confirm the alerts close on GitHub, archive.
+- [x] 3.1 Commit, push, confirm the alerts close on GitHub, archive.
+      Pushed as d2b6839fb; the Dependabot API then listed 0 open alerts.
