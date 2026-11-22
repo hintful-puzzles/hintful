@@ -74,7 +74,7 @@ import {
   redrawBridges,
   toCoord,
 } from "./render.ts";
-import { type BridgesSpan, bridgesSolved, solveFromScratch } from "./solver.ts";
+import { type BridgesSpan, bridgesSolved, rules, solveFromScratch } from "./solver.ts";
 import {
   type BridgesMistake,
   type BridgesMove,
@@ -573,6 +573,7 @@ export const bridgesGame: Game<
   status(s: BridgesState): GameStatus {
     return bridgesSolved(s) ? "solved" : "ongoing";
   },
+  rules,
 
   solve,
   difficulty,

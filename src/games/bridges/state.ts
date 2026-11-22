@@ -29,13 +29,11 @@ import * as bridges from "../../generated/games/bridges/bridges.compiled.ts";
 export const G_ISLAND = 0x0001;
 export const G_LINEV = 0x0002;
 export const G_LINEH = 0x0004;
-export const G_LINE = G_LINEV | G_LINEH;
 export const G_MARKV = 0x0008;
 export const G_MARKH = 0x0010;
 export const G_MARK = G_MARKV | G_MARKH;
 export const G_NOLINEV = 0x0020;
 export const G_NOLINEH = 0x0040;
-export const G_WARN = 0x0080;
 
 export interface BridgesParams {
   w: number;
@@ -510,18 +508,6 @@ export class BridgesState {
     return is.y + is.points[j].off * is.points[j].dy;
   }
 
-  islandHasbridge(is: Island, direction: number): boolean {
-    const pt = is.points[direction];
-    const gline = pt.dx ? G_LINEH : G_LINEV;
-    return (this.gridAt(pt.x, pt.y) & gline) !== 0;
-  }
-
-  islandFindConnection(is: Island, adjpt: number): Island | null {
-    if (!is.points[adjpt].off) return null;
-    if (!this.islandHasbridge(is, adjpt)) return null;
-    return this.islandAt(this.islandOrthX(is, adjpt), this.islandOrthY(is, adjpt));
-  }
-
   /**
    * Write bridges/no-lines/max along the span between two orthogonal islands.
    * n = -1 toggles the NOLINE flags; n = 0 clears the line; n > 0 sets n bridges.
@@ -553,39 +539,6 @@ export class BridgesState {
     let c = 0;
     for (const pt of is.points) {
       c += this.gridCount(pt.x, pt.y, pt.dx ? G_LINEH : G_LINEV);
-    }
-    return c;
-  }
-
-  islandAdjspace(
-    is: Island,
-    marks: boolean,
-    missing: number,
-    direction: number,
-  ): number {
-    const pt = is.points[direction];
-    const gline = pt.dx ? G_LINEH : G_LINEV;
-    if (marks) {
-      const mline = pt.dx ? G_MARKH : G_MARKV;
-      if (this.gridAt(pt.x, pt.y) & mline) return 0;
-    }
-    // The bridges already on the span come off its whole capacity, the clues
-    // at its ends included, and not off its limit alone. An island's room then
-    // never grows as its bridges are drawn, which is what keeps the grade from
-    // depending on the order the islands are visited in.
-    const cap = Math.min(
-      this.possibles(pt.dx, pt.x, pt.y),
-      this.maximum(pt.dx, pt.x, pt.y),
-    );
-    return Math.max(0, Math.min(missing, cap - this.gridCount(pt.x, pt.y, gline)));
-  }
-
-  islandCountspaces(is: Island, marks: boolean): number {
-    const missing = is.count - this.islandCountbridges(is);
-    if (missing < 0) return 0;
-    let c = 0;
-    for (let i = 0; i < is.points.length; i++) {
-      c += this.islandAdjspace(is, marks, missing, i);
     }
     return c;
   }
@@ -628,33 +581,6 @@ export class BridgesState {
         }
       }
     }
-  }
-
-  /** True when this island can no longer be legally satisfied (C island_impossible). */
-  islandImpossible(is: Island, strict: boolean): boolean {
-    const curr = this.islandCountbridges(is);
-    const nspc = is.count - curr;
-    if (nspc < 0) return true; // too many bridges
-    if (curr + this.islandCountspaces(is, false) < is.count) return true; // can't reach clue
-    if (strict && curr < is.count) return true; // locked but unfinished
-
-    let nsurrspc = 0;
-    for (let i = 0; i < is.points.length; i++) {
-      const pt = is.points[i];
-      const dx = pt.dx;
-      if (!pt.off) continue;
-      const poss = this.possibles(dx, pt.x, pt.y);
-      if (poss === 0) continue;
-      const isOrth = this.islandAt(this.islandOrthX(is, i), this.islandOrthY(is, i));
-      if (!isOrth) continue;
-      const ifree = isOrth.count - this.islandCountbridges(isOrth);
-      if (ifree > 0) {
-        const bmax = this.maximum(dx, pt.x, pt.y);
-        const bcurr = this.gridCount(pt.x, pt.y, dx ? G_LINEH : G_LINEV);
-        nsurrspc += Math.min(ifree, bmax - bcurr);
-      }
-    }
-    return nsurrspc < nspc; // surrounding islands can't absorb the rest
   }
 
   // --- Map-wide helpers (bridges.c) ---

@@ -1096,6 +1096,15 @@ says how each form is read; what a description's author acts on:
   element of a disjunction, is the game's reading's (`rules.grid`) to
   turn into decided elements where certain (a square marked no track has
   no rail).
+- **A mark on the answer's own elements whose `of` is `value(at)`** is the
+  values each may still hold (Bridges' line, from the bridges drawn to its
+  limit): the check takes them last, as `cands`, ANDs them into each
+  element's domain wherever it reads one, and `marksHold` holds them to the
+  answer. A candidate mark with no `of` (Solo's notes) is not read: a game
+  whose marks rule values out for certain declares the `of`. An element's value plus, minus or
+  times a term is bounded by its domain too, so Bridges' `value(e) - 1`,
+  the bridges an edge carries, sums to a clue that turns red with lines
+  still open.
 - **A statement that reads nothing of the board is left out**: it is the
   same of every board the deal makes, so it says whether the board was
   dealt right, which the deal and the answer check settle, and never where

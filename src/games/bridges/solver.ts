@@ -15,6 +15,7 @@
  * ({@link bridgesWalk}).
  */
 
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import { CellMarks } from "../../engine/solve/cell-marks.ts";
 import type { FiringTally } from "../../engine/solve/deduction-fixpoint.ts";
 import {
@@ -22,6 +23,7 @@ import {
   describedSpace,
   type GridSpace,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -36,6 +38,7 @@ import {
   type BridgesState,
   G_LINEH,
   G_LINEV,
+  G_MARK,
   G_NOLINEH,
   G_NOLINEV,
 } from "./state.ts";
@@ -83,9 +86,12 @@ export interface Geometry {
   variations: readonly string[];
 }
 
+export const spaceOf = (s: { w: number; h: number }): GridSpace =>
+  describedSpace(bridges.units, s.w, s.h);
+
 function geometryOf(state: BridgesState): Geometry {
   const { w, h } = state;
-  const sp = describedSpace(bridges.units, w, h);
+  const sp = spaceOf(state);
   const lines: Line[] = [];
   const lineOf = new Int32Array(sp.edges.length).fill(-1);
   const linesAt: number[][] = Array.from({ length: w * h }, () => []);
@@ -367,6 +373,61 @@ export function solveFromScratch(
   }
   state.mapUpdatePossibles();
   return 1;
+}
+
+/**
+ * The board as the rules read it: each edge's value where certain, else 0,
+ * and the values each may still hold. A line holds at least the bridges
+ * drawn and at most its limit, none past a bridge drawn across it, and no
+ * more than either island still needs, since every other line of that
+ * island holds at least what it has: so a line at an island with all its
+ * bridges, or at one the player marked done, holds what it has, and a
+ * group of islands each with all its bridges is finished as it stands. An
+ * edge on no line holds none.
+ */
+function rulesReading(state: BridgesState): {
+  geo: Geometry;
+  g: Uint8Array;
+  cands: Uint8Array;
+} {
+  const geo = geometryOf(state);
+  const g = new Uint8Array(geo.sp.edges.length).fill(NONE);
+  const cands = new Uint8Array(g.length).fill(1 << NONE);
+  const known = geo.lines.map((line) => lineOnState(state, line));
+  const need = Int32Array.from(geo.dealt.number.valueAt);
+  known.forEach(({ lo }, n) => {
+    need[geo.lines[n].a] -= lo;
+    need[geo.lines[n].b] -= lo;
+  });
+  const done = (c: number): boolean => (state.grid[c] & G_MARK) !== 0;
+  geo.lines.forEach((line, n) => {
+    const { lo } = known[n];
+    const across = line.span.y1 === line.span.y2 ? G_LINEV : G_LINEH;
+    const crossed = line.cells.slice(1, -1).some((c) => (state.grid[c] & across) !== 0);
+    const hi =
+      crossed || done(line.a) || done(line.b)
+        ? lo
+        : Math.max(lo, Math.min(known[n].hi, lo + need[line.a], lo + need[line.b]));
+    for (const e of line.edges) {
+      g[e] = lo === hi ? lo + NONE : 0;
+      cands[e] = between(lo, hi);
+    }
+  });
+  return { geo, g, cands };
+}
+
+export const rules: RulesOf<BridgesState> = describedRules(bridges, {
+  grid: (s) => rulesReading(s).g,
+  size: (s) => [s.w, s.h],
+  deals: (s): [bridges.Dealt, readonly string[], Uint8Array] => {
+    const { geo, cands } = rulesReading(s);
+    return [geo.dealt, geo.variations, cands];
+  },
+});
+
+/** The island cell each of the rules' `number` clues is at, by its index. */
+export function clueCells(state: BridgesState): Int32Array {
+  return geometryOf(state).dealt.number.at;
 }
 
 /** Whether the bridges on `state` answer the board, by its rules. */

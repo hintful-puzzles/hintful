@@ -619,7 +619,8 @@ export function edgeMarkOf(
   const read = Object.entries(json.marks ?? {}).filter(
     ([, m]) =>
       (m.sort === "edge" || m.sort === "angle" || m.sort === "cell") &&
-      m.of !== undefined,
+      m.of !== undefined &&
+      !candidates(json, m),
   );
   if (read.length > 1)
     throw new Error(
@@ -632,6 +633,22 @@ export function edgeMarkOf(
   if (m.sort === json.answer.value.sort)
     throw new Error(`${name}: a mark that narrows the answer sits off its elements`);
   return { name, of: m.of as string, sort: m.sort as MarkSort };
+}
+
+/** Whether a mark is the answer's own candidates: on its elements, its term
+ * the value. */
+function candidates(json: DescriptionJson, m: { sort: string; of?: string }): boolean {
+  return m.sort === json.answer.value.sort && m.of?.replaceAll(" ", "") === "value(at)";
+}
+
+/**
+ * Whether the player's marks narrow the answer's own elements, a set of the
+ * values each may hold (Bridges' line, from the bridges drawn to its
+ * limit): declared as a mark on the answer's sort whose `of` is
+ * `value(at)`. The violation check then reads them where it reads a domain.
+ */
+export function narrowsAnswer(json: DescriptionJson): boolean {
+  return Object.values(json.marks ?? {}).some((m) => candidates(json, m));
 }
 
 /** What a relation over the edges is written: each pair known alike or

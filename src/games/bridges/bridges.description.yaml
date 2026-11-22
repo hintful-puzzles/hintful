@@ -66,6 +66,10 @@ answer:
   value:
     sort: edge
     domain: "range(1, maxb + 1)"
+marks:
+  # The values a line may still hold, from the bridges drawn on it to its
+  # limit, on each of its edges.
+  cand: { sort: edge, notation: "set of range(1, maxb + 1)", of: "value(at)" }
 define:
   # A square with a number is an island.
   island(c): "clue(number, c) != none"
@@ -327,10 +331,11 @@ variations:
     add:
       rules:
         # No bridge closes a loop: each one bridged joins two groups the
-        # rest would leave apart.
+        # rest would leave apart. Said of each edge, so a loop's bridges are
+        # where it breaks.
         acyclic: >-
-          forall L = {e in edges where value(e) > 1}, e in L:
-          end2(e) not in through(end1(e), L - {e})
+          forall e in edges where value(e) > 1:
+          end2(e) not in through(end1(e), {x in edges where value(x) > 1 and x != e})
       techniques:
         # A line between two islands the bridges already join would close a
         # loop: it is blocked.

@@ -45,6 +45,7 @@ import {
   edgeMarkOf,
   type LibraryJson,
   loadDescription,
+  narrowsAnswer,
   parseTechnique,
   relationMarkOf,
   stepsOf,
@@ -826,6 +827,7 @@ function violationsOf(json: DescriptionJson, d: Description, env: Env): string[]
     d.repeat,
     { ...env, answer: { repeats: d.repeat !== null } },
     markRead(json, env),
+    narrowsAnswer(json),
   );
 }
 

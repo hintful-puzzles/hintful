@@ -127,14 +127,7 @@
       lines are red, where nothing was; its tallies go). Bridges moves with
       batch 3, 2.3d.
 - [ ] 2.3d Bound the loop and acyclic forms; then batch 3. Loopy's and
-      Pearl's "largest piece" guess goes (`design.md` § "Census"). Bridges
-      first needs its rules to read a line it narrows without deciding: one
-      bridge drawn where two may go, a ≤1 limit, the most its run allows.
-      A value per element cannot hold that, and its old check used it (an
-      island that can no longer reach its count through its lines' limits).
-      Proposed: `violations` takes an optional mask per element of the values
-      the player's marks still allow, read wherever the check reads a
-      domain, and the guard checks each mask holds the answer's value.
+      Pearl's "largest piece" guess goes (`design.md` § "Census").
       Moved: loopy, pearl. Their loop rule is the through form, bounded in
       2.3c; what they needed was the reading `oneLoopHeld` gives (an open
       edge at a dot with two lines is none, and every open edge once a loop
@@ -192,13 +185,20 @@
       so `reachesEnd`, implied, says every rail reaches an end, and the
       render draws it and the shape in place of `path`. Its
       `checkCompletion`, `numErrors` and `S_ERROR` go; status asks the
-      rules, marks included. Next: bridges. Its limit marks are the
-      per-edge mask proposed above, and they can come in as Tracks' marks
-      do, last in `deals`: read them wherever the check reads a domain
-      (`domainOf` in `compile-violations.ts`, ANDed with the domain), and
-      have the module's `marksHold` cover them, so the guard checks them
-      against the answer. Rome's goal
-      chain and wordtrail's pieces are to be read before their batch.
+      rules, marks included.
+      Moved (2026-11-22): bridges. A mark on the answer's own elements
+      whose `of` is `value(at)` is their candidates: the check takes them
+      last, `cands`, ANDed into the domain wherever it reads one, and
+      `marksHold` holds them to the answer (Solo's notes, with no `of`, are
+      not read). An element's value under `+`, `-` or `*` is bounded by its
+      domain, so a number turns red with lines open, where the sum of
+      `value(e) - 1` was unbounded. A line reads from the bridges drawn to
+      its limit, none past a bridge across it, no more than either island
+      still needs, and what it has at an island marked done; "no loops" is
+      the cycle form. Its `markWarnings`, `G_WARN` and `islandImpossible`
+      go; the marks are what it drew (planted: the guard fails on a line
+      decided early and on candidates that rule out the answer). Next:
+      rome's goal chain and wordtrail's pieces, read before their batch.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
 - [x] 2.4 Plant a broken rule and see its mark appear in a game that wrote

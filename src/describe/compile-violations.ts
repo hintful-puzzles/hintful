@@ -102,6 +102,7 @@ export function violationCheck(
   repeat: Repeat,
   env: Env,
   mark: MarkRead | null = null,
+  narrowed = false,
 ): string[] {
   const readsClues = { yes: false };
   const scratch: string[] = [];
@@ -146,6 +147,19 @@ export function violationCheck(
       ? [["domain", { code: "_domain", sort: { k: "set", of: { k: "num" } } }]]
       : [],
   );
+  const domainOf =
+    domain === null || (domain.mask === "domainOf" && env.wide)
+      ? null
+      : domain.mask === "domainOf"
+        ? (x: string) => {
+            readsClues.yes = true;
+            return `domainOf(sp, cl, ${x})`;
+          }
+        : () => domain.mask;
+  if (narrowed && domainOf === null)
+    throw new Error(
+      "the answer's candidates narrow a domain the check reads per element",
+    );
   const c = new Check(
     cenv,
     out,
@@ -153,14 +167,9 @@ export function violationCheck(
     repeat === null
       ? null
       : { value: measured(repeat.value), times: measured(repeat.times) },
-    domain === null || (domain.mask === "domainOf" && env.wide)
-      ? null
-      : domain.mask === "domainOf"
-        ? (x) => {
-            readsClues.yes = true;
-            return `domainOf(sp, cl, ${x})`;
-          }
-        : () => domain.mask,
+    // The player's candidates narrow each element's domain (a Bridges line
+    // from the bridges drawn to its limit).
+    narrowed && domainOf !== null ? (x) => `(${domainOf(x)} & cands[${x}])` : domainOf,
     mark,
   );
   for (const s of statements) {
@@ -240,7 +249,13 @@ export function violationCheck(
   out.emit("return _out;");
   if (c.triesValues)
     out.entries.unshift({ indent: 1, text: "const g = Int32Array.from(g0);" });
-  const holds = c.readsMarks && mark !== null ? marksHold(mark, cenv, readsClues) : [];
+  const holds = [
+    ...(c.readsMarks && mark !== null ? marksHold(mark, cenv, readsClues) : []),
+    ...(narrowed
+      ? [`  for (const x of ${set}) if (!((cands[x] >> g[x]) & 1)) return false;`]
+      : []),
+  ];
+  if (holds.length > 0) holds.push("  return true;");
   if (c.readsMarks && mark !== null) {
     // `_at` is a name the code may leave unread (Tracks' term reads only `_d`).
     const at = { code: "_at", sort: elem(mark.sort) };
@@ -261,8 +276,15 @@ export function violationCheck(
     ...(readsClues.yes ? ["cl: Dealt"] : []),
     ...(statements.some((s) => s.on !== null) ? ["variations: readonly string[]"] : []),
     ...(c.readsMarks ? ["marks: ArrayLike<number>"] : []),
+    ...(narrowed ? ["cands: ArrayLike<number>"] : []),
   ];
-  const plain = params.map((p) => p.replace(/^g0:/, "g:"));
+  // `marksHold` takes what `violations` does, a name its body leaves unread
+  // marked so.
+  const plain = params.map((p) => {
+    const q = p.replace(/^g0:/, "g:");
+    const name = q.slice(0, q.indexOf(":"));
+    return holds.some((l) => new RegExp(`\\b${name}\\b`).test(l)) ? q : `_${q}`;
+  });
   return [
     "/** Each statement the board `g`, a value an element and 0 where it is",
     " * undecided, already breaks: false on every completion of it. */",
@@ -274,8 +296,9 @@ export function violationCheck(
       ? []
       : [
           "",
-          "/** Whether the player's `marks` on the elements, each a mask of the",
-          " * values the mark allows, hold of the whole board `g`. */",
+          "/** Whether the player's marks, each a mask of the values it allows",
+          " * (`marks` off the answer's elements, `cands` on them), hold of the",
+          " * whole board `g`. */",
           `export function marksHold(${plain.join(", ")}): boolean {`,
           ...holds,
           "}",
@@ -283,8 +306,8 @@ export function violationCheck(
   ];
 }
 
-/** The body of `marksHold`: each mark's term read on the whole board, and
- * the mark holding that value. */
+/** `marksHold`'s reading of the marks off the answer's elements: each mark's
+ * term read on the whole board, and the mark holding that value. */
 function marksHold(mark: MarkRead, env: Env, readsClues: { yes: boolean }): string[] {
   const scratch: string[] = [];
   const henv: Env = {
@@ -312,7 +335,6 @@ function marksHold(mark: MarkRead, env: Env, readsClues: { yes: boolean }): stri
     ...out.text(),
     `    if (!((marks[at] >> (${of.code})) & 1)) return false;`,
     "  }",
-    "  return true;",
   ];
 }
 
@@ -883,10 +905,17 @@ class Check {
     const lo = Out.fresh("_lo");
     const hi = Out.fresh("_hi");
     const aCounted = e.k === "bin" && counted(e.a, scope, this.env);
+    // An element's value its domain bounds: a Bridges edge's `value(e) - 1`,
+    // the bridges it carries, is at least what its candidates allow.
+    const valued = (x: Expr): boolean =>
+      this.domainOf !== null &&
+      x.k === "call" &&
+      x.fn === "value" &&
+      x.args.length === 1;
     if (
       e.k === "bin" &&
       (e.op === "+" || e.op === "-" || e.op === "*") &&
-      (aCounted || counted(e.b, scope, this.env))
+      (aCounted || counted(e.b, scope, this.env) || valued(e.a) || valued(e.b))
     ) {
       const a = this.bounds(e.a, scope);
       const b = this.bounds(e.b, scope);

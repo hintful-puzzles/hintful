@@ -32,7 +32,7 @@ import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
 import { newBridgesDesc } from "./generator.ts";
 import { bridgesGame } from "./index.ts";
-import { border, COL_ISLAND, COL_MARK, newDrawState } from "./render.ts";
+import { border, COL_ISLAND, COL_MARK, errorsOf, newDrawState } from "./render.ts";
 import { solveFromScratch } from "./solver.ts";
 import {
   type BridgesMove,
@@ -46,7 +46,6 @@ import {
   G_LINEV,
   G_MARK,
   G_NOLINEH,
-  G_WARN,
   newStateFromDesc,
 } from "./state.ts";
 
@@ -335,9 +334,13 @@ describe("bridges input model (drag → move)", () => {
   });
 
   it("stops marking a loop's bridges once it is opened, while another loop stands", () => {
-    // Two squares of four islands side by side, on a board that forbids loops.
+    // Two squares of four islands side by side, on a board that forbids
+    // loops. Each island needs a third bridge, so neither square is a group
+    // finished apart from the rest: only the loop rule breaks.
     const p = { ...BRIDGES_PRESETS[0], w: 7, h: 3, allowloops: false };
-    const board = newStateFromDesc(p, "2a2a2a2g2a2a2a2");
+    const board = newStateFromDesc(p, "3a3a3a3g3a3a3a3");
+    const red = (s: BridgesState, x: number, y: number): number =>
+      errorsOf(s)[y * 7 + x];
     const square = (x: number): BridgesOp[] => [
       { op: "L", x1: x, y1: 0, x2: x + 2, y2: 0, n: 1 },
       { op: "L", x1: x, y1: 2, x2: x + 2, y2: 2, n: 1 },
@@ -345,17 +348,45 @@ describe("bridges input model (drag → move)", () => {
       { op: "L", x1: x + 2, y1: 0, x2: x + 2, y2: 2, n: 1 },
     ];
     const both = bridgesGame.executeMove(board, { ops: [...square(0), ...square(4)] });
-    expect(both.gridAt(1, 0) & G_WARN).toBeTruthy();
-    expect(both.gridAt(5, 0) & G_WARN).toBeTruthy();
+    expect(red(both, 1, 0)).toBe(1);
+    expect(red(both, 5, 0)).toBe(1);
 
     const opened = bridgesGame.executeMove(both, {
       ops: [{ op: "L", x1: 0, y1: 0, x2: 2, y2: 0, n: 0 }],
     });
     // The left square is a loop no more, and none of its bridges is marked;
     // the right one still is.
-    expect(opened.gridAt(1, 2) & G_WARN).toBeFalsy();
-    expect(opened.gridAt(0, 1) & G_WARN).toBeFalsy();
-    expect(opened.gridAt(5, 0) & G_WARN).toBeTruthy();
+    expect(red(opened, 1, 2)).toBe(0);
+    expect(red(opened, 0, 1)).toBe(0);
+    expect(red(opened, 5, 0)).toBe(1);
+  });
+
+  it("marks an island its lines' limits leave short, with no bridge drawn", () => {
+    // A 3 whose two lines carry 2 and 1 at most: limiting the first to one
+    // leaves it a bridge short, and the 2 beside it can still be met.
+    const p = { ...BRIDGES_PRESETS[0], w: 5, h: 3, maxb: 2 };
+    const board = newStateFromDesc(p, "3a2a1e1d");
+    expect(errorsOf(board)[0]).toBe(0);
+    const limited = bridgesGame.executeMove(board, {
+      ops: [{ op: "C", x1: 0, y1: 0, x2: 2, y2: 0, n: 1 }],
+    });
+    expect([...errorsOf(limited)].flatMap((r, c) => (r ? [c] : []))).toEqual([0]);
+  });
+
+  it("marks a group finished apart from the rest, and an island marked done short", () => {
+    const p = { ...BRIDGES_PRESETS[0], w: 3, h: 3 };
+    const board = newStateFromDesc(p, "1a1c1a1");
+    const reds = (s: BridgesState): number[] =>
+      [...errorsOf(s)].flatMap((r, c) => (r ? [c] : []));
+    // The top two islands joined have all their bridges, and the bottom two
+    // are still open: the top group, its bridge included, is red.
+    const joined = bridgesGame.executeMove(board, {
+      ops: [{ op: "L", x1: 0, y1: 0, x2: 2, y2: 0, n: 1 }],
+    });
+    expect(reds(joined)).toEqual([0, 1, 2]);
+    // An island marked done holds the bridges it has: none, where it needs one.
+    const marked = bridgesGame.executeMove(board, { ops: [{ op: "M", x: 0, y: 2 }] });
+    expect(reds(marked)).toEqual([6]);
   });
 
   it("a plain click toggles the island mark", () => {

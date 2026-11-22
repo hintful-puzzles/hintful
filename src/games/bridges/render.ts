@@ -37,13 +37,14 @@ import type {
   Rect,
 } from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import { sweepStep, WIN_LEAD, WIN_NONE } from "../../engine/render/win-wave.ts";
 import type { BridgesHighlights } from "./hint.ts";
 import { PIECE, SPAN } from "./hint-marks.ts";
 import { dragReleaseOps, executeMove } from "./moves.ts";
-import type { BridgesSpan } from "./solver.ts";
+import { type BridgesSpan, clueCells, rules, spaceOf } from "./solver.ts";
 import {
   type BridgesMistake,
   type BridgesMove,
@@ -58,7 +59,6 @@ import {
   G_MARKV,
   G_NOLINEH,
   G_NOLINEV,
-  G_WARN,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 24;
@@ -1039,6 +1039,32 @@ function hintWords(
   return out;
 }
 
+// --- live errors ----------------------------------------------------------
+
+/**
+ * Where the rules break, per square: an island whose number its lines can
+ * no longer meet, and the islands and bridge squares of what else breaks a
+ * rule, a group finished apart from the rest, a loop where loops are not
+ * allowed, two bridges crossing. An edge without a bridge is named only by
+ * a lone island's ruled-out lines, which its number already shows.
+ */
+export function errorsOf(s: BridgesState): Uint8Array {
+  const out = new Uint8Array(s.w * s.h);
+  const live = liveErrors(rules, s);
+  const at = clueCells(s);
+  for (const k of live.clues.get("number") ?? []) out[at[k]] = 1;
+  const sp = spaceOf(s);
+  for (const list of live.byRule.values())
+    for (const edges of list)
+      for (const e of edges) {
+        const ends = [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
+        const line = ends[1] - ends[0] === 1 ? G_LINEH : G_LINEV;
+        if (ends.some((c) => !(s.grid[c] & G_ISLAND) && s.grid[c] & line))
+          for (const c of ends) out[c] = 1;
+      }
+  return out;
+}
+
 // The redraw doctrine is what makes this branchy: one cache key per island and
 // per bridge span, compared against the last frame before anything is painted.
 // The branches ARE the diff, and hoisting them into helpers hides which cell a
@@ -1072,6 +1098,7 @@ export function redrawBridges(
   const released = releaseOps ? executeMove(s, { ops: releaseOps }) : null;
 
   const mistakeMask = buildMistakeMask(s, mistakes);
+  const errors = errorsOf(s);
   const newgrid = ds.newgrid;
   newgrid.fill(0);
   const newlead = ds.newlead;
@@ -1096,19 +1123,14 @@ export function redrawBridges(
             (dragDst && is.x === dragDst.x && is.y === dragDst.y))
         )
           idata |= DI_COL_SELECTED;
-        else if (
-          s.islandImpossible(is, (v & G_MARK) !== 0) ||
-          v & G_WARN ||
-          mistakeMask?.[c]
-        )
-          idata |= DI_COL_WARNING;
+        else if (errors[c] || mistakeMask?.[c]) idata |= DI_COL_WARNING;
         else idata |= DI_COL_NORMAL;
 
         if (ui.cursor.visible && ui.cursor.x === is.x && ui.cursor.y === is.y)
           idata |= DI_BG_CURSOR;
         else if (v & G_MARK) idata |= DI_BG_MARK;
-        // Fork aid: lift a satisfied island (visual only — no lock).
-        // A satisfied island is never impossible, so this never fights the red.
+        // Fork aid: lift a satisfied island (visual only — no lock). The lift
+        // is its background and an error its color, so the two never clash.
         else if (ui.autoMark && s.islandCountbridges(is) === is.count)
           idata |= DI_BG_MARK;
         else idata |= DI_BG_NORMAL;
@@ -1155,7 +1177,7 @@ export function redrawBridges(
                 ? DL_COUNT_POSSIBLE
                 : 0;
 
-        const wrong = mistakeMask?.[c];
+        const wrong = errors[c] || mistakeMask?.[c];
         // The win flash lights a bridge square by square as it crosses, and a
         // square with no bridge has nothing to light.
         const tone = dv & (G_LINEH | G_LINEV) ? flash.win(sweepStep(x, y)) : WIN_NONE;
@@ -1163,14 +1185,14 @@ export function redrawBridges(
         if (tone === WIN_LEAD) newlead[c] = 1;
         hdata |= lit
           ? DL_COL_FLASH
-          : v & G_WARN || wrong
+          : wrong
             ? DL_COL_WARNING
             : selh
               ? DL_COL_SELECTED
               : DL_COL_NORMAL;
         vdata |= lit
           ? DL_COL_FLASH
-          : v & G_WARN || wrong
+          : wrong
             ? DL_COL_WARNING
             : selv
               ? DL_COL_SELECTED

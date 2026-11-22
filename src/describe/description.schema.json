@@ -639,7 +639,7 @@
               "notation": { "type": "string" },
               "of": {
                 "$ref": "#/$defs/formula",
-                "description": "For a mark on the edges, on a tiling's angles, or on the cells of an answer that is not on the cells, a technique reads: the number of the answer it narrows, read of the element `at`. The mark is read `name(e)`, the values it may still hold, and narrowed by `strike(e, d)`."
+                "description": "For a mark on the edges, on a tiling's angles, or on the cells of an answer that is not on the cells, a technique reads: the number of the answer it narrows, read of the element `at`. The mark is read `name(e)`, the values it may still hold, and narrowed by `strike(e, d)`. On the answer's own elements, `value(at)`: the values each may still hold, which the violation check reads as the element's domain (Bridges' line)."
               },
               "means": {
                 "$ref": "#/$defs/formula",
