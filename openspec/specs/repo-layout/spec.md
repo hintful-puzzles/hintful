@@ -1440,12 +1440,12 @@ The repository SHALL hold a third skeleton, `src/skeleton/code/`, a small game w
 
 ### Requirement: A game is registered by its directory
 
-A game SHALL be registered and cataloged by files in its own directory
-alone: its `index.ts` registers the game, and its `catalog.ts` exports its
-catalog entry, whose shape `src/engine/contract/catalog.ts` declares. No shared file
-SHALL list the games. Loading the games SHALL fail when a directory under
-`src/games/` registers no game under its own name or has no `catalog.ts`, or
-when a `catalog.ts` sits in a directory with no `index.ts`.
+A game SHALL be registered and cataloged by its own directory alone: its
+`index.ts` registers it and its `catalog.ts` exports its entry, or, for a
+game born from its description, the `<id>.game.ts` and `<id>.catalog.ts`
+the compiler writes from it. No shared file SHALL list the games. Loading
+the games SHALL fail when a game registers under another name or has no
+catalog entry, or when a catalog entry has no game.
 
 #### Scenario: A game directory has no catalog entry
 
@@ -1459,6 +1459,11 @@ when a `catalog.ts` sits in a directory with no `index.ts`.
 - **WHEN** a directory's `index.ts` registers no game whose id is the
   directory's name
 - **THEN** importing `src/games/index.ts` throws, naming the directory
+
+#### Scenario: A born game needs no TypeScript of its own
+
+- **WHEN** a game's directory holds its description and no `index.ts`
+- **THEN** the game is registered and cataloged from what the compiler wrote
 
 ### Requirement: Engine modules are grouped by concern into layered directories
 
@@ -1491,3 +1496,17 @@ name any directory.
 - **WHEN** a contributor adds a directory under `src/engine/` without
   declaring it
 - **THEN** the layering guard fails
+
+### Requirement: The TypeScript under src/games/ only shrinks
+
+The gate SHALL count the lines of TypeScript under `src/games/`, tests
+excluded, and refuse a count other than the committed ceiling, so a change
+that adds a game's hand-written code fails and the change that removes some
+lowers the ceiling.
+
+#### Scenario: A planted line
+
+- **WHEN** a line is added to a TypeScript file under `src/games/` that is not
+  a test
+- **THEN** the gate's `game-lines` check fails, naming the count and the
+  ceiling

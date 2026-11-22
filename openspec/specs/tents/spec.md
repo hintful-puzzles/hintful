@@ -204,9 +204,8 @@ one level below.
 
 Tents' solver SHALL deduce only, as the ladder `tents.description.yaml`
 states. Each technique SHALL be checked sound, and a planted defect of each
-found unsound. The boards of its firing census SHALL be those generated at
-every preset and at a non-square size, at every cap the generator uses, and
-every technique SHALL fire on them.
+found unsound. Its hint pins SHALL reach every kind of step, each technique's
+and each arm's, on boards dealt at every preset and at a non-square size.
 
 #### Scenario: Generated boards solve at exactly their difficulty
 
@@ -223,13 +222,14 @@ every technique SHALL fire on them.
 #### Scenario: A silenced technique fails
 
 - **WHEN** any technique is removed from the description
-- **THEN** the firing census fails
+- **THEN** its pinned kind of step is no longer reached, and the pins fail
 
 #### Scenario: A Normal rung nothing depends on is still certified
 
 - **WHEN** the tree diagonal-pair technique is silenced
-- **THEN** the census reports it as never fired, even though every board is
-  still dealt at its tier, because other techniques reach its conclusions
+- **THEN** its pinned step is no longer given, and the pins fail, even though
+  every board is still dealt at its tier because other techniques reach its
+  conclusions
 
 ### Requirement: Solver: Tents' techniques by tier
 
@@ -383,8 +383,8 @@ outline and its stripes stand for SHALL be the legend's (`hint.marks`).
 #### Scenario: A line count's picture
 
 - **WHEN** the displayed step counts a row
-- **THEN** the row is hatched, its clue is recolored as an outline and the
-  squares the step decides are ringed
+- **THEN** the row and its clue are hatched, and the squares the step decides
+  are ringed
 
 ### Requirement: Hint: A Tents step's links are followed as its squares are
 
@@ -403,8 +403,8 @@ by the tent.
 Where every way of placing a row's or column's remaining tents in its open
 squares, no two side by side, puts a tent next to one open square of a line
 alongside, even diagonally, a step SHALL mark that square grass ("Wherever
-this column's 2 remaining tents go, one touches each of these squares beside
-it"). The step SHALL decide no square of the line it counts.
+this column's 2 remaining tents go, one touches each ringed square"). The
+step SHALL decide no square of the line it counts.
 
 #### Scenario: A column's two tents on a dealt Normal board
 
@@ -421,8 +421,8 @@ after each: grass beside no tree, or beside trees that all have their tents;
 grass round a tent; a tree's one open square; the square between a tree's two
 diagonal candidates; a link after which one of those four decides something;
 a line's count over its own squares; its count over the lines beside it; a
-link after which any of them does, or failing that the first link pending. It
-SHALL NOT stop at the board's tier.
+link after which any of them does, or else the first link pending, from
+the board's dealt tier.
 
 #### Scenario: A line is counted when no square beside a tree is decided
 

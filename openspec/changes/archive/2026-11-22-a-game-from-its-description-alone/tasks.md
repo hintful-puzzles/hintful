@@ -193,6 +193,8 @@ engine commit.
       game and hold. `skip_specs` was already gone. Kakurasu gains its
       hint pins (901 positions on 48 boards, every kind), which the route
       now asks of a born game.
-- [ ] 4.3 Commit, push, archive. File the migration batches (review stage
+- [x] 4.3 Commit, push, archive. File the migration batches (review stage
       4) as changes if the pilot holds; if it does not, record why in the
-      doctrine.
+      doctrine. The owner (2026-11-22): a tentative pass; pilot more games
+      first. Filed `born-unruly-norinori-and-mosaic`, three plain-cell
+      games with no links, which files the family's migration if it holds.

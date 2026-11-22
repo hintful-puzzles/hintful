@@ -421,7 +421,6 @@ Kakurasu's four. Time holds, and Tents' 3005 lines are gone. Four of the
 six are the link reading only Tents' hint has (a step's `MARK` facts,
 `says.arms`, `glance`, `askBefore`), and they serve any later game with
 links. The other two are small: an arm in `rulesOut`, and `noBareLine`.
-The recommendation is to read it as holding and file the stage-4
-migration batches, starting with the fill games that have no links. The
-alternative is to record in the doctrine why it did not hold, and file
-no batches.
+Answered by the owner, 2026-11-22: a tentative pass. Pilot more games
+before a family moves whole: `born-unruly-norinori-and-mosaic`, after
+`clear-the-dependabot-alerts`.

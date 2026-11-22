@@ -1,0 +1,4 @@
+# No requirement changes: a dependency upgrade.
+schema: spec-driven
+skip_specs: true
+created: 2026-11-22

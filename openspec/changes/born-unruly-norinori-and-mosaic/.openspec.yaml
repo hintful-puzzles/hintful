@@ -1,0 +1,4 @@
+# Drop skip_specs once the design names each game's deltas (task 3.2).
+schema: spec-driven
+skip_specs: true
+created: 2026-11-22
