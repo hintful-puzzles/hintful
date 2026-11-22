@@ -4,11 +4,12 @@
  * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
  * reach it as a registered game. What is left here is upstream's IDs read as
  * the right blocks and numbers, a number dealt on each line, the tiers a
- * pasted board opens at, the drag and the arrows by direction, and the
- * hint's words.
+ * pasted board opens at, the drag and the arrows by direction, the hint's
+ * words, and a wrong line outlined by Check & Save.
  */
 
 import { describe, expect, it } from "vitest";
+import { COL_ERROR } from "../../engine/color/roles.ts";
 import {
   DESC_CONTRADICTORY,
   DESC_NOT_UNIQUE,
@@ -27,6 +28,7 @@ import {
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
 import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { renderScenario } from "../../engine/testing/render-scenario.ts";
 import { game } from "../../generated/games/sticks/sticks.game.ts";
 
 const ACROSS = 1;
@@ -162,6 +164,35 @@ describe("sticks", () => {
     expect(values()).toEqual([ACROSS, BLOCK, ACROSS, DOWN]);
     send(CURSOR_RIGHT | MOD_CTRL);
     expect(values()).toEqual([ACROSS, BLOCK, ACROSS, ACROSS]);
+  });
+
+  it("counts the block numbers left, never a line's", () => {
+    const board = loaded("7x7:c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4");
+    expect(game.statusbarText?.(board, game.newUi(board))).toBe("Clues left: 5");
+    const solved = game.solve(board, board);
+    if (!solved.ok) throw new Error("no answer");
+    const done = game.executeMove(board, solved.move);
+    expect(game.statusbarText?.(done, game.newUi(done))).toBe("");
+  });
+
+  it("outlines a line Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = "7x7:c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4";
+    const fresh = loaded(id);
+    const solved = game.solve(fresh, fresh);
+    if (!solved.ok) throw new Error("no answer");
+    const answer = game.executeMove(fresh, solved.move).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < answer.length; c++) {
+      if (fresh.fixed[c]) continue;
+      const moves = [{ set: [c, answer[c] === ACROSS ? DOWN : ACROSS] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
+    }
+    throw new Error("no wrong line that breaks no rule");
   });
 });
 

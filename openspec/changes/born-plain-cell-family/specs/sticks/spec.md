@@ -130,6 +130,18 @@ each column from the top.
   horizontal, both by that 3, and the step after them reasons from the 1
   block
 
+### Requirement: Status bar: The Sticks status bar counts the block numbers left
+
+The status bar SHALL read `Clues left: {n}`, counting the shown block
+numbers not yet met with every side decided, and SHALL be empty once none is
+left. A line's number is never counted.
+
+#### Scenario: A board as dealt, and solved
+
+- **WHEN** the 7×7 board `c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4`, with
+  five numbered blocks, is opened, and then solved
+- **THEN** the status bar reads "Clues left: 5", and then is empty
+
 ## REMOVED Requirements
 
 ### Requirement: Params: Sticks refuses, for a deal only, a block percentage outside 5 to 100 and a quarter-turn symmetry off a square

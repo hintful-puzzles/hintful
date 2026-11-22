@@ -160,6 +160,14 @@ for (const game of games) {
   }
 
   const held = new Set(requirements.map((r) => subjectOf(r.title)));
+  // A subject an open change adds is held: its game's new member and the
+  // requirement for it land in one commit, and the spec only at its archive.
+  const delta = path === specPath(game) ? openDelta(game) : null;
+  if (delta !== null) {
+    const [kept] = readFileSync(delta, "utf8").split("\n## REMOVED Requirements");
+    for (const [, title] of kept.matchAll(/^### Requirement: (.+)$/gm))
+      held.add(subjectOf(title));
+  }
   const members = recorded.get(game);
   if (!members) {
     failures.push(

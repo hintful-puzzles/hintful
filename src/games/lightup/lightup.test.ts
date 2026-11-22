@@ -203,4 +203,24 @@ describe("lightup", () => {
       ),
     ).toBeGreaterThan(0);
   });
+
+  it("outlines a square Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = "7x7:c2mBc2a1a4aBc2m1c";
+    const fresh = loaded(id);
+    const solved = game.solve(fresh, fresh);
+    if (!solved.ok) throw new Error("no answer");
+    const answer = game.executeMove(fresh, solved.move).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < answer.length; c++) {
+      if (fresh.fixed[c]) continue;
+      const moves = [{ set: [c, answer[c] === BULB ? CROSS : BULB] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
+    }
+    throw new Error("no wrong square that breaks no rule");
+  });
 });
