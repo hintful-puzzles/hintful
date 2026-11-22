@@ -288,6 +288,18 @@ research tools all read through it; the app never does.
   placing runs on each value the board holds too, so a bulb the player
   placed shines. `play.sweepWith: secondary` makes the sweep stroke the
   secondary button's alone, the primary placing one piece where it began.
+  A scatter may take a `first` too, and scatters on the cells left (Sticks'
+  blocks). `deal.oneIn: { kind: group }` derives a kind whose meaning reads
+  its own clues (Sticks' length reads `room`) once on a random cell of each
+  group, as the only clue of its kind, so no second copy of the meaning is
+  written. `deal.hide` may list kinds, hidden in one random order across
+  them; `stripFrom: everyClue` starts every search-tier draw from every clue,
+  where the lowest tier's boards leave the search too little to strip.
+  `digits`' `after: { B: kind }` writes one digit of that kind straight
+  after a letter's cell (Sticks' `B2`). A bar painter `across` or `down`
+  names an axis, which makes a drag run along its row or column and an
+  arrow with Ctrl or Shift stroke a line along or across the move; `{each}`
+  in a step is the number its square shows, of the first kind in `numbers`.
   The compiler writes `<id>.game.ts`, `fillGame` of the module, and
   `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One

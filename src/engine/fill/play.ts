@@ -47,11 +47,27 @@ import { PAINTERS } from "../render/pieces/index.ts";
 import { type ClueList, clueAt } from "../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, type FillModule, listOf } from "./board.ts";
 
+import { applyEdit, type Edit } from "./edit.ts";
+
 /** Whether the painter named `paint` draws one of a pair of alike pieces. */
 const paired = (paint: string): boolean =>
   paint in PAINTERS && PAINTERS[paint as keyof typeof PAINTERS].pair !== undefined;
 
-import { applyEdit, type Edit } from "./edit.ts";
+/** The line the painter named `paint` runs along, where it draws a line
+ * through its cell. */
+const axisOf = (paint: string): "row" | "column" | null =>
+  paint in PAINTERS ? (PAINTERS[paint as keyof typeof PAINTERS].axis ?? null) : null;
+
+/** The values that are lines through their cell, by the line they run
+ * along, or `null` where the values are not both lines. */
+function axesOf(play: FillPlay): { row: number; column: number } | null {
+  const by = new Map(
+    Object.entries(play.values).map(([v, { paint }]) => [axisOf(paint), Number(v)]),
+  );
+  const row = by.get("row");
+  const column = by.get("column");
+  return row === undefined || column === undefined ? null : { row, column };
+}
 
 /** A value the player places: what its verb does, as the Controls paragraph
  * completes "Click a square to …", the key or keys that place it, a letter
@@ -177,6 +193,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   origin: (tileSize: number) => number,
 ): FillInput<C, D> {
   const { primary, secondary } = play;
+  const axes = axesOf(play);
   type Verb = TargetVerb<FillBoard<C>, FillUi, Point, Edit>;
 
   /** A verb that sets a cell to `to(v)` from `v`, or means nothing on a fixed
@@ -226,11 +243,12 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   const targetVerbs: TargetVerbs<FillBoard<C>, FillUi, D, Point, Edit> = {
     geometry: squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin }),
     primary: clicking(primary, secondary),
-    // One of a pair of alike pieces (Unruly's block and disc) is placed as
-    // the other is, and rules nothing out.
-    secondary: paired(play.values[secondary].paint)
-      ? clicking(secondary, primary)
-      : rulingOut(clicking(secondary, primary)),
+    // One of a pair of alike pieces (Unruly's block and disc), or of two
+    // lines (Sticks'), is placed as the other is, and rules nothing out.
+    secondary:
+      paired(play.values[secondary].paint) || axes !== null
+        ? clicking(secondary, primary)
+        : rulingOut(clicking(secondary, primary)),
     keyOnly,
     ...(play.stroke === "sweep"
       ? {
@@ -296,6 +314,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
     const link = dragLink(b, ui, drag);
     if (link !== null) return link;
     const { sx, sy, ex, ey } = drag;
+    if (axes !== null && (sx !== ex || sy !== ey)) return alongEdit(b, drag, axes);
     // A left drag acts as a click where it began, and a right drag that never
     // left its cell is a right click: each its button's verb.
     if (ui.dragButton === LEFT_BUTTON || (sx === ex && sy === ey)) {
@@ -312,6 +331,25 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
       for (let x = Math.min(sx, ex); x <= Math.max(sx, ex); x++) {
         const c = y * b.w + x;
         if (!b.fixed[c] && b.values[c] === 0) set.push(c, secondary);
+      }
+    return set.length === 0 ? null : { set };
+  }
+
+  /** A drag of either button where the values are lines: the line along the
+   * drag's row or column through each cell it passes, or, where the cell it
+   * began in already holds that line, each cell it passes emptied. */
+  function alongEdit(
+    b: FillBoard<C>,
+    { sx, sy, ex, ey }: GridDrag,
+    by: { row: number; column: number },
+  ): Edit | null {
+    const value = sy === ey ? by.row : by.column;
+    const to = b.values[sy * b.w + sx] === value ? 0 : value;
+    const set: number[] = [];
+    for (let y = Math.min(sy, ey); y <= Math.max(sy, ey); y++)
+      for (let x = Math.min(sx, ex); x <= Math.max(sx, ex); x++) {
+        const c = y * b.w + x;
+        if (!b.fixed[c] && b.values[c] !== to) set.push(c, to);
       }
     return set.length === 0 ? null : { set };
   }
@@ -393,16 +431,36 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
 
   /** Shift or Ctrl with an arrow paints the cells the cursor leaves and
    * enters with the secondary value: Shift the open ones, Ctrl the primary
-   * ones as well. A bare arrow only moves the cursor. */
+   * ones as well; or, where the values are lines, by the way it moves. A
+   * bare arrow only moves the cursor. */
   function strokeKey(b: FillBoard<C>, ui: FillUi, raw: number): Edit | UiUpdate | null {
     const c0 = ui.cursor.y * b.w + ui.cursor.x;
+    const delta = cursorDelta(stripModifiers(raw));
     const moved = moveCursor(ui.cursor, stripModifiers(raw), b.w, b.h);
     const c1 = ui.cursor.y * b.w + ui.cursor.x;
     const set: number[] = [];
+    // Where the values are lines, Ctrl draws the line along the way the
+    // cursor moves, Shift the one across it, and both empty the cells.
+    const both = MOD_SHFT | MOD_CTRL;
+    const across = delta !== null && delta.dy === 0;
+    const line =
+      axes === null
+        ? null
+        : (raw & both) === both
+          ? 0
+          : raw & MOD_CTRL
+            ? across
+              ? axes.row
+              : axes.column
+            : across
+              ? axes.column
+              : axes.row;
     for (const c of c0 === c1 ? [c0] : [c0, c1]) {
       const v = b.values[c];
-      if (!b.fixed[c] && (v === 0 || (raw & MOD_CTRL && v === primary)))
-        set.push(c, secondary);
+      if (b.fixed[c]) continue;
+      if (line !== null) {
+        if (v !== line) set.push(c, line);
+      } else if (v === 0 || (raw & MOD_CTRL && v === primary)) set.push(c, secondary);
     }
     if (set.length > 0) return { set };
     return moved ? UI_UPDATE : null;

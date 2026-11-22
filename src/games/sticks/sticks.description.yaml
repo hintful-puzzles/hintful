@@ -1,6 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: sticks
+catalog:
+  name: Sticks
+  aliases: [Tatebo-Yokobo]
+  description: Line-drawing puzzle
+  objective: Fill in the grid with horizontal and vertical line segments.
+  collection: unreleased
+  family: lines
+  similar: Tatebo-Yokobo (タテボーヨコボー)
 help:
   rules: |-
     You are given a grid with several blocks. Fill every blank square with a line, which connects two square edges and goes horizontally or vertically through the center of the square. The lines must follow these rules:
@@ -11,7 +19,7 @@ help:
   controls: |-
     {{controls}}
 
-    You can also drag horizontally or vertically across the squares to draw a line that way through each of them; a drag that starts along a line already there clears the lines it passes over instead. Hold Shift or Ctrl while moving the cursor to draw a line through the square it leaves and the square it enters (Shift across the way it moves, Ctrl along it), or both to clear them.
+    You can also drag along a row or a column to draw a line that way through each square it passes; a drag that starts on a line already running that way clears the squares it passes instead. Hold Shift or Ctrl while moving the cursor to draw a line through the square it leaves and the square it enters (Shift across the way it moves, Ctrl along it), or both to clear them.
   sections:
     - heading: When a line connects to a block
       body: |-
@@ -124,14 +132,93 @@ clues:
   joins:
     at: cell
     value: "range(0, 4)"
-    means: "count(p in adj4(at) where meets(p, at)) = v"
+    means: "value(at) = 3 and count(p in adj4(at) where meets(p, at)) = v"
 freedom: { kind: fill }
+play:
+  values:
+    2: { does: place a vertical line in it, key: "1", glyph: " | ", paint: down }
+    1: { does: place a horizontal line in it, key: ["2", "0"], glyph: " - ", paint: across }
+  given:
+    3: { glyph: "###", paint: wall }
+  # A click goes round empty and the two lines, the left button vertical
+  # first and the right horizontal.
+  primary: 2
+  secondary: 1
+  click: cycle
+  stroke: line
+  # A number on a line sees along it as far as its line runs, which no block
+  # of squares bounds.
+  plain: [length]
+  # Upstream's 7x7, a smaller one, and an upright 8x10 in place of
+  # upstream's 10x10, whose Unreasonable deal is the slower past a second.
+  boards: [5x5, 7x7, 8x10]
+  default: 7x7
+  # Every 2x2 board with one answer is finished by the ladder.
+  bounds:
+    tiers:
+      Unreasonable: { area: { min: 5 } }
+  hintMarks:
+    ring: the square the step decides, with the line it must hold.
+    outline: >-
+      what the step reasons from: the number or block it is about, and the
+      line or the sides that number would break.
 deal:
   block: a share of the squares, at random, symmetric as asked
   answer: a line a square, at random
-  length: a number on each line, or as many hidden as the board stays at its tier
+  length: a number on each line, at a random square of it, or as many hidden as the board stays at its tier
   joins: a number on each block, or as many hidden as the board stays at its tier
   tier: one of the tiers
+  options:
+    blocks:
+      letter: b
+      kw: percentage-of-black-squares
+      name: "%age of blocks"
+      min: 5
+      max: 100
+      default: 20
+      words: "{n}% blocks"
+      doc: Rough percentage of blocks in the grid, from 5 to 100.
+    symmetry:
+      letter: s
+      kw: symmetry
+      name: Symmetry
+      default: 2
+      doc: >-
+        The pattern the blocks follow. <em>None</em> places them freely.
+        <em>2-way mirror</em> makes the bottom half a mirror image of the top
+        half, and <em>2-way rotational</em> makes the grid look the same
+        turned upside down. <em>4-way mirror</em> mirrors top to bottom and
+        left to right, and <em>4-way rotational</em> makes the grid look the
+        same after a quarter turn, which needs a square grid.
+      choices:
+        - { name: None, words: no symmetry }
+        - name: 2-way mirror
+        - name: 2-way rotational
+        - name: 4-way mirror
+        - name: 4-way rotational
+          bounds: { square: true }
+  # The blocks first, at the share and the symmetry the params give
+  # (upstream's set_blacks), then a line at random in every other square.
+  sample:
+    first: { value: 3, share: blocks, symmetry: symmetry }
+    scatter: { value: 1, share: 0.5, each: true }
+    rest: 2
+  # A number on each line, at one of its squares, and the numbers of both
+  # kinds hidden in one random order (upstream's single shuffle).
+  oneIn: { length: "stick(at)" }
+  hide: [length, joins]
+  # An Unreasonable board is stripped from every number, as upstream's one
+  # strip is: from Easy boards a 7x7 took up to 1.6 s, and from every number
+  # 0.4 s (2026-11-22).
+  stripFrom: everyClue
+# Upstream's game ID: `B` a block, with its number straight after, a number
+# on a line after `_` where the square before was written, and a letter a
+# run of squares with none.
+id:
+  - digits: length
+    apart: _
+    letters: { B: block }
+    after: { B: joins }
 tiers: [Easy, Unreasonable]
 # Every step tries a line one way in a square (`hor`: across) and finds it
 # breaks a rule, so the line runs the other way.

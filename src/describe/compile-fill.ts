@@ -506,15 +506,27 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
       throw new CompileError(
         `id: runs of ${kind}, which is not a cell's one-valued marker`,
       );
+    const after = "digits" in seg ? (seg.after ?? {}) : {};
     for (const m of more)
-      if (!markerKind(d, m))
+      if (!Object.values(after).includes(m) && !markerKind(d, m))
         throw new CompileError(
           `id: the letter of ${m}, which is not a cell's one-valued marker`,
         );
-    if ("digits" in seg)
+    if ("digits" in seg) {
       for (const letter of Object.keys(seg.letters ?? {}))
         if (seg.apart === letter)
           throw new CompileError(`id: the letter ${letter} is the digits' apart`);
+      // A letter's number is one digit, written straight after it.
+      for (const [letter, k] of Object.entries(after)) {
+        const vs = valuesOf(d, k);
+        if (seg.letters?.[letter] === undefined)
+          throw new CompileError(`id: a number after ${letter}, which is no letter`);
+        if (d.clueKinds.get(k)?.at !== "cell" || vs === null || vs[0] < 0 || vs[1] > 9)
+          throw new CompileError(
+            `id: digits of ${k} after ${letter}, which is not a cell's clue of the values 0 to 9`,
+          );
+      }
+    }
     // A dot run's case is its value, one of two.
     if (
       "dots" in seg &&
@@ -567,12 +579,21 @@ export function dealOf(
       throw new CompileError(`id: clue kind or partition ${kind} is not named once`);
   const isMarker = (kind: string): boolean => markerKind(d, kind);
   checkSegments(id, d, env);
-  const hide = json.deal?.["hide"];
-  if (typeof hide === "string" && !d.clueKinds.has(hide))
-    throw new CompileError(`deal hide: no clue kind ${hide}`);
+  const hideJson = json.deal?.["hide"];
+  // One kind, or several hidden in one random order.
+  const hide =
+    typeof hideJson === "string" ||
+    (Array.isArray(hideJson) && hideJson.every((k) => typeof k === "string"))
+      ? (hideJson as string | readonly string[])
+      : undefined;
+  if (hideJson !== undefined && hide === undefined)
+    throw new CompileError("deal hide: a clue kind, or a list of them");
+  const hides = hide !== undefined;
+  for (const k of typeof hide === "string" ? [hide] : (hide ?? []))
+    if (!d.clueKinds.has(k)) throw new CompileError(`deal hide: no clue kind ${k}`);
   const thorough = thoroughOf(json);
   if (thorough !== null) {
-    if (typeof hide !== "string")
+    if (!hides)
       throw new CompileError(
         "deal thorough: a setting of how the deal hides, and no hide",
       );
@@ -583,10 +604,13 @@ export function dealOf(
     if (taken.includes(thorough.letter))
       throw new CompileError(`deal thorough: the letter ${thorough.letter} is taken`);
   }
+  const stripFrom = json.deal?.["stripFrom"];
+  if (stripFrom !== undefined && (stripFrom !== "everyClue" || !hides))
+    throw new CompileError("deal stripFrom: everyClue, where the deal hides");
   const symmetric = json.deal?.["symmetric"];
   if (symmetric !== undefined && typeof hide !== "string")
     throw new CompileError(
-      "deal symmetric: the symmetry of the clues left, and no hide",
+      "deal symmetric: the symmetry of the clues left, and no hide of one kind",
     );
   const tiers = json.tiers ?? [];
   const tierLetters =
@@ -630,7 +654,7 @@ export function dealOf(
       throw new CompileError(
         `deal unpair: ${String(unpair)} is no clue kind at a cell`,
       );
-    if (typeof hide === "string")
+    if (hides)
       throw new CompileError(
         "deal unpair: a board's answer is the ladder's, and a hide",
       );
@@ -643,9 +667,16 @@ export function dealOf(
       throw new CompileError(
         "deal sample: a mend and a climb redraw a cell at a time, so take `each`",
       );
-    if (sample.climb === true && typeof hide === "string")
+    if (sample.climb === true && hides)
       throw new CompileError(
         "deal sample: a climb keeps what the ladder decided, and a hide",
+      );
+    if (
+      sample.first !== undefined &&
+      (sample.scatter.each !== true || sample.climb === true)
+    )
+      throw new CompileError(
+        "deal sample: first cells are kept by a scatter of `each` that does not climb",
       );
   }
   const leaves = json.deal?.["leaves"];
@@ -654,7 +685,7 @@ export function dealOf(
       throw new CompileError(
         `deal leaves: ${String(leaves)} is no cell's one-valued marker`,
       );
-    if (typeof hide !== "string")
+    if (!hides)
       throw new CompileError("deal leaves: what a hidden clue leaves, and no hide");
   }
   const options = optionsJsonOf(json, tiers, [
@@ -672,7 +703,7 @@ export function dealOf(
       throw new CompileError(
         `deal sample first: ${symmetry} is no option of the ${SYMMETRIES} symmetries`,
       );
-    if (typeof hide !== "string")
+    if (!hides && "build" in sample)
       throw new CompileError(
         "deal sample first: the build is on the first cells' clues with every hidden one hidden, and no hide",
       );
@@ -695,7 +726,8 @@ export function dealOf(
     ...(settings.length === 0 ? {} : { settings }),
     ...(Object.keys(options).length === 0 ? {} : { options }),
     sample,
-    ...(typeof hide === "string" ? { hide } : {}),
+    ...(hides ? { hide } : {}),
+    ...(stripFrom === undefined ? {} : { stripFrom }),
     ...(typeof leaves === "string" ? { leaves } : {}),
     ...(tierFlag === null ? {} : { tierFlag }),
     ...(typeof unpair === "string" ? { unpair } : {}),
@@ -1057,6 +1089,84 @@ export function numbersOf(
   ];
 }
 
+/** `deal.oneIn`: by clue kind, the cells a clue at `at` is the one of, so
+ * the deal shows one in each such group, at a random member. */
+function oneInOf(json: DescriptionJson): Readonly<Record<string, string>> {
+  const got = json.deal?.["oneIn"];
+  if (got === undefined) return {};
+  const groups: Record<string, string> = {};
+  for (const [k, g] of typeof got === "object" && !Array.isArray(got)
+    ? Object.entries(got)
+    : [])
+    if (typeof g === "string") groups[k] = g;
+  if (typeof got !== "object" || Object.keys(groups).length !== Object.keys(got).length)
+    throw new CompileError("deal oneIn: a formula of `at` by clue kind");
+  return groups;
+}
+
+/**
+ * The deal of kind `kind` one in each group: for each cell no group so far
+ * holds, its group's cells, one of them at random, and there the first of
+ * its values whose clue holds as the only one of its kind (`clueHolds_` with
+ * the clues `cl`). Emitted into `once`, which `deriveClues` runs after the
+ * other kinds.
+ */
+function onceOf(
+  kind: string,
+  c: { readonly value: Expr | null },
+  group: string,
+  sorts: ClueKind,
+  env: Env,
+  measured: (e: Expr) => Expr,
+  once: Out,
+): void {
+  const covered = Out.fresh("_covered");
+  const members = Out.fresh("_members");
+  const at = Out.fresh("_at");
+  const vs = Out.fresh("_v");
+  const pickAt = Out.fresh("_pick");
+  const found = Out.fresh("found");
+  once.emit(`const ${covered} = new Uint8Array(sp.cells.length);`);
+  once.emit(`const ${at}: number[] = [];`);
+  once.emit(`const ${vs}: number[] = [];`);
+  once.open("for (const _c of sp.cells) {");
+  once.emit(`if (${covered}[_c]) continue;`);
+  once.emit(`const ${members}: number[] = [];`);
+  const groupExpr = measured(parse(group));
+  bindingLoops(
+    [{ name: "_p", kind: "in", of: groupExpr, where: null }],
+    new Map<string, Val>([["at", { code: "_c", sort: sorts.at }]]),
+    { ...env, readsClues: { yes: false } },
+    once,
+    (sc) => once.emit(`${members}.push(${(sc.get("_p") as Val).code});`),
+  );
+  once.emit(`if (${members}.length === 0) continue;`);
+  once.emit(`for (const _m of ${members}) ${covered}[_m] = 1;`);
+  once.emit(`const ${pickAt} = ${members}[pick(${members}.length)];`);
+  once.open(`${found}: {`);
+  bindingLoops(
+    [{ name: "v", kind: "in", of: measured(c.value as Expr), where: null }],
+    new Map<string, Val>([["at", { code: pickAt, sort: sorts.at }]]),
+    { ...env, readsClues: { yes: false } },
+    once,
+    (sc) => {
+      const v = (sc.get("v") as Val).code;
+      once.emit(
+        `if (clueHolds_${kind}(g, sp, { ...cl, ${kind}: clueList([${pickAt}], [${v}], sp.cells.length) }, ${pickAt}, ${v})) { ${at}.push(${pickAt}); ${vs}.push(${v}); break ${found}; }`,
+      );
+    },
+  );
+  once.close();
+  once.close();
+  // The clues in cell order, as a list holds them.
+  once.emit(
+    `const _order_${kind} = ${at}.map((_x, _i) => _i).sort((_a, _b) => ${at}[_a] - ${at}[_b]);`,
+  );
+  once.emit(
+    `cl.${kind} = clueList(_order_${kind}.map((_i) => ${at}[_i]), _order_${kind}.map((_i) => ${vs}[_i]), sp.cells.length);`,
+  );
+}
+
 /** The elements a clue may sit at, as the description names them. */
 const UNIVERSE: Readonly<Record<string, string>> = { cell: "cells", line: "lines" };
 
@@ -1085,6 +1195,12 @@ export function derivedClues(
   const holds: string[] = [];
   const derive = new Out(1);
   const dealt: string[] = [];
+  const oneIn = oneInOf(json);
+  for (const k of Object.keys(oneIn))
+    if (d.clueKinds.get(k)?.at !== "cell")
+      throw new CompileError(`deal oneIn: ${k} is no clue kind at a cell`);
+  /** The kinds dealt one in each group, after the rest. */
+  const once = new Out(1);
   for (const [kind, c] of d.clueKinds) {
     const sorts = env.clues.get(kind) as ClueKind;
     const universe = UNIVERSE[c.at];
@@ -1106,7 +1222,8 @@ export function derivedClues(
       out,
     );
     expect(means, "bool", `clue ${kind}`);
-    if (readsClues.yes)
+    const group = oneIn[kind];
+    if (readsClues.yes && group === undefined)
       throw new CompileError(
         `clue ${kind}: its meaning reads the board's clues, so a sampled answer cannot deal it`,
       );
@@ -1117,16 +1234,23 @@ export function derivedClues(
     ];
     holds.push(
       "",
-      `/** Whether a ${kind} clue at \`at\` valued \`v\` holds of the whole board \`g\`. */`,
+      group === undefined
+        ? `/** Whether a ${kind} clue at \`at\` valued \`v\` holds of the whole board \`g\`. */`
+        : `/** Whether a ${kind} clue at \`at\` valued \`v\` holds of the whole board \`g\`, the clues \`cl\`. */`,
       `export function clueHolds_${kind}(${[
         "g: ArrayLike<number>",
         param("sp", "GridSpace", body),
+        ...(group === undefined ? [] : [param("cl", "Dealt", body)]),
         param("at", "number", body),
         param("v", "number", body),
       ].join(", ")}): boolean {`,
       ...body,
       "}",
     );
+    if (group !== undefined) {
+      onceOf(kind, c, group, sorts, henv, measured, once);
+      continue;
+    }
     // Each element in order, then each value in the values' order: a value
     // pushed at this element already is the one that holds first.
     const at = `${kind}_at`;
@@ -1157,7 +1281,22 @@ export function derivedClues(
   // The sizes the techniques and the rules read, as `Dealt` holds them.
   const sizes = [...env.sizes.read].sort();
   for (const n of sizes) dealt.push(`${n}: sizes.${n}`);
-  const body = [...derive.text(), `  return { ${dealt.join(", ")} };`];
+  const onceKinds = Object.keys(oneIn);
+  const body =
+    onceKinds.length === 0
+      ? [...derive.text(), `  return { ${dealt.join(", ")} };`]
+      : [
+          ...derive.text(),
+          // Each kind dealt one in a group is read as the only clue of its
+          // kind on the board, beside every other kind.
+          `  const cl: Dealt = { ${[
+            ...dealt,
+            ...onceKinds.map((k) => `${k}: clueList([], [], sp.cells.length)`),
+          ].join(", ")} };`,
+          ...once.text(),
+          "  return cl;",
+        ];
+  if (onceKinds.length > 0) env.used.add("clueList");
   return [
     ...holds,
     "",
@@ -1174,6 +1313,7 @@ export function derivedClues(
       sizes.length === 0
         ? "_sizes: object = {}"
         : `sizes: Readonly<Record<${sizes.map((n) => JSON.stringify(n)).join(" | ")}, number>>`,
+      ...(onceKinds.length === 0 ? [] : ["pick: (n: number) => number = () => 0"]),
     ].join(", ")}): Dealt {`,
     ...body,
     "}",

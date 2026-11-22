@@ -67,6 +67,9 @@ export interface FillHintModule<C> extends LadderedFillModule<C> {
   /** How the game is played: where a cell's mark is a link, the kind of clue
    * it names. */
   readonly play?: FillPlay;
+  /** The kinds of clue written as a number on their cell, which a step
+   * names a square by ("this 2"). */
+  readonly numbers?: readonly string[];
 }
 
 /** A fill game's `Game.hint`, but for its legend of marks, its gesture, and
@@ -214,6 +217,15 @@ export function fillHint<C extends object>(
     },
     ...(module.STATED === undefined ? {} : { stated: module.STATED }),
     ...(pieces === null ? {} : { piece: (n: number) => pieces[n] }),
+    // The number written on a square, the first of the kinds that has one.
+    shows: (b, { x, y }) => {
+      for (const kind of module.numbers ?? []) {
+        const list = b.dealt[kind as keyof C] as ClueList;
+        const k = list.byAt[y * b.w + x];
+        if (k >= 0) return list.v[k];
+      }
+      return -1;
+    },
     say: {},
   });
   return {

@@ -61,6 +61,9 @@ export type IdSegment =
       /** A one-valued kind at cells written in the stream as its capital
        * letter, by the letter. */
       readonly letters?: Readonly<Record<string, string>>;
+      /** By letter, a kind at cells whose digit may follow the letter, on
+       * its cell (Sticks' numbered block, `B2`). */
+      readonly after?: Readonly<Record<string, string>>;
     }
   | { readonly numbers: string; readonly before?: string; readonly order?: "columns" };
 
@@ -125,8 +128,12 @@ export interface FillDeal {
   /** The settings only the deal reads, by name. */
   readonly options?: Readonly<Record<string, FillOption>>;
   readonly sample: Sample | null;
-  /** The clue kind the deal hides while the board still finishes. */
-  readonly hide?: string;
+  /** The clue kind the deal hides while the board still finishes, or the
+   * kinds it hides in one random order. */
+  readonly hide?: string | readonly string[];
+  /** Where a search tier's strip starts every draw: from every clue, not
+   * from a board of the lowest tier one draw in eight (Sticks'). */
+  readonly stripFrom?: "everyClue";
   /** The one-valued kind at cells that `hide`'s clue sits over: dealt where
    * none of `hide`'s is shown, so a clue hidden leaves it. */
   readonly leaves?: string;
@@ -673,14 +680,26 @@ export function encodeDesc<C extends Clues<C>>(
       const marked = Object.entries(seg.letters ?? {}).map(
         ([letter, kind]) => [letter, listOf(kind)] as const,
       );
-      // Two clues side by side have no run between them, so `apart` there.
+      const after = new Map(
+        Object.entries(seg.after ?? {}).map(([letter, kind]) => [letter, listOf(kind)]),
+      );
+      const letterAt = (c: number): string | null =>
+        marked.find(([, l]) => l.valueAt[c] >= 0)?.[0] ?? null;
+      // A clue straight after a written cell has no run before it, so
+      // `apart` there.
       const apart = (c: number): string =>
-        seg.apart !== undefined && c > 0 && list.valueAt[c - 1] >= 0 ? seg.apart : "";
+        seg.apart !== undefined &&
+        c > 0 &&
+        (list.valueAt[c - 1] >= 0 || letterAt(c - 1) !== null)
+          ? seg.apart
+          : "";
       out += encodeRunLength(
         sp.cells.length,
         (c) => {
           if (list.valueAt[c] >= 0) return apart(c) + String(list.valueAt[c]);
-          return marked.find(([, l]) => l.valueAt[c] >= 0)?.[0] ?? null;
+          const letter = letterAt(c);
+          const n = letter === null ? -1 : (after.get(letter)?.valueAt[c] ?? -1);
+          return letter === null ? null : n >= 0 ? letter + String(n) : letter;
         },
         { keepTrailingBlanks: true },
       );
@@ -775,8 +794,14 @@ export function decodeDesc<C extends Clues<C>>(
         const markedAt = new Map<string, number[]>(
           Object.values(letters).map((k) => [k, []]),
         );
+        const after = seg.after ?? {};
+        const numberedAt = new Map<string, { at: number[]; v: number[] }>(
+          Object.values(after).map((k) => [k, { at: [], v: [] }]),
+        );
         const isRun = (x: string) => x >= "a" && x <= "z";
         const isLetter = (x: string) => x in letters;
+        // Whether the cell before was written, so a clue here has no run
+        // before it.
         let afterClue = false;
         for (let pos = 0; pos < n; ) {
           if (r.peekIs(isRun)) {
@@ -786,8 +811,19 @@ export function decodeDesc<C extends Clues<C>>(
             continue;
           }
           if (r.peekIs(isLetter)) {
-            markedAt.get(letters[r.char()])?.push(pos++);
-            afterClue = false;
+            const letter = r.char();
+            markedAt.get(letters[letter])?.push(pos);
+            const k = after[letter];
+            if (k !== undefined && r.peekIs(isDigit)) {
+              const value = Number(r.char());
+              if (value > maxOf(clueMax, k as keyof C, sp, pos))
+                r.fail(DESC_OUT_OF_RANGE);
+              const got = numberedAt.get(k);
+              got?.at.push(pos);
+              got?.v.push(value);
+            }
+            pos++;
+            afterClue = true;
             continue;
           }
           const max = maxOf(clueMax, kind, sp, pos);
@@ -804,6 +840,8 @@ export function decodeDesc<C extends Clues<C>>(
           afterClue = true;
         }
         out[kind] = clueList(at, v, n);
+        for (const [k, got] of numberedAt)
+          out[k as keyof C] = clueList(got.at, got.v, n);
         for (const [k, cells] of markedAt)
           out[k as keyof C] = clueList(
             cells,

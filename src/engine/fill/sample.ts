@@ -23,22 +23,25 @@ type Near = "adj4" | "adj8";
  * every line (`sampleLines`). */
 export type Sample = BuiltSample | ScatterSample | DominoSample | LinesSample;
 
+/** A value dealt on a share of the cells before the rest is drawn, as
+ * symmetric as asked, each by the name of the option that gives it, the
+ * share going up by `ramp` as draws fail. */
+export interface FirstCells {
+  readonly value: number;
+  readonly share: string;
+  readonly symmetry: string;
+  readonly ramp?: {
+    readonly every: number;
+    readonly step: number;
+    readonly top: number;
+  };
+}
+
 /** An answer the ladder builds: any value of a cell's domain, or `value`
- * alone, placed at random and the rest decided; with `first`, a value dealt
- * on a share of the cells first, as symmetric as asked, each by the name of
- * the option that gives it, the share going up by `ramp` as draws fail. */
+ * alone, placed at random and the rest decided, after the `first` cells. */
 export interface BuiltSample {
   readonly build: true | { readonly value: number };
-  readonly first?: {
-    readonly value: number;
-    readonly share: string;
-    readonly symmetry: string;
-    readonly ramp?: {
-      readonly every: number;
-      readonly step: number;
-      readonly top: number;
-    };
-  };
+  readonly first?: FirstCells;
 }
 
 /** The share of `first` cells the draw numbered `draw` of a deal takes, from
@@ -47,7 +50,7 @@ export interface BuiltSample {
  * has too few squares to need a tier above the lowest (upstream lightup.c's
  * `new_game_desc` climbs and stays). */
 export function rampedShare(
-  ramp: NonNullable<BuiltSample["first"]>["ramp"],
+  ramp: FirstCells["ramp"],
   asked: number,
   draw: number,
 ): number {
@@ -105,6 +108,9 @@ export interface ScatterSample {
   /** Whether a draw after a refused one keeps what the ladder decided on it
    * (`deal.ts`, `climbFill`). */
   readonly climb?: true;
+  /** The cells dealt a value before the scatter of `each` draws the rest
+   * (Sticks' blocks). */
+  readonly first?: FirstCells;
 }
 
 /** How many cells a share of `n` is: rounded down, a share written as a

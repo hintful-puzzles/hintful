@@ -1,595 +1,191 @@
 /**
- * Behavioral tests for Sticks: the desc codec, the contradiction solver, the
- * drag/click/keyboard input machine, `findMistakes`, completion through
- * `executeMove`, the midend lifecycle + save round-trip, and tier-2.5 render
- * scenarios with snapshots.
+ * Sticks, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is upstream's IDs read as
+ * the right blocks and numbers, a number dealt on each line, the tiers a
+ * pasted board opens at, the drag and the arrows by direction, and the
+ * hint's words.
  */
+
 import { describe, expect, it } from "vitest";
-import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  descBadCharacter,
-  validateDesc,
+  DESC_CONTRADICTORY,
+  DESC_NOT_UNIQUE,
 } from "../../engine/contract/desc-error.ts";
 import { UI_UPDATE } from "../../engine/contract/game.ts";
-import type { Point } from "../../engine/contract/types.ts";
 import { paramsError } from "../../engine/game-id/params.ts";
-import { SYMM_NONE, SYMM_ROT2 } from "../../engine/generate/symmetric-blacks.ts";
 import {
+  CURSOR_LEFT,
   CURSOR_RIGHT,
-  CURSOR_SELECT,
   LEFT_BUTTON,
   LEFT_DRAG,
   LEFT_RELEASE,
+  MOD_CTRL,
   MOD_SHFT,
-  RIGHT_BUTTON,
-  RIGHT_RELEASE,
 } from "../../engine/input/pointer.ts";
+import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { type Flash, NO_FLASH, WIN_FLASH_S } from "../../engine/render/win-wave.ts";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
-import { driveMidend } from "../../engine/testing/drive-midend.ts";
-import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
-import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { seedBudget } from "../../engine/testing/slow.ts";
-import {
-  expectWinFlashTravels,
-  winFlashAt,
-  winFlashRun,
-} from "../../engine/testing/win-flash.ts";
-import { newSticksDesc } from "./generator.ts";
-import { sticksGame } from "./index.ts";
-import { brokenNumbers, COL_CELL, COL_LINE, newDrawState, redraw } from "./render.ts";
-import { deductionFinishes, findMistakes, searchAnswers } from "./solver.ts";
-import {
-  decodeParams,
-  encodeDesc,
-  encodeParams,
-  F_BLOCK,
-  F_HOR,
-  F_VER,
-  newState,
-  type SticksMove,
-  type SticksParams,
-  type SticksState,
-  type SticksUi,
-  textFormat,
-} from "./state.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { game } from "../../generated/games/sticks/sticks.game.ts";
 
-// A small board upstream's generator dealt (4x4, ROT2) — a real,
-// uniquely-solvable board.
-const FIX = { w: 4, h: 4, blackpc: 20, symm: 2, desc: "a1aB0_1a2_1a3a2B0a2a" };
-const FIX_PARAMS = {
-  w: FIX.w,
-  h: FIX.h,
-  blackpc: FIX.blackpc,
-  symm: FIX.symm,
-  diff: DIFF_EASY,
+const ACROSS = 1;
+const DOWN = 2;
+const BLOCK = 3;
+
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
 };
-const FIX_ID = `${FIX.w}x${FIX.h}b${FIX.blackpc}s${FIX.symm}:${FIX.desc}`;
 
-/** The fixture board's unique solution grid. */
-function fixtureSolution(): Uint8Array {
-  const answer = searchAnswers(newState(FIX_PARAMS, FIX.desc));
-  if (answer.kind !== "one") throw new Error("the fixture board has no one answer");
-  return answer.solution;
-}
-
-/** First white cell index of the fixture whose solution is the given line. */
-function whiteCellSolved(line: number): number {
-  const solution = fixtureSolution();
-  for (let i = 0; i < solution.length; i++) {
-    if (!(solution[i] & F_BLOCK) && solution[i] & line) return i;
-  }
-  throw new Error("no such cell");
-}
-
-const newUi = (): SticksUi => sticksGame.newUi(newState(FIX_PARAMS, FIX.desc));
-
-/** A midend plus a reader of the last notified game status. */
-function harness() {
-  const h = driveMidend(sticksGame);
-  const status = () => h.last("game-state-change")?.status ?? null;
-  return { m: h.midend, status };
-}
-
-/** Drive interpretMove at the default 48px tile size (border 4). */
-function press(
-  state: SticksState,
-  ui: SticksUi,
-  button: number,
-  x: number,
-  y: number,
-): SticksMove | null | typeof UI_UPDATE {
-  return sticksGame.interpretMove(
-    state,
-    ui,
-    preferredDrawState(sticksGame, state),
-    { x, y },
-    button,
-  );
-}
-
-/** Pixel center of cell (x, y) at the default tile size. */
-const center = (x: number, y: number): Point => ({
-  x: x * 48 + 4 + 24,
-  y: y * 48 + 4 + 24,
-});
-
-describe("sticks desc codec", () => {
-  it("decodes the fixture desc to a consistent board", () => {
-    const s = newState(FIX_PARAMS, FIX.desc);
-    expect(s.grid.length).toBe(16);
-    // Re-encoding is the exact inverse; this board is the only one any test
-    // re-encodes.
-    expect(encodeDesc(s.grid, s.numbers, s.w, s.h)).toBe(FIX.desc);
+describe("sticks", () => {
+  it("reads upstream's IDs: B a block with its number after, _ before a number after a written square", () => {
+    const board = loaded("4x1:B2_1_3a");
+    expect(Array.from(board.values)).toEqual([BLOCK, 0, 0, 0]);
+    expect(Array.from(board.dealt.joins.at)).toEqual([0]);
+    expect(Array.from(board.dealt.joins.v)).toEqual([2]);
+    expect(Array.from(board.dealt.length.at)).toEqual([1, 2]);
+    expect(Array.from(board.dealt.length.v)).toEqual([1, 3]);
   });
 
-  it("chains z for blank runs over 26", () => {
-    const grid = new Uint8Array(32);
-    const numbers = new Int16Array(32).fill(-1);
-    numbers[30] = 5;
-    const desc = encodeDesc(grid, numbers, 8, 4);
-    expect(desc).toBe("zd5a");
-    const p = { w: 8, h: 4, blackpc: 20, symm: SYMM_NONE, diff: DIFF_EASY };
-    expect(validateDesc(sticksGame, p, desc)).toBeNull();
-    const back = newState(p, desc);
-    expect(back.numbers[30]).toBe(5);
-  });
-
-  it("separates adjacent white clues with _ and shares B with its digit", () => {
-    const grid = new Uint8Array(4);
-    const numbers = new Int16Array(4).fill(-1);
-    grid[0] = F_BLOCK;
-    numbers[0] = 2;
-    numbers[1] = 1;
-    numbers[2] = 3;
-    const desc = encodeDesc(grid, numbers, 4, 1);
-    expect(desc).toBe("B2_1_3a");
-    const p = { w: 4, h: 1, blackpc: 20, symm: SYMM_NONE, diff: DIFF_EASY };
-    const back = newState(p, desc);
-    expect(back.grid[0]).toBe(F_BLOCK);
-    expect(Array.from(back.numbers)).toEqual([2, 1, 3, -1]);
-  });
-
-  it("validateDesc rejects wrong lengths and unknown characters", () => {
-    expect(validateDesc(sticksGame, FIX_PARAMS, FIX.desc)).toBeNull();
-    expect(validateDesc(sticksGame, FIX_PARAMS, `${FIX.desc}a`)).toBe(DESC_TOO_LONG);
-    expect(validateDesc(sticksGame, FIX_PARAMS, "a1a")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(sticksGame, FIX_PARAMS, "a!b")).toBe(descBadCharacter("!"));
-  });
-
-  it("validateDesc refuses what encodeDesc never writes", () => {
-    const p = { w: 4, h: 1, blackpc: 20, symm: SYMM_NONE, diff: DIFF_EASY };
-    expect(validateDesc(sticksGame, p, "B2_1_3a")).toBeNull();
-    expect(validateDesc(sticksGame, p, "B0c")).toBeNull();
-    // A black cell's clue counts at most four lines; a stick is at most as
-    // long as the board.
-    expect(validateDesc(sticksGame, p, "B5_1_3a")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(sticksGame, p, "B2_1_5a")).toBe(DESC_OUT_OF_RANGE);
-    // Large enough to wrap a 16-bit cell to a different clue.
-    expect(validateDesc(sticksGame, p, "B2_1_65539a")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(sticksGame, p, "B2_0_3a")).toBe(DESC_OUT_OF_RANGE);
-    // A `_` anywhere but before a white clue following a written cell.
-    expect(validateDesc(sticksGame, p, "_B2_1_3a")).toBe(descBadCharacter("_"));
-    expect(validateDesc(sticksGame, p, "B2_1a_3")).toBe(descBadCharacter("_"));
-    expect(validateDesc(sticksGame, p, "B2_1_B")).toBe(descBadCharacter("B"));
-    expect(validateDesc(sticksGame, p, "_1c")).toBe(descBadCharacter("_"));
-    expect(validateDesc(sticksGame, p, "1_23a")).toBe(DESC_OUT_OF_RANGE);
-    expect(validateDesc(sticksGame, p, "B2_1_3a,")).toBe(DESC_TOO_LONG);
-  });
-});
-
-describe("sticks params", () => {
-  it("encodes and decodes both forms", () => {
-    const p = { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY };
-    expect(encodeParams(p, true)).toBe("7x7b20s2de");
-    expect(encodeParams(p, false)).toBe("7x7");
-    expect(decodeParams("7x7b20s2de")).toEqual(p);
-    // A string from before the tiers reads as Easy.
-    expect(decodeParams("7x7b20s2")).toEqual(p);
-    expect(encodeParams({ ...p, diff: DIFF_UNREASONABLE }, true)).toBe("7x7b20s2du");
-    expect(decodeParams("10x10")).toMatchObject({ w: 10, h: 10 });
-  });
-
-  it("validates bounds in upstream order", () => {
-    const error = (p: SticksParams, full = true) => paramsError(sticksGame, p, full);
-    expect(error({ w: 1, h: 5, blackpc: 20, symm: 0, diff: DIFF_EASY })).toBe(
-      "Width must be at least 2.",
-    );
-    expect(error({ w: 5, h: 5, blackpc: 4, symm: 0, diff: DIFF_EASY })).toBe(
-      "%age of blocks must be between 5% and 100%.",
-    );
-    expect(error({ w: 5, h: 6, blackpc: 20, symm: 4, diff: DIFF_EASY })).toBe(
-      "4-fold symmetry is only available with square grids.",
-    );
-    expect(error({ w: 5, h: 5, blackpc: 20, symm: 9, diff: DIFF_EASY })).toMatch(
-      /^Symmetry must be one of/,
-    );
-    // The short check ignores the generation-only limits.
-    expect(
-      error({ w: 5, h: 6, blackpc: 0, symm: 4, diff: DIFF_EASY }, false),
-    ).toBeNull();
-  });
-});
-
-describe("sticks solver", () => {
-  it("deduces the fixture board to its unique complete solution", () => {
-    const solution = fixtureSolution();
-    let lines = 0;
-    for (let i = 0; i < solution.length; i++) {
-      if (!(solution[i] & F_BLOCK)) {
-        expect(solution[i] & (F_HOR | F_VER)).not.toBe(0);
-        lines++;
-      }
-    }
-    // An all-block fixture would satisfy the loop and assert nothing.
-    expect(lines).toBeGreaterThan(0);
-  });
-
-  it("flags an over-long segment's clue cell live", () => {
-    // 3x1: clue 1 at cell 0, but a 2-cell horizontal segment through it.
-    const grid = new Uint8Array([F_HOR, F_HOR, 0]);
-    const numbers = new Int16Array([1, -1, -1]);
-    expect([...brokenNumbers({ w: 3, h: 1, grid, numbers })]).toEqual([0]);
-  });
-
-  it("flags a line walled in short of its number by another number", () => {
-    // 3x1: clue 2 on a line across at cell 0, and the open square beside it
-    // numbered 1, which the line cannot take without joining two numbers.
-    const grid = new Uint8Array([F_HOR, 0, 0]);
-    const numbers = new Int16Array([2, 1, -1]);
-    expect([...brokenNumbers({ w: 3, h: 1, grid, numbers })]).toEqual([0]);
-  });
-
-  it("deduces nothing on a clueless board", () => {
-    const board = {
-      w: 2,
-      h: 2,
-      grid: new Uint8Array(4),
-      numbers: new Int16Array(4).fill(-1),
-    };
-    expect(deductionFinishes(board)).toBe(false);
-  });
-
-  it("every generated Easy board has exactly one answer, and the ladder finds it", () => {
-    // "The ladder finished" says it found *an* answer by forced steps, which
-    // is a different claim from "the board has only one": the search counts
-    // the answers, each checked by the rules.
-    // The count must be able to say "more than one", or asserting one proves
-    // nothing. A 2x2 board with no clues at all has many answers.
-    const blank = {
-      w: 2,
-      h: 2,
-      grid: new Uint8Array(4),
-      numbers: new Int16Array(4).fill(-1),
-    };
-    expect(searchAnswers(blank).kind).toBe("several");
-
-    for (const p of [
-      { w: 7, h: 7, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY },
-      { w: 10, h: 10, blackpc: 20, symm: SYMM_ROT2, diff: DIFF_EASY },
+  it("deals each tier, the smallest Unreasonable boards included, and opens each at its tier", () => {
+    for (const id of [
+      "5x5b20s2de",
+      "7x7b20s2de",
+      "7x7b20s2du",
+      "8x10b20s2de",
+      "2x3b20s0du",
+      "3x3b20s0du",
     ]) {
-      // The 10x10 board is most of the case's cost, and the 7x7 ones hold the
-      // same rule, so CI deals one of it.
-      const boards = p.w === 7 ? seedBudget(2, 8) : seedBudget(1, 8);
-      for (let s = 0; s < boards; s++) {
-        const { desc } = newSticksDesc(p, randomNew(`unique-${p.w}-${s}`));
-        const state = newState(p, desc);
-        expect(deductionFinishes(state)).toBe(true);
-        expect(searchAnswers(state).kind).toBe("one");
+      const p = game.decodeParams(id);
+      for (const seed of ["a", "b"]) {
+        const { desc } = game.newDesc(p, randomNew(`sticks-${id}-${seed}`));
+        const board = game.newState(p, desc);
+        const solved = game.solve(board, board);
+        if (!solved.ok) throw new Error(`${id}:${desc}: ${solved.error}`);
+        expect(game.status(game.executeMove(board, solved.move)), `${id}:${desc}`).toBe(
+          "solved",
+        );
+        const me = new Midend(game);
+        expect(me.newGameFromId(`${id.slice(0, -2)}:${desc}`)).toBeNull();
+        expect(me.getParams(), desc).toBe(id);
       }
     }
   });
 
-  it("flags an over-connected black clue", () => {
-    // 3x1: black cell with clue 0 in the middle, a horizontal line touching it.
-    const grid = new Uint8Array([F_HOR, F_BLOCK, 0]);
-    const numbers = new Int16Array([-1, 0, -1]);
-    const state: SticksState = {
-      w: 3,
-      h: 1,
-      grid,
-      numbers,
+  it("opens a pasted board at the tier it has, and refuses one with several answers or none", () => {
+    const load = (id: string) => {
+      const me = new Midend(game);
+      return me.newGameFromId(id) ?? me.getParams();
     };
-    expect([...brokenNumbers(state)]).toEqual([1]);
+    expect(load("4x4b20s2:3b1aB1b2_1B1c1a")).toBe("4x4b20s2du");
+    expect(load("4x4b20s2de:c1_1B0_1cB2c4a")).toBe("4x4b20s2de");
+    expect(load("4x4b20s2:p")).toBe(DESC_NOT_UNIQUE);
+    expect(load("4x4b20s2:4_1b1k")).toBe(DESC_CONTRADICTORY);
+  });
+
+  it("refuses only the sizes and symmetries no board is dealt on", () => {
+    const refused = (s: string) => paramsError(game, game.decodeParams(s), true);
+    expect(refused("2x2b20s0de")).toBeNull();
+    expect(refused("2x2b20s0du")).toMatch(/is Unreasonable/);
+    expect(refused("2x3b20s0du")).toBeNull();
+    expect(refused("4x5b20s4de")).toMatch(/must be square/);
+    expect(refused("7x7b4s0de")).toMatch(/at least 5/);
+  });
+
+  it("reads its params, the tier last", () => {
+    for (const id of ["7x7b20s2de", "7x7b20s2du", "10x10b30s0de"])
+      expect(game.encodeParams(game.decodeParams(id), true)).toBe(id);
+    expect(game.encodeParams(game.decodeParams("7x7"), true)).toBe("7x7b20s2de");
+  });
+
+  it("rules a line into a 0 block out first", () => {
+    // The square right of the 0 block, at (1,4), cannot run across into it.
+    const board = loaded("7x7:c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4");
+    const plan = game.hint.plan(board);
+    if (!plan?.ok) throw new Error("no hint");
+    expect(plan.steps[0].rung).toBe("overConnected");
+    expect(plan.steps[0].move.set).toEqual([4 * 7 + 1, DOWN]);
+    expect(board.values[4 * 7]).toBe(BLOCK);
+  });
+
+  it("carries the hint on from the 3 along its row, then to the 1 block", () => {
+    const plan = game.hint.plan(loaded("5x5:3bB1b5c2aB3c2a2_2aB2b1"));
+    if (!plan?.ok) throw new Error("no hint");
+    expect(plan.steps.slice(0, 4).map((s) => [s.rung, s.move.set])).toEqual([
+      ["unreachable", [0, ACROSS]],
+      ["unreachable", [1, ACROSS]],
+      ["unreachable", [2, ACROSS]],
+      ["overConnected", [4, DOWN]],
+    ]);
+    // A step names a numbered square by its number.
+    expect(plan.steps[0].explanation).toMatch(/this 3 must be horizontal/);
+  });
+
+  it("draws by direction: a key sets a line, a drag runs along its row, an arrow strokes", () => {
+    let board = loaded("4x1:aBb");
+    const ui = game.newUi(board);
+    const ds = { tileSize: 10 } as Parameters<typeof game.interpretMove>[2];
+    const send = (button: number, c = -1) => {
+      const at = c < 0 ? { x: -1, y: -1 } : { x: c * 10 + 5, y: 5 };
+      const m = game.interpretMove(board, ui, ds, at, button);
+      if (m !== null && m !== UI_UPDATE) board = game.executeMove(board, m);
+      return m;
+    };
+    const values = () => Array.from(board.values);
+    // A drag from the empty third square across the fourth draws along the row.
+    send(LEFT_BUTTON, 2);
+    send(LEFT_DRAG, 3);
+    send(LEFT_RELEASE, 3);
+    expect(values()).toEqual([0, BLOCK, ACROSS, ACROSS]);
+    // Started on a line that way, the same drag clears.
+    send(LEFT_BUTTON, 2);
+    send(LEFT_DRAG, 3);
+    send(LEFT_RELEASE, 3);
+    expect(values()).toEqual([0, BLOCK, 0, 0]);
+    // The cursor shows on the first square; 1 sets a vertical line, outright.
+    send(CURSOR_LEFT);
+    send(CURSOR_LEFT);
+    send("1".charCodeAt(0));
+    expect(values()).toEqual([DOWN, BLOCK, 0, 0]);
+    expect(send("1".charCodeAt(0))).toBeNull();
+    send("2".charCodeAt(0));
+    expect(values()).toEqual([ACROSS, BLOCK, 0, 0]);
+    // Ctrl and Right leaves the block out; at the edge it draws one square.
+    send(CURSOR_RIGHT | MOD_CTRL);
+    expect(values()).toEqual([ACROSS, BLOCK, 0, 0]);
+    send(CURSOR_RIGHT | MOD_CTRL);
+    send(CURSOR_RIGHT);
+    expect(values()).toEqual([ACROSS, BLOCK, ACROSS, 0]);
+    send(CURSOR_RIGHT | MOD_SHFT);
+    expect(values()).toEqual([ACROSS, BLOCK, ACROSS, DOWN]);
+    send(CURSOR_RIGHT | MOD_CTRL);
+    expect(values()).toEqual([ACROSS, BLOCK, ACROSS, ACROSS]);
   });
 });
 
-describe("sticks findMistakes", () => {
-  it("flags a line contradicting the unique solution, and only that", () => {
-    const i = whiteCellSolved(F_VER);
-    const state = newState(FIX_PARAMS, FIX.desc);
-    state.grid[i] = F_HOR; // contradicts the solution's vertical
-    expect(findMistakes(state)).toEqual([{ index: i, kind: "cell" }]);
-    state.grid[i] = F_VER; // matches the solution
-    expect(findMistakes(state)).toEqual([]);
-  });
-
-  it("never flags a blank cell (missing lines are incomplete, not wrong)", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    expect(findMistakes(state)).toEqual([]);
-  });
-});
-
-describe("sticks input", () => {
-  it("left click cycles blank -> vertical -> horizontal -> blank", () => {
-    const i = whiteCellSolved(F_VER);
-    const x = i % 4;
-    const y = (i - x) / 4;
-    let state = newState(FIX_PARAMS, FIX.desc);
-    const ui = newUi();
-    const c = center(x, y);
-
-    for (const expected of ["ver", "hor", "none"] as const) {
-      expect(press(state, ui, LEFT_BUTTON, c.x, c.y)).toBe(UI_UPDATE);
-      const move = press(state, ui, LEFT_RELEASE, c.x, c.y);
-      expect(move).toEqual({
-        kind: "set",
-        changes: [{ index: i, line: expected }],
-      });
-      state = sticksGame.executeMove(state, move as SticksMove);
-    }
-    expect(state.grid[i]).toBe(0);
-  });
-
-  it("right click cycles the other way (blank -> horizontal)", () => {
-    const i = whiteCellSolved(F_VER);
-    const c = center(i % 4, Math.floor(i / 4));
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const ui = newUi();
-    press(state, ui, RIGHT_BUTTON, c.x, c.y);
-    expect(press(state, ui, RIGHT_RELEASE, c.x, c.y)).toEqual({
-      kind: "set",
-      changes: [{ index: i, line: "hor" }],
-    });
-  });
-
-  it("a click on a black cell commits nothing", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const black = state.grid.findIndex((t) => (t & F_BLOCK) !== 0);
-    expect(black).toBeGreaterThanOrEqual(0);
-    const c = center(black % 4, Math.floor(black / 4));
-    const ui = newUi();
-    press(state, ui, LEFT_BUTTON, c.x, c.y);
-    expect(press(state, ui, LEFT_RELEASE, c.x, c.y)).toBe(UI_UPDATE);
-  });
-
-  it("a horizontal drag accretes cells and commits them as one move", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const ui = newUi();
-    const c0 = center(0, 0);
-    press(state, ui, LEFT_BUTTON, c0.x, c0.y);
-    // Sweep right across the top row in half-tile steps.
-    for (let px = c0.x; px <= center(3, 0).x; px += 24) {
-      press(state, ui, LEFT_DRAG, px, c0.y);
-    }
-    const move = press(state, ui, LEFT_RELEASE, center(3, 0).x, c0.y);
-    expect(move).not.toBe(UI_UPDATE);
-    expect(move).not.toBeNull();
-    const set = move as Extract<SticksMove, { kind: "set" }>;
-    expect(set.kind).toBe("set");
-    expect(set.changes.length).toBeGreaterThan(1);
-    for (const ch of set.changes) {
-      expect(ch.line).toBe("hor");
-      expect(state.grid[ch.index] & F_BLOCK).toBe(0);
-    }
-  });
-
-  it("keyboard: Enter places a vertical at the cursor, no-ops suppressed", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    // Find a white cell reachable at the cursor origin by moving right.
-    const ui = newUi();
-    // Arrow to make the cursor visible.
-    expect(press(state, ui, CURSOR_RIGHT, 0, 0)).toBe(UI_UPDATE);
-    const i = ui.cursor.y * 4 + ui.cursor.x;
-    if (state.grid[i] & F_BLOCK) {
-      // Fixture-dependent guard: step once more if we landed on a wall.
-      press(state, ui, CURSOR_RIGHT, 0, 0);
-    }
-    const j = ui.cursor.y * 4 + ui.cursor.x;
-    const move = press(state, ui, CURSOR_SELECT, 0, 0);
-    expect(move).toEqual({ kind: "set", changes: [{ index: j, line: "ver" }] });
-    const after = sticksGame.executeMove(state, move as SticksMove);
-    // '1' places a vertical — already vertical, so it is a suppressed no-op;
-    // Enter cycles onward (vertical -> horizontal), so it still moves.
-    expect(press(after, ui, 49 /* '1' */, 0, 0)).toBeNull();
-    expect(press(after, ui, CURSOR_SELECT, 0, 0)).toEqual({
-      kind: "set",
-      changes: [{ index: j, line: "hor" }],
-    });
-  });
-
-  it("Shift+arrow draws a line across the two cells", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    const ui = newUi();
-    press(state, ui, CURSOR_RIGHT, 0, 0); // reveals the cursor
-    const from = ui.cursor.y * 4 + ui.cursor.x;
-    const move = press(state, ui, CURSOR_RIGHT | MOD_SHFT, 0, 0);
-    const to = ui.cursor.y * 4 + ui.cursor.x;
-    expect(to).toBe(from + 1);
-    // Shift+horizontal-arrow paints vertical lines on both cells (upstream
-    // mapping); both are blank white cells on the fixture's top row.
-    expect(move).toEqual({
-      kind: "set",
-      changes: [
-        { index: from, line: "ver" },
-        { index: to, line: "ver" },
-      ],
-    });
-  });
-});
-
-describe("sticks completion and solve (through a real Midend)", () => {
-  it("completing the board via executeMove sets completed", () => {
-    const solution = fixtureSolution();
-    let state = newState(FIX_PARAMS, FIX.desc);
-    const changes = [];
-    for (let i = 0; i < solution.length; i++) {
-      if (solution[i] & F_BLOCK) continue;
-      changes.push({
-        index: i,
-        line: solution[i] & F_VER ? ("ver" as const) : ("hor" as const),
-      });
-    }
-    const last = changes.pop();
-    if (!last) throw new Error("fixture has no white cells");
-    state = sticksGame.executeMove(state, { kind: "set", changes });
-    expect(sticksGame.status(state)).toBe("ongoing");
-    const done = sticksGame.executeMove(state, { kind: "set", changes: [last] });
-    expect(sticksGame.status(done)).toBe("solved");
-  });
-
-  it("Solve through the midend completes the board (solved-with-help)", () => {
-    const { m, status } = harness();
-    expect(m.newGameFromId(FIX_ID)).toBeNull();
-    expect(m.solve()).toBeNull();
-    expect(status()).toBe("solved-with-help");
-    const text = m.formatAsText();
-    expect(typeof text).toBe("string");
-    // Every white cell carries a line ('-' or '|'), none left '.'.
-    expect(text).not.toContain(".");
-  });
-
-  it("is solved exactly while the board is complete", () => {
-    const solution = fixtureSolution();
-    let state = newState(FIX_PARAMS, FIX.desc);
-    const all = [];
-    for (let i = 0; i < solution.length; i++) {
-      if (solution[i] & F_BLOCK) continue;
-      all.push({
-        index: i,
-        line: solution[i] & F_VER ? ("ver" as const) : ("hor" as const),
-      });
-    }
-    state = sticksGame.executeMove(state, { kind: "set", changes: all });
-    expect(sticksGame.status(state)).toBe("solved");
-    const broken = sticksGame.executeMove(state, {
-      kind: "set",
-      changes: [{ index: all[0].index, line: "none" }],
-    });
-    expect(sticksGame.status(broken)).toBe("ongoing");
-  });
-});
-
-describe("sticks text format", () => {
-  it("renders the four cell glyphs", () => {
-    const state = newState(FIX_PARAMS, FIX.desc);
-    // Place one of each line so all four glyphs are actually on the board.
-    state.grid[whiteCellSolved(F_VER)] = F_VER;
-    state.grid[whiteCellSolved(F_HOR)] = F_HOR;
-    const text = textFormat(state);
-    // The WHOLE rendering, not a `toContain` per glyph: a one-character needle
-    // cannot notice a missing glyph, nor tell its glyph from a superstring of
-    // it (`docs/test-strength.md` §3).
-    expect(text).toMatchInlineSnapshot(`
-      "| - . #
-      . . . .
-      . . . .
-      # . . .
-      "
-    `);
-    // Kept beside the snapshot so a careless `vitest -u` cannot erase the
-    // guarantee: exactly the four glyphs, nothing else but the separators.
-    expect(new Set(text.replace(/[\n ]/g, ""))).toEqual(new Set(["#", "|", "-", "."]));
-    expect(text.split("\n").filter(Boolean).length).toBe(4);
-  });
-});
-
-describe("sticks rendering (tier 2.5)", () => {
-  it("draws the opening frame: backing, walls and clue numbers", () => {
-    const result = renderScenario({ game: sticksGame, id: FIX_ID });
-    const ops = result.recording.ops;
-    expect(ops.length).toBeGreaterThan(0);
-    // Clue numbers are drawn as text.
-    expect(ops.some((o) => o.op === "text")).toBe(true);
-    expect(result.recording.ops).toMatchSnapshot();
-  });
-
-  it("draws a placed line as a COL_LINE bar", () => {
-    const i = whiteCellSolved(F_VER);
-    const result = renderScenario({
-      game: sticksGame,
-      id: FIX_ID,
-      moves: [{ kind: "set", changes: [{ index: i, line: "ver" }] }],
-    });
-    expect(
-      result.recording.ops.some((o) => o.op === "rect" && o.color === COL_LINE),
-    ).toBe(true);
-  });
-
-  it("repaints the mistake overlay on an already-drawn frame", () => {
-    // The paint-twice guard (docs/rendering.md § "Prove the overlay repaints"): a cold frame proves nothing, so
-    // warm the drawstate, then redraw the SAME drawstate with mistakes.
-    const i = whiteCellSolved(F_VER);
-    const result = renderScenario({
-      game: sticksGame,
-      id: FIX_ID,
-      moves: [{ kind: "set", changes: [{ index: i, line: "hor" }] }],
-      showMistakes: true,
-    });
-    expect(result.mistakeCount).toBe(1);
-    expect(
-      result.recording.ops.some((o) => o.op === "rect" && o.color === COL_ERROR),
-    ).toBe(true);
-  });
-});
-
-describe("sticks: the win flash sweeps the open cells", () => {
-  const TS = 48;
-  const state = newState(FIX_PARAMS, FIX.desc);
-  state.grid.set(fixtureSolution());
-  const open = [...state.grid].filter((tile) => !(tile & F_BLOCK)).length;
-
-  const paint = (flash: Flash, ds = newDrawState(state, TS)) => {
-    const dr = new RecordingDrawing(sticksGame.colors([1, 1, 1]));
-    redraw(dr, ds, { prev: null, state, dir: 1, ui: newUi(), animTime: 0, flash });
-    return dr.ops;
-  };
-  /** The cells a frame fills with the flash color, as the `x,y` drawn at. */
-  const lit = (ops: ReturnType<typeof paint>): string[] =>
-    ops.flatMap((op) =>
-      op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
-        ? [`${op.x},${op.y}`]
-        : [],
-    );
-  const step = (key: string): number => {
-    const [x, y] = key.split(",").map(Number);
-    return x - y;
-  };
-
-  it("travels every open cell and no block, from the bottom left to the top right", () => {
-    expectWinFlashTravels(winFlashRun(paint, lit), open, step);
-  });
-
-  it("paints the leading edge in one flash color and the body in the other", () => {
-    const slots = new Set(
-      winFlashRun(paint, (ops) =>
-        ops.flatMap((op) =>
-          op.op === "rect" && (op.color === COL_FLASH || op.color === COL_FLASH_LEAD)
-            ? [op.color]
-            : [],
-        ),
-      ).frames.flat(),
-    );
-    expect(slots).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
-  });
-
-  it("keeps a lit cell's line, and repaints the cell when the flash leaves it", () => {
-    const ds = newDrawState(state, TS);
-    const during = paint(
-      winFlashAt(WIN_FLASH_S / 2, (flash) => paint(flash)),
-      ds,
-    );
-    const bars = (ops: typeof during) =>
-      ops.filter((o) => o.op === "rect" && o.color === COL_LINE).length;
-    expect(bars(during)).toBe(open);
-    // The same draw state, settled: the cells that were lit are drawn again.
-    const after = paint(NO_FLASH, ds);
-    expect(after.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
-    expect(after.some((o) => o.op === "rect" && o.color === COL_FLASH)).toBe(false);
-  });
+/** A position for every kind of step. */
+describeHintPins({
+  game,
+  params: [game.decodeParams("7x7b20s2de"), game.decodeParams("8x10b20s2du")],
+  pins: {
+    /** Held on 802 of 1129 positions walked. */
+    overConnected: "7x7b20s2de:a2a2c2_1a2aBB0a1aBb2cBa1b1aB1a1aBB0_3a2_2_3b3c1",
+    /** Held on 691 of 1129 positions walked. */
+    twoClues: {
+      id: "7x7b20s2de:1aB1a4cB2aB1aB2c3f1_3d1a1b3aB_1B2_2B2a3a2aB2a2",
+      moves: [{ set: [16, 1] }, { set: [24, 1] }],
+    },
+    /** Held on 1052 of 1129 positions walked. */
+    tooLong: {
+      id: "8x10b20s2du:B1c3bB1aB2_1aB1_1d1aB1_1a2_1_1b4bBc4B2aB1bBaB2b1aB2c4a1_1_1bB2b2c1B_1aB2aB2e4B",
+      moves: [{ set: [64, 2] }],
+    },
+    /** Held on 877 of 1129 positions walked. */
+    starved:
+      "8x10b20s2du:a1_2Ba1_2a1cB2bB1a1aB4a2aBaBc1B2_1_2_1_1Bd1cB3_2_2bB4_2b1B2aBcB3_1_1_2B_1_1Bb1c2aB2_3b",
+    /** Held on 1111 of 1129 positions walked. */
+    unreachable: "7x7b20s2de:1aB1a4cB2aB1aB2c3f1_3d1a1b3aB_1B2_2B2a3a2aB2a2",
+  },
 });

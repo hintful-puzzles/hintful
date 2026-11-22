@@ -308,8 +308,8 @@ preset:12x16 Normal  full=12x16b20s2d1  brief=12x16
 preset:12x16 Unreasonable  full=12x16b20s2d2  brief=12x16
 bump:w  full=8x7b20s4d0  brief=8x7
 bump:h  full=7x8b20s4d0  brief=7x8
-bump:blackpc  full=7x7b21s4d0  brief=7x7
-bump:symm  full=7x7b20s5d0  brief=7x7"
+bump:options.walls  full=7x7b21s4d0  brief=7x7
+bump:options.symmetry  full=7x7b20s5d0  brief=7x7"
 `;
 
 exports[`encoded params are byte-stable > loopy 1`] = `
@@ -834,8 +834,8 @@ preset:8x10 Easy  full=8x10b20s2de  brief=8x10
 preset:8x10 Unreasonable  full=8x10b20s2du  brief=8x10
 bump:w  full=8x7b20s2de  brief=8x7
 bump:h  full=7x8b20s2de  brief=7x8
-bump:blackpc  full=7x7b21s2de  brief=7x7
-bump:symm  full=7x7b20s3de  brief=7x7"
+bump:options.blocks  full=7x7b21s2de  brief=7x7
+bump:options.symmetry  full=7x7b20s3de  brief=7x7"
 `;
 
 exports[`encoded params are byte-stable > subsets 1`] = `

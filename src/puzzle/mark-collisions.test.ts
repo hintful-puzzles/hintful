@@ -23,10 +23,10 @@ import * as dominosa from "../games/dominosa/render.ts";
 import * as galaxies from "../games/galaxies/render.ts";
 import * as path from "../games/path/render.ts";
 import * as salad from "../games/salad/render.ts";
-import * as sticks from "../games/sticks/render.ts";
 import * as untangle from "../games/untangle/render.ts";
 import * as wordtrail from "../games/wordtrail/render.ts";
 import * as mosaic from "../generated/games/mosaic/mosaic.compiled.ts";
+import * as sticks from "../generated/games/sticks/sticks.compiled.ts";
 import { puzzleIds } from "./catalog.ts";
 import {
   alike,
@@ -113,7 +113,11 @@ const DECLARED: Record<string, Declared[]> = {
     },
   ],
   sticks: [
-    { among: [sticks.COL_NUMBER], against: [sticks.COL_TEXT], why: NUMBER_ON_A_PIECE },
+    {
+      among: [COL_INK],
+      against: [fillSlots(sticks.play).COL_NUMBER_LIGHT],
+      why: NUMBER_ON_A_PIECE,
+    },
   ],
   untangle: [
     {

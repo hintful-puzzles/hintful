@@ -86,7 +86,23 @@ order.
       mirror Normal board and a 4x4 four-way mirror Unreasonable board are
       no longer refused but their deals give up, since the born deal hides
       at Easy first; saves are not read.
-- [ ] 2.5 Sticks born.
+- [x] 2.5 Sticks born. Done 2026-11-22, 1,647 hand-written lines gone.
+      Added, each the engine's: `deal.oneIn`, a clue whose meaning reads
+      its own kind's clues (a line's length reads its room) derived once on
+      a random square of each line; `deal.hide` as a list hidden in one
+      random order; `stripFrom: everyClue`, a search tier's every draw
+      stripped from every number (an 8x10 Unreasonable deal from Easy boards
+      took up to 3.7 s, from every number 1.7 s, against the hand-written
+      generator's 2.6 s); a `first` on a scatter; `digits`' `after`, a
+      block's number straight after its `B`; the `across` and `down` bar
+      painters, whose axis makes a drag run along its row or column and an
+      arrow with Ctrl or Shift stroke along or across the move; a step's
+      `{each}` read as the number on its square. Differences a player sees:
+      a drag keeps to one row or column, where it could turn; the hint rings
+      the square it decides, not a line in the hint color, and goes column
+      by column; a share of blocks outside 5 to 100 is refused in any ID;
+      an Unreasonable 2x3 is dealt, which the hand-written generator gave up
+      on; saves of the hand-written game are not read.
 - [ ] 2.6 Bricks born.
 - [ ] 2.7 Pattern born.
 - [ ] 2.8 Singles born.

@@ -21,6 +21,9 @@ export interface Painter {
   /** The member of the two-state pair the piece is, which a hint names it
    * by (`PAIR_NAMES`), where it is one. */
   readonly pair?: PairIndex;
+  /** The line the piece runs along, where it is a line through its cell: a
+   * drag along that line places it, and it rules no other piece out. */
+  readonly axis?: "row" | "column";
   /** Whether {@link paint} draws a piece just placed by its `grown`, so a
    * placement of it is worth an animation. */
   readonly grows?: boolean;

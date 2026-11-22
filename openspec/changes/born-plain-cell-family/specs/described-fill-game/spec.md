@@ -162,12 +162,13 @@ default on any other board. A `tierFlag` letter MAY stand for a tier.
 
 ### Requirement: A born game's build may lay one value on a first one's cells
 
-A built sample MAY lay a `first` value on a share of the cells, as symmetric
-as an option asks, then build with one value alone, each on a random cell
-that may still hold it, the ladder deciding the rest, on the clues the first
-cells derive with every hidden one hidden. A `ramp` SHALL raise the share by
-its step after each `every` draws, past its top starting again. A hidden
-clue MAY leave a clue of another kind on its cell (`deal.leaves`).
+A built or scattered sample MAY lay a `first` value on a share of the
+cells, as symmetric as an option asks. A build SHALL then lay one value
+alone, each on a random cell that may still hold it, the ladder deciding the
+rest on the first cells' clues, every hidden one hidden; a scatter SHALL
+scatter on the cells left. A `ramp` SHALL raise the share by its step every
+`every` draws, wrapping past its top. A hidden clue MAY leave another kind's
+on its cell (`deal.leaves`).
 
 #### Scenario: Light Up's walls
 
@@ -191,6 +192,67 @@ the ladder places.
 - **WHEN** a bulb is placed
 - **THEN** the squares it lights are washed, a cross there is drawn or not as
   the preference says, and a hint never crosses them
+
+### Requirement: A born game's clue may be written once in a group
+
+`deal.oneIn` MAY derive a kind's clue on one random cell of each group a
+formula names: the clue SHALL be the one its meaning reads there as the only
+one of its kind, so a meaning that reads other clues is written once.
+
+#### Scenario: One number on each stick
+
+- **WHEN** a Sticks board is dealt
+- **THEN** each line of its answer carries one length number, on a random
+  square of it, before any is hidden
+
+### Requirement: A born game may hide several kinds of clue
+
+`deal.hide` MAY name several kinds, whose clues SHALL be hidden in one random
+order across them, each kept hidden while the ladder finishes the board.
+`deal.stripFrom: everyClue` SHALL start every draw of a search tier from
+every clue, not from a board of the lowest tier.
+
+#### Scenario: Sticks hides lengths and block numbers together
+
+- **WHEN** a Sticks board is dealt at Easy
+- **THEN** both its line numbers and its block numbers are among those hidden
+
+### Requirement: A born game's run code may write a clue after a letter
+
+A digits segment's `after` MAY write, straight after a letter's cell, one
+digit for a clue of a named kind on it, absent where it has none, and the
+reading SHALL refuse a digit past the kind's largest.
+
+#### Scenario: Sticks' numbered block
+
+- **WHEN** `4x1:B2_1_3a` is read
+- **THEN** the first square is a block numbered 2, and the next two hold the
+  numbers 1 and 3
+
+### Requirement: A born game's values may be lines along an axis
+
+A value painted as a bar MAY name an axis, `row` or `column`. A drag SHALL
+then set, from where it began along its row or column, the value of that
+axis, or clear them if the first cell holds it; an arrow with Ctrl SHALL set
+the value along the move in the two cells, with Shift the one across it, and
+with both clear them, leaving out fixed cells and cells already so.
+
+#### Scenario: Sticks' drag and arrows
+
+- **WHEN** a drag runs along a row of empty squares, and Ctrl and Right is
+  pressed with the cursor before a block
+- **THEN** the drag draws a line across in each, and the block is left out
+
+### Requirement: A born game's hint names a number by what it shows
+
+A step's `{each}` SHALL be the number written on the square it names, of the
+first kind in `numbers` with a clue there.
+
+#### Scenario: This 3 must be horizontal
+
+- **WHEN** a Sticks step forces a square holding the number 3 to be
+  horizontal
+- **THEN** it says that this 3 must be horizontal
 
 ## MODIFIED Requirements
 

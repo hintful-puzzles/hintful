@@ -8,6 +8,28 @@
   "else": { "$ref": "#/$defs/game" },
   "$defs": {
     "formula": { "type": "string", "minLength": 1, "description": "A formula." },
+    "firstCells": {
+      "type": "object",
+      "description": "A value dealt first on the share of the cells option `share` gives, as a percentage, as symmetric as option `symmetry` asks (upstream's set_blacks, the choices none, 2-way mirror, 2-way rotational, 4-way mirror and 4-way rotational).",
+      "required": ["value", "share", "symmetry"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "integer", "minimum": 1 },
+        "share": { "type": "string" },
+        "symmetry": { "type": "string" },
+        "ramp": {
+          "type": "object",
+          "description": "After each `every` draws the share goes up `step`, and past `top` starts over from the params' own: a layout few boards of the tier come from is left behind (upstream lightup.c's ramp of walls).",
+          "required": ["every", "step", "top"],
+          "additionalProperties": false,
+          "properties": {
+            "every": { "type": "integer", "minimum": 1 },
+            "step": { "type": "integer", "minimum": 1 },
+            "top": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
     "countOrFormula": {
       "oneOf": [{ "type": "integer", "minimum": 1 }, { "$ref": "#/$defs/formula" }]
     },
@@ -1075,6 +1097,12 @@
                     "type": "object",
                     "propertyNames": { "pattern": "^[A-Z]$" },
                     "additionalProperties": { "type": "string" }
+                  },
+                  "after": {
+                    "description": "By letter, the clue kind whose number may follow the letter, on the letter's cell.",
+                    "type": "object",
+                    "propertyNames": { "pattern": "^[A-Z]$" },
+                    "additionalProperties": { "type": "string" }
                   }
                 }
               },
@@ -1115,8 +1143,21 @@
               "description": "A clue kind at a cell of which two side by side with the same value are both taken off, in reading order: the board's answer is then the one the ladder finds, not the sample. With no `hide`."
             },
             "hide": {
-              "type": "string",
-              "description": "A clue kind the deal hides from the answer's, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier."
+              "oneOf": [
+                { "type": "string" },
+                {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "minItems": 2,
+                  "uniqueItems": true
+                }
+              ],
+              "description": "A clue kind the deal hides from the answer's, or several hidden in one random order, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier."
+            },
+            "oneIn": {
+              "type": "object",
+              "additionalProperties": { "type": "string" },
+              "description": "By clue kind at cells, a formula of `at` giving the cells it is the one clue of: the deal shows one in each such group, at a random member, valued as its meaning holds with it the only clue of its kind (Sticks' number, one on each line). Its meaning may then read its own kind's clues."
             },
             "leaves": {
               "type": "string",
@@ -1208,6 +1249,10 @@
                 }
               }
             },
+            "stripFrom": {
+              "enum": ["everyClue"],
+              "description": "A search tier's deal strips every draw from every clue, and not from a board of the lowest tier but one draw in eight: quicker where the lowest tier's boards leave the search little to strip (Sticks')."
+            },
             "symmetric": {
               "enum": ["halfTurn"],
               "description": "The clues `hide` leaves are symmetric under a half turn of the board: a clue whose partner square has none goes first, and each other goes with its partner."
@@ -1244,27 +1289,7 @@
                         }
                       ]
                     },
-                    "first": {
-                      "type": "object",
-                      "required": ["value", "share", "symmetry"],
-                      "additionalProperties": false,
-                      "properties": {
-                        "value": { "type": "integer", "minimum": 1 },
-                        "share": { "type": "string" },
-                        "symmetry": { "type": "string" },
-                        "ramp": {
-                          "type": "object",
-                          "description": "After each `every` draws the share goes up `step`, and past `top` starts over from the params' own: a layout few boards of the tier come from is left behind (upstream lightup.c's ramp of walls).",
-                          "required": ["every", "step", "top"],
-                          "additionalProperties": false,
-                          "properties": {
-                            "every": { "type": "integer", "minimum": 1 },
-                            "step": { "type": "integer", "minimum": 1 },
-                            "top": { "type": "integer", "minimum": 1 }
-                          }
-                        }
-                      }
-                    }
+                    "first": { "$ref": "#/$defs/firstCells" }
                   }
                 },
                 {
@@ -1355,6 +1380,10 @@
                     "climb": {
                       "const": true,
                       "description": "Each draw after one the deal refused keeps the cells the ladder decided on it and samples the rest, one draw in a hundred sampling every cell; a board the tier below finishes has one cell turned to the other value. A hill climb toward a board of the tier (upstream's clusters.c). With `each`, and no `hide`."
+                    },
+                    "first": {
+                      "$ref": "#/$defs/firstCells",
+                      "description": "A value dealt first, the scatter of `each` drawing every other cell (Sticks' blocks)."
                     },
                     "noBareLine": {
                       "type": "boolean",

@@ -1,5 +1,6 @@
 /** The painters a description's `paint:` may name, by name. */
 
+import { across, down } from "./bar.ts";
 import { ground, tent, tree } from "./camp.ts";
 import { bulb, wall } from "./lamp.ts";
 import type { Painter } from "./painter.ts";
@@ -8,12 +9,14 @@ import { star } from "./star.ts";
 import { clear, cross, domino, shade } from "./stock.ts";
 
 export const PAINTERS = {
+  across,
   block,
   bulb,
   clear,
   cross,
   disc,
   domino,
+  down,
   ground,
   shade,
   star,

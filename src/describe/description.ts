@@ -241,7 +241,12 @@ export type IdSegmentJson =
   | { runs: string }
   | { walls: string }
   | { dots: string; cases: [number, number] }
-  | { digits: string; apart?: string; letters?: Record<string, string> }
+  | {
+      digits: string;
+      apart?: string;
+      letters?: Record<string, string>;
+      after?: Record<string, string>;
+    }
   | { numbers: string; before?: string; order?: "columns" };
 
 /** The clue kinds or dealt partition an ID segment writes. */
@@ -253,7 +258,11 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
       : "dots" in seg
         ? [seg.dots]
         : "digits" in seg
-          ? [seg.digits, ...Object.values(seg.letters ?? {})]
+          ? [
+              seg.digits,
+              ...Object.values(seg.letters ?? {}),
+              ...Object.values(seg.after ?? {}),
+            ]
           : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
@@ -263,7 +272,13 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
  * ({@link growOf}). */
 type DealJson = Record<
   string,
-  string | SampleJson | ThoroughJson | GrowJson | Record<string, OptionJson>
+  | string
+  | readonly string[]
+  | SampleJson
+  | ThoroughJson
+  | GrowJson
+  | Record<string, OptionJson>
+  | Record<string, string>
 >;
 
 /** The settings the params give that only the deal reads (`deal.options`),
@@ -352,15 +367,7 @@ export interface ThoroughJson {
  * the other value until none does; with `climb`, a draw after a refused one
  * keeps what the ladder decided on it. */
 export type SampleJson =
-  | {
-      build: true | { value: number };
-      first?: {
-        value: number;
-        share: string;
-        symmetry: string;
-        ramp?: { every: number; step: number; top: number };
-      };
-    }
+  | { build: true | { value: number }; first?: FirstJson }
   | { dominoes: { value: number }; rest: number }
   | {
       lines: { value: number; count: number | string; apart: "adj4" | "adj8" };
@@ -380,7 +387,17 @@ export type SampleJson =
       noBareLine?: boolean;
       mend?: true;
       climb?: true;
+      first?: FirstJson;
     };
+
+/** A value dealt on a share of the cells before the rest of the answer, as
+ * symmetric as an option asks, the share raised by `ramp` as draws fail. */
+interface FirstJson {
+  value: number;
+  share: string;
+  symmetry: string;
+  ramp?: { every: number; step: number; top: number };
+}
 
 /** A game's nouns, compiled into its module as `WORDS`: the engine's
  * lexicon words `{noun}` (a board position, "square" unless the game's genre

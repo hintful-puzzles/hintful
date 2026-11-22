@@ -136,6 +136,7 @@ describe("the pre-commit test selector can see every coupling", () => {
     expect(
       patterns('import.meta.glob<string>([\n  "./a/*.ts",\n  "./b/*.ts",\n]);'),
     ).toEqual([true]);
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: the source under test holds a template literal
     expect(patterns("import.meta.glob(`./${dir}/*.ts`);")).toEqual([false]);
     expect(
       patterns("// import.meta.glob(dir)\nconst s = 'import.meta.glob(x)';"),

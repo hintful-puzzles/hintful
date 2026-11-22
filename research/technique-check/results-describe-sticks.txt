@@ -1,15 +1,15 @@
 ok  sticks     overConnected                  3  sound    (want sound   )     9 queries    0.2s
 ok  sticks     overConnected (planted)        3  unsound  (want unsound )     1 queries    0.0s   at cell 0
 ok  src/games/sticks/sticks.description.yaml#overConnected: recorded sound, proved whole on all 1 boards
-ok  sticks     twoClues                       3  sound    (want sound   )     9 queries    0.3s
+ok  sticks     twoClues                       3  sound    (want sound   )     9 queries    0.4s
 ok  sticks     twoClues (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
 ok  src/games/sticks/sticks.description.yaml#twoClues: recorded sound, proved whole on all 1 boards
-ok  sticks     tooLong                        3  sound    (want sound   )     9 queries    0.3s
+ok  sticks     tooLong                        3  sound    (want sound   )     9 queries    0.4s
 ok  sticks     tooLong (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
 ok  src/games/sticks/sticks.description.yaml#tooLong: recorded sound, proved whole on all 1 boards
 ok  sticks     starved                        3  sound    (want sound   )     9 queries    0.2s
 ok  sticks     starved (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
 ok  src/games/sticks/sticks.description.yaml#starved: recorded sound, proved whole on all 1 boards
-ok  sticks     unreachable                    3  sound    (want sound   )     9 queries    0.6s
+ok  sticks     unreachable                    3  sound    (want sound   )     9 queries    0.5s
 ok  sticks     unreachable (planted)          3  unsound  (want unsound )     1 queries    0.0s   at cell 0
 ok  src/games/sticks/sticks.description.yaml#unreachable: recorded sound, proved whole on all 1 boards
