@@ -18,7 +18,8 @@ The player paints some white squares black so that no two black squares are
 orthogonally adjacent, all white squares stay connected, and every numbered
 clue equals the number of white squares visible from it in a straight line,
 itself counted once (`h + v - 1`). The board SHALL be reported solved exactly
-while `findErrors` finds no error on it.
+while its rules (`Game.rules`) hold of it, an unmarked square counting as
+white.
 
 #### Scenario: A clue counts itself once
 
@@ -29,7 +30,7 @@ while `findErrors` finds no error on it.
 #### Scenario: Completing the board is detected
 
 - **WHEN** a move paints the final black square of the unique solution
-- **THEN** `findErrors` reports no error and `status` returns `"solved"`
+- **THEN** the rules report no violation and `status` returns `"solved"`
 
 ### Requirement: Rules: Range's move is a list of cell-sets
 
@@ -44,16 +45,22 @@ out-of-bounds or clue-cell target.
 
 ### Requirement: Rules: Range highlights errors live
 
-`redraw` SHALL highlight, in the error color, every cell currently violating a
-rule, recomputed each frame from `findErrors`: a black cell orthogonally
-adjacent to another black cell, a clue whose visible white run cannot equal
-its number, or a white cell cut off from the main white component.
+`redraw` SHALL frame in the error color, each frame, every square where the
+board breaks a rule (`Game.rules`), a square beside a black one read as
+white: two black squares orthogonally adjacent, both framed; a clue that can
+no longer see its number, or already sees more; and, where the white squares
+can no longer be one group, the black squares that touch two of the groups.
 
 #### Scenario: A black-adjacency violation reddens live
 
 - **WHEN** two orthogonally adjacent cells are both painted black
 - **THEN** `redraw` frames both in the error color without any explicit check
   action
+
+#### Scenario: A corner cut off
+
+- **WHEN** the two squares beside a corner are painted black
+- **THEN** both are framed in the error color, and the corner is not
 
 ### Requirement: Rules: Range checks mistakes against the solution
 

@@ -16,7 +16,7 @@ it. Galaxies and Rect have no live errors (only the mistake overlay).
 | Matched | tents | Hall's condition per group: what Tents drew |
 | Connected / joined | range, singles, spokes, bridges | broken where the sure members fall into two groups of the possible ones; named by the cut (`connected`) or the finished groups (through) |
 | Acyclic / one loop / one path | net, slant, tracks, bridges, rome, path, wordtrail, loopy, pearl | the cycle form: each sure line on a cycle of sure lines (2026-11-22) |
-| Regions of size k | palisade, separate, filling | **none yet** |
+| Regions of size k | palisade, separate, filling | the walk's sure and possible squares, named by them or the edges round them (2026-11-22) |
 | Chain (n beside n+1) | signpost, ascent | exact once decided |
 
 Marks beyond the rules, each a judgment the rules do not make: Loopy's and

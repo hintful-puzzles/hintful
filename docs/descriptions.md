@@ -1163,9 +1163,13 @@ says how each form is read; what a description's author acts on:
   names two pieces alike and the rules make one of them certain, a
   statement said of the other's elements names it: Tracks' `reachesEnd`,
   implied, every rail reaching an end, where `path` names the finished
-  track and a stray rail apart from it alike. A set a binder names is
-  evaluated whole, so a set a walk reads is written in place (`through(c,
-  {x in edges where P})`), never bound by `forall R = ...` first.
+  track and a stray rail apart from it alike. A statement's `forall O = S`,
+  S a set read from the answer, is read as S written in place of O, so
+  `|through(c, O)| = k` is bounded as the walk's sure and possible squares
+  are: a region too big names its sure squares, one too small its possible
+  ones, and on a board whose answer is its edges the edges round them
+  (Palisade's region outlined). A count's own filters name nothing: where
+  a count breaks is what the count names or read.
   A number counted along a chain is said between two given numbers, counted
   from each end with `onward`: Signpost's square some numbers on from one
   given must be the square as many short of the next, so two runs that

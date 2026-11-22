@@ -61,10 +61,11 @@ NOT be compared with the board's solution.
 
 ### Requirement: Rules: Loopy flags the lines at a dot the loop cannot pass
 
-`checkCompletion` SHALL flag, on the board as drawn and without the solution,
+The board SHALL flag, as drawn and without the solution (`Game.rules`),
 every line at a dot that carries three or more lines, and the one line at a
-dot whose every other edge is ruled out. A dot with one line and an edge still
-undecided SHALL NOT be flagged, since the loop can go on from it.
+dot whose every other edge is ruled out or reads as none. A dot with one line
+and an edge still undecided SHALL NOT be flagged, since the loop can go on
+from it.
 
 #### Scenario: Three lines meet
 
@@ -78,48 +79,13 @@ undecided SHALL NOT be flagged, since the loop can go on from it.
   and one undecided
 - **THEN** nothing is flagged, and ruling out the third flags the line
 
-### Requirement: Rules: Once a loop is closed, Loopy flags all but the largest piece
-
-Lines joined to a dot flagged for its own lines are left out. Of the rest,
-each closed loop SHALL be one piece and all the open paths together one, sized
-by the dots they pass through. Where a loop is closed and there is more than
-one piece, `checkCompletion` SHALL flag every line outside the largest; a loop
-wins a tie with the paths, and of two loops of one size one is flagged. With
-no loop closed nothing SHALL be flagged, however many paths lie apart.
-
-#### Scenario: A line left apart from a loop
-
-- **WHEN** a loop round one square is closed and one line stands elsewhere
-- **THEN** the lone line is flagged and the loop is not
-
-#### Scenario: A loop closed early beside longer paths
-
-- **WHEN** a loop round one square, through four dots, is closed while a path
-  elsewhere runs through five dots, or two paths through three dots each
-- **THEN** the loop's four lines are flagged and no path is
-- **AND** beside a single path through four dots the path is flagged and the
-  loop is not
-
-#### Scenario: Two loops
-
-- **WHEN** a loop round one square and a loop round four are both closed
-- **THEN** the lines of the smaller are flagged
-
-#### Scenario: A branch takes its loop out of the comparison
-
-- **WHEN** a loop round four squares has a spur drawn off one of its dots,
-  and a loop round one square is closed elsewhere
-- **THEN** the three lines at the spur's dot are flagged and the small loop is
-  not, being the only piece left
-
 ### Requirement: Rules: Loopy checks the board against its solution
 
 `findMistakes(state)` SHALL report every edge the player has marked against the
 board's unique solution: a line the loop does not run along, and an edge ruled
 out that the loop does run along. The solution SHALL be solved from the clues
-alone at the top tier. The highlighting `checkCompletion` does, of a rule
-broken on the board as drawn without knowing the answer, is distinct and SHALL
-remain.
+alone at the top tier. The live error marks, of a rule broken on the board as
+drawn without knowing the answer, are distinct and SHALL remain.
 
 #### Scenario: A line the loop does not use is a mistake
 
@@ -130,10 +96,10 @@ remain.
 
 #### Scenario: A broken rule is flagged without the answer
 
-- **WHEN** a dot carries three lines, or the lines close a loop that is not the
-  only one
-- **THEN** `checkCompletion` flags it on the board as drawn, whether or not Check
-  has been requested
+- **WHEN** a dot carries three lines, or the lines close a loop with other
+  lines apart from it
+- **THEN** it is flagged on the board as drawn, whether or not Check has been
+  requested
 
 ### Requirement: Rules: Loopy's notes are state, set by absolute moves
 
@@ -159,6 +125,37 @@ note in the mistake color.
 - **WHEN** the player notes a corner the loop passes by as needing a line, or two
   edges the loop treats differently as matching, and Check is requested
 - **THEN** each note is reported and drawn in the mistake color
+
+### Requirement: Rules: Once a loop is closed, Loopy flags every piece
+
+Once the lines close a loop, every edge not yet decided SHALL be read as
+none, the closed loop being the only one the answer can hold. Where lines lie
+apart from that loop, each piece of lines with no edge left undecided SHALL
+be flagged, the loop included; with no loop closed, a piece SHALL be flagged
+only once every edge round it is decided, however many paths lie apart. A
+clue SHALL be drawn in the error color once it can no longer be met, which
+it is the moment a loop closes short of it.
+
+#### Scenario: A line left apart from a loop
+
+- **WHEN** a loop round one square is closed and one line stands elsewhere
+- **THEN** the loop's four lines and the lone line are all flagged
+
+#### Scenario: Two loops
+
+- **WHEN** a loop round one square and a loop round four are both closed
+- **THEN** the lines of both are flagged
+
+#### Scenario: Paths apart with no loop closed
+
+- **WHEN** two paths lie apart and each still has an undecided edge at an end
+- **THEN** nothing is flagged
+
+#### Scenario: A clue the closed loop leaves short
+
+- **WHEN** a loop closes with a clued face elsewhere short of its count, and no
+  edge round that face ruled out
+- **THEN** the clue is drawn in the error color
 
 ### Requirement: Params: Loopy offers every tiling the geometry module provides
 

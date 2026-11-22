@@ -86,6 +86,7 @@ import {
   menu,
   newState,
   paramConfig,
+  rules,
   status,
   textFormat,
   validateParams,
@@ -397,6 +398,7 @@ export const fillingGame: Game<
   interpretMove,
   executeMove,
   status,
+  rules,
 
   solve,
   difficulty,

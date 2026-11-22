@@ -2,11 +2,11 @@
  * Palisade rendering — the clue layer over the shared border-grid renderer.
  *
  * The mechanic's own look — the three-valued border edges, the error model over
- * the two DSFs, the half-grid cursor, the tile skeleton, the hint's marks and
+ * how an error shows, the half-grid cursor, the tile skeleton, the hint's marks and
  * the geometry — is
  * [`engine/mechanics/border-grid-render.ts`](../../engine/border-grid-render.ts), shared
  * with Separate. What is Palisade's and stays here: a cell carries a **clue**
- * counting its walls and sits on the lifted surface of a given, a clue the board already contradicts reddens, and a region
+ * counting its walls and sits on the lifted surface of a given, a clue its rules find broken reddens, and a region
  * counts as finished when it is size `k` with every clue in it satisfied.
  */
 
@@ -22,11 +22,10 @@ import { COL_ERROR, FIRST_GAME_SLOT, rolePalette } from "../../engine/color/role
 import type { Frame, GameDrawing } from "../../engine/contract/game.ts";
 import { stepMarks } from "../../engine/contract/hint-words.ts";
 import type { Color, Size } from "../../engine/contract/types.ts";
-import { BORDER_MASK, buildDsf } from "../../engine/mechanics/border-grid.ts";
+import { buildDsf } from "../../engine/mechanics/border-grid.ts";
 import {
   type BorderGridColors,
   type BorderGridDrawState,
-  borderErrorBits,
   borderGridSize,
   center,
   cursorBits,
@@ -44,6 +43,7 @@ import {
 } from "../../engine/mechanics/border-grid-render.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
+import { errorMarks } from "./solver.ts";
 import {
   bitcount,
   EMPTY,
@@ -123,7 +123,7 @@ export function redraw(
   if (ds.tiles.firstFrame()) drawBorderGridBackground(dr, ts, w, h, PALETTE);
 
   const blackDsf = buildDsf(w, h, borders, true);
-  const yellowDsf = buildDsf(w, h, borders, false);
+  const { sides: edgeErrors, clues: badClues } = errorMarks(state);
 
   // Completed-and-correct regions: a wall-bounded (black) component of exactly
   // `k` cells, every clue in it satisfied, and no wall interior to it: a
@@ -153,12 +153,10 @@ export function redraw(
       if (clue !== EMPTY) flags |= F_GIVEN;
       flags |= flashFlag(flash.win(sweepStep(c, r)));
 
-      const on = bitcount(borders[i]);
-      const off = bitcount((borders[i] >> 4) & BORDER_MASK);
-      if (clue !== EMPTY && (on > clue || clue > 4 - off)) flags |= F_CLUE_ERROR;
+      if (badClues.has(i)) flags |= F_CLUE_ERROR;
 
       flags |= cursorBits(ui.cursor, c, r);
-      flags |= borderErrorBits(c, r, w, h, k, borders, blackDsf, yellowDsf);
+      flags |= edgeErrors[i];
 
       if (ds.tiles.changed(i, flags, edgeHints[i])) {
         drawBorderTile(

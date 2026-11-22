@@ -46,7 +46,7 @@ import {
   PREFERRED_TILE_SIZE,
   redraw,
 } from "./render.ts";
-import { answerOf, solveToBorders } from "./solver.ts";
+import { answerOf, rules, solveToBorders } from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
@@ -133,6 +133,7 @@ export const palisadeGame: Game<
   ...playedByTargetVerbs(targetVerbs),
   executeMove,
   status,
+  rules,
 
   solve: (orig, _curr) =>
     solveFromAnswer(answerOf(orig), (sol) => ({

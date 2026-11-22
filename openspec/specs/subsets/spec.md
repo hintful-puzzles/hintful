@@ -25,8 +25,9 @@ of which contains the other.
 
 The game SHALL flag as mistakes for Check & Save: a set-value placed in more
 than one cell; any
-edge whose horseshoe relation, or missing-horseshoe disjointness relation, is
-violated by two decided cells; and, when the board has a unique solution, any
+edge whose horseshoe relation, or missing-horseshoe disjointness relation, the
+board already breaks, its live error; and, when the board has a unique
+solution, any
 letter marked or crossed out against that solution, and any
 set ruled out of the cell that solution puts it in, each of which SHALL be
 drawn in the mistake color.
@@ -571,3 +572,22 @@ color and a cell lights as one piece.
   cross
 - **AND** once the flash has left the cell each slot is on its own surface
   again, plain or lifted
+
+### Requirement: Look: Subsets draws in red where the board breaks a rule
+
+The renderer SHALL draw in the error color, always and with no mistake check
+asked for (`Game.rules`), every horseshoe and every gap the board already
+breaks: a horseshoe whose open end cannot hold a different set holding its
+closed end's, and a gap beside which one set holds the other, drawn as a red
+cross. A cell counts once its letters are all decided, and an edge is red
+once its rules break whatever an undecided neighbor comes to hold.
+
+#### Scenario: The empty set beside a gap
+
+- **WHEN** the player clears every letter of a cell beside a gap
+- **THEN** a red cross is drawn in the gap
+
+#### Scenario: Two equal sets across a horseshoe
+
+- **WHEN** the same set is placed on both ends of a horseshoe
+- **THEN** the horseshoe is drawn red

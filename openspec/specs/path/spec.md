@@ -286,7 +286,7 @@ A step SHALL ring the edges it decides, drawn as the line or cross it asks for, 
 
 ### Requirement: Look: Each pair and the lines reaching it share a color
 
-A Pairs number SHALL sit in a ring of its pair's color, from the colors that mean nothing, spread so that pairs given near each other differ where the set allows, and repeating past it. A pair's ring, disc and lines SHALL be edged in black. The ring SHALL fill with the color once a line joins the pair. A line SHALL take the color of the number its piece reaches, and a piece reaching no number SHALL be ink. A line SHALL be red where its piece joins two different numbers or closes into a loop.
+A Pairs number SHALL sit in a ring of its pair's color, from the colors that mean nothing, spread so that pairs given near each other differ where the set allows, and repeating past it. A pair's ring, disc and lines SHALL be edged in black. The ring SHALL fill with the color once a line joins the pair. A line SHALL take the color of the number its piece reaches, and a piece reaching no number SHALL be ink.
 
 #### Scenario: A line from a number takes its color
 
@@ -300,7 +300,7 @@ A Pairs number SHALL sit in a ring of its pair's color, from the colors that mea
 
 ### Requirement: Look: Path's line changes color from the 1 to the highest number
 
-Under Path, a stretch of line SHALL take the color of the number it leaves, the colors running in order of hue from the 1's to the highest's, and a number SHALL be ringed in that color, the highest in its stretch's. A number's disc SHALL fill once the line reaches the numbers either side of it. A line SHALL be red where it closes a loop or passes two numbers that are not one apart. A wall SHALL be drawn as a bar along its edge.
+Under Path, a stretch of line SHALL take the color of the number it leaves, the colors running in order of hue from the 1's to the highest's, and a number SHALL be ringed in that color, the highest in its stretch's. A number's disc SHALL fill once the line reaches the numbers either side of it. A wall SHALL be drawn as a bar along its edge.
 
 #### Scenario: Each stretch takes its own color
 
@@ -320,3 +320,17 @@ The win flash SHALL travel the board's lines: under Path, the one line from the 
 
 - **WHEN** on `4x3de:1_2_1c2e` the whole answer is drawn and the win flash runs
 - **THEN** it runs from the top-left 1 round to the other 1, and then from the top 2 to the other 2
+
+### Requirement: Look: A piece of line the rules break is red
+
+Under either ruleset a piece of line SHALL be drawn red, whole, where the board breaks a rule on it (`Game.rules`): it closes a loop, though its numbers are in order; it joins two numbers that may not meet, two different ones under Pairs and two not one apart under Path; or it ends at a square that can take no further line.
+
+#### Scenario: A line that can go no further is red
+
+- **WHEN** on `4x3de:1_2_1c2e` a line is drawn from the square below the top-left 1 into the corner below it, and the corner's other side is crossed
+- **THEN** that line is drawn red
+
+#### Scenario: A loop through the numbers in order is red once it closes
+
+- **WHEN** on `4x3zde:1f2_3b4` a line runs from the 2 along the top row, back along the middle one to the 3, and on along the bottom row toward the 2
+- **THEN** it takes the numbers' colors while open, and is drawn red once it reaches the 2 again

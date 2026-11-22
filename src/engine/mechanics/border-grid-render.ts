@@ -5,9 +5,8 @@
  * WHAT LIVES HERE is what would have to change in both games at once, by the
  * same test `border-grid.ts` states:
  *
- * - **The error model.** A region larger than `k`, a region smaller than `k`, or
- *   a wall that separates nothing, read off the two DSFs each frame. Change what
- *   counts as a wrong wall and both games change together, or one is wrong.
+ * - **How an error shows**: an edge the rules' violations name is red
+ *   (`borderErrorMarks`), as is an edge Check & Save finds wrong.
  * - **The half-grid cursor**, whose *movement* `border-grid.ts` owns
  *   (`moveBorderCursor`).
  * - **The four edge rects**, keyed off the border bits the module defines, and
@@ -35,21 +34,23 @@ import {
 } from "../color/roles.ts";
 import type { GameDrawing } from "../contract/game.ts";
 import type { StepMarks } from "../contract/hint-words.ts";
+import type { RulesOf } from "../contract/rules.ts";
 import type { Rect, Size } from "../contract/types.ts";
 import type { GridCursor } from "../input/pointer.ts";
 import { glyphFont } from "../render/draw.ts";
 import { drawMarkSides } from "../render/hint-mark.ts";
+import { liveErrors } from "../render/live-errors.ts";
 import { OverlaySidecar } from "../render/overlay-sidecar.ts";
 import { textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { WIN_BODY, WIN_LEAD, type WinTone } from "../render/win-wave.ts";
+import type { GridSpace } from "../solve/describe-runtime.ts";
 import {
   BORDER,
   DISABLED,
-  DX,
-  DY,
+  edgeSide,
+  FLIP,
   margin,
-  outOfBounds,
   SQUARE_DIRS,
   squareSide,
 } from "./border-grid.ts";
@@ -161,47 +162,43 @@ export function newBorderGridDrawState(
 // --- the flags a frame computes ----------------------------------------------
 
 /**
- * The mechanic's own error bits for one cell: for each of its four borders,
- * whether that border makes a region too large, too small, or is a wall that
- * separates nothing.
- *
- * `black` is the DSF over wall-separated regions, `yellow` the one over
- * no-wall regions — `buildDsf(w, h, borders, true | false)`.
+ * The rules' live errors (`docs/rendering.md` § "Live errors are the
+ * rules'") as the border grid draws them: each square's red sides, every
+ * edge a violation names red on both its squares, and the squares whose
+ * clue is red, a clue of kind `kind` being at the square `at` lists for it.
+ * `sp` is the description's space, whose edges the violations index.
  */
-export function borderErrorBits(
-  c: number,
-  r: number,
-  w: number,
-  h: number,
-  k: number,
-  borders: Uint8Array,
-  black: Dsf,
-  yellow: Dsf,
-): number {
-  const i = r * w + c;
-  let bits = 0;
-  for (let dir = 0; dir < 4; dir++) {
-    const cc = c + DX[dir];
-    const rr = r + DY[dir];
-    if (outOfBounds(cc, rr, w, h)) continue;
-    const ii = rr * w + cc;
-    const tooLarge =
-      (yellow.size(i) > k || yellow.size(ii) > k) && !yellow.equivalent(i, ii);
-    const tooSmall =
-      (black.size(i) < k || black.size(ii) < k) && !black.equivalent(i, ii);
-    const dangling =
-      borders[i] & BORDER(dir) &&
-      (yellow.equivalent(i, ii) || (black.size(i) <= k && black.equivalent(i, ii)));
-    if (tooLarge || tooSmall || dangling) bits |= BORDER_ERROR(BORDER(dir));
+export function borderErrorMarks<S>(
+  rules: RulesOf<S>,
+  s: S,
+  sp: GridSpace,
+  kind: string,
+  at: ArrayLike<number>,
+): { sides: Int32Array; clues: ReadonlySet<number> } {
+  const live = liveErrors(rules, s);
+  const sides = new Int32Array(sp.cells.length);
+  const mark = (e: number) => {
+    const p = sp.edgeEnds[2 * e];
+    const { dir, to } = edgeSide(sp, e, p);
+    sides[p] |= BORDER_ERROR(BORDER(dir));
+    sides[to] |= BORDER_ERROR(BORDER(FLIP(dir)));
+  };
+  for (let e = 0; e < live.at.length; e++) if (live.at[e]) mark(e);
+  for (const [a, b] of live.pairs) {
+    mark(a);
+    mark(b);
   }
-  return bits;
+  return {
+    sides,
+    clues: new Set([...(live.clues.get(kind) ?? [])].map((q) => at[q])),
+  };
 }
 
 /**
  * The Check & Save overlay, as per-cell edge-error bits.
  *
  * A mistake is an edge that contradicts the unique solution, and it reddens
- * through the *same* channel as the live error model above — one red edge means
+ * through the *same* channel as the live errors above — one red edge means
  * one thing to a player, whichever of the two found it.
  */
 export function mistakeEdgeBits(

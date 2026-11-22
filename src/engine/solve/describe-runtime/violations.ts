@@ -140,6 +140,20 @@ export function unmatched(
   return [...short(sp, mustA, mayB), ...short(sp, mustB, mayA)];
 }
 
+/** The edges with one end among `cells` and the other not: a region's
+ * outline, by which a region of the wrong size is named on a board whose
+ * answer is its edges. */
+export function rimEdges(sp: GridSpace, cells: readonly number[]): number[] {
+  const inside = new Set(cells);
+  const out: number[] = [];
+  for (const c of cells)
+    for (const e of sp.cellEdges[c]) {
+      const a = sp.edgeEnds[2 * e];
+      if (!inside.has(a === c ? sp.edgeEnds[2 * e + 1] : a)) out.push(e);
+    }
+  return out;
+}
+
 /**
  * `connected(S)` on a board being filled, `S` as the cells sure to be in it
  * (`must`) and those that may be (`may`): `null` where every completion may

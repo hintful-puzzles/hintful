@@ -1,12 +1,12 @@
 /**
  * Separate rendering — the clue layer over the shared border-grid renderer.
  *
- * The mechanic's own look — the three-valued border edges, the error model over
- * the two DSFs, the half-grid cursor, the tile skeleton, the hint's marks and
+ * The mechanic's own look — the three-valued border edges, how an error
+ * shows, the half-grid cursor, the tile skeleton, the hint's marks and
  * the geometry — is
  * [`engine/mechanics/border-grid-render.ts`](../../engine/border-grid-render.ts), shared
  * with Palisade. What is Separate's and stays here: a cell carries a **letter**,
- * a letter that repeats inside a *completed* wall-bounded region reddens, and a
+ * a letter its rules find repeated in a region reddens, and a
  * region counts as finished when it is size `k` with no letter twice.
  */
 
@@ -26,7 +26,6 @@ import type { BorderHint } from "../../engine/mechanics/border-grid-hint.ts";
 import {
   type BorderGridColors,
   type BorderGridDrawState,
-  borderErrorBits,
   borderGridSize,
   center,
   cursorBits,
@@ -43,6 +42,7 @@ import {
 } from "../../engine/mechanics/border-grid-render.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { sweepStep } from "../../engine/render/win-wave.ts";
+import { errorMarks } from "./solver.ts";
 import type {
   SeparateMistake,
   SeparateMove,
@@ -115,12 +115,10 @@ export function redraw(
   if (ds.tiles.firstFrame()) drawBorderGridBackground(dr, ts, w, h, PALETTE);
 
   const blackDsf = buildDsf(w, h, borders, true);
-  const yellowDsf = buildDsf(w, h, borders, false);
+  const { sides: edgeErrors, clues: badLetters } = errorMarks(state);
 
-  // Per black region: how many times each letter appears. A letter repeated
-  // within a *completed* (size-k) region reddens every cell carrying it. Gating
-  // on size k keeps the untouched board (one big region holding every letter k
-  // times) clean: as in Palisade, only provably-wrong state is flagged.
+  // Per black region: how many times each letter appears, for the finished
+  // region's shade.
   const regionCounts = new Map<number, Int32Array>();
   for (let i = 0; i < wh; i++) {
     const root = blackDsf.canonify(i);
@@ -156,14 +154,11 @@ export function redraw(
 
       flags |= flashFlag(flash.win(sweepStep(c, r)));
 
-      const root = blackDsf.canonify(i);
-      const counts = regionCounts.get(root);
-      if (counts && blackDsf.size(i) === k && counts[letters[i]] > 1)
-        flags |= F_CLUE_ERROR;
-      if (validRoot.get(root)) flags |= F_CORRECT;
+      if (badLetters.has(i)) flags |= F_CLUE_ERROR;
+      if (validRoot.get(blackDsf.canonify(i))) flags |= F_CORRECT;
 
       flags |= cursorBits(ui.cursor, c, r);
-      flags |= borderErrorBits(c, r, w, h, k, borders, blackDsf, yellowDsf);
+      flags |= edgeErrors[i];
 
       if (ds.tiles.changed(i, flags, edgeHints[i])) {
         drawBorderTile(

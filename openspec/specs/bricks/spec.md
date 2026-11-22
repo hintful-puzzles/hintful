@@ -324,24 +324,6 @@ Every hint step SHALL give as its reason the technique that forced its cell, and
 - **WHEN** a hint is asked for where a number has all its shaded neighbors and three of its neighbors are empty, and no other rule forces a cell
 - **THEN** the next three steps clear those three cells clockwise from above, each by that number
 
-### Requirement: Look: Bricks marks a rule violation on the board
-
-A rule violation SHALL be marked on the board: a bar over three shaded cells in
-a row, an error diamond where a shaded cell rests on nothing, and a miscounted
-clue's number in the error color. The marks SHALL show live while a drag is in
-flight, for the board the drag previews, and when the check hands `redraw` its
-mistakes. A committed board SHALL otherwise carry none.
-
-#### Scenario: A drag shows the row it is about to make
-
-- **WHEN** a drag in flight previews three shaded cells in a row
-- **THEN** the bar is drawn over them before the drag is released
-
-#### Scenario: A committed violation waits for the check
-
-- **WHEN** a move leaves three shaded cells in a row and no drag is in flight
-- **THEN** no mark is drawn until the check reports the mistake
-
 ### Requirement: Look: Bricks draws its marks beside the piece
 
 The keyboard cursor and both of a hint's rings SHALL be drawn in the margin a
@@ -375,3 +357,29 @@ the lifted surface of a given. No cell SHALL carry a bevel.
 
 - **WHEN** a board is drawn
 - **THEN** each numbered cell is the lifted surface, and no other cell is
+
+### Requirement: Look: Bricks draws in red where the board breaks a rule
+
+A rule violation SHALL be marked on the board, always and with no mistake
+check asked for (`Game.rules`), as every game marks one: a bar over three or
+more shaded cells in a row, an error diamond under a shaded cell that can
+rest on nothing, both squares beneath it clear, a number or the board's edge,
+and in the error color the number of a clue that can no longer count its
+bricks. While a drag is in flight the marks SHALL be those of the board the
+drag previews.
+
+#### Scenario: A drag shows the row it is about to make
+
+- **WHEN** a drag in flight previews three shaded cells in a row
+- **THEN** the bar is drawn over them before the drag is released
+
+#### Scenario: A committed row of three is marked at once
+
+- **WHEN** a move leaves three shaded cells in a row and no drag is in flight
+- **THEN** the bar is drawn over them
+
+#### Scenario: A brick over an open square is not yet marked
+
+- **WHEN** a shaded cell has one square beneath it still empty and the other
+  clear
+- **THEN** no diamond is drawn under it

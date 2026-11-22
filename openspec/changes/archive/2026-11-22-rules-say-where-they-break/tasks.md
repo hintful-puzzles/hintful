@@ -218,17 +218,28 @@
       plain (its test, since the walk draws words whole and the guard never
       reads one: a reading planted unsound there passed the guard). Its
       `broken` pieces go; 0.8 ms a redraw on 7×7.
-- [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
-      then batch 4.
-      Read first (2026-11-22): the size of a set read from the answer is
-      bounded already where the set is written in place (`heldSet`, the
-      `size` arm of `compile-violations.ts`: sure members at least, possible
-      at most). Palisade and Separate name theirs by a binder, `forall O =
-      joined`, which the check evaluates whole, and Filling's binder set
-      reads values, not edges. Likely the whole compiler part: read a
-      binder's held set as if written in place, so no description changes
-      and no technique re-check runs. Then look at what each game's checker
-      draws before moving it.
+- [x] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
+      then batch 4. Bound (2026-11-22): a statement's `forall O = S`, S read
+      from the answer, is read with S in place of O (`heldLetsInPlace`), so
+      no description changed; a walked region's size breach names its sure
+      squares when too big and its possible ones when too small, the edges
+      round them where the answer is edges (`rimEdges`); `through(c, D)`
+      reads a definition D with no parameters (Separate's `joined`); a
+      count's filters no longer leak where they read false into where the
+      count breaks (WordTrail's `clue.words`); a binder over a held set that
+      wants only sure bindings walks only the sure members (Separate's
+      letter clue was quadratic: 113 ms on an empty 60×60, now 4 ms).
+      Moved: palisade, separate (`regionsHeld`: an open edge inside a group
+      the walls close off at k squares or fewer reads as none, so a wall
+      left inside it is red, which the old model drew; the border grid's
+      `borderErrorBits` goes for `borderErrorMarks`, and both games'
+      `sideOf`/`valuesOf` for the mechanic's `edgeSide`/`edgeValues`), filling
+      (its boxed-in pass goes). Marks unchanged, and every render snapshot;
+      new: Separate's repeated letter is red once no-wall marks join the two,
+      before the region is walled off. Planted: a size bound one too high
+      fails all three games' guard tests; `regionsHeld` at `2k` fails the walk
+      test (at `k + 3` it is no defect: a closed group of an answer's walls is
+      whole regions, so its size is a multiple of k).
 - [x] 2.4 Plant a broken rule and see its mark appear in a game that wrote
       no checker (once batch 1 has moved a game whose checker is deleted:
       edit its description's rule, see the mark move in the app). Range's
@@ -242,6 +253,7 @@
 
 - [x] 3.1a Guides: `descriptions.md` § "Where a rule breaks",
       `rendering.md` § "Live errors are the rules'", `new-game.md`.
-- [ ] 3.1b Spec deltas for the game specs that state error marks, as each
-      batch moves them.
-- [ ] 3.2 Commit, push, archive.
+- [x] 3.1b Spec deltas for the game specs that state error marks, as each
+      batch moves them (batch 4: `border-grid`, `separate`; Palisade's and
+      Filling's still hold as written).
+- [x] 3.2 Commit, push, archive.

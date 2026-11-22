@@ -16,15 +16,15 @@
  * that have no reason to be identical.
  *
  * The mechanic's **look** lives next door in
- * [`border-grid-render.ts`](./border-grid-render.ts): the error model over the
- * two DSFs, the half-grid cursor this file *moves*, the four edge rects and the
+ * [`border-grid-render.ts`](./border-grid-render.ts): how the rules' live
+ * errors show, the half-grid cursor this file *moves*, the four edge rects and the
  * geometry — a sibling only because one file holding both would be long.
  *
  * WHAT DOES NOT live here is code that merely looks alike. A loop over `w*h`
  * that reads a flag and draws a line resembles its counterpart in any grid game
  * in this collection; unifying that would couple two renderers with no reason to
  * move together. The test is not "are these the same text" but *"would a change
- * here have to happen in both games at once?"* — which the error model and the
+ * here have to happen in both games at once?"* — which the error marks and the
  * cursor pass, being the rendering *of this mechanic*.
  */
 import { Dsf } from "../board/dsf.ts";
@@ -46,6 +46,7 @@ import {
   type TargetGeometry,
   type TargetVerbs,
 } from "../input/target-verb.ts";
+import type { GridSpace } from "../solve/describe-runtime.ts";
 
 // --- the edge bit vocabulary -----------------------------------------------
 // A cell stores its four borders in the low nibble and their "definitely not a
@@ -70,6 +71,40 @@ export const FLIP = (dir: number): number => dir ^ 2;
 
 export const DX = [0, +1, 0, -1] as const;
 export const DY = [-1, 0, +1, 0] as const;
+
+// --- the description's edges -------------------------------------------------
+
+/** The side of square `a` that the description's edge `e` is, and the square
+ * across it. */
+export function edgeSide(
+  sp: GridSpace,
+  e: number,
+  a: number,
+): { dir: number; to: number } {
+  const p = sp.edgeEnds[2 * e];
+  const q = sp.edgeEnds[2 * e + 1];
+  // A grid one square wide has its squares below one another `p + 1` apart.
+  const down = q === p + sp.w;
+  if (a === p) return { dir: down ? 2 : 1, to: q };
+  return { dir: down ? 0 : 3, to: p };
+}
+
+/** What the description reads each edge as holding on `borders`, the byte a
+ * square: `wall`, `none` where marked no wall, or 0 for neither. */
+export function edgeValues(
+  sp: GridSpace,
+  borders: Uint8Array,
+  wall: number,
+  none: number,
+): Uint8Array {
+  const values = new Uint8Array(sp.edges.length);
+  for (const e of sp.edges) {
+    const p = sp.edgeEnds[2 * e];
+    const b = BORDER(edgeSide(sp, e, p).dir);
+    values[e] = borders[p] & b ? wall : borders[p] & DISABLED(b) ? none : 0;
+  }
+  return values;
+}
 
 /** `square-edges.ts`'s direction for each of this file's. This file numbers
  * directions by the bit each one's border is saved in, which is upstream's

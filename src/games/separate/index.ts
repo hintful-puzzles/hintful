@@ -49,7 +49,7 @@ import {
   redraw,
   type SeparateDrawState,
 } from "./render.ts";
-import { answerOf, solveToBorders } from "./solver.ts";
+import { answerOf, rules, solveToBorders } from "./solver.ts";
 import {
   decodeParams,
   defaultParams,
@@ -135,6 +135,7 @@ export const separateGame: Game<
   ...playedByTargetVerbs(targetVerbs),
   executeMove,
   status,
+  rules,
 
   solve: (orig, _curr) =>
     solveFromAnswer(answerOf(orig), (sol) => ({

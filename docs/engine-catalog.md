@@ -1055,7 +1055,8 @@ wraps it, so no two save formats are coupled. Exemplar: `palisade/index.ts`.
 
 ### `border-grid-render.ts` — that mechanic's look
 
-Reach for it to draw a border-grid game's tile: the error model, the
+Reach for it to draw a border-grid game's tile: the rules' live errors as
+red edges (`borderErrorMarks`), the
 half-grid cursor, the edges, the tile skeleton and the board geometry. The
 game supplies its palette indices as `BorderGridColors` and a `drawContent`
 callback for the middle of the tile. `packHintMarks` packs a hint step onto

@@ -116,6 +116,42 @@ export function oneLoopHeld(
   return values;
 }
 
+/**
+ * `values`, one per edge of `sp`, `wall`, `none` or 0 where undecided, with
+ * what "the walls divide the grid into regions of `k` squares" makes certain
+ * of every answer read in place: an open edge between two squares of a group
+ * the walls close off, of `k` squares or fewer, holds none, since a region
+ * holding either square is the whole group. So a wall inside such a group
+ * already stands inside a region (Palisade's and Separate's).
+ */
+export function regionsHeld(
+  values: Uint8Array,
+  sp: GridSpace,
+  k: number,
+  wall: number,
+  none: number,
+): Uint8Array {
+  const n = sp.cells.length;
+  const parent = Int32Array.from({ length: n }, (_, i) => i);
+  const root = (c: number): number => {
+    while (parent[c] !== c) c = parent[c] = parent[parent[c]];
+    return c;
+  };
+  for (const e of sp.edges) {
+    if (values[e] === wall) continue;
+    const [ra, rb] = [root(sp.edgeEnds[2 * e]), root(sp.edgeEnds[2 * e + 1])];
+    if (ra !== rb) parent[ra] = rb;
+  }
+  const size = new Int32Array(n);
+  for (let c = 0; c < n; c++) size[root(c)]++;
+  for (const e of sp.edges) {
+    const r = root(sp.edgeEnds[2 * e]);
+    if (values[e] === 0 && r === root(sp.edgeEnds[2 * e + 1]) && size[r] <= k)
+      values[e] = none;
+  }
+  return values;
+}
+
 export function describedRules<State, Deals extends readonly unknown[]>(
   module: RulesModule<Deals>,
   read: RulesReading<State, Deals> & RulesSpace<State>,

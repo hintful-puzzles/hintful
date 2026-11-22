@@ -597,7 +597,10 @@ grid while a gesture is live, and paints only what they say:
   breaks `connected` at once; and in a one-loop game (`oneLoopHeld`, Loopy
   and Pearl) an open edge at a dot with two lines is none, and every open
   edge is once a loop closes, so the loop and the lines apart from it are
-  each finished, and a clue it leaves short shows. A game whose space is
+  each finished, and a clue it leaves short shows; and in a game of regions
+  of `k` squares (`regionsHeld`, Palisade and Separate) an open edge inside
+  a group the walls close off at `k` squares or fewer is none, so a wall
+  left inside it shows. A game whose space is
   no grid passes `space` instead of `size` (Loopy's tiling).
 - **A mark the description reads through its `of` goes in as the last of
   `deals`**, a mask of values per element (Tracks' square marked track;
@@ -617,8 +620,7 @@ grid while a gesture is live, and paints only what they say:
   its form, so every game gains it.
 
 Exemplar: [`tents/render.ts`](../src/games/tents/render.ts) (`errorsOf`) and
-[`tents/solver.ts`](../src/games/tents/solver.ts) (`rules`). The games not
-yet moved are listed by `openspec/changes/rules-say-where-they-break`.
+[`tents/solver.ts`](../src/games/tents/solver.ts) (`rules`).
 
 ## Special paint shapes
 

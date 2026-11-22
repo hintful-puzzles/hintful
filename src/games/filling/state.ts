@@ -21,6 +21,7 @@ import {
 } from "../../engine/contract/desc-error.ts";
 import { noSuchTier } from "../../engine/contract/difficulty.ts";
 import type { ParamConfigItem, PresetBoards } from "../../engine/contract/game.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import type { GameStatus } from "../../engine/contract/types.ts";
 import { digitValue } from "../../engine/game-id/decimal.ts";
 import { readDesc } from "../../engine/game-id/desc-reader.ts";
@@ -35,6 +36,7 @@ import {
   searchTierSegment,
 } from "../../engine/solve/answer-search.ts";
 import { cluesWhere, describedSpace } from "../../engine/solve/describe-runtime.ts";
+import { describedRules } from "../../engine/solve/described-rules.ts";
 import * as filling from "../../generated/games/filling/filling.compiled.ts";
 
 const EMPTY = 0;
@@ -169,6 +171,13 @@ export function isSolved(
     dealtOf(clues, w, h),
   );
 }
+
+/** The squares as the rules read them: an empty square is undecided. */
+export const rules: RulesOf<FillingState> = describedRules(filling, {
+  grid: (s) => s.board,
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s.clues, s.w, s.h)],
+});
 
 // --- desc codec ----------------------------------------------------------
 // Run-length: a lowercase letter 'a'..'z' advances past a run of 1..26 empty

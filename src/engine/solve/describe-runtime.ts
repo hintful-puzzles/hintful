@@ -178,6 +178,7 @@ export {
   knownIn,
   markRange,
   overDomain,
+  rimEdges,
   stoppedAt,
   undecided,
   unmatched,

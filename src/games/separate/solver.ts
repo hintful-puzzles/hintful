@@ -18,15 +18,17 @@
  */
 
 import { Dsf } from "../../engine/board/dsf.ts";
+import type { RulesOf } from "../../engine/contract/rules.ts";
 import {
-  BORDER,
   BORDER_D,
   BORDER_L,
   BORDER_R,
   BORDER_U,
-  DISABLED,
+  edgeSide,
+  edgeValues,
   initBorders,
 } from "../../engine/mechanics/border-grid.ts";
+import { borderErrorMarks } from "../../engine/mechanics/border-grid-render.ts";
 import {
   type Answer,
   answerCache,
@@ -41,6 +43,7 @@ import {
   type GridSpace,
   rangeMask,
 } from "../../engine/solve/describe-runtime.ts";
+import { describedRules, regionsHeld } from "../../engine/solve/described-rules.ts";
 import {
   describedLadder,
   type Ladder,
@@ -50,7 +53,7 @@ import {
   TIERS,
 } from "../../engine/solve/ladder-runtime.ts";
 import * as separate from "../../generated/games/separate/separate.compiled.ts";
-import type { SeparateShape } from "./state.ts";
+import type { SeparateShape, SeparateState } from "./state.ts";
 
 /** What the description reads an edge as holding. */
 export const WALL = 1;
@@ -67,27 +70,34 @@ function dealtOf(p: SeparateShape, letters: Uint8Array): separate.Dealt {
   return { letter: cluesWhere(letters, () => true), k: p.k };
 }
 
-/** The side of square `a` that edge `e` is, and the square across it. */
-function sideOf(sp: GridSpace, e: number, a: number): { dir: number; to: number } {
-  const p = sp.edgeEnds[2 * e];
-  const q = sp.edgeEnds[2 * e + 1];
-  // A grid one square wide has its squares below one another `p + 1` apart.
-  const down = q === p + sp.w;
-  if (a === p) return { dir: down ? 2 : 1, to: q };
-  return { dir: down ? 0 : 3, to: p };
-}
+/** What the description reads each edge as holding on `borders`. */
+const valuesOf = (sp: GridSpace, borders: Uint8Array): Uint8Array =>
+  edgeValues(sp, borders, WALL, OPEN);
 
-/** What the description reads each edge as holding on `borders`, the
- * border-grid byte a square: a wall, a no-wall mark, or 0 for neither. */
-function valuesOf(sp: GridSpace, borders: Uint8Array): Uint8Array {
-  const values = new Uint8Array(sp.edges.length);
-  for (const e of sp.edges) {
-    const p = sp.edgeEnds[2 * e];
-    const b = BORDER(sideOf(sp, e, p).dir);
-    values[e] = borders[p] & b ? WALL : borders[p] & DISABLED(b) ? OPEN : 0;
-  }
-  return values;
-}
+/** The edges as the rules read them: a wall, a no-wall mark, and an open
+ * edge inside a group the walls close off at `k` squares or fewer read as
+ * none ({@link regionsHeld}). */
+export const rules: RulesOf<SeparateState> = describedRules(separate, {
+  grid: (s) => {
+    const sp = describedSpace(separate.units, s.w, s.h);
+    return regionsHeld(valuesOf(sp, s.borders), sp, s.k, WALL, OPEN);
+  },
+  size: (s) => [s.w, s.h],
+  deals: (s) => [dealtOf(s, s.letters)],
+});
+
+const LETTER = "letter" satisfies keyof separate.Dealt;
+
+/** The live errors as the border grid draws them: each square's red sides,
+ * and the squares whose letter is red. */
+export const errorMarks = (s: SeparateState) =>
+  borderErrorMarks(
+    rules,
+    s,
+    describedSpace(separate.units, s.w, s.h),
+    LETTER,
+    dealtOf(s, s.letters)[LETTER].at,
+  );
 
 /** Whether `borders` is solved: the walls divide the grid into regions of `k`
  * squares, each holding no letter twice, with no wall inside one. An edge
@@ -204,7 +214,7 @@ function wallsOf(m: CellMarks): Uint8Array {
   for (const e of sp.edges) {
     if (m.grid[e] !== WALL) continue;
     const p = sp.edgeEnds[2 * e];
-    const down = sideOf(sp, e, p).dir === 2;
+    const down = edgeSide(sp, e, p).dir === 2;
     sol[p] |= down ? BORDER_D : BORDER_R;
     sol[sp.edgeEnds[2 * e + 1]] |= down ? BORDER_U : BORDER_L;
   }

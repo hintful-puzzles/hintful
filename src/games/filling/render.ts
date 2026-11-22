@@ -1,10 +1,11 @@
 /**
  * Filling (Fillomino) rendering — port of `game_redraw` / `draw_grid` /
  * `draw_square` in filling.c. Per-cell `Int32Array` cache keyed on a packed
- * `(value | flags)` word; region borders, completed/overfull/boxed-in error
- * shades, selection and cursor highlights recomputed each frame from a fresh
- * region DSF. Plus the fork's mistake overlay (Check & Save), an inset error
- * outline distinct from the live overfull shade, and its hint marks.
+ * `(value | flags)` word; region borders, the completed shade, selection and
+ * cursor highlights recomputed each frame from a fresh region DSF, and the
+ * error shade on each square its rules find broken (a group too big, or shut
+ * in too small). Plus the fork's mistake overlay (Check & Save), an inset
+ * error outline distinct from the live error shade, and its hint marks.
  *
  * A cell is the quiet cell surface, a clue's lifted, with the thin line
  * between cells in the surface's grid color. A region's border is content and
@@ -35,6 +36,7 @@ import type { Color, Point, Size } from "../../engine/contract/types.ts";
 import { glyphFont } from "../../engine/render/draw.ts";
 import { hatchPeriod } from "../../engine/render/hatch.ts";
 import { HintMarks, type MarkBand } from "../../engine/render/hint-mark.ts";
+import { liveErrors } from "../../engine/render/live-errors.ts";
 import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../../engine/render/ring.ts";
 import { TileCache } from "../../engine/render/tile-cache.ts";
 import {
@@ -45,12 +47,11 @@ import {
 } from "../../engine/render/win-wave.ts";
 import type { FillingHint } from "./index.ts";
 import {
-  DX,
-  DY,
   type FillingMove,
   type FillingState,
   type FillingUi,
   makeRegionDsf,
+  rules,
 } from "./state.ts";
 
 export const PREFERRED_TILE_SIZE = 32;
@@ -346,23 +347,7 @@ export function redrawFilling(
     }
   }
 
-  // Per-region "has an empty neighbor" so a boxed-in incomplete region can
-  // be flagged as an error (it can never reach its size).
-  const hasEmptyNeighbor = new Set<number>();
-  for (let i = 0; i < sz; i++) {
-    if (board[i] === 0) continue;
-    const x = i % w;
-    const y = (i / w) | 0;
-    for (let j = 0; j < 4; j++) {
-      const nx = x + DX[j];
-      const ny = y + DY[j];
-      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-      if (board[ny * w + nx] === 0) {
-        hasEmptyNeighbor.add(dsf.canonify(i));
-        break;
-      }
-    }
-  }
+  const errors = liveErrors(rules, state).at;
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -375,11 +360,10 @@ export function redrawFilling(
         flags |= tone << WIN_SHIFT;
       } else if (ui.sel?.has(i)) {
         flags |= HIGH_BG;
-      } else if (v) {
-        const size = dsf.size(i);
-        if (size === v) flags |= CORRECT_BG;
-        else if (size > v) flags |= ERROR_BG;
-        else if (!hasEmptyNeighbor.has(dsf.canonify(i))) flags |= ERROR_BG;
+      } else if (errors[i]) {
+        flags |= ERROR_BG;
+      } else if (v && dsf.size(i) === v) {
+        flags |= CORRECT_BG;
       }
 
       if (ui.cursor.visible && x === ui.cursor.x && y === ui.cursor.y)
