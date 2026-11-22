@@ -716,6 +716,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "kakurasu",
     "members": [
+      "animLength",
       "clearMistakes",
       "difficulty",
       "findMistakes",
@@ -728,6 +729,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "targetVerbs",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -1890,6 +1892,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "id": "tents",
     "members": [
+      "animLength",
       "clearMistakes",
       "difficulty",
       "findMistakes",
@@ -1903,6 +1906,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "targetVerbs",
       "textFormat",
       "transposeParams",
+      "validateParams",
     ],
     "ui": [
       "cursor",
@@ -2103,6 +2107,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   },
   {
     "drawState": [
+      "clues",
+      "marks",
       "tileSize",
       "tiles",
     ],
@@ -2115,6 +2121,8 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "hint",
       "hint.gesture",
       "hint.judgeMove",
+      "hint.refreshStep",
+      "revealOne",
       "rules",
       "targetVerbs",
       "textFormat",
@@ -2123,6 +2131,10 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
     ],
     "ui": [
       "cursor",
+      "drag",
+      "dragButton",
+      "dragOk",
+      "linkArmed",
     ],
   },
   {

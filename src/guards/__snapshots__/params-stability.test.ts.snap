@@ -950,9 +950,8 @@ preset:12x16 Easy  full=12x16dt  brief=12x16
 preset:12x16 Normal  full=12x16de  brief=12x16
 preset:12x16 Tricky  full=12x16dn  brief=12x16
 preset:8x8 Normal, unique  full=8x8ude  brief=8x8u
-bump:w2  full=9x8dt  brief=9x8
-bump:h2  full=8x9dt  brief=8x9
-flip:unique  full=8x8udt  brief=8x8u"
+bump:w  full=9x8dt  brief=9x8
+bump:h  full=8x9dt  brief=8x9"
 `;
 
 exports[`encoded params are byte-stable > untangle 1`] = `

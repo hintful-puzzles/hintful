@@ -736,8 +736,9 @@ stretched by the midend to the uniform hint duration.
 the new color from the cell's center over `animTime`, with the previous color
 beneath, and let animating cells bypass the tile cache
 ([`rendering.md`](./rendering.md) § "Animation and flash"). Exemplar:
-`animLength` in [`unruly/index.ts`](../src/games/unruly/index.ts) and the
-grow branch in [`unruly/render.ts`](../src/games/unruly/render.ts).
+`animLength` in [`engine/fill/game.ts`](../src/engine/fill/game.ts) and the
+grow branch in [`engine/fill/render.ts`](../src/engine/fill/render.ts), which a
+painter takes as its `grown`.
 
 ## Group one firing into one step
 

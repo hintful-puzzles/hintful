@@ -348,8 +348,8 @@ and "Only the Menu scrolls".
 **If the game is "aim at a target, and each button does something there",
 declare it and write no press handling.** The declaration's types are in
 [`engine/input/target-verb.ts`](../src/engine/input/target-verb.ts), and the
-skeleton's `index.ts` declares one; [`unruly/index.ts`](../src/games/unruly/index.ts)
-adds a digit arm and an erase key. The model owns the cursor's parking and
+skeleton's `index.ts` declares one, and [`engine/fill/play.ts`](../src/engine/fill/play.ts)
+builds a fill game's from its description's `play:`. The model owns the cursor's parking and
 reveal, and Enter and Space; a game writes none of it.
 
 What a game decides:

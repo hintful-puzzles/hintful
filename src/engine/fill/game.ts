@@ -13,6 +13,7 @@ import type { Point } from "../contract/types.ts";
 import { transposeDimensions } from "../game-id/params.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
 import { verbClicks } from "../input/target-verb.ts";
+import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import type { ClueList } from "../solve/describe-runtime.ts";
 import {
   type AnswerReading,
@@ -32,8 +33,10 @@ import {
   type ClueMax,
   decodeDesc,
   type FillDeal,
+  type FillModifier,
   type FillParams,
   fillParams,
+  variationsOf,
 } from "./game-id.ts";
 import { type FillHint, type FillHintModule, fillHint, linkedCell } from "./hint.ts";
 import {
@@ -43,7 +46,12 @@ import {
   fillInput,
   newFillUi,
 } from "./play.ts";
-import { type FillDrawState, type FillRender, fillRender } from "./render.ts";
+import {
+  type FillDrawState,
+  type FillRender,
+  fillRender,
+  PLACE_ANIM_TIME,
+} from "./render.ts";
 
 /** A board's clues, by kind. */
 type Clues<C> = { readonly [K in keyof C]: ClueList };
@@ -55,9 +63,24 @@ export interface BornModule<C> extends FillHintModule<C>, DealtFillModule<C> {
   readonly labels?: { readonly start?: (i: number) => string };
   readonly deal: FillDeal;
   readonly clueMax: ClueMax<C>;
-  readonly boards: readonly { readonly w: number; readonly h: number }[];
+  readonly boards: readonly Size[];
+  /** The preset menu beside its grid of `boards`. */
+  readonly menu?: {
+    readonly default?: Size;
+    readonly tiers: readonly (Size & {
+      readonly first: number;
+      readonly last: number;
+    })[];
+    readonly variants: readonly (Size & {
+      readonly variations: readonly string[];
+      readonly diff: number;
+    })[];
+  };
+  readonly modifiers?: Readonly<Record<string, FillModifier>>;
   readonly hintMarks: Readonly<Partial<Record<MarkRole, string>>>;
 }
+
+type Size = { readonly w: number; readonly h: number };
 
 export type FillGame<C> = Game<
   FillParams,
@@ -75,11 +98,31 @@ export function fillGame<C extends Clues<C> & object>(
   module: BornModule<C>,
 ): FillGame<C> {
   const { play, deal, boards } = module;
-  const [first] = boards;
-  const defaultParams = (): FillParams => ({ w: first.w, h: first.h, diff: 0 });
-  const params = fillParams(deal, module.tiers, defaultParams);
+  const byDefault = module.menu?.default ?? boards[0];
+  const defaultParams = (): FillParams => ({ w: byDefault.w, h: byDefault.h, diff: 0 });
+  const params = fillParams(deal, module.tiers, defaultParams, module.modifiers);
+  const boardTiers = module.menu?.tiers ?? [];
+  const variants = module.menu?.variants ?? [];
   const menu: PresetBoards<FillParams> = {
     boards: boards.map(({ w, h }) => ({ w, h, diff: 0 })),
+    ...(boardTiers.length === 0
+      ? {}
+      : {
+          tiers: (p: FillParams) => {
+            const got = boardTiers.find((b) => b.w === p.w && b.h === p.h);
+            return got === undefined ? null : [got.first, got.last];
+          },
+        }),
+    ...(variants.length === 0
+      ? {}
+      : {
+          variants: variants.map(({ w, h, variations, diff }) => ({
+            w,
+            h,
+            diff,
+            variations,
+          })),
+        }),
   };
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
@@ -97,6 +140,7 @@ export function fillGame<C extends Clues<C> & object>(
       p.w,
       p.h,
       descValue(decodeDesc(deal, spaceOf(module, p), module.clueMax, desc)),
+      variationsOf(p),
     );
   // The renderer previews the input's drag, and the input reads the board
   // where the renderer puts it: each is read only once both are built.
@@ -111,6 +155,14 @@ export function fillGame<C extends Clues<C> & object>(
   );
   const input: FillInput<C, FillDrawState> = fillInput(module, play, render.origin);
   const { hint, rulesOut } = fillHint(module);
+  // The values whose piece grows when placed.
+  const growing = new Set(
+    Object.entries(play.values)
+      .filter(
+        ([, { paint }]) => paint in PAINTERS && PAINTERS[paint as PainterName].grows,
+      )
+      .map(([v]) => Number(v)),
+  );
 
   return {
     id,
@@ -118,12 +170,13 @@ export function fillGame<C extends Clues<C> & object>(
     menu,
     encodeParams: params.encodeParams,
     decodeParams: params.decodeParams,
+    validateParams: params.validateParams,
     transposeParams: transposeDimensions(),
     paramConfig: params.paramConfig,
 
     newDesc: (p, rs) => dealFill(module, deal, p, rs),
     newState,
-    newUi: () => newFillUi(),
+    newUi: () => newFillUi(module.play.stroke),
 
     targetVerbs: input.targetVerbs,
     interpretMove: input.interpretMove,
@@ -188,5 +241,19 @@ export function fillGame<C extends Clues<C> & object>(
     computeSize: render.computeSize,
     newDrawState: render.newDrawState,
     redraw: render.redraw,
+    // A piece placed or taken away on one cell grows or shrinks; a move that
+    // changes more, a solve or a stroke, is instant, and so is one whose
+    // pieces are drawn whole.
+    animLength: (a, b) => {
+      let at = -1;
+      for (let c = 0; c < a.values.length; c++)
+        if (a.values[c] !== b.values[c]) {
+          if (at >= 0) return 0;
+          at = c;
+        }
+      return at >= 0 && (growing.has(a.values[at]) || growing.has(b.values[at]))
+        ? PLACE_ANIM_TIME
+        : 0;
+    },
   };
 }

@@ -96,7 +96,7 @@ describe("a fill game's input", () => {
     expect(Array.from(shown.values.slice(4, 8))).toEqual([GRASS, GRASS, TENT, GRASS]);
     const { board } = play_(start, ui, [[RIGHT_RELEASE, 7]]);
     expect(Array.from(board.values)).toEqual(Array.from(shown.values));
-    expect(ui.drag.live).toBe(false);
+    expect(ui.drag?.live).toBe(false);
   });
 
   it("joins a tree and the open square beside it with a left drag, placing the tent, and parts them", () => {

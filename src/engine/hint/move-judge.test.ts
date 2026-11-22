@@ -37,9 +37,9 @@ import {
   type TracksOp,
   type TracksState,
 } from "../../games/tracks/state.ts";
-import { unrulyGame } from "../../games/unruly/index.ts";
 import { NAMES } from "../../generated/games/lightup/lightup.compiled.ts";
 import { NAMES as UNRULY_NAMES } from "../../generated/games/unruly/unruly.compiled.ts";
+import { game as unrulyGame } from "../../generated/games/unruly/unruly.game.ts";
 import { D, dirX, dirY, L, R, U } from "../board/square-edges.ts";
 import { SYMM_ROT4 } from "../generate/symmetric-blacks.ts";
 import { randomNew } from "../random/index.ts";

@@ -12,35 +12,63 @@ import { difficultyItem } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
 import { isDigit } from "../game-id/decimal.ts";
 import { readDesc } from "../game-id/desc-reader.ts";
+import { readDotRuns, writeDotRuns } from "../game-id/dot-runs.ts";
+import { modifierItem } from "../game-id/modifier.ts";
 import { dimensionParamConfig } from "../game-id/params.ts";
-import { choice, dims, paramsCodec } from "../game-id/params-codec.ts";
+import { choice, dims, flag, paramsCodec } from "../game-id/params-codec.ts";
 import { type ClueList, clueList, type GridSpace } from "../solve/describe-runtime.ts";
 import type { Sample } from "./sample.ts";
 
 /** A segment of the desc: where a one-valued clue kind sits, as upstream's
- * run code, or a kind's values, the first after `before` and the rest after
- * commas, in the space's order or the columns first. */
+ * run code; a two-valued kind at cells as upstream's dot runs, its value the
+ * letter's case (`cases`, lowercase then uppercase); or a kind's values, the
+ * first after `before` and the rest after commas, in the space's order or
+ * the columns first. */
 export type IdSegment =
   | { readonly runs: string }
+  | { readonly dots: string; readonly cases: readonly [number, number] }
   | { readonly numbers: string; readonly before?: string; readonly order?: "columns" };
 
 /** What a compiled fill module says of its deal (`deal`). */
 export interface FillDeal {
   readonly sample: Sample | null;
+  /** The clue kind the deal hides while the board still finishes. */
+  readonly hide?: string;
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
   readonly universes: Readonly<Record<string, "cells" | "lines">>;
   readonly tierLetters: string;
   readonly sizes: Readonly<
-    Record<string, { readonly min: number; readonly max?: number }>
+    Record<
+      string,
+      { readonly min: number; readonly max?: number; readonly step?: number }
+    >
   >;
+}
+
+/** A variation the player may switch on (`play.modifiers`). */
+export interface FillModifier {
+  readonly letter: string;
+  readonly kw: string;
+  readonly name: string;
+  readonly words: string;
+  readonly rule: string;
+  readonly note?: string;
+  /** The most lines a board 2i squares across may have the other way. */
+  readonly most?: readonly number[];
 }
 
 export interface FillParams {
   w: number;
   h: number;
   diff: number;
+  /** The variations on, by name, in the modifiers' order; absent where none
+   * is, as on every board of a game with none. */
+  variations?: readonly string[];
 }
+
+/** The variations `p` has on. */
+export const variationsOf = (p: FillParams): readonly string[] => p.variations ?? [];
 
 /** A board's clues, by kind. */
 type Clues<C> = { readonly [K in keyof C]: ClueList };
@@ -50,33 +78,83 @@ export type ClueMax<C> = {
   readonly [K in keyof C]: (sp: GridSpace, at: number) => number;
 };
 
-/** The params' custom form and codec: the size within the description's
- * `sizes`, and the tier by its letter, which only a full ID carries. */
+/**
+ * The params' custom form and codec: the size within the description's
+ * `sizes`, each modifier by its letter, and the tier by its letter, which
+ * only a full ID carries; and what the form's bounds cannot say, a size off
+ * its step or past a modifier's `most`.
+ */
 export function fillParams(
   deal: FillDeal,
   tiers: readonly string[],
   defaults: () => FillParams,
+  modifiers: Readonly<Record<string, FillModifier>> = {},
 ): {
   paramConfig: ParamConfigItem<FillParams>[];
   encodeParams(p: FillParams, full: boolean): string;
   decodeParams(s: string): FillParams;
+  validateParams(p: FillParams): string | null;
 } {
   const w = deal.sizes["w"];
+  const step = w?.step;
+  const named = Object.entries(modifiers);
   const paramConfig: ParamConfigItem<FillParams>[] = [
     ...dimensionParamConfig<FillParams>({
-      doc: "Size of the grid in squares.",
+      doc: `Size of the grid in squares.${step === 2 ? " Both must be even." : ""}`,
       ...(w === undefined
         ? {}
         : { bounds: { min: w.min, ...(w.max === undefined ? {} : { max: w.max }) } }),
     }),
     difficultyItem(tiers, "diff"),
+    ...named.map(([variation, m]) =>
+      modifierItem<FillParams>({
+        kw: m.kw,
+        name: m.name,
+        type: "boolean",
+        when: true,
+        words: m.words,
+        slot: "tail",
+        rule: m.rule,
+        ...(m.note === undefined ? {} : { note: m.note }),
+        get: (p) => variationsOf(p).includes(variation),
+        // In the modifiers' order, whichever is set first, and absent where
+        // none is on.
+        set: (p, on) => {
+          const now = named
+            .map(([n]) => n)
+            .filter((n) => (n === variation ? on : variationsOf(p).includes(n)));
+          if (now.length > 0) p.variations = now;
+          else delete p.variations;
+        },
+      }),
+    ),
   ];
   return {
     paramConfig,
     ...paramsCodec(defaults, [
       dims(paramConfig),
+      ...named.map(([, m]) => flag(paramConfig, m.letter, m.kw)),
       choice(paramConfig, "d", "difficulty", deal.tierLetters, { full: true }),
     ]),
+    validateParams(p) {
+      if (step !== undefined && (p.w % step !== 0 || p.h % step !== 0))
+        return step === 2
+          ? "Width and height must both be even."
+          : `Width and height must both be multiples of ${step}.`;
+      for (const [variation, m] of named) {
+        const { most } = m;
+        if (most === undefined || !variationsOf(p).includes(variation)) continue;
+        for (const [across, along, side, other] of [
+          [p.w, p.h, "wide", "high"],
+          [p.h, p.w, "high", "wide"],
+        ] as const) {
+          const bound = most[across / 2];
+          if (bound !== undefined && along > bound)
+            return `${m.name}: a grid ${across} ${side} can be at most ${bound} ${other}.`;
+        }
+      }
+      return null;
+    },
   };
 }
 
@@ -131,6 +209,15 @@ export function encodeDesc<C extends Clues<C>>(
       }
       continue;
     }
+    if ("dots" in seg) {
+      const list = dealt[seg.dots as keyof C];
+      const [lower, upper] = seg.cases;
+      out += writeDotRuns(sp.cells.length, (c) => {
+        const v = list.valueAt[c];
+        return v === upper ? 1 : v === lower ? 0 : null;
+      });
+      continue;
+    }
     const list = dealt[seg.numbers as keyof C];
     elements(sp, universeOf(deal, seg.numbers), seg.order).forEach((e, i) => {
       out += i === 0 ? (seg.before ?? "") : ",";
@@ -176,6 +263,16 @@ export function decodeDesc<C extends Clues<C>>(
           at.map(() => 0),
           n,
         );
+        continue;
+      }
+      if ("dots" in seg) {
+        const at: number[] = [];
+        const v: number[] = [];
+        readDotRuns(r, sp.cells.length, (c, kind) => {
+          at.push(c);
+          v.push(seg.cases[kind]);
+        });
+        out[seg.dots as keyof C] = clueList(at, v, sp.cells.length);
         continue;
       }
       const kind = seg.numbers as keyof C;

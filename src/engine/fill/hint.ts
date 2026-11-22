@@ -25,16 +25,19 @@ import { premiseOf } from "../hint/described-hint.ts";
 import type { DescribedRulesOut } from "../hint/described-rules-out.ts";
 import { glanceWalk } from "../hint/glance.ts";
 import type { Clauses } from "../hint/stated.ts";
+import type { PairIndex } from "../render/piece.ts";
+import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import type { CellMarks } from "../solve/cell-marks.ts";
 import { type ClueList, MARK } from "../solve/describe-runtime.ts";
-import { describedLadder, TIERS } from "../solve/ladder-runtime.ts";
+import { TIERS } from "../solve/ladder-runtime.ts";
 import { asDealt } from "./answer.ts";
 import {
   type FillBoard,
+  isAnswerOf,
   type LadderedFillModule,
+  ladderOf,
   marksOf,
   solveBoard,
-  spaceOf,
 } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { type FillLink, LINK } from "./marks.ts";
@@ -87,6 +90,19 @@ export function fillHint<C extends object>(
   module: FillHintModule<C>,
 ): { hint: FillHintHooks<C>; rulesOut?: RulesOut<FillBoard<C>, Edit> } {
   const links = module.play?.links;
+  // Where every value is a piece of the pair, a step names it by the pair's
+  // word for it ("a block").
+  const pairs = Object.entries(module.play?.values ?? {}).map(
+    ([v, { paint }]) =>
+      [
+        Number(v),
+        paint in PAINTERS ? PAINTERS[paint as PainterName].pair : undefined,
+      ] as const,
+  );
+  const pieces =
+    pairs.length > 0 && pairs.every(([, p]) => p !== undefined)
+      ? Object.fromEntries(pairs as (readonly [number, PairIndex])[])
+      : null;
   // A board's tier is its deal's, which no move changes: every board of one
   // game shares its `dealt`.
   const lowest = new WeakMap<C, number>();
@@ -112,7 +128,7 @@ export function fillHint<C extends object>(
     walk(board, cap) {
       const { marks, ok } = marksOf(module, board);
       if (!ok) return null;
-      const { entries } = describedLadder(module, board.dealt as never);
+      const { entries } = ladderOf(module, board);
       if (links?.glance === undefined) return { marks, entries };
       const walk = glanceWalk(
         entries,
@@ -148,10 +164,10 @@ export function fillHint<C extends object>(
       ? {}
       : {
           done: (board: FillBoard<C>, m: CellMarks): boolean =>
-            module.isAnswer(
+            isAnswerOf(
+              module,
+              board,
               Uint8Array.from(m.grid, (v) => (v === 0 ? (module.play?.blank ?? 0) : v)),
-              spaceOf(module, board),
-              board.dealt,
             ),
         }),
     tiers: { lowest: tierOf, count: module.tiers.length },
@@ -196,6 +212,7 @@ export function fillHint<C extends object>(
       };
     },
     ...(module.STATED === undefined ? {} : { stated: module.STATED }),
+    ...(pieces === null ? {} : { piece: (n: number) => pieces[n] }),
     say: {},
   });
   return {

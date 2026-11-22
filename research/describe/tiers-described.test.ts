@@ -14,7 +14,7 @@ import { clustersGame } from "../../src/games/clusters/index.ts";
 import { mosaicGame } from "../../src/games/mosaic/index.ts";
 import { seismicGame } from "../../src/games/seismic/index.ts";
 import { starbattleGame } from "../../src/games/starbattle/index.ts";
-import { unrulyGame } from "../../src/games/unruly/index.ts";
+import { game as unrulyGame } from "../../src/generated/games/unruly/unruly.game.ts";
 import { say } from "../progress.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a walk over any tiered game.
@@ -55,7 +55,9 @@ it("tiers", () => {
         say(`${name} tier ${tier}: ${lines.length} boards so far`);
         for (const base of [
           g.defaultParams(),
-          ...(name === "unruly" ? [{ ...g.defaultParams(), unique: true }] : []),
+          ...(name === "unruly"
+            ? [{ ...g.defaultParams(), variations: ["unique"] }]
+            : []),
           ...(name === "seismic" ? [{ ...g.defaultParams(), mode: 1 }] : []),
         ])
           for (let s = 0; s < SEEDS; s++) {

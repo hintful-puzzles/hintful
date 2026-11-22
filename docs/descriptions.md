@@ -202,12 +202,24 @@ research tools all read through it; the app never does.
   gives every cell the board's domain. A step's line is its `stripes`,
   which hatch the line's clue in the margin too.
 - **A fill game born from its description declares the rest of a game**
-  (Kakurasu, Tents): `catalog:` its entry, `play.boards` its menu (the first
-  the default), `play.hintMarks` its legend, `id:` its game ID's grammar and
+  (Kakurasu, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
+  (the first the default unless `default:` names another, `boardTiers:` a
+  board that stops short of a tier, `variants:` the boards after the grid),
+  `play.hintMarks` its legend, `id:` its game ID's grammar and
   `tierLetters:` its params' tier letters, so upstream's IDs still load.
-  `deal.sample` draws the answer (`scatter`, `partner`, `rest`, and
-  `noBareLine` where no line may hold the rest value alone). The compiler
-  writes `<id>.game.ts`, `fillGame` of the module, and `<id>.catalog.ts`.
+  `play.modifiers` puts a variation in the params by its letter, with the
+  `most` lines a board of each width may have where the rule bounds the
+  size, and `sizes.step` holds a side to a multiple. `play.dealt` names a
+  clue kind meaning `value(at) = v` that the cell is dealt holding (Unruly's
+  givens, which `id:` writes as `dots`). `play.click: cycle` goes round
+  empty and both buttons' values, two pieces alike, so the right button
+  rules nothing out. `deal.sample` draws the answer: `build`, a random
+  value on a random cell and then what the whole ladder decides, until the
+  board is full; or `scatter`, `partner`, `rest`, and `noBareLine` where no
+  line may hold the rest value alone. `deal.hide` then takes each of a
+  kind's clues off, in a random order, while the board still finishes. The
+  compiler writes `<id>.game.ts`, `fillGame` of the module, and
+  `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One
   ladder runs on every board the game deals, and a name a board's variations
   leave out is empty there, so a technique over it binds nothing (Solo's
@@ -915,7 +927,7 @@ the ladder: one technique
 an entry, in the module's order, capped per scale. A game's solver extends
 `CellMarks` only to keep what no description states, a Search (`LatinSolver`
 and Solo's forcing chains and recursion); a game whose solve is its ladder
-uses it as it is ([`unruly/solver.ts`](../src/games/unruly/solver.ts)).
+uses it as it is, as every fill game does ([`engine/fill/board.ts`](../src/engine/fill/board.ts)).
 
 - **The space is the module's.** `units` lists the description's units in
   its order, and `describedSpace` builds the grid from them: rows and
@@ -1308,7 +1320,6 @@ the `terms` its step's sentence reads and the `marks` (`outline`, `stripes`,
 at the firing, on the marks before its facts are made and under the
 technique's own `with`, and only where a hint asks (a solve passes no `fire`).
 The rung `describedLadder` builds for it then records `{ binding, says }` for each fact, and
-`describedHint` (`engine/hint/described-hint.ts`, a step a fact) or
 `describedFiringHint` (`engine/hint/described-firing-hint.ts`, a step a firing)
 builds the steps from it: the firing's facts are the ringed targets, evidence
 is the outline less them and less the `strand`, drawn apart. **What the walk

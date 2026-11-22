@@ -586,10 +586,16 @@ grid while a gesture is live, and paints only what they say:
   game has a mark for two pieces clashing (Tents' diamond on the shared side
   or corner), and on both otherwise.
 - **Any other violation marks its elements**, and a clue's marks the clue.
+  A fill board reads its cells' shape first
+  ([`engine/fill/render.ts`](../src/engine/fill/render.ts), `lineShape`):
+  three or more in a row along part of a line get a bar along them, two or
+  more whole parallel lines a bar across each, and the rest their pieces in
+  error, which a pair piece shows as a `!` badge (Unruly's run of three,
+  its two lines alike, an over-full line's pieces). A shape, never a rule's
+  name, so no game names its rules to the renderer.
 - **A game that draws one rule's breach its own way reads `byRule`**, the
   rule named by a constant typed as its module's `RuleName`, so renaming or
-  moving the rule fails the typecheck (Unruly's bar along a run of three,
-  its badge on an over-full line's pieces).
+  moving the rule fails the typecheck.
 - **`rules.grid` reads what one rule makes certain of every answer**, so a
   statement read alone sees it as the player does: Light Up's lit square
   holds no bulb, and a square beside a shaded one is clear in Range and
@@ -878,8 +884,10 @@ names the one it applies.
   verbs, `PAIR_NAMES[i]` (a description says `{piece term}`), and its help
   page writes `{{pair:0}}` and `{{pair:1}}`
   ([`help-pages.md`](./help-pages.md)). Exemplars:
-  [`unruly/render.ts`](../src/games/unruly/render.ts),
-  [`unruly.description.yaml`](../src/games/unruly/unruly.description.yaml).
+  the painters `block` and `disc`
+  ([`engine/render/pieces/pair.ts`](../src/engine/render/pieces/pair.ts)),
+  which [`unruly.description.yaml`](../src/games/unruly/unruly.description.yaml)
+  paints with.
 - **Shaded or not is the `SHADED` piece alone** ("Shaded or not is the
   pair's first member alone"): a cell ruled out is quiet surface with a
   cross, and an undecided one is plain surface. The words are `SHADED_NAME`

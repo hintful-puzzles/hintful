@@ -23,7 +23,20 @@ mode, a solve to the end).
 In design.md § 1's order: Mosaic shares most of Unruly's capabilities, and
 Norinori's partition is its own.
 
-- [ ] 2.1 Unruly born; its capabilities added listed here.
+- [x] 2.1 Unruly born; its capabilities added listed here. Done
+      2026-11-22, 1,160 hand-written lines gone. Added, each the engine's:
+      `play.click: cycle` and a value's list of keys; `play.dealt`, a clue
+      kind dealt as fixed cells, and the `dots` ID segment (upstream's dot
+      runs); `play.modifiers`, a variation in the params by its letter,
+      with `most` and `sizes.step` refusing a board; the menu's `default`,
+      `boardTiers` and `variants`; `deal.sample: {build: true}` and
+      `deal.hide`; the pair's `block` and `disc` painters, the hint naming
+      a pair piece by its word, and the given's lifted surface; live errors
+      drawn by their cells' shape (a run's bar, a strike across lines
+      alike, a badge on a pair piece); and the placement's grow, for a
+      painter that `grows`. The fill Ui holds the line stroke's drag only
+      where the stroke is a line. The hint walks shorten (a firing that
+      settles several cells is one step), and the help says so.
 - [ ] 2.2 Mosaic born; its capabilities added listed here.
 - [ ] 2.3 Norinori born; its capabilities added listed here.
 

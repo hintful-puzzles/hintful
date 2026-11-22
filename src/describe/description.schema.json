@@ -568,7 +568,15 @@
             "type": "object",
             "required": ["min"],
             "additionalProperties": false,
-            "properties": { "min": { "type": "integer" }, "max": { "type": "integer" } }
+            "properties": {
+              "min": { "type": "integer" },
+              "max": { "type": "integer" },
+              "step": {
+                "type": "integer",
+                "minimum": 2,
+                "description": "Where the size is a multiple of it alone (Unruly's even sides): a fill game's Custom dialog refuses another."
+              }
+            }
           }
         },
         "space": {
@@ -748,7 +756,17 @@
                 "additionalProperties": false,
                 "properties": {
                   "does": { "type": "string" },
-                  "key": { "type": "string", "pattern": "^[A-Z]$" },
+                  "key": {
+                    "description": "The key that places the value, a capital letter or a digit, or a list of them.",
+                    "oneOf": [
+                      { "type": "string", "pattern": "^[A-Z0-9]$" },
+                      {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": { "type": "string", "pattern": "^[A-Z0-9]$" }
+                      }
+                    ]
+                  },
                   "glyph": { "type": "string", "minLength": 3, "maxLength": 3 },
                   "paint": { "type": "string" }
                 }
@@ -792,6 +810,65 @@
               "enum": ["line", "sweep"],
               "description": "What a drag does: `line` paints the secondary value along one row or column, `sweep` repeats the pressed verb."
             },
+            "click": {
+              "enum": ["toggle", "cycle"],
+              "description": "What a click does: `toggle` (the default) sets the button's value or empties a cell holding it; `cycle` goes round empty, the button's value and the other button's, the right button the other way round."
+            },
+            "dealt": {
+              "type": "string",
+              "description": "The clue kind at a cell that the cell is dealt holding: its value is the cell's, which no edit changes. Its meaning is `value(at) = v`."
+            },
+            "default": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*x[1-9][0-9]*$",
+              "description": "The default board, one of `boards`, where it is not the first."
+            },
+            "boardTiers": {
+              "type": "object",
+              "description": "The first and last tier a board of `boards` is offered at, by its `WxH`, where it is not every tier.",
+              "propertyNames": { "pattern": "^[1-9][0-9]*x[1-9][0-9]*$" },
+              "additionalProperties": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": { "type": "string" }
+              }
+            },
+            "variants": {
+              "type": "array",
+              "description": "The boards after the menu's grid, one for each modifier: a size of `boards`, the variations on, and its tier.",
+              "items": {
+                "type": "object",
+                "required": ["board", "with", "tier"],
+                "additionalProperties": false,
+                "properties": {
+                  "board": { "type": "string", "pattern": "^[1-9][0-9]*x[1-9][0-9]*$" },
+                  "with": { "type": "array", "items": { "type": "string" } },
+                  "tier": { "type": "string" }
+                }
+              }
+            },
+            "modifiers": {
+              "type": "object",
+              "description": "Each variation the player may switch on, by its name: its letter in the params, its Custom field (`kw`, `name`), its words in a board's name and the rule the help lists (`engine/game-id/modifier.ts`), and `most`, where the rule bounds the size: a board 2i squares across has at most `most[i]` lines the other way.",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["letter", "kw", "name", "words", "rule"],
+                "additionalProperties": false,
+                "properties": {
+                  "letter": { "type": "string", "pattern": "^[a-z]$" },
+                  "kw": { "type": "string" },
+                  "name": { "type": "string" },
+                  "words": { "type": "string" },
+                  "rule": { "type": "string" },
+                  "note": { "type": "string" },
+                  "most": {
+                    "type": "array",
+                    "items": { "type": "integer", "minimum": 0 }
+                  }
+                }
+              }
+            },
             "links": {
               "type": "string",
               "description": "The cell mark naming a clue, drawn as a link between a cell and the clue's cell beside it."
@@ -817,7 +894,7 @@
             },
             "boards": {
               "type": "array",
-              "description": "The sizes the preset menu offers, `WxH`, smallest first, each at every tier; the first at the easiest tier is the default board. A game born from its description (`catalog:`) states them.",
+              "description": "The sizes the preset menu offers, `WxH`, smallest first, each at every tier unless `boardTiers` says otherwise; the first at the easiest tier is the default board unless `default` names another. A game born from its description (`catalog:`) states them.",
               "minItems": 1,
               "items": { "type": "string", "pattern": "^[1-9][0-9]*x[1-9][0-9]*$" }
             },
@@ -869,6 +946,21 @@
               },
               {
                 "type": "object",
+                "required": ["dots", "cases"],
+                "additionalProperties": false,
+                "description": "A clue kind of two values at cells as upstream's dot runs (`engine/game-id/dot-runs.ts`): a letter a clue, its offset the run of cells before it and its case its value, `cases` the values written lowercase and uppercase. It ends the desc.",
+                "properties": {
+                  "dots": { "type": "string" },
+                  "cases": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": { "type": "integer" }
+                  }
+                }
+              },
+              {
+                "type": "object",
                 "required": ["numbers"],
                 "additionalProperties": false,
                 "properties": {
@@ -887,39 +979,58 @@
         "deal": {
           "type": "object",
           "additionalProperties": { "type": "string" },
-          "description": "What the generator chooses, in words, and `sample` where the deal samples an answer and derives the clues from each kind's `means`.",
+          "description": "What the generator chooses, in words; `sample` where the deal samples an answer and derives the clues from each kind's `means`, and `hide` where it then hides a kind's clues.",
           "properties": {
+            "hide": {
+              "type": "string",
+              "description": "A clue kind the deal hides from the answer's: each clue of it, in a random order, is taken off while the board still finishes at the tier."
+            },
             "sample": {
-              "type": "object",
-              "description": "How the deal samples an answer: `scatter`'s value on a share of the cells, optionally none within `apart` of another; `partner`'s value beside each, along `along`, the two matched; `rest` on every other cell. The compiler then writes `clueHolds_<kind>` and `deriveClues`.",
-              "required": ["scatter", "rest"],
-              "additionalProperties": false,
-              "properties": {
-                "scatter": {
+              "oneOf": [
+                {
                   "type": "object",
-                  "required": ["value", "share"],
+                  "description": "The answer built by the ladder: a random value on a random undecided cell, then every cell the whole ladder decides from those, until every cell is decided.",
+                  "required": ["build"],
+                  "additionalProperties": false,
+                  "properties": { "build": { "const": true } }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer sampled: `scatter`'s value on a share of the cells, optionally none within `apart` of another; `partner`'s value beside each, along `along`, the two matched; `rest` on every other cell.",
+                  "required": ["scatter", "rest"],
                   "additionalProperties": false,
                   "properties": {
-                    "value": { "type": "integer", "minimum": 1 },
-                    "share": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
-                    "apart": { "enum": ["adj4", "adj8"] }
+                    "scatter": {
+                      "type": "object",
+                      "required": ["value", "share"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "value": { "type": "integer", "minimum": 1 },
+                        "share": {
+                          "type": "number",
+                          "exclusiveMinimum": 0,
+                          "maximum": 1
+                        },
+                        "apart": { "enum": ["adj4", "adj8"] }
+                      }
+                    },
+                    "partner": {
+                      "type": "object",
+                      "required": ["value", "along"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "value": { "type": "integer", "minimum": 1 },
+                        "along": { "enum": ["adj4", "adj8"] }
+                      }
+                    },
+                    "rest": { "type": "integer", "minimum": 1 },
+                    "noBareLine": {
+                      "type": "boolean",
+                      "description": "Draw again an answer with a row or column holding nothing but `rest`: such a line's clue gives it away, and it reads as an empty strip of the board (upstream's Tents)."
+                    }
                   }
-                },
-                "partner": {
-                  "type": "object",
-                  "required": ["value", "along"],
-                  "additionalProperties": false,
-                  "properties": {
-                    "value": { "type": "integer", "minimum": 1 },
-                    "along": { "enum": ["adj4", "adj8"] }
-                  }
-                },
-                "rest": { "type": "integer", "minimum": 1 },
-                "noBareLine": {
-                  "type": "boolean",
-                  "description": "Draw again an answer with a row or column holding nothing but `rest`: such a line's clue gives it away, and it reads as an empty strip of the board (upstream's Tents)."
                 }
-              }
+              ]
             }
           }
         },

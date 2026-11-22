@@ -7,6 +7,7 @@
 
 import type { GameDrawing } from "../../contract/game.ts";
 import type { Color, Rect } from "../../contract/types.ts";
+import type { PairIndex } from "../piece.ts";
 
 export interface Painter {
   /** The colors the piece is drawn in, from the board's background, each
@@ -17,12 +18,26 @@ export interface Painter {
   /** The surface a cell holding the piece takes, as an index into
    * {@link colors}, or `null` for the board's surface of an undecided cell. */
   readonly surface: number | null;
+  /** The member of the two-state pair the piece is, which a hint names it
+   * by (`PAIR_NAMES`), where it is one. */
+  readonly pair?: PairIndex;
+  /** Whether {@link paint} draws a piece just placed by its `grown`, so a
+   * placement of it is worth an animation. */
+  readonly grows?: boolean;
   /**
    * Draw the piece in `tile`, the cell's whole box, the color at index `i`
    * of {@link colors} in slot `slot[i]`. `error` where a rule breaks at the
-   * cell, which a piece shows in the error role.
+   * cell, which a piece shows in the error role. `grown`, from 0 to 1, is
+   * how far a piece just placed has grown from the middle of its cell; a
+   * piece that does not grow is drawn whole.
    */
-  paint(dr: GameDrawing, tile: Rect, slot: readonly number[], error: boolean): void;
+  paint(
+    dr: GameDrawing,
+    tile: Rect,
+    slot: readonly number[],
+    error: boolean,
+    grown?: number,
+  ): void;
 }
 
 /** The box of a tile's surface: inside the grid line on its top and left. */

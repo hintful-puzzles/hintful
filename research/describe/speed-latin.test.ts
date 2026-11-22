@@ -18,7 +18,7 @@ import { seismicGame } from "../../src/games/seismic/index.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
-import { unrulyGame } from "../../src/games/unruly/index.ts";
+import { game as unrulyGame } from "../../src/generated/games/unruly/unruly.game.ts";
 import { progress } from "./pilot.ts";
 
 const SEEDS = Number(process.env["SEEDS"] ?? 4);

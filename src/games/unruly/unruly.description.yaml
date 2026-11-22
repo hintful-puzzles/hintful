@@ -46,14 +46,21 @@ help:
       would make the two rows identical, so that square must hold a {{pair:1}}
       (and the same with the pieces swapped, or with columns).
 
-    When one idea settles several squares at once, the hint walks through
-    them one at a time as a single step.
+    When one idea settles several squares at once, the hint rings them all
+    in one step.
+catalog:
+  name: Unruly
+  description: Two-piece grid puzzle
+  objective: Fill the grid with blocks and discs, avoiding runs of three.
+  collection: original
+  family: shading
+  similar: Tohu-Wa-Vohu, Binairo, Tic-Tac-Logic
 produces: shading
 words:
   cell: cell
 sizes:
-  w: { min: 6, max: 30 }
-  h: { min: 6, max: 30 }
+  w: { min: 6, step: 2 }
+  h: { min: 6, step: 2 }
 space:
   grid: { w: "w", h: "h" }
   # Rows and columns are lines, but a value repeats in them.
@@ -61,7 +68,6 @@ space:
 answer:
   # 1 is the first of the pair, 2 the second.
   value: { sort: cell, domain: "range(1, 2)" }
-given: [value]
 define:
   # The other piece.
   flip(d): "3 - d"
@@ -78,10 +84,75 @@ shape:
     forall L in lines, i in range(0, |cells(L)| - 3):
     not (value(sq(L, i)) = value(sq(L, i + 1)) and value(sq(L, i + 1)) = value(sq(L, i + 2)))
   - "forall L in lines, d in domain: 2 * count(c in cells(L) where value(c) = d) = |cells(L)|"
+clues:
+  # A piece the board is dealt holding.
+  given:
+    at: cell
+    value: "range(1, 2)"
+    means: "value(at) = v"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: put a block in it, key: "1", glyph: " 1 ", paint: block }
+    2: { does: put a disc in it, key: ["0", "2"], glyph: " 0 ", paint: disc }
+  primary: 1
+  secondary: 2
+  # A click goes round empty, the button's piece and the other one.
+  click: cycle
+  stroke: sweep
+  dealt: given
+  # Upstream's 6x6 and 8x8, and its 10x10 and 14x14 made upright boards of
+  # about their area.
+  boards: [6x6, 8x8, 8x12, 12x16]
+  default: 8x8
+  # The smallest board stops a tier short, which is the line the unique
+  # board takes in a section of twelve.
+  boardTiers: { 6x6: [Easy, Normal] }
+  variants: [{ board: 8x8, with: [unique], tier: Normal }]
+  modifiers:
+    unique:
+      letter: u
+      kw: unique-rows-and-columns
+      name: Unique rows and columns
+      words: unique
+      rule: no two rows may be the same, and no two columns.
+      note: >-
+        There are only so many different rows of a given width, so this limits
+        how tall the grid can be for its width, and the other way round: a grid
+        6 squares wide can be at most 14 high, and one 8 wide at most 34.
+      # OEIS A177790: how many different lines of 2i squares the shape allows,
+      # as far as a 32-bit integer holds. A board 2i wide has at most that
+      # many rows, and the other way round.
+      most:
+        [
+          1, 2, 6, 14, 34, 84, 208, 518, 1296, 3254, 8196, 20700, 52404, 132942,
+          337878, 860142, 2192902, 5598144, 14308378, 36610970, 93770358,
+          240390602, 616787116, 1583765724,
+        ]
+  hintMarks:
+    ring: >-
+      the square to fill. It is drawn empty: the sentence says whether it must
+      hold a block or a disc.
+    outline: >-
+      the squares whose pieces the step reasons from: the pair that would make
+      three, the full quota, the only places the last one can go, or the row a
+      match would copy.
+    stripes: the row or column the sentence calls "this row" or "this column".
 deal:
-  givens: which squares show their piece, fewer at higher tiers
-  tier: one of the tiers
+  answer: >-
+    built a square at a time: a random piece on a random empty square, then
+    every square the ladder decides from them
+  given: >-
+    every square's piece, then each hidden in a random order while the board
+    still finishes at the tier
+  tier: one of the tiers, the board finished at it and not at the tier below
+  sample: { build: true }
+  hide: given
+# Upstream's game ID: the givens as dot runs, a block's letter uppercase.
+id:
+  - dots: given
+    cases: [2, 1]
+tierLetters: ten
 variations:
   unique:
     add:

@@ -133,8 +133,8 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `permutation-planner.ts` — a staged plan over any permutation moves |
 | `hint/` — the planners, judges and sentences of a hint |
 | – `hint-plan.ts` — the plan-accumulation loop |
-| – `described-hint.ts` — a described game's hint, built from its firings |
-| – `described-firing-hint.ts` — the same, a step a firing |
+| – `described-hint.ts` — what a hint reads off a firing |
+| – `described-firing-hint.ts` — a described game's hint, a step a firing |
 | – `glance.ts` — marks a board shows at a glance, and asking for a deeper one |
 | – `move-judge.ts` — whether the player's last move followed from the board |
 | – `described-rules-out.ts` — `Game.rulesOut` from the description |
@@ -1535,21 +1535,18 @@ Exemplar: `src/games/loopy/hint.ts`.
 them ([`hints.md`](./hints.md) § "Show only what the board does not
 already say").
 
-### `described-hint.ts` — a described game's hint, built from its firings
+### `described-hint.ts` — what a hint reads off a firing
 
-Reach for `describedHint` when a game's techniques are stated in a
-description and a placement is a fact: give it the state as the
-description's marks, the ladder, the move a fact makes, and a sentence for
-each technique as a function of its `says` terms and the cells it marks. It
-returns the part of `Game.hint` it can make, `plan`, `judgeMove`, `keepTrack`
-and `rungs`, which the game spreads into its hint; a step's kind is the
-technique's id, its marks are the `says` marks, and a firing that fills
-several cells is a journey. Exemplar: `unruly/index.ts`. The `says` block is
-in [`descriptions.md`](./descriptions.md).
+A game's own hint over its ladder's firings reads them here: `spokenOf`
+what a firing says, `techniqueOf` its technique, `filledBy` the cells it
+fills and `premiseOf` what its premise reads; `SuppliedHooks` types the
+hooks a game writes for what its techniques declare `supplied`, and
+`DEFAULT_PLAN` is the plan length unless a game sets its own. The `says`
+block is in [`descriptions.md`](./descriptions.md).
 
-### `described-firing-hint.ts` — the same, a step a firing
+### `described-firing-hint.ts` — a described game's hint, a step a firing
 
-`describedFiringHint` is the other shape, for a
+`describedFiringHint` builds the hint of a
 game whose step is a firing: one step decides every cell the firing does, and
 `hint.keepTrack` shrinks it as the player makes some (`hint-track.ts`). The
 game gives the walk, how a fact is its highlights' target and the move that
@@ -1572,8 +1569,8 @@ hint builds it from the description; Tents is the first to declare one.
 The pieces a builder's `judgeMove` is made of: the facts a move made, read
 from the marks before and after it; whether walked marks hold each; which
 techniques made it, direct or chained; and the one table of words a verdict
-names them in (`verdictOf`). `describedFiringHint`, `describedEdgeHint`,
-`describedHint` and the candidate plan (`candidate-judge.ts`) drive them
+names them in (`verdictOf`). `describedFiringHint`, `describedEdgeHint`
+and the candidate plan (`candidate-judge.ts`) drive them
 through `judgeByWalk` with an aimed walk. A game whose hint walks the ladder
 from its own code passes its marks and its aimed walk to `judgeWalked`
 (`docs/hints.md` § "Judging the last move").

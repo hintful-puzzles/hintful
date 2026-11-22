@@ -24,6 +24,7 @@ import {
   type DescriptionJson,
   type PlayJson,
   sampleOf,
+  segmentKind,
 } from "./description.ts";
 import type { Binder, Expr } from "./expr.ts";
 import { parse } from "./expr.ts";
@@ -121,7 +122,26 @@ export function playOf(
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,
     );
-  const { links, glance, askBefore, labels, boards, hintMarks, ...rest } = p;
+  if (p.dealt !== undefined) {
+    const kind = json.clues?.[p.dealt];
+    if (kind?.at !== "cell" || kind.means.replace(/\s+/g, "") !== "value(at)=v")
+      throw new CompileError(
+        `play dealt: ${p.dealt} is not a clue at a cell meaning \`value(at) = v\``,
+      );
+  }
+  const {
+    links,
+    glance,
+    askBefore,
+    labels,
+    boards,
+    hintMarks,
+    default: byDefault,
+    boardTiers,
+    variants,
+    modifiers,
+    ...rest
+  } = p;
   const rungs = d.techniques.filter((t) => t.on === null).map((t) => t.id);
   for (const [key, ids] of [
     ["glance", glance],
@@ -164,12 +184,15 @@ export function playOf(
       : [
           "",
           "/** The preset menu's sizes, smallest first; the first is the default. */",
-          `export const boards = ${JSON.stringify(
-            boards.map((b) => {
-              const [w, h] = b.split("x").map(Number);
-              return { w, h };
-            }),
-          )} as const;`,
+          `export const boards = ${JSON.stringify(boards.map(sizeOf))} as const;`,
+        ]),
+    ...menuOf(json, { boards, byDefault, boardTiers, variants }),
+    ...(modifiers === undefined
+      ? []
+      : [
+          "",
+          "/** The variations the player may switch on, by name (`engine/fill/game-id.ts`). */",
+          `export const modifiers = ${JSON.stringify(checkedModifiers(json, modifiers))} as const;`,
         ]),
     ...(hintMarks === undefined
       ? []
@@ -179,6 +202,87 @@ export function playOf(
           `export const hintMarks = ${JSON.stringify(hintMarks)} as const;`,
         ]),
   ];
+}
+
+/** A board's `WxH` as its size. */
+const sizeOf = (b: string): { w: number; h: number } => {
+  const [w, h] = b.split("x").map(Number);
+  return { w, h };
+};
+
+/**
+ * `menu`, what the preset menu offers beside its grid of `boards`: the
+ * default board where it is not the first, the tiers a board stops at, and
+ * the variant boards, a tier by its index. Nothing where the description
+ * states none. A board not in `boards`, a tier not in `tiers` or a variation
+ * the description lacks is refused.
+ */
+function menuOf(
+  json: DescriptionJson,
+  p: Pick<PlayJson, "boards" | "boardTiers" | "variants"> & { byDefault?: string },
+): string[] {
+  const { boards, byDefault, boardTiers, variants } = p;
+  if (byDefault === undefined && boardTiers === undefined && variants === undefined)
+    return [];
+  const tiers = json.tiers ?? [];
+  const tierOf = (name: string, where: string): number => {
+    const i = tiers.indexOf(name);
+    if (i < 0) throw new CompileError(`play ${where}: ${name} is no tier`);
+    return i;
+  };
+  const board = (b: string, where: string) => {
+    if (!boards?.includes(b))
+      throw new CompileError(`play ${where}: ${b} is not in boards`);
+    return sizeOf(b);
+  };
+  const menu = {
+    ...(byDefault === undefined ? {} : { default: board(byDefault, "default") }),
+    tiers: Object.entries(boardTiers ?? {}).map(([b, [first, last]]) => ({
+      ...board(b, "boardTiers"),
+      first: tierOf(first, "boardTiers"),
+      last: tierOf(last, "boardTiers"),
+    })),
+    variants: (variants ?? []).map((v) => {
+      for (const name of v.with)
+        if (json.variations?.[name] === undefined)
+          throw new CompileError(`play variants: ${name} is no variation`);
+      return {
+        ...board(v.board, "variants"),
+        variations: v.with,
+        diff: tierOf(v.tier, "variants"),
+      };
+    }),
+  };
+  return [
+    "",
+    "/** The preset menu beside its grid: the default board, the tiers a board",
+    " * stops at, and the variant boards. */",
+    `export const menu = ${JSON.stringify(menu)} as const;`,
+  ];
+}
+
+/** The modifiers, each a variation the description has that only adds: a
+ * ruleset would need a choice, which no fill game offers yet. */
+function checkedModifiers(
+  json: DescriptionJson,
+  modifiers: NonNullable<PlayJson["modifiers"]>,
+): NonNullable<PlayJson["modifiers"]> {
+  const letters = new Set<string>();
+  for (const [name, m] of Object.entries(modifiers)) {
+    const v = json.variations?.[name];
+    if (v === undefined)
+      throw new CompileError(`play modifiers: ${name} is no variation`);
+    if (v.replace !== undefined)
+      throw new CompileError(`play modifiers: ${name} replaces, so it is a ruleset`);
+    if (m.letter === "d" || letters.has(m.letter))
+      throw new CompileError(`play modifiers: the letter ${m.letter} is taken`);
+    letters.add(m.letter);
+  }
+  // The board passes the variations after its clues, which an answer check
+  // takes only where it reads one.
+  if (Object.keys(json.clues ?? {}).length === 0)
+    throw new CompileError("play modifiers: a fill game with variations deals a clue");
+  return modifiers;
 }
 
 /**
@@ -227,24 +331,43 @@ export function dealOf(
   const kinds = [...d.clueKinds.keys()];
   const id =
     json.id ?? kinds.map((k, i) => ({ numbers: k, ...(i > 0 ? { before: "," } : {}) }));
-  const named = id.map((seg) => ("runs" in seg ? seg.runs : seg.numbers));
+  const named = id.map(segmentKind);
   for (const kind of kinds)
     if (named.filter((k) => k === kind).length !== 1)
       throw new CompileError(`id: clue kind ${kind} is not named once`);
-  for (const seg of id) {
-    const kind = "runs" in seg ? seg.runs : seg.numbers;
+  for (const [i, seg] of id.entries()) {
+    const kind = segmentKind(seg);
     const c = d.clueKinds.get(kind);
     if (c === undefined) throw new CompileError(`id: no clue kind ${kind}`);
-    // A run code says where a clue is, never its value: one value, 0.
-    const one =
+    // The values a kind's `range(lo, hi)` states, where both are numbers.
+    const values =
       c.value !== null &&
       c.value.k === "call" &&
-      c.value.args.every((a) => a.k === "num" && a.v === 0);
-    if ("runs" in seg && (c.at !== "cell" || !one))
+      c.value.args.every((a) => a.k === "num")
+        ? c.value.args.map((a) => (a.k === "num" ? a.v : 0))
+        : null;
+    // A run code says where a clue is, never its value: one value, 0.
+    if ("runs" in seg && (c.at !== "cell" || values?.join() !== "0,0"))
       throw new CompileError(
         `id: runs of ${kind}, which is not a cell's one-valued marker`,
       );
+    // A dot run's case is its value, one of two.
+    if (
+      "dots" in seg &&
+      (c.at !== "cell" ||
+        values === null ||
+        values[1] - values[0] !== 1 ||
+        [...seg.cases].sort().join() !== values.join())
+    )
+      throw new CompileError(
+        `id: dots of ${kind}, which is not a cell's clue of the values ${seg.cases.join(" and ")}`,
+      );
+    if ("dots" in seg && i !== id.length - 1)
+      throw new CompileError(`id: dots of ${kind} end the desc, and come last`);
   }
+  const hide = json.deal?.["hide"];
+  if (typeof hide === "string" && !d.clueKinds.has(hide))
+    throw new CompileError(`deal hide: no clue kind ${hide}`);
   const tiers = json.tiers ?? [];
   const tierLetters =
     json.tierLetters ?? tiers.map((t) => t[0]?.toLowerCase() ?? "").join("");
@@ -262,6 +385,7 @@ export function dealOf(
   );
   const deal = {
     sample: sampleOf(json),
+    ...(typeof hide === "string" ? { hide } : {}),
     id,
     universes,
     tierLetters,

@@ -442,8 +442,8 @@ export interface GameDrawing<Blitter = unknown> {
 
 /**
  * A game's explained hint: its plan and everything the midend and the guards
- * ask of it. A hint builder (`describedHint`, `describedEdgeHint`,
- * `describedFiringHint`) returns the parts it makes, and the game hands them
+ * ask of it. A hint builder (`describedEdgeHint`, `describedFiringHint`)
+ * returns the parts it makes, and the game hands them
  * over with the rest.
  */
 export interface GameHint<

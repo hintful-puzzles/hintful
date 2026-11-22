@@ -28,6 +28,8 @@ export interface HelpOnlyJson {
 export interface SizeRange {
   min: number;
   max?: number;
+  /** Where the size is a multiple of it alone. */
+  step?: number;
 }
 
 /** A description with its formal rules, as `description.schema.json` states
@@ -143,13 +145,27 @@ export interface DescriptionJson {
 /** A fill game's `play:`: the engine's `FillPlay` (`engine/fill/play.ts`),
  * with its link named by the cell mark it draws. */
 export interface PlayJson {
-  values: Record<string, { does: string; key: string; glyph: string; paint: string }>;
+  values: Record<
+    string,
+    { does: string; key: string | string[]; glyph: string; paint: string }
+  >;
   given?: Record<string, { glyph: string; paint: string }>;
   primary: number;
   secondary: number;
   blank?: number;
   erase?: string;
   stroke: "line" | "sweep";
+  click?: "toggle" | "cycle";
+  /** The clue kind at a cell that the cell is dealt holding. */
+  dealt?: string;
+  /** The default board, `WxH`, where it is not the first. */
+  default?: string;
+  /** The first and last tier a board is offered at, by its `WxH`. */
+  boardTiers?: Record<string, [string, string]>;
+  /** The boards after the menu's grid: a size, its variations and its tier. */
+  variants?: { board: string; with: string[]; tier: string }[];
+  /** Each variation the player may switch on, by its name. */
+  modifiers?: Record<string, ModifierJson>;
   links?: string;
   /** The techniques that read a link the board shows at a glance, run once on
    * the drawn links before each step of the hint. */
@@ -162,6 +178,19 @@ export interface PlayJson {
   boards?: string[];
   /** What each mark of the hint means here (`Game.hint.marks`). */
   hintMarks?: Partial<Record<"ring" | "outline" | "stripes" | "strike", string>>;
+}
+
+/** A variation the player may switch on: its params letter, its Custom
+ * field, its words and rule (`engine/game-id/modifier.ts`), and where it
+ * bounds the size, the most lines a board 2i across may have the other way. */
+export interface ModifierJson {
+  letter: string;
+  kw: string;
+  name: string;
+  words: string;
+  rule: string;
+  note?: string;
+  most?: number[];
 }
 
 /** A game born from its description: its catalog entry, the engine's
@@ -177,11 +206,17 @@ export interface CatalogJson {
 }
 
 /** A piece of a fill game's game ID (`engine/fill/game-id.ts`): `runs`, the
- * cells a clue kind sits at as upstream's run code, or `numbers`, a clue
- * kind's values in the space's order, or the columns first. */
+ * cells a clue kind sits at as upstream's run code; `dots`, a two-valued
+ * kind's clues as upstream's dot runs; or `numbers`, a clue kind's values in
+ * the space's order, or the columns first. */
 export type IdSegmentJson =
   | { runs: string }
+  | { dots: string; cases: [number, number] }
   | { numbers: string; before?: string; order?: "columns" };
+
+/** The clue kind an ID segment writes. */
+export const segmentKind = (seg: IdSegmentJson): string =>
+  "runs" in seg ? seg.runs : "dots" in seg ? seg.dots : seg.numbers;
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
@@ -194,16 +229,19 @@ export function sampleOf(json: DescriptionJson): SampleJson | null {
   return typeof sample === "object" ? sample : null;
 }
 
-/** How a deal samples an answer: `scatter`'s value on a share of the cells,
- * optionally none within `apart` of another; `partner`'s value beside each,
- * along `along`, the two matched; and `rest` on every other cell. With
- * `noBareLine`, an answer with a row or column all `rest` is drawn again. */
-export interface SampleJson {
-  scatter: { value: number; share: number; apart?: "adj4" | "adj8" };
-  partner?: { value: number; along: "adj4" | "adj8" };
-  rest: number;
-  noBareLine?: boolean;
-}
+/** How a deal samples an answer: built by the ladder (`build`), or
+ * `scatter`'s value on a share of the cells, optionally none within `apart`
+ * of another; `partner`'s value beside each, along `along`, the two matched;
+ * and `rest` on every other cell. With `noBareLine`, an answer with a row or
+ * column all `rest` is drawn again. */
+export type SampleJson =
+  | { build: true }
+  | {
+      scatter: { value: number; share: number; apart?: "adj4" | "adj8" };
+      partner?: { value: number; along: "adj4" | "adj8" };
+      rest: number;
+      noBareLine?: boolean;
+    };
 
 /** A game's nouns, compiled into its module as `WORDS`: the engine's
  * lexicon words `{noun}` (a board position, "square" unless the game's genre

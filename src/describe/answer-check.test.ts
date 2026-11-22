@@ -31,7 +31,8 @@ describe("a compiled answer check", () => {
       return ((c / 6) | 0) % 2 === 0 ? v : 3 - v;
     });
     const sp = describedSpace(unruly.units, 6, 6);
-    expect(unruly.isAnswer(g, sp, [])).toBe(true);
-    expect(unruly.isAnswer(g, sp, ["unique"])).toBe(false);
+    const none = { given: clueList([], [], 36) };
+    expect(unruly.isAnswer(g, sp, none, [])).toBe(true);
+    expect(unruly.isAnswer(g, sp, none, ["unique"])).toBe(false);
   });
 });

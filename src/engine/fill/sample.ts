@@ -17,7 +17,11 @@ import { matching } from "../solve/latin.ts";
 
 type Near = "adj4" | "adj8";
 
-export interface Sample {
+/** How a deal draws its answer: built by the ladder (`buildAnswer`), or
+ * scattered (`sampleAnswer`). */
+export type Sample = { readonly build: true } | ScatterSample;
+
+export interface ScatterSample {
   readonly scatter: {
     readonly value: number;
     readonly share: number;
@@ -38,7 +42,7 @@ const shareOf = (share: number, n: number): number => Math.floor(share * n + 1e-
  * room for every scattered cell or no partner for each, or left a line bare
  * that `noBareLine` refuses. */
 export function sampleAnswer(
-  sample: Sample,
+  sample: ScatterSample,
   sp: GridSpace,
   rs: RandomState,
 ): Uint8Array | null {

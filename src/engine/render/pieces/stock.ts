@@ -13,8 +13,9 @@ import { type Painter, surfaceOf } from "./painter.ts";
 export const shade: Painter = {
   colors: () => [SHADED],
   surface: null,
-  paint(dr, tile, slot, error) {
-    drawPiece(dr, surfaceOf(tile), SHADED_SHAPE, error ? COL_ERROR : slot[0]);
+  grows: true,
+  paint(dr, tile, slot, error, grown = 1) {
+    drawPiece(dr, surfaceOf(tile), SHADED_SHAPE, error ? COL_ERROR : slot[0], grown);
   },
 };
 

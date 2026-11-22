@@ -401,8 +401,7 @@ exactly what a game ID would. Exemplars: the skeleton's `state.ts`,
 - **Check labels and choice lists by eye, and assert a field map in the
   game's own test.** `custom-params.test.ts` round-trips every preset
   through `get` and `set`, which cannot see a wrong label or a swapped field
-  map. Exemplar: the "drives w2/h2" test in
-  [`unruly.test.ts`](../src/games/unruly/unruly.test.ts).
+  map.
 
 ## Difficulty is a declared contract
 

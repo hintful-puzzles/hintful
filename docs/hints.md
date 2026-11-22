@@ -928,11 +928,11 @@ or a gesture that ends before the step completes throws
 
 ### Where the plan loop comes from
 
-**A described game writes no plan loop.** `describedHint`,
-`describedFiringHint` and `describedEdgeHint` walk its ladder one firing at
-a time under a step budget and a plan length, and hand back `plan` with the
-hooks beside it ([`engine-catalog.md`](./engine-catalog.md) §
-"`described-hint.ts` — a described game's hint, built from its firings").
+**A described game writes no plan loop.** `describedFiringHint` and
+`describedEdgeHint` walk its ladder one firing at a time under a step budget
+and a plan length, and hand back `plan` with the hooks beside it
+([`engine-catalog.md`](./engine-catalog.md) §
+"`described-firing-hint.ts` — a described game's hint, a step a firing").
 Exemplar: `skeletonHint` in `src/skeleton/grid/hint.ts`.
 
 A hint outside the description that still takes one forced firing at a time

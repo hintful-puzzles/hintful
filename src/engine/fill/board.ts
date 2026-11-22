@@ -9,6 +9,7 @@
 import type { DifficultyVerdict } from "../contract/difficulty.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
 import {
+  type ClueList,
   describedSpace,
   type GridSpace,
   type Violation,
@@ -21,16 +22,32 @@ import {
   runLadder,
   TIERS,
 } from "../solve/ladder-runtime.ts";
+import type { FillPlay } from "./play.ts";
 
 /** What a fill game's compiled module offers the engine, over its clues
  * `C`. */
 export interface FillModule<C> {
   readonly units: readonly string[];
   readonly tiers: readonly string[];
+  /** How the board is played: where `dealt` names a clue kind at a cell,
+   * the cell is dealt holding it. */
+  readonly play?: FillPlay;
   /** The values cell `c` may hold, as a bitmask (bit `d`). */
   domainOf(sp: GridSpace, cl: C, c: number): number;
-  isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: C): boolean;
-  violations(g: ArrayLike<number>, sp: GridSpace, cl: C): Violation[];
+  /** The answer check and the violations, a variation's rules where
+   * `variations` has it on: a module with none takes no such argument. */
+  isAnswer(
+    g: ArrayLike<number>,
+    sp: GridSpace,
+    cl: C,
+    variations: readonly string[],
+  ): boolean;
+  violations(
+    g: ArrayLike<number>,
+    sp: GridSpace,
+    cl: C,
+    variations: readonly string[],
+  ): Violation[];
   /** Where the checks read the cells' marks (the element each names, `-1`
    * for none): whether those of a whole board hold of it. */
   marksHold?(
@@ -53,6 +70,8 @@ export interface FillBoard<C> {
   readonly w: number;
   readonly h: number;
   readonly dealt: C;
+  /** The variations on, by name: the params', which no move changes. */
+  readonly variations: readonly string[];
   /** Each cell's value, the description's, 0 where it has none. */
   readonly values: Uint8Array;
   /** 1 where the cell's domain leaves it one value, placed as the board is
@@ -75,13 +94,15 @@ export function spaceOf<C>(
 const onlyValue = (mask: number): number =>
   mask !== 0 && (mask & (mask - 1)) === 0 ? 31 - Math.clz32(mask) : 0;
 
-/** A fresh `w` by `h` board on the clues `dealt`, each cell its domain
- * leaves one value holding it. */
+/** A fresh `w` by `h` board on the clues `dealt` with `variations` on, each
+ * cell its domain leaves one value, and each the `play.dealt` kind sits at,
+ * holding it. */
 export function newBoard<C>(
   module: FillModule<C>,
   w: number,
   h: number,
   dealt: C,
+  variations: readonly string[] = [],
 ): FillBoard<C> {
   const sp = describedSpace(module.units, w, h);
   const values = new Uint8Array(w * h);
@@ -92,7 +113,23 @@ export function newBoard<C>(
     values[c] = only;
     fixed[c] = 1;
   }
-  return { w, h, dealt, values, fixed, mark: new Int32Array(w * h).fill(-1) };
+  const kind = module.play?.dealt;
+  if (kind !== undefined) {
+    const given = dealt[kind as keyof C] as ClueList;
+    given.at.forEach((c, k) => {
+      values[c] = given.v[k];
+      fixed[c] = 1;
+    });
+  }
+  return {
+    w,
+    h,
+    dealt,
+    variations,
+    values,
+    fixed,
+    mark: new Int32Array(w * h).fill(-1),
+  };
 }
 
 /** Every value any cell of the board may hold, as a bitmask. */
@@ -142,10 +179,22 @@ export function solveBoard<C>(
     mark: marks.marked.slice(),
   });
   if (!ok) return out("impossible");
-  const { entries } = describedLadder(module, board.dealt as never);
+  const { entries } = ladderOf(module, board);
   if (runLadder(marks, ladderTechniques(marks, entries, { [TIERS]: cap }, {})))
     return out("impossible");
   if (marks.grid.includes(0)) return out("unsolved");
-  const sp = spaceOf(module, board);
-  return out(module.isAnswer(marks.grid, sp, board.dealt) ? "solved" : "impossible");
+  return out(isAnswerOf(module, board, marks.grid) ? "solved" : "impossible");
+}
+
+/** The ladder on the board's clues with its variations on. */
+export const ladderOf = <C>(module: LadderedFillModule<C>, board: FillBoard<C>) =>
+  describedLadder(module, board.dealt as never, {}, undefined, board.variations);
+
+/** Whether `g` is an answer to the board: its clues, its variations on. */
+export function isAnswerOf<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+  g: ArrayLike<number>,
+): boolean {
+  return module.isAnswer(g, spaceOf(module, board), board.dealt, board.variations);
 }

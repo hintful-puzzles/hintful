@@ -24,7 +24,7 @@ import { DIFF_HARD, DIFF_TRICKY, SYMM_NONE } from "../../src/games/solo/state.ts
 import { starbattleGame } from "../../src/games/starbattle/index.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import { unequalGame } from "../../src/games/unequal/index.ts";
-import { unrulyGame } from "../../src/games/unruly/index.ts";
+import { game as unrulyGame } from "../../src/generated/games/unruly/unruly.game.ts";
 import { say } from "../progress.ts";
 
 // biome-ignore lint/suspicious/noExplicitAny: a walk over any Latin game.

@@ -1,310 +1,98 @@
+/**
+ * Unruly, born from its description: what only this game's statements decide.
+ * The engine's own tests read its compiled module for the click cycle, the
+ * dot runs, the modifier, the built and hidden deal, the pair's pieces and
+ * the line-shaped live errors (`engine/fill/*.test.ts`), and the cross-game
+ * guards reach it as a registered game. What is left here is a position for
+ * every kind of step its hint takes, upstream's givens read as the right
+ * pieces, the size its unique rule allows, and a wrong piece outlined.
+ */
+
 import { describe, expect, it } from "vitest";
-import {
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  descBadCharacter,
-  validateDesc,
-} from "../../engine/contract/desc-error.ts";
-import { describeParams, presetMenu } from "../../engine/game-id/param-label.ts";
-import { paramsError } from "../../engine/game-id/params.ts";
-import {
-  BACKSPACE,
-  CURSOR_LEFT,
-  CURSOR_RIGHT,
-  DELETE,
-} from "../../engine/input/pointer.ts";
-import { randomNew } from "../../engine/random/index.ts";
-import {
-  type Cell,
-  DIFF_EASY,
-  DIFF_NORMAL,
-  DIFF_TRICKY,
-  EMPTY,
-  ONE,
-  ZERO,
-} from "./constants.ts";
-import { newDesc } from "./generator.ts";
-import { unrulyGame } from "./index.ts";
-import { findMistakes, isComplete, solveGame, solveToString } from "./solver.ts";
-import {
-  decodeParams,
-  encodeGrid,
-  encodeParams,
-  executeMove,
-  newState,
-  status,
-  type UnrulyParams,
-  type UnrulyState,
-} from "./state.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
+import { renderScenario } from "../../engine/testing/render-scenario.ts";
+import { game } from "../../generated/games/unruly/unruly.game.ts";
 
-function params(w2: number, h2: number, diff: number, unique = false): UnrulyParams {
-  return { w2, h2, unique, diff };
-}
+const BLOCK = 1;
+const DISC = 2;
 
-describe("params", () => {
-  it("round-trips through encode/decode", () => {
-    const p = params(10, 8, DIFF_TRICKY, true);
-    const enc = encodeParams(p, true);
-    expect(enc).toBe("10x8udn");
-    expect(decodeParams(enc)).toEqual(p);
-  });
-
-  it("drives w2/h2 from the shared Width/Height dialog items", () => {
-    // Unruly maps `dimensionParamConfig` onto `w2`/`h2` rather than `w`/`h`.
-    // The engine's get∘set round-trip guard cannot see a *swapped* mapping —
-    // both accessors would name the same wrong field, so the round trip stays
-    // the identity — so the fields are named here, where the fact lives.
-    const cfg = unrulyGame.paramConfig;
-    const width = cfg.find((i) => i.kw === "width");
-    const height = cfg.find((i) => i.kw === "height");
-    if (width?.type !== "string" || height?.type !== "string")
-      throw new Error("Unruly must expose Width and Height as text fields");
-
-    const p = params(8, 8, DIFF_NORMAL);
-    width.set(p, "14");
-    height.set(p, "10");
-    expect(p).toEqual(params(14, 10, DIFF_NORMAL));
-    expect(width.get(p)).toBe("14");
-    expect(height.get(p)).toBe("10");
-    // The mapping is load-bearing all the way to the game id.
-    expect(encodeParams(p, true)).toBe("14x10de");
-  });
-
-  it("decodes a bare square size", () => {
-    expect(decodeParams("8x8")).toEqual(params(8, 8, DIFF_EASY, false));
-    expect(decodeParams("12")).toEqual(params(12, 12, DIFF_EASY, false));
-  });
-
-  it("rejects invalid params", () => {
-    const error = (p: UnrulyParams) => paramsError(unrulyGame, p, true);
-    expect(error(params(7, 8, DIFF_NORMAL))).toMatch(/even/);
-    expect(error(params(4, 8, DIFF_NORMAL))).toBe("Width must be at least 6.");
-    expect(error(params(8, 8, 99))).toMatch(/^Difficulty must be one of/);
-    // 6-wide unique: at most A177790[3] = 14 distinct rows, so h2 = 16 is too tall.
-    expect(error(params(6, 16, DIFF_NORMAL, true))).toMatch(/too tall/);
-  });
-
-  it("accepts the offered presets", () => {
-    const menu = presetMenu(unrulyGame);
-    for (const entry of menu.submenu ?? []) {
-      const p = entry.params;
-      expect(p).toBeDefined();
-      if (p) expect(paramsError(unrulyGame, p, true)).toBeNull();
-    }
-  });
-
-  it("labels a unique-rows game as such", () => {
-    expect(describeParams(unrulyGame, params(8, 8, DIFF_NORMAL, true))).toMatch(
-      /^8x8 \S+, unique$/,
-    );
-  });
+/** A position for every kind of step. */
+describeHintPins({
+  game,
+  // No preset turns unique rows on at the top tier, and only a board dealt
+  // with it fires that rung.
+  params: [
+    { w: 14, h: 14, diff: 2 },
+    { w: 8, h: 8, diff: 2, variations: ["unique"] },
+  ],
+  pins: {
+    /** Held on 2221 of 2243 positions walked. */
+    threes: "14x14dn:BBADaFcaCdMFCCCdfcCEfebdDbBobBABAMABgajJBGBacjac",
+    /** Held on 1810 of 2243 positions walked. */
+    lastGap: {
+      id: "8x8udn:aDcfCBbiBbgDACfCCd",
+      moves:
+        '[{"set":[17,2]},{"set":[43,2]},{"set":[46,2]},{"set":[25,1]},{"set":[52,2]},{"set":[53,1]},{"set":[21,1]},{"set":[37,2]},{"set":[61,2]},{"set":[38,1]},{"set":[62,1]}]',
+    },
+    /** Held on 1493 of 2243 positions walked. */
+    quota: {
+      id: "8x8udn:MBAaAIjabCaIBdcba",
+      moves:
+        '[{"set":[13,2]},{"set":[35,1]},{"set":[38,1]},{"set":[53,2]},{"set":[62,1]},{"set":[34,2]},{"set":[45,1]},{"set":[46,2]}]',
+    },
+    /** Held on 1550 of 2243 positions walked. */
+    lastOne: {
+      id: "8x8udn:AcabHbatBcaDicCb",
+      moves:
+        '[{"set":[2,1]},{"set":[1,2]},{"set":[5,1]},{"set":[18,1]},{"set":[41,1]},{"set":[44,1]},{"set":[9,1]},{"set":[10,2]},{"set":[51,1]},{"set":[31,2]},{"set":[55,2]},{"set":[7,1]}]',
+    },
+    /** Held on 402 of 2243 positions walked. */
+    unique: {
+      id: "8x8udn:MBAaAIjabCaIBdcba",
+      moves:
+        '[{"set":[13,2]},{"set":[35,1]},{"set":[38,1]},{"set":[53,2]},{"set":[62,1]},{"set":[34,2]},{"set":[45,1]},{"set":[46,2]},{"set":[32,1,33,1]},{"set":[25,2]},{"set":[5,1,21,1,29,1]},{"set":[6,2,22,2,30,2]}]',
+    },
+  },
 });
 
-describe("desc codec", () => {
-  it("round-trips a generated board", () => {
-    const rng = randomNew("unruly-desc-seed");
-    const p = params(8, 8, DIFF_NORMAL);
-    const { desc } = newDesc(p, rng);
-    expect(validateDesc(unrulyGame, p, desc)).toBeNull();
-    const state = newState(p, desc);
-    // Re-encode the clue grid (only immutable cells are present after parse).
-    expect(encodeGrid(state.grid, p.w2 * p.h2)).toBe(desc);
+describe("unruly", () => {
+  it("reads upstream's givens as pieces fixed on the board", () => {
+    // Upstream's dot runs: a block's letter is uppercase and a disc's
+    // lowercase, its offset from `a` the run of empty squares before it, and
+    // a last letter closes the board.
+    const board = game.newState(game.decodeParams("6x6"), "aBdIAEbceaca");
+    const pieces = Array.from(board.values, (v, c) => (board.fixed[c] ? v : 0));
+    expect(pieces.slice(0, 8)).toEqual([DISC, 0, BLOCK, 0, 0, 0, DISC, 0]);
+    expect(pieces.filter((v) => v !== 0)).toHaveLength(11);
   });
 
-  it("rejects malformed descs", () => {
-    const p = params(8, 8, DIFF_NORMAL);
-    expect(validateDesc(unrulyGame, p, "!!!")).toBe(descBadCharacter("!"));
-    expect(validateDesc(unrulyGame, p, "a")).toBe(DESC_TOO_SHORT);
+  it("bounds a board's size by the rows its unique rule leaves", () => {
+    const with6 = (h: number) =>
+      game.validateParams?.({ w: 6, h, diff: 0, variations: ["unique"] }, true) ?? null;
+    // 14 different rows of six squares keep the rules (OEIS A177790).
+    expect(with6(14)).toBeNull();
+    expect(with6(16)).not.toBeNull();
+    expect(game.validateParams?.({ w: 6, h: 16, diff: 0 }, true) ?? null).toBeNull();
   });
 
-  it("reads only the run letters its encoder writes", () => {
-    // A 6x6 board with no clues: 36 empties, written as a 25-run and 11 more.
-    const p = params(6, 6, DIFF_EASY);
-    expect(encodeGrid(new Uint8Array(36), 36)).toBe("zl");
-    expect(validateDesc(unrulyGame, p, "zl")).toBeNull();
-    // A `z` run takes the case of the clue that ends it.
-    expect(validateDesc(unrulyGame, p, "Zl")).toBe(descBadCharacter("l"));
-    expect(validateDesc(unrulyGame, p, "zL")).toBe(descBadCharacter("L"));
-    // The letter landing past the grid stands for a ZERO, so it is lowercase.
-    expect(validateDesc(unrulyGame, p, "ZL")).toBe(descBadCharacter("L"));
-    // A run overshooting the grid says more than the board holds.
-    expect(validateDesc(unrulyGame, p, "zm")).toBe(DESC_TOO_LONG);
-    expect(validateDesc(unrulyGame, p, "zk")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(unrulyGame, p, "zla")).toBe(DESC_TOO_LONG);
-  });
-
-  it("parses clues as immutable cells of the right color", () => {
-    // Hand-place a ONE at index 0 and a ZERO at index 1, then round-trip.
-    const p = params(6, 6, DIFF_EASY);
-    const s = p.w2 * p.h2;
-    const grid = new Uint8Array(s);
-    grid[0] = ONE;
-    grid[1] = ZERO;
-    const desc = encodeGrid(grid, s);
-    expect(validateDesc(unrulyGame, p, desc)).toBeNull();
-    const state = newState(p, desc);
-    expect(state.grid[0]).toBe(ONE);
-    expect(state.immutable[0]).toBe(1);
-    expect(state.grid[1]).toBe(ZERO);
-    expect(state.immutable[1]).toBe(1);
-    expect(state.grid[2]).toBe(EMPTY);
-    expect(state.immutable[2]).toBe(0);
-  });
-});
-
-describe("generator + solver", () => {
-  const cases: [string, UnrulyParams][] = [
-    ["8x8 trivial", params(8, 8, DIFF_EASY)],
-    ["8x8 easy", params(8, 8, DIFF_NORMAL)],
-    ["8x8 normal", params(8, 8, DIFF_TRICKY)],
-    ["10x10 normal", params(10, 10, DIFF_TRICKY)],
-    ["8x8 easy unique", params(8, 8, DIFF_NORMAL, true)],
-  ];
-
-  it.each(cases)("generates a board the solver solves: %s", (_name, p) => {
-    const rng = randomNew(`unruly-gen-${_name}`);
-    const { desc } = newDesc(p, rng);
-    expect(validateDesc(unrulyGame, p, desc)).toBeNull();
-
-    const state = newState(p, desc);
-    // The deductive solver at the board's difficulty completes it.
-    const grid = Uint8Array.from(state.grid);
-    const work = { w2: p.w2, h2: p.h2, unique: p.unique, grid };
-    solveGame(work, p.diff);
-    expect(isComplete(work)).toBe(true);
-  });
-
-  it("solveToString returns a fully solved grid for a generated board", () => {
-    const rng = randomNew("unruly-solve-seed");
-    const p = params(8, 8, DIFF_TRICKY);
-    const { desc } = newDesc(p, rng);
-    const state = newState(p, desc);
-    const sol = solveToString(state);
-    expect(sol).not.toBeNull();
-    expect(sol).toHaveLength(p.w2 * p.h2);
-    expect(sol).toMatch(/^[01]+$/);
-  });
-
-  it("the too-easy gate keeps NORMAL boards from being solved one level easier", () => {
-    const rng = randomNew("unruly-gate-seed");
-    const p = params(8, 8, DIFF_TRICKY);
-    const { desc } = newDesc(p, rng);
-    const state = newState(p, desc);
-    const grid = Uint8Array.from(state.grid);
-    const work = { w2: p.w2, h2: p.h2, unique: p.unique, grid };
-    solveGame(work, DIFF_NORMAL);
-    // EASY solver must NOT complete a NORMAL board (else it was too easy).
-    expect(isComplete(work)).toBe(false);
-  });
-});
-
-describe("moves", () => {
-  const p = params(6, 6, DIFF_EASY);
-  const s = p.w2 * p.h2;
-
-  function blank(): UnrulyState {
-    const desc = encodeGrid(new Uint8Array(s), s);
-    return newState(p, desc);
-  }
-
-  it("places a value and is pure (no mutation of the prior state)", () => {
-    const a = blank();
-    const b = executeMove(a, { type: "place", x: 1, y: 2, value: ONE });
-    expect(b.grid[2 * p.w2 + 1]).toBe(ONE);
-    expect(a.grid[2 * p.w2 + 1]).toBe(EMPTY);
-  });
-
-  it("clears a cell with either erase key", () => {
-    // `DELETE` (127) is what the keyboard sends for Backspace/Delete/Clear;
-    // `BACKSPACE` (8) is what a keypad's Clear key would send. Both must pass
-    // `interpretMove`'s gate *and* reach a value in `decideValue`.
-    const ds = unrulyGame.newDrawState(blank(), 32);
-    for (const erase of [BACKSPACE, DELETE]) {
-      const state = executeMove(blank(), { type: "place", x: 0, y: 0, value: ONE });
-      const ui = unrulyGame.newUi(state);
-      unrulyGame.interpretMove(state, ui, ds, { x: 0, y: 0 }, CURSOR_RIGHT);
-      unrulyGame.interpretMove(state, ui, ds, { x: 0, y: 0 }, CURSOR_LEFT);
-      const move = unrulyGame.interpretMove(state, ui, ds, { x: 0, y: 0 }, erase);
-      expect(move, `erase key ${erase} produced no move`).toMatchObject({
-        type: "place",
-        x: 0,
-        y: 0,
-        value: EMPTY,
-      });
+  it("outlines a piece Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = "6x6dt:aBdIAEbceaca";
+    const fresh = game.newState(game.decodeParams("6x6dt"), id.split(":")[1]);
+    const solved = game.solve(fresh, fresh);
+    if (!solved.ok) throw new Error("no answer");
+    const answer = game.executeMove(fresh, solved.move).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < answer.length; c++) {
+      if (fresh.fixed[c]) continue;
+      const moves = [{ set: [c, answer[c] === BLOCK ? DISC : BLOCK] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
     }
-  });
-
-  it("rejects placing on an immutable cell", () => {
-    const grid = new Uint8Array(s);
-    grid[0] = ONE;
-    const state = newState(p, encodeGrid(grid, s));
-    expect(state.immutable[0]).toBe(1);
-    expect(() =>
-      executeMove(state, { type: "place", x: 0, y: 0, value: ZERO }),
-    ).toThrow();
-  });
-
-  it("detects completion and reports solved status", () => {
-    const rng = randomNew("unruly-complete-seed");
-    const { desc } = newDesc(p, rng);
-    const state = newState(p, desc);
-    const sol = solveToString(state);
-    if (!sol) throw new Error("expected solvable board");
-    // Apply the solution cell by cell on the non-immutable cells.
-    let cur = state;
-    for (let i = 0; i < s; i++) {
-      if (cur.immutable[i]) continue;
-      const value: Cell = sol[i] === "1" ? ONE : ZERO;
-      cur = executeMove(cur, {
-        type: "place",
-        x: i % p.w2,
-        y: Math.floor(i / p.w2),
-        value,
-      });
-    }
-    expect(status(cur)).toBe("solved");
-    expect(isComplete(cur)).toBe(true);
-  });
-
-  it("findMistakes flags a mark contradicting the solution, none when correct", () => {
-    const big = params(8, 8, DIFF_NORMAL);
-    const rng = randomNew("unruly-mistake-seed");
-    const { desc } = newDesc(big, rng);
-    const state = newState(big, desc);
-    const sol = solveToString(state);
-    if (!sol) throw new Error("expected solvable board");
-
-    // First non-immutable cell.
-    let idx = -1;
-    for (let i = 0; i < big.w2 * big.h2; i++) {
-      if (!state.immutable[i]) {
-        idx = i;
-        break;
-      }
-    }
-    expect(idx).toBeGreaterThanOrEqual(0);
-    const x = idx % big.w2;
-    const y = Math.floor(idx / big.w2);
-
-    // A correct mark → no mistakes.
-    const right: Cell = sol[idx] === "1" ? ONE : ZERO;
-    const good = executeMove(state, { type: "place", x, y, value: right });
-    expect(findMistakes(good)).toHaveLength(0);
-
-    // The opposite color → flagged at that cell.
-    const wrong: Cell = sol[idx] === "1" ? ZERO : ONE;
-    const bad = executeMove(state, { type: "place", x, y, value: wrong });
-    const mistakes = findMistakes(bad);
-    expect(mistakes.some((m) => m.x === x && m.y === y)).toBe(true);
-  });
-
-  it("a solve move fills the board, which is then solved", () => {
-    const rng = randomNew("unruly-solvemove-seed");
-    const { desc } = newDesc(p, rng);
-    const state = newState(p, desc);
-    const sol = solveToString(state);
-    if (!sol) throw new Error("expected solvable board");
-    const done = executeMove(state, { type: "solve", grid: sol });
-    expect(status(done)).toBe("solved");
+    throw new Error("no wrong piece that breaks no rule");
   });
 });

@@ -23,6 +23,7 @@ import {
   cellSurface,
   ERROR_TEXT,
   GRID_DARK,
+  givenSurface,
   INK,
   surfaceGrid,
 } from "../color/palette.ts";
@@ -95,6 +96,37 @@ export interface FillRender<C> {
 
 const PREFERRED_TILE_SIZE = 32;
 
+/** How long a piece placed or taken away grows or shrinks, in seconds; the
+ * midend stretches it to a hint step's. */
+export const PLACE_ANIM_TIME = 0.13;
+
+/** How a broken rule's cells lie on a `w` by `h` grid: a run, three or more
+ * in a row along part of one line, in order; or two or more whole parallel
+ * lines; or `null`, anything else. */
+function lineShape(
+  at: readonly number[],
+  w: number,
+  h: number,
+):
+  | { kind: "run"; rows: boolean; cells: number[] }
+  | { kind: "lines"; rows: boolean }
+  | null {
+  const cells = [...new Set(at)].sort((a, b) => a - b);
+  const rows = new Set(cells.map((c) => Math.floor(c / w)));
+  const columns = new Set(cells.map((c) => c % w));
+  if (rows.size >= 2 && cells.length === rows.size * w)
+    return { kind: "lines", rows: true };
+  if (columns.size >= 2 && cells.length === columns.size * h)
+    return { kind: "lines", rows: false };
+  if (cells.length < 3) return null;
+  const step = rows.size === 1 ? 1 : columns.size === 1 ? w : 0;
+  const along = step === 1 ? w : h;
+  if (step === 0 || cells.length >= along) return null;
+  return cells.every((c, i) => i === 0 || c - cells[i - 1] === step)
+    ? { kind: "run", rows: step === 1, cells }
+    : null;
+}
+
 // The board's own slots; each painter's follow.
 const COL_GRID = FIRST_GAME_SLOT;
 /** The surface of a cell not yet decided. */
@@ -108,6 +140,9 @@ const COL_LABEL = FIRST_GAME_SLOT + 4;
 const FIRST_PAINTER_SLOT = FIRST_GAME_SLOT + 5;
 
 // --- the tile's word: the value in the low byte, the layers above ----------
+/** The cell was dealt its value: an undecided cell's surface is lifted under
+ * it. */
+const FIXED = 1 << 8;
 /** A rule breaks at the cell: its piece is drawn in error. */
 const ERR_AT = 1 << 9;
 /** Two cells break a rule together across a side or a corner: one bit each,
@@ -130,6 +165,16 @@ const HINT_LINE = 1 << 8;
 /** The link a step asks for from this cell, a bit a direction: the ring round
  * it lies over the tile, which repaints when it moves. */
 const HINT_LINK_SHIFT = 9;
+
+// --- the line word: a rule broken along a line -----------------------------
+/** A run the rules forbid passes through the cell: a bar along it, which
+ * reaches half a tile toward each of its ends, a bit a direction (up, right,
+ * down, left). */
+const RUN_SHIFT = 0;
+/** The cell's row, or its column, is one of two or more the rules forbid
+ * together: a bar across the whole line. */
+const ACROSS_ROW = 1 << 4;
+const ACROSS_COLUMN = 1 << 5;
 
 /** The step to each of a cell's four sides, up, right, down, left. */
 const DIRS: readonly (readonly [number, number])[] = [
@@ -199,6 +244,9 @@ export function fillRender<C extends Clues<C>>(
     }
     byValue.set(Number(v), got);
   }
+  /** The lifted surface under a value the cell was dealt, after the painters'
+   * slots so a board without one numbers them as before. */
+  const COL_GIVEN = next;
 
   const start = (ts: number): number => (labelStart === undefined ? 1 : ts);
   const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : 1);
@@ -211,6 +259,7 @@ export function fillRender<C extends Clues<C>>(
     out[COL_INK] = INK;
     out[COL_ERRTEXT] = ERROR_TEXT;
     out[COL_LABEL] = GRID_DARK;
+    out[COL_GIVEN] = givenSurface(bg);
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
         out[slot[i]] = c;
@@ -283,6 +332,21 @@ export function fillRender<C extends Clues<C>>(
     dr.drawRect(rect, color);
   }
 
+  /** A broken rule's bar, a thick outline inset from `box`. */
+  function drawErrorBar(dr: GameDrawing, ts: number, box: Rect): void {
+    const thick = Math.floor(ts / 10);
+    const margin = Math.floor(ts / 20);
+    drawThickRectOutline(
+      dr,
+      box.x + margin,
+      box.y + margin,
+      box.w - 2 * margin,
+      box.h - 2 * margin,
+      thick,
+      COL_ERROR,
+    );
+  }
+
   function drawTile(
     dr: GameDrawing,
     ts: number,
@@ -290,6 +354,10 @@ export function fillRender<C extends Clues<C>>(
     y: number,
     word: number,
     hintWord: number,
+    lineWord: number,
+    // A piece placed or taken away a moment ago: the value it grows from or
+    // shrinks into, and how far it has got, 0 to 1.
+    anim: { readonly from: number; readonly frac: number } | null = null,
   ): void {
     const v = word & 0xff;
     const tx = coord(x, ts);
@@ -307,11 +375,42 @@ export function fillRender<C extends Clues<C>>(
         ? winSlot(tone)
         : piece !== undefined && piece.painter.surface !== null
           ? piece.slot[piece.painter.surface]
-          : COL_CELL,
+          : word & FIXED
+            ? COL_GIVEN
+            : COL_CELL,
     );
     // Under the content, so the piece stays whole.
     if (hintWord & HINT_LINE) dr.drawHatch(surface, hatchPeriod(ts));
-    piece?.painter.paint(dr, tile, piece.slot, (word & ERR_AT) !== 0);
+    // A piece taken away shrinks into its cell; one placed grows alone, since
+    // two pieces in one cell read as neither.
+    const shrinking = anim !== null && v === 0 ? byValue.get(anim.from) : undefined;
+    if (shrinking !== undefined && anim !== null)
+      shrinking.painter.paint(dr, tile, shrinking.slot, false, 1 - anim.frac);
+    piece?.painter.paint(dr, tile, piece.slot, (word & ERR_AT) !== 0, anim?.frac ?? 1);
+
+    // A run's bar reaches half a tile toward each end it continues to, the
+    // clip keeping each tile to its own part.
+    const half = Math.floor(ts / 2);
+    const run = (d: number): boolean => (lineWord & (1 << (RUN_SHIFT + d))) !== 0;
+    if (run(1) || run(3))
+      drawErrorBar(dr, ts, {
+        x: tx - (run(3) ? half : 0),
+        y: ty,
+        w: ts + (run(1) ? half : 0) + (run(3) ? half : 0),
+        h: ts,
+      });
+    if (run(0) || run(2))
+      drawErrorBar(dr, ts, {
+        x: tx,
+        y: ty - (run(0) ? half : 0),
+        w: ts,
+        h: ts + (run(0) ? half : 0) + (run(2) ? half : 0),
+      });
+    const across = Math.floor(ts / 12);
+    if (lineWord & ACROSS_ROW)
+      dr.drawRect({ x: tx, y: ty + half - across, w: ts, h: 2 * across }, COL_ERROR);
+    if (lineWord & ACROSS_COLUMN)
+      dr.drawRect({ x: tx + half - across, y: ty, w: 2 * across, h: ts }, COL_ERROR);
 
     for (let d = 0; d < 4; d++)
       if (word & (1 << (LINK_SHIFT + d)))
@@ -397,11 +496,62 @@ export function fillRender<C extends Clues<C>>(
     });
   }
 
+  /** The tile words of the board's live errors: a pair's diamond and the
+   * cells in error, the bars along a run and across lines, and the line
+   * clues broken. */
+  function errorWords(state: FillBoard<C>, shown: FillBoard<C>) {
+    const { w, h } = state;
+    const errors = liveErrors(rules, shown);
+    const word = new Int32Array(w * h);
+    for (const [a, b] of errors.pairs) {
+      const [ax, ay, bx, by] = [a % w, Math.floor(a / w), b % w, Math.floor(b / w)];
+      if (Math.abs(bx - ax) > 1 || Math.abs(by - ay) > 1) {
+        word[a] |= ERR_AT;
+        word[b] |= ERR_AT;
+        continue;
+      }
+      // The point the two share, in halves of a tile from `a`'s corner; each
+      // tile the diamond lies across paints its part.
+      const px = ax * 2 + 1 + (bx - ax);
+      const py = ay * 2 + 1 + (by - ay);
+      for (let cy = Math.floor((py - 1) / 2); cy <= Math.floor(py / 2); cy++)
+        for (let cx = Math.floor((px - 1) / 2); cx <= Math.floor(px / 2); cx++)
+          if (cx >= 0 && cy >= 0 && cx < w && cy < h)
+            word[cy * w + cx] |= diamondBit(px - cx * 2, py - cy * 2);
+    }
+    // Every other broken rule by how its cells lie: a run along a line gets a
+    // bar, two or more whole lines a bar across each, and any other cells
+    // their pieces in error.
+    const lineWord = new Int32Array(w * h);
+    for (const list of errors.byRule.values())
+      for (const at of list) {
+        if (at.length === 2) continue;
+        const shape = lineShape(at, w, h);
+        if (shape === null) for (const c of at) word[c] |= ERR_AT;
+        else if (shape.kind === "lines")
+          for (const c of at) lineWord[c] |= shape.rows ? ACROSS_ROW : ACROSS_COLUMN;
+        else
+          shape.cells.forEach((c, i) => {
+            const [back, on] = shape.rows ? [3, 1] : [0, 2];
+            if (i > 0) lineWord[c] |= 1 << (RUN_SHIFT + back);
+            if (i < shape.cells.length - 1) lineWord[c] |= 1 << (RUN_SHIFT + on);
+          });
+      }
+    const lineErrors = new Set<number>();
+    for (const [kind, broken] of errors.clues)
+      for (const q of broken) {
+        const at = state.dealt[kind as keyof C].at[q];
+        if (lineClues.includes(kind as keyof C)) lineErrors.add(at);
+        else word[at] |= ERR_AT;
+      }
+    return { word, lineWord, lineErrors };
+  }
+
   function redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void {
-    const { state, ui, flash, hint, mistakes } = frame;
+    const { state, prev, animTime, ui, flash, hint, mistakes } = frame;
     const ts = ds.tileSize;
     const { w, h } = state;
-    const shown = ui.drag.live ? previewed(state, ui) : state;
+    const shown = ui.drag?.live ? previewed(state, ui) : state;
 
     if (ds.tiles.firstFrame()) {
       dr.drawRect(
@@ -435,32 +585,7 @@ export function fillRender<C extends Clues<C>>(
     }
 
     // The live errors, on the board as the drag would leave it.
-    const errors = liveErrors(rules, shown);
-    const word = new Int32Array(w * h);
-    for (const [a, b] of errors.pairs) {
-      const [ax, ay, bx, by] = [a % w, Math.floor(a / w), b % w, Math.floor(b / w)];
-      if (Math.abs(bx - ax) > 1 || Math.abs(by - ay) > 1) {
-        word[a] |= ERR_AT;
-        word[b] |= ERR_AT;
-        continue;
-      }
-      // The point the two share, in halves of a tile from `a`'s corner; each
-      // tile the diamond lies across paints its part.
-      const px = ax * 2 + 1 + (bx - ax);
-      const py = ay * 2 + 1 + (by - ay);
-      for (let cy = Math.floor((py - 1) / 2); cy <= Math.floor(py / 2); cy++)
-        for (let cx = Math.floor((px - 1) / 2); cx <= Math.floor(px / 2); cx++)
-          if (cx >= 0 && cy >= 0 && cx < w && cy < h)
-            word[cy * w + cx] |= diamondBit(px - cx * 2, py - cy * 2);
-    }
-    for (let i = 0; i < w * h; i++) if (errors.at[i]) word[i] |= ERR_AT;
-    const lineErrors = new Set<number>();
-    for (const [kind, broken] of errors.clues)
-      for (const q of broken) {
-        const at = state.dealt[kind as keyof C].at[q];
-        if (lineClues.includes(kind as keyof C)) lineErrors.add(at);
-        else word[at] |= ERR_AT;
-      }
+    const { word, lineWord, lineErrors } = errorWords(state, shown);
 
     // The links as drawn, both halves, and those Check & Save found wrong.
     const badLinks = new Set<number>();
@@ -520,14 +645,22 @@ export function fillRender<C extends Clues<C>>(
 
     const cx = ui.cursor.visible ? ui.cursor.x : -1;
     const cy = ui.cursor.visible ? ui.cursor.y : -1;
+    // A cell whose value just changed, while the engine drives timed redraws.
+    const before = animTime > 0 && prev !== null ? prev.values : null;
+    const frac = Math.min(1, animTime / PLACE_ANIM_TIME);
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         const i = y * w + x;
-        let k = word[i] | shown.values[i];
+        let k = word[i] | shown.values[i] | (state.fixed[i] ? FIXED : 0);
         if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
         k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
         const hk = hintWord[i] | outlines.packed(x, y);
-        if (ds.tiles.changed(i, k, hk)) drawTile(dr, ts, x, y, k, hk);
+        // A growing piece is no key's: its tile is drawn every frame.
+        if (before !== null && before[i] !== shown.values[i]) {
+          ds.tiles.forget(i);
+          drawTile(dr, ts, x, y, k, hk, lineWord[i], { from: before[i], frac });
+        } else if (ds.tiles.changed(i, k, hk, lineWord[i]))
+          drawTile(dr, ts, x, y, k, hk, lineWord[i]);
       }
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
@@ -576,7 +709,7 @@ export function fillRender<C extends Clues<C>>(
     colors,
     newDrawState: (b, tileSize) => ({
       tileSize,
-      tiles: new TileCache(b.w * b.h, { words: 2 }),
+      tiles: new TileCache(b.w * b.h, { words: 3 }),
       clues: new TileCache(b.w + b.h),
       marks: new HintMarks(),
     }),

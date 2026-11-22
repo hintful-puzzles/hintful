@@ -16,6 +16,7 @@ import { describedRules } from "../solve/described-rules.ts";
 import {
   type FillBoard,
   type FillModule,
+  isAnswerOf,
   type LadderedFillModule,
   solveBoard,
   spaceOf,
@@ -88,7 +89,7 @@ export function status<C>(
 ): GameStatus {
   const g = checked(reading, board);
   if (reading.blank === null && g.includes(0)) return "ongoing";
-  return module.isAnswer(g, spaceOf(module, board), board.dealt) ? "solved" : "ongoing";
+  return isAnswerOf(module, board, g) ? "solved" : "ongoing";
 }
 
 /** The edit that fills every cell with the answer and clears every mark. */
@@ -185,7 +186,7 @@ export function rulesOf<C>(module: FillModule<C>): RulesOf<FillBoard<C>> {
     {
       grid: (b) => b.values,
       size: (b) => [b.w, b.h],
-      deals: (b) => [b.dealt] as const,
+      deals: (b) => [b.dealt, b.variations] as const,
     },
   );
 }
