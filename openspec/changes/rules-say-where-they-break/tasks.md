@@ -192,7 +192,12 @@
       so `reachesEnd`, implied, says every rail reaches an end, and the
       render draws it and the shape in place of `path`. Its
       `checkCompletion`, `numErrors` and `S_ERROR` go; status asks the
-      rules, marks included. Rome's goal
+      rules, marks included. Next: bridges. Its limit marks are the
+      per-edge mask proposed above, and they can come in as Tracks' marks
+      do, last in `deals`: read them wherever the check reads a domain
+      (`domainOf` in `compile-violations.ts`, ANDed with the domain), and
+      have the module's `marksHold` cover them, so the guard checks them
+      against the answer. Rome's goal
       chain and wordtrail's pieces are to be read before their batch.
 - [ ] 2.3e Bound region size (`|through(c, O)|` over walls decided so far);
       then batch 4.
