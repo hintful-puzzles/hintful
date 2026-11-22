@@ -101,7 +101,8 @@ Norinori's partition is its own.
       deal for the mistake check, and the gesture planner stops at a
       click that completes the step.
 - [x] 3.2 Spec deltas; lower the `game-lines` ceiling with each flip.
-- [ ] 3.3 Commit, push, archive. File the plain-cell family's migration if
+- [x] 3.3 Commit, push, archive. File the plain-cell family's migration if
       it holds; if not, record why in the doctrine. Asked the owner
-      (2026-11-22) whether the pilot holds on 3.1's figures. The answer
-      decides between filing the migration and writing the doctrine.
+      (2026-11-22) whether the pilot holds on 3.1's figures. Answered the
+      same day: a success; archive, and file the next games. Filed
+      `born-plain-cell-family`.

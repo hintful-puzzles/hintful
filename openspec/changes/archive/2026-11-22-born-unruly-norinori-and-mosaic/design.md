@@ -216,5 +216,6 @@ family's migration on these figures is the owner's call (3.3).
 ## Open questions
 
 Both of 1.2's were answered by the owner on 2026-11-22: the saves break,
-and all three games move. One is open: whether the pilot holds on the
-figures above (3.3).
+and all three games move. Whether the pilot holds on the figures above
+was answered by the owner the same day: a success, and the family moves
+on (3.3, `born-plain-cell-family`).

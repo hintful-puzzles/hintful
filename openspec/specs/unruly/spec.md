@@ -37,16 +37,6 @@ two identical columns.
 - **THEN** `status` does not return `"solved"`
 - **AND** the same grid on a board without `unique` is solved
 
-### Requirement: Rules: A placement on a clue or off the board is rejected
-
-`executeMove` SHALL reject a placement whose target is out
-of bounds or an immutable clue cell.
-
-#### Scenario: A placement on a clue is rejected
-
-- **WHEN** `executeMove` is given a placement on an immutable clue cell
-- **THEN** it throws, and the state it was given is unchanged
-
 ### Requirement: Rules: Unruly checks player marks against the unique solution
 
 The `unruly` game SHALL implement `findMistakes(state)`, the mistake check
@@ -107,14 +97,21 @@ its own.
 
 ### Requirement: Generation: Unruly winnows the clues of a full valid grid
 
-`newDesc` SHALL winnow the clues of a full valid grid, keeping a clue only
-where the solver at the target difficulty could not finish without it.
+`newDesc` SHALL build its answer a square at a time, a random piece on a
+random empty square and then every square the whole ladder decides, and then
+hide the givens one at a time in a random order, keeping a given only where
+the board would not finish at its tier without it.
 
 #### Scenario: A Tricky board is not a Normal one
 
 - **WHEN** `newDesc` deals a board at Tricky
 - **THEN** the deductive solver capped at Normal does not finish it from its
   clues
+
+#### Scenario: No given can be spared
+
+- **WHEN** any one given of a dealt board is taken away
+- **THEN** the board no longer finishes at its tier
 
 ### Requirement: Generation: The Easy techniques are the impending three and the single gap
 
@@ -200,17 +197,15 @@ one window (so every other empty cell is forced).
 
 ### Requirement: Hint: A firing that forces several cells is one journey
 
-The plan SHALL hold one narrated step per forced cell. The moves that a single
-firing forces (a whole line completing to one kind, a near-complete row's
-forced remainder) SHALL be one journey.
+The plan SHALL hold one step per firing. The cells that a single firing forces
+(a whole line completing to one kind, a near-complete row's forced remainder)
+SHALL be one step that rings them all and makes them in one move.
 
 #### Scenario: One firing reads as one journey
 
-- **WHEN** a single completed-count or near-complete firing forces several cells
-- **THEN** those cells are emitted as consecutive steps, the first beginning a
-  journey and the rest flagged `continuesPrevious`
-- **AND** the per-cell techniques (three-in-a-row, unique rows) emit independent
-  steps
+- **WHEN** a single completed-count or near-complete firing forces several
+  cells
+- **THEN** one step rings every one of them, and playing it fills them all
 
 ### Requirement: Hint: hint.keepTrack completes on the hinted cell and value
 
@@ -269,16 +264,16 @@ holds.
 
 The cited premise or pivotal cells the deduction reasons over SHALL be
 outlined `COL_HINT_CELL`, and the forced move ringed `COL_HINT`: the like pair
-in `threes`, the completed quota in `complete`, the full reference line in
-`unique`, and in `nearcomplete` the reserved window with the piece beside it
-when there is one. The cell SHALL keep its own appearance inside the outline:
-a piece stays visible, and an empty reserved-window cell stays empty.
+in `threes`, the completed quota in `quota` and `lastGap`, the full reference
+line in `unique`, and in `lastOne` the window the last piece must fall in. The
+cell SHALL keep its own appearance inside the outline: a piece stays visible,
+and an empty cell of the window stays empty.
 
 #### Scenario: A reserved window is outlined and stays empty
 
-- **WHEN** a `nearcomplete` hint is displayed
-- **THEN** the empty cells of its reserved window are outlined `COL_HINT_CELL`
-- **AND** they are drawn empty inside the outline
+- **WHEN** a `lastOne` hint is displayed
+- **THEN** the cells of its window are outlined `COL_HINT_CELL`
+- **AND** its empty cells are drawn empty inside the outline
 
 ### Requirement: Look: Unruly draws pieces on a quiet surface
 

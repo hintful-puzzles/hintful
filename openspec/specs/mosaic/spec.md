@@ -10,31 +10,6 @@ sentences and their order, and how its marks and numbers are drawn.
 
 ## Requirements
 
-### Requirement: Rules: A Mosaic toggle cycles a mark and a paint fills only unmarked cells
-
-One step of a toggle SHALL take a cell around the cycle unmarked, marked,
-blank, and two steps SHALL take it round the other way. A paint
-SHALL set only the still-unmarked cells along its straight run. The game
-SHALL make no `paint` move of its own, and SHALL still replay one from a
-saved game. `executeMove` SHALL throw on an out-of-bounds target.
-
-#### Scenario: Toggling cycles a cell
-
-- **WHEN** a cell is toggled three times (single steps)
-- **THEN** it passes marked → blank → unmarked
-
-#### Scenario: A double toggle goes the other way
-
-- **WHEN** an unmarked cell is toggled by two steps
-- **THEN** it is blank
-
-#### Scenario: Painting fills only unmarked cells
-
-- **WHEN** a paint move covers a run containing a marked cell and unmarked
-  cells, painting blank
-- **THEN** the unmarked cells become blank and the already-marked cell is
-  unchanged
-
 ### Requirement: Rules: Mosaic flags a satisfied clue and a contradicted one
 
 A clue SHALL be drawn done (gray) when it is exactly satisfied with no cell of
@@ -74,6 +49,25 @@ error-colored outline overlay.
   Save runs
 - **THEN** `findMistakes` returns that cell
 - **AND** a correctly-marked board returns no mistakes
+
+### Requirement: Rules: A Mosaic click cycles a square, and a right click cycles it back
+
+A click SHALL take a cell around the cycle undecided, shaded, clear, and a
+right click round the other way, clear first, as the description's `play`
+says. A drag
+SHALL sweep the value the pressed cell took over the cells it crosses. Every
+move SHALL be an engine `Edit`; a saved game's `paint` or `toggle` move is
+not read.
+
+#### Scenario: Clicking cycles a cell
+
+- **WHEN** an undecided cell is clicked three times
+- **THEN** it passes shaded → clear → undecided
+
+#### Scenario: A right click goes the other way
+
+- **WHEN** an undecided cell is right-clicked twice
+- **THEN** it passes clear → shaded
 
 ### Requirement: Params: A Mosaic params string may leave out its aggressiveness and its difficulty
 
@@ -156,9 +150,9 @@ that makes the board unsolvable.
 
 ### Requirement: Generation: An Unreasonable Mosaic board is an Easy one with clues the search can spare hidden
 
-At Unreasonable the generator SHALL start from an Easy board, and on some
-tries from every clue showing, which the smallest boards are dealt from. It
-SHALL hide clues while the search still proves one answer. With aggressive
+At Unreasonable the generator SHALL start from an Easy board, and on one try
+in eight from every clue showing, which the smallest boards are dealt from.
+It SHALL hide clues while the search still proves one answer. With aggressive
 generation it SHALL try every clue. Without, it SHALL stop at the first clue
 whose loss stops the deduction, two numbers compared included.
 
@@ -302,27 +296,17 @@ number decides anything alone.
 - **WHEN** the 5×5 board `0b4c4b4a6a3d3a2c` is solved
 - **THEN** the solver finishes it, where upstream's rule alone stops short
 
-### Requirement: Controls: Mosaic takes its buttons, keys and drag from its verbs, and a finished board takes none
+### Requirement: Controls: Mosaic's controls are its description's, and a finished board takes them
 
-Mosaic's buttons, keys and drag SHALL be those its `targetVerbs` declares, the
-primary verb one step of the toggle and the secondary two, with a sweep over
-the cells holding the mark the pressed cell held (`engine-input`, "The engine
-owns a declaring game's press and select keys" and "A drag on from a press
-repeats the press"). `interpretMove` SHALL add one arm of its own: once the
-board is complete, the game SHALL accept only cursor movement.
+Mosaic's buttons, keys and drag SHALL be those the fill engine derives from
+its description (`described-fill-game`). A finished board SHALL take input
+as any other game's does: a move may take it off its solution, and its status
+follows (`ts-engine`, "A game's status is judged from the board alone").
 
-#### Scenario: A drag from a marked cell clears marks
+#### Scenario: A finished board takes a click
 
-- **WHEN** the player presses a marked cell with the primary button and drags
-  across a marked cell and an unmarked cell
-- **THEN** both marked cells become blank and the unmarked cell is left as it
-  was
-
-#### Scenario: A finished board takes no click
-
-- **WHEN** the board is complete and the player clicks a cell
-- **THEN** no move is made
-- **AND** an arrow key still moves the cursor
+- **WHEN** the board is solved and the player clicks a cell
+- **THEN** the cell changes, and the board is no longer solved
 
 ### Requirement: Hint: Mosaic's hint stops where the rule does
 
@@ -340,38 +324,38 @@ those one number at a time forces and then those two numbers compared force.
 A hint step that compares two numbers SHALL name both by their values, and by
 where each sits where the values are equal. The squares it rings SHALL be
 squares only one of the two counts. A step that shades SHALL say how many more
-the first needs than the second and that it has only that many empty squares
-outside the second's block. A step that clears SHALL say that both need the
-same.
+the first needs than the second, and which ringed squares that makes shaded
+and which clear. A step that clears SHALL say that both need the same and that
+one's squares all lie in the other's block.
 
 #### Scenario: The ringed squares belong to one block only
 
 - **WHEN** a step that shades by comparison is shown
-- **THEN** every ringed square is in the first number's block and outside the
-  other's, and both blocks' perimeters are drawn
+- **THEN** every ringed square is outside one of the two blocks, both numbers
+  are circled and both blocks are outlined
 
 #### Scenario: Two 7s side by side
 
-- **WHEN** a step compares two 7s in one row
-- **THEN** it says "The left 7 still needs 2 more shaded squares than the
-  right 7, and only 2 of its empty squares are outside the right 7's block, so
-  these squares must be shaded.", or the same with left and right exchanged
+- **WHEN** a step that shades compares two 7s in one row
+- **THEN** it opens "The left 7 needs 2 more shaded squares than the right
+  7", or the same with left and right exchanged, and names the block each
+  ringed square lies outside of as the left or the right 7's
 
 ### Requirement: Hint: One Mosaic number alone settles its block
 
 A number whose block already holds as many shaded squares as it counts SHALL
-make every empty square of the block clear. A number whose block holds only
-as many squares that are not clear as it counts SHALL make every empty square
-of the block shaded. The hint step SHALL say of a 0 that it allows no shaded
-squares and of a number equal to its block's size that it needs all of them.
+make every open square of the block clear. A number whose block holds only
+as many open squares as it still needs SHALL make every open square of the
+block shaded.
 
 #### Scenario: The three sentences of a small board
 
-- **WHEN** the hint's plan is read on the 3×3 board `d7a2a4`
-- **THEN** it says "This 4 needs all 4 of its squares shaded, so these squares
-  must be shaded.", then "This 2 already has its 2 shaded squares, so these
-  squares must be clear.", then "This 7 needs 7 shaded squares, and only 7 of
-  its squares are not clear, so these squares must be shaded."
+- **WHEN** the hint is followed on the 3×3 board `d7a2a4`
+- **THEN** it says "This 4 needs 4 shaded squares and has only 4 open
+  squares, so each ringed square must be shaded.", then "This 2 already has
+  its 2 shaded squares, so each ringed square must be clear.", then "This 7
+  needs 3 more shaded squares and has only 3 open squares, so each ringed
+  square must be shaded."
 
 #### Scenario: A number on a shaded square
 
@@ -380,12 +364,8 @@ squares and of a number equal to its block's size that it needs all of them.
 
 ### Requirement: Hint: Mosaic's hint asks the numbers in reading order, and the nearest pair first
 
-The plan SHALL ask every number once in reading order, and SHALL ask a number
-again, after those already waiting, each time a square of its block is
-decided. Where the numbers alone decide nothing, each number in turn SHALL be
-compared with the numbers whose blocks overlap its own, the nearest first, a
-number beside it before one two squares away, and the first comparison that
-decides a square SHALL be the step.
+The plan SHALL take its steps in the order the description's ladder fires
+them: one number alone before two compared (`described-fill-game`).
 
 #### Scenario: The first number that decides is not the first number
 
