@@ -38,8 +38,8 @@ export const domino: Painter = {
 };
 
 /** A cell said clear on a board colored half and half: the clear square, a
- * surface of its own with the cross faint in its middle, none where a number
- * takes the middle (`drawClearSquare`). */
+ * surface of its own (`CLEAR`) with the cross faint in its middle
+ * (`CLEAR_MARK`), none where a number takes the middle. */
 export const clear: Painter = {
   colors: () => [CLEAR, CLEAR_MARK],
   surface: 0,

@@ -16,7 +16,7 @@ import {
 import { difficultyItem, noSuchTier } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
 import { isDigit } from "../game-id/decimal.ts";
-import { readDesc } from "../game-id/desc-reader.ts";
+import { type DescReader, readDesc } from "../game-id/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../game-id/dot-runs.ts";
 import { modifierItem } from "../game-id/modifier.ts";
 import { dimensionParamConfig, parseConfigInt } from "../game-id/params.ts";
@@ -38,6 +38,9 @@ import {
   clueList,
   type GridSpace,
   inHexagon,
+  type ListClues,
+  listAt,
+  listClues,
   type Partition,
   partition,
 } from "../solve/describe-runtime.ts";
@@ -49,13 +52,20 @@ import type { Sample } from "./sample.ts";
  * run code; a dealt partition as the walls between its parts
  * (`engine/game-id/wall-runs.ts`); a two-valued kind at cells as upstream's
  * dot runs, its value the
- * letter's case (`cases`, lowercase then uppercase); or a kind's values, the
- * first after `before` and the rest after commas, in the space's order or
- * the columns first. */
+ * letter's case (`cases`, lowercase then uppercase), after `before` and
+ * written only where one is dealt where `before` is given; a list kind's
+ * lists, `.` within one and `/` between two; or a kind's values, the first
+ * after `before` and the rest after commas, in the space's order or the
+ * columns first. */
 export type IdSegment =
   | { readonly runs: string }
   | { readonly walls: string }
-  | { readonly dots: string; readonly cases: readonly [number, number] }
+  | {
+      readonly dots: string;
+      readonly cases: readonly [number, number];
+      readonly before?: string;
+    }
+  | { readonly lists: string; readonly order?: "columns" }
   | {
       readonly digits: string;
       readonly apart?: string;
@@ -780,11 +790,22 @@ export function encodeDesc<C extends Clues<C>>(
     }
     if ("dots" in seg) {
       const list = listOf(seg.dots);
+      // Behind its mark, the segment is written only where it holds a clue.
+      if (seg.before !== undefined && list.at.length === 0) continue;
       const [lower, upper] = seg.cases;
-      out += writeDotRuns(sp.cells.length, (c) => {
-        const v = list.valueAt[c];
-        return v === upper ? 1 : v === lower ? 0 : null;
-      });
+      out +=
+        (seg.before ?? "") +
+        writeDotRuns(sp.cells.length, (c) => {
+          const v = list.valueAt[c];
+          return v === upper ? 1 : v === lower ? 0 : null;
+        });
+      continue;
+    }
+    if ("lists" in seg) {
+      const lists = dealt[seg.lists as keyof C] as ListClues;
+      out += elements(sp, universeOf(deal, seg.lists), seg.order)
+        .map((e) => Array.from(listAt(lists, e) ?? []).join("."))
+        .join("/");
       continue;
     }
     const list = listOf(seg.numbers);
@@ -799,6 +820,59 @@ export function encodeDesc<C extends Clues<C>>(
 
 const isRunChar = (ch: string): boolean => ch === "_" || (ch >= "a" && ch <= "z");
 
+/** A `runs` segment: the cells each letter's run of empty cells ends
+ * before, of `n`. */
+function readRunCells(r: DescReader, n: number): ClueList {
+  const at: number[] = [];
+  let pos = 0;
+  for (;;) {
+    const ch = r.char(isRunChar);
+    if (ch === "z") {
+      // `z` is written only with empty cells still to follow it.
+      pos += 25;
+      if (pos >= n) r.fail(DESC_TOO_LONG);
+      continue;
+    }
+    pos += ch === "_" ? 0 : ch.charCodeAt(0) - 96;
+    if (pos > n) r.fail(DESC_TOO_LONG);
+    if (pos === n) break;
+    at.push(pos++);
+  }
+  return clueList(
+    at,
+    at.map(() => 0),
+    n,
+  );
+}
+
+/** A `lists` segment: every element's list, an empty one written as
+ * nothing, held in the space's order. */
+function readLists<C extends Clues<C>>(
+  r: DescReader,
+  deal: FillDeal,
+  sp: GridSpace,
+  clueMax: ClueMax<C>,
+  seg: { readonly lists: string; readonly order?: "columns" },
+): ListClues {
+  const kind = seg.lists as keyof C;
+  const universe = universeOf(deal, seg.lists);
+  const least = deal.least?.[seg.lists] ?? 0;
+  const read = elements(sp, universe, seg.order).map((e, i) => {
+    if (i > 0) r.expect("/");
+    const list: number[] = [];
+    if (r.peekIs(isDigit))
+      do list.push(r.int(least, maxOf(clueMax, kind, sp, e)));
+      while (r.accept("."));
+    return [e, list] as const;
+  });
+  read.sort((a, b) => a[0] - b[0]);
+  return listClues(
+    read.map(([e]) => e),
+    read.map(([, list]) => list),
+    sp[universe].length,
+  );
+}
+
 /** The clues `desc` deals, each number read within its kind's largest value
  * at its element. */
 export function decodeDesc<C extends Clues<C>>(
@@ -812,7 +886,7 @@ export function decodeDesc<C extends Clues<C>>(
   grown: GrowSizes | null = null,
 ): DescParse<C> {
   return readDesc(desc, (r) => {
-    const out: Partial<Record<keyof C, ClueList | Partition>> = {};
+    const out: Partial<Record<keyof C, ClueList | ListClues | Partition>> = {};
     for (const seg of deal.id) {
       if ("walls" in seg) {
         const n = sp.cells.length;
@@ -830,27 +904,7 @@ export function decodeDesc<C extends Clues<C>>(
         continue;
       }
       if ("runs" in seg) {
-        const n = sp.cells.length;
-        const at: number[] = [];
-        let pos = 0;
-        for (;;) {
-          const ch = r.char(isRunChar);
-          if (ch === "z") {
-            // `z` is written only with empty cells still to follow it.
-            pos += 25;
-            if (pos >= n) r.fail(DESC_TOO_LONG);
-            continue;
-          }
-          pos += ch === "_" ? 0 : ch.charCodeAt(0) - 96;
-          if (pos > n) r.fail(DESC_TOO_LONG);
-          if (pos === n) break;
-          at.push(pos++);
-        }
-        out[seg.runs as keyof C] = clueList(
-          at,
-          at.map(() => 0),
-          n,
-        );
+        out[seg.runs as keyof C] = readRunCells(r, sp.cells.length);
         continue;
       }
       if ("digits" in seg) {
@@ -943,11 +997,16 @@ export function decodeDesc<C extends Clues<C>>(
       if ("dots" in seg) {
         const at: number[] = [];
         const v: number[] = [];
-        readDotRuns(r, sp.cells.length, (c, kind) => {
-          at.push(c);
-          v.push(seg.cases[kind]);
-        });
+        if (seg.before === undefined || r.accept(seg.before))
+          readDotRuns(r, sp.cells.length, (c, kind) => {
+            at.push(c);
+            v.push(seg.cases[kind]);
+          });
         out[seg.dots as keyof C] = clueList(at, v, sp.cells.length);
+        continue;
+      }
+      if ("lists" in seg) {
+        out[seg.lists as keyof C] = readLists(r, deal, sp, clueMax, seg);
         continue;
       }
       const kind = seg.numbers as keyof C;

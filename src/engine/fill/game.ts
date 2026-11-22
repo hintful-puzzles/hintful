@@ -70,6 +70,7 @@ import { answerSearched, searches } from "./search.ts";
 export interface BornModule<C> extends FillHintModule<C>, DealtFillModule<C> {
   readonly play: FillPlay;
   readonly lineClues: readonly (keyof C)[];
+  readonly lineLists?: readonly (keyof C)[];
   readonly labels?: { readonly start?: (i: number) => string };
   readonly deal: FillDeal;
   readonly clueMax: ClueMax<C>;
@@ -194,6 +195,7 @@ export function fillGame<C extends Clues<C> & object>(
       ]),
     ),
     lineClues: module.lineClues,
+    ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(deal.partitions === undefined
       ? {}
       : { partition: deal.partitions[0] as keyof C }),
@@ -215,6 +217,7 @@ export function fillGame<C extends Clues<C> & object>(
     {
       play,
       lineClues: module.lineClues,
+      ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
       ...(module.labels === undefined ? {} : { labels: module.labels }),
     },
     (b, ui) => input.previewed(b, ui),

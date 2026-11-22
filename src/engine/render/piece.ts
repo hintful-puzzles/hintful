@@ -33,8 +33,8 @@ export const PAIR_NAMES: readonly [string, string] = ["block", "disc"];
  * Singles): the pair's first member, alone, so the only piece on the board is
  * the shaded one and a finished picture still reads as one. The color is
  * `SHADED` (`palette.ts`); this is its shape. What a cell known not to be
- * shaded shows is {@link drawRuledOutCross} or {@link drawClearSquare}, by how
- * much of the board the state covers.
+ * shaded shows is {@link drawRuledOutCross}, or the clear square (the `clear`
+ * painter, `pieces/stock.ts`), by how much of the board the state covers.
  */
 export const SHADED_SHAPE: PieceShape = TWO_SHAPES[0];
 /** The word for a shaded cell: the rules' word, which no theme changes, where
@@ -50,7 +50,7 @@ export const UNSHADED_NAME = "clear";
  * `cell`, half the cell wide, in `color` (the `RULED_OUT` role). One mark in
  * every game that has the state, so a cross never has to be learned twice.
  * On a board colored half and half the cross sits on a surface of its own
- * ({@link drawClearSquare}).
+ * (the `clear` painter, `pieces/stock.ts`).
  */
 export function drawRuledOutCross(dr: GameDrawing, cell: Rect, color: number): void {
   const cx = cell.x + Math.floor(cell.w / 2);
@@ -69,30 +69,6 @@ export function drawRuledOutCross(dr: GameDrawing, cell: Rect, color: number): v
     color,
     thickness,
   );
-}
-
-/**
- * The **clear square** of a board that is colored half and half, where a
- * square the player has said is not shaded gets a color of its own: `cell`
- * filled whole in `surface` (the `CLEAR` role), with no piece, and the
- * ruled-out cross drawn faint (`cross`, the `CLEAR_MARK` role) in the middle
- * of `content`. `content` is `null` where the square holds something else in
- * its middle, a number for one, which then has the square to itself.
- *
- * For a game whose two states say as much as each other and whose work is
- * coloring the whole board in one or the other (Mosaic, Pattern, Bricks). A game where
- * a few squares are the answer and the rest is a note calls
- * {@link drawRuledOutCross} on the plain surface.
- */
-export function drawClearSquare(
-  dr: GameDrawing,
-  cell: Rect,
-  surface: number,
-  cross: number,
-  content: Rect | null = cell,
-): void {
-  dr.drawRect(cell, surface);
-  if (content !== null) drawRuledOutCross(dr, content, cross);
 }
 
 /**

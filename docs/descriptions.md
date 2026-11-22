@@ -309,7 +309,18 @@ research tools all read through it; the app never does.
   `order: upward`, `share` and `least` lay the value bottom row first at a
   chance, drawing again below a least share; `digits`' `also: { "7": kind }`
   reads a number past the segment's range as another kind's clue, and
-  `tierAliases` a retired tier letter.
+  `tierAliases` a retired tier letter. A line kind whose meaning is `T = v`
+  for a list `T` (Pattern's runs) is a list clue: derived whole, written by
+  `id:`'s `lists` one line a `/` and one number a `.` (`order: columns`
+  puts the columns first), drawn in the margins, which grow to hold the
+  longest, and each fifth grid line doubled. `deal.sample: picture` draws
+  upstream's smoothed random picture. A kind named in `deal.never` is never
+  dealt by a deal, only read from an ID (Pattern's given squares, which
+  `dots` with `before: ","` writes after the lists). A search tier with no
+  clue to hide draws until the ladder stops short and the search says one.
+  `least_start(L, R, k, v)` and `greatest_start` are where run `k` of list
+  `R` can start on line `L`, its runs of `v` packed one way and the other
+  around the line's decided cells.
   The compiler writes `<id>.game.ts`, `fillGame` of the module, and
   `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One

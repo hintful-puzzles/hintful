@@ -12,7 +12,12 @@ import type { RulesOf } from "../contract/rules.ts";
 import { NO_SOLUTION } from "../contract/solve-failure.ts";
 import type { GameStatus } from "../contract/types.ts";
 import { type Answer, answerCache, solveFromAnswer } from "../solve/answer-search.ts";
-import { clueAt, type Partition } from "../solve/describe-runtime.ts";
+import {
+  clueAt,
+  type ListClues,
+  listAt,
+  type Partition,
+} from "../solve/describe-runtime.ts";
 import { describedRules } from "../solve/described-rules.ts";
 import {
   asDealt,
@@ -45,6 +50,9 @@ export interface AnswerReading<C> {
   readonly glyphs: Readonly<Record<number, string>>;
   /** The clue kinds that sit at lines, printed past each line's end. */
   readonly lineClues: readonly (keyof C)[];
+  /** The list kinds at lines: a column's printed stacked above it, and a
+   * row's after it. */
+  readonly lineLists?: readonly (keyof C)[];
   /** The clue kinds written as numbers on their cells, printed there in
    * place of the cell's value. */
   readonly numbers?: readonly (keyof C)[];
@@ -227,6 +235,43 @@ export function rulesOf<C>(module: FillModule<C>): RulesOf<FillBoard<C>> {
  * column's below, and the box at their corner left open.
  */
 export function textFormat<C extends Clues<C>>(
+  reading: AnswerReading<C>,
+  board: FillBoard<C>,
+): string {
+  const grid = gridFormat(reading, board);
+  const kinds = reading.lineLists ?? [];
+  if (kinds.length === 0) return grid;
+  const { w, h, dealt } = board;
+  const listOfLine = (k: number): number[] => {
+    for (const kind of kinds) {
+      const l = listAt(dealt[kind] as ListClues, k);
+      if (l !== null) return Array.from(l);
+    }
+    return [];
+  };
+  // Each column's numbers bottom-aligned over its cell, a cell's text being
+  // three characters after a one-character wall.
+  const columns = Array.from({ length: w }, (_, x) => listOfLine(h + x));
+  const tall = Math.max(0, ...columns.map((l) => l.length));
+  const above = Array.from({ length: tall }, (_, r) =>
+    columns
+      .map((l) => {
+        const i = r - (tall - l.length);
+        return i >= 0 ? String(l[i]).padStart(3).padEnd(4) : "    ";
+      })
+      .join("")
+      .trimEnd(),
+  );
+  // The grid's lines alternate a wall and a row of cells.
+  const lines = grid.split("\n").map((line, i) => {
+    const row = i % 2 === 1 && (i - 1) / 2 < h ? listOfLine((i - 1) / 2) : [];
+    return row.length === 0 ? line : `${line} ${row.join(" ")}`;
+  });
+  return [...above.map((l) => ` ${l}`), ...lines].join("\n");
+}
+
+/** {@link textFormat}'s grid: each cell and each line clue. */
+function gridFormat<C extends Clues<C>>(
   reading: AnswerReading<C>,
   board: FillBoard<C>,
 ): string {

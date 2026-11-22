@@ -1,2 +1,3 @@
 ok  pattern    line                           3  sound    (want sound   )     6 queries    0.1s
 ok  pattern    line (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/games/pattern/pattern.description.yaml#line: recorded sound, proved whole on all 1 boards

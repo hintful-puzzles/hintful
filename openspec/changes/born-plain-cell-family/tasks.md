@@ -120,7 +120,28 @@ order.
       params string with upstream's `t` deals and opens as Unreasonable,
       where generating was refused; the drag paints with the engine's
       sweep; saves of the hand-written game are not read.
-- [ ] 2.7 Pattern born.
+- [ ] 2.7 Pattern born. 2,066 hand-written lines gone.
+      Added, each the engine's: list clues on a fill board, a line kind
+      whose meaning is `T = v` derived whole and checked live; `id:`'s
+      `lists` segment (`order: columns`) and `dots`' `before`; margins as
+      deep as the longest list, the cursor's line's numbers in its color,
+      a step's stripes running on through them, and each fifth grid line
+      doubled; `deal.sample: picture`; `deal.never`; a search tier that
+      hides no clue, drawn until the ladder stops short; `least_start` and
+      `greatest_start` (`runStart`), so the planner's four ways are arms
+      of the one `line` technique and `steps:` went; the text format's
+      lists. Deals measured 2026-11-22 over 8 each: 30x30 Easy median
+      25 ms, max 55 ms; Unreasonable median 151 ms, max 298 ms (15x15's
+      max 477 ms). Differences a player sees: the menu lists each size at Easy
+      and Unreasonable, where it listed Easy alone; the drag is the
+      engine's sweep, not a line or an erasing rectangle; Shift with a
+      move marks clear the undecided squares and Ctrl the shaded ones too,
+      where Ctrl shaded, Shift cleared and both emptied; a step outlines
+      the marked squares that hold a run in place, and its unreachable
+      sentence names the line, not its clue; a list that overfills its line
+      opens as contradictory, not with a message of its own; a shaded
+      square is the engine's purple piece; saves of the hand-written game
+      are not read.
 - [ ] 2.8 Singles born.
 - [ ] 2.9 Boats born.
 

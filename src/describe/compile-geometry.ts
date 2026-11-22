@@ -74,6 +74,8 @@ const GEOMETRY = new Set([
   "onward",
   "stretch",
   "run_lengths",
+  "least_start",
+  "greatest_start",
   "connected",
   "cuts",
   "cut_edges",

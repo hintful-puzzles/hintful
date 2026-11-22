@@ -902,11 +902,10 @@ the case.
 - **A move over an arbitrary set of cells** lets one firing group cells that
   do not touch and lets `hint.keepTrack` shrink it in place.
 
-Exemplars: the ladder's one `line` technique, told four ways by `reasonOf`
-from `packLeft` and `packRight` in
-[`pattern/solver.ts`](../src/games/pattern/solver.ts), and the four `steps`
-of [`pattern.description.yaml`](../src/games/pattern/pattern.description.yaml),
-with the `fillCells` move of [`pattern/index.ts`](../src/games/pattern/index.ts).
+Exemplar: the one `line` technique of
+[`pattern.description.yaml`](../src/games/pattern/pattern.description.yaml),
+told by four arms from each run's `least_start` and `greatest_start`
+(`runStart`, [`describe-runtime/clues.ts`](../src/engine/solve/describe-runtime/clues.ts)).
 A technique that forces by contradiction needs no such reading: each way its
 trial breaks is a technique of its own ([`descriptions.md`](./descriptions.md)
 § "A firing's reason is built from its binding").

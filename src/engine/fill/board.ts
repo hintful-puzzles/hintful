@@ -13,6 +13,7 @@ import {
   describedSpace,
   type GridSpace,
   hexStore,
+  type ListClues,
   type Partition,
   type Violation,
 } from "../solve/describe-runtime.ts";
@@ -26,10 +27,12 @@ import {
 } from "../solve/ladder-runtime.ts";
 import type { FillPlay } from "./play.ts";
 
-/** A board's clues by kind, its dealt partitions by name, and the sizes its
- * params give beyond the grid's (Star Battle's `stars`): a compiled module's
- * `Dealt`. */
-export type Clues<C> = { readonly [K in keyof C]: ClueList | Partition | number };
+/** A board's clues by kind, a list kind's as lists (Pattern's runs), its
+ * dealt partitions by name, and the sizes its params give beyond the grid's
+ * (Star Battle's `stars`): a compiled module's `Dealt`. */
+export type Clues<C> = {
+  readonly [K in keyof C]: ClueList | ListClues | Partition | number;
+};
 
 /** The clues of kind `kind`, which the caller knows is a clue kind and not a
  * partition. */

@@ -52,6 +52,7 @@ import {
   sampleAnswer,
   sampleDominoes,
   sampleLines,
+  samplePicture,
 } from "./sample.ts";
 import {
   type SearchedFillModule,
@@ -202,14 +203,16 @@ export function dealFill<C extends Clues<C>>(
           ? sampleDominoes(sample, sp, rs)
           : "lines" in sample
             ? sampleLines(sample, sp, sizes, rs)
-            : sampleAnswer(
-                sample,
-                sp,
-                rs,
-                sample.first === undefined
-                  ? null
-                  : firstLaid(sample.first, deal, p, rs, layouts++),
-              );
+            : "picture" in sample
+              ? samplePicture(sample, sp, rs)
+              : sampleAnswer(
+                  sample,
+                  sp,
+                  rs,
+                  sample.first === undefined
+                    ? null
+                    : firstLaid(sample.first, deal, p, rs, layouts++),
+                );
     if (g === null) return null;
     const grown = grownRound(g, tier);
     if (grown === null) return null;
@@ -282,6 +285,19 @@ export function dealFill<C extends Clues<C>>(
     return keeping(clues, shown);
   };
 
+  if (searches(module) && p.diff === module.tiers.length - 1 && kind === undefined) {
+    // Every clue is shown, so a board is drawn again until the tier below
+    // stops short of it and the search proves one answer (upstream
+    // pattern.c's Unreasonable: most such pictures have several).
+    const top = p.diff - 1;
+    const got = dealUnreasonable<{ g: Uint8Array; clues: C }>({
+      label: `fill: ${module.tiers[p.diff]} deal (${p.w}x${p.h})`,
+      draw: () => draw(p.diff),
+      deduced: (b) => finishes(b.clues, top),
+      answer: (b, budget) => searchBoard(module, board(b.clues), budget),
+    });
+    return { desc: encodeDesc(deal, sp, got.clues), aux: encodeAnswer(got.g) };
+  }
   if (searches(module) && p.diff === module.tiers.length - 1) {
     if (kind === undefined) throw new Error("deal: a search tier hides no clue");
     const top = p.diff - 1;

@@ -626,9 +626,8 @@ split, the blitter and canceling a dangling drag in `changedState` are in
 | the piece picked up | § "A sprite drag" |
 | one end of a pair, or the origin of a direction | § "The aim drag" |
 
-A rectangle-fill drag ([`pattern/index.ts`](../src/games/pattern/index.ts))
-and a slide-follow drag ([`sixteen/index.ts`](../src/games/sixteen/index.ts),
-`slide/index.ts`) keep lifecycles of their own.
+A slide-follow drag ([`sixteen/index.ts`](../src/games/sixteen/index.ts),
+`slide/index.ts`) keeps a lifecycle of its own.
 
 **Continue every drag on the button class** (`isMouseDrag`, `isMouseRelease`),
 never on the exact press code (§ "A touch hold arrives as the right button").

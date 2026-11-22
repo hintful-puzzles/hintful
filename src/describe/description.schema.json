@@ -1084,11 +1084,22 @@
               },
               {
                 "type": "object",
+                "required": ["lists"],
+                "additionalProperties": false,
+                "description": "A list kind at lines, each line's list in turn, its numbers between `.` and the lines between `/`, an empty list written as nothing (upstream's Pattern). With `order: columns`, the columns come first.",
+                "properties": {
+                  "lists": { "type": "string" },
+                  "order": { "const": "columns" }
+                }
+              },
+              {
+                "type": "object",
                 "required": ["dots", "cases"],
                 "additionalProperties": false,
-                "description": "A clue kind of two values at cells as upstream's dot runs (`engine/game-id/dot-runs.ts`): a letter a clue, its offset the run of cells before it and its case its value, `cases` the values written lowercase and uppercase. It ends the desc.",
+                "description": "A clue kind of two values at cells as upstream's dot runs (`engine/game-id/dot-runs.ts`): a letter a clue, its offset the run of cells before it and its case its value, `cases` the values written lowercase and uppercase. It ends the desc. With `before`, it follows that mark and is written only where a clue is dealt (Pattern's `,`).",
                 "properties": {
                   "dots": { "type": "string" },
+                  "before": { "type": "string", "minLength": 1, "maxLength": 1 },
                   "cases": {
                     "type": "array",
                     "minItems": 2,
@@ -1162,6 +1173,18 @@
           "additionalProperties": { "type": "string" },
           "description": "What the generator chooses, in words; `sample` where the deal samples an answer and derives the clues from each kind's `means`, and `hide` where it then hides a kind's clues.",
           "properties": {
+            "never": {
+              "oneOf": [
+                { "type": "string" },
+                {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "minItems": 2,
+                  "uniqueItems": true
+                }
+              ],
+              "description": "A clue kind, or several, that no deal deals: only a game ID carries one (Pattern's given squares, which only upstream's pictures hold)."
+            },
             "unpair": {
               "type": "string",
               "description": "A clue kind at a cell of which two side by side with the same value are both taken off, in reading order: the board's answer is then the one the ladder finds, not the sample. With no `hide`."
@@ -1332,6 +1355,23 @@
                       ]
                     },
                     "first": { "$ref": "#/$defs/firstCells" }
+                  }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer as a picture (upstream's pattern.c `generate`): random noise smoothed by one averaging pass over each cell's eight neighbors, `value` at and above its median and `rest` below; a row or column across a side over two cells all one value is drawn again.",
+                  "required": ["picture"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "picture": {
+                      "type": "object",
+                      "required": ["value", "rest"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "value": { "type": "integer", "minimum": 1 },
+                        "rest": { "type": "integer", "minimum": 1 }
+                      }
+                    }
                   }
                 },
                 {

@@ -53,6 +53,7 @@ export {
   perPlace,
   perValue,
   runFits,
+  runStart,
   runsOf,
   sameList,
 } from "./describe-runtime/clues.ts";

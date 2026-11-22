@@ -191,13 +191,13 @@ export interface FillInput<C, D> {
 }
 
 /**
- * The input `play` declares, on a board drawn `origin(tileSize)` pixels in
- * from the top and left of the canvas.
+ * The input `play` declares, on a board drawn `origin(tileSize, board)`
+ * pixels in from the top and left of the canvas.
  */
 export function fillInput<C extends Clues<C>, D extends Tiled>(
   module: FillModule<C>,
   play: FillPlay,
-  origin: (tileSize: number) => number,
+  origin: (tileSize: number, board: FillBoard<C>) => number,
 ): FillInput<C, D> {
   const { primary, secondary } = play;
   const axes = axesOf(play);

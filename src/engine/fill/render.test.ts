@@ -99,7 +99,7 @@ describe("a fill game drawn by layers", () => {
     );
     // One line across the grid line the two cells share.
     expect(a.x + a.w).toBe(b.x);
-    expect(b.x).toBe(render0.origin(TS) + TS);
+    expect(b.x).toBe(render0.origin(TS, { w: W, h: W }) + TS);
     const wrong = draw(linked, { mistakes: [{ cell: 0, kind: "mark" }] }).ops;
     expect(halves(wrong, COL_ERROR)).toHaveLength(2);
   });
@@ -114,7 +114,7 @@ describe("a fill game drawn by layers", () => {
     const labels = { start: (i: number) => String(i + 1) };
     const { ops, render } = draw([], { look: { ...look, labels } });
     const plain = draw([]).render;
-    expect(render.origin(TS)).toBe(TS);
+    expect(render.origin(TS, { w: W, h: W })).toBe(TS);
     expect(render.computeSize({ w: W, h: W }, TS).w).toBe(
       plain.computeSize({ w: W, h: W }, TS).w + TS - 1,
     );

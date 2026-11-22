@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/pattern/pattern.description.yaml: edit that, not this.
 
-import { type ListClues, type Fire, type GridSpace, type Marks, type Violation, PLACE, freshBinding, heldIn, listAt, overDomain, rangeMask, runFits, runsOf, sameList, sameSet, staleChecking, stoppedAt, stretch, undecided } from "../../../engine/solve/describe-runtime.ts";
+import { type ClueList, type ListClues, type Fire, type GridSpace, type Marks, type Violation, PLACE, clueList, freshBinding, heldIn, listAt, listClues, listLength, nth, overDomain, rangeMask, runFits, runStart, runsOf, sameList, sameSet, staleChecking, stoppedAt, stretch, undecided } from "../../../engine/solve/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -9,6 +9,7 @@ const DEV = import.meta.env.DEV;
  * rules read that the grid does not give. */
 export interface Dealt {
   runs: ListClues;
+  given: ClueList;
 }
 
 /** The units no value repeats in, in the description's order: the
@@ -18,62 +19,24 @@ export const units: readonly string[] = [];
 /** Every technique a rung runs, by id: the description's, in its order. */
 export type LadderId = "line";
 
-/** What the planner supplies for each kind of step it emits, over the
- * elements `E` it marks: its terms, and the elements marked by role and sort. */
-export interface StepsById<E> {
-  overlap: { ring: "cell"; terms: { axis: Unit; run: number; slack: number }; marks: { stripes: { line: readonly E[] }; outline: { clue: readonly E[]; cell: readonly E[] } } };
-  unreachable: { ring: "cell"; terms: { axis: Unit }; marks: { stripes: { line: readonly E[] }; outline: { clue: readonly E[] } } };
-  lineEmpty: { ring: "cell"; terms: { axis: Unit }; marks: { stripes: { line: readonly E[] } } };
-  intersection: { ring: "cell"; terms: { axis: Unit; covers: boolean }; marks: { stripes: { line: readonly E[] }; outline: { clue: readonly E[] } } };
+/** What a firing of each technique that says anything says, by id. */
+export interface SaysById {
+  line: LineSays;
 }
 
-/** Each kind of step the planner emits: its clauses by wording, the
- * condition under which each wording is the one said (`null`: always), and
- * its terms that are another step's clause, which the voice speaks. */
-export const STEPS: {
-  readonly [K in keyof StepsById<unknown>]: {
-    readonly ring: StepsById<unknown>[K]["ring"];
-    readonly spoken?: readonly string[];
-    readonly clauses: readonly { aim?: string; answers?: string; look?: string; follows?: string; move?: string; effect?: string; again?: string; later?: string; long?: string }[];
-    readonly when: readonly (
-      | null
-      | ((
-          t: StepsById<unknown>[K]["terms"],
-          m: StepsById<unknown>[K]["marks"],
-          r: readonly unknown[],
-          s: Readonly<Record<string, readonly unknown[]>>,
-        ) => boolean)
-    )[];
-  };
-} = {
-  overlap: {
-    ring: "cell",
-    clauses: [{"move":"{ring} must be {shaded}","look":"{stripes line: this {axis}}'s {outline clue: run of {run}} has nowhere to slide"},{"move":"{ring} must be {shaded}","look":"{stripes line: this {axis}}'s {outline clue: run of {run}} has nowhere to slide, given {outline cell}"},{"move":"{ring} must be {shaded}","look":"{stripes line: this {axis}}'s {outline clue: run of {run}} can slide only {slack} {slack: square | squares}"},{"move":"{ring} must be {shaded}","look":"{stripes line: this {axis}}'s {outline clue: run of {run}} can slide only {slack} {slack: square | squares}, given {outline cell}"}],
-    when: [(t, m) => ((t.slack === 0) && (m.outline.cell.length === 0)), (t, _m) => (t.slack === 0), (_t, m) => (m.outline.cell.length === 0), null],
-  },
-  unreachable: {
-    ring: "cell",
-    clauses: [{"look":"No run of {stripes line: this {axis}}'s {outline clue: outlined clue} can reach {ring: the ringed square | the ringed squares}","move":"{ring: that square | those squares} must be {unshaded}"}],
-    when: [null],
-  },
-  lineEmpty: {
-    ring: "cell",
-    clauses: [{"look":"{stripes line: this {axis}} has no clues","move":"{ring} must be {unshaded}"}],
-    when: [null],
-  },
-  intersection: {
-    ring: "cell",
-    clauses: [{"look":"Every way {stripes line: this {axis}}'s {outline clue: outlined runs} can fit {if covers: covers | leaves out} {ring: the ringed square | the ringed squares}","move":"{ring: that square | those squares} must be {if covers: {shaded} | {unshaded}}"}],
-    when: [null],
-  },
-};
+/** The kinds of step a firing can be: a technique's id, and for one whose
+ * `says` has arms, `<id>.<arm>` for each. */
+export const SAYS_KINDS = ["line.lineEmpty","line.overlap","line.unreachable","line.intersection"] as const;
 
-import { stepVoice, type StepVoice, type Unit, type Voice } from "../../../engine/hint/step-voice.ts";
-
-/** The steps, spoken: a game declares once what its marks are drawn on and
- * how its values print, the description's nouns filled in. */
-export const voice = <E>(v: Voice<E>): StepVoice<StepsById<E>, E> =>
-  stepVoice<StepsById<E>, E>(STEPS, { ...v });
+/** Each kind of step's words as the description states them, and each
+ * fact's, by wording (`engine/hint/stated.ts`); and the flag terms the engine
+ * sets to whether the step decides several elements (`several`). */
+export const STATED = {
+  "line.lineEmpty": {"step":[{"look":"{stripes: this {unit}} has no clues","move":"{ring} must be {unshaded}"}]},
+  "line.overlap": {"step":[{"move":"{ring} must be {shaded}","look":"{stripes: this {unit}}'s run of {run} has nowhere to slide"},{"move":"{ring} must be {shaded}","look":"{stripes: this {unit}}'s run of {run} has nowhere to slide, given {outline}"},{"move":"{ring} must be {shaded}","look":"{stripes: this {unit}}'s run of {run} can slide only {slack} {slack: square | squares}"},{"move":"{ring} must be {shaded}","look":"{stripes: this {unit}}'s run of {run} can slide only {slack} {slack: square | squares}, given {outline}"}]},
+  "line.unreachable": {"step":[{"look":"No run of {stripes: this {unit}} can reach {ring: the ringed square | the ringed squares}","move":"{ring: that square | those squares} must be {unshaded}"}]},
+  "line.intersection": {"step":[{"look":"Every way {stripes: this {unit}}'s runs can fit covers {ring: the ringed square | the ringed squares}","move":"{ring: that square | those squares} must be {shaded}"},{"look":"Every way {stripes: this {unit}}'s runs can fit leaves out {ring: the ringed square | the ringed squares}","move":"{ring: that square | those squares} must be {unshaded}"}]},
+} as const;
 
 /** Every technique run as each value is placed, by id. */
 export type PlacingId = never;
@@ -97,7 +60,7 @@ export const striking: readonly { id: StrikingId; variation?: string }[] = [
  * does (`describedLadder`). A fill game's names the bindings of a firing
  * that name a clue it reads: a cell's, or a clue's index by its kind. */
 export const techniques = {
-  line: { dealt: true, run: line },
+  line: { dealt: true, run: line, reads: {"cells":["c"],"clues":{}} },
 } as const;
 
 /** The ladder: each technique's tier, on its scale where that is not the
@@ -145,6 +108,11 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     }
     if (!(sameList(runsOf(sp.lineCells[_at2], _g4), _v3))) return false;
   }
+  for (let _k11 = 0; _k11 < cl.given.at.length; _k11++) {
+    const _at12 = cl.given.at[_k11];
+    const _v13 = cl.given.v[_k11];
+    if (!(((g[_at12] || -1) === _v13))) return false;
+  }
   return true;
 }
 
@@ -191,12 +159,92 @@ export function violations(g0: ArrayLike<number>, sp: GridSpace, cl: Dealt): Vio
       _out.push({ rule: "clue.runs", clue: _k1, at: (_wit ?? _rd).slice() });
     }
   }
+  for (let _k13 = 0; _k13 < cl.given.at.length; _k13++) {
+    const _at14 = cl.given.at[_k13];
+    const _v15 = cl.given.v[_k13];
+    _rd.length = 0;
+    _wit = null;
+    let _vd16: number = 2;
+    try {
+      if (_at14 < 0 || g[_at14] > 0) {
+        if (_at14 >= 0) _rd.push(_at14);
+        _vd16 = (_at14 < 0 ? -1 : g[_at14]) === _v15 ? 1 : 0;
+      } else if (!(_v15 > 0 && _v15 < 32 && (_domain >> _v15) & 1)) {
+        _vd16 = 0;
+      }
+    } catch (e) {
+      undecided(e);
+    }
+    if (_vd16 === 0 && _sure === 1) {
+      _out.push({ rule: "clue.given", clue: _k13, at: (_wit ?? _rd).slice() });
+    }
+  }
   return _out;
 }
 
+/** The clues the whole board `g` deals: each kind at each element where
+ * one of its values holds, the first in its values' order; the
+ * partition the deal grew round it; and the sizes the params give. */
+export function deriveClues(g: ArrayLike<number>, sp: GridSpace, _grown: object = {}, _sizes: object = {}): Dealt {
+  const runs_l = sp.lines.map((at) => {
+    const _g1: number[] = [];
+    _g1.length = 0;
+    G2: {
+      const _a5 = sp.lineCells[at];
+      for (let _i6 = 0; _i6 < _a5.length; _i6++) {
+        const v_c = _a5[_i6];
+        if (!(((g[v_c] || -1) === 1))) continue;
+        _g1.push(v_c);
+      }
+    }
+    return Array.from(runsOf(sp.lineCells[at], _g1));
+  });
+  return { runs: listClues(sp.lines, runs_l, sp.lines.length), given: clueList([], [], sp.cells.length) };
+}
+
+/** The values each cell may hold: the board's domain, the same at every cell. */
+export function domainOf(_sp: GridSpace, _cl: Dealt, _c: number): number {
+  return rangeMask(1, 2);
+}
+
+/** How the player fills the board: the engine's `FillPlay`. */
+export const play = {"values":{"1":{"does":"shade it","key":"S","glyph":"###","paint":"shade"},"2":{"does":"mark it clear","key":"X","glyph":" x ","paint":"clear"}},"primary":1,"secondary":2,"blank":2,"click":"cycle","stroke":"sweep","dealt":"given"} as const;
+
+/** The clue kinds at lines, drawn past each line's end. */
+export const lineClues = [] as const;
+
+/** The list kinds at lines, each list drawn stacked before its line's start. */
+export const lineLists = ["runs"] as const;
+
+/** The preset menu's sizes, smallest first; the first is the default. */
+export const boards = [{"w":10,"h":10},{"w":10,"h":15},{"w":15,"h":15},{"w":20,"h":25},{"w":30,"h":30}] as const;
+
+/** The preset menu beside its grid: the default board, the tiers a board
+ * stops at, and the variant boards. */
+export const menu = {"default":{"w":15,"h":15},"tiers":[],"variants":[]} as const;
+
+/** What the sizes alone cannot say of a board, and of a board of a tier. */
+export const bounds = {"all":{},"tiers":[{"tier":1,"shorter":{"min":2},"longer":{"min":4}}]} as const;
+
+/** What each mark of the hint means here (`Game.hint.marks`). */
+export const hintMarks = {"ring":"the squares the step decides; the sentence says whether they must be shaded or clear.","outline":"the squares already marked shaded or clear that hold a run in place.","stripes":"the row or column the sentence names, running on through its numbers."} as const;
+
+/** How the engine deals the board and writes its game ID. */
+export const deal = {"sample":{"picture":{"value":1,"rest":2}},"id":[{"lists":"runs","order":"columns"},{"dots":"given","cases":[2,1],"before":","}],"universes":{"runs":"lines","given":"cells"},"tierLetters":"eu","sizes":{"w":{"min":1},"h":{"min":1}},"least":{"runs":1,"given":1}} as const;
+
+/** Each clue kind's largest value at an element. */
+export const clueMax = {
+  runs(sp: GridSpace, at: number): number {
+    return Number(sp.lineCells[at].length);
+  },
+  given(_sp: GridSpace, _at: number): number {
+    return Number(2);
+  },
+};
+
 /** The statements a violation names, so a game that draws one its own
  * way names it by a name the description has. */
-export type RuleName = "domain" | "clue.runs";
+export type RuleName = "domain" | "clue.runs" | "clue.given";
 
 export interface LineBinding {
   L: number;
@@ -206,6 +254,14 @@ export interface LineBinding {
   c: number;
 }
 
+/** What a step for a firing of it speaks of: its terms, and the elements it marks by role; the arm that holds says which way it reads. */
+export type LineSays =
+  | { arm: "lineEmpty"; terms: {  }; marks: { stripes: readonly number[]; reads: readonly number[]; } }
+  | { arm: "overlap"; terms: { run: number; slack: number; }; marks: { stripes: readonly number[]; reads: readonly number[]; outline: readonly number[]; }; wording: number }
+  | { arm: "unreachable"; terms: {  }; marks: { stripes: readonly number[]; reads: readonly number[]; } }
+  | { arm: "intersection"; terms: {  }; marks: { stripes: readonly number[]; reads: readonly number[]; }; wording: number }
+;
+
 const lineFacts: number[] = [];
 let lineCands = new Int32Array(0);
 let line_p49 = new Int32Array(0);
@@ -214,7 +270,7 @@ let line_p113 = new Int32Array(0);
 let line_l114: readonly number[] = [];
 
 /** Its dearest read grows with the board as n. */
-export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding> | null): number {
+export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding, LineSays> | null): number {
   const _g34: number[] = [];
   if (line_p49.length < sp.cells.length) line_p49 = new Int32Array(sp.cells.length);
   else line_p49.fill(0);
@@ -231,6 +287,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
   let _y115 = false;
   const _m120 = new Int32Array(sp.cells.length);
   const _o119 = new Int32Array(sp.cells.length);
+  const _g196: number[] = [];
   const facts = lineFacts;
   let fired = 0;
   let changed = false;
@@ -245,13 +302,18 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
     const v_R = _h32;
     let _g52 = -1;
     let _g116 = -1;
+    const _h129 = listLength(v_R);
+    const _h130 = (_h129 === 0);
+    const _h134 = (_h129 - 1);
     R2:
     for (let _m33 = b.domain; _m33 !== 0; _m33 &= _m33 - 1) {
       const v_d = 31 - Math.clz32(_m33 & -_m33);
       const _h60 = (3 - v_d);
       const _h61 = _h60;
-      const _m129_0 = b.made[0];
-      const _m130_1 = b.made[1];
+      const _h131 = (v_d === 1);
+      const _h146 = (v_d === 2);
+      const _m241_0 = b.made[0];
+      const _m242_1 = b.made[1];
       _g34.length = 0;
       G35: {
         const _a47 = sp.lineCells[v_L];
@@ -286,7 +348,7 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
       for (let _i64 = 0; _i64 < _a63.length; _i64++) {
         const v_c = _a63[_i64];
         if (!((stretch(sp.lineCells[v_L], v_c, v_O).indexOf(v_c) === 0))) continue;
-        if (b.made[0] !== _m129_0 || b.made[1] !== _m130_1) {
+        if (b.made[0] !== _m241_0 || b.made[1] !== _m242_1) {
           _g65.length = 0;
           G66: {
             const _a78 = sp.lineCells[v_L];
@@ -373,7 +435,196 @@ export function line(b: Marks, sp: GridSpace, cl: Dealt, fire: Fire<LineBinding>
         if (!(_c128)) return -1;
         if (changed || facts.length > 0) {
           fired = 1;
-          if (fire !== null && !fire({ L: v_L, R: v_R, d: v_d, O: v_O.slice(), c: v_c }, facts)) return 1;
+          if (fire !== null) {
+            let _c145: boolean = _h131;
+            if (_c145) {
+              let _g132 = 0;
+              G133: {
+                for (let v_k = 0; v_k <= _h134; v_k++) {
+                  const _h139 = runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, true);
+                  const _h140 = _h139;
+                  const _h141 = runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, false);
+                  const _h142 = _h141;
+                  const _h143 = nth(v_R, v_k);
+                  const _h144 = (_h142 + _h143);
+                  let _q135 = true;
+                  Q136: {
+                    const _a137 = stretch(sp.lineCells[v_L], v_c, v_O);
+                    for (let _i138 = 0; _i138 < _a137.length; _i138++) {
+                      const v_x = _a137[_i138];
+                      if (!(((sp.lineCells[v_L].indexOf(v_x) >= _h140) && (sp.lineCells[v_L].indexOf(v_x) < _h144)))) {
+                        _q135 = false;
+                        break Q136;
+                      }
+                    }
+                  }
+                  if (!(_q135)) continue;
+                  _g132++;
+                }
+              }
+              _c145 = (_g132 > 0);
+            }
+            let _c153: boolean = _h146;
+            if (_c153) {
+              let _q147 = true;
+              Q148: {
+                const _a149 = stretch(sp.lineCells[v_L], v_c, v_O);
+                for (let _i150 = 0; _i150 < _a149.length; _i150++) {
+                  const v_x = _a149[_i150];
+                  let _q151 = false;
+                  Q152: {
+                    for (let v_k = 0; v_k <= _h134; v_k++) {
+                      if (((sp.lineCells[v_L].indexOf(v_x) >= runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, false)) && (sp.lineCells[v_L].indexOf(v_x) < (runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, true) + nth(v_R, v_k))))) {
+                        _q151 = true;
+                        break Q152;
+                      }
+                    }
+                  }
+                  if (!(!(_q151))) {
+                    _q147 = false;
+                    break Q148;
+                  }
+                }
+              }
+              _c153 = _q147;
+            }
+            let _arm = -1;
+            if (_h130) _arm = 0; else if (_c145) _arm = 1; else if (_c153) _arm = 2; else if (true) _arm = 3;
+            let _says: LineSays | null = null;
+            if (_arm === 0) {
+              _says = { arm: "lineEmpty", terms: {  }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+            }
+            if (_arm === 1) {
+              let _g154 = 0;
+              G155: {
+                const _t156 = stretch(sp.lineCells[v_L], v_c, v_O);
+                let _g157 = 0;
+                G158: {
+                  for (let v_k = 0; v_k <= _h134; v_k++) {
+                    const _h168 = runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, true);
+                    const _h169 = _h168;
+                    const _h170 = runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, false);
+                    const _h171 = _h170;
+                    const _h172 = nth(v_R, v_k);
+                    const _h173 = (_h171 + _h172);
+                    let _q164 = true;
+                    Q165: {
+                      const _a166 = _t156;
+                      for (let _i167 = 0; _i167 < _a166.length; _i167++) {
+                        const v_x = _a166[_i167];
+                        if (!(((sp.lineCells[v_L].indexOf(v_x) >= _h169) && (sp.lineCells[v_L].indexOf(v_x) < _h173)))) {
+                          _q164 = false;
+                          break Q165;
+                        }
+                      }
+                    }
+                    if (!(_q164)) continue;
+                    _g157 |= 1 << v_k;
+                  }
+                }
+                for (let _m174 = _g157; _m174 !== 0; _m174 &= _m174 - 1) {
+                  const v_k = 31 - Math.clz32(_m174 & -_m174);
+                  _g154 += nth(v_R, v_k);
+                }
+              }
+              const _sw_run = _g154;
+              let _g175 = 0;
+              G176: {
+                const _t177 = stretch(sp.lineCells[v_L], v_c, v_O);
+                let _g178 = 0;
+                G179: {
+                  for (let v_k = 0; v_k <= _h134; v_k++) {
+                    const _h189 = runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, true);
+                    const _h190 = _h189;
+                    const _h191 = runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, false);
+                    const _h192 = _h191;
+                    const _h193 = nth(v_R, v_k);
+                    const _h194 = (_h192 + _h193);
+                    let _q185 = true;
+                    Q186: {
+                      const _a187 = _t177;
+                      for (let _i188 = 0; _i188 < _a187.length; _i188++) {
+                        const v_x = _a187[_i188];
+                        if (!(((sp.lineCells[v_L].indexOf(v_x) >= _h190) && (sp.lineCells[v_L].indexOf(v_x) < _h194)))) {
+                          _q185 = false;
+                          break Q186;
+                        }
+                      }
+                    }
+                    if (!(_q185)) continue;
+                    _g178 |= 1 << v_k;
+                  }
+                }
+                for (let _m195 = _g178; _m195 !== 0; _m195 &= _m195 - 1) {
+                  const v_k = 31 - Math.clz32(_m195 & -_m195);
+                  _g175 += (runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, true) - runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, false));
+                }
+              }
+              const _sw_slack = _g175;
+              const _sw_stripes = sp.lineCells[v_L].slice();
+              const _sw_reads = sp.lineCells[v_L].slice();
+              _g196.length = 0;
+              G197: {
+                const _a217 = sp.lineCells[v_L];
+                for (let _i218 = 0; _i218 < _a217.length; _i218++) {
+                  const v_x = _a217[_i218];
+                  let _c240: boolean = ((b.grid[v_x] !== 0) && !(stretch(sp.lineCells[v_L], v_c, v_O).includes(v_x)));
+                  if (_c240) {
+                    let _q219 = false;
+                    Q220: {
+                      const _t221 = stretch(sp.lineCells[v_L], v_c, v_O);
+                      let _g222 = 0;
+                      G223: {
+                        for (let v_k = 0; v_k <= _h134; v_k++) {
+                          const _h233 = runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, true);
+                          const _h234 = _h233;
+                          const _h235 = runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, false);
+                          const _h236 = _h235;
+                          const _h237 = nth(v_R, v_k);
+                          const _h238 = (_h236 + _h237);
+                          let _q229 = true;
+                          Q230: {
+                            const _a231 = _t221;
+                            for (let _i232 = 0; _i232 < _a231.length; _i232++) {
+                              const v_x = _a231[_i232];
+                              if (!(((sp.lineCells[v_L].indexOf(v_x) >= _h234) && (sp.lineCells[v_L].indexOf(v_x) < _h238)))) {
+                                _q229 = false;
+                                break Q230;
+                              }
+                            }
+                          }
+                          if (!(_q229)) continue;
+                          _g222 |= 1 << v_k;
+                        }
+                      }
+                      for (let _m239 = _g222; _m239 !== 0; _m239 &= _m239 - 1) {
+                        const v_k = 31 - Math.clz32(_m239 & -_m239);
+                        if (((_i218 >= runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, false)) && (_i218 < (runStart(v_R, v_k, sp.lineCells[v_L].map((_x) => (b.grid[_x] || -1)), 1, true) + nth(v_R, v_k))))) {
+                          _q219 = true;
+                          break Q220;
+                        }
+                      }
+                    }
+                    _c240 = _q219;
+                  }
+                  if (!(_c240)) continue;
+                  _g196.push(v_x);
+                }
+              }
+              const _sw_outline = _g196.slice();
+              _says = { arm: "overlap", terms: { run: _sw_run, slack: _sw_slack }, marks: { stripes: _sw_stripes, reads: _sw_reads, outline: _sw_outline }, wording: (((_sw_slack === 0) && (_sw_outline.length === 0)) ? 0 : (_sw_slack === 0) ? 1 : (_sw_outline.length === 0) ? 2 : 3) };
+            }
+            if (_arm === 2) {
+              _says = { arm: "unreachable", terms: {  }, marks: { stripes: sp.lineCells[v_L].slice(), reads: sp.lineCells[v_L].slice() } };
+            }
+            if (_arm === 3) {
+              const _sw_stripes = sp.lineCells[v_L].slice();
+              const _sw_reads = sp.lineCells[v_L].slice();
+              _says = { arm: "intersection", terms: {  }, marks: { stripes: _sw_stripes, reads: _sw_reads }, wording: (_h131 ? 0 : 1) };
+            }
+            if (_says === null) throw new Error("line: no arm of says holds");
+            if (!fire({ L: v_L, R: v_R, d: v_d, O: v_O.slice(), c: v_c }, facts, _says)) return 1;
+          }
           cands.fill(-1);
           _epoch++;
         }

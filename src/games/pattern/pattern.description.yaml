@@ -1,6 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: pattern
+catalog:
+  name: Pattern
+  aliases: [Nonogram, Picross, Griddlers, Paint by Numbers]
+  description: Pattern puzzle
+  objective: Fill in the pattern in the grid, given only the lengths of runs of black squares.
+  collection: original
+  family: shading
+  similar: Nonograms, Picross®
 help:
   rules: |-
     Shade some of the squares in the grid, so that the numbers in each row
@@ -12,13 +20,10 @@ help:
     of its own, with a faint cross. A gray square with nothing in it is one
     you have not decided yet.
 
-    Drag along a row or column to give every undecided square on it what
-    the first square turned into. A drag whose first square turns back to
-    undecided erases instead, and it erases a whole rectangle, not just a
-    row or column. Hold Ctrl while moving the cursor to shade undecided
-    squares as you go, Shift to mark them clear, and both to return any
-    square to undecided. Like a drag, Ctrl or Shift alone leaves a square
-    you have already marked as it is.
+    Drag across several squares to make them all what the first one became.
+    Hold Shift while moving the cursor to mark clear every undecided square
+    it leaves and enters, or Ctrl to mark those squares clear even where
+    they are shaded.
   hints: |-
     **Hint** explains the next step rather than simply making it. Each step
     works along one row or column at a time, from its numbers and the
@@ -60,6 +65,22 @@ define:
   flip(d): "3 - d"
   # The shaded squares of the filling f of line L run as R says.
   fits(f, L, R): "run_lengths(L, {x in cells(L) where f(x) = 1}) = R"
+  # Where square x sits along line L, from its start.
+  pos(L, x): "index(x, cells(L))"
+  # The earliest and latest place run k of line L's runs R starts in any
+  # fit round what the line holds: a hint's words read them.
+  lo(L, R, k): "least_start(L, R, k, 1)"
+  hi(L, R, k): "greatest_start(L, R, k, 1)"
+  # Whether run k covers square x in every fit, between its latest start
+  # and its earliest end.
+  covers(L, R, k, x): "pos(L, x) >= hi(L, R, k) and pos(L, x) < lo(L, R, k) + nth(R, k)"
+  # Whether some run reaches square x in some fit.
+  reached(L, R, x): >-
+    exists k in range(0, |R| - 1):
+    pos(L, x) >= lo(L, R, k) and pos(L, x) < hi(L, R, k) + nth(R, k)
+  # The runs that cover every square of S in every fit: one at most, since
+  # two runs never share a square.
+  covering(L, R, S): "{k in range(0, |R| - 1) where forall x in S: covers(L, R, k, x)}"
 clues:
   # A row's or column's numbers: the lengths of its runs of shaded squares,
   # in order.
@@ -69,11 +90,54 @@ clues:
     value: "range(1, |cells(at)|)"
     means: "run_lengths(at, {c in cells(at) where value(c) = 1}) = v"
     complete: true
+  # A square dealt shaded or clear, which only upstream's own pictures
+  # carry.
+  given:
+    at: cell
+    value: "range(1, 2)"
+    means: "value(at) = v"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: mark it clear, key: X, glyph: " x ", paint: clear }
+  primary: 1
+  secondary: 2
+  # The answer is the shaded squares alone: an open square is clear.
+  blank: 2
+  click: cycle
+  stroke: sweep
+  dealt: given
+  # Upstream's sizes, and its 15x15 first.
+  boards: [10x10, 10x15, 15x15, 20x25, 30x30]
+  default: 15x15
+  # A line one square wide says square by square what it holds, and up to
+  # 3x3 every picture has been tried: neither has an Unreasonable board.
+  bounds:
+    tiers: { Unreasonable: { shorter: { min: 2 }, longer: { min: 4 } } }
+  hintMarks:
+    ring: the squares the step decides; the sentence says whether they must be shaded or clear.
+    outline: the squares already marked shaded or clear that hold a run in place.
+    stripes: the row or column the sentence names, running on through its numbers.
 deal:
   answer: a picture, random noise smoothed and cut at its median, no row or column all one value
   runs: every line's
-  tier: one of the tiers
+  tier: one of the tiers, a picture its tier does not finish drawn again
+  never: given
+  # Upstream's pattern.c `generate`: noise smoothed by one averaging pass,
+  # shaded at and above its median; a line across a side over two squares
+  # never all one value.
+  sample:
+    picture: { value: 1, rest: 2 }
+# Upstream's game ID: each line's numbers, the columns first, `.` between
+# two and `/` between lines; then, where a square is dealt, `,` and the
+# dealt squares as dot runs, a shaded one's letter uppercase.
+id:
+  - lists: runs
+    order: columns
+  - dots: given
+    cases: [2, 1]
+    before: ","
 tiers: [Easy, Unreasonable]
 names:
   line: "every way a line's runs fit"
@@ -91,47 +155,49 @@ techniques:
     conclude: >-
       (exists fill f of cells(L) from cand where f(c) = d: fits(f, L, R))
       and (forall x in stretch(L, c, O): place(x, d))
-phrases:
-  # The line a step reasons along, striped.
-  thisLine: "{stripes line: this {axis}}"
-  # Where a step cites placed squares.
-  given: ", given {outline cell}"
-steps:
-  # A firing of `line` is told one of four ways, by what its squares are on
-  # the line, which the planner reads off the runs' packings (`solver.ts`):
-  # no formula states a run's least and greatest start.
-  # A run that covers the same squares in every fit.
-  overlap:
-    ring: cell
-    terms: { axis: unit, run: number, slack: number }
-    marks: { stripes: [line], outline: [clue, cell] }
-    move: "{ring} must be {shaded}"
-    wordings:
-      - when: "slack = 0 and |outlineCell| = 0"
-        look: "{thisLine}'s {outline clue: run of {run}} has nowhere to slide"
-      - when: "slack = 0"
-        look: "{thisLine}'s {outline clue: run of {run}} has nowhere to slide{given}"
-      - when: "|outlineCell| = 0"
-        look: "{thisLine}'s {outline clue: run of {run}} can slide only {slack} {slack: square | squares}"
-      - look: "{thisLine}'s {outline clue: run of {run}} can slide only {slack} {slack: square | squares}{given}"
-  # Squares out of every run's reach.
-  unreachable:
-    ring: cell
-    terms: { axis: unit }
-    marks: { stripes: [line], outline: [clue] }
-    look: "No run of {thisLine}'s {outline clue: outlined clue} can reach {ring: the ringed square | the ringed squares}"
-    move: "{ring: that square | those squares} must be {unshaded}"
-  # A line with no runs.
-  lineEmpty:
-    ring: cell
-    terms: { axis: unit }
-    marks: { stripes: [line] }
-    look: "{thisLine} has no clues"
-    move: "{ring} must be {unshaded}"
-  # None of those: every fit of the runs agrees.
-  intersection:
-    ring: cell
-    terms: { axis: unit, covers: flag }
-    marks: { stripes: [line], outline: [clue] }
-    look: "Every way {thisLine}'s {outline clue: outlined runs} can fit {if covers: covers | leaves out} {ring: the ringed square | the ringed squares}"
-    move: "{ring: that square | those squares} must be {if covers: {shaded} | {unshaded}}"
+    # A firing is told one of four ways, by what its squares are on the
+    # line: a run's overlap, out of every run's reach, a line with no runs,
+    # or none of those, which is every fit agreeing. Every square a firing
+    # decides holds its value in every fit, so placing them leaves the fits,
+    # and the starts, as they were. The stripes run on through the line's
+    # numbers, so "its runs" points at them.
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      arms:
+        lineEmpty:
+          when: "|R| = 0"
+          look: "{stripes: this {unit}} has no clues"
+          move: "{ring} must be {unshaded}"
+        overlap:
+          when: "d = 1 and |covering(L, R, stretch(L, c, O))| > 0"
+          terms:
+            run: "sum(k in covering(L, R, stretch(L, c, O)) of nth(R, k))"
+            slack: "sum(k in covering(L, R, stretch(L, c, O)) of hi(L, R, k) - lo(L, R, k))"
+          # The squares already marked between the run's earliest start
+          # and its latest end, which hold it where it is.
+          marks:
+            outline: >-
+              {x in cells(L) where known(x) and x not in stretch(L, c, O)
+              and (exists k in covering(L, R, stretch(L, c, O)):
+              pos(L, x) >= lo(L, R, k) and pos(L, x) < hi(L, R, k) + nth(R, k))}
+          move: "{ring} must be {shaded}"
+          wordings:
+            - when: "slack = 0 and |outline| = 0"
+              look: "{stripes: this {unit}}'s run of {run} has nowhere to slide"
+            - when: "slack = 0"
+              look: "{stripes: this {unit}}'s run of {run} has nowhere to slide, given {outline}"
+            - when: "|outline| = 0"
+              look: "{stripes: this {unit}}'s run of {run} can slide only {slack} {slack: square | squares}"
+            - look: "{stripes: this {unit}}'s run of {run} can slide only {slack} {slack: square | squares}, given {outline}"
+        unreachable:
+          when: "d = 2 and (forall x in stretch(L, c, O): not reached(L, R, x))"
+          look: "No run of {stripes: this {unit}} can reach {ring: the ringed square | the ringed squares}"
+          move: "{ring: that square | those squares} must be {unshaded}"
+        intersection:
+          when: "true"
+          wordings:
+            - when: "d = 1"
+              look: "Every way {stripes: this {unit}}'s runs can fit covers {ring: the ringed square | the ringed squares}"
+              move: "{ring: that square | those squares} must be {shaded}"
+            - look: "Every way {stripes: this {unit}}'s runs can fit leaves out {ring: the ringed square | the ringed squares}"
+              move: "{ring: that square | those squares} must be {unshaded}"

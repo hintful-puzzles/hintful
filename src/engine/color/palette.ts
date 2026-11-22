@@ -347,7 +347,8 @@ export const SHADED: Color = TWO[0];
  * a game whose board is colored half and half (Mosaic, Pattern, Bricks), where the
  * state that is not shaded says as much as the shaded one. A surface of its
  * own in the hue of the pair's second member, so a part-solved board is two
- * colors on the undecided gray. `drawClearSquare` (`piece.ts`) draws it. A
+ * colors on the undecided gray. The `clear` painter (`pieces/stock.ts`)
+ * draws it. A
  * game where a few squares are the answer and the rest is a note keeps the
  * bare cross ({@link RULED_OUT}).
  */

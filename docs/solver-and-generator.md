@@ -308,9 +308,10 @@ does not throw. Exemplar: `filling/index.ts`.
 three things for [`engine/solve/answer-search.ts`](../src/engine/solve/answer-search.ts):
 the deduction with a verdict, what to assume where it stops, and what the
 deal draws.** The loop, its bound, the contract and the caching are the
-engine's, and its header says which export is which. Copy
-[`pattern/`](../src/games/pattern/). A player meets "trial and error" only on
-a tier with that name.
+engine's, and its header says which export is which. A game born from its
+description has all of it from the fill engine (`engine/fill/search.ts` and
+`deal.ts`); a hand-written one copies [`filling/`](../src/games/filling/). A
+player meets "trial and error" only on a tier with that name.
 
 - **`searchAnswers` counts answers to two** by trial and error over the
   game's own deduction: one answer, several, none, or out of reach once its
@@ -702,8 +703,8 @@ measured cost:
 
 1. **Narrate everything the gate accepts.** Promote the catch-all into an
    honest technique, even a non-local or tedious one. This keeps every
-   generated board. Exemplar: the single-line-intersection bottom rung in
-   [`pattern/solver.ts`](../src/games/pattern/solver.ts).
+   generated board. Exemplar: the `intersection` arm of Pattern's `line`
+   ([`pattern.description.yaml`](../src/games/pattern/pattern.description.yaml)).
 2. **Reject at generation.** Accept a board only if the narratable techniques
    solve it to completion. This shrinks the generated set, so measure the
    rejection rate first: a teachable set much weaker than the full solver can

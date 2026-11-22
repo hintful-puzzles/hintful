@@ -245,6 +245,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -310,6 +311,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -721,6 +723,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -793,6 +796,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -1012,6 +1016,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -1116,6 +1121,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -1231,20 +1237,24 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
-      "h",
+      "lists",
+      "marks",
+      "parts",
       "tileSize",
       "tiles",
-      "w",
     ],
     "id": "pattern",
     "members": [
+      "animLength",
       "clearMistakes",
       "difficulty",
       "findMistakes",
       "hint",
+      "hint.gesture",
       "hint.judgeMove",
-      "hint.targets",
+      "hint.refreshStep",
       "revealOne",
+      "rules",
       "targetVerbs",
       "textFormat",
       "transposeParams",
@@ -1254,8 +1264,9 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
       "cursor",
       "drag",
       "dragButton",
-      "releaseButton",
-      "state",
+      "dragOk",
+      "linkArmed",
+      "washedMarks",
     ],
   },
   {
@@ -1322,6 +1333,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -1830,6 +1842,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -1865,6 +1878,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -1932,6 +1946,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",
@@ -2156,6 +2171,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "lists",
       "marks",
       "parts",
       "tileSize",

@@ -165,6 +165,73 @@ export function nth(l: ArrayLike<number> | null, i: number): number {
   return l === null || i < 0 || i >= l.length ? -1 : l[i];
 }
 
+/**
+ * Each run's start packed as far towards the line's start as the marks
+ * allow, the least start it has in any fit; `null` where none fits. `held`
+ * is each square's value, `v` the runs' and any other value a square no run
+ * covers, 0 or less an open square. A run starts no earlier than the one
+ * before it ends, past a gap, nor where it would cover a square of another
+ * value, nor so late it leaves a square of `v` behind it uncovered.
+ */
+function packed(
+  R: ArrayLike<number>,
+  held: ArrayLike<number>,
+  v: number,
+): number[] | null {
+  const len = held.length;
+  const starts = new Array<number>(R.length);
+  const isV = (i: number) => held[i] === v;
+  const isOther = (i: number) => held[i] > 0 && held[i] !== v;
+  const rec = (k: number, pos: number): boolean => {
+    if (k === R.length) {
+      for (let i = pos; i < len; i++) if (isV(i)) return false;
+      return true;
+    }
+    const r = R[k];
+    let firstV = len;
+    for (let i = pos; i < len; i++)
+      if (isV(i)) {
+        firstV = i;
+        break;
+      }
+    for (let start = pos; start <= Math.min(len - r, firstV); start++) {
+      let fits = true;
+      for (let j = 0; j < r && fits; j++) if (isOther(start + j)) fits = false;
+      if (!fits || (start + r < len && isV(start + r))) continue;
+      if (rec(k + 1, start + r + 1)) {
+        starts[k] = start;
+        return true;
+      }
+    }
+    return false;
+  };
+  return rec(0, 0) ? starts : null;
+}
+
+/**
+ * `least_start(L, R, k, v)` and `greatest_start(L, R, k, v)`: the earliest
+ * or the latest place on the line where run `k` of the runs `R` of value
+ * `v` starts in any fit round the line's values `held` (0 or less where a
+ * square has none), or none (`-1`) where no fit is left or `k` names no run.
+ * The least starts are one packing of every run as early as it goes, whose
+ * run `k` starts no later than in any fit; the greatest, the same of the
+ * line read backwards (the nonogram solver's left-right overlap). Read by a
+ * hint's words, not by a technique's conclusion.
+ */
+export function runStart(
+  R: ArrayLike<number> | null,
+  k: number,
+  held: ArrayLike<number>,
+  v: number,
+  last: boolean,
+): number {
+  if (R === null || k < 0 || k >= R.length) return -1;
+  if (!last) return packed(R, held, v)?.[k] ?? -1;
+  const n = R.length;
+  const back = packed(Array.from(R).reverse(), Array.from(held).reverse(), v);
+  return back === null ? -1 : held.length - back[n - 1 - k] - R[k];
+}
+
 /** `runs(L, S)`: the lengths of the maximal runs of `S` along the line
  * `L`, in `L`'s order. */
 export function runsOf(L: readonly number[], S: readonly number[]): Int32Array {

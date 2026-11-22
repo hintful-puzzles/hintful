@@ -47,6 +47,8 @@ const EARLY = new Set([
   "v",
   "stretch",
   "run_lengths",
+  "least_start",
+  "greatest_start",
   "connected",
   "cuts",
   "cut_edges",

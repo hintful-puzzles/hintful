@@ -1,543 +1,196 @@
 /**
- * Behavioral tests for the Pattern (Nonograms) port.
- * Tier 1 — params/desc codec, solver, findMistakes, moves, completion.
- * Tier 2.5 — a render scenario through a real Midend with a snapshot.
+ * Pattern, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is upstream's IDs, list
+ * clues and given squares included, the tiers a board opens at, the four
+ * ways a step is told, and the margins the lists are drawn in.
  */
+
 import { describe, expect, it } from "vitest";
-import { COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
 import {
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  descBadCharacter,
-  validateDesc,
+  DESC_CONTRADICTORY,
+  DESC_NOT_UNIQUE,
 } from "../../engine/contract/desc-error.ts";
-import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { paramsError } from "../../engine/game-id/params.ts";
-import {
-  CURSOR_RIGHT,
-  CURSOR_SELECT,
-  LEFT_BUTTON,
-  LEFT_DRAG,
-  LEFT_RELEASE,
-  MOD_CTRL,
-  MOD_SHFT,
-} from "../../engine/input/pointer.ts";
+import { newBoard, solveBoard, spaceOf } from "../../engine/fill/board.ts";
+import { encodeDesc } from "../../engine/fill/game-id.ts";
+import { searchBoard } from "../../engine/fill/search.ts";
 import { Midend } from "../../engine/midend/midend.ts";
 import { randomNew } from "../../engine/random/index.ts";
-import { type Flash, sweepStep } from "../../engine/render/win-wave.ts";
-import { DIFF_EASY, DIFF_UNREASONABLE } from "../../engine/solve/answer-search.ts";
-import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
 import {
-  DEFAULT_BACKGROUND,
-  renderScenario,
-} from "../../engine/testing/render-scenario.ts";
-import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import { newPatternDesc } from "./generator.ts";
-import { patternGame } from "./index.ts";
-import { COL_CELL, COL_CLEAR, COL_FULL, fromCoord } from "./render.ts";
-import { findMistakes, isComplete, solveState, status } from "./solver.ts";
-import {
-  computeRuns,
-  decodeParams,
-  encodeClues,
-  encodeParams,
-  executeMove,
-  GRID_EMPTY,
-  GRID_FULL,
-  GRID_UNKNOWN,
-  type GridVal,
-  newState,
-  type PatternMove,
-  type PatternParams,
-  type PatternState,
-} from "./state.ts";
+  describeAbsentTiers,
+  describeDealtTiers,
+} from "../../engine/testing/absent-tiers.ts";
+import * as pattern from "../../generated/games/pattern/pattern.compiled.ts";
+import { game } from "../../generated/games/pattern/pattern.game.ts";
 
-const easy = (w: number, h: number): PatternParams => ({ w, h, diff: DIFF_EASY });
-const unreasonable = (w: number, h: number): PatternParams => ({
-  w,
-  h,
-  diff: DIFF_UNREASONABLE,
-});
+const SHADED = 1;
+const CLEAR = 2;
 
-function genState(
-  p: PatternParams,
-  seed: string,
-): { state: PatternState; desc: string } {
-  const { desc } = newPatternDesc(p, randomNew(seed));
-  return { state: newState(p, desc), desc };
-}
+/** Boards by their game IDs: a recorded 5x5, one that needs search, and
+ * two with given squares, which only upstream's own pictures carry. */
+const UPSTREAM = [
+  "5x5:4/2.2/2/1/2/2/2/1/3.1/4",
+  "5x5:1.1/3/3/3/2/3/3/3/2/1.1",
+  "2x2:1/1/1/1,aBb",
+  "2x2:1/2//1,Bc",
+];
 
-/** Apply the unique solution to a fresh state cell-by-cell via real fills. */
-function applySolution(state: PatternState, solution: Uint8Array): PatternState {
-  const { w, h } = state.common;
-  let st = state;
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const v = solution[y * w + x] === GRID_FULL ? GRID_FULL : GRID_EMPTY;
-      st = executeMove(st, { type: "fill", value: v, x, y, w: 1, h: 1 });
-    }
-  }
-  return st;
-}
+/** A 10x10 board the old spec read its hint on. */
+const TEN = "8/6.1/4.1.1.1/4.1/4.3/2/2/2.2/2.1.2/1.2/3.2/3.2/5/5/2.2/5/1.2/3.1/6/8";
 
-describe("pattern params", () => {
-  it("round-trips and decodes a bare square dimension", () => {
-    expect(encodeParams(easy(20, 15), true)).toBe("20x15de");
-    expect(encodeParams(unreasonable(20, 15), true)).toBe("20x15du");
-    expect(decodeParams("20x15du")).toEqual(unreasonable(20, 15));
-    // The shared form leaves the tier out, and a board is graded as it loads.
-    expect(encodeParams(unreasonable(20, 15), false)).toBe("20x15");
-    expect(decodeParams("10")).toEqual(easy(10, 10));
-  });
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
+};
 
-  it("reads an ID written before the game had tiers as Easy", () => {
-    expect(decodeParams("20x15")).toEqual(easy(20, 15));
-  });
+/** What a pasted ID opens as: its params, or the refusal. */
+const opened = (id: string) => {
+  const me = new Midend(game);
+  return me.newGameFromId(id) ?? me.getParams();
+};
 
-  it("rejects invalid params", () => {
-    expect(paramsError(patternGame, easy(0, 5), true)).toBe(
-      "Width must be at least 1.",
-    );
-    expect(paramsError(patternGame, easy(5, -1), true)).toBe(
-      "Height must be at least 1.",
-    );
-    expect(paramsError(patternGame, easy(10, 10), true)).toBeNull();
-  });
-});
-
-describe("pattern desc codec", () => {
-  it("round-trips a clue desc through newState/encodeClues", () => {
-    const desc = "4/2.2/2/1/2/2/2/1/3.1/4"; // a recorded 5x5 board
-    const st = newState(easy(5, 5), desc);
-    expect(encodeClues(st.common.clues)).toBe(desc);
-  });
-
-  it("accepts a generated desc and rejects malformed ones", () => {
-    const { desc } = genState(easy(10, 10), "pattern-desc-1");
-    expect(validateDesc(patternGame, easy(10, 10), desc)).toBeNull();
-    // Too few line specifications.
-    expect(validateDesc(patternGame, easy(5, 5), "1/2/3")).toBe(DESC_TOO_SHORT);
-    // Unrecognized character.
-    expect(validateDesc(patternGame, easy(2, 2), "1/2/!/1")).toBe(
-      descBadCharacter("!"),
-    );
-    // A clue longer than its line, and clues that together overfill it.
-    expect(validateDesc(patternGame, easy(3, 3), "9/1/1/1/1/1")).toBe(
-      DESC_OUT_OF_RANGE,
-    );
-    expect(validateDesc(patternGame, easy(3, 3), "2.2/1/1/1/1/1")).toMatch(
-      /a column whose clues/,
-    );
-    expect(validateDesc(patternGame, easy(3, 3), "1/1/1/1/1/2.2")).toMatch(
-      /a row whose clues/,
-    );
-  });
-
-  it("reads exactly what the encoder writes, and upstream's clue squares", () => {
-    const v = (desc: string) => validateDesc(patternGame, easy(2, 2), desc);
-    expect(v("1/2//1")).toBeNull();
-    // A NUL is a character like any other, not the end of a line.
-    expect(v("1\0/2//1")).toBe(descBadCharacter("\0"));
-    expect(v("1/2//1x")).toBe(DESC_TOO_LONG);
-    expect(v("1/2//1/")).toBe(DESC_TOO_LONG);
-    expect(v("1/0//1")).toMatch(/a clue of 0/);
-    // Clue squares: `b` skips one square and places a white one at index 1;
-    // `c` lands on the end and is the tail.
-    expect(v("1/2//1,bc")).toBeNull();
-    expect(newState(easy(2, 2), "1/2//1,Bc").common.immutable).toEqual(
-      Uint8Array.of(0, 1, 0, 0),
-    );
-    expect(v("1/2//1,bd")).toBe(DESC_TOO_LONG);
-    expect(v("1/2//1,b")).toBe(DESC_TOO_SHORT);
-    // The Kelvin sign lowercases to `k`, which is no reason to read it as one.
-    expect(v("1/2//1,K")).toBe(descBadCharacter("K"));
-  });
-});
-
-describe("pattern solver", () => {
-  it("fully cracks every generated board (the uniqueness gate)", () => {
-    for (const seed of ["s-a", "s-b", "s-c"]) {
-      const { state } = genState(easy(10, 10), seed);
-      const solution = solveState(state);
-      expect(solution).not.toBeNull();
-      if (!solution) continue;
-      // The solution reproduces every clue.
-      const { w, h, clues } = state.common;
-      for (let i = 0; i < w; i++) {
-        expect(computeRuns(solution, i, h, w)).toEqual(clues[i]);
-      }
-      for (let i = 0; i < h; i++) {
-        expect(computeRuns(solution, i * w, w, 1)).toEqual(clues[w + i]);
-      }
+describe("pattern", () => {
+  it("reads each line's list, the columns first, and writes the desc back", () => {
+    const board = loaded("5x5:4/2.2/2/1/2/2/2/1/3.1/4");
+    const lists = (L: number) =>
+      Array.from(board.dealt.runs.lists[board.dealt.runs.byAt[L]]);
+    // The space numbers the rows first, then the columns.
+    expect([0, 1, 2, 3, 4].map(lists)).toEqual([[2], [2], [1], [3, 1], [4]]);
+    expect([5, 6, 7, 8, 9].map(lists)).toEqual([[4], [2, 2], [2], [1], [2]]);
+    for (const id of UPSTREAM) {
+      const b = loaded(id);
+      expect(encodeDesc(pattern.deal, spaceOf(pattern, b), b.dealt), id).toBe(
+        id.split(":")[1],
+      );
     }
   });
-});
 
-describe("pattern findMistakes", () => {
-  it("flags only player cells that contradict the unique solution", () => {
-    const { state } = genState(easy(10, 10), "mistake-seed");
-    const solution = solveState(state);
-    expect(solution).not.toBeNull();
-    if (!solution) return;
-
-    // A fresh all-unknown board has no mistakes.
-    expect(findMistakes(state)).toEqual([]);
-
-    // The fully-correct board has no mistakes.
-    const solved = applySolution(state, solution);
-    expect(findMistakes(solved)).toEqual([]);
-
-    // Flip one cell to the wrong color → exactly that cell is flagged.
-    const wrong = solution[0] === GRID_FULL ? GRID_EMPTY : GRID_FULL;
-    const dirty = executeMove(solved, {
-      type: "fill",
-      value: wrong,
-      x: 0,
-      y: 0,
-      w: 1,
-      h: 1,
-    });
-    expect(findMistakes(dirty)).toEqual([{ x: 0, y: 0, kind: "cell" }]);
+  it("writes its text with the columns' lists above and the rows' after", () => {
+    const board = loaded("2x2:/1//1");
+    expect(game.textFormat?.(board)).toBe(
+      [
+        "       1",
+        "+---+---+",
+        "| . | . |",
+        "+---+---+",
+        "| . | . | 1",
+        "+---+---+",
+        "",
+      ].join("\n"),
+    );
   });
-});
 
-describe("pattern moves and completion", () => {
-  it("a fill applies a rectangle and a no-op fill leaves the board", () => {
-    const st = newState(easy(5, 5), "4/2.2/2/1/2/2/2/1/3.1/4");
-    const filled = executeMove(st, {
-      type: "fill",
-      value: GRID_FULL,
-      x: 1,
-      y: 1,
-      w: 2,
-      h: 2,
-    });
-    for (const [x, y] of [
-      [1, 1],
-      [2, 1],
-      [1, 2],
+  it("reads a params string with no height or no tier as upstream wrote it", () => {
+    expect(game.encodeParams(game.decodeParams("20x15"), true)).toBe("20x15de");
+    expect(game.encodeParams(game.decodeParams("10"), true)).toBe("10x10de");
+  });
+
+  it("deals given squares fixed, shaded by an uppercase letter", () => {
+    // `a` places a clear square at once, `B` skips one and places a shaded
+    // one, and the last letter lands on the end.
+    const board = loaded("2x2:1/1/1/1,aBb");
+    expect(Array.from(board.dealt.given.at)).toEqual([0, 2]);
+    expect(Array.from(board.dealt.given.v)).toEqual([2, 1]);
+    expect(Array.from(board.fixed)).toEqual([1, 0, 1, 0]);
+    expect(opened("2x2:1/1/1/1,aBb")).toBe("2x2de");
+  });
+
+  it("refuses a desc that is not one", () => {
+    const v = (desc: string) => opened(`2x2:${desc}`);
+    expect(v("/1//1")).toBe("2x2de");
+    expect(v("/1//1x")).toMatch(/\.$/);
+    expect(v("/1//1/")).toMatch(/\.$/);
+    // A run is at least one square and at most its line.
+    expect(v("/0//1")).toMatch(/\.$/);
+    expect(v("/3//1")).toMatch(/\.$/);
+    // Runs that overfill their line have no answer.
+    expect(v("/1.1//1")).toBe(DESC_CONTRADICTORY);
+    expect(v("/1//1,bd")).toMatch(/\.$/);
+    expect(v("/1//1,b")).toMatch(/\.$/);
+    expect(opened("5x5:1/2/3")).toMatch(/\.$/);
+  });
+
+  it("opens a pasted board at the tier it needs, and refuses one without one answer", () => {
+    expect(opened("5x5:1.1/3/3/3/2/3/3/3/2/1.1")).toBe("5x5du");
+    expect(opened("5x5de:1.1/3/3/3/2/3/3/3/2/1.1")).toBe("5x5du");
+    expect(opened("5x5:4/2.2/2/1/2/2/2/1/3.1/4")).toBe("5x5de");
+    expect(opened("2x2:1/1/1/1")).toBe(DESC_NOT_UNIQUE);
+    expect(opened("2x2:2/2//")).toBe(DESC_CONTRADICTORY);
+  });
+
+  it("has no Unreasonable board up to 3x3, nor one a square wide", () => {
+    // Every picture of each size: where the lines stop short, a second
+    // picture fits, so the description's bounds refuse these sizes.
+    let stuck = 0;
+    for (const [w, h] of [
       [2, 2],
-    ]) {
-      expect(filled.grid[y * 5 + x]).toBe(GRID_FULL);
-    }
-    expect(filled.grid[0]).toBe(GRID_UNKNOWN);
-  });
-
-  it("completes when fills reproduce the solution", () => {
-    const { state } = genState(easy(5, 5), "complete-seed");
-    const solution = solveState(state);
-    expect(solution).not.toBeNull();
-    if (!solution) return;
-    const solved = applySolution(state, solution);
-    expect(isComplete(solved)).toBe(true);
-    expect(status(solved)).toBe("solved");
-  });
-
-  it("a solve move solves the board", () => {
-    const { state } = genState(easy(5, 5), "solve-seed");
-    const sol = solveState(state);
-    expect(sol).not.toBeNull();
-    if (!sol) return;
-    let grid = "";
-    for (let i = 0; i < sol.length; i++) grid += sol[i] === GRID_FULL ? "1" : "0";
-    const move: PatternMove = { type: "solve", grid };
-    const after = executeMove(state, move);
-    expect(status(after)).toBe("solved");
-  });
-
-  it("cursor select reveals the cursor, then cycles a cell", () => {
-    const st = newState(easy(5, 5), "4/2.2/2/1/2/2/2/1/3.1/4");
-    const ui = patternGame.newUi(st);
-    // First select just reveals the cursor.
-    expect(
-      patternGame.interpretMove(
-        st,
-        ui,
-        preferredDrawState(patternGame, st),
-        { x: 0, y: 0 },
-        CURSOR_SELECT,
-      ),
-    ).toBe(UI_UPDATE);
-    expect(ui.cursor.visible).toBe(true);
-    // Second select cycles the (0,0) cell UNKNOWN → FULL.
-    const move = patternGame.interpretMove(
-      st,
-      ui,
-      preferredDrawState(patternGame, st),
-      { x: 0, y: 0 },
-      CURSOR_SELECT,
-    );
-    expect(move).toEqual({ type: "fill", value: GRID_FULL, x: 0, y: 0, w: 1, h: 1 });
-  });
-});
-
-describe("pattern drag-paint skips placed marks", () => {
-  const base = () => newState(easy(5, 5), "4/2.2/2/1/2/2/2/1/3.1/4");
-
-  it("an onlyBlank fill paints blanks but leaves existing marks", () => {
-    // Place EMPTY at (0,0), then drag FULL across the top row with onlyBlank.
-    let st = executeMove(base(), {
-      type: "fill",
-      value: GRID_EMPTY,
-      x: 0,
-      y: 0,
-      w: 1,
-      h: 1,
-    });
-    st = executeMove(st, {
-      type: "fill",
-      value: GRID_FULL,
-      x: 0,
-      y: 0,
-      w: 4,
-      h: 1,
-      onlyBlank: true,
-    });
-    expect(st.grid[0]).toBe(GRID_EMPTY); // the placed mark is untouched
-    expect([st.grid[1], st.grid[2], st.grid[3]]).toEqual([
-      GRID_FULL,
-      GRID_FULL,
-      GRID_FULL,
-    ]);
-  });
-
-  it("a single-cell fill (no onlyBlank) still overwrites a mark", () => {
-    let st = executeMove(base(), {
-      type: "fill",
-      value: GRID_EMPTY,
-      x: 0,
-      y: 0,
-      w: 1,
-      h: 1,
-    });
-    st = executeMove(st, { type: "fill", value: GRID_FULL, x: 0, y: 0, w: 1, h: 1 });
-    expect(st.grid[0]).toBe(GRID_FULL); // a deliberate click can change a mark
-  });
-
-  it("interpretMove flags a multi-cell paint drag onlyBlank, a single cell not", () => {
-    const st = base();
-    const drag = (endX: number) => {
-      const ui = patternGame.newUi(st);
-      Object.assign(ui, {
-        dragButton: LEFT_DRAG,
-        releaseButton: LEFT_RELEASE,
-        state: GRID_FULL,
-      });
-      Object.assign(ui.drag, { live: true, sx: 0, sy: 0, ex: endX, ey: 0 });
-      return patternGame.interpretMove(
-        st,
-        ui,
-        preferredDrawState(patternGame, st),
-        { x: 0, y: 0 },
-        LEFT_RELEASE,
-      );
-    };
-    expect(drag(3)).toMatchObject({ type: "fill", onlyBlank: true, w: 4 });
-    // A drag that never left its square is a click, whose move overwrites.
-    const one = drag(0);
-    expect(one).toMatchObject({ type: "fill", w: 1 });
-    expect(one).not.toMatchObject({ onlyBlank: true });
-  });
-
-  // The tests above reach `interpretMove` only at the release, with the drag's
-  // anchor written onto the `Ui` by hand — so nothing ran the press handler
-  // that sets it. Measured: swapping the two coordinates it writes passed all
-  // 38 pattern tests. These drive press → drag → release through
-  // `interpretMove`, which is the only way the anchor is exercised at all.
-  describe("driven through interpretMove from the press", () => {
-    /** Pixel center of cell `(x, y)`, through the game's own geometry. */
-    function rig() {
-      const st = base();
-      const ui = patternGame.newUi(st);
-      const ds = preferredDrawState(patternGame, st);
-      const ts = (ds as { tileSize: number }).tileSize;
-      const b =
-        Math.floor((3 * ts) / 4) + Math.floor(ts / 2) + ts * (Math.floor(5 / 5) + 2);
-      const at = (x: number, y: number) => ({ x: b + x * ts + 1, y: b + y * ts + 1 });
-      return { st, ui, ds, at };
-    }
-
-    it("anchors the drag at the pressed cell, not at its transpose", () => {
-      const { st, ui, ds, at } = rig();
-      patternGame.interpretMove(st, ui, ds, at(3, 1), LEFT_BUTTON);
-      expect([ui.drag.sx, ui.drag.sy]).toEqual([3, 1]);
-      expect([ui.drag.ex, ui.drag.ey]).toEqual([3, 1]);
-    });
-
-    it("snaps a paint drag to the axis it moved furthest along", () => {
-      const { st, ui, ds, at } = rig();
-      patternGame.interpretMove(st, ui, ds, at(1, 1), LEFT_BUTTON);
-      // 3 across, 1 down — horizontal wins, so the row is held.
-      patternGame.interpretMove(st, ui, ds, at(4, 2), LEFT_DRAG);
-      expect([ui.drag.ex, ui.drag.ey]).toEqual([4, 1]);
-
-      // And the other way round.
-      patternGame.interpretMove(st, ui, ds, at(1, 1), LEFT_BUTTON);
-      patternGame.interpretMove(st, ui, ds, at(2, 4), LEFT_DRAG);
-      expect([ui.drag.ex, ui.drag.ey]).toEqual([1, 4]);
-    });
-
-    it("commits the swept row as one onlyBlank fill", () => {
-      const { st, ui, ds, at } = rig();
-      patternGame.interpretMove(st, ui, ds, at(1, 2), LEFT_BUTTON);
-      patternGame.interpretMove(st, ui, ds, at(3, 2), LEFT_DRAG);
-      const move = patternGame.interpretMove(st, ui, ds, at(3, 2), LEFT_RELEASE);
-      expect(move).toMatchObject({
-        type: "fill",
-        value: GRID_FULL,
-        x: 1,
-        y: 2,
-        w: 3,
-        h: 1,
-        onlyBlank: true,
-      });
-      expect(ui.drag.live).toBe(false);
-    });
-
-    it("a press outside the grid starts no drag", () => {
-      const { st, ui, ds } = rig();
-      expect(patternGame.interpretMove(st, ui, ds, { x: 1, y: 1 }, LEFT_BUTTON)).toBe(
-        null,
-      );
-      expect(ui.drag.live).toBe(false);
-    });
-  });
-
-  it("a clear drag (middle/UNKNOWN) still erases placed marks", () => {
-    let st = executeMove(base(), {
-      type: "fill",
-      value: GRID_FULL,
-      x: 0,
-      y: 0,
-      w: 3,
-      h: 1,
-    });
-    // A clear is never onlyBlank, so it resets marked cells to UNKNOWN.
-    st = executeMove(st, { type: "fill", value: GRID_UNKNOWN, x: 0, y: 0, w: 3, h: 1 });
-    expect([st.grid[0], st.grid[1], st.grid[2]]).toEqual([
-      GRID_UNKNOWN,
-      GRID_UNKNOWN,
-      GRID_UNKNOWN,
-    ]);
-  });
-});
-
-describe("pattern keyboard stroke skips placed marks", () => {
-  /** The top row's first two squares set to `marks`, the cursor on (0,0), and
-   * one arrow right with `mods` held: the move and the board after it. */
-  function stroke(marks: [GridVal, GridVal], mods: number) {
-    let st = newState(easy(5, 5), "4/2.2/2/1/2/2/2/1/3.1/4");
-    marks.forEach((value, x) => {
-      st = executeMove(st, { type: "fill", value, x, y: 0, w: 1, h: 1 });
-    });
-    const ui = patternGame.newUi(st);
-    const move = patternGame.interpretMove(
-      st,
-      ui,
-      preferredDrawState(patternGame, st),
-      { x: 0, y: 0 },
-      CURSOR_RIGHT | mods,
-    );
-    const after =
-      move !== null && move !== UI_UPDATE ? executeMove(st, move as PatternMove) : st;
-    return { move, ui, cells: [after.grid[0], after.grid[1]] };
-  }
-
-  it("shades the blank square and leaves the one marked clear", () => {
-    const { cells, ui } = stroke([GRID_EMPTY, GRID_UNKNOWN], MOD_CTRL);
-    expect(cells).toEqual([GRID_EMPTY, GRID_FULL]);
-    expect(ui.cursor.x).toBe(1);
-  });
-
-  it("marks the blank square clear and leaves the shaded one", () => {
-    const { cells } = stroke([GRID_UNKNOWN, GRID_FULL], MOD_SHFT);
-    expect(cells).toEqual([GRID_EMPTY, GRID_FULL]);
-  });
-
-  it("makes no move over two marked squares, and still moves the cursor", () => {
-    const { move, ui } = stroke([GRID_EMPTY, GRID_EMPTY], MOD_CTRL);
-    expect(move).toBe(UI_UPDATE);
-    expect(ui.cursor.x).toBe(1);
-  });
-
-  it("clears both marked squares with Ctrl and Shift together", () => {
-    const { cells } = stroke([GRID_EMPTY, GRID_FULL], MOD_CTRL | MOD_SHFT);
-    expect(cells).toEqual([GRID_UNKNOWN, GRID_UNKNOWN]);
-  });
-});
-
-describe("pattern Midend integration", () => {
-  it("generates and solves", () => {
-    const me = new Midend(patternGame);
-    expect(me.newGameFromId("10x10#midend-seed")).toBeNull();
-    expect(me.requestKeys()).toEqual([]); // no on-screen keypad
-    expect(me.solve()).toBeNull(); // a fresh game can solve
-  });
-});
-
-describe("pattern render", () => {
-  it("draws the grid, undecided tiles, and clue numbers", () => {
-    const { recording } = renderScenario({
-      game: patternGame,
-      id: "10x10#render-seed",
-    });
-    const ops = recording.ops;
-    expect(ops.length).toBeGreaterThan(0);
-    // An undecided tile is plain surface, and a fresh board holds no piece.
-    expect(ops.some((o) => o.op === "rect" && o.color === COL_CELL)).toBe(true);
-    expect(ops.some((o) => o.op === "polygon" && o.fill === COL_FULL)).toBe(false);
-    // Clue numbers are drawn as text.
-    expect(ops.some((o) => o.op === "text")).toBe(true);
-    expect(ops).toMatchSnapshot();
-  });
-
-  it("sweeps the win flash from the bottom left to the top right", () => {
-    const { state } = genState(easy(5, 5), "complete-seed");
-    const solution = solveState(state);
-    if (!solution) throw new Error("the board has no solution");
-    const solved = applySolution(state, solution);
-    const full = solved.grid.filter((v) => v === GRID_FULL).length;
-    const palette = patternGame.colors(DEFAULT_BACKGROUND);
-    const paint = (flash: Flash) => {
-      const dr = new RecordingDrawing(palette);
-      const ds = preferredDrawState(patternGame, solved);
-      patternGame.redraw(dr, ds, {
-        prev: null,
-        state: solved,
-        dir: 1,
-        ui: patternGame.newUi(solved),
-        animTime: 0,
-        flash,
-      });
-      return dr.ops;
-    };
-    // The cells whose ground is the flash color, each as its index.
-    // Lit is either tone of the highlight, and the flash shows both.
-    const tones = new Set<number>();
-    const isLit = (color: number) =>
-      (color === COL_FLASH || color === COL_FLASH_LEAD) && tones.add(color).size > 0;
-    const run = winFlashRun(paint, (ops) => {
-      const ts = patternGame.preferredTileSize;
-      const cells: number[] = [];
-      let clear = 0;
-      for (const o of ops) {
-        if (o.op !== "rect") continue;
-        if (o.color === COL_CLEAR) clear++;
-        if (isLit(o.color))
-          cells.push(fromCoord(ts, 5, o.y) * 5 + fromCoord(ts, 5, o.x));
+      [2, 3],
+      [3, 2],
+      [3, 3],
+      [1, 7],
+      [7, 1],
+    ] as const) {
+      const sp = spaceOf(pattern, { w, h });
+      for (let bits = 0; bits < 1 << (w * h); bits++) {
+        const g = Uint8Array.from({ length: w * h }, (_, c) =>
+          (bits >> c) & 1 ? 1 : 2,
+        );
+        const board = newBoard(pattern, w, h, pattern.deriveClues(g, sp));
+        if (solveBoard(pattern, board, 0).verdict === "solved") continue;
+        stuck++;
+        expect(searchBoard(pattern, board).kind).toBe("several");
       }
-      // A lit cell keeps what it holds: only the surface under it changes,
-      // an empty cell's own surface included.
-      expect(ops.filter((o) => o.op === "polygon" && o.fill === COL_FULL).length).toBe(
-        full,
-      );
-      const litEmpty = cells.filter((i) => solved.grid[i] === GRID_EMPTY).length;
-      expect(clear).toBe(25 - full - litEmpty);
-      return cells;
-    });
-    expectWinFlashTravels(run, 25, (i) => sweepStep(i % 5, Math.floor(i / 5)));
-    expect(tones.size).toBe(2);
+    }
+    // 2 + 12 + 12 + 128 pictures the lines do not decide, none a line wide.
+    expect(stuck).toBe(154);
+  });
+
+  it("tells each step one of four ways, from the row its overlap first reaches", () => {
+    const plan = game.hint.plan(loaded(`10x10:${TEN}`));
+    if (!plan?.ok) throw new Error("no hint");
+    const step = (n: number) => {
+      const s = plan.steps[n - 1];
+      return [s.rung, s.move.set, s.explanation];
+    };
+    // The ninth row first, the first any run's overlap reaches; then the
+    // fifth column, through a square that step shaded.
+    expect(step(1)).toEqual([
+      "line.overlap",
+      [84, SHADED, 85, SHADED],
+      "This row's run of 6 can slide only 4 squares, so these squares must be shaded.",
+    ]);
+    expect(step(2)[1]).toEqual([24, SHADED, 34, SHADED]);
+    expect(step(7)).toEqual([
+      "line.overlap",
+      [2, SHADED, 12, SHADED, 22, SHADED, 32, SHADED],
+      "This column's run of 4 has nowhere to slide, so these squares must be shaded.",
+    ]);
+    expect(step(19)).toEqual([
+      "line.unreachable",
+      [5, CLEAR, 15, CLEAR, 25, CLEAR],
+      "No run of this column can reach the ringed squares, so those squares must be clear.",
+    ]);
+    expect(step(8)[2]).toMatch(/, given the outlined squares, /);
+  });
+
+  it("deals each tier and writes a board it reads back", () => {
+    for (const id of ["10x10de", "10x10du", "5x5de", "6x6du", "1x5de"]) {
+      const p = game.decodeParams(id);
+      for (const seed of ["a", "b"]) {
+        const { desc } = game.newDesc(p, randomNew(`pattern-${id}-${seed}`));
+        expect(opened(`${id}:${desc}`), `${id}:${desc}`).toBe(id);
+        const board = game.newState(p, desc);
+        const solved = game.solve(board, board);
+        if (!solved.ok) throw new Error(`${id}:${desc}: ${solved.error}`);
+        const done = game.executeMove(board, solved.move);
+        expect(game.status(done), `${id}:${desc}`).toBe("solved");
+        expect(Array.from(done.values).some((v) => v === SHADED)).toBe(true);
+      }
+    }
   });
 });
+
+describeAbsentTiers(game, ["3x3du", "2x3du", "1x5du"]);
+describeDealtTiers(game, ["2x4du", "3x4du"]);

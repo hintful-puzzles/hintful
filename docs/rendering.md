@@ -903,7 +903,7 @@ names the one it applies.
   game's own. Where the puzzle has its own mark for a kept cell (Singles'
   ring around its number), that is the mark.
 - **Where the work is coloring the whole board one way or the other, a clear
-  square is `drawClearSquare`** ("A board colored half and half gives its
+  square is the `clear` painter** (`engine/render/pieces/stock.ts`; "A board colored half and half gives its
   clear squares a surface"). A retired number on it takes `CLEAR_MARK`, not
   `clueDoneColor`, and a contradicted number is a badge. A game that draws
   the bare cross (`git grep -l drawRuledOutCross -- src/games`) and might

@@ -129,6 +129,8 @@ export const power = (halves: number): string =>
 const WALKS = new Set([
   "stretch",
   "run_lengths",
+  "least_start",
+  "greatest_start",
   "ray",
   "sight",
   "through",

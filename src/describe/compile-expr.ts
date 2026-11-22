@@ -2780,6 +2780,24 @@ function factWithSays(
   env.used.add(fn === "strike" ? "STRIKE" : "PLACE");
 }
 
+/** `least_start(L, R, k, v)` or `greatest_start`: where run k of the runs R
+ * of value v starts at the earliest or the latest on L, over the marks. A
+ * hint's words read it. */
+function runStartOf(fn: string, vs: readonly Val[], env: Env, out: Out): Val {
+  expectElem(vs[0], "line", fn);
+  if (vs[1].sort.k !== "list") throw new CompileError(`${fn}(L, R, k, v): R is a list`);
+  expect(vs[2], "num", fn);
+  expect(vs[3], "num", fn);
+  if (env.supposed.length > 0)
+    throw new CompileError(`${fn} reads the marks, and no supposition`);
+  const held = markRead("value", { code: "_x", sort: elem("cell") }, env, out);
+  env.used.add("runStart");
+  return {
+    code: `runStart(${vs[1].code}, ${vs[2].code}, sp.lineCells[${vs[0].code}].map((_x) => ${held.code}), ${vs[3].code}, ${fn === "greatest_start"})`,
+    sort: NUM,
+  };
+}
+
 function call(
   fn: string,
   args: readonly Expr[],
@@ -3081,6 +3099,10 @@ function call(
         sort: { k: "list" },
       };
     }
+    case "least_start":
+    case "greatest_start":
+      arity(4);
+      return runStartOf(fn, vs, env, out);
     case "connected":
     case "cuts": {
       // Whether the cells S are one group side by side, and the members

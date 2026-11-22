@@ -315,6 +315,64 @@ names, and never written.
 - **WHEN** `7x6dt` is read
 - **THEN** it is the 7×6 Unreasonable board, written `7x6dn`
 
+### Requirement: A born game's line clue may be a list
+
+A line kind whose meaning is `T = v` for a list `T` SHALL be a list clue:
+derived whole from the answer, written by an ID's `lists` segment, a line
+to a `/` and its numbers joined by `.`, and drawn in margins sized to the
+longest list, a column's stacked above it and a row's beside it, red where
+its line breaks it. With a list clue each fifth grid line SHALL be doubled.
+
+#### Scenario: Pattern's 5×5
+
+- **WHEN** `5x5:4/2.2/2/1/2/2/2/1/3.1/4` is read and written
+- **THEN** the second column's list is 2 and 2, and the ID it writes is the
+  one read
+
+### Requirement: A born game's sample may be a picture
+
+`deal.sample: picture` SHALL draw upstream's picture: random noise smoothed
+over each cell's neighbors and cut at its median, and drawn again where a
+line longer than two holds one value alone.
+
+#### Scenario: A Pattern deal
+
+- **WHEN** a 10×10 Pattern board is dealt
+- **THEN** it opens at its tier and holds shaded squares
+
+### Requirement: A born game's kind may be read and never dealt
+
+A kind named in `deal.never` SHALL never be dealt, and SHALL be read from an
+ID that holds it. A `dots` segment with `before` SHALL be read only after
+that text, and SHALL write nothing where no cell holds its kind.
+
+#### Scenario: Pattern's given squares
+
+- **WHEN** `2x2:1/1/1/1,aBb` is opened
+- **THEN** its first cell is fixed clear and its third fixed shaded
+
+### Requirement: A born game's search tier may hide no clue
+
+Where no clue is hidden, the search tier's deal SHALL draw until the ladder
+stops short of the answer and the search proves the answer the only one.
+
+#### Scenario: Pattern Unreasonable
+
+- **WHEN** a 6×6 Unreasonable Pattern board is dealt
+- **THEN** it opens as `6x6du`
+
+### Requirement: A born game's technique may read where a run can start
+
+`least_start(L, R, k, v)` and `greatest_start` SHALL be the first and last
+place run `k` of list `R` can start on line `L`, its runs of value `v`
+packed toward one end and then the other around the line's decided cells.
+
+#### Scenario: A run with no room to slide
+
+- **WHEN** Pattern's hint is read on a 10×10 board whose third column is 4
+- **THEN** a step shades that column's top four squares, saying its run of
+  4 has nowhere to slide
+
 ## MODIFIED Requirements
 
 ### Requirement: A fill game is born from its description

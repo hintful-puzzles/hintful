@@ -21,7 +21,66 @@ type Near = "adj4" | "adj8";
 /** How a deal draws its answer: built by the ladder (`buildAnswer`),
  * scattered (`sampleAnswer`), as dominoes (`sampleDominoes`), or a count to
  * every line (`sampleLines`). */
-export type Sample = BuiltSample | ScatterSample | DominoSample | LinesSample;
+export type Sample =
+  | BuiltSample
+  | ScatterSample
+  | DominoSample
+  | LinesSample
+  | PictureSample;
+
+/** A picture: smoothed noise, `value` at and above its median, `rest` below. */
+export interface PictureSample {
+  readonly picture: { readonly value: number; readonly rest: number };
+}
+
+const f = Math.fround;
+
+/**
+ * A picture as upstream's pattern.c `generate` draws one, or `null` where a
+ * row or column across a side over two cells is all one value (too easy;
+ * upstream's `generate_soluble`). Each cell's noise is averaged with its
+ * eight neighbors' once, except along a side of two, where a 2x2 would be
+ * four equal cells, and cut at the median. Upstream works in
+ * single-precision floats and decides each cell by `>=`, so every step is
+ * rounded as it does.
+ */
+export function samplePicture(
+  sample: PictureSample,
+  sp: GridSpace,
+  rs: RandomState,
+): Uint8Array | null {
+  const { w, h } = sp;
+  const n = w * h;
+  const noise = new Float64Array(n);
+  for (let i = 0; i < n; i++) noise[i] = f(f(randomUpto(rs, 100000000)) / f(100000000));
+  const smooth = new Float64Array(n);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      let cnt = 0;
+      let sum = 0;
+      for (let p = -1; p <= 1; p++)
+        for (let q = -1; q <= 1; q++) {
+          if (y + p < 0 || y + p >= h || x + q < 0 || x + q >= w) continue;
+          if ((h === 2 && p !== 0) || (w === 2 && q !== 0)) continue;
+          cnt++;
+          sum = f(sum + noise[(y + p) * w + (x + q)]);
+        }
+      smooth[y * w + x] = f(sum / cnt);
+    }
+  const sorted = Float64Array.from(smooth).sort();
+  let index = Math.floor(n / 2);
+  if (w & h & 1) index += randomUpto(rs, 2);
+  const threshold = index < n ? sorted[index] : f(sorted[n - 1] + 1);
+  const { value, rest } = sample.picture;
+  const g = Uint8Array.from(smooth, (s) => (s >= threshold ? value : rest));
+  const mixed = (len: number, at: (i: number) => number): boolean => {
+    for (let i = 1; i < len; i++) if (g[at(i)] !== g[at(0)]) return true;
+    return false;
+  };
+  if (w > 2) for (let y = 0; y < h; y++) if (!mixed(w, (i) => y * w + i)) return null;
+  if (h > 2) for (let x = 0; x < w; x++) if (!mixed(h, (i) => i * w + x)) return null;
+  return g;
+}
 
 /** A value dealt on a share of the cells before the rest is drawn, as
  * symmetric as asked, each by the name of the option that gives it, the

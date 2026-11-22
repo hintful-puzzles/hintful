@@ -241,7 +241,8 @@ export interface CatalogJson {
 export type IdSegmentJson =
   | { runs: string }
   | { walls: string }
-  | { dots: string; cases: [number, number] }
+  | { dots: string; cases: [number, number]; before?: string }
+  | { lists: string; order?: "columns" }
   | {
       digits: string;
       apart?: string;
@@ -268,14 +269,16 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
       ? [seg.walls]
       : "dots" in seg
         ? [seg.dots]
-        : "digits" in seg
-          ? [
-              seg.digits,
-              ...Object.values(seg.letters ?? {}),
-              ...Object.values(seg.after ?? {}),
-              ...Object.values(seg.also ?? {}),
-            ]
-          : [seg.numbers];
+        : "lists" in seg
+          ? [seg.lists]
+          : "digits" in seg
+            ? [
+                seg.digits,
+                ...Object.values(seg.letters ?? {}),
+                ...Object.values(seg.after ?? {}),
+                ...Object.values(seg.also ?? {}),
+              ]
+            : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
@@ -381,6 +384,7 @@ export interface ThoroughJson {
 export type SampleJson =
   | { build: true | { value: number }; first?: FirstJson }
   | { dominoes: { value: number }; rest: number }
+  | { picture: { value: number; rest: number } }
   | {
       lines: { value: number; count: number | string; apart: "adj4" | "adj8" };
       rest: number;

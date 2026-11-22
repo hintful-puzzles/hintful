@@ -214,7 +214,10 @@ export function playOf(
             ...(glance === undefined ? {} : { glance, askBefore: askBefore ?? [] }),
           },
         };
-  const lineClues = [...d.clueKinds].filter(([, c]) => c.at === "line").map(([k]) => k);
+  const atLines = [...d.clueKinds].filter(([, c]) => c.at === "line").map(([k]) => k);
+  const isList = (k: string) => (env.clues.get(k) as ClueKind).list;
+  const lineClues = atLines.filter((k) => !isList(k));
+  const lineLists = atLines.filter(isList);
   // A rule over a dealt partition's parts breaks at the cells it counts, which
   // may happen to lie in a row and still are no run.
   const overParts = (src: string): boolean => {
@@ -235,6 +238,13 @@ export function playOf(
     "",
     "/** The clue kinds at lines, drawn past each line's end. */",
     `export const lineClues = ${JSON.stringify(lineClues)} as const;`,
+    ...(lineLists.length === 0
+      ? []
+      : [
+          "",
+          "/** The list kinds at lines, each list drawn stacked before its line's start. */",
+          `export const lineLists = ${JSON.stringify(lineLists)} as const;`,
+        ]),
     ...(partRules.length === 0
       ? []
       : [
@@ -799,7 +809,9 @@ export function dealOf(
                   ? sample.dominoes.value
                   : "lines" in sample
                     ? sample.lines.value
-                    : sample.scatter.value,
+                    : "picture" in sample
+                      ? sample.picture.value
+                      : sample.scatter.value,
             ...(grow.closed === undefined ? {} : { closed: grow.closed }),
           },
         }),
@@ -1224,6 +1236,68 @@ function onceOf(
 /** The elements a clue may sit at, as the description names them. */
 const UNIVERSE: Readonly<Record<string, string>> = { cell: "cells", line: "lines" };
 
+/** The clue kinds `deal.never` names: dealt by no deal, carried only by an
+ * ID (Pattern's given squares, which only upstream's pictures hold). */
+function neverOf(json: DescriptionJson, d: Description): string[] {
+  const never = json.deal?.["never"];
+  const kinds = never === undefined ? [] : typeof never === "string" ? [never] : never;
+  if (!Array.isArray(kinds))
+    throw new CompileError("deal never: a clue kind, or a list");
+  for (const k of kinds)
+    if (typeof k !== "string" || !d.clueKinds.has(k))
+      throw new CompileError(`deal never: ${String(k)} is no clue kind`);
+  return kinds as string[];
+}
+
+/**
+ * `<kind>_l`, the list a list kind deals at each element of `universe`, its
+ * meaning `T = v` (either way round) with `T` read off the answer: the list
+ * is `T`, so every element holds one, an empty one included. A meaning of
+ * any other shape is refused.
+ */
+function listDerived(
+  kind: string,
+  means: Expr,
+  universe: string,
+  env: Env,
+  measured: (e: Expr) => Expr,
+): string[] {
+  const isV = (e: Expr) => e.k === "name" && e.name === "v";
+  const term =
+    means.k !== "bin" || means.op !== "="
+      ? null
+      : isV(means.b)
+        ? means.a
+        : isV(means.a)
+          ? means.b
+          : null;
+  if (term === null)
+    throw new CompileError(
+      `clue ${kind}: a sampled deal derives a list whose meaning is a list of the answer = v`,
+    );
+  const readsClues = { yes: false };
+  const scratch: string[] = [];
+  const out = new Out(1);
+  const sorts = env.clues.get(kind) as ClueKind;
+  const t = compileExpr(
+    measured(term),
+    new Map<string, Val>([["at", { code: "at", sort: sorts.at }]]),
+    answerEnv(env, readsClues, scratch),
+    out,
+  );
+  if (t.sort.k !== "list" || readsClues.yes)
+    throw new CompileError(
+      `clue ${kind}: a sampled deal derives a list whose meaning is a list of the answer = v`,
+    );
+  return [
+    `const ${kind}_l = sp.${universe}.map((at) => {`,
+    ...scratch.map((s) => `  ${s}`),
+    ...out.text(),
+    `  return Array.from(${t.code});`,
+    "});",
+  ];
+}
+
 /**
  * For a description whose deal samples an answer: `clueHolds_<kind>(g, sp,
  * at, v)`, whether a clue of each kind at `at` valued `v` holds of the whole
@@ -1256,6 +1330,7 @@ export function derivedClues(
   /** The kinds dealt one in each group, after the rest. */
   const once = new Out(1);
   const outside = json.space.grid?.hexagon?.outside;
+  const never = neverOf(json, d);
   for (const [kind, c] of d.clueKinds) {
     // A hexagon's corners hold its outside kind, and no other cell does.
     if (kind === outside) {
@@ -1268,8 +1343,22 @@ export function derivedClues(
       env.used.add("inHexagon");
       continue;
     }
+    // A kind only an ID carries is dealt none.
+    if (never.includes(kind)) {
+      dealt.push(`${kind}: clueList([], [], sp.cells.length)`);
+      continue;
+    }
     const sorts = env.clues.get(kind) as ClueKind;
     const universe = UNIVERSE[c.at];
+    if (sorts.list && !sorts.per && universe !== undefined) {
+      for (const line of listDerived(kind, c.means, universe, env, measured))
+        derive.emit(line);
+      dealt.push(
+        `${kind}: listClues(sp.${universe}, ${kind}_l, sp.${universe}.length)`,
+      );
+      env.used.add("listClues");
+      continue;
+    }
     if (c.value === null || sorts.per || sorts.list || universe === undefined)
       throw new CompileError(
         `clue ${kind}: a sampled deal derives a clue of one value at a cell or a line`,

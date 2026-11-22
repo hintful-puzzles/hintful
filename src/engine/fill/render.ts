@@ -73,6 +73,8 @@ import {
   clueAt,
   hexShift,
   inHexagon,
+  type ListClues,
+  listAt,
   type Partition,
 } from "../solve/describe-runtime.ts";
 import { type FillMistake, rulesOf } from "./answer.ts";
@@ -99,6 +101,8 @@ export interface FillLook<C> {
   readonly play: FillPlay;
   /** The clue kinds at lines, drawn past each line's end. */
   readonly lineClues: readonly (keyof C)[];
+  /** The list kinds at lines, each list stacked before its line's start. */
+  readonly lineLists?: readonly (keyof C)[];
   /** The fixed text before each line's start, by the line's index along its
    * axis. */
   readonly labels?: { readonly start?: (i: number) => string };
@@ -115,13 +119,15 @@ export interface FillDrawState {
   readonly tiles: TileCache;
   /** Per line, its clue's error, hint and hatch. */
   readonly clues: TileCache;
+  /** Per line, its list's error, hatch, cursor and font. */
+  readonly lists: TileCache;
   readonly marks: HintMarks;
 }
 
 export interface FillRender<C> {
   readonly preferredTileSize: number;
   /** How far in from the canvas's top and left the board's first cell lies. */
-  origin(tileSize: number): number;
+  origin(tileSize: number, board: { w: number; h: number }): number;
   computeSize(size: { w: number; h: number }, tileSize: number): Size;
   colors(background: Color): Color[];
   newDrawState(board: FillBoard<C>, tileSize: number): FillDrawState;
@@ -316,6 +322,7 @@ export function fillRender<C extends Clues<C>>(
   previewed: (board: FillBoard<C>, ui: FillUi) => FillBoard<C>,
 ): FillRender<C> {
   const { play, lineClues, labels } = look;
+  const lineLists = look.lineLists ?? [];
   const labelStart = labels?.start;
   // The dealt partition drawn as walls and fills: one, as no game deals two.
   const walled = module.deal?.partitions?.[0] as (keyof C & string) | undefined;
@@ -439,7 +446,19 @@ export function fillRender<C extends Clues<C>>(
    * has them. */
   const COL_WASH = play.dotted === true ? COL_DOT + 2 : COL_DOT;
 
-  const start = (ts: number): number => (labelStart === undefined ? 1 : ts);
+  /** The tiles before a board's lines its lists take, upstream pattern.c's
+   * `TLBORDER`: a line of `d` holds at most about `d / 2` runs, which stack
+   * a fifth as deep with room to spare. One depth serves both axes, the
+   * longer side's, so the board has one origin. */
+  const depthOf = (b: { w: number; h: number }): number =>
+    lineLists.length === 0 ? 0 : Math.floor(Math.max(b.w, b.h) / 5) + 2;
+  /** The board being drawn's list depth and width: every drawing call is
+   * within a redraw, which sets them from its board first. */
+  let depth = 0;
+  let boardW = 0;
+  const startAt = (ts: number, d: number): number =>
+    labelStart !== undefined ? ts : d > 0 ? d * ts + Math.floor(ts / 4) : 1;
+  const start = (ts: number): number => startAt(ts, depth);
   const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : 1);
   const coord = (n: number, ts: number): number => n * ts + start(ts);
   // A hexagon's rows are drawn sheared, each half a tile right of the one
@@ -617,7 +636,13 @@ export function fillRender<C extends Clues<C>>(
     dr.clip(tile);
     if (part === null) {
       dr.drawRect(tile, COL_GRID);
-      lay({ x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 });
+      // A board of lists doubles every fifth line inside it, to count along
+      // a list by (upstream pattern.c's `grid_square`).
+      const ruled = (i: number, n: number, at: 0 | 4) =>
+        depth > 0 && i % 5 === at && (at === 0 ? i > 0 : i < n - 1) ? 1 : 0;
+      const [l, t] = [ruled(x, boardW, 0), ruled(y, h, 0)];
+      const [r, b] = [ruled(x, boardW, 4), ruled(y, h, 4)];
+      lay({ x: tx + 1 + l, y: ty + 1 + t, w: ts - 1 - l - r, h: ts - 1 - t - b });
     } else
       drawWalledSquare(
         dr,
@@ -859,16 +884,106 @@ export function fillRender<C extends Clues<C>>(
     for (const [kind, broken] of errors.clues)
       for (const q of broken) {
         const at = listOf(state.dealt, kind as keyof C).at[q];
-        if (lineClues.includes(kind as keyof C)) lineErrors.add(at);
+        if (lineClues.includes(kind as keyof C) || lineLists.includes(kind as keyof C))
+          lineErrors.add(at);
         else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
       }
     return { word, lineWord, lineErrors };
+  }
+
+  /** The list of line `k`, the first of the list kinds that has one: empty
+   * where none does. */
+  const listOfLine = (b: FillBoard<C>, k: number): ArrayLike<number> => {
+    for (const kind of lineLists) {
+      const l = listAt(b.dealt[kind] as ListClues, k);
+      if (l !== null) return l;
+    }
+    return [];
+  };
+
+  /**
+   * Each line's list, before its start: a row's on one line, right against
+   * the board, and a column's stacked upward from it, spread over the margin
+   * where it is short (upstream pattern.c's `draw_numbers`). A list is red
+   * where its line breaks it, striped with its line where a step stripes
+   * that, and in the cursor's color where the cursor is on its line, so the
+   * cursor's row and column are found from the margin.
+   */
+  function drawLists(
+    dr: GameDrawing,
+    ds: FillDrawState,
+    b: FillBoard<C>,
+    at: {
+      readonly stripedLine: number;
+      readonly lineErrors: ReadonlySet<number>;
+      readonly cx: number;
+      readonly cy: number;
+    },
+  ): void {
+    const ts = ds.tileSize;
+    const { w, h } = b;
+    const from = start(ts);
+    const half = Math.floor(ts / 2);
+    // Upstream's font: smaller where a column's list has a number of two
+    // digits, or a row's runs would not fit the margin at the larger size.
+    let large = true;
+    for (let k = 0; k < w + h; k++) {
+      const list = listOfLine(b, k);
+      if (k >= h && Array.from(list).some((n) => n >= 10)) large = false;
+      if (k < h && list.length * 3 - 2 > depth * 2) large = false;
+    }
+    const size = Math.floor(ts / (large ? 1.6 : 2.2));
+    for (let k = 0; k < w + h; k++) {
+      const row = k < h;
+      const err = at.lineErrors.has(k);
+      const hatched = at.stripedLine === k;
+      const cur = row ? k === at.cy : k - h === at.cx;
+      const color = err ? COL_ERROR : cur ? COL_CURSOR : COL_INK;
+      const key = (err ? 1 : 0) | (hatched ? 2 : 0) | (cur ? 4 : 0) | (large ? 8 : 0);
+      if (!ds.lists.changed(k, key)) continue;
+      const box = row
+        ? { x: 0, y: coord(k, ts), w: from, h: ts }
+        : { x: coord(k - h, ts), y: 0, w: ts, h: from };
+      dr.clip(box);
+      dr.drawRect(box, COL_BACKGROUND);
+      if (hatched) dr.drawHatch(box, hatchPeriod(ts));
+      const list = Array.from(listOfLine(b, k));
+      if (row && list.length > 0)
+        dr.drawText(
+          { x: from - Math.floor(ts / 4), y: box.y + half },
+          { align: "right", baseline: "mathematical", fontType: "variable", size },
+          color,
+          list.join(list.length > depth ? " " : "  "),
+        );
+      else if (list.length > 0) {
+        // The last run sits a tile above the board, the first as high as
+        // the list's length and the margin allow.
+        const bottom = from - Math.floor((ts * 3) / 4);
+        const span = bottom - half;
+        const fit = Math.max(list.length, depth) - 1;
+        list.forEach((n, j) => {
+          dr.drawText(
+            {
+              x: box.x + half,
+              y: bottom - Math.floor(((list.length - 1 - j) * span) / Math.max(1, fit)),
+            },
+            glyphFont(size),
+            color,
+            String(n),
+          );
+        });
+      }
+      dr.unclip();
+      dr.drawUpdate(box);
+    }
   }
 
   function redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void {
     const { state, prev, animTime, ui, flash, hint, mistakes } = frame;
     const ts = ds.tileSize;
     const { w, h } = state;
+    depth = depthOf(state);
+    boardW = w;
     const shown = ui.drag?.live ? previewed(state, ui) : state;
 
     if (ds.tiles.firstFrame()) {
@@ -1054,6 +1169,8 @@ export function fillRender<C extends Clues<C>>(
     ds.marks.paint(dr, unlinked, area, markStyle);
     for (const l of askedLinks) drawLinkRing(dr, ts, w, l, whole(l));
 
+    if (lineLists.length > 0)
+      drawLists(dr, ds, state, { stripedLine, lineErrors, cx, cy });
     if (lineClues.length === 0) return;
     const size = Math.floor(ts / 2);
     for (let k = 0; k < w + h; k++) {
@@ -1088,13 +1205,14 @@ export function fillRender<C extends Clues<C>>(
 
   return {
     preferredTileSize: PREFERRED_TILE_SIZE,
-    origin: start,
+    origin: (ts, b) => startAt(ts, depthOf(b)),
     // A hexagon's rows reach half a tile past its width.
     computeSize: ({ w, h }, size) => {
       const ts = tileOf(size);
+      const from = startAt(ts, depthOf({ w, h }));
       return {
-        w: start(ts) + end(ts) + ts * w + (hexagon ? ts >> 1 : 0),
-        h: start(ts) + end(ts) + ts * h,
+        w: from + end(ts) + ts * w + (hexagon ? ts >> 1 : 0),
+        h: from + end(ts) + ts * h,
       };
     },
     colors,
@@ -1103,6 +1221,7 @@ export function fillRender<C extends Clues<C>>(
       parts: partsOf(b),
       tiles: new TileCache(b.w * b.h, { words: 3 }),
       clues: new TileCache(b.w + b.h),
+      lists: new TileCache(b.w + b.h),
       marks: new HintMarks(),
     }),
     redraw,
