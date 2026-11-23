@@ -16,8 +16,8 @@
  * - `tiers`: `absent` and `dealt`, the cells `describeAbsentTiers` and
  *   `describeDealtTiers` take.
  * - `ids`: a game ID, what it opens as (`opens`, the params the midend then
- *   holds, or `refused`) and what its desc reads as (`holds`), refused or
- *   not.
+ *   holds, or `refused`), what its desc reads as (`holds`), refused or
+ *   not, and whether the desc is written back byte for byte (`writesBack`).
  * - `params`: a params string read, with what it is written back as
  *   (`full`, `brief`), its menu `label`, and whether it is `refused` when a
  *   board is to be dealt or `loads` when one arrives with its desc.
@@ -58,6 +58,8 @@ import { loadDesc, readBoard } from "../contract/desc-error.ts";
 import type { HintStep } from "../contract/game.ts";
 import { CELL } from "../contract/hint-words.ts";
 import type { Color, ConfigValues, Point } from "../contract/types.ts";
+import { type Clues, type FillBoard, type FillModule, spaceOf } from "../fill/board.ts";
+import { encodeDesc, type FillDeal } from "../fill/game-id.ts";
 import { type FillHintModule, pairPieces } from "../fill/hint.ts";
 import { describeParams } from "../game-id/param-label.ts";
 import { paramsError } from "../game-id/params.ts";
@@ -112,6 +114,8 @@ export interface IdCase extends At {
   readonly opens: string | null;
   readonly refused: Said | null;
   readonly holds: Readonly<Record<string, unknown>>;
+  /** Whether the desc is written back byte for byte. */
+  readonly writesBack: boolean;
   readonly recorded: boolean;
 }
 
@@ -432,13 +436,22 @@ export function parseGameCases(text: string, path: string): GameCases {
 
   const ids = items(top.get("ids"), "ids").map((node, i): IdCase => {
     const where = `ids[${i}]`;
-    const e = entries(node, where, ["id", "opens", "refused", "holds", "recorded"]);
+    const e = entries(node, where, [
+      "id",
+      "opens",
+      "refused",
+      "holds",
+      "writesBack",
+      "recorded",
+    ]);
     const c: IdCase = {
       line: lineOf(node),
       id: str(e.get("id"), `${where}.id`),
       opens: opt(e.get("opens"), (n) => str(n, `${where}.opens`)),
       refused: opt(e.get("refused"), (n) => said(n, `${where}.refused`)),
       holds: holds(e.get("holds"), `${where}.holds`),
+      writesBack:
+        opt(e.get("writesBack"), (n) => bool(n, `${where}.writesBack`)) ?? false,
       recorded: opt(e.get("recorded"), (n) => bool(n, `${where}.recorded`)) ?? false,
     };
     if (c.opens !== null && c.refused !== null)
@@ -714,11 +727,37 @@ function splitId(id: string): [string, string] {
   return [id.slice(0, colon), id.slice(colon + 1)];
 }
 
+/** The desc a born game writes for the board `desc` reads as under
+ * `params`, through the codec its description compiles to; or why none. */
+export function writtenBack(
+  game: AnyGame,
+  compiled: Readonly<Record<string, unknown>>,
+  params: string,
+  desc: string,
+): string {
+  const deal = compiled["deal"] as FillDeal | undefined;
+  if (deal === undefined) return "nothing: no desc codec is compiled";
+  const read = readBoard(game, game.decodeParams(params), desc);
+  if (!read.ok) return `nothing: ${read.error}`;
+  const b = read.value as FillBoard<Clues<object>>;
+  const module = compiled as unknown as FillModule<Clues<object>>;
+  return encodeDesc(deal, spaceOf(module, b), b.dealt);
+}
+
 /** What of an ID case the game does not do: empty when it holds. What the
  * board `holds` is the codec's reading of the desc, so a case may say what a
  * board refused as unplayable reads as. */
-export function checkId(game: AnyGame, c: IdCase): string[] {
+export function checkId(
+  game: AnyGame,
+  c: IdCase,
+  compiled: Readonly<Record<string, unknown>> = {},
+): string[] {
   const out: string[] = [];
+  if (c.writesBack) {
+    const [params, desc] = splitId(c.id);
+    const written = writtenBack(game, compiled, params, desc);
+    if (written !== desc) out.push(`written back as ${written}`);
+  }
   const loaded = load(game, c.id);
   if (c.refused !== null) {
     if (!("error" in loaded)) out.push("loads, where it should be refused");
@@ -936,7 +975,12 @@ export function describeGameCases(
         });
     });
   };
-  each("ids", cases.ids, (c) => c.id, checkId);
+  each(
+    "ids",
+    cases.ids,
+    (c) => c.id,
+    (g, c) => checkId(g, c, compiled),
+  );
   each("params", cases.params, (c) => c.read, checkParams);
   each("positions", cases.positions, (c) => c.id, checkPosition);
   each(

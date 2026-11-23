@@ -16,11 +16,18 @@
  * this app's full encoding of the params the recording named. Three Mathrax
  * descs were left out: upstream's Recursive tier deals boards with several
  * answers, which no game here loads.
+ *
+ * A game born from its description also writes each desc back byte for
+ * byte, through the codec its description compiles to: a link it shares
+ * reads the same on upstream's site. Its IDs from elsewhere (the hand-written
+ * port's) are its cases' `ids`, with `writesBack`.
  */
 import { expect, it } from "vitest";
 import { loadVerdict } from "../engine/contract/desc-error.ts";
 import { paramsError } from "../engine/game-id/params.ts";
+import { BORN_GAMES } from "../engine/testing/born-games.ts";
 import { REGISTERED_GAMES } from "../engine/testing/enrollment.ts";
+import { writtenBack } from "../engine/testing/game-cases.ts";
 import corpus from "./__fixtures__/upstream-descs.json" with { type: "json" };
 
 it("every desc upstream's generator wrote loads", () => {
@@ -47,4 +54,21 @@ it("every desc upstream's generator wrote loads", () => {
   // 48 games and 711 descs when drawn.
   expect(descs).toBeGreaterThanOrEqual(700);
   expect(refused).toEqual([]);
+});
+
+it("a born game writes each of upstream's descs back as upstream wrote it", () => {
+  const differ: string[] = [];
+  let descs = 0;
+  for (const { id, game, compiled } of BORN_GAMES) {
+    const byParams = (corpus as Record<string, Record<string, string[]>>)[id] ?? {};
+    for (const [params, list] of Object.entries(byParams))
+      for (const desc of list) {
+        descs++;
+        const written = writtenBack(game, compiled, params, desc);
+        if (written !== desc) differ.push(`${id} ${params}:${desc} written ${written}`);
+      }
+  }
+  // 126 descs of nine born games on 2026-11-23.
+  expect(descs).toBeGreaterThanOrEqual(100);
+  expect(differ).toEqual([]);
 });

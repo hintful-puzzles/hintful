@@ -30,7 +30,10 @@
       - [x] The mistake outline (`mistake-outline.test.ts`), seen to fail
             on all fourteen with the overlay's mark planted away; Pattern
             left `NO_OVERLAY_TEST`.
-      - [ ] A desc written back, in `upstream-descs.test.ts`.
+      - [x] A desc written back, in `upstream-descs.test.ts`: every born
+            game's corpus descs (126 of nine games), through the codec its
+            description compiles to; an `ids` case's `writesBack` for IDs
+            from elsewhere. Seen to fail with the run letters one off.
       - [x] A deal's symmetry holds (`dealt-symmetry.test.ts`): a
             symmetric hide's clues and a sample's first cells at their
             option's symmetry, read from each compiled deal; seen to fail

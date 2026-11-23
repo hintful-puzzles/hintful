@@ -113,4 +113,11 @@ describe("a case, checked", () => {
     expect(check(`${id}    holds: { target: 4 }\n`)).not.toEqual([]);
     expect(check("ids:\n  - id: t3:g3-1\n    holds: { target: 3 }\n")).not.toEqual([]);
   });
+
+  it("fails a desc to be written back where no codec is compiled", () => {
+    const [c] = read("ids:\n  - id: t3:g3-1\n    writesBack: true\n").ids;
+    expect(checkId(fakeGame, c)).toEqual([
+      "written back as nothing: no desc codec is compiled",
+    ]);
+  });
 });
