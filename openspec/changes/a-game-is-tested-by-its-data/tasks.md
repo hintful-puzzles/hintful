@@ -179,12 +179,26 @@
                   dots side by side, and the same deal without `unpair`
                   shows some. Seen to fail with the mend, the keep, the turn
                   and the unpair each planted off.
-            - [ ] Next: the 9 left in `NO_FIXTURE_YET`, grouped by what
-                  one board can show: the deal's (`grow`, `latin`, `oneIn`,
-                  `stripFrom`, and `sample`'s `dominoes`, `picture`), and
-                  `produces: links`, `space.grid.hexagon`, `space.regions`.
-                  `stripFrom` changes only which draw a strip starts from,
-                  so its test needs a way to see that.
+            - [x] `growing`: `space.regions`, `deal.grow` (with
+                  `closed`) and `deal.sample.dominoes`, on dominoes none side
+                  by side, two shaded squares in every region
+                  (`deal.test.ts`). The walls an ID writes read back as the
+                  regions and the rules read them; a sample takes dominoes
+                  until no other fits; each grown region holds two, none
+                  under three squares but a closed domino; Easy closes more
+                  than Normal, at most one region in three. Seen to fail with
+                  the walls, the sample's spacing and refill, a region's
+                  count, the tier's `oneIn` and `atMostOneIn` each planted
+                  off. "None closed without `closed`" is not tested: on these
+                  techniques no board deals without one, and `smallest`
+                  refuses a two-square region anyway.
+            - [ ] Next: the 6 left in `NO_FIXTURE_YET`: the deal's
+                  (`latin`, `oneIn`, `stripFrom`, `sample.picture`), and
+                  `produces: links`, `space.grid.hexagon`. `deal.oneIn` is
+                  Sticks' one number on each line, not the grown
+                  partition's `closed.oneIn`. `stripFrom` changes only which
+                  draw a strip starts from, so its test needs a way to see
+                  that.
 
 ## 4. The born games
 

@@ -8,7 +8,9 @@
  * and symmetry, each left where its number is hidden; on `mirroring`, a hide
  * symmetric under a half turn, one less thorough, and a kind no deal deals;
  * on `climbing`, draws mended until no rule breaks and climbing toward the
- * tier, with dots alike side by side taken off. Upstream's game ID
+ * tier, with dots alike side by side taken off; on `growing`, regions read
+ * from walls and grown round dominoes sampled densely, some closed as
+ * regions of their own. Upstream's game ID
  * grammar is each game's own cases' (`tents.cases.yaml`'s `ids` and
  * `params`).
  */
@@ -16,6 +18,7 @@
 import { describe, expect, it } from "vitest";
 import * as climbing from "../../generated/engine/testing/fixtures/climbing/climbing.compiled.ts";
 import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
+import * as growing from "../../generated/engine/testing/fixtures/growing/growing.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
@@ -27,8 +30,8 @@ import { clueList } from "../solve/describe-runtime.ts";
 import { partners } from "../testing/symmetry-partners.ts";
 import { newBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
-import { decodeDesc, encodeDesc, givenOf } from "./game-id.ts";
-import { sampleAnswer, sampleLines, samplePieces } from "./sample.ts";
+import { decodeDesc, encodeDesc, givenOf, partitionOf } from "./game-id.ts";
+import { sampleAnswer, sampleDominoes, sampleLines, samplePieces } from "./sample.ts";
 
 const PIECE = 1;
 const SHADED = 1;
@@ -399,5 +402,88 @@ describe("draws mended and climbing toward the tier, alike dots unpaired", () =>
   it("takes off two dots alike side by side, and finishes without them", () => {
     expect(pairs(climbing.deal, 6)).toBe(0);
     expect(pairs(changed({}, { unpair: undefined }), 6)).toBeGreaterThan(0);
+  });
+});
+
+describe("a partition grown round dominoes, some closed as regions of their own", () => {
+  const W = 6;
+  const sp = spaceOf(growing, { w: W, h: W });
+  const seeds = Array.from({ length: 8 }, (_, i) => `grow-${i}`);
+  /** The board dealt at `diff` from `seed`, read back from its ID and checked
+   * to finish on its answer at its tier and not below. */
+  const dealt = (seed: string, diff: number) => {
+    const { desc, aux } = dealFill(
+      growing,
+      growing.deal,
+      { w: W, h: W, diff },
+      randomNew(seed),
+    );
+    const clues = descValue(
+      decodeDesc<growing.Dealt>(growing.deal, sp, growing.clueMax, desc),
+    );
+    const board = newBoard(growing, W, W, clues);
+    const solved = solveBoard(growing, board, diff);
+    expect(solved.verdict).toBe("solved");
+    expect(Array.from(solved.values, (v) => v.toString(36)).join("")).toBe(aux);
+    if (diff > 0)
+      expect(solveBoard(growing, board, diff - 1).verdict).not.toBe("solved");
+    return { regions: clues.region.cells, answer: solved.values };
+  };
+  /** The regions that are a domino of the answer and nothing else. */
+  const closed = (regions: readonly (readonly number[])[], answer: Uint8Array) =>
+    regions.filter((r) => r.length === 2 && r.every((c) => answer[c] === SHADED))
+      .length;
+
+  it("samples dominoes none side by side, until no other fits", () => {
+    for (const seed of seeds) {
+      const g = sampleDominoes(growing.deal.sample, sp, randomNew(seed));
+      if (g === null) throw new Error("no domino fits");
+      const lit = (c: number) => sp.adj4[c].filter((d) => g[d] === SHADED).length;
+      for (const c of sp.cells) if (g[c] === SHADED) expect(lit(c)).toBe(1);
+      // Two squares side by side, neither beside a shaded one, would take one more.
+      for (const c of sp.cells)
+        for (const d of sp.adj4[c])
+          expect(g[c] === SHADED || g[d] === SHADED || lit(c) + lit(d) > 0).toBe(true);
+    }
+  });
+
+  it("grows regions holding two shaded squares each, none under three squares but a closed domino", () => {
+    for (const seed of seeds)
+      for (const diff of [0, 1]) {
+        const { regions, answer } = dealt(seed, diff);
+        for (const r of regions) {
+          expect(r.filter((c) => answer[c] === SHADED)).toHaveLength(2);
+          if (r.length < 3) expect(r.every((c) => answer[c] === SHADED)).toBe(true);
+        }
+      }
+  });
+
+  it("closes more dominoes at the tier that asks one in fewer, at most one region in three", () => {
+    const count = (diff: number): number =>
+      seeds.reduce((n, seed) => {
+        const { regions, answer } = dealt(seed, diff);
+        // At most one region in three is closed (`atMostOneIn`).
+        expect(closed(regions, answer) * 3).toBeLessThanOrEqual(regions.length);
+        return n + closed(regions, answer);
+      }, 0);
+    expect(count(0)).toBeGreaterThan(count(1));
+  });
+
+  it("reads a region from the walls an ID writes, and holds the rules to it", () => {
+    // Two regions, the left two columns and the rest, on a 4x2 board.
+    const parts = partitionOf([0, 0, 1, 1, 0, 0, 1, 1]);
+    const small = spaceOf(growing, { w: 4, h: 2 });
+    const desc = encodeDesc(growing.deal, small, { region: parts });
+    const read = descValue(
+      decodeDesc<growing.Dealt>(growing.deal, small, growing.clueMax, desc),
+    );
+    expect(read.region.cells).toEqual([
+      [0, 1, 4, 5],
+      [2, 3, 6, 7],
+    ]);
+    const g = (s: string) => Uint8Array.from(s, Number);
+    expect(growing.isAnswer(g("11211212"), small, read)).toBe(false);
+    expect(growing.isAnswer(g("12212121"), small, read)).toBe(false);
+    expect(growing.isAnswer(g("12121212"), small, read)).toBe(true);
   });
 });

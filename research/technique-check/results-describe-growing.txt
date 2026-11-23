@@ -1,0 +1,15 @@
+ok  growing    fullRegion                     3  sound    (want sound   )   128 queries    0.9s
+ok  growing    fullRegion (planted)           3  unsound  (want unsound )    44 queries    0.7s   at region region 43
+ok  src/engine/testing/fixtures/growing/growing.description.yaml#fullRegion: recorded sound, proved whole on all 1 boards
+ok  growing    exactRegion                    3  sound    (want sound   )   128 queries    3.5s
+ok  growing    exactRegion (planted)          3  unsound  (want unsound )    44 queries    1.3s   at region region 43
+ok  src/engine/testing/fixtures/growing/growing.description.yaml#exactRegion: recorded sound, proved whole on all 1 boards
+ok  growing    domino                         3  sound    (want sound   )     9 queries    0.4s
+ok  growing    domino (planted)               3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/growing/growing.description.yaml#domino: recorded sound, proved whole on all 1 boards
+ok  growing    between                        3  sound    (want sound   )     9 queries    0.4s
+ok  growing    between (planted)              3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/growing/growing.description.yaml#between: recorded sound, proved whole on all 1 boards
+ok  growing    partner                        3  sound    (want sound   )     9 queries    0.3s
+ok  growing    partner (planted)              3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/growing/growing.description.yaml#partner: recorded sound, proved whole on all 1 boards

@@ -1,0 +1,21 @@
+# A defect planted in each of the fixture's techniques, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A region one short of its two read as having them.
+  fullRegion:
+    for: "r in region, O = open(cells(r)) where |O| > 0 and need(cells(r)) <= 1"
+  # A region needing all but one of its open squares read as needing them all.
+  exactRegion:
+    for: "r in region, O = open(cells(r)) where |O| > 0 and need(cells(r)) + 1 >= |O|"
+  # A shaded square beside a crossed one read as a domino.
+  domino:
+    for: >-
+      c in cells where value(c) = 1, d in adj4(c) where value(d) = 2,
+      O = {e in adj4(c) + adj4(d) where not known(e)} where |O| > 0
+  # A square beside one shaded square read as beside two.
+  between:
+    for: "x in cells where not known(x) and lit(x) >= 1"
+  # A shaded square with two open neighbors read as having one.
+  partner:
+    for: "c in cells where value(c) = 1 and lit(c) = 0, F = free(c) where |F| <= 2"

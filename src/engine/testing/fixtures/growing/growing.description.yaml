@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: shaded squares in dominoes none touching along a
+# side, and two in every region, for the fill engine's tests of a dealt
+# partition, dominoes sampled densely, and a partition grown round them with
+# some dominoes closed as regions of their own, on a description that names
+# no game.
+game: growing
+produces: shading
+sizes:
+  w: { min: 2, max: 12 }
+  h: { min: 2, max: 12 }
+space:
+  grid: { w: "w", h: "h" }
+  regions: { region: dealt }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  need(S): "2 - count(c in S where value(c) = 1)"
+  open(S): "{c in S where not known(c)}"
+  lit(c): "count(d in adj4(c) where value(d) = 1)"
+  free(c): "{d in adj4(c) where not known(d)}"
+shape:
+  - "forall r in region: count(c in cells(r) where value(c) = 1) = 2"
+  - "forall c in cells where value(c) = 1: lit(c) = 1"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  blank: 2
+  boards: [6x6]
+  hintMarks:
+    ring: the squares the step decides.
+    stripes: the region the step is about.
+    outline: the shaded squares the step reasons from.
+deal:
+  answer: dominoes at random, none touching another along a side, packed densely
+  region: >-
+    a region grown round each shaded square, joined in twos, some dominoes
+    dealt as regions of their own, then mended until the board finishes at the
+    tier
+  tier: one of the tiers, the board finished at it and not at the tier below
+  sample: { dominoes: { value: 1 }, rest: 2 }
+  grow:
+    partition: region
+    holds: 2
+    smallest: 3
+    closed: { oneIn: [2, 4], atMostOneIn: 3 }
+id:
+  - walls: region
+tiers: [Easy, Normal]
+names:
+  fullRegion: "a region with its two shaded squares"
+  exactRegion: "a region needing every open square"
+  domino: "a finished domino"
+  partner: "a shaded square's only partner"
+  between: "a square that would touch two"
+techniques:
+  - id: fullRegion
+    tier: Easy
+    for: "r in region, O = open(cells(r)) where |O| > 0 and need(cells(r)) = 0"
+    conclude: "forall c in O: place(c, 2)"
+    says:
+      marks: { stripes: "cells(r)" }
+      look: "{stripes: this region} has its two shaded squares"
+      move: "{ring: its open square | its open squares} must be crossed out"
+  - id: exactRegion
+    tier: Easy
+    for: "r in region, O = open(cells(r)) where |O| > 0 and need(cells(r)) = |O|"
+    conclude: "forall c in O: place(c, 1)"
+    says:
+      marks: { stripes: "cells(r)" }
+      look: "{stripes: this region} needs every open square"
+      move: "{ring: its open square | its open squares} must be shaded"
+  - id: domino
+    tier: Easy
+    for: >-
+      c in cells where value(c) = 1, d in adj4(c) where value(d) = 1,
+      O = {e in adj4(c) + adj4(d) where not known(e)} where |O| > 0
+    conclude: "forall e in O: place(e, 2)"
+    says:
+      marks: { outline: "{c} + {d}" }
+      look: "{outline: these two shaded squares} make a domino"
+      move: "{ring} must be crossed out"
+  - id: between
+    tier: Normal
+    for: "x in cells where not known(x) and lit(x) >= 2"
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{d in adj4(x) where value(d) = 1}" }
+      look: "{ring} would touch two shaded squares"
+      move: "it must be crossed out"
+  - id: partner
+    tier: Normal
+    for: "c in cells where value(c) = 1 and lit(c) = 0, F = free(c) where |F| = 1"
+    conclude: "forall d in F: place(d, 1)"
+    says:
+      marks: { outline: "{c}" }
+      look: "{outline: this shaded square} has no shaded neighbor and one open one"
+      move: "{ring} must be shaded"
