@@ -364,12 +364,13 @@ commit. In design.md § "Decisions" 7's order.
         parity: the other kinds never meet at a Latin square's corner.
         Tested on two answers whose corner 0 is all odd, one also the
         same (seen to fail with the precedence planted away).
-        Found: at the lowest tier the hide only takes off what the ladder
-        never read with every clue shown, and tries no clue one by one
-        (`hideUpTo`'s `tries`), so a `cornering` Easy deal keeps givens
-        and no corner clue at all. Mathrax's Easy deal is upstream's
-        givens stripped first, so 2.6d measures its boards against the
-        hand-written port's and decides how the hide reaches them.
+        A `cornering` Easy deal keeps some 8 givens and no clue but a rare
+        parity (20 5x5 deals, 2026-11-23): its Easy reads a parity and no
+        other corner clue, so the givens are what finish it, and taking
+        the thorough run from the other end of the hide order or keeping
+        the waiting kinds out of the read-prune moved nothing. Mathrax
+        reads its arithmetic clues at Easy (`clueEasy`); 2.6d measures its
+        deals against the hand-written port's.
   - [x] 2.6c A hide of some kinds first and the rest in one random order
         (`deal.hideFirst`, upstream mathrax.c's givens, then its clues),
         replacing `hideInTurn: true`, which Towers and `flanking` state as
