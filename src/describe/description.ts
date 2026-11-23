@@ -355,6 +355,7 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
  * ({@link growOf}). */
 type DealJson = Record<
   string,
+  | boolean
   | string
   | readonly string[]
   | SampleJson

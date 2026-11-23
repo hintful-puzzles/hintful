@@ -889,22 +889,8 @@ export function dealOf(
   const written = kinds.filter((k) => k !== json.play?.tally?.kind);
   checkNamed(id, [...written, ...partitions], hexagon?.outside ?? null);
   checkSegments(id, d, env);
-  const hideJson = json.deal?.["hide"];
-  // One kind, or several hidden in one random order.
-  const hide =
-    typeof hideJson === "string" ||
-    (Array.isArray(hideJson) && hideJson.every((k) => typeof k === "string"))
-      ? (hideJson as string | readonly string[])
-      : undefined;
-  if (hideJson !== undefined && hide === undefined)
-    throw new CompileError("deal hide: a clue kind, or a list of them");
-  const hides = hide !== undefined;
-  for (const k of typeof hide === "string" ? [hide] : (hide ?? [])) {
-    const c = d.clueKinds.get(k);
-    if (c === undefined) throw new CompileError(`deal hide: no clue kind ${k}`);
-    if (c.complete)
-      throw new CompileError(`deal hide: ${k} is complete, so none of it is hidden`);
-  }
+  const { hide, hideInTurn, hideFrom } = hideOf(json, d);
+  const hides = hide !== null;
   const thorough = thoroughOf(json);
   if (thorough !== null) {
     if (!hides)
@@ -1064,6 +1050,8 @@ export function dealOf(
     ...(Object.keys(options).length === 0 ? {} : { options }),
     sample,
     ...(hides ? { hide } : {}),
+    ...(hideInTurn ? { hideInTurn } : {}),
+    ...present("hideFrom", hideFrom),
     ...(stripFrom === undefined ? {} : { stripFrom }),
     ...present("tierFlag", tierFlag),
     ...present("unusedLetters", unusedLetters),
@@ -1292,6 +1280,63 @@ function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
 /** The symmetries a `first` sample's option chooses among, in upstream's
  * order (`engine/generate/symmetric-blacks.ts`). */
 const SYMMETRIES = 5;
+
+/** `deal.hide`, one kind or several, whether they go in turn
+ * (`hideInTurn`), and the tier each is first hidden at (`hideFrom`). */
+function hideOf(
+  json: DescriptionJson,
+  d: Description,
+): {
+  hide: string | readonly string[] | null;
+  hideInTurn: boolean;
+  hideFrom: Record<string, number> | null;
+} {
+  const hideJson = json.deal?.["hide"];
+  // One kind, or several hidden in one random order.
+  const hide =
+    typeof hideJson === "string" ||
+    (Array.isArray(hideJson) && hideJson.every((k) => typeof k === "string"))
+      ? (hideJson as string | readonly string[])
+      : null;
+  if (hideJson !== undefined && hide === null)
+    throw new CompileError("deal hide: a clue kind, or a list of them");
+  const kinds = typeof hide === "string" ? [hide] : (hide ?? []);
+  for (const k of kinds) {
+    const c = d.clueKinds.get(k);
+    if (c === undefined) throw new CompileError(`deal hide: no clue kind ${k}`);
+    if (c.complete)
+      throw new CompileError(`deal hide: ${k} is complete, so none of it is hidden`);
+  }
+  const hideInTurn = json.deal?.["hideInTurn"];
+  if (hideInTurn !== undefined && (hideInTurn !== true || kinds.length < 2))
+    throw new CompileError("deal hideInTurn: true, where the deal hides several kinds");
+  return { hide, hideInTurn: hideInTurn === true, hideFrom: hideFromOf(json, kinds) };
+}
+
+/** `deal.hideFrom`: each kind of `hidden` the deal keeps whole below a
+ * tier, by the tier's index; `null` where there is none. */
+function hideFromOf(
+  json: DescriptionJson,
+  hidden: readonly string[],
+): Record<string, number> | null {
+  const from = json.deal?.["hideFrom"];
+  if (from === undefined) return null;
+  if (typeof from !== "object" || Array.isArray(from))
+    throw new CompileError("deal hideFrom: a tier by clue kind");
+  const out: Record<string, number> = {};
+  for (const [kind, tier] of Object.entries(from)) {
+    if (!hidden.includes(kind))
+      throw new CompileError(`deal hideFrom: ${kind} is no kind the deal hides`);
+    if (typeof tier !== "string")
+      throw new CompileError(`deal hideFrom: ${kind}'s tier by its name`);
+    out[kind] = tierIndex(json.tiers ?? [], tier, "deal hideFrom");
+    if (out[kind] === 0)
+      throw new CompileError(
+        `deal hideFrom: ${kind} from the lowest tier is every tier`,
+      );
+  }
+  return out;
+}
 
 /** The index of tier `name`, refused where there is no such tier. */
 function tierIndex(tiers: readonly string[], name: string, where: string): number {

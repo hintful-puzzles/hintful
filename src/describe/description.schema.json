@@ -1422,6 +1422,15 @@
               ],
               "description": "A clue kind the deal hides from the answer's, or several hidden in one random order, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier."
             },
+            "hideInTurn": {
+              "const": true,
+              "description": "The kinds of `hide` go in turn, in its order, at each tier: every clue of one that may go is tried before any of the next, each kind's in a random order (upstream towers.c's givens, then its clues)."
+            },
+            "hideFrom": {
+              "type": "object",
+              "additionalProperties": { "type": "string" },
+              "description": "By kind of `hide`, the tier from which the deal hides it: a board below that tier shows every clue of the kind (Towers' clues at Easy)."
+            },
             "oneIn": {
               "type": "object",
               "additionalProperties": { "type": "string" },

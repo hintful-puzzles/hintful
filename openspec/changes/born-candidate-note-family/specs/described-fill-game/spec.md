@@ -26,7 +26,38 @@ directory SHALL hold no TypeScript but its tests.
 - **THEN** Unequal and Adjacent are in all of them, and neither directory
   holds a TypeScript file
 
+### Requirement: A born game may hide several kinds of clue
+
+`deal.hide` MAY name several kinds, whose clues SHALL be hidden in one random
+order across them, each kept hidden while the ladder finishes the board.
+With `deal.hideInTurn`, they SHALL instead be hidden in `hide`'s order at
+each tier, every clue of one kind tried before any of the next, each kind's
+in a random order. `deal.stripFrom: everyClue` SHALL start every draw of a search tier from
+every clue, not from a board hidden at the lowest tier that finishes it.
+
+#### Scenario: Sticks hides lengths and block numbers together
+
+- **WHEN** a Sticks board is dealt at Easy
+- **THEN** both its line numbers and its block numbers are among those hidden
+
+#### Scenario: Squares go before sums
+
+- **WHEN** a `flanking` board is dealt at Normal, its givens hidden in turn
+  before its sums
+- **THEN** it shows fewer givens and more sums than the same deal in one
+  random order
+
 ## ADDED Requirements
+
+### Requirement: A born game may hide a kind only from a tier up
+
+`deal.hideFrom` MAY name a tier for a kind of `hide`: a board below that
+tier SHALL show every clue of the kind.
+
+#### Scenario: Every sum at Easy
+
+- **WHEN** a `flanking` board is dealt at Easy, its sums hidden from Normal
+- **THEN** it shows the sum at every slot
 
 ### Requirement: A born game's default board is dealt at the first tier its menu offers it
 

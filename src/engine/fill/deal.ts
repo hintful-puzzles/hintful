@@ -324,6 +324,18 @@ export function dealFill<C extends Clues<C>>(
     }
     return out;
   };
+  /** `units`, shuffled, in the order the deal hides them: where it hides in
+   * turn (`deal.hideInTurn`), every unit of `hide`'s first kind before any
+   * of the next, each kind's in a random order. */
+  const hideOrder = (clues: C, units: number[][]): number[][] => {
+    shuffle(units, rs);
+    if (deal.hideInTurn !== true) return units;
+    const offsets = offsetsOf(clues, kinds);
+    const kindOf = (u: readonly number[]): number =>
+      offsets.findLastIndex((o) => o <= u[0]);
+    // A stable sort keeps each kind's units in their random order.
+    return units.sort((a, b) => kindOf(a) - kindOf(b));
+  };
   /**
    * The shortest run from the start of `units` whose clues alone of the
    * hidden kinds tier `t` finishes the board with, found by halving: the
@@ -404,16 +416,14 @@ export function dealFill<C extends Clues<C>>(
     const atFrom = (units: number[][]): number[][] =>
       units.filter((u) => !u.some(later));
     if (thorough && !forSearch) {
-      const order = atFrom(unitsOf(clues, shown));
-      shuffle(order, rs);
+      const order = hideOrder(clues, atFrom(unitsOf(clues, shown)));
       // `from` reads none of the kept, so finishes as well without them.
       const kept = shown.filter(later);
       shown = [...shortestRun(clues, order, from), ...kept].sort(byIndex);
     }
     for (const t of tier > from && !forSearch ? [from, tier] : [from]) {
       const units = unitsOf(clues, shown);
-      const order = t === from ? atFrom(units) : units;
-      shuffle(order, rs);
+      const order = hideOrder(clues, t === from ? atFrom(units) : units);
       const tries = thorough
         ? order
         : order.slice(0, t === from ? 0 : Math.min(p.w, p.h));
@@ -469,8 +479,7 @@ export function dealFill<C extends Clues<C>>(
         }
       },
       strip(b, one) {
-        const order = unitsOf(b.all, b.shown);
-        shuffle(order, rs);
+        const order = hideOrder(b.all, unitsOf(b.all, b.shown));
         const hide = (run: readonly number[]) => {
           b.shown = b.shown.filter((j) => !run.includes(j));
         };
@@ -694,15 +703,17 @@ const byIndex = (a: number, b: number): number => a - b;
 /** The indices of a list's clues. */
 const shownOf = (list: ClueList): number[] => Array.from(list.at.keys());
 
-/** The kinds the deal hides on a board of `p` (`deal.hide`), in one random
- * order together: the hide flag's too where `p` has it on. */
+/** The kinds the deal hides on a board of `p` (`deal.hide`), but one kept
+ * whole below its tier (`deal.hideFrom`): the hide flag's too where `p` has
+ * it on. */
 const hiddenKinds = (deal: FillDeal, p: FillParams): readonly string[] => {
-  const kinds =
+  const kinds = (
     deal.hide === undefined
       ? []
       : typeof deal.hide === "string"
         ? [deal.hide]
-        : deal.hide;
+        : deal.hide
+  ).filter((k) => p.diff >= (deal.hideFrom?.[k] ?? 0));
   return deal.hideFlag !== undefined && p.hides === true
     ? [...kinds, deal.hideFlag.kind]
     : kinds;

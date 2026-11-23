@@ -42,10 +42,12 @@ play:
 deal:
   answer: a Latin square
   given: every square's number, then each hidden while the board still finishes
-  flank: every sum, then each hidden while the board still finishes
+  flank: every sum, then above Easy each hidden, once no more squares can be, while the board still finishes
   tier: one of the tiers
   sample: { latin: true }
   hide: [given, flank]
+  hideInTurn: true
+  hideFrom: { flank: Normal }
 id:
   - { numbers: flank, between: "/" }
   - { digits: given, apart: "_", before: "," }

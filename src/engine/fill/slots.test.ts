@@ -1,6 +1,7 @@
 /**
  * Clues at slots, a step beyond each end of every line, on the `flanking`
- * fixture: dealt from the answer, written a slot at a time between slashes
+ * fixture: dealt from the answer, every sum shown at Easy and above it the
+ * squares hidden before the sums, written a slot at a time between slashes
  * with the givens after a comma only where there are any, drawn in the
  * margin at both ends of each line, red where broken, gray where marked
  * done, printed in the text format, and outlined by the walk's own step.
@@ -36,8 +37,9 @@ import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { expectDragRepeatsThePress } from "../testing/sweep-probe.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { dealFill } from "./deal.ts";
 import { fillGame } from "./game.ts";
-import { encodeDesc } from "./game-id.ts";
+import { encodeDesc, type FillDeal } from "./game-id.ts";
 import { slotAt, slotPoint } from "./slots.ts";
 
 const game = fillGame("flanking", flanking);
@@ -97,6 +99,37 @@ describe("a clue at a slot in the desc", () => {
       });
       expect(encodeDesc(flanking.deal, sp, b.dealt)).toBe(desc);
     }
+  });
+
+  it("shows every sum at Easy, where the deal hides sums from Normal on", () => {
+    for (const seed of ["a", "b", "c"]) {
+      const p = params(5);
+      const b = game.newState(p, game.newDesc(p, randomNew(seed)).desc);
+      expect(b.dealt.flank.at.length).toBe(20);
+      expect(b.dealt.given.at.length).toBeLessThan(25);
+    }
+  });
+
+  it("hides the squares first and then the sums, where they go in turn", () => {
+    /** The squares and sums a Normal deal of `deal` leaves, over some seeds. */
+    const left = (deal: FillDeal) => {
+      let given = 0;
+      let flank = 0;
+      for (const seed of ["a", "b", "c", "d", "e", "f"]) {
+        const p = params(5, NORMAL);
+        const { desc } = dealFill(flanking, deal, p, randomNew(seed));
+        const b = game.newState(p, desc);
+        given += b.dealt.given.at.length;
+        flank += b.dealt.flank.at.length;
+      }
+      return { given, flank };
+    };
+    const { hideInTurn: _, ...together } = flanking.deal;
+    const inTurn = left(flanking.deal);
+    const mixed = left(together);
+    // Measured 2026-11-23: 1 square and 41 sums left in turn, 30 and 16 not.
+    expect(inTurn.given).toBeLessThan(mixed.given);
+    expect(inTurn.flank).toBeGreaterThan(mixed.flank);
   });
 });
 

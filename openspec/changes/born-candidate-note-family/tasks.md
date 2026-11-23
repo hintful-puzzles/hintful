@@ -262,11 +262,23 @@ commit. In design.md § "Decisions" 7's order.
         steps had been named by an id `names:` lacks, so Check & save could
         not name them; they are `cage` steps now, and the walk refuses a
         rung `names:` does not cover.
-  - [ ] 2.5c The flip: the hide of givens then clues, the clues from a
-        tier up; the tower painter (3D, drawing past its tile, its hit
-        test, the 2D/3D preference); Towers' tests to `towers.cases.yaml`,
-        its TypeScript deleted, the `game-lines` ceiling lowered, its spec
-        deltas, and the run in the app.
+  - [x] 2.5c A hide in turn and from a tier up, on `flanking`:
+        `deal.hideInTurn` hides every clue of `hide`'s first kind that may
+        go before any of the next (upstream towers.c's givens, then its
+        clues), and `deal.hideFrom` keeps a kind whole below a tier
+        (Towers' clues at Easy). Done: the order is the shuffle stably
+        sorted by kind, at each tier's pass and in a search tier's strip.
+        Measured on six 5x5 Normal `flanking` deals (2026-11-23): 1 given
+        and 41 sums left in turn, 30 and 16 in one order.
+  - [ ] 2.5d The tower painter: a value drawn as a solid that reaches into
+        the tiles up and right of its own, repainted with them, a press on
+        its drawn top retargeted to its cell, and the 2D/3D preference;
+        on `flanking` (render and input tests: the fixture is not in the
+        app, so the browser look is 2.5e's).
+  - [ ] 2.5e The flip: `facing`, `fullLine` and `tallestNearest` as
+        placing techniques and `bounds` as arms (2.5b); Towers' tests to
+        `towers.cases.yaml`, its TypeScript deleted, the `game-lines`
+        ceiling lowered, its spec deltas, and the run in the app.
 - [ ] 2.6 Mathrax born: clues at corners, a kind precedence switched by
       option letters, a hide of givens before clues, the board word the
       hint reads stated in the description.
