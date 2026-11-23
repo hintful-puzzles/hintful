@@ -284,6 +284,19 @@ vouches for them (`docs/hints-candidates.md` § "Deduce from the notes when
 the mistake check vouches for them"). Notes are not a second `mark`: a cell
 holds several, and the mark (a link, a cross) is one element.
 
+The moves are the shared canonical ones (2026-11-23, read for 2.1b): a board
+of numbers' move is an `Edit` or a `CandidateMove` (`set` with `pencil` and
+`autoElim`, `pencilAll`, `pencilStrike`, `pencilAdd`,
+`engine/hint/candidate-hint.ts`), so the default type-keyed dialect reads it
+with no adapter, and `applyNoteMove`, `adaptiveMarkAllMove` over the space's
+units, `entryMistakes` (a `note` kind beside `FillMistake`'s), keep-track,
+the judge and `candidateGesture` serve it unchanged. Typed entries become
+`CandidateMove`s; Solve, Clear and Reveal stay `Edit`s, and a value an edit
+places clears its cell's notes. The `Ui`'s pencil fields are on a board of
+numbers alone (`numbers.ts`'s `typedUi`), since the app and
+`pencil-mode-key.test.ts` read a `Ui` with a pencil mode as one that takes
+notes.
+
 ### 2. A born game with notes hints through the candidate walk
 
 The fill board has two walks: its own, one firing a step over values, and
