@@ -29,6 +29,12 @@
  * (2026-11-07). A claim about what a change costs is counted in instructions
  * by `npm run compare-cost` (`docs/method.md` § "Compare a cost in
  * instructions, not in time").
+ *
+ * **Its ratio of a described game to a hand-written one is not a player's.**
+ * Under vitest every import is read through a module runner's getter, which
+ * a described game's compiled techniques pay on each runtime call and
+ * hand-written code seldom, so the described side reads dearer here than in
+ * the app's bundle, which `compare-cost` counts.
  */
 import { execFileSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";

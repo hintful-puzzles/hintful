@@ -152,15 +152,14 @@ it a cost. A figure in milliseconds, such as whether a deal stays under the
 100 ms a player does not notice, is still CPU time, taken as the least of
 several runs, as `scripts/checks/cpu-unit.ts` takes its unit.
 
-A count taken under vitest is of the engine behind its module runner, which
-reads every import through a getter, where the app's bundle binds it
-directly. A described game's compiled techniques call their runtime through
-a barrel, two getters a call, and a hand-written game calls few, so a
-vitest comparison of the two overstates the described one: Light Up's
-deal read 3.2 times its hand-written one there and 1.5 times bundled
-(`cut-the-born-deal-cost`, 2026-11-23). Compare a described game against a
-hand-written one on bundles of both trees until `compare-cost` counts one
-(`count-cost-on-the-bundled-engine`).
+A count is of each tree bundled as the app bundles it, DEV off, and run by
+Node. Under vitest the engine runs behind a module runner that reads every
+import through a getter, with DEV checks on, and what that adds is not the
+same share of every game's work: it put Light Up's born deal at 2.1 times
+the hand-written one, against 1.7 bundled, and left Boats' ratio where it
+was (`count-cost-on-the-bundled-engine`, 2026-11-23). So a figure taken
+under vitest, `deal-compare`'s and `deal-profile`'s included, is never read
+as a player's cost or as one game's against another's.
 
 ## Retire a dead instruction
 

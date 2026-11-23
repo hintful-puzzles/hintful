@@ -17,6 +17,13 @@
  * **A report and not a gate.** The shares are one machine's on one day, and a
  * cell is a few deals.
  *
+ * **The share is vitest's, and above a player's.** Under vitest every import
+ * is read through a module runner's getter, and the getters on a compiled
+ * technique's runtime calls are samples in described code that the app's
+ * bundle does not take. So `f` overstates what the description costs: a game
+ * it clears is clear, and one it does not is counted by `npm run
+ * compare-cost`, on bundles of both trees.
+ *
  *     DEAL_PROFILE_PROGRESS=/tmp/p.md \
  *       npx vitest run -c scripts/checks/diff.vitest.config.mts deal-profile
  *

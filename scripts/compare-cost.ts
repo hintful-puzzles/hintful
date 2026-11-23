@@ -12,7 +12,16 @@
  * It refuses a baseline whose `package-lock.json` differs from this tree's,
  * whose dependencies would then not be its own, and otherwise links this
  * tree's `node_modules` into it. It copies its worker and the worker's config
- * there too, so both trees walk with the same code.
+ * there too, so both trees walk with the same code, and stops at a tree its
+ * config cannot bundle, with Vite's message.
+ *
+ * **What is counted is the bundle** (`scripts/checks/cost.vite.config.mts`):
+ * each tree's worker and the named games, built by Vite as the app builds
+ * them, DEV off, and run by Node. Under vitest's module runner every import
+ * is read through a getter, and DEV checks run, which weigh on some games'
+ * work more than others': Light Up's born deal read 2.1 times the
+ * hand-written one's there and 1.7 times bundled, and one tree's spread was
+ * ten times the bundle's (`count-cost-on-the-bundled-engine`'s design.md).
  *
  * **Why instructions, and not time** (`docs/method.md` § "Compare a cost in
  * instructions, not in time"): CPU time is the work at the speed of the core
@@ -23,7 +32,7 @@
  * **What it runs.** The boards are dealt once, at the baseline: four on each
  * menu board of at most 100 squares. Then, round by round, alternating which
  * tree goes first, each tree runs three processes a game: one that only loads
- * the game, one that walks every board by its hint to the end, and one that
+ * the bundle, one that walks every board by its hint to the end, and one that
  * deals each board's params once. A figure is a run's count less the
  * loading run's of the same round, and the line gives the median over the
  * rounds and the spread of one tree's rounds (largest less smallest). A
@@ -34,8 +43,8 @@
  * Node runs with V8's `--predictable`, which took the spread of one tree's
  * Tents walk from 10% to 2% (2026-11-23): the compiler's helper threads are
  * counted too, and left to themselves they do a different amount each run.
- * The worker runs in vitest's thread pool, because a forked worker's
- * instructions are not in the count of the process `time` wraps.
+ * The bundle runs in the process `time` wraps: a child's instructions are
+ * not in its count.
  *
  * Steps and technique tries are the engine's own counts and are exact; tries
  * read "–" in a tree from before the counter (`techniqueTries`).
@@ -54,7 +63,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-/** What a worker run writes back (`scripts/checks/cost-walk.test.ts`). */
+/** What a worker run writes back (`scripts/checks/cost-walk.ts`). */
 export interface CostRun {
   /** The boards a `list` dealt, by game. */
   boards?: Record<string, string[]>;
@@ -68,8 +77,8 @@ export interface CostRun {
 }
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const WORKER = "scripts/checks/cost-walk.test.ts";
-const CONFIG = "scripts/checks/cost.vitest.config.mts";
+const WORKER = "scripts/checks/cost-walk.ts";
+const CONFIG = "scripts/checks/cost.vite.config.mts";
 /** A run that has not ended in this long is killed, and the command with it. */
 const KILL_MS = 600_000;
 
@@ -132,24 +141,16 @@ process.on("exit", () => rmSync(scratch, { recursive: true, force: true }));
 for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const)
   process.on(signal, () => process.exit(1));
 
-/** One worker run in `tree`, counted by the kernel. */
-function counted(tree: string, env: Record<string, string>): Promise<Counted> {
-  const out = path.join(scratch, "out.json");
-  rmSync(out, { force: true });
+/** Run `command` in `tree` to its end, or reject with what it printed. */
+function finished(
+  tree: string,
+  command: string,
+  args: readonly string[],
+  env: Record<string, string>,
+  what: string,
+): Promise<string> {
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      "/usr/bin/time",
-      [
-        "-l",
-        process.execPath,
-        "--predictable",
-        path.join(tree, "node_modules/vitest/vitest.mjs"),
-        "run",
-        "-c",
-        CONFIG,
-      ],
-      { cwd: tree, env: { ...process.env, ...env, COST_OUT: out } },
-    );
+    const child = spawn(command, args, { cwd: tree, env: { ...process.env, ...env } });
     let stderr = "";
     let stdout = "";
     child.stderr.on("data", (d: Buffer) => {
@@ -161,30 +162,50 @@ function counted(tree: string, env: Record<string, string>): Promise<Counted> {
     const timer = setTimeout(() => child.kill("SIGKILL"), KILL_MS);
     child.on("close", (code) => {
       clearTimeout(timer);
-      const field = (name: string) =>
-        Number(
-          new RegExp(`^\\s*(\\d+)\\s+${name}$`, "m").exec(stderr)?.[1] ?? Number.NaN,
-        );
-      if (code !== 0 || !existsSync(out)) {
-        reject(
-          new Error(
-            `a run in ${tree} failed (${env["COST_KIND"]}):\n${stdout}\n${stderr}`,
-          ),
-        );
-        return;
-      }
-      const instructions = field("instructions retired");
-      if (Number.isNaN(instructions)) {
-        reject(new Error(`/usr/bin/time printed no instructions retired:\n${stderr}`));
-        return;
-      }
-      resolve({
-        instructions,
-        cycles: field("cycles elapsed"),
-        out: JSON.parse(readFileSync(out, "utf8")) as CostRun,
-      });
+      if (code === 0) resolve(stderr);
+      else reject(new Error(`${what} in ${tree} failed:\n${stdout}\n${stderr}`));
     });
   });
+}
+
+/** Bundle `tree`'s worker with `games`, as the app bundles the engine. */
+async function bundled(tree: string, games: readonly string[]): Promise<string> {
+  const bundle = path.join(scratch, `${path.basename(tree)}-${bundles++}.mjs`);
+  await finished(
+    tree,
+    process.execPath,
+    [path.join(tree, "node_modules/vite/bin/vite.js"), "build", "-c", CONFIG],
+    { COST_BUNDLE: bundle, COST_GAMES: games.join(",") },
+    "bundling the worker",
+  );
+  if (!existsSync(bundle))
+    throw new Error(`bundling the worker in ${tree} wrote no ${bundle}`);
+  return bundle;
+}
+let bundles = 0;
+
+/** One run of a worker `bundle`, counted by the kernel. */
+async function counted(bundle: string, env: Record<string, string>): Promise<Counted> {
+  const out = path.join(scratch, "out.json");
+  rmSync(out, { force: true });
+  const stderr = await finished(
+    scratch,
+    "/usr/bin/time",
+    ["-l", process.execPath, "--predictable", bundle],
+    { ...env, COST_OUT: out },
+    `a ${env["COST_KIND"]} run of ${bundle}`,
+  );
+  const field = (name: string) =>
+    Number(new RegExp(`^\\s*(\\d+)\\s+${name}$`, "m").exec(stderr)?.[1] ?? Number.NaN);
+  if (!existsSync(out)) throw new Error(`a run of ${bundle} wrote no ${out}`);
+  const instructions = field("instructions retired");
+  if (Number.isNaN(instructions))
+    throw new Error(`/usr/bin/time printed no instructions retired:\n${stderr}`);
+  return {
+    instructions,
+    cycles: field("cycles elapsed"),
+    out: JSON.parse(readFileSync(out, "utf8")) as CostRun,
+  };
 }
 
 const median = (xs: readonly number[]): number => {
@@ -224,10 +245,14 @@ async function main(): Promise<void> {
       `this is ${process.platform}, and the count is macOS's (/usr/bin/time -l, instructions retired): no figure is reported in its place`,
     );
   prepareBaseline(baseline);
-  const trees = { baseline, working: ROOT } as const;
+  console.error("bundling the worker in each tree");
+  const trees = {
+    baseline: await bundled(baseline, games),
+    working: await bundled(ROOT, games),
+  } as const;
 
   console.error(`dealing the boards at ${baseline}`);
-  const dealt = await counted(baseline, {
+  const dealt = await counted(trees.baseline, {
     COST_KIND: "list",
     COST_GAMES: games.join(","),
   });
@@ -237,14 +262,14 @@ async function main(): Promise<void> {
     let ids = boards[game] ?? [];
     const list = path.join(scratch, `${game}.json`);
     writeFileSync(list, JSON.stringify(ids));
-    const run = (tree: string, kind: string) =>
-      counted(tree, { COST_KIND: kind, COST_GAME: game, COST_LIST: list });
+    const run = (bundle: string, kind: string) =>
+      counted(bundle, { COST_KIND: kind, COST_GAME: game, COST_LIST: list });
 
     // The warm-up: what each tree refuses is walked in neither.
     const refused = new Map<string, string>();
-    for (const [name, tree] of Object.entries(trees)) {
+    for (const [name, bundle] of Object.entries(trees)) {
       console.error(`${game}: warm-up in the ${name} tree`);
-      const { out } = await run(tree, "walk");
+      const { out } = await run(bundle, "walk");
       for (const [id, why] of Object.entries(out.refused ?? {}))
         refused.set(id, `${name} refuses it: ${why}`);
     }
@@ -275,10 +300,10 @@ async function main(): Promise<void> {
       ) as ("baseline" | "working")[];
       for (const name of order) {
         console.error(`${game}: round ${r + 1} of ${rounds}, ${name} tree`);
-        const tree = trees[name];
-        const none = await run(tree, "none");
-        const walk = await run(tree, "walk");
-        const deal = await run(tree, "deal");
+        const bundle = trees[name];
+        const none = await run(bundle, "none");
+        const walk = await run(bundle, "walk");
+        const deal = await run(bundle, "deal");
         const side = sides[name];
         side.walk.push(walk.instructions - none.instructions);
         side.walkCycles.push(walk.cycles - none.cycles);
