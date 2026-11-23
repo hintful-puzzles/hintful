@@ -66,14 +66,26 @@ commit. In design.md § "Decisions" 7's order.
         `implicit`); `notes.ts`'s `reachOf` is the one reach the walk,
         auto-pencil and Mark-all read; the struck lane is an
         `OverlaySidecar` on the tiles. The walk refuses units other than
-        rows and columns and a technique of the description's own: 2.2
-        gives it Unequal's own strikes, worded by `statedParts` over their
-        `step` or `fact`, and 2.7 Seismic's areas and its `cull` reach.
-- [ ] 2.2 Unequal born: the walk's rungs for the description's own
-      techniques (design.md § "Decisions" 2), clues at edges, a gapped grid,
-      the chevron painter,
-      done marks on a clue, the cell-records segment, `order` renamed `w`,
-      the alphabet past 9, the deal hiding from every clue (§ 5).
+        rows and columns: 2.7 gives it Seismic's areas and its `cull`
+        reach.
+- [ ] 2.2 Unequal born (design.md § "Decisions" 2 and 5), in three commits:
+  - [x] 2.2a Clues at edges (`at: edge`, `ends(at)`), the `records`/`sides`
+        segment, `play.gaps` with the chevron painter (a gapped grid, a
+        sign red where it breaks, printed in the text), and the walk's
+        rungs for the description's own techniques, worded by
+        `statedParts` a leg a cell; tested on the `ordering` fixture
+        (`engine/fill/edges.test.ts`). A born board of numbers whose
+        ladder strikes needs notes: without them the fill walk's strike
+        step is an empty move. The hide keeps a kind the lowest tier reads
+        none of whole until the asked tier's pass, or a Normal board's
+        signs all went at Easy and no Normal board was dealt.
+  - [ ] 2.2b Done marks on an edge clue (a press in its gap, or an arrow
+        with Shift or Ctrl), drawn gray.
+  - [ ] 2.2c The flip: `order` renamed `w`, the alphabet past 9, the
+        deal hiding from every clue, Unequal's tests to `cases.yaml`, its
+        TypeScript deleted, the `game-lines` ceiling lowered and its spec
+        deltas written; its rungs (upstream's greater/lesser beside the
+        fixture's `sign`) settled there.
 - [ ] 2.3 Adjacent born: records flagged from both cells, the legacy `a`,
       the bar painter and a missing bar's breach; `engine/edge-clue-latin/`
       deleted (§ 4).

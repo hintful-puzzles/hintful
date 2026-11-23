@@ -1,0 +1,6 @@
+5x5 Easy #1: 9 steps, solved, 2ad0346abca34404 [lineFull:5 lineMet:4]
+5x5 Easy #2: 13 steps, solved, bba7449ded598281 [lineFull:5 lineMet:4 tooMuch:4]
+5x5 Easy #3: 11 steps, solved, 1896224224731738 [lineFull:6 lineMet:3 tooMuch:2]
+5x5 Normal #1: 17 steps, solved, c85c59f753dfd5fb [everyWay:3 lineFull:5 lineMet:4 noWay:1 tooMuch:4]
+5x5 Normal #2: 15 steps, solved, 4a4e3b7c09ceb948 [everyWay:1 lineFull:6 lineMet:3 tooMuch:5]
+5x5 Normal #3: 15 steps, solved, eb95287deb056151 [everyWay:2 lineFull:5 lineMet:4 noWay:1 tooMuch:3]

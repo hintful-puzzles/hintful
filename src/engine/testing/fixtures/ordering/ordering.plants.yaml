@@ -1,0 +1,10 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # The larger end held one past the smaller end's least.
+  sign:
+    conclude: >-
+      forall d in cand(c) where not (exists u in cand(p):
+      (c = big and u + 1 < d) or (c = small and u > d)): strike(c, d)

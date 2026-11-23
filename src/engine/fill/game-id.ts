@@ -9,6 +9,7 @@
 import { Dsf } from "../board/dsf.ts";
 import type { DescParse } from "../contract/desc-error.ts";
 import {
+  DESC_CONTRADICTORY,
   DESC_MALFORMED,
   DESC_OUT_OF_RANGE,
   DESC_TOO_LONG,
@@ -98,7 +99,29 @@ export type IdSegment =
     }
   /** A cell kind written a letter a clue, each letter one of its values,
    * between runs of empty cells `a` to `z`, the last run left off. */
-  | { readonly glyphs: string; readonly values: Readonly<Record<string, number>> };
+  | { readonly glyphs: string; readonly values: Readonly<Record<string, number>> }
+  /** A record a cell, closed by a comma: its clue of `records` as a number,
+   * 0 for none, then a side letter (`SIDES`) for each clue of `sides`, a kind
+   * at edges valued one of the edge's ends, that it is the value of. */
+  | { readonly records: string; readonly sides: string };
+
+/** A record's side letters, up, right, down and left (upstream unequal.c's
+ * `adjthan` order). */
+const SIDES = "URDL";
+const SIDE_STEP: readonly (readonly [number, number])[] = [
+  [0, -1],
+  [1, 0],
+  [0, 1],
+  [-1, 0],
+];
+
+/** The cell a step of side `d` from cell `c` reaches, `-1` off the grid. */
+function across(sp: GridSpace, c: number, d: number): number {
+  const [dx, dy] = SIDE_STEP[d];
+  const x = (c % sp.w) + dx;
+  const y = Math.floor(c / sp.w) + dy;
+  return x < 0 || y < 0 || x >= sp.w || y >= sp.h ? -1 : y * sp.w + x;
+}
 
 /** A deal setting the player may turn off (`deal.thorough`): on, the hide
  * tries every clue; off, as many as the board's shorter side. A menu board
@@ -153,6 +176,9 @@ export interface FillOption {
   }[];
 }
 
+/** The elements a clue kind sits at. */
+export type Universe = "cells" | "lines" | "edges";
+
 /** What a compiled fill module says of its deal (`deal`). */
 export interface FillDeal {
   /** Whether the grid is as high as it is wide, so one size gives both. */
@@ -195,7 +221,7 @@ export interface FillDeal {
   readonly grow?: FillGrow;
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
-  readonly universes: Readonly<Record<string, "cells" | "lines">>;
+  readonly universes: Readonly<Record<string, Universe>>;
   /** The dealt partitions, by name: Norinori's regions. */
   readonly partitions?: readonly string[];
   readonly tierLetters: string;
@@ -906,18 +932,20 @@ function optionItem(
  * the columns first. */
 function elements(
   sp: GridSpace,
-  universe: "cells" | "lines",
+  universe: Universe,
   order?: "columns",
 ): readonly number[] {
   const { w, h } = sp;
   if (order !== "columns") return sp[universe];
+  if (universe === "edges")
+    throw new Error("id: an edge's kind is written in its order");
   if (universe === "lines") return [...sp.lines.slice(h), ...sp.lines.slice(0, h)];
   const out: number[] = [];
   for (let x = 0; x < w; x++) for (let y = 0; y < h; y++) out.push(y * w + x);
   return out;
 }
 
-function universeOf(deal: FillDeal, kind: string): "cells" | "lines" {
+function universeOf(deal: FillDeal, kind: string): Universe {
   const u = deal.universes[kind];
   if (u === undefined) throw new Error(`id: no clue kind ${kind}`);
   return u;
@@ -1061,6 +1089,19 @@ export function encodeDesc<C extends Clues<C>>(
       for (const c of sp.cells) out += n2c(list.valueAt[c]);
       continue;
     }
+    if ("records" in seg) {
+      const numbers = listOf(seg.records);
+      const sides = listOf(seg.sides);
+      for (const c of sp.cells) {
+        out += String(Math.max(0, numbers.valueAt[c]));
+        for (let d = 0; d < SIDES.length; d++) {
+          const n = across(sp, c, d);
+          if (n >= 0 && sides.valueAt[sp.edgeOf(c, n)] === c) out += SIDES[d];
+        }
+        out += ",";
+      }
+      continue;
+    }
     if ("glyphs" in seg) {
       const list = listOf(seg.glyphs);
       const letter = new Map(Object.entries(seg.values).map(([l, v]) => [v, l]));
@@ -1167,6 +1208,50 @@ function readLists<C extends Clues<C>>(
     read.map(([, list]) => list),
     sp[universe].length,
   );
+}
+
+/** A `records` segment: a cell's number (0 for none) and the sides whose
+ * edge's clue it is the value of, a record a cell, each closed by a comma. */
+function readRecords<C extends Clues<C>>(
+  r: DescReader,
+  deal: FillDeal,
+  sp: GridSpace,
+  clueMax: ClueMax<C>,
+  seg: { readonly records: string; readonly sides: string },
+): readonly [ClueList, ClueList] {
+  const kind = seg.records as keyof C;
+  const least = deal.least?.[seg.records] ?? 1;
+  const at: number[] = [];
+  const v: number[] = [];
+  // The end each edge's clue is valued, -1 for none.
+  const end = new Int32Array(sp.edges.length).fill(-1);
+  for (const c of sp.cells) {
+    const n = r.int(0, maxOf(clueMax, kind, sp, c));
+    if (n > 0) {
+      if (n < least) r.fail(DESC_OUT_OF_RANGE);
+      at.push(c);
+      v.push(n);
+    }
+    for (let d = 0; d < SIDES.length; d++) {
+      if (!r.accept(SIDES[d])) continue;
+      const other = across(sp, c, d);
+      if (other < 0) r.fail(DESC_OUT_OF_RANGE);
+      const e = sp.edgeOf(c, other);
+      // A clue valued both its ends says two things of one edge.
+      if (end[e] >= 0) r.fail(DESC_CONTRADICTORY);
+      end[e] = c;
+    }
+    r.expect(",");
+  }
+  const edges = sp.edges.filter((e) => end[e] >= 0);
+  return [
+    clueList(at, v, sp.cells.length),
+    clueList(
+      edges,
+      edges.map((e) => end[e]),
+      sp.edges.length,
+    ),
+  ];
 }
 
 /** The clues `desc` deals, each number read within its kind's largest value
@@ -1318,6 +1403,12 @@ export function decodeDesc<C extends Clues<C>>(
           return n;
         });
         out[kind] = clueList(sp.cells, v, sp.cells.length);
+        continue;
+      }
+      if ("records" in seg) {
+        const [numbers, sides] = readRecords(r, deal, sp, clueMax, seg);
+        out[seg.records as keyof C] = numbers;
+        out[seg.sides as keyof C] = sides;
         continue;
       }
       const kind = seg.numbers as keyof C;

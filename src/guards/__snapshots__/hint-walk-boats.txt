@@ -1,5 +1,5 @@
 6x6 Easy, size 3 #0: 11 steps, solved, 0e522dcd6c203691 [given:2 lineShips:4 lineWater:5]
-6x6 Normal, size 3 #0: 10 steps, solved, 49302deb86610be7 [lineShips:5 lineWater:4 onlyFit:1]
-6x6 Tricky, size 3 #0: 14 steps, solved, 87e6a1ad633ba779 [given:1 lineShips:4 lineWater:6 onlyRuns:1 shared:1 tooLong:1]
-6x6 Hard, size 3 #0: 16 steps, solved, 72da32f3f9ba51b1 [given:1 lastWater:2 lineShips:5 lineWater:6 tooLong:2]
+6x6 Normal, size 3 #0: 13 steps, solved, b80108057f054de7 [given:1 lineShips:4 lineWater:7 onlyFit:1]
+6x6 Tricky, size 3 #0: 16 steps, solved, 5e6b5113e2b78edb [given:1 lineShips:7 lineWater:3 shared:4 tooLong:1]
+6x6 Hard, size 3 #0: 15 steps, solved, a360ff6905d755eb [lastWater:2 lineShips:5 lineWater:6 tooLong:2]
 6x6 Easy, size 3, Remove numbers: on #0: 8 steps, solved, 19fa34598ce1f0af [given:4 lineShips:1 lineWater:2 total:1]

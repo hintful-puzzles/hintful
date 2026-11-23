@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a Latin square with greater-than signs between some
+# neighboring squares, for the fill engine's tests of a clue at an edge
+# whose value is one of the edge's ends (dealt from the answer, written in
+# the desc as a record a square, drawn in a gap between the squares, red
+# where it breaks) and of the candidate walk running a technique the
+# description states, on a description that names no game.
+game: ordering
+produces: latin
+sizes:
+  w: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "w" }
+  edges: true
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
+define:
+  lesser(k): "other(at(k), v(k))"
+shape:
+  - "latin(value, lines)"
+clues:
+  # v is the end on the open side of the sign.
+  greater:
+    at: edge
+    value: "ends(at)"
+    means: "value(v) > value(other(at, v))"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  gaps: { greater: chevron }
+  hintNotes: implicit
+  boards: [4x4, 5x5]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: a Latin square
+  given: every square's number, then each hidden while the board still finishes
+  greater: every true sign, then each hidden while the board still finishes
+  tier: one of the tiers
+  sample: { latin: true }
+  hide: [given, greater]
+id:
+  - { records: given, sides: greater }
+tiers: [Easy, Normal]
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a square"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only square left for a number"
+  sign: "a sign"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  # One sign, each end in turn, value by value: the larger end is larger than
+  # some note of the smaller end, and the smaller end smaller than some note
+  # of the larger. Each struck end is worded by a fact of its own.
+  - kind: rel.support
+    as: sign
+    tier: Normal
+    with:
+      group: >-
+        k in clues(greater), big = v(k), small = lesser(k), c in {big, small},
+        p = the(q in {big, small} where q != c)
+      end: c
+      partner: p
+      rel: "(c = big and u < d) or (c = small and u > d)"
+      marks: {}
+    says:
+      terms:
+        lo: "min(d in cand(small))"
+        hi: "max(d in cand(big))"
+      fact:
+        terms: { sign: "{c, p}" }
+        wordings:
+          - when: "c = big"
+            look: "{outline sign: this sign}'s smaller side is at least {lo}"
+          - look: "{outline sign: this sign}'s larger side is at most {hi}"

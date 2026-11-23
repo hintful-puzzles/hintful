@@ -258,7 +258,8 @@ export interface TargetVerbUi {
  *
  * A "square" is a tile-sized catchment, not necessarily a drawn cell: Twiddle's
  * target is a block's center, so its inset grows with the block and `border`
- * reads the state.
+ * reads the state. `gap` is the space between two squares, where the board
+ * draws one: a press in it is on no square.
  */
 export function squareGrid<
   State,
@@ -267,23 +268,28 @@ export function squareGrid<
   size: (state: State) => Size;
   border: (tileSize: number, state: State) => number;
   wrap?: boolean;
+  gap?: (tileSize: number) => number;
 }): TargetGeometry<State, { cursor: GridCursor }, DrawState, Point> {
   const inGrid = (s: State, x: number, y: number) => {
     const { w, h } = options.size(s);
     return x >= 0 && y >= 0 && x < w && y < h;
   };
+  const pitch = (ts: number): number => ts + (options.gap?.(ts) ?? 0);
   return {
     noun: "square",
     pointerTarget(s, ds, p) {
-      const b = options.border(ds.tileSize, s);
-      const x = fromCoord(p.x, ds.tileSize, b);
-      const y = fromCoord(p.y, ds.tileSize, b);
-      return inGrid(s, x, y) ? { x, y } : null;
+      const ts = ds.tileSize;
+      const b = options.border(ts, s);
+      const x = fromCoord(p.x, pitch(ts), b);
+      const y = fromCoord(p.y, pitch(ts), b);
+      const inGap = p.x - b - x * pitch(ts) >= ts || p.y - b - y * pitch(ts) >= ts;
+      return inGrid(s, x, y) && !inGap ? { x, y } : null;
     },
     pointAt(s, ds, t) {
-      const b = options.border(ds.tileSize, s);
-      const half = Math.floor(ds.tileSize / 2);
-      return { x: b + t.x * ds.tileSize + half, y: b + t.y * ds.tileSize + half };
+      const ts = ds.tileSize;
+      const b = options.border(ts, s);
+      const half = Math.floor(ts / 2);
+      return { x: b + t.x * pitch(ts) + half, y: b + t.y * pitch(ts) + half };
     },
     cursorTarget(s, ui) {
       const { x, y } = ui.cursor;

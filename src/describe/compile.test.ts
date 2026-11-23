@@ -867,6 +867,33 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/hintNotes: the hint reads notes, and `marks` declares none/);
   });
 
+  it("refuses a rung that strikes on a board of numbers without notes", () => {
+    const source = "src/engine/testing/fixtures/ordering/ordering.description.yaml";
+    const ordering = sources.get(source);
+    if (ordering === undefined || !isFormal(ordering)) throw new Error("no ordering");
+    const compileOrdering = (notes: boolean) => {
+      const j = structuredClone(ordering) as {
+        marks?: Record<string, unknown>;
+        play: { hintNotes?: string };
+      };
+      if (!notes) {
+        delete j.marks;
+        delete j.play.hintNotes;
+      }
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileOrdering(true)).toContain("export const STATED");
+    expect(() => compileOrdering(false)).toThrow(
+      /technique sign: it strikes, and a board of numbers strikes only in notes/,
+    );
+  });
+
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
     expect(() =>
       compileTents((j: { play: { secondary: number } }) => {

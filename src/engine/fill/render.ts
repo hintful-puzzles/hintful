@@ -112,6 +112,7 @@ import {
 import { answerOf, type FillMistake, rulesOf } from "./answer.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "./board.ts";
 import { tallyOf } from "./game-id.ts";
+import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import type { FillMove } from "./notes.ts";
 import { numeral } from "./numbers.ts";
@@ -158,6 +159,9 @@ export interface FillDrawState {
   readonly clues: TileCache;
   /** Per line, its list's error, hatch, cursor and font. */
   readonly lists: TileCache;
+  /** Per edge, the clue in its gap and its error, where the board has
+   * gaps. */
+  readonly gaps: TileCache;
   readonly marks: HintMarks;
   /** What the tally beneath the board shows found, `null` before it is
    * drawn. */
@@ -171,6 +175,8 @@ export interface FillRender<C> {
   readonly preferredTileSize: number;
   /** How far in from the canvas's top and left the board's first cell lies. */
   origin(tileSize: number, board: { w: number; h: number }): number;
+  /** The space between two cells, 0 on a board without gaps. */
+  gap(tileSize: number): number;
   computeSize(
     size: { w: number; h: number; tally?: readonly number[] },
     tileSize: number,
@@ -620,7 +626,14 @@ export function fillRender<C extends Clues<C>>(
     labelStart !== undefined ? ts : d > 0 ? d * ts + Math.floor(ts / 4) : rim(ts);
   const start = (ts: number): number => startAt(ts, depth);
   const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : rim(ts));
-  const coord = (n: number, ts: number): number => n * ts + start(ts);
+  // A board with clues at edges has a gap between every two cells to draw
+  // them in, half a tile wide (upstream unequal.c's).
+  const gapKinds = gapKindsOf<C>(play);
+  const gapped = gapKinds.length > 0;
+  const gapOf = (ts: number): number => (gapped ? Math.floor(ts / 2) : 0);
+  /** From one cell's left to the next's. */
+  const pitch = (ts: number): number => ts + gapOf(ts);
+  const coord = (n: number, ts: number): number => n * pitch(ts) + start(ts);
   // A hexagon's rows are drawn sheared, each half a tile right of the one
   // above, its store's corners not at all.
   const hexagon = module.hexagon !== undefined;
@@ -630,10 +643,12 @@ export function fillRender<C extends Clues<C>>(
   const drawn = (b: { w: number; h: number }, x: number, y: number): boolean =>
     !hexagon || inHexagon(b.w, b.h, x, y);
   /** Which outlined cells share a side: on a hexagon only a row's, since a
-   * cell overlaps those above and below it by half. */
+   * cell overlaps those above and below it by half; across a gap none. */
   const sides = hexagon
     ? { joinEvidence: (a: { y: number }, b: { y: number }) => a.y === b.y }
-    : {};
+    : gapped
+      ? { joinEvidence: () => false }
+      : {};
   /** The tile size a board is drawn at: even on a hexagon, so its rows shift
    * by exactly half a tile. */
   const tileOf = (ts: number): number => (hexagon ? ts & ~1 : ts);
@@ -1012,15 +1027,17 @@ export function fillRender<C extends Clues<C>>(
     ts: number,
   ): Size => {
     const from = startAt(ts, depthOf({ w, h }));
+    // The cells, and the gaps between them.
+    const across = (n: number): number => pitch(ts) * n - gapOf(ts);
     return {
       w: Math.max(
-        from + end(ts) + ts * w + (hexagon ? ts >> 1 : 0),
+        from + end(ts) + across(w) + (hexagon ? ts >> 1 : 0),
         counts === null ? 0 : from + Math.ceil(tallyAcross(counts, w) * ts),
       ),
       h:
         from +
         end(ts) +
-        ts * h +
+        across(h) +
         (counts === null ? 0 : Math.ceil(tallyHeight(counts, w) * ts)),
     };
   };
@@ -1089,7 +1106,8 @@ export function fillRender<C extends Clues<C>>(
     );
     for (const [a, b] of pairs) {
       const [ax, ay, bx, by] = [a % w, Math.floor(a / w), b % w, Math.floor(b / w)];
-      if (Math.abs(bx - ax) > 1 || Math.abs(by - ay) > 1) {
+      // A point two cells share is in a gap, which neither tile draws.
+      if (gapped || Math.abs(bx - ax) > 1 || Math.abs(by - ay) > 1) {
         word[a] |= ERR_AT;
         word[b] |= ERR_AT;
         continue;
@@ -1123,15 +1141,17 @@ export function fillRender<C extends Clues<C>>(
           });
       }
     const lineErrors = new Set<number>();
+    const gapErrors = new Set<number>();
     // A broken number is drawn as a badge (`numberStates`), not on the piece.
     for (const [kind, broken] of errors.clues)
       for (const q of broken) {
         const at = listOf(state.dealt, kind as keyof C).at[q];
         if (lineClues.includes(kind as keyof C) || lineLists.includes(kind as keyof C))
           lineErrors.add(at);
+        else if (play.gaps?.[kind] !== undefined) gapErrors.add(at);
         else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
       }
-    return { word, lineWord, lineErrors };
+    return { word, lineWord, lineErrors, gapErrors };
   }
 
   /** The list of line `k`, the first of the list kinds that has one: empty
@@ -1335,6 +1355,42 @@ export function fillRender<C extends Clues<C>>(
   const noteKey = (b: FillBoard<C>, i: number, selected: boolean, ui: FillUi): number =>
     (b.pencil?.[i] ?? 0) | (selected && ui.pencilMode === true ? NOTES_MODE : 0);
 
+  /** Each gap's clue, where it has moved: in ink, red where it breaks. */
+  function drawGaps(
+    dr: GameDrawing,
+    ds: FillDrawState,
+    b: FillBoard<C>,
+    broken: ReadonlySet<number>,
+  ): void {
+    const ts = ds.tileSize;
+    const g = gapOf(ts);
+    const sp = spaceOf(module, b);
+    for (const e of sp.edges) {
+      const clue = gapClueAt(gapKinds, b, sp, e);
+      const err = broken.has(e);
+      const key =
+        clue === null
+          ? 0
+          : 1 | (clue.kind << 1) | (clue.toward << 8) | (err ? 1 << 10 : 0);
+      if (!ds.gaps.changed(e, key)) continue;
+      const a = sp.edgeEnds[2 * e];
+      const [x, y] = [a % b.w, Math.floor(a / b.w)];
+      const right = sp.edgeEnds[2 * e + 1] === a + 1;
+      // The gap past cell `a`, and inside it the part no cell's frame takes.
+      const gap = right
+        ? { x: coord(x, ts) + ts, y: coord(y, ts), w: g, h: ts }
+        : { x: coord(x, ts), y: coord(y, ts) + ts, w: ts, h: g };
+      const open = right
+        ? { x: gap.x + 1, y: gap.y, w: g - 1, h: ts + 1 }
+        : { x: gap.x, y: gap.y + 1, w: ts + 1, h: g - 1 };
+      dr.clip(open);
+      dr.drawRect(open, COL_BACKGROUND);
+      clue?.painter.paint(dr, gap, clue.toward, err ? COL_ERROR : COL_INK);
+      dr.unclip();
+      dr.drawUpdate(open);
+    }
+  }
+
   /** The pencil-mode indicator, at the canvas's top right. */
   function drawPencilMode(
     dr: GameDrawing,
@@ -1365,8 +1421,8 @@ export function fillRender<C extends Clues<C>>(
     if (ds.tiles.firstFrame()) {
       // A walled board's frame is a wall: each cell paints its own top and
       // left, so this is the bottom and right of the last row and column. A
-      // hexagon's edge is each of its cells' own.
-      if (hexagon) {
+      // hexagon's edge is each of its cells' own, and so is a gapped board's.
+      if (hexagon || gapped) {
         for (let y = 0; y < h; y++)
           for (let x = 0; x < w; x++)
             if (drawn(state, x, y))
@@ -1406,7 +1462,7 @@ export function fillRender<C extends Clues<C>>(
     }
 
     // The live errors, on the board as the drag would leave it.
-    const { word, lineWord, lineErrors } = errorWords(state, shown);
+    const { word, lineWord, lineErrors, gapErrors } = errorWords(state, shown);
 
     addMistakesAndLinks(word, shown, mistakes ?? []);
 
@@ -1529,6 +1585,7 @@ export function fillRender<C extends Clues<C>>(
       }
 
     if (notes) drawPencilMode(dr, ds, state, ui);
+    if (gapped) drawGaps(dr, ds, state, gapErrors);
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
     ds.marks.paint(dr, unlinked, area, markStyle);
@@ -1572,6 +1629,7 @@ export function fillRender<C extends Clues<C>>(
   return {
     preferredTileSize: PREFERRED_TILE_SIZE,
     origin: (ts, b) => startAt(ts, depthOf(b)),
+    gap: gapOf,
     // A hexagon's rows reach half a tile past its width.
     computeSize: (p, size) => {
       const tally = module.deal?.tally;
@@ -1587,6 +1645,7 @@ export function fillRender<C extends Clues<C>>(
         struck,
         clues: new TileCache(b.w + b.h),
         lists: new TileCache(b.w + b.h),
+        gaps: new TileCache(gapped ? spaceOf(module, b).edges.length : 0),
         marks: new HintMarks(),
         tally: { shown: null },
         pencilModeShown: null,

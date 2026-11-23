@@ -365,18 +365,35 @@ export function dealFill<C extends Clues<C>>(
     // its bindings do not name, it does not, and every clue is tried. A unit
     // goes only where none of it was read.
     const read = cluesRead(module, board(clues), from, kinds);
+    // A kind `from` reads none of is one only a higher tier reads (a sign
+    // above a Latin square's singles): kept whole for `tier` to hide from,
+    // where pruned at `from` no board of `tier` was left. It costs Boats'
+    // 10x10 Normal and Tricky deals 20 to 24 ms against 11 to 14
+    // (2026-11-23).
+    const offsets = offsetsOf(clues, kinds);
+    const unread = kinds.map((_, n) => {
+      if (tier === from) return false;
+      for (let j = offsets[n]; j < offsets[n + 1]; j++) if (read.has(j)) return false;
+      return true;
+    });
+    const later = (i: number): boolean => unread[offsets.findLastIndex((o) => o <= i)];
     const pruned = unitsOf(clues, shown)
-      .filter((u) => u.some((i) => read.has(i)))
+      .filter((u) => u.some((i) => read.has(i) || later(i)))
       .flat()
       .sort(byIndex);
     if (finishes(keeping(clues, pruned), from)) shown = pruned;
+    const atFrom = (units: number[][]): number[][] =>
+      units.filter((u) => !u.some(later));
     if (thorough && !forSearch) {
-      const order = unitsOf(clues, shown);
+      const order = atFrom(unitsOf(clues, shown));
       shuffle(order, rs);
-      shown = shortestRun(clues, order, from);
+      // `from` reads none of the kept, so finishes as well without them.
+      const kept = shown.filter(later);
+      shown = [...shortestRun(clues, order, from), ...kept].sort(byIndex);
     }
     for (const t of tier > from && !forSearch ? [from, tier] : [from]) {
-      const order = unitsOf(clues, shown);
+      const units = unitsOf(clues, shown);
+      const order = t === from ? atFrom(units) : units;
       shuffle(order, rs);
       const tries = thorough
         ? order

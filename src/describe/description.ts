@@ -154,6 +154,9 @@ export interface PlayJson {
   /** Where the board keeps notes, how its hint reads a square with none
    * until the player chooses: `populate` where it says nothing. */
   hintNotes?: "implicit" | "populate";
+  /** The clue kinds at edges, each drawn in the gap between its cells by
+   * the edge painter named. */
+  gaps?: Record<string, string>;
   values?: Record<
     string,
     { does: string; key: string | string[]; glyph: string; paint: string }
@@ -288,7 +291,8 @@ export type IdSegmentJson =
       hidden?: string;
       closed?: true;
     }
-  | { glyphs: string; values: Record<string, number> };
+  | { glyphs: string; values: Record<string, number> }
+  | { records: string; sides: string };
 
 /** The board as a rectangle, or as a hexagon `w` wide and `h` high, stored
  * sheared (`engine/fill/hexagon.ts`), its store's corners holding the clue
@@ -313,14 +317,16 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
             ? [seg.cells]
             : "glyphs" in seg
               ? [seg.glyphs]
-              : "digits" in seg
-                ? [
-                    seg.digits,
-                    ...Object.values(seg.letters ?? {}),
-                    ...Object.values(seg.after ?? {}),
-                    ...Object.values(seg.also ?? {}),
-                  ]
-                : [seg.numbers];
+              : "records" in seg
+                ? [seg.records, seg.sides]
+                : "digits" in seg
+                  ? [
+                      seg.digits,
+                      ...Object.values(seg.letters ?? {}),
+                      ...Object.values(seg.after ?? {}),
+                      ...Object.values(seg.also ?? {}),
+                    ]
+                  : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`

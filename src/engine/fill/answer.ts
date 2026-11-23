@@ -58,6 +58,10 @@ export interface AnswerReading<C> {
   /** The clue kinds written as numbers on their cells, printed there in
    * place of the cell's value. */
   readonly numbers?: readonly (keyof C)[];
+  /** Where the board has gaps between its cells (`play.gaps`), the clue in
+   * the one between cells `a` and `z` as one character, a space for none:
+   * printed in place of the wall between them. */
+  readonly gap?: (board: FillBoard<C>, a: number, z: number) => string;
   /** The dealt partition, printed as walls between its parts. */
   readonly partition?: keyof C;
 }
@@ -314,8 +318,17 @@ function gridFormat<C extends Clues<C>>(
     reading.partition === undefined ? null : (dealt[reading.partition] as Partition).of;
   const part = (x: number, y: number): number =>
     x < 0 || y < 0 || x >= w || y >= h ? -1 : (parts?.[y * w + x] ?? 0);
+  // Between two cells of a gapped board, its gap's clue in place of a wall.
+  const { gap } = reading;
+  const inside = (x: number, y: number): boolean => part(x, y) >= 0;
   const walled = (x: number, y: number, x2: number, y2: number): boolean =>
-    parts === null || part(x, y) !== part(x2, y2);
+    gap !== undefined
+      ? !inside(x, y) || !inside(x2, y2)
+      : parts === null || part(x, y) !== part(x2, y2);
+  const between = (x: number, y: number, x2: number, y2: number): string | null =>
+    gap !== undefined && inside(x, y) && inside(x2, y2)
+      ? gap(board, y * w + x, y2 * w + x2)
+      : null;
   return boxedGridText(w + margin, h + margin, {
     corner: (x, y) =>
       margin && x === w + 1 && y === h + 1
@@ -326,10 +339,16 @@ function gridFormat<C extends Clues<C>>(
             walled(x, y - 1, x, y)
           ? "+"
           : " ",
-    top: (x, y) =>
-      margin && y === h + 1 && x === w ? "   " : walled(x, y - 1, x, y) ? "---" : "   ",
-    left: (x, y) =>
-      margin && x === w + 1 && y === h ? " " : walled(x - 1, y, x, y) ? "|" : " ",
+    top: (x, y) => {
+      if (margin && y === h + 1 && x === w) return "   ";
+      const g = between(x, y - 1, x, y);
+      if (g !== null) return ` ${g} `;
+      return walled(x, y - 1, x, y) ? "---" : "   ";
+    },
+    left: (x, y) => {
+      if (margin && x === w + 1 && y === h) return " ";
+      return between(x - 1, y, x, y) ?? (walled(x - 1, y, x, y) ? "|" : " ");
+    },
     cell: (x, y) => {
       if (x === w && y === h) return "   ";
       // A row's line is its index; a column's comes after the rows.

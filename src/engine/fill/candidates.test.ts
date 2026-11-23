@@ -142,13 +142,9 @@ describe("the candidate walk of a board that keeps notes", () => {
     expect(verdict?.followed).toBe(true);
   });
 
-  it("walks only the Latin library on rows and columns, and refuses anything else", () => {
+  it("walks rows and columns, and refuses any other units", () => {
     const tier = () => 0;
     const ui = () => game.newUi(NEEDS_A_SET);
-    const own = { ...squaring.ladder[0], id: "own" };
-    expect(() =>
-      candidateFill({ ...squaring, ladder: [...squaring.ladder, own] }, tier, ui),
-    ).toThrow(/Latin library alone, not own/);
     expect(() => candidateFill({ ...squaring, units: ["rows"] }, tier, ui)).toThrow(
       /rows and columns, not rows/,
     );

@@ -242,8 +242,22 @@ research tools all read through it; the app never does.
   a fresh game starts on (`docs/hints-candidates.md` § "Choosing the
   default"), `populate` where it says nothing. The walk runs on rows and
   columns, and its rungs are the Latin library's (`use: latin.*`, which the
-  fill ladder resolves as every Latin game's does), worded by the library;
-  it refuses a technique of the description's own until it can word one.
+  fill ladder resolves as every Latin game's does), worded by the library,
+  and after them the description's own, which strike: a firing a leg a cell,
+  each worded by the look of its `says`, of the fact its first note is where
+  it words each fact (`fact:`), and recorded under the technique's id; a
+  board of numbers without notes is refused a rung that strikes, since it
+  has nowhere to strike. A
+  clue at an edge (`at: edge`) is dealt over the edges; one whose value is
+  one of its ends (`ends(at)`, a sign's greater end) is written only by
+  `id:`'s `records`, a record a cell of a cell kind's number (0 for none)
+  and a letter `URDL` a side whose clue it is the value of, comma-closed
+  (upstream Unequal's). `play.gaps` names each edge kind's painter
+  (`engine/render/pieces/edge.ts`): the board then has a half-tile gap
+  between its cells, each edge's clue drawn in its gap, red where it breaks,
+  and printed there in the text. A hide keeps whole, until the asked tier's
+  pass, a kind the lowest tier reads none of (signs over a Latin square's
+  singles), so the tier that reads it hides from it.
   `deal.sample: { latin: true }`
   draws a Latin square. `play.click: cycle` goes round
   empty and both buttons' values. The right button rules out unless its

@@ -1149,40 +1149,15 @@ function techniqueFunction(t: Technique, fnName: string, env: Env): CompiledTech
   };
 }
 
-/** Whether `e` makes a placement, in a definition it calls included. */
-function places(e: Expr, env: Env): boolean {
-  switch (e.k) {
-    case "num":
-    case "name":
-      return false;
-    case "set":
-      return e.elems.some((x) => places(x, env));
-    case "size":
-    case "not":
-    case "neg":
-      return places(e.of, env);
-    case "bin":
-      return places(e.a, env) || places(e.b, env);
-    case "with":
-      return places(e.body, env);
-    case "quant":
-      return (
-        e.binders.some(
-          (b) => places(b.of, env) || (b.where !== null && places(b.where, env)),
-        ) || places(e.body, env)
-      );
-    case "agg":
-      return (
-        e.binders.some((b) => places(b.of, env)) ||
-        (e.term !== null && places(e.term, env))
-      );
-    case "call": {
-      if (e.fn === "place") return true;
-      const def = env.defs.get(e.fn);
-      return (
-        e.args.some((x) => places(x, env)) ||
-        (def !== undefined && places(def.body, env))
-      );
-    }
+/** Whether `e` concludes by `fn` (`place` or `strike`), in a definition it
+ * calls included. */
+export function concludes(e: Expr, fn: "place" | "strike", env: Env): boolean {
+  if (e.k === "call") {
+    if (e.fn === fn) return true;
+    const def = env.defs.get(e.fn);
+    if (def !== undefined && concludes(def.body, fn, env)) return true;
   }
+  return children(e).some((x) => concludes(x, fn, env));
 }
+
+const places = (e: Expr, env: Env): boolean => concludes(e, "place", env);

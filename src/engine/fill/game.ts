@@ -59,6 +59,7 @@ import {
   variationsOf,
   withThorough,
 } from "./game-id.ts";
+import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import {
   type FillHint,
   type FillHintModule,
@@ -253,6 +254,7 @@ export function fillGame<C extends Clues<C> & object>(
         ]),
   ];
   const numbered = module.numbers ?? [];
+  const gapKinds = gapKindsOf<C>(play);
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
     numbers: numbered as readonly (keyof C)[],
@@ -273,6 +275,15 @@ export function fillGame<C extends Clues<C> & object>(
     ...(deal.partitions === undefined
       ? {}
       : { partition: deal.partitions[0] as keyof C }),
+    ...(gapKinds.length === 0
+      ? {}
+      : {
+          gap: (b: FillBoard<C>, a: number, z: number) => {
+            const sp = spaceOf(module, b);
+            const clue = gapClueAt(gapKinds, b, sp, sp.edgeOf(a, z));
+            return clue?.painter.glyph(clue.toward) ?? " ";
+          },
+        }),
   };
   // The board's clues are the desc's, beside the params' sizes beyond the
   // grid's.
@@ -308,9 +319,9 @@ export function fillGame<C extends Clues<C> & object>(
   const typed =
     play.numbers === undefined
       ? null
-      : numberInput<C, FillDrawState>(module, render.origin);
+      : numberInput<C, FillDrawState>(module, render.origin, render.gap);
   const buttons: FillInput<C, FillDrawState> | null =
-    typed === null ? fillInput(module, play, render.origin) : null;
+    typed === null ? fillInput(module, play, render.origin, render.gap) : null;
   const inputs =
     buttons !== null
       ? { targetVerbs: buttons.targetVerbs, interpretMove: buttons.interpretMove }

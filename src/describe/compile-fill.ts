@@ -7,6 +7,7 @@
  * § 7).
  */
 
+import { EDGE_PAINTERS } from "../engine/render/pieces/edge.ts";
 import { bindingLoops, compileExpr } from "./compile-expr.ts";
 import {
   type ClueKind,
@@ -19,6 +20,7 @@ import {
   Out,
   type Val,
 } from "./compile-sorts.ts";
+import { concludes } from "./compile-technique.ts";
 import { freeNames } from "./compile-terms.ts";
 import {
   type Description,
@@ -212,10 +214,30 @@ export function playOf(
     throw new CompileError(
       "marks: candidate notes are a board of numbers', and play has no `numbers`",
     );
+  // A board of numbers holds no strike but in its notes: a step that only
+  // strikes would be no move.
+  if (!notes && p.numbers !== undefined)
+    for (const t of d.techniques)
+      if (t.on === null && concludes(t.conclude, "strike", env))
+        throw new CompileError(
+          `technique ${t.id}: it strikes, and a board of numbers strikes only in notes \`marks\` declares`,
+        );
   if (!notes && p.hintNotes !== undefined)
     throw new CompileError(
       "play hintNotes: the hint reads notes, and `marks` declares none",
     );
+  // A clue at an edge is drawn in the gap between its cells, and only there.
+  for (const [k, c] of d.clueKinds)
+    if (c.at === "edge" && p.gaps?.[k] === undefined)
+      throw new CompileError(
+        `clue ${k}: a clue at an edge, and no painter in play gaps`,
+      );
+  for (const [k, painter] of Object.entries(p.gaps ?? {})) {
+    if (d.clueKinds.get(k)?.at !== "edge")
+      throw new CompileError(`play gaps: ${k} is no clue kind at an edge`);
+    if (!(painter in EDGE_PAINTERS))
+      throw new CompileError(`play gaps: no edge painter ${painter}`);
+  }
   const plainPlay = {
     ...rest,
     ...(notes ? { notes } : {}),
@@ -528,6 +550,11 @@ function markerKind(d: Description, kind: string): boolean {
   return d.clueKinds.get(kind)?.at === "cell" && valuesOf(d, kind)?.join() === "0,0";
 }
 
+/** Whether a clue kind's value is one of the board's elements (a sign's
+ * greater end), not a number. */
+const isElement = (env: Env, kind: string): boolean =>
+  env.clues.get(kind)?.v.k === "elem";
+
 /** Refuses an `id:` segment that cannot write the kind it names. */
 function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): void {
   for (const [i, seg] of id.entries()) {
@@ -539,6 +566,24 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
     }
     const c = d.clueKinds.get(kind);
     if (c === undefined) throw new CompileError(`id: no clue kind ${kind}`);
+    if ("records" in seg) {
+      // 0 is a record's cell with no clue, so no clue is 0.
+      const lo = c.value?.k === "call" ? c.value.args[0] : undefined;
+      if (c.at !== "cell" || isElement(env, kind) || lo?.k !== "num" || lo.v < 1)
+        throw new CompileError(
+          `id: records of ${kind}, which is not a cell's number from 1 up`,
+        );
+      if (d.clueKinds.get(seg.sides)?.at !== "edge" || !isElement(env, seg.sides))
+        throw new CompileError(
+          `id: sides of ${seg.sides}, which is not an edge's clue valued one of its ends`,
+        );
+      continue;
+    }
+    // Only a record says which end of an edge a clue is valued.
+    if (isElement(env, kind))
+      throw new CompileError(
+        `id: ${kind} is valued an element, which only a record's sides write`,
+      );
     const values = valuesOf(d, kind);
     if ("runs" in seg && !markerKind(d, kind))
       throw new CompileError(
@@ -727,8 +772,8 @@ export function dealOf(
     json.tierLetters ?? tiers.map((t) => t[0]?.toLowerCase() ?? "").join("");
   if (tierLetters.length !== tiers.length || new Set(tierLetters).size !== tiers.length)
     throw new CompileError(`tierLetters: ${tierLetters} is not one letter a tier`);
-  // A clue a fill game deals sits at a cell or a line; the tally, the
-  // params' clue at the board, is none it deals.
+  // A clue a fill game deals sits at a cell, a line or an edge; the tally,
+  // the params' clue at the board, is none it deals.
   const universes = Object.fromEntries(
     [...d.clueKinds]
       .filter(([k]) => k !== json.play?.tally?.kind)
@@ -736,7 +781,7 @@ export function dealOf(
         const u = UNIVERSE[c.at];
         if (u === undefined)
           throw new CompileError(
-            `clue ${k}: a fill game's clue sits at a cell or a line`,
+            `clue ${k}: a fill game's clue sits at a cell, a line or an edge`,
           );
         return [k, u];
       }),
@@ -865,6 +910,9 @@ export function dealOf(
   for (const [kind, c] of d.clueKinds) {
     if (kind === json.play?.tally?.kind) continue;
     const sorts = env.clues.get(kind) as ClueKind;
+    // A value that is one of the board's elements (a sign's greater end) is
+    // written by where it lies, never as a number.
+    if (sorts.v.k === "elem") continue;
     const range = c.value === null ? null : measured(c.value);
     if (
       range === null ||
@@ -1281,7 +1329,11 @@ function onceOf(
 }
 
 /** The elements a clue may sit at, as the description names them. */
-const UNIVERSE: Readonly<Record<string, string>> = { cell: "cells", line: "lines" };
+const UNIVERSE: Readonly<Record<string, string>> = {
+  cell: "cells",
+  line: "lines",
+  edge: "edges",
+};
 
 /** The clue kinds `deal.never` names: dealt by no deal, carried only by an
  * ID (Pattern's given squares, which only upstream's pictures hold). */

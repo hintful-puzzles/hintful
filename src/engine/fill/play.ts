@@ -46,6 +46,7 @@ import {
   type TargetVerbs,
   type VerbKey,
 } from "../input/target-verb.ts";
+import type { EdgePainterName } from "../render/pieces/edge.ts";
 import { PAINTERS } from "../render/pieces/index.ts";
 import {
   type ClueList,
@@ -131,6 +132,10 @@ export interface FillPlay {
    * the player chooses (`candidate-hint.ts`'s `CandidateReading`): the
    * convention, `populate`, where the description says nothing. */
   readonly hintNotes?: CandidateReading;
+  /** The clue kinds at edges, each drawn in the gap between its cells by
+   * the edge painter named: a board with any has a gap between every two
+   * cells. */
+  readonly gaps?: Readonly<Record<string, EdgePainterName>>;
   /** The values the player places, by the description's value. */
   readonly values?: Readonly<Record<number, PlayValue>>;
   /** The values only the deal places, a fixed cell's. */
@@ -274,6 +279,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   module: FillModule<C>,
   buttons: FillPlay,
   origin: (tileSize: number, board: FillBoard<C>) => number,
+  gap: (tileSize: number) => number = () => 0,
 ): FillInput<C, D> {
   const play = buttonsOf(buttons);
   const { primary, secondary } = play;
@@ -286,6 +292,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
       ? squareGrid<FillBoard<C>, D>({
           size: (b) => b,
           border: origin,
+          gap,
           ...(play.wrap === true ? { wrap: true } : {}),
         })
       : hexGrid<FillBoard<C>, D>({

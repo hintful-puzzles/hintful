@@ -108,8 +108,9 @@ export interface NumberInput<C, D> {
 export function numberInput<C, D extends { readonly tileSize: number }>(
   module: FillModule<C>,
   origin: (tileSize: number, board: FillBoard<C>) => number,
+  gap: (tileSize: number) => number = () => 0,
 ): NumberInput<C, D> {
-  const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin });
+  const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
   return {
     interpretMove(b, fillUi, ds, p, raw) {

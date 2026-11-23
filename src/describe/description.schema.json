@@ -817,6 +817,11 @@
               "enum": ["implicit", "populate"],
               "description": "Where `marks` declares candidate notes, how the hint reads a square with none until the player chooses (the hint-notes preference): `implicit`, as every number its row and column leave it, writing notes only where a step rests on them; `populate`, every candidate penciled in first. `populate` where it is left out (`docs/hints-candidates.md` § \"Choosing the default\")."
             },
+            "gaps": {
+              "type": "object",
+              "description": "The clue kinds at edges, each drawn in a gap between its two cells by the painter named (`engine/render/pieces/edge.ts`): a board with any is drawn with a half-tile gap between every two cells.",
+              "additionalProperties": { "type": "string" }
+            },
             "values": {
               "type": "object",
               "description": "The values the player places, by the description's value: what its verb does (\"place a tent\"), the letter that places it, its three-character glyph in the text format, and the painter that draws it.",
@@ -1262,6 +1267,16 @@
                     "propertyNames": { "pattern": "^[A-Z]$" },
                     "additionalProperties": { "type": "integer" }
                   }
+                }
+              },
+              {
+                "type": "object",
+                "required": ["records", "sides"],
+                "additionalProperties": false,
+                "description": "A record a cell, each closed by a comma: the cell's clue of `records` as a number, 0 for none, then a letter `U`, `R`, `D` or `L` for each side whose clue of `sides`, a clue at an edge whose value is one of its ends, has this cell as its value (upstream's Unequal).",
+                "properties": {
+                  "records": { "type": "string" },
+                  "sides": { "type": "string" }
                 }
               }
             ]
