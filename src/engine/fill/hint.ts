@@ -29,9 +29,9 @@ import type { PairIndex } from "../render/piece.ts";
 import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
 import type { CellMarks } from "../solve/cell-marks.ts";
 import { type ClueList, MARK } from "../solve/describe-runtime.ts";
-import { TIERS } from "../solve/ladder-runtime.ts";
 import {
   asDealt,
+  capsOf,
   type FillBoard,
   isAnswerOf,
   type LadderedFillModule,
@@ -148,6 +148,7 @@ export function fillHint<C extends object>(
     string
   >({
     name: "fill hint",
+    caps: (cap) => capsOf(module, cap),
     walk(board, cap) {
       const { marks, ok, entries } = marksOf(module, board);
       if (!ok) return null;
@@ -156,7 +157,7 @@ export function fillHint<C extends object>(
         entries,
         { glance: links.glance, askBefore: links.askBefore ?? [] },
         board.mark.slice(),
-        { [TIERS]: cap },
+        capsOf(module, cap),
         premiseOf,
       );
       const names = new Map(entries.map((e) => [e.id, e.name]));

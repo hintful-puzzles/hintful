@@ -1,0 +1,7 @@
+ok  grading    cageCull                       current: recorded src/engine/testing/fixtures/grading/grading.description.yaml#cageCull e7b7c3c2cc622f22
+ok  grading    cageLast                       3  sound    (want sound   )    79 queries    1.3s
+ok  grading    cageLast (planted)             3  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  src/engine/testing/fixtures/grading/grading.description.yaml#cageLast: recorded sound, proved whole on all 1 boards
+ok  grading    cageSets                       3  sound    (want sound   )    79 queries    1.5s
+ok  grading    cageSets (planted)             3  unsound  (want unsound )    10 queries    0.2s   at region cage 9
+ok  src/engine/testing/fixtures/grading/grading.description.yaml#cageSets: recorded sound, proved whole on all 1 boards

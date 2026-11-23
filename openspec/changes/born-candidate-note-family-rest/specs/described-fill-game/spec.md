@@ -46,3 +46,26 @@ any other formula SHALL be refused.
   `blocks(a, b)` with each side a number or a size, or states one by
   formula that is not among its units
 - **THEN** the description does not compile
+
+### Requirement: A born game is graded on each of its scales
+
+A born game whose description names scales besides its tiers SHALL run its
+ladder, for a deal, a solve, a hint and a search alike, capped at the
+board's tier and at the top of each other scale. Its deal SHALL keep only a
+board that needs the asked tier and, on each other scale its ladder has an
+entry of, the top of that scale: the scale's tier under its top, with the
+asked tier, does not finish it. A board of a search tier SHALL be held on
+the tiers alone.
+
+#### Scenario: A board needs the top of the other scale
+
+- **WHEN** a board of a game with a second scale is dealt at any tier but
+  the search's
+- **THEN** its ladder finishes it at the asked tier with the other scale at
+  its top, and does not with the other scale a tier under its top
+
+#### Scenario: A hint reads the other scale
+
+- **WHEN** a hint is asked on such a board
+- **THEN** the walk may take a technique of the other scale up to its top,
+  and hints the board to the end

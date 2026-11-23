@@ -385,7 +385,11 @@ research tools all read through it; the app never does.
   where `by` names the setting. `sample: { search: true }` then searches the
   answer under that partition, from the blank board, a square's values
   tried in a random order, a draw out of budget divided again (`zoning` is
-  the fixture). A domain that is a part's numbers, `range(1,
+  the fixture). A clue at a part is the answer's, so the blank board shows
+  none, and a conclusion that is false is a contradiction: a technique
+  reading a part's clue reads only a part that has one (`r in cage where
+  clue(sum, r) != none`, the `grading` fixture's), or the search finds no
+  answer. A domain that is a part's numbers, `range(1,
   |cells(P(c))|)`, is a board of numbers' only domain that differs by cell:
   the keypad runs to the largest size drawn, or past it to the board in
   play's largest part (a game ID from elsewhere, upstream's areas of six
@@ -845,7 +849,15 @@ them; the game caps and grades each ladder entry on its `scale`. A grade is
 the same whatever path a solve takes only where a scale's techniques run in
 tier order. Solo's killer scale does not (its region rule comes before the
 cages' readings, as upstream's did), so there how much one firing does
-decides the grade, and a technique is one rung, as everywhere.
+decides the grade, and a technique is one rung, as everywhere. No player
+asks a tier on another scale, so a fill board is capped at the top of each
+(`engine/fill/board.ts`'s `capsOf`, which every ladder run on a fill board
+takes), and its deal holds a board to need that top as it holds it to need
+the asked tier: where the board's ladder has an entry on the scale, the
+scale's tier under its top does not finish it (upstream's solo.c holds
+every Killer board at `DIFF_KINTERSECT`). A search tier's board is held on
+the tiers alone. The `grading` fixture is a Latin square in sum cages
+whose readings grade on a scale of their own.
 
 ## What a technique compiles to
 

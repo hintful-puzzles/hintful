@@ -20,14 +20,15 @@ import {
   type Partition,
 } from "../solve/describe-runtime.ts";
 import {
+  type Caps,
   ladderTechniques,
   runLadder,
   type Said,
-  TIERS,
 } from "../solve/ladder-runtime.ts";
 import { encodeAnswer } from "./answer.ts";
 import {
   type Clues,
+  capsOf,
   type FillBoard,
   marksOf,
   newBoard,
@@ -163,8 +164,25 @@ export function dealFill<C extends Clues<C>>(
   const given = givenOf(deal, p);
   const board = (clues: C): FillBoard<C> =>
     newBoard(module, sp.w, sp.h, clues, variations);
-  const finishes = (clues: C, cap: number): boolean =>
+  const finishes = (clues: C, cap: number | Caps): boolean =>
     solveBoard(module, board(clues), cap).verdict === "solved";
+  /** For each other scale this board's ladder runs an entry of, the caps of
+   * the asked tier with that scale a tier under its top: a board is held to
+   * need the top of each, as it is held to need the asked tier. */
+  const belowTops: readonly Caps[] = Object.entries(module.scales ?? {})
+    .filter(
+      ([scale, tiers]) =>
+        tiers.length > 1 &&
+        module.ladder.some(
+          (e) =>
+            e.scale === scale &&
+            (e.variation === undefined || variations.includes(e.variation)),
+        ),
+    )
+    .map(([scale, tiers]) => ({
+      ...capsOf(module, p.diff),
+      [scale]: tiers.length - 2,
+    }));
   const thorough = p.thorough ?? true;
   const kinds = hiddenKinds(deal, p);
   const kind = (kinds.length === 0 ? undefined : kinds[0]) as keyof C | undefined;
@@ -644,6 +662,12 @@ export function dealFill<C extends Clues<C>>(
       drawRejected("fill: the tier below finishes the board");
       continue;
     }
+    // Upstream's solo.c merges Killer cages until the grade is
+    // `DIFF_KINTERSECT` on the killer scale as well as the asked tier.
+    if (belowTops.some((caps) => finishes(clues, caps))) {
+      drawRejected("fill: another scale's tier below its top finishes the board");
+      continue;
+    }
     // A board the hide flag asked to hide a kind hides one of it (upstream
     // boats.c refused a stripped board that showed every number).
     if (deal.hideFlag !== undefined && p.hides === true && !hidesAny(clues, deal, sp)) {
@@ -943,7 +967,7 @@ function cluesRead<C extends Clues<C>>(
   marks.wholePasses = true;
   runLadder(
     marks,
-    ladderTechniques(marks, entries, { [TIERS]: cap }, {}, (e) => {
+    ladderTechniques(marks, entries, capsOf(module, cap), {}, (e) => {
       current = reads[e.id]?.reads ?? null;
       return 0;
     }),
@@ -1026,7 +1050,7 @@ function buildAnswer<C extends Clues<C>>(
   // placement: a fresh solve each time cost a 12x16 Light Up deal seconds.
   const { marks, ok, entries } = marksOf(module, board);
   if (!ok) return null;
-  const ladder = ladderTechniques(marks, entries, { [TIERS]: tier }, {});
+  const ladder = ladderTechniques(marks, entries, capsOf(module, tier), {});
   if (runLadder(marks, ladder)) return null;
   const build = sample.build === true ? null : sample.build;
   const order = Array.from(sp.cells);

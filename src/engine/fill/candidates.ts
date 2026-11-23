@@ -75,12 +75,14 @@ import {
   PLACE,
   popcount,
 } from "../solve/describe-runtime.ts";
+import type { Firing as LadderFiring, Said } from "../solve/ladder-runtime.ts";
 import {
-  type Firing as LadderFiring,
-  type Said,
-  TIERS,
-} from "../solve/ladder-runtime.ts";
-import { type FillBoard, type LadderedFillModule, ladderOf, spaceOf } from "./board.ts";
+  capsOf,
+  type FillBoard,
+  type LadderedFillModule,
+  ladderOf,
+  spaceOf,
+} from "./board.ts";
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
 import { numeral } from "./numbers.ts";
 import { slotPoint } from "./slots.ts";
@@ -396,7 +398,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     const ladder = ladderOf(module, board);
     const on: NotesLadder = {
       ladder,
-      caps: { [TIERS]: tierOf(board) },
+      caps: capsOf(module, tierOf(board)),
       marks: () => {
         const m = new CellMarks(sp, domain, grid.slice());
         m.placing = ladder.placing;

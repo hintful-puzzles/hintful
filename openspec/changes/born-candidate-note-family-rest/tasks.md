@@ -36,7 +36,7 @@ the predecessor's were, in a commit before the flip.
         the wing's `alongside` reaches the walk. Left for 2.1c: Solo's box
         under Jigsaw is a ruleset's dealt partition among the units, which
         the compiler has no `Dealt` field for and `spaceOf` does not read.
-  - [ ] 2.1b Grading on a second scale: a board dealt at the asked tier
+  - [x] 2.1b Grading on a second scale: a board dealt at the asked tier
         on each (`scales:`). Read 2026-11-23 for this: the player never
         asks Solo's killer tier; every board carries `kdiff` Region, which
         the ID does not write (`games/solo/index.ts`'s `plainBoard`), and
@@ -44,6 +44,16 @@ the predecessor's were, in a commit before the flip.
         tier on both scales (`generator.ts`, the loop after
         `genKillerCages`). The ladder runtime already caps and grades by
         scale (`ladder-runtime.ts`); the fill engine passes only `TIERS`.
+        Built on the `grading` fixture: every ladder run on a fill board
+        takes `capsOf`, each other scale at its top; the deal holds a
+        board to need that top where its ladder has an entry on the
+        scale, as it holds it to need the asked tier (the tier below does
+        not finish it, the engine's test, where upstream's is the grade).
+        For the flip: Solo's killer techniques move under `Killer`'s
+        `add`, or a plain board is held on the killer scale and never
+        deals; and with the answer searched under the cages, each reads
+        only a cage with a total (`where clue(total, r) != none`,
+        docs/descriptions.md § "The file").
   - [ ] 2.1c A partition divided into equal parts (jigsaw blocks); the
         diagonals drawn; a second partition drawn inset inside the first.
   - [ ] 2.1d The symmetry option of seven, written as upstream's suffixes;

@@ -19,6 +19,7 @@ import {
   type Violation,
 } from "../solve/describe-runtime.ts";
 import {
+  type Caps,
   type CompiledLadder,
   describedLadder,
   type Ladder,
@@ -135,6 +136,9 @@ export function washedValues<C>(
  * reads apart; the type cannot say so for an id that is any string. */
 export type LadderedFillModule<C> = FillModule<C> &
   Pick<CompiledLadder<string, never>, "ladder"> & {
+    /** The scales it grades on besides `tiers`, each its tiers lowest first
+     * (Solo's killer scale). */
+    readonly scales?: Readonly<Record<string, readonly string[]>>;
     readonly placing: readonly { readonly id: string; readonly variation?: string }[];
     readonly striking: readonly { readonly id: string; readonly variation?: string }[];
     /** Each of the description's own techniques: whether it reads the
@@ -353,7 +357,7 @@ export interface Solved {
 export function solveBoard<C>(
   module: LadderedFillModule<C>,
   board: FillBoard<C>,
-  cap: number,
+  cap: number | Caps,
 ): Solved {
   const { marks, ok, entries } = marksOf(module, board);
   const out = (verdict: DifficultyVerdict): Solved => ({
@@ -362,10 +366,24 @@ export function solveBoard<C>(
     mark: marks.marked.slice(),
   });
   if (!ok) return out("impossible");
-  if (runLadder(marks, ladderTechniques(marks, entries, { [TIERS]: cap }, {})))
+  const caps = typeof cap === "number" ? capsOf(module, cap) : cap;
+  if (runLadder(marks, ladderTechniques(marks, entries, caps, {})))
     return out("impossible");
   if (marks.grid.includes(0)) return out("unsolved");
   return out(isAnswerOf(module, board, marks.grid) ? "solved" : "impossible");
+}
+
+/**
+ * The caps the ladder runs at on a board of tier `tier`: the description's
+ * own tiers at `tier`, and each of its other scales at its top. No player
+ * asks a tier on another scale, so every board is asked the top of it, as
+ * upstream's solo.c asks every Killer board `DIFF_KINTERSECT`.
+ */
+export function capsOf<C>(module: LadderedFillModule<C>, tier: number): Caps {
+  const caps: Record<string, number> = { [TIERS]: tier };
+  for (const [scale, tiers] of Object.entries(module.scales ?? {}))
+    caps[scale] = tiers.length - 1;
+  return caps;
 }
 
 /** The ladder on the board's clues with its variations on, each library

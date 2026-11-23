@@ -13,9 +13,10 @@ import type { RandomState } from "../random/index.ts";
 import { type Answer, answerCache, solvedPositions } from "../solve/answer-search.ts";
 import type { CellMarks } from "../solve/cell-marks.ts";
 import type { ClueList, GridSpace, Partition } from "../solve/describe-runtime.ts";
-import { ladderTechniques, runLadder, TIERS } from "../solve/ladder-runtime.ts";
+import { ladderTechniques, runLadder } from "../solve/ladder-runtime.ts";
 import {
   asDealt,
+  capsOf,
   type FillBoard,
   isAnswerOf,
   type LadderedFillModule,
@@ -124,7 +125,7 @@ export function searchedPositions<C>(
       start: root.ok ? root.marks : null,
       deduce(m) {
         if (m === null) return "contradiction";
-        if (runLadder(m, ladderTechniques(m, root.entries, { [TIERS]: cap }, {})))
+        if (runLadder(m, ladderTechniques(m, root.entries, capsOf(module, cap), {})))
           return "contradiction";
         if (m.grid.includes(0)) return "stuck";
         return isAnswerOf(module, board, m.grid) ? "solved" : "contradiction";

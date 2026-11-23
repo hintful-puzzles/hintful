@@ -36,7 +36,7 @@ import type { Point } from "../contract/types.ts";
 import type { PairIndex } from "../render/piece.ts";
 import type { CellMarks } from "../solve/cell-marks.ts";
 import { MARK, PLACE } from "../solve/describe-runtime.ts";
-import { type LadderEntry, TIERS } from "../solve/ladder-runtime.ts";
+import { type Caps, type LadderEntry, TIERS } from "../solve/ladder-runtime.ts";
 import { ladderWalk, type Taken } from "../solve/ladder-walk.ts";
 import { stepBudget } from "../solve/step-budget.ts";
 import {
@@ -171,6 +171,9 @@ interface FiringShape<
    * needs and does not move as the player plays. Without it every tier is
    * open. */
   tiers?: { lowest(state: State): number; count: number };
+  /** The caps the ladder runs at for tier `cap`, where the game grades on
+   * scales besides its tiers; the tiers alone at `cap` where left out. */
+  caps?(cap: number): Caps;
   /** The most firings a plan holds: a player rarely follows more, and a
    * recompute yields the next batch; {@link DEFAULT_PLAN} where left out. */
   plan?: number;
@@ -347,7 +350,8 @@ export function describedFiringHint<
     const pointOf = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
     const index = (t: Point): number => t.y * w + t.x;
     m.budget = stepBudget(spec.name);
-    const walk = ladderWalk(m, entries, { [TIERS]: cap }, premiseOf, {
+    const caps = spec.caps?.(cap) ?? { [TIERS]: cap };
+    const walk = ladderWalk(m, entries, caps, premiseOf, {
       ...(fallback === undefined ? {} : { fallback }),
       ...(writes === undefined ? {} : { writes }),
       ...(judging ? { aim: judging.aim } : {}),
