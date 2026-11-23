@@ -23,11 +23,12 @@
  *
  * **It fails only where a board's verdicts differ**, which no change to how a
  * solver concludes may cause; a board that differs is the generator's, and is
- * reported. **The times are a report**: the machine is busy and its load
- * moves, which the alternation spreads over both sides but cannot remove.
- * HEAD against itself read 0.73 to 1.15× a preset at three deals
- * (2026-11-07), so a claim rests on more deals than that, or on two runs that
- * agree, and a game's total row is steadier than a preset's.
+ * reported. **The times are a hint, never a claim**: the machine is busy and
+ * its load moves, which the alternation spreads over both sides but cannot
+ * remove. HEAD against itself read 0.73 to 1.15× a preset at three deals
+ * (2026-11-07). A claim about what a change costs is counted in instructions
+ * by `npm run compare-cost` (`docs/method.md` § "Compare a cost in
+ * instructions, not in time").
  */
 import { execFileSync } from "node:child_process";
 import { appendFileSync, existsSync, mkdirSync, writeFileSync } from "node:fs";

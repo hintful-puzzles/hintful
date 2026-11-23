@@ -100,6 +100,14 @@ export interface LadderCandidate {
  */
 export type FiringTally = Map<string, number>;
 
+/**
+ * How many times a ladder has asked a technique for its firings, in this
+ * process: the work a walk did besides the firings it took. A cost comparison
+ * reports it beside the instructions (`scripts/compare-cost.ts`), so a change
+ * in what a walk costs can be told from a change in what it tries.
+ */
+export const techniqueTries = { count: 0 };
+
 export interface DeductionFixpointOptions {
   /** The ladder, easiest first. A pass tries the techniques in order and
    * restarts from the first the moment one fires. */
@@ -170,6 +178,7 @@ function firstFiring(
   const { techniques, beforeTechnique } = opts;
   for (const technique of techniques) {
     beforeTechnique?.(technique);
+    techniqueTries.count++;
     const ret = technique.run();
     if (ret < 0) return "contradiction";
     if (ret > 0) {
@@ -214,6 +223,7 @@ function continuingFiring(
         stalled = ask(j).length === 0;
     if (stalled && !contradiction) {
       beforeTechnique?.(technique);
+      techniqueTries.count++;
       const offered = available();
       if (offered === "contradiction") contradiction = true;
       else list = offered.map((candidate) => ({ ...candidate, technique }));

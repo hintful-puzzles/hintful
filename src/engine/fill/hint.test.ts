@@ -11,6 +11,7 @@ import type { HintStep } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import { click, drag } from "../input/hint-gesture.ts";
+import { techniqueTries } from "../solve/deduction-fixpoint.ts";
 import { status } from "./answer.ts";
 import { type FillBoard, newBoard, spaceOf } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
@@ -72,6 +73,18 @@ describe("a fill game's hint", () => {
     expect(Array.from(board.values, (v) => (v === SHADED ? "#" : ".")).join("")).toBe(
       ANSWER.join(""),
     );
+  });
+
+  it("counts the techniques its walk tries, the figure a cost comparison reports", () => {
+    let board = dealt();
+    const before = techniqueTries.count;
+    let made = 0;
+    for (; status(kakurasu, reading, board) !== "solved" && made < 40; made++)
+      board = applyEdit(kakurasu, board, plan(board)[0].move);
+    expect({ made, tried: techniqueTries.count - before }).toEqual({
+      made: 10,
+      tried: 113,
+    });
   });
 
   it("follows a step made one square at a time, shrinking it to what is left", () => {

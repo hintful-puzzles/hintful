@@ -129,6 +129,29 @@ whole population and not the one file that suggested it, and check which side
 of the figure is which. Walk a proposal's deliverable list item by item
 against what is already on disk.
 
+## Compare a cost in instructions, not in time
+
+Whether a change made a walk or a deal dearer is a count of the instructions
+the work retires, `npm run compare-cost` (its header says how to make the
+baseline it is given). CPU time is the work at the speed of the core it got
+and the caches it shared, and on this machine, always busy, it moves with
+the load: the same fixed loop took 27% more CPU time beside ten busy
+processes and 0.1% more instructions. A difference in CPU time smaller than
+a fifth is not a finding.
+
+Read a line by its spread, the largest less the smallest of one tree's
+rounds: a difference inside it is none, and the command says so. The JIT
+compiles on helper threads whose work is in the count, which is why the
+command runs Node with `--predictable`, and what is left of the spread.
+Read it with the engine's own counts beside it, steps and technique tries,
+which are exact and say whether the work changed or only its price.
+
+Where cycles move and instructions do not, the same work met more cache
+misses or a slower core: check it again at a quieter moment before calling
+it a cost. A figure in milliseconds, such as whether a deal stays under the
+100 ms a player does not notice, is still CPU time, taken as the least of
+several runs, as `scripts/checks/cpu-unit.ts` takes its unit.
+
 ## Retire a dead instruction
 
 When an instruction has gone stale, fixing the one part you noticed leaves

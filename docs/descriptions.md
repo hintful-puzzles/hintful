@@ -116,6 +116,7 @@ and techniques, and:
 | A planning game's position and moves | you describe a planning game, or its moves or finish change |
 | Checking a dead-end claim sound | you state or edit a dead-end claim, a move or a finish, or the gate reports a claim unchecked |
 | What a candidate inherits | you plan a new game's ladder, or ask what another game's techniques would do under a game's rules |
+| Judging a family moved onto its description | you move hand-written games onto their descriptions, or judge a change that did |
 | What this builds on | you design a new part of the language or the engine, or write about the approach |
 
 ## The file
@@ -786,12 +787,14 @@ Net's search to under half (2026-11-09).
 described game's deals and walks at HEAD and says where the work is, which
 bounds what the description could cost; it never says what a construct costs
 above the code it replaced, since the old code did much of the same work.
-[`deal-compare`](../scripts/checks/deal-compare.test.ts) says that: it deals
-some games' presets with the same seeds on the working tree and on any commit,
-alternating which goes first, times deals and single solves, and fails where
-a board's verdicts differ. A change to the compiler or the runtime is timed
-with it against the commit before, on the games whose profile names the
-construct; each file's header says how to run it.
+`npm run compare-cost` says that: it walks and deals the same boards in the
+working tree and in a checkout of any commit and counts the instructions each
+took (`docs/method.md` § "Compare a cost in instructions, not in time").
+[`deal-compare`](../scripts/checks/deal-compare.test.ts) deals some games'
+presets with the same seeds in both and fails where a board's verdicts
+differ. A change to the compiler or the runtime is counted against the commit
+before, on the games whose profile names the construct; each command's header
+says how to run it.
 
 **Speed is improved as work passes, not in a campaign of its own.** Where a
 session finds a described game slow, or meets a statement the compiler makes
@@ -2262,6 +2265,46 @@ It writes `results-inherit-<game>.txt`. **What it does not see**:
   its tier, or of whether the ladder should run it. And a technique that
   reads only the grid is in every grid game's words: Group's read the
   answer as a multiplication table, and come out unsound in Solo, rightly.
+
+## Judging a family moved onto its description
+
+A change that moves a family of hand-written games onto their
+descriptions records, for each game it moves (a flip), the figures below,
+and judges the family by them before it is archived. They replace "each
+game needs fewer new capabilities than the one before", which counted how
+different each game was more than how well the engine served it, and which
+two pilots failed while their families went on (the owner, 2026-11-22).
+
+1. **The game's lines go, and more of them than the engine gains.** The
+   hand-written TypeScript a flip removes under `src/games/`, against what
+   `src/engine/` and `src/describe/` gain net, tests and JSON excluded. A
+   flip that adds more than it removes says so and names the later games
+   its additions are for; across the family, the lines removed are at
+   least twice those added.
+2. **Every capability is a concept, never a game.** Each key or engine
+   capability a flip adds could be adopted by another game, whether or not
+   one does yet (`docs/doctrine.md`): one user is fine, a name or a shape
+   only one game could want is not. A flip lists what it added, each with
+   the concept it serves.
+3. **What earlier flips built is used.** A flip's gap list marks each need
+   met by what is already built or new. Reported, with no threshold: the
+   share met should rise along a family, and where it does not, the
+   family's next order is the question.
+4. **The cost is counted, and nothing a player feels is left.** The walk
+   and the deal against the change's baseline, by `npm run compare-cost`
+   (`docs/method.md` § "Compare a cost in instructions, not in time"). A
+   rise outside the spread is explained by the steps and tries beside it
+   or by the code. A deal or a walk that takes more than 100 ms of CPU
+   time (the least of several runs) on a menu board where the baseline's
+   did not is fixed before the family is archived, in the engine.
+5. **The hint does no less a step.** Steps on the same boards, both trees.
+   Fewer is explained, as a firing that settles several squares at once;
+   more means each hint does less than before, and the engine is fixed so
+   it does not.
+6. **A game born from its description costs little.** The first game of a
+   family's kind written new, with no hand-written game before it, records
+   its description's lines and what the engine gained for it. That is the
+   figure the initiative is for, and it is recorded the first time.
 
 ## What this builds on
 

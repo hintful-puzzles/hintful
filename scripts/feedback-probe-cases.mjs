@@ -470,6 +470,7 @@ export const MODULES = [
         find: [
           "  for (const technique of techniques) {",
           "    beforeTechnique?.(technique);",
+          "    techniqueTries.count++;",
           "    const ret = technique.run();",
           '    if (ret < 0) return "contradiction";',
           "    if (ret > 0) {",
@@ -483,6 +484,7 @@ export const MODULES = [
           "  let last: DeductionTechnique | null = null;",
           "  for (const technique of techniques) {",
           "    beforeTechnique?.(technique);",
+          "    techniqueTries.count++;",
           "    const ret = technique.run();",
           '    if (ret < 0) return "contradiction";',
           "    if (ret > 0) {",
