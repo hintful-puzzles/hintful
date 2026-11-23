@@ -82,8 +82,10 @@
       `draws` names a collection color (`yellow-wash`) for a surface with
       no role, and `brings` is what its last move's placement rules out.
       Singles (`input` for its wrapping cursor and the margin press; its
-      rungs on boards too small to load are its pins'). Left: Sticks and
-      Bricks (`input` for keys, drags and the hexagon's shear). `wordings` renders a technique's stated step from terms on
+      rungs on boards too small to load are its pins'), Sticks (an input
+      case reads its board as the codec does, answers or none). Left:
+      Bricks (`input` for the hexagon's cursor, the number pad, and the
+      press through the shear). `wordings` renders a technique's stated step from terms on
       the compiled module (`BornGame.compiled`), the pieces named as the
       hint names them (`pairPieces`); `draws` takes `any` for a piece in
       the game's own colors. A position's

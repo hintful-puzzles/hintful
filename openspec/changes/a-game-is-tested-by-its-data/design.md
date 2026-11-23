@@ -59,7 +59,9 @@ naming the file and the line.
   `returns` (a `move`, `ui` or `none`) and `preferences`; an entry with no
   event says what holds as it stands. The events go to `interpretMove`,
   not through the midend, so a press lands where the game's geometry says
-  and a case reads what the game made of each event.
+  and a case reads what the game made of each event. The board is the
+  desc's reading, answers or none: the smallest board that shows a
+  control seldom has one answer (Sticks' `4x1:aBb`).
 - `wordings`: a technique's stated wording rendered from terms, and the
   sentence expected, for a wording no walk reaches.
 

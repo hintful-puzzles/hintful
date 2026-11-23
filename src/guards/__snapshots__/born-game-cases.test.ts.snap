@@ -91,6 +91,23 @@ exports[`range: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`singles: pinned hint positions > says, at each pin 1`] = `
+{
+  "besideCovered": "No shaded square may touch the outlined shaded square, so these squares (1, 3, 2 and 6) must be clear.",
+  "boxedIn": "This 6 is the outlined clear square's last neighbor that isn't shaded, so it must be clear to keep that square joined.",
+  "corner.across": "Left clear, this inner 4 would make both 4s flanking corner 6 shaded and box the corner in, so it must be shaded.",
+  "corner.apex": "Left clear, this corner 1 would box itself in with both 1s beside it shaded, so it must be shaded.",
+  "corner.four": "Left clear, this corner 5 would box itself in with its two 5s shaded, so it and the 5 diagonally inside must be shaded.",
+  "corner.pairAtS": "The corner's 5s need one shaded; shading this 3 forces the side 5, boxing the corner in, so it must stay clear.",
+  "corner.pairAtT": "The corner's 4s need one shaded; shading this 2 forces the side 4, boxing the corner in, so it must stay clear.",
+  "offset": "The outlined 4s and 6s mean shading the ringed 2 makes two shaded squares touch, so that 2 must be clear.",
+  "pair": "The outlined 4s touch, so one of them stays clear and uses up the 4 in this row: the ringed 4 must be shaded.",
+  "sameLine": "The outlined clear 2 already holds this row's 2, so the ringed 2 must be shaded.",
+  "sandwich": "The outlined 6s sit one square apart, so one of them must be shaded: the 2 between them must be clear.",
+  "split": "Shading this 4 would cut off some of the outlined squares around it from the rest, so it must be clear.",
+}
+`;
+
 exports[`starbattle: pinned hint positions > says, at each pin 1`] = `
 {
   "around": "No star may touch the outlined star, even diagonally, so each ringed square must be empty.",
@@ -108,6 +125,16 @@ exports[`starbattle: pinned hint positions > says, at each pin 1`] = `
   "neededRegion": "This region needs 2 stars and without this square has room for only 1, so that square must hold a star.",
   "starvedLine": "A star on this square would complete its region, leaving this column no open square, so it must be empty.",
   "starvedRegion": "A star on this square would complete its column, leaving this region no open square, so it must be empty.",
+}
+`;
+
+exports[`sticks: pinned hint positions > says, at each pin 1`] = `
+{
+  "overConnected": "The 0 block takes no lines, and a vertical line on this square would run into it, so this square must be horizontal.",
+  "starved": "The 4 block needs 4 outlined sides, and a horizontal line on this square shuts one, so this square must be vertical.",
+  "tooLong": "A vertical line on this 1 would run the 1's line to 2 squares, too long for it, so this 1 must be horizontal.",
+  "twoClues": "A horizontal line on this 1 would join the 1 and the 3 along the outlined squares, so this 1 must be vertical.",
+  "unreachable": "The 3 needs more room, and a vertical line on this 3 would leave it 2 squares, so this 3 must be horizontal.",
 }
 `;
 

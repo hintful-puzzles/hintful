@@ -21,7 +21,6 @@ const only = (globalThis as { process?: { env?: Record<string, string | undefine
  */
 const NOT_YET_DATA: Readonly<Record<string, string>> = {
   bricks: "bricks.test.ts",
-  sticks: "sticks.test.ts",
 };
 
 describe("a born game's cases", () => {

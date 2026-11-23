@@ -1,0 +1,107 @@
+# Sticks' cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every kind of step its
+# hint takes, upstream's IDs read as the right blocks and numbers, the tier
+# a pasted board opens at, the sizes refused, the hint's words, the clues
+# left, and the lines drawn by direction.
+
+values:
+  across: 1
+  down: 2
+  block: 3
+
+hint:
+  params:
+    - {w: 7, h: 7, diff: 0, options: {blocks: 20, symmetry: 2}}
+    - {w: 8, h: 10, diff: 1, options: {blocks: 20, symmetry: 2}}
+  pins:
+    overConnected: "7x7b20s2de:a2a2c2_1a2aBB0a1aBb2cBa1b1aB1a1aBB0_3a2_2_3b3c1"
+    twoClues:
+      id: "7x7b20s2de:1aB1a4cB2aB1aB2c3f1_3d1a1b3aB_1B2_2B2a3a2aB2a2"
+      moves: [{set: [16, across]}, {set: [24, across]}]
+    tooLong:
+      id: "8x10b20s2du:B1c3bB1aB2_1aB1_1d1aB1_1a2_1_1b4bBc4B2aB1bBaB2b1aB2c4a1_1_1bB2b2c1B_1aB2aB2e4B"
+      moves: [{set: [64, down]}]
+    starved: "8x10b20s2du:a1_2Ba1_2a1cB2bB1a1aB4a2aBaBc1B2_1_2_1_1Bd1cB3_2_2bB4_2b1B2aBcB3_1_1_2B_1_1Bb1c2aB2_3b"
+    unreachable: "7x7b20s2de:1aB1a4cB2aB1aB2c3f1_3d1a1b3aB_1B2_2B2a3a2aB2a2"
+
+tiers:
+  # Off the menu: the smallest boards Unreasonable is dealt on.
+  dealt: [2x3b20s0du, 3x3b20s0du]
+
+ids:
+  # B a block with its number after, _ before a number after a written
+  # square. A line of 3 does not fit beside a 1 on four squares: refused,
+  # and read all the same.
+  - id: "4x1:B2_1_3a"
+    refused: DESC_CONTRADICTORY
+    holds:
+      values: [block, 0, 0, 0]
+      dealt.joins.at: [0]
+      dealt.joins.v: [2]
+      dealt.length.at: [1, 2]
+      dealt.length.v: [1, 3]
+  # A pasted board opens at the tier it has.
+  - {id: "4x4b20s2:3b1aB1b2_1B1c1a", opens: 4x4b20s2du}
+  - {id: "4x4b20s2de:c1_1B0_1cB2c4a", opens: 4x4b20s2de}
+  - {id: "4x4b20s2:p", refused: DESC_NOT_UNIQUE}
+  - {id: "4x4b20s2:4_1b1k", refused: DESC_CONTRADICTORY}
+
+params:
+  # The tier last, and a board with no blocks or symmetry given takes the
+  # usual.
+  - {read: "7x7b20s2de", full: "7x7b20s2de"}
+  - {read: "7x7b20s2du", full: "7x7b20s2du"}
+  - {read: "10x10b30s0de", full: "10x10b30s0de"}
+  - {read: "7x7", full: "7x7b20s2de"}
+  # Only the sizes and symmetries no board is dealt on are refused.
+  - {read: "2x2b20s0de", refused: false}
+  - {read: "2x2b20s0du", refused: "/is Unreasonable/"}
+  - {read: "2x3b20s0du", refused: false}
+  - {read: "4x5b20s4de", refused: "/must be square/"}
+  - {read: "7x7b4s0de", refused: "/at least 5/"}
+
+positions:
+  # The square right of the 0 block, at (1,4), cannot run across into it.
+  - id: "7x7:c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4"
+    holds: {values.28: block}
+    steps: [{rung: overConnected, set: [29, down]}]
+  # The hint carries on from the 3 along its row, then to the 1 block, and
+  # names a numbered square by its number.
+  - id: "5x5:3bB1b5c2aB3c2a2_2aB2b1"
+    steps:
+      - {rung: unreachable, set: [0, across], says: "/this 3 must be horizontal/"}
+      - {rung: unreachable, set: [1, across]}
+      - {rung: unreachable, set: [2, across]}
+      - {rung: overConnected, set: [4, down]}
+  # The block numbers left are counted, never a line's.
+  - id: "7x7:c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4"
+    statusbar: "Clues left: 5"
+  - id: "7x7:c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4"
+    solve: true
+    statusbar: ""
+
+input:
+  - id: "4x1:aBb"
+    events:
+      # A drag from the empty third square across the fourth draws along
+      # the row; started on a line that way, the same drag clears.
+      - {press: [2, 0]}
+      - {drag: [3, 0]}
+      - {release: [3, 0], values: [0, block, across, across]}
+      - {press: [2, 0]}
+      - {drag: [3, 0]}
+      - {release: [3, 0], values: [0, block, 0, 0]}
+      # The cursor shows on the first square; 1 sets a vertical line,
+      # outright, and again does nothing.
+      - {key: left}
+      - {key: left}
+      - {key: "1", values: [down, block, 0, 0]}
+      - {key: "1", returns: none}
+      - {key: "2", values: [across, block, 0, 0]}
+      # Ctrl and Right leaves the block out; at the edge it draws one
+      # square.
+      - {key: ctrl+right, values: [across, block, 0, 0]}
+      - {key: ctrl+right}
+      - {key: right, values: [across, block, across, 0]}
+      - {key: shift+right, values: [across, block, across, down]}
+      - {key: ctrl+right, values: [across, block, across, across]}

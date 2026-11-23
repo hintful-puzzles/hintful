@@ -8,7 +8,7 @@
  * Dev/test-only; never imported by production code.
  */
 
-import { loadDesc } from "../contract/desc-error.ts";
+import { readBoard } from "../contract/desc-error.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import type { Point } from "../contract/types.ts";
 import {
@@ -113,14 +113,16 @@ interface CellTarget {
   y: number;
 }
 
-/** What of an input case the game does not do. */
+/** What of an input case the game does not do. The board is the desc's
+ * reading, answers or none: what an event does is the controls', and the
+ * smallest board that shows it seldom has one answer. */
 export function checkInput(game: AnyGame, c: InputCase): string[] {
   const [params, desc] = [
     c.id.slice(0, c.id.indexOf(":")),
     c.id.slice(c.id.indexOf(":") + 1),
   ];
-  const loaded = loadDesc(game, game.decodeParams(params), desc);
-  if (!loaded.ok) return [`refused: ${loaded.error}`];
+  const loaded = readBoard(game, game.decodeParams(params), desc);
+  if (!loaded.ok) return [`reads as no board: ${loaded.error}`];
   let state = loaded.value;
   for (const m of c.moves) state = game.executeMove(state, m);
   const ui = game.newUi(state);
