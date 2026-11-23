@@ -673,14 +673,14 @@ reader takes the `DescReader`, so it sits inside a game's one parse. **It
 is not `run-length.ts`'s grammar**: a letter is a run and a value, and a
 chunk is 25. A grammar that writes every chunk in lowercase, or ends at the
 last dot with no closing letter, is a different one again (Galaxies').
-Exemplar: `unruly/state.ts`.
+Exemplar: the `dots` id segment (`engine/fill/game-id.ts`).
 
 ### `desc-alphabet.ts` — one character per small number
 
 Reach for it when a desc character stands for a number over nine. It is a
 value codec, one character per cell: `n2c(n)` writes digits, then
 lowercase, then capitals, and `c2n(c)` inverts it, with `null` for anything
-else. Exemplar: `singles/state.ts`.
+else. Exemplar: the `cells` id segment (`engine/fill/game-id.ts`).
 
 - **The order is frozen into shipped game IDs.** No caller reorders it.
 - **A sentinel stays with the game**, handled before delegating.
@@ -787,7 +787,8 @@ more than one puzzle, each ruleset a `name` and its `rule`.
 `rulesetField(game)` finds it, for the label, the menu's sections and the
 help, and `rulesetsMarkdown` is what a page's `{{rulesets}}` becomes. A
 ruleset's `only` is what it offers of the other fields (`only.ts`).
-Exemplar: `seismic/state.ts`.
+Exemplar: `path/state.ts`; a born game states its rulesets in
+`play.sizes` (Seismic's).
 
 ### `only.ts` — what one setting leaves of the others
 
@@ -880,8 +881,8 @@ Reach for it where a board's regions are dealt and drawn as heavy walls
 inside a tile-cached grid. `regionWalls(w, h, regions)` in `newDrawState`
 keeps each square's walls; `drawWalledSquare` paints a square's box, its
 halves of the walls and its corners round the surface the game lays, and
-`walledBoxes` gives that surface, for a hint's band. Exemplars:
-`starbattle/render.ts`, `engine/fill/render.ts`.
+`walledBoxes` gives that surface, for a hint's band. Exemplar:
+`engine/fill/render.ts`.
 
 ### `ring.ts` — the round ring
 
@@ -1217,7 +1218,8 @@ suits which rule is
 [`solver-and-generator.md`](./solver-and-generator.md) § "A division into
 regions is the engine's". The order of `mergeNeighbors` and
 `growFromSeeds` deals the boards; both are upstream's draws.
-Exemplars: `rome/generator.ts`, `map/generator.ts`, `seismic/generator.ts`.
+Exemplars: `rome/generator.ts`, `map/generator.ts`, `fill/divide.ts`
+(Seismic's areas, `deal.divide` with `sizes`).
 
 ### `mend-division.ts` — mend a division until it has one answer
 
@@ -1230,7 +1232,7 @@ leave open, the second answers its search meets (as the cells that break
 each), and whether the tier below finishes the board too. It also names the
 cells that never move, where the answer has what a region counts. The search
 is usually `solvedPositions` from `answer-search.ts`. Exemplar:
-`starbattle/generator.ts`.
+`engine/fill/grow.ts`, with the judge `engine/fill/deal.ts` hands it.
 
 ### `laydomino.ts` — random domino tiling
 
@@ -1288,7 +1290,7 @@ its fills are tried. Two callers, which differ only in that choice:
   fills by area. The colors are `REGION_FILLS` (`color/colors.ts`), one palette
   slot each; [`rendering.md`](./rendering.md) § "What a board looks like:
   pieces on a quiet surface" says what a game owes when it takes them.
-  Exemplar: `starbattle/render.ts`.
+  Exemplars: `engine/fill/render.ts`, `rect/render.ts`.
 - **A generator whose answer is a coloring** passes a `choice` that draws.
   Its order deals the boards there: the walk asks once for the region and
   once for its fills at every step, which are the draws of upstream's
@@ -1351,7 +1353,7 @@ a value a cell and the values each may still hold, and the edges' and
 cells' marks where the description keeps them. `WideCellMarks` holds a
 domain whose values run past 31 (`ascent/solver.ts`). A game's solver
 extends `CellMarks` only to keep a Search no description states. Exemplar:
-`unruly/solver.ts`; the guide is [`descriptions.md`](./descriptions.md)
+`solo/solver.ts`; the guide is [`descriptions.md`](./descriptions.md)
 § "The runtime a ladder runs on".
 
 ### `ladder-runtime.ts` — what a compiled ladder runs on
@@ -1361,7 +1363,7 @@ description: the pairing of each technique with its reason, and
 `ladderTechniques` and `runLadder` to run it on the marks capped per scale.
 `withSearch` puts a Search no description states after the ladder, and
 `keptRung` makes a hint rung of the compiled firings that serve another.
-Exemplars: `unruly/solver.ts`, `seismic/solver.ts`; the guide is
+Exemplar: `abcd/solver.ts`; the guide is
 [`descriptions.md`](./descriptions.md) § "The runtime a ladder runs on".
 
 ### `ladder-walk.ts` — a hint's walk over a compiled ladder
@@ -1562,7 +1564,7 @@ game gives the walk, how a fact is its highlights' target and the move that
 makes some, and a sentence a technique, which an `arms` technique reads by
 `spoken.arm`. It returns the hint's part (`plan`, `judgeMove`, `keepTrack`,
 `refreshStep`) as `hint`, which the game spreads, and `rulesOut` beside it.
-Exemplar: `singles/index.ts`.
+Exemplar: `engine/fill/hint.ts`.
 
 ### `glance.ts` — marks a board shows at a glance, and asking for a deeper one
 

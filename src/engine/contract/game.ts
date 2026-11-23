@@ -686,10 +686,12 @@ export interface Game<
 
   /** The on-screen keypad this game wants (upstream `game_request_keys`): the
    * `{ button, label }` keys, digits/letters plus a clear key or a game's
-   * bespoke keys like Undead's Ghost/Vampire/Zombie. It depends on `params`
-   * only, since the app's key panel reloads only on a param change, so it
-   * deliberately takes neither state nor ui. Absent ⇒ no keypad. */
-  requestKeys?(p: Params): KeyLabel[];
+   * bespoke keys like Undead's Ghost/Vampire/Zombie. It depends on `params`,
+   * and on the board in play, `state`, where a board can hold a value its
+   * params do not promise (an area larger than the deal grows, in a game ID
+   * from elsewhere); the app's key panel reloads with each board. It takes
+   * no ui, and a caller with no board yet passes none. Absent ⇒ no keypad. */
+  requestKeys?(p: Params, state?: State): KeyLabel[];
   /** What the board has shown of the value each key types, for a game whose
    * scores say it of a value as a whole (Wordguess: a letter in the word, in
    * its place, or not in it). Sent with every move, so the keypad keeps up

@@ -1,3 +1,3 @@
-Seismic: 4x4 Easy #0: 11 steps, solved, d39d6b020fc60034 [regionsFull:10 singleton:1]
-Seismic: 4x4 Normal #0: 35 steps, solved, fc4225b5c22734a5 [dup:8 hidden:4 note:8 regionsFull:3 single:8 starve:4]
-Tectonic: 4x4 Easy #0: 12 steps, solved, 995ed2e2a4a87d1c [hidden:1 regionsFull:10 singleton:1]
+Seismic: 4x4 Easy #0: 11 steps, solved, 0952aef1ddbe5dbf [regionsFull:11]
+Seismic: 4x4 Normal #0: 24 steps, solved, bc026413deb77871 [dup:4 hiddenSingle:1 note:5 regionsFull:6 single:6 starve:2]
+Tectonic: 4x4 Easy #0: 11 steps, solved, f7427f0a2b7b3186 [regionsFull:11]

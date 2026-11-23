@@ -225,7 +225,7 @@ commit. In design.md § "Decisions" 7's order.
         press and by Shift-arrow, the hint walked to the solve on both
         (its wording "multiply to 120", once "¢" and fixed here), the
         "6x6 Normal, multiplication only" entry, light and dark.
-- [ ] 2.5 Towers born: clues at both ends of a line, `numbers` with its
+- [x] 2.5 Towers born: clues at both ends of a line, `numbers` with its
       separator and the optional givens after `,`, a hide from a tier up,
       `fullLine` and `tallestNearest` stated as techniques, the tower
       painter drawing past its tile with its hit test and 2D/3D preference.
@@ -410,7 +410,7 @@ commit. In design.md § "Decisions" 7's order.
         deal +7.8%, steps 2528 / 2522, unsolved 8 / 8. Run in Chrome: a
         5x5 Easy deal, typing, notes, a broken clue in red, a hint walked
         to the solve, a 6x6 Normal upstream board in dark.
-- [ ] 2.7 Seismic born: a partition grown to drawn sizes before the answer,
+- [x] 2.7 Seismic born: a partition grown to drawn sizes before the answer,
       the answer searched under it, `T` a ruleset by a bare letter, its
       reach from the compiled `cull` (`notes.ts`'s `reachOf`), and the
       walk's regions from units beyond rows and columns, its areas.
@@ -501,11 +501,48 @@ commit. In design.md § "Decisions" 7's order.
         both rulesets, tiers and readings; the reach per ruleset; the words)
         and `compile.test.ts`; the reach and the `reads` seen to fail
         planted.
-  - [ ] 2.7d The flip: `mode` the ruleset, the menu (4x4, 6x6, 6x8 and 7x9
+  - [x] 2.7d The flip: `mode` the ruleset, the menu (4x4, 6x6, 6x8 and 7x9
         in both, Easy), the keypad to the largest area dealt, an area of one
         a leading technique, Seismic's tests to `seismic.cases.yaml`, its
         TypeScript deleted, the `game-lines` ceiling lowered, its spec
         deltas and the run in the app.
+        Done: the menu is every size at both tiers in both modes, as the
+        hand-written menu was, 6x6 Seismic Easy the default (a first visit
+        opens on the menu's first board in every game, Towers too). No
+        `singleton` technique: the fill board places a cell whose domain
+        leaves one value as it is dealt (`FillBoard.fixed`), so an area of
+        one shows its 1 from the start, and 38 areas of one over 40 deals
+        were all placed so. Capabilities added, each a concept:
+        - The keypad reads the board in play (`Game.requestKeys(p, state)`)
+          and reaches a part larger than any the deal divides; the app's
+          panel reloads with each game ID, not each params string. Upstream's
+          own `6x6de` and `7x7de` boards have areas of six where the deal
+          draws five, which the hand-written keypad could not type on touch.
+        - A part a deal divides to drawn sizes is refused past 31 squares,
+          what a cell's mask holds (`fill/game-id.ts`); upstream's nine was
+          its notes', and the fill board's notes and keys reach 31.
+        - The walk's rungs carry the Latin library's strikes only where the
+          ladder places them (`candidates.ts`): Seismic's walk declared
+          `set` and `wing`, which nothing of its could fire.
+        - A cases file's hint params are dealt as a pin's ID reads them back
+          (`game-cases.ts`): `{w, h, diff}` with no `sizes` dealt boards
+          under neither keep-apart rule and wrote them as Seismic's, so a
+          pin did not load.
+        Each new guard seen to fail planted (the keypad, the refusal).
+        Differences a player sees: an area of one shows its 1 from the
+        deal; an area of ten to 31 squares in a game ID reads; the keypad
+        reaches a shared board's largest area; the hint says "cell" and a
+        starved area's strikes are told a cell at a time; the clean says
+        "any number N … within N cells", and the cull and the starved area
+        say "in line" to stay within the 120 characters a step has; an
+        underdetermined ID is refused
+        as needing trial and error; the Custom size's note on slow large
+        boards is gone; saves break (approved). The 28 upstream descs all
+        load and write back byte for byte. Run in Chrome 2026-11-23:
+        upstream's 6x6 Seismic Easy (keypad 1 to 6, its areas of one lifted
+        1s), two 2s too close in red, notes, the hint walked to the solve;
+        a 6x6 Tectonic Normal in dark, the starved area striped with its
+        struck cell ringed, walked to the solve; a fresh 4x4 Easy deal.
 
 ## 3. Finish
 

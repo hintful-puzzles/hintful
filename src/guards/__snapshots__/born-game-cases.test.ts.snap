@@ -144,6 +144,18 @@ exports[`range: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`seismic: pinned hint positions > says, at each pin 1`] = `
+{
+  "clean": "Now clear the easy ones: cross out any number already in its cell's area or in a cell touching it.",
+  "dup": "The 4 just placed can't repeat in its area or in line within 4 cells, so the 4 must go from the other cells.",
+  "hiddenSingle": "No other cell in this area can be 1, so this cell must be 1.",
+  "note": "Only 2 and 3 aren't already in this cell's area or within reach along its row or column, so pencil them in.",
+  "regionsFull": "Every other number is already in this cell's area or within reach along its row or column, so it can only be 2.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 3.",
+  "starve": "Each cell this area has left for its 2 is in line with this cell and within 2 of it, so this cell can only be 1, 3 or 4.",
+}
+`;
+
 exports[`singles: pinned hint positions > says, at each pin 1`] = `
 {
   "besideCovered": "No shaded square may touch the outlined shaded square, so these squares (1, 3, 2 and 6) must be clear.",

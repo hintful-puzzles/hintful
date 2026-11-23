@@ -990,8 +990,13 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
   }
 
   private keypadHasM(): boolean {
-    const keys = this.game.requestKeys?.(this.boardParams) ?? [];
-    return keys.some((k) => isMarkAllLetter(k.button));
+    return this.gameKeys().some((k) => isMarkAllLetter(k.button));
+  }
+
+  /** The keys the game asks for on the board in play, or on none yet. */
+  private gameKeys(): KeyLabel[] {
+    const board = this.history.length === 0 ? undefined : this.state;
+    return this.game.requestKeys?.(this.boardParams, board) ?? [];
   }
 
   /** Hand one input to the game and act on its answer. */
@@ -2091,7 +2096,7 @@ export class Midend<Params, State, Move, Ui, DrawState> implements EngineCore {
    * `pencil-mode-key.test.ts` refuses.
    */
   requestKeys(): KeyLabel[] {
-    const keys = this.game.requestKeys?.(this.boardParams) ?? [];
+    const keys = this.gameKeys();
     if (!this.takesNotes()) return keys;
     return [...keys, pencilModeKey];
   }

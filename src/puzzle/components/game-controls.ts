@@ -62,7 +62,10 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
   @query("[part=base]")
   private base?: HTMLElement;
 
-  private renderedParams: string | null = null;
+  /** The game ID the keys were loaded for, which a puzzle with no ID yet
+   * leaves `null`: `keysLoaded` says whether they were loaded at all. */
+  private renderedGameId: string | null = null;
+  private keysLoaded = false;
   private fittedHeight = 0;
   private watchedBase: HTMLElement | null = null;
   private resizeObserver: ResizeObserver | null = null;
@@ -81,12 +84,14 @@ export class PuzzleGameControls extends SignalWatcher(LitElement) {
   }
 
   protected override willUpdate() {
-    // The available keys can vary with changes to puzzle params.
-    // (This should really be an effect on this.puzzle?.currentParams,
+    // The available keys can vary with the board, its params and, in a game
+    // ID from elsewhere, what it holds (`Game.requestKeys`).
+    // (This should really be an effect on this.puzzle?.currentGameId,
     // but @lit-labs/signals doesn't have effects yet.)
-    const currentParams = this.puzzle?.currentParams ?? null;
-    if (currentParams !== this.renderedParams) {
-      this.renderedParams = currentParams;
+    const currentGameId = this.puzzle?.currentGameId ?? null;
+    if (!this.keysLoaded || currentGameId !== this.renderedGameId) {
+      this.keysLoaded = true;
+      this.renderedGameId = currentGameId;
       void this.loadKeyLabels();
     }
     this.empty = this.characterKeys.length === 0 && !this.hasOthers;

@@ -7,8 +7,10 @@
 
 import { describe, expect, it } from "vitest";
 import * as zoning from "../../generated/engine/testing/fixtures/zoning/zoning.compiled.ts";
+import { Dsf } from "../board/dsf.ts";
 import { DESC_OUT_OF_RANGE, validateDesc } from "../contract/desc-error.ts";
 import type { HintStep } from "../contract/game.ts";
+import { encodeRegionWalls } from "../game-id/wall-runs.ts";
 import type { CandidateReading } from "../hint/candidate-hint.ts";
 import { randomNew } from "../random/index.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
@@ -93,6 +95,19 @@ describe("the ID", () => {
 
   it("refuses a given larger than its area", () => {
     expect(validateDesc(game, params(3), "f5,d4d")).toBe(DESC_OUT_OF_RANGE);
+  });
+
+  it("reads an area as large as a cell's values reach, and refuses one larger", () => {
+    // An 8x4 and a 7x5 with no wall inside: one area of 32 squares, whose
+    // 32 no cell holds, and one of 35. A 6x5's 30 reads.
+    const open = (w: number, h: number) => {
+      const joined = new Dsf(w * h);
+      for (let c = 1; c < w * h; c++) joined.merge(0, c);
+      return `${encodeRegionWalls(joined, w, h)},${"z".repeat(Math.floor((w * h) / 26))}${String.fromCharCode(96 + ((w * h) % 26))}`;
+    };
+    expect(validateDesc(game, params(8, 4), open(8, 4))).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(game, params(7, 5), open(7, 5))).toBe(DESC_OUT_OF_RANGE);
+    expect(validateDesc(game, params(6, 5), open(6, 5))).toBeNull();
   });
 });
 
@@ -265,5 +280,17 @@ describe("typing", () => {
       type: "set",
       n: 3,
     });
+  });
+
+  it("offers keys to a board's own largest area, where it is larger than any drawn", () => {
+    // A 3x3 with no wall inside it: one area of nine, from an ID dealt
+    // elsewhere. Its keypad must type the 9 its area owes.
+    const digits = (b?: Board) =>
+      (game.requestKeys?.(params(3), b) ?? [])
+        .map((k) => k.label)
+        .filter((l) => /^[0-9]$/.test(l));
+    expect(digits(board(3, 3, "l,i")).at(-1)).toBe("9");
+    expect(digits(board(3, 3, "f5,i")).at(-1)).toBe("4");
+    expect(digits().at(-1)).toBe("4");
   });
 });

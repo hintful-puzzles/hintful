@@ -1105,7 +1105,9 @@ export function describeGameCases(
   if (hint !== null)
     describeHintPins({
       game,
-      params: hint.params,
+      // Dealt as a pin's ID reads them back, so a setting the case leaves
+      // out is the one its ID says, and not none.
+      params: hint.params.map((p) => game.decodeParams(game.encodeParams(p, true))),
       ...(hint.seeds === null ? {} : { seeds: hint.seeds }),
       kinds: Object.fromEntries(
         Object.entries(hint.kinds).map(([name, shape]) => [name, kindOf(shape)]),

@@ -119,9 +119,6 @@ const OWN_CONVERSIONS: Record<string, Record<string, typeof FOLDS | typeof SCALE
   "rome/index.ts": {
     "return Math.max(0, Math.floor((pixel - o) / ts));": FOLDS,
   },
-  "seismic/render.ts": {
-    "return Math.trunc((v - origin(ts)) / ts);": FOLDS,
-  },
   "undead/index.ts": {
     "x: Math.trunc((p.x - border - 1) / ts),": FOLDS,
     "y: Math.trunc((p.y - border - 2) / ts) - 1,": FOLDS,

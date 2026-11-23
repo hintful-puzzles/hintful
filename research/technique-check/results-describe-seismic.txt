@@ -1,0 +1,16 @@
+ok  seismic mode=0 cull                           3  sound    (want sound   )     9 queries    0.3s
+ok  seismic mode=0 cull (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  seismic mode=1 cull                           3  sound    (want sound   )     9 queries    0.4s
+ok  src/games/seismic/seismic.description.yaml#cull: recorded sound, proved whole on all 2 boards
+ok  seismic mode=0 lone                           3  sound    (want sound   )     9 queries    0.2s
+ok  seismic mode=0 lone (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  seismic mode=1 lone                           3  sound    (want sound   )     9 queries    0.3s
+ok  src/games/seismic/seismic.description.yaml#lone: recorded sound, proved whole on all 2 boards
+ok  seismic mode=0 areaSingle                     3  sound    (want sound   )    79 queries    3.1s
+ok  seismic mode=0 areaSingle (planted)           3  unsound  (want unsound )    10 queries    0.2s   at region area 9
+ok  seismic mode=1 areaSingle                     3  sound    (want sound   )    79 queries    1.5s
+ok  src/games/seismic/seismic.description.yaml#areaSingle: recorded sound, proved whole on all 2 boards
+ok  seismic mode=0 starve                         3  sound    (want sound   )    79 queries    1.7s
+ok  seismic mode=0 starve (planted)               3  unsound  (want unsound )    10 queries    0.2s   at region area 9
+ok  seismic mode=1 starve                         3  sound    (want sound   )    79 queries    1.2s
+ok  src/games/seismic/seismic.description.yaml#starve: recorded sound, proved whole on all 2 boards

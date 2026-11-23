@@ -62,9 +62,14 @@ export function byCell(marks: readonly Mark[]): Mark[][] {
  * across lines) and a wing. */
 export type LatinStrikeReason = Exclude<LatinReason, { kind: "single" | "dup" }>;
 
-/** The library's techniques that strike. Its singles and the cull around a
- * placement are the walk's own. */
-const LIBRARY_STRIKES: readonly string[] = ["latin.set", "latin.fish", "latin.wing"];
+/** The library's techniques that strike, each with the kind of reason it
+ * gives, which is the rung its step is walked as. Its singles and the cull
+ * around a placement are the walk's own. */
+export const LIBRARY_STRIKES: Readonly<Record<string, LatinStrikeReason["kind"]>> = {
+  "latin.set": "set",
+  "latin.fish": "set",
+  "latin.wing": "wing",
+};
 
 /**
  * A rung for each of the library's strikes in `on`'s ladder, in the ladder's
@@ -83,7 +88,7 @@ export function latinStrikeRungs<
   split: (marks: Mark[]) => Mark[][] = (marks) => [marks],
 ): CandidateRung<M, H, Reason | LatinStrikeReason>[] {
   return on.ladder.entries
-    .filter((e) => LIBRARY_STRIKES.includes(e.id))
+    .filter((e) => Object.hasOwn(LIBRARY_STRIKES, e.id))
     .map((e) =>
       techniqueRung<M, H, Reason | LatinStrikeReason, S>(on, e.id, (f) => {
         const reason = f.reasons[0] as LatinStrikeReason;

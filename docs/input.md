@@ -541,7 +541,7 @@ skipping, lock modes), build on `cursorDelta`, `isCursorMove` and
   first press**, so the board does not move under a player who cannot yet see
   where it would act. That path calls `showCursor` and returns early; the
   plain arrow beside it reveals and moves. Exemplar:
-  [`range/index.ts`](../src/games/range/index.ts), the shifted arrow.
+  [`sixteen/index.ts`](../src/games/sixteen/index.ts), the shifted arrow.
 - **What a game does while the cursor moves is its own**: read `ui.cursor`
   either side of a `moveCursor` call. Exemplar: `strokeKey` in
   `engine/fill/play.ts`.
@@ -671,8 +671,7 @@ the time to weigh one against the two exemplars.
 
 Preview the drag by recoloring the gathered cells, and put the recoloring in
 the diff key ([`rendering.md`](./rendering.md) § "The tile cache and the diff
-key"). Exemplars: [`clusters/index.ts`](../src/games/clusters/index.ts);
-a fill game's drag without `play.straight` ([`fill/play.ts`](../src/engine/fill/play.ts)),
+key"). Exemplar: a fill game's drag without `play.straight` ([`fill/play.ts`](../src/engine/fill/play.ts)),
 which is this drag and the line-fill one below with one path apart: every
 square passed that held what the pressed one held becomes what it became.
 
@@ -996,9 +995,12 @@ game source to restate the digit codes. Explicit labels are carried word for wor
 **Offer no key that is inert on every board the generator makes, and derive
 the bound: do not write it.** Compute it from the generator's distribution,
 assert in a structural test that every generated board fits it, and pin the
-`KeyLabel[]`, so widening the distribution fails a test. Exemplar:
-`maxGeneratedRegionSize` in
-[`seismic/generator.ts`](../src/games/seismic/generator.ts).
+`KeyLabel[]`, so widening the distribution fails a test. **A board from
+another game ID can hold more than any you deal**: `requestKeys` takes the
+board in play and reaches it (an upstream Seismic area of six, where the
+deal draws five at most), and the app reloads the panel with each board.
+Exemplar: `keypadTop` and `requestKeys` in
+[`fill/numbers.ts`](../src/engine/fill/numbers.ts).
 
 ### A notes mode added to a game
 

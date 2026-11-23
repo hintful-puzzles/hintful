@@ -1,0 +1,140 @@
+# Seismic's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every rung its hint
+# takes in both modes, upstream's IDs read and written back, its params, and
+# the keep-apart rules broken.
+
+hint:
+  params:
+    - {w: 6, h: 6, diff: 0}
+    - {w: 6, h: 6, diff: 1}
+    - {w: 6, h: 6, diff: 0, sizes: {mode: 1}}
+    - {w: 6, h: 6, diff: 1, sizes: {mode: 1}}
+  unreached:
+    populate: >-
+      spoken under the reading that pencils every candidate in first, and Seismic's hint starts on the one that does not (play.hintNotes)
+  pins:
+    # Held on 289 of 1853 positions walked.
+    clean:
+      id: "6x6Tdh:a2aa1aaa5aababhb2a1b1g,1a3c4b1a1e3d5a5b3a3b1c"
+      moves:
+        - {type: set, x: 1, y: 2, n: 1, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 2, n: 3, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 5, n: 1, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 1, y: 0, n: 2}, {x: 1, y: 0, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 2, n: 2}, {x: 0, y: 2, n: 3}, {x: 0, y: 2, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 3, n: 2}, {x: 0, y: 3, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 3, n: 2}, {x: 1, y: 3, n: 4}]}
+        - {type: set, x: 1, y: 1, n: 2, pencil: false, autoElim: false}
+    # Held on 621 of 1853 positions walked.
+    note: "6x6dh:1ca2b2b2ba1a1c1aa1a2f3ac1a,a41m5s"
+    # Held on 1077 of 1853 positions walked.
+    dup: "6x6dh:1ca2b2b2ba1a1c1aa1a2f3ac1a,a41m5s"
+    # Held on 1086 of 1853 positions walked.
+    single:
+      id: "6x6dh:aaaabbb1a1aa2baab5aaaa3cc,f1c2s5b1b"
+      moves:
+        - {type: pencilAdd, marks: [{x: 0, y: 0, n: 2}, {x: 0, y: 0, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 0, n: 2}, {x: 1, y: 0, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 0, n: 1}, {x: 2, y: 0, n: 3}, {x: 2, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 0, n: 1}, {x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 1, n: 2}, {x: 1, y: 1, n: 3}, {x: 1, y: 1, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 2}]}
+    # Held on 1695 of 1853 positions walked.
+    regionsFull: "6x6de:1ca2b2b2ba1a1c1aa1a2f3ac1a,a41m5d1f2g"
+    # Held on 1277 of 1853 positions walked.
+    hiddenSingle: "6x6de:5bca1abaa1baaaa6b1b4a1ab,q4b4n2"
+    # Held on 743 of 1853 positions walked.
+    starve:
+      id: "6x6dh:3a4bbb3aab1eaa7c1a2ca"
+      moves:
+        - {type: pencilAdd, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 1, n: 1}, {x: 0, y: 1, n: 2}]}
+
+ids:
+  # Boards upstream's generator dealt, read and written back: each mode and
+  # tier, and an area of six.
+  - {id: "4x4de:11bafa,d4c1f3", writesBack: true}
+  - {id: "4x4Tde:a9bi,a3c2a35a4b3b", writesBack: true}
+  - {id: "4x4dh:2a1a1a1aa1b1d,j4b4b", writesBack: true}
+  - {id: "6x6Tdh:aa1aa3abb2ccg2a1cb4b2a,3a2i4b5a3b2c4c3c1c", writesBack: true}
+  - {id: "6x6de:2c1aa4aaa6bb4aba2a1aba3a,g2b5l3l", writesBack: true}
+  # Large boards upstream deals and shares, each one solver run to open.
+  - {id: "9x8:aa1b1b3b1a1ca1aa4bbaaa1a1ba3dcaa3b2c3bad1a6b1a3aab3,z34e2j1i2q", opens: "9x8de"}
+  - {id: "11x10T:abb1baacbbcaab4aaca1baaaa1bab1ab1daaa1dab1ba1ac7a2a2a1b2a2baa5d2d2aa3c3ab1b6b,b4a3e54m3d1a23g3j4b1d5d4f4b5m5f5d2b5c41", opens: "11x10Tde"}
+  # A character neither part holds, a given larger than its area, and a zero.
+  - {id: "4x4de:!!!,d4c1f3", refused: '/"!"/'}
+  - {id: "4x4de:11bafa,9o", refused: DESC_OUT_OF_RANGE}
+  - {id: "4x4de:11bafa,0o", refused: DESC_OUT_OF_RANGE}
+  # The givens cut short, a run past the board, and anything after.
+  - {id: "4x4de:11bafa,o", refused: DESC_TOO_SHORT}
+  - {id: "4x4de:11bafa,q", refused: DESC_TOO_LONG}
+  - {id: "4x4de:11bafa,p,", refused: DESC_TOO_LONG}
+  # A wall list past the 24 borders.
+  - {id: "4x4de:zz,p", refused: DESC_TOO_LONG}
+  - {id: "4x4de:25,p", refused: DESC_OUT_OF_RANGE}
+  # No given, written or not: the ladder, which has no search, stops short.
+  - {id: "4x4de:11bafa,p", refused: DESC_NOT_DEDUCIBLE}
+  - {id: "4x4de:11bafa", refused: DESC_NOT_DEDUCIBLE}
+  # An area of 32 squares, past what a cell holds.
+  - {id: "8x4de:zz,zf", refused: DESC_OUT_OF_RANGE}
+
+positions:
+  # The areas' walls, and the givens.
+  # An area of one shows its 1 from the start.
+  - id: "4x4de:11bafa,d4c1f3"
+    text: |
+      +---+---+---+---+
+      | . | 1 | . | 1 |
+      +   +---+   +---+
+      | 4 | . | . | . |
+      +   +   +   +   +
+      | 1 | . | . | . |
+      +   +   +---+   +
+      | . | . | .   3 |
+      +---+---+---+---+
+  - id: "4x4Tde:a9bi,a3c2a35a4b3b"
+    text: |
+      +---+---+---+---+
+      | .   3 | . | . |
+      +   +---+   +   +
+      | . | 2 | . | 3 |
+      +   +   +   +   +
+      | 5 | . | 4 | . |
+      +   +   +   +---+
+      | . | 3 | .   . |
+      +---+---+---+---+
+  # The board solved.
+  - id: "4x4de:11bafa,d4c1f3"
+    solve: true
+    status: solved
+  # Seismic: two 2s with one cell between them on a row break the rule, and
+  # with two between them in a column they do not.
+  - id: "4x4de:11bafa,d4c1f3"
+    moves: [{set: [0, 2]}, {set: [2, 2]}]
+    breaks: [shape.1]
+  - id: "4x4de:11bafa,d4c1f3"
+    moves: [{set: [2, 2]}, {set: [14, 2]}]
+    breaks: []
+  # Tectonic: two equal numbers touching at a corner break the rule, and two
+  # cells apart on a row they do not.
+  - id: "4x4Tde:a9bi,a3c2a35a4b3b"
+    moves: [{set: [6, 1]}, {set: [11, 1]}]
+    breaks: [shape.1]
+  - id: "4x4Tde:a9bi,a3c2a35a4b3b"
+    moves: [{set: [12, 1]}, {set: [14, 1]}]
+    breaks: []
+
+params:
+  # Upstream's: the size, `T` for Tectonic, then the tier.
+  - {read: "6x6de", full: "6x6de", brief: "6x6"}
+  - {read: "6x6Tdh", full: "6x6Tdh", brief: "6x6T"}
+  - {read: "7x4dh", brief: "7x4"}
+  - {read: "5", full: "5x5de"}
+  - {read: "3x6", refused: "Width must be at least 4."}
+  - {read: "6x6de", label: "Seismic: 6x6 Easy"}
+  - {read: "5x7Tdh", label: "Tectonic: 5x7 Normal"}
+  # A large board in either mode is dealt however long it takes.
+  - {read: "20x20dh", full: "20x20dh"}
+  - {read: "20x20Tdh", full: "20x20Tdh"}

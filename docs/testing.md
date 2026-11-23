@@ -610,7 +610,8 @@ Three treatments for an expensive test, in order of how little they lose:
 1. **Run a deterministic search once.** A loop that scans seeds until a board
    shows a technique finds the same board every time, so write the board
    down. For a hint's rung that is `describeHintPins`, as in
-   [`boats.test.ts`](../src/games/boats/boats.test.ts).
+   [`abcd-hint.test.ts`](../src/games/abcd/abcd-hint.test.ts); a born
+   game's `hint.pins` are the same, written by `npm run hint-scan`.
 2. **Turn a seed count down** with `seedBudget(gate, full)`
    ([`slow.ts`](../src/engine/testing/slow.ts)), only for a property whose
    violation would be systematic, and say at the call site how many
@@ -698,7 +699,7 @@ push.
 
 Run the slow tier with a path, for the games a refactor could have moved,
 when you move a solver, a generator or a hint planner:
-`npm run test:slow -- src/games/seismic`,
+`npm run test:slow -- src/games/spokes`,
 `npm run test:slow -- src/guards/hint-resume.test.ts`. The bare command
 re-runs every gate test as well, with the widened seed budgets on top. The
 deferred cases are

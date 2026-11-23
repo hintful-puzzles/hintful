@@ -84,8 +84,11 @@ export type IdSegment =
       readonly digits: string;
       readonly apart?: string;
       /** Written before the segment, which is written only where a clue of
-       * the kind is dealt (Towers' givens after `,`). */
+       * the kind is dealt (Towers' givens after `,`), unless `always`. */
       readonly before?: string;
+      /** The segment behind `before` is written with no clue dealt too, as
+       * its blanks (Seismic's `,zj`). */
+      readonly always?: true;
       /** A one-valued kind at cells written in the stream as its capital
        * letter, by the letter. */
       readonly letters?: Readonly<Record<string, string>>;
@@ -133,6 +136,9 @@ export type IdSegment =
    * by the clue's number, or a kind and one of its values (`parity 0`)
    * standing whole. The longest code that matches is read. */
   | { readonly codes: Readonly<Record<string, string>>; readonly before?: string };
+
+/** The largest value a cell holds: a domain is a bit a value in an int. */
+const MOST_VALUE = 31;
 
 /** A record's side letters, up, right, down and left (upstream unequal.c's
  * `adjthan` order). */
@@ -1271,8 +1277,10 @@ export function encodeDesc<C extends Clues<C>>(
     }
     if ("digits" in seg) {
       const list = listOf(seg.digits);
-      // Behind its mark, the segment is written only where it holds a clue.
-      if (seg.before !== undefined && list.at.length === 0) continue;
+      // Behind its mark, the segment is written only where it holds a clue,
+      // unless it is always written.
+      if (seg.before !== undefined && seg.always !== true && list.at.length === 0)
+        continue;
       out += seg.before ?? "";
       const cells = boardCells(deal, sp);
       const marked = Object.entries(seg.letters ?? {}).map(
@@ -1747,6 +1755,16 @@ export function decodeDesc<C extends Clues<C>>(
           r.fail(DESC_MALFORMED);
         const count = sized?.parts ?? null;
         if (count !== null && parts.cells.length !== count) r.fail(DESC_MALFORMED);
+        // A part the deal divides to drawn sizes holds a number for each of
+        // its cells (Seismic's areas), and a cell holds at most 31.
+        const divided = deal.divide;
+        if (
+          divided !== undefined &&
+          "sizes" in divided &&
+          divided.partition === seg.walls &&
+          parts.cells.some((cs) => cs.length > MOST_VALUE)
+        )
+          r.fail(DESC_OUT_OF_RANGE);
         out[seg.walls as keyof C] = parts;
         continue;
       }

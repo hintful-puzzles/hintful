@@ -180,7 +180,7 @@ cell, so an overlay compared nowhere never shows.
 repack, stale and commit, one instance per overlay, registered on the
 `TileCache` when the draw state is built; its doc says which packer an
 overlay takes. Exemplars: the skeleton's `render.ts`,
-[`starbattle/render.ts`](../src/games/starbattle/render.ts). A game that
+[`engine/fill/render.ts`](../src/engine/fill/render.ts). A game that
 folds the overlay bit into the packed tile value, as the skeleton does with
 its mistake flag, cannot leave it out of the diff test.
 
@@ -669,8 +669,9 @@ port.** On the drawing path a visual improvement is the point of the fork.
   build the board by hand through the game's own codec** for the regression
   test. That also proves the input is reachable in play.
 
-Exemplar: [`seismic/render.ts`](../src/games/seismic/render.ts) and
-`seismic.test.ts` ("draws every pencil mark, including a 9").
+Exemplar: a born board's notes, a bit a value in an `Int32Array`
+(`FillBoard.pencil`, [`fill/board.ts`](../src/engine/fill/board.ts)), where
+the hand-written Seismic's narrower mask once dropped its 9.
 
 ## Animation and flash
 
@@ -946,9 +947,8 @@ names the one it applies.
   that regions sharing a side differ. It says only "these cells are one
   region": the heavy border still tells two regions apart, and everything
   else is drawn over the fill as over the plain surface. A mistake's wash
-  and the win flash take its place. Exemplar:
-  [`starbattle/render.ts`](../src/games/starbattle/render.ts), on the first
-  four.
+  and the win flash take its place. Exemplar: a fill game's parts
+  ([`engine/fill/render.ts`](../src/engine/fill/render.ts)).
   - **A region's color is one value a scheme in every game** (the owner,
     2026-10-15: consistency first), so a yellow region in Map and in Star
     Battle is one yellow in both schemes.

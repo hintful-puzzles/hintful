@@ -36,7 +36,7 @@
  * work for the thing you are actually changing is one command:
  *
  * ```sh
- * npm run test:slow -- src/games/seismic        # the deferred 7x7 fixtures
+ * npm run test:slow -- src/games/spokes         # its deferred hint boards
  * npm run test:slow -- src/guards/hint-resume.test.ts   # every preset, not the gate slice
  * npm run test:slow -- src/games/sixteen src/guards/hint-quality.test.ts
  * ```

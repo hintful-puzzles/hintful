@@ -298,7 +298,7 @@ erase and repaint undo it.
   puts the outline sides in the diff key, so a cell whose outline changed
   while it stayed evidence repaints with nothing to wire. A game with no
   notes passes `pack` no `markBits`, and its struck notes are not asked for
-  ([`starbattle/render.ts`](../src/games/starbattle/render.ts)). Exemplar:
+  ([`mines/render.ts`](../src/games/mines/render.ts)). Exemplar:
   [`filling/render.ts`](../src/games/filling/render.ts).
   A game that paints the marks inside its own tile, because content goes
   over the outline or the tile animates, paints them with the same two
@@ -308,7 +308,8 @@ erase and repaint undo it.
   the fill engine's tile ([`engine/fill/render.ts`](../src/engine/fill/render.ts)).
 - **Both**, a pixel of real gutter plus some of the cell's own edge. The
   `outer` part makes it an outside-band game, and the erase covers the inside
-  part too. Exemplar: [`clusters/render.ts`](../src/games/clusters/render.ts).
+  part too. Exemplar: `markBand` in
+  [`group/render.ts`](../src/games/group/render.ts).
 - **Inset**, inside the cell body, where the cell border is where a wall
   lives and a mark there would read as one. Exemplars:
   [`galaxies/render.ts`](../src/games/galaxies/render.ts), the border grid
@@ -433,8 +434,8 @@ reasoned over; do not filter it out as a house rule.** A run whose length is
 the argument contains the target. A clue's already-counted neighbors do not.
 Filtering everywhere empties the step whose counted span is the target
 itself, which the non-empty assertion of § "Show the evidence as an area"
-catches. Exemplar: the `unreachable` rung in
-[`sticks/index.ts`](../src/games/sticks/index.ts).
+catches. Exemplar: the `unreachable` technique in
+[`sticks.description.yaml`](../src/games/sticks/sticks.description.yaml).
 
 ### A deictic promises a number of marks
 

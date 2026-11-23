@@ -1255,7 +1255,11 @@
                   "before": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "Written before the segment, and the segment only where a clue of the kind is dealt (Towers' `,` before its givens)."
+                    "description": "Written before the segment, and the segment only where a clue of the kind is dealt (Towers' `,` before its givens), unless `always`."
+                  },
+                  "always": {
+                    "const": true,
+                    "description": "With `before`, the segment is written where no clue of the kind is dealt too, as one run of blanks (Seismic's `,zj`)."
                   },
                   "letters": {
                     "type": "object",

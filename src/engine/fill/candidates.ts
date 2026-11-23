@@ -34,8 +34,8 @@ import {
 } from "../hint/candidate-hint.ts";
 import { candidateJudge, type RungNames } from "../hint/candidate-judge.ts";
 import {
+  CANDIDATE_RUNGS,
   type Firing,
-  LATIN_RUNGS,
   type NotesLadder,
   type PlanRung,
   runCandidatePlan,
@@ -59,7 +59,7 @@ import {
   rowColRegions,
   singleReasonOf,
 } from "../hint/latin-hint.ts";
-import { byCell, latinStrikeRungs } from "../hint/latin-notes.ts";
+import { byCell, LIBRARY_STRIKES, latinStrikeRungs } from "../hint/latin-notes.ts";
 import { type Clauses, statedParts, statedSentence } from "../hint/stated.ts";
 import { type StepTable, type StepType, stepVoice } from "../hint/step-voice.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
@@ -83,8 +83,15 @@ import { WALK_STEPS, type WalkStep } from "./walk-steps.ts";
 /** What a step of the candidate walk marks: the shared highlights. */
 export type CandidateFillHint = CandidateHighlights;
 
-/** Every rung a step of the walk can be: the Latin family's. */
-const CANDIDATE_FILL_RUNGS: readonly string[] = LATIN_RUNGS;
+/** The rungs a step of the walk can be on every board of notes: the walk's
+ * own and the singles. The library's strikes are rungs where the ladder
+ * places them. */
+const CANDIDATE_FILL_RUNGS: readonly string[] = [
+  ...CANDIDATE_RUNGS,
+  "single",
+  "regionsFull",
+  "hiddenSingle",
+];
 
 /** A fill board's moves as the walk reads and makes them: its note-taking
  * cell's are the canonical shapes, and an edit (Solve, Clear, Reveal) is
@@ -226,6 +233,15 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     return arms.length > 0 ? arms : [module.techniques[id]?.rung ?? id];
   };
   const ownKinds = [...new Set(own.flatMap(kindsOf))];
+  // The rungs of the library's strikes the ladder places.
+  const libraryKinds = [
+    ...new Set(
+      module.ladder.flatMap((e) => {
+        const kind = LIBRARY_STRIKES[e.id];
+        return kind === undefined ? [] : [kind];
+      }),
+    ),
+  ];
   // Check & save names a move by its rung.
   for (const kind of ownKinds)
     if (module.NAMES !== undefined && !Object.hasOwn(module.NAMES, kind))
@@ -532,6 +548,6 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         board.w,
         FILL_CANDIDATE_MOVES,
       ),
-    rungs: [...CANDIDATE_FILL_RUNGS, ...ownKinds],
+    rungs: [...CANDIDATE_FILL_RUNGS, ...libraryKinds, ...ownKinds],
   };
 }

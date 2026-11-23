@@ -10,9 +10,9 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { it } from "vitest";
 import { difficultyTiers, withTier } from "../../src/engine/contract/difficulty.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
-import { seismicGame } from "../../src/games/seismic/index.ts";
 import { game as clustersGame } from "../../src/generated/games/clusters/clusters.game.ts";
 import { game as mosaicGame } from "../../src/generated/games/mosaic/mosaic.game.ts";
+import { game as seismicGame } from "../../src/generated/games/seismic/seismic.game.ts";
 import { game as starbattleGame } from "../../src/generated/games/starbattle/starbattle.game.ts";
 import { game as unrulyGame } from "../../src/generated/games/unruly/unruly.game.ts";
 import { say } from "../progress.ts";
@@ -58,7 +58,7 @@ it("tiers", () => {
           ...(name === "unruly"
             ? [{ ...g.defaultParams(), variations: ["unique"] }]
             : []),
-          ...(name === "seismic" ? [{ ...g.defaultParams(), mode: 1 }] : []),
+          ...(name === "seismic" ? [{ ...g.defaultParams(), sizes: { mode: 1 } }] : []),
         ])
           for (let s = 0; s < SEEDS; s++) {
             const p = withTier(g, base, tier);

@@ -39,7 +39,7 @@ the section that says more.
    size is `numberItem` with `label: { slot: "size", words: squareSize(field) }`,
    its codec segment is `size(paramConfig, kw)`, and `index.ts` writes
    `notApplicable: { transposeParams: SQUARE_GRID }`. Exemplar:
-   [`starbattle/state.ts`](../src/games/starbattle/state.ts).
+   [`salad/state.ts`](../src/games/salad/state.ts).
 6. **The desc**: one `parseDesc` built on `readDesc`, and a `newState` that
    builds from `descValue(parseDesc(p, desc))`. See "Read a desc once".
 7. **`executeMove`**: clone the state, apply the move, and end the dispatch
@@ -810,7 +810,8 @@ notes declares the shared ones ("Pencil marks: the full note-taking UX").
   `auto-cross` preference and makes the marks one step of Undo with the move.
   The hint judges the move alone and ends a plan where marks are brought.
   `rules-out.test.ts` plays every declaring game's hint with it on. Exemplar:
-  [`starbattle/hint.ts`](../src/games/starbattle/hint.ts). Notes culled by a
+  Star Battle's `rulesOut`, in
+  [`starbattle.description.yaml`](../src/games/starbattle/starbattle.description.yaml). Notes culled by a
   placed value are the candidate engine's `auto-pencil` instead, whose plan
   models the cull and runs on.
 

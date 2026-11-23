@@ -117,8 +117,9 @@ const NO_KEYBOARD: Record<string, string> = {
  */
 const INERT_PANEL_KEYS: Record<string, string[]> = {
   // Empty, and meant to stay so. A keypad is bounded by what the *generator*
-  // can deal, not by what the *format* allows (Seismic's derives from
-  // `maxGeneratedRegionSize`), or it offers digits no board can hold.
+  // can deal, not by what the *format* allows (Seismic's runs to the largest
+  // area its deal draws, `fill/numbers.ts`), or it offers digits no board can
+  // hold.
 };
 
 /**

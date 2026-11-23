@@ -604,7 +604,7 @@ export function lazyPopulate<M, H>(
  * **What a game still decides for itself**, and why the loop is not shared: what
  * *empty* means (Undead's `guess[i] === MON_NONE`, Salad's extra CROSS
  * exclusion) and what *every candidate* means — a scalar mask for the square
- * Latin games, a per-cell `areaBits(dsf.size(i))` for Seismic, one of two masks
+ * Latin games, a cell's own domain on a born board (Seismic's area), one of two masks
  * by hole type for Salad. A shared loop over those needs three callbacks and is longer at each call site
  * than the four lines it would replace.
  *

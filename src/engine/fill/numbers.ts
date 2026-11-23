@@ -142,8 +142,9 @@ export interface NumberInput<C, D> {
     p: Point,
     button: number,
   ): CandidateMove | DoneMove | UiUpdate | null;
-  /** A key a value, then the clear key, for a board of the params `p`. */
-  requestKeys(p: FillParams): KeyLabel[];
+  /** A key a value, then the clear key, for a board of the params `p`, and
+   * of `board` where it is in play. */
+  requestKeys(p: FillParams, board?: FillBoard<C>): KeyLabel[];
   gesture(board: FillBoard<C>, ui: FillUi, ds: D, move: FillMove): PointerAction[];
 }
 
@@ -258,9 +259,13 @@ export function numberInput<
         ? { type: "set", x, y, n, pencil }
         : { type: "set", x, y, n, pencil, autoElim: fillUi.autoPencil ?? false };
     },
-    requestKeys(p) {
+    requestKeys(p, board) {
+      const sp = spaceOf(module, boardSizeOf(module, p));
+      const top = keypadTop(module, sp, p.sizes ?? {});
+      // A board from another ID may hold a part larger than any the deal
+      // divides (upstream Seismic's areas of six): its keypad reaches it.
       return digitKeys(
-        keypadTop(module, spaceOf(module, boardSizeOf(module, p)), p.sizes ?? {}),
+        board === undefined ? top : Math.max(top, topValue(module, sp, board.dealt)),
       );
     },
     gesture(b, fillUi, ds, move) {

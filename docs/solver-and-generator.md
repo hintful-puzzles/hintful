@@ -235,8 +235,8 @@ not only of the hint.
   does"). A narrated objective with a solution fallback is the sanctioned
   non-deductive form.
 
-Exemplar: [`range/solver.ts`](../src/games/range/solver.ts) keeps a board
-only if it is uniquely solvable without guessing.
+Exemplar: the fill deal ([`fill/deal.ts`](../src/engine/fill/deal.ts)) keeps
+a board only if its ladder solves it, which makes it unique without guessing.
 
 ### No option switches the generator's checks off
 
@@ -1154,8 +1154,8 @@ Rules for any of them:
   finishes. Walk such a board on, keeping it finished at the tier, for as
   many moves as the deal has spent mending: where boards come right
   quickly, a fresh draw is cheaper than a long walk, and where they come
-  right slowly, the reverse. Exemplar:
-  [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).
+  right slowly, the reverse. Exemplar: `mendDivision`
+  ([`mend-division.ts`](../src/engine/generate/mend-division.ts)).
 - **Try a neighboring game's mend, and say when it does not carry.**
 - **Measure and say which boards the change deals.**
 - **Time a generator as the browser runs it, not under vitest**
@@ -1172,9 +1172,9 @@ states what it wants:
 | The game knows | The walk | Exemplar |
 | --- | --- | --- |
 | Which neighboring regions may join | `mergeNeighbors`, with what a region holds and how two holdings join | [`rome/generator.ts`](../src/games/rome/generator.ts) |
-| That, and how many regions there are to be | `mergeToCount`, which returns `null` where the rule cannot be met | [`starbattle/generator.ts`](../src/games/starbattle/generator.ts) |
+| That, and how many regions there are to be | `mergeToCount`, which returns `null` where the rule cannot be met | [`fill/grow.ts`](../src/engine/fill/grow.ts) |
 | Where each region starts, or how many there are | `growFromSeeds`, over cells the game places or `scatterSeeds` draws | [`map/generator.ts`](../src/games/map/generator.ts) |
-| How large a region may be | `growToSize`, with a size the game draws for each | [`seismic/generator.ts`](../src/games/seismic/generator.ts) |
+| How large a region may be | `growToSize`, with a size the game draws for each | [`fill/divide.ts`](../src/engine/fill/divide.ts) (Seismic's `deal.divide`) |
 
 - **The rule is a value and a function, never a walk.** A merge rule is what
   a region holds (`of`) and what two hold as one, or `null` (`join`). A rule
@@ -1193,8 +1193,8 @@ states what it wants:
   seldom has one answer, and the engine mends it** with `mendDivision`
   ([`mend-division.ts`](../src/engine/generate/mend-division.ts)), whose doc says what
   it moves and keeps. The game supplies the judge, with its ladder
-  capped at the tier asked for. Exemplar: `judgeOf` in
-  [`starbattle/generator.ts`](../src/games/starbattle/generator.ts).
+  capped at the tier asked for. Exemplar: the judge the fill deal hands
+  `growPartition` ([`fill/deal.ts`](../src/engine/fill/deal.ts)).
   `redivide.ts` mends only regions of one size.
 - **The draw gives a mend its places to start and its small regions; no
   mend does.** On a blank board the deductions start only from a region that
@@ -1338,7 +1338,7 @@ the boards a seed deals move").
   verdict and also writes a flag into the board is a hazard once a later
   whole-cell comparison reads that byte. Where the generator depends on it,
   keep a mutating validate on the generator path and separate pure checks for
-  play. Exemplar: [`clusters/solver.ts`](../src/games/clusters/solver.ts).
+  play.
 - **The root's identity.** Some deductions branch on which element the
   union-find's `canonify` returns, and the shared
   [`Dsf`](../src/engine/board/dsf.ts) matches upstream `dsf.c`'s choice for that.

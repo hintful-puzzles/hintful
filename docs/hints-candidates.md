@@ -178,8 +178,9 @@ regions".
   each placed value, which equals asking what reaches a cell only when "two
   equal values may not stand together" runs both ways.
 
-Exemplar: [`seismic/hint.ts`](../src/games/seismic/hint.ts), whose `reach`
-is what its description's `cull` strikes, asked once a cell and value.
+Exemplar: [`fill/notes.ts`](../src/engine/fill/notes.ts)'s `reachOf`, a
+born board's reach: the units' peers and what its placing techniques strike
+(Seismic's `cull`), asked once a cell and value.
 
 ## A sentence names which kinds of region
 
@@ -455,9 +456,8 @@ check vouches for them".
 - **What a sentence names beyond the technique's terms is read off the
   values placed** in the game's `legs`: Rome's loop chain and goal group.
 - **The soundness check holds a technique, and the game's own hint test
-  holds what its step claims** (Seismic's starved area against upstream's
-  trial placement): the step is the technique's firing by construction, so
-  no test compares two copies.
+  holds what its step claims**: the step is the technique's firing by
+  construction, so no test compares two copies.
 - **The hint never writes the state.** A shared structure read through an
   accessor that mutates as it reads (a `Dsf` compressing paths) breaks
   `hint-resume.test.ts`, which asks that asking change nothing: compress once
@@ -468,7 +468,8 @@ check vouches for them".
   tier, is `gatePresets`'s doc
   ([`engine/testing/hint-games.ts`](../src/engine/testing/hint-games.ts)).
 
-Exemplars: [`seismic/hint.ts`](../src/games/seismic/hint.ts),
+Exemplars: [`fill/candidates.ts`](../src/engine/fill/candidates.ts), every
+born game's walk (Seismic's areas among them),
 [`abcd/hint.ts`](../src/games/abcd/hint.ts),
 [`rome/hint.ts`](../src/games/rome/hint.ts),
 [`salad/hint.ts`](../src/games/salad/hint.ts) (a Latin game). Outside the

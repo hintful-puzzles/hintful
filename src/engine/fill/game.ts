@@ -381,8 +381,8 @@ export function fillGame<C extends Clues<C> & object>(
       ? { targetVerbs: buttons.targetVerbs, interpretMove: buttons.interpretMove }
       : {
           interpretMove: (typed as NumberInput<C, FillDrawState>).interpretMove,
-          requestKeys: (p: FillParams) =>
-            (typed as NumberInput<C, FillDrawState>).requestKeys(p),
+          requestKeys: (p: FillParams, board?: FillBoard<C>) =>
+            (typed as NumberInput<C, FillDrawState>).requestKeys(p, board),
         };
   const newUi = (b: FillBoard<C>): FillUi => {
     const ui = typed === null ? newFillUi() : typedUi(newFillUi(), play);

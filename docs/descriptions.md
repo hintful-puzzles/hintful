@@ -316,7 +316,8 @@ research tools all read through it; the app never does.
   named in the compiled `techniques`' `slotTerms`, and the walk marks it a
   step beyond its line's end (`engine/fill/slots.ts`). It is printed in a rim
   round the text's grid, and `id:`'s `numbers` writes it with `between: "/"`;
-  `digits`' `before` is written, with its segment, only where its kind has a
+  `digits`' `before` is written, with its segment, always with `always`
+  (Seismic's `,zj` on a board with no givens), else only where its kind has a
   clue (Towers' givens after `,`), and holds no other kind (`flanking` is the
   fixture). A clue at a corner (`at: corner`, where four squares meet,
   Mathrax's) is dealt over the corners, drawn on a disc there by its
