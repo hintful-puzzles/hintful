@@ -289,6 +289,22 @@ commit. In design.md § "Decisions" 7's order.
         placing techniques and `bounds` as arms (2.5b); Towers' tests to
         `towers.cases.yaml`, its TypeScript deleted, the `game-lines`
         ceiling lowered, its spec deltas, and the run in the app.
+        What the flip states and checks (2026-11-23, from 2.5c and 2.5d):
+        `play.numbers: { raised: true }`, `deal.hide: [given, sees]` with
+        `hideInTurn: true` and `hideFrom: { sees: Normal }`, `tierLetters:
+        ehxu`, the menu 4x4, 5x5 and 6x6 Easy with 5x5 Easy the default,
+        Tricky and Unreasonable from 4x4 (`play.bounds`, as Keen's), the
+        catalog from `catalog.ts`. Upstream deals small Easy boards (w up to
+        5) with no givens, redrawing a square whose clues alone do not
+        finish at Easy; the born deal hides givens while the board finishes,
+        so it may keep some: measure how often on the 4x4 and 5x5 Easy menu
+        boards, and list it as a difference or state it. In the browser,
+        look at the right frame line beside the right column's slots (a
+        slot's background is drawn from `coord(w)`, the line's own pixel
+        column), a tower top over a clue above and over the corner, and the
+        pencil-mode indicator in the corner after a top-right tower comes
+        and goes. The numeral is three fifths of a tile, where Towers drew
+        half: a difference.
 - [ ] 2.6 Mathrax born: clues at corners, a kind precedence switched by
       option letters, a hide of givens before clues, the board word the
       hint reads stated in the description.
