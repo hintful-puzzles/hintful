@@ -1,0 +1,10 @@
+--  sizing n=2: no board of order 3 has an answer, so nothing is checked there
+ok  sizing n=1 beside                         3  sound    (want sound   )     9 queries    0.0s
+ok  sizing n=1 beside (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/sizing/sizing.description.yaml#beside: recorded sound, proved whole on all 1 boards
+ok  sizing n=1 full                           3  sound    (want sound   )     6 queries    0.0s
+ok  sizing n=1 full (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/sizing/sizing.description.yaml#full: recorded sound, proved whole on all 1 boards
+ok  sizing n=1 room                           3  sound    (want sound   )     6 queries    0.0s
+ok  sizing n=1 room (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/sizing/sizing.description.yaml#room: recorded sound, proved whole on all 1 boards

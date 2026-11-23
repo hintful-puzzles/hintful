@@ -1,0 +1,13 @@
+# A defect planted in each of the fixture's techniques, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A square beside a crossed one read as beside a shaded one.
+  beside:
+    for: "c in cells where value(c) = 2, x in adj4(c) where not known(x)"
+  # A line one short of its shaded squares read as having them all.
+  full:
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) <= 1"
+  # A line read as needing every open square when it needs all but one.
+  room:
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) + 1 >= |O|"

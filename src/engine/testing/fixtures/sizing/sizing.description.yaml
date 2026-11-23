@@ -1,0 +1,97 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a square board whose every row and column shades
+# the same number of squares, none side by side, for the fill engine's tests
+# of a size the params give beyond the grid's, the bounds a board and a tier
+# keep, and an answer laid a line at a time, on a description that names no
+# game.
+game: sizing
+produces: shading
+sizes:
+  w: { min: 2, max: 9 }
+  # The shaded squares every row and column holds.
+  n: { min: 1, max: 2 }
+space:
+  grid: { w: "w", h: "w" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  open(L): "{c in cells(L) where not known(c)}"
+  need(L): "n - count(c in cells(L) where value(c) = 1)"
+shape:
+  - "forall L in lines: count(c in cells(L) where value(c) = 1) = n"
+  - "forall c in cells, x in adj4(c): not (value(c) = 1 and value(x) = 1)"
+clues:
+  # A square the board is dealt holding.
+  given: { at: cell, value: "range(1, 2)", means: "value(at) = v" }
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  blank: 2
+  dealt: given
+  sizes:
+    n:
+      letter: n
+      # Two a line, none side by side, leave a 3x3's middle line one square.
+      rulesets:
+        - name: One a line
+          rule: One in each.
+          least: 1
+        - name: Two a line
+          rule: Two in each.
+          least: 4
+  # No board below 3x3, and a Normal one from 4x4.
+  bounds:
+    area: { min: 9 }
+    tiers:
+      Normal: { area: { min: 16 } }
+  boards: [4x4, 5x5n2]
+  hintMarks:
+    ring: the squares the step decides.
+    outline: the shaded square the step reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: the shaded squares at random, as many to every row and column, none side by side
+  given: every square's piece, then each hidden while the board still finishes
+  tier: one of the tiers, the board finished at it and not at the tier below
+  sample: { lines: { value: 1, count: n, apart: adj4 }, rest: 2 }
+  hide: given
+id:
+  - dots: given
+    cases: [2, 1]
+tiers: [Easy, Normal]
+names:
+  beside: "no two shaded squares side by side"
+  full: "a line with all its shaded squares"
+  room: "a line needing every open square"
+# A deal finishes at a tier and not below, so each tier has its own step.
+techniques:
+  - id: beside
+    tier: Easy
+    for: "c in cells where value(c) = 1, x in adj4(c) where not known(x)"
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{c}" }
+      look: "no two shaded squares sit side by side"
+      move: "{ring: this square}, beside {outline: the outlined one}, must be crossed out"
+  - id: full
+    tier: Easy
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) = 0"
+    conclude: "forall c in O: place(c, 2)"
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}} already has all its shaded squares"
+      move: "{ring: its open square | its open squares} must be crossed out"
+  - id: room
+    tier: Normal
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) = |O|"
+    conclude: "forall c in O: place(c, 1)"
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}} still needs every open square"
+      move: "{ring: its open square | its open squares} must be shaded"

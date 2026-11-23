@@ -129,14 +129,24 @@
                   in `engine/hint/` and `palette-source`, read a game's
                   names, stated words or whole population, and run no
                   capability: they stay.
-            - [ ] Next: the 28 left in `NO_FIXTURE_YET`, grouped by what
+            - [x] `sizing`: `play.sizes`, `play.bounds` and
+                  `deal.sample.lines`, on a square board whose every line
+                  shades `n` squares, none side by side
+                  (`fill/game-id.test.ts`, and `deal.test.ts`'s lines). Seen
+                  to fail with a ruleset's `least`, the board's bounds, a
+                  tier's bounds and the sampler's spacing each planted off.
+            - [ ] Next: the 25 left in `NO_FIXTURE_YET`, grouped by what
                   one board can show: the deal's (`grow`, `hideFlag`,
                   `latin`, `leaves`, `never`, `oneIn`, `options`,
                   `stripFrom`, `symmetric`, `thorough`, `unpair`,
                   `withhold`, and `sample`'s `climb`, `dominoes`, `first`,
-                  `lines`, `mend`, `picture`, `pieces`), play's (`bounds`,
-                  `plain`, `shape`, `sizes`, `tally`, `wash`), and
-                  `produces: links`, `space.grid.hexagon`, `space.regions`.
+                  `mend`, `picture`, `pieces`), play's (`plain`, `shape`,
+                  `tally`, `wash`), and `produces: links`,
+                  `space.grid.hexagon`, `space.regions`. A fleet-like
+                  fixture (`shape`, `tally`, `pieces`, `withhold`,
+                  `hideFlag`) and a lit one (`plain`, `wash`, `first`,
+                  `leaves`, `stripFrom`, `symmetric`, `options`) would each
+                  take several.
 
 ## 4. The born games
 
