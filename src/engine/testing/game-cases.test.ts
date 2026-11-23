@@ -23,6 +23,20 @@ describe("a cases file, read", () => {
     expect(() =>
       read("positions:\n  - id: t3:g3-1\n    preferences: {kw: [1]}\n"),
     ).toThrow(`${PATH}:3: positions[0].preferences.kw is not`);
+    expect(() =>
+      read("positions:\n  - id: a\n    steps:\n      - {step: 2}\n      - {step: 2}\n"),
+    ).toThrow(`${PATH}:5: positions[0].steps[1].step 2 is not after step 2`);
+    expect(() => read("tiers:\n  absent:\n    - {cell: 2x2du}\n")).toThrow(
+      `${PATH}:3: tiers.absent[0] is a map only to say exhaustive: true`,
+    );
+    expect(
+      read("tiers:\n  absent: [3x3du, {cell: 2x2du, exhaustive: true}]\n").tiers,
+    ).toMatchObject({
+      absent: [
+        { cell: "3x3du", every: null },
+        { cell: "2x2du", every: { unfinished: null } },
+      ],
+    });
     expect(
       read("positions:\n  - id: t3:g3-1\n    draws: {rect yellow-wash: 1}\n")
         .positions[0].draws,
@@ -87,6 +101,10 @@ describe("a case, checked", () => {
       [
         "positions:\n  - id: t3:g3-1\n    moves: [inc]\n    steps: [{ rung: inc, says: Increment the counter to 2 }, { says: /to 3$/ }]\n",
         "positions:\n  - id: t3:g3-1\n    moves: [inc]\n    steps: [{ says: /to 3$/ }]\n",
+      ],
+      [
+        "positions:\n  - id: t3:g3-1\n    moves: [inc]\n    steps: [{ step: 2, says: /to 3$/ }]\n",
+        "positions:\n  - id: t3:g3-1\n    moves: [inc]\n    steps: [{ step: 3, says: /to 3$/ }]\n",
       ],
     ];
     for (const [right, wrong] of pairs) {

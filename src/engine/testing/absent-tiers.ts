@@ -89,12 +89,16 @@ export function describeDealtTiers<Params>(
 
 /**
  * Hold each of `cells`, written as full params strings (`"3dh"`), to the three
- * things above.
+ * things above. A cell in `everyAnswer` has its absence shown over every
+ * answer of its size (`every-answer.ts`), a proof where the tries are a
+ * sample, so the generator is not asked.
  */
 export function describeAbsentTiers<Params>(
   game: DealingGame<Params>,
   cells: readonly string[],
+  opts: { readonly everyAnswer?: readonly string[] } = {},
 ): void {
+  const sampled = cells.filter((c) => !opts.everyAnswer?.includes(c));
   describe("a size with no board at a tier", () => {
     it.each(cells)("%s is refused when a board is to be dealt", (cell) => {
       expect(paramsError(game, game.decodeParams(cell), true)).toMatch(/\.$/);
@@ -104,7 +108,8 @@ export function describeAbsentTiers<Params>(
       expect(paramsError(game, game.decodeParams(cell), false)).toBeNull();
     });
 
-    itSlow.each(cells)(
+    if (sampled.length === 0) return;
+    itSlow.each(sampled)(
       `%s: the generator finds none in ${ABSENT_TRIES} tries`,
       (cell) => {
         const p = game.decodeParams(cell);

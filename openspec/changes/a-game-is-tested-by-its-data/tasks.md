@@ -52,9 +52,12 @@
             order, a subset. Agreed on all 673 placements of the four
             declaring games before it was written; seen to fail with a
             technique dropped and with the premise check dropped.
-      - [ ] Absence over every picture of a small size (Pattern's "no
-            Unreasonable board up to 3x3"): `tiers.absent` with
-            `exhaustive: true`. Pattern needs only this to move.
+      - [x] Absence over every picture of a small size (Pattern's "no
+            Unreasonable board up to 3x3"): an absent cell written
+            `{cell, exhaustive: true}` (`testing/every-answer.ts`), every
+            answer of the size tried in place of the generator's tries.
+            Seen to fail on 2x2 to 3x3 with the search tier planted to
+            take a board of several answers.
 
 ## 3. Capabilities on their own descriptions
 
@@ -73,12 +76,13 @@
       or a few, the cases of 1.1 kept as data or named by the guard that
       holds them. `npm run test:hint-sweeps` before the last commit.
       Moved: Kakurasu, Unruly, Mosaic, Norinori, Range, Clusters, Star
-      Battle, Light Up, Tents, Boats (its tally case is
+      Battle, Light Up, Tents, Pattern (a step expected names its `step`
+      in the plan where it is not the next), Boats (its tally case is
       `engine/fill/tally-display.test.ts`'s, on plain values, which 3.1's
       tally fixture may take). A position draws under `preferences`,
       `draws` names a collection color (`yellow-wash`) for a surface with
       no role, and `brings` is what its last move's placement rules out.
-      Left: Pattern (the exhaustive absence), Singles (the `input`
+      Left: Singles (the `input`
       section, for its wrapping cursor; its hidden shaded number is a
       position's `preferences`), Sticks and Bricks (`input` for keys,
       drags and the hexagon's shear). `wordings` renders a technique's stated step from terms on

@@ -14,7 +14,10 @@
  *   `unreached`, `pins`), and `kinds`, each a step shape ({@link KindShape}).
  *   `npm run hint-scan -- <the cases file>` writes `pins`.
  * - `tiers`: `absent` and `dealt`, the cells `describeAbsentTiers` and
- *   `describeDealtTiers` take.
+ *   `describeDealtTiers` take. An absent cell written
+ *   `{ cell, exhaustive: true }` is shown absent over every answer of its
+ *   size in place of the generator's tries, with `unfinished` the count of
+ *   those no lower tier finishes (`every-answer.ts`).
  * - `ids`: a game ID, what it opens as (`opens`, the params the midend then
  *   holds, or `refused`), what its desc reads as (`holds`), refused or
  *   not, and whether the desc is written back byte for byte (`writesBack`).
@@ -24,7 +27,8 @@
  * - `positions`: a game ID, `moves` played on it and `solve` after them, and
  *   what the engine reports there: `status`, `text`, `statusbar`, `breaks`
  *   (the rules the live errors name), `mistakes` (what Check & Save
- *   counts), the hint's first `steps`, `holds`, `brings` (what the last
+ *   counts), the hint's `steps` (from the first, or each at the `step` it
+ *   names), `holds`, `brings` (what the last
  *   move's placement rules out, `Game.rulesOut`), `draws` (ops counted by
  *   shape and color: a role, or one of the collection's colors) and
  *   `circled` (the text inside each circle the hint draws), the frame drawn
@@ -67,6 +71,7 @@ import { statedSentence } from "../hint/stated.ts";
 import { Midend } from "../midend/midend.ts";
 import { describeAbsentTiers, describeDealtTiers } from "./absent-tiers.ts";
 import type { AnyGame } from "./enrollment.ts";
+import { everyAnswer } from "./every-answer.ts";
 import { describeHintPins, type HintKind } from "./hint-positions.ts";
 import type { DrawOp } from "./recording-drawing.ts";
 import { renderScenario } from "./render-scenario.ts";
@@ -94,6 +99,9 @@ export interface StepShape {
   readonly marks?: boolean;
   readonly says?: Said;
 }
+
+/** A step of a plan expected, and which step it is, counted from 1. */
+export type PlanStep = StepShape & { readonly step: number };
 
 /** A further kind of hint position, by its step's shape. */
 export type KindShape = StepShape & {
@@ -146,7 +154,7 @@ export interface PositionCase extends At {
   readonly statusbar?: string | null;
   readonly breaks: readonly string[] | null;
   readonly mistakes: number | null;
-  readonly steps: readonly StepShape[] | null;
+  readonly steps: readonly PlanStep[] | null;
   readonly holds: Readonly<Record<string, unknown>>;
   /** What the last of `moves` brings (`Game.rulesOut`), `null` for nothing;
    * absent, not checked. */
@@ -179,12 +187,22 @@ export interface WordingCase extends At {
   readonly says: Said;
 }
 
+/** A size refused a tier. Where `every` is given its absence is shown over
+ * every answer of the size ({@link everyAnswer}) in place of the
+ * generator's tries, and `unfinished` is how many of them no lower tier
+ * finishes, where the file states it. */
+export interface AbsentCell {
+  readonly cell: string;
+  readonly every: { readonly unfinished: number | null } | null;
+  readonly line: number;
+}
+
 export interface GameCases {
   readonly path: string;
   readonly values: Readonly<Record<string, number>>;
   readonly hint: HintCases | null;
   readonly tiers: {
-    readonly absent: readonly string[];
+    readonly absent: readonly AbsentCell[];
     readonly dealt: readonly string[];
   };
   readonly ids: readonly IdCase[];
@@ -371,6 +389,23 @@ export function parseGameCases(text: string, path: string): GameCases {
     };
   };
 
+  /** A plan's steps expected, each the one after the last unless it names
+   * its `step`, counted from 1. */
+  const planSteps = (node: unknown, where: string): PlanStep[] => {
+    let last = 0;
+    return items(node, where).map((n, k) => {
+      const at = `${where}[${k}]`;
+      const step =
+        isMap(n) && n.has("step") ? num(n.get("step", true), `${at}.step`) : last + 1;
+      if (step <= last) return fail(n, `${at}.step ${step} is not after step ${last}`);
+      last = step;
+      return {
+        step,
+        ...stepShape(n, at, ["step", "rung", "set", "sets", "marks", "says"]),
+      };
+    });
+  };
+
   const holds = (node: unknown, where: string): Record<string, unknown> => {
     const out: Record<string, unknown> = {};
     for (const [field, v] of entries(node, where, null)) out[field] = named(js(v), v);
@@ -432,7 +467,21 @@ export function parseGameCases(text: string, path: string): GameCases {
   const t = entries(top.get("tiers"), "tiers", ["absent", "dealt"]);
   const cells = (key: string) =>
     items(t.get(key), `tiers.${key}`).map((n, i) => str(n, `tiers.${key}[${i}]`));
-  const tiers = { absent: cells("absent"), dealt: cells("dealt") };
+  const absent = items(t.get("absent"), "tiers.absent").map((n, i): AbsentCell => {
+    const where = `tiers.absent[${i}]`;
+    if (!isMap(n)) return { cell: str(n, where), every: null, line: lineOf(n) };
+    const e = entries(n, where, ["cell", "exhaustive", "unfinished"]);
+    if (js(e.get("exhaustive")) !== true)
+      return fail(n, `${where} is a map only to say exhaustive: true`);
+    return {
+      cell: str(e.get("cell"), `${where}.cell`),
+      every: {
+        unfinished: opt(e.get("unfinished"), (u) => num(u, `${where}.unfinished`)),
+      },
+      line: lineOf(n),
+    };
+  });
+  const tiers = { absent, dealt: cells("dealt") };
 
   const ids = items(top.get("ids"), "ids").map((node, i): IdCase => {
     const where = `ids[${i}]`;
@@ -554,15 +603,7 @@ export function parseGameCases(text: string, path: string): GameCases {
         steps:
           e.get("steps") === undefined
             ? null
-            : items(e.get("steps"), `${where}.steps`).map((n, k) =>
-                stepShape(n, `${where}.steps[${k}]`, [
-                  "rung",
-                  "set",
-                  "sets",
-                  "marks",
-                  "says",
-                ]),
-              ),
+            : planSteps(e.get("steps"), `${where}.steps`),
         holds: holds(e.get("holds"), `${where}.holds`),
         ...(e.has("brings")
           ? { brings: named(js(e.get("brings")), e.get("brings")) }
@@ -690,14 +731,21 @@ function stepDiffers(
   return null;
 }
 
-/** The field at `path` (`dealt.number.at`) of `state`, arrays read whole. */
+/** The field at `path` (`dealt.number.at`) of `state`, arrays read whole,
+ * and a list of them (a line's runs) each as a list. */
 function fieldOf(state: unknown, path: string): unknown {
   let at: unknown = state;
   for (const key of path.split(".")) {
     if (at === null || typeof at !== "object") return undefined;
     at = (at as Record<string, unknown>)[key];
   }
-  return ArrayBuffer.isView(at) ? Array.from(at as unknown as ArrayLike<number>) : at;
+  const plain = (v: unknown): unknown =>
+    ArrayBuffer.isView(v)
+      ? Array.from(v as unknown as ArrayLike<number>)
+      : Array.isArray(v)
+        ? v.map(plain)
+        : v;
+  return plain(at);
 }
 
 /** What of `holds` `state` does not hold, one line a field. */
@@ -897,12 +945,12 @@ export function checkPosition(game: AnyGame, c: PositionCase): string[] {
     if (plan === undefined) out.push("has no hint");
     else if (!plan.ok) out.push(`the hint refuses: ${plan.error}`);
     else
-      c.steps.forEach((want, i) => {
-        const step = plan.steps[i];
+      for (const want of c.steps) {
+        const step = plan.steps[want.step - 1];
         const differs =
           step === undefined ? "is not in the plan" : stepDiffers(want, step);
-        if (differs !== null) out.push(`step ${i + 1} ${differs}`);
-      });
+        if (differs !== null) out.push(`step ${want.step} ${differs}`);
+      }
   }
   out.push(...holdsDiffers(c.holds, state));
   const { circled } = c;
@@ -959,7 +1007,26 @@ export function describeGameCases(
       pins: hint.pins,
       source: cases.path,
     });
-  if (cases.tiers.absent.length > 0) describeAbsentTiers(game, cases.tiers.absent);
+  const { absent } = cases.tiers;
+  if (absent.length > 0)
+    describeAbsentTiers(
+      game,
+      absent.map((a) => a.cell),
+      { everyAnswer: absent.flatMap((a) => (a.every === null ? [] : [a.cell])) },
+    );
+  const proven = absent.filter((a) => a.every !== null);
+  if (proven.length > 0)
+    describe(`${game.id}: a size with no board at a tier, over every answer`, () => {
+      for (const a of proven)
+        it(`${cases.path}:${a.line} ${a.cell}`, () => {
+          const got = everyAnswer(game, compiled, a.cell);
+          expect(got.needing, "boards that need the tier").toEqual([]);
+          expect(got.answers, "answers tried").toBeGreaterThan(0);
+          const unfinished = a.every?.unfinished ?? null;
+          if (unfinished !== null)
+            expect(got.unfinished, "answers no lower tier finishes").toBe(unfinished);
+        });
+    });
   if (cases.tiers.dealt.length > 0) describeDealtTiers(game, cases.tiers.dealt);
   const each = <C extends At>(
     section: string,
