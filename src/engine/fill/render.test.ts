@@ -1,15 +1,15 @@
 /**
  * A fill game drawn by layers, on boards built by hand: what each layer puts
  * on the canvas, read from a recording. The painters and the labels are drawn
- * on fixtures; a link, and the clues and errors Tents' rules give, on Tents'
- * compiled module until a fixture names a link.
+ * on fixtures, and a link, and the clues and errors a board's rules give, on
+ * the `linking` one.
  */
 
 import { describe, expect, it } from "vitest";
 import * as joining from "../../generated/engine/testing/fixtures/joining/joining.compiled.ts";
+import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as painting from "../../generated/engine/testing/fixtures/painting/painting.compiled.ts";
 import * as playing from "../../generated/engine/testing/fixtures/playing/playing.compiled.ts";
-import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import { PAINTERS } from "../render/pieces/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
@@ -23,31 +23,39 @@ import { fillGame } from "./game.ts";
 import { fillInput, newFillUi } from "./play.ts";
 import { type FillLook, fillRender } from "./render.ts";
 
-const TENT = 1;
+const PIECE = 1;
 
-// Tents (T), trees (R) and grass (.), the trees at 1, 11 and 12.
-const ANSWER = ["TR..", "...T", "...R", "RT.."];
+// Pieces (P), anchors (A) and empty squares (.), the anchors at 1, 11 and 12.
+const ANSWER = ["PA..", "...P", "...A", "AP.."];
 const W = 4;
 const TS = 32;
-const look: FillLook<tents.Dealt> = { play: tents.play, lineClues: tents.lineClues };
+const look: FillLook<linking.Dealt> = {
+  play: linking.play,
+  lineClues: linking.lineClues,
+};
 
-function dealt(): FillBoard<tents.Dealt> {
-  const g = Uint8Array.from(ANSWER.join(""), (ch) => "_T.R".indexOf(ch));
-  return newBoard(tents, W, W, tents.deriveClues(g, spaceOf(tents, { w: W, h: W })));
+function dealt(): FillBoard<linking.Dealt> {
+  const g = Uint8Array.from(ANSWER.join(""), (ch) => "_P.A".indexOf(ch));
+  return newBoard(
+    linking,
+    W,
+    W,
+    linking.deriveClues(g, spaceOf(linking, { w: W, h: W })),
+  );
 }
 
 function draw(
   edits: readonly Edit[],
-  options: { look?: FillLook<tents.Dealt>; mistakes?: readonly FillMistake[] } = {},
-): { ops: readonly DrawOp[]; render: ReturnType<typeof fillRender<tents.Dealt>> } {
+  options: { look?: FillLook<linking.Dealt>; mistakes?: readonly FillMistake[] } = {},
+): { ops: readonly DrawOp[]; render: ReturnType<typeof fillRender<linking.Dealt>> } {
   let board = dealt();
-  for (const e of edits) board = applyEdit(tents, board, e);
-  const input = fillInput<tents.Dealt, { tileSize: number }>(
-    tents,
-    tents.play,
+  for (const e of edits) board = applyEdit(linking, board, e);
+  const input = fillInput<linking.Dealt, { tileSize: number }>(
+    linking,
+    linking.play,
     () => 1,
   );
-  const render = fillRender(tents, options.look ?? look, input.previewed);
+  const render = fillRender(linking, options.look ?? look, input.previewed);
   const dr = new RecordingDrawing(render.colors(DEFAULT_BACKGROUND));
   const ds = render.newDrawState(board, TS);
   render.redraw(dr, ds, {
@@ -70,28 +78,28 @@ const texts = (ops: readonly DrawOp[], color?: number): string[] =>
 describe("a fill game drawn by layers", () => {
   it("draws each given with its painter and each line's clue past its end", () => {
     const { ops } = draw([]);
-    // A tree's five leaves, for each of the three trees.
+    // The `tree` painter's five leaves, for each of the three anchors.
     expect(ops.filter((o) => o.op === "circle")).toHaveLength(15);
     // The rows' counts, then the columns'.
     expect(texts(ops)).toEqual(["1", "1", "0", "1", "1", "1", "0", "1"]);
   });
 
-  it("puts a diamond on the side two touching tents share, and on the corner, a quarter a tile", () => {
-    const side = draw([{ set: [4, TENT, 5, TENT] }]).ops;
+  it("puts a diamond on the side two touching pieces share, and on the corner, a quarter a tile", () => {
+    const side = draw([{ set: [4, PIECE, 5, PIECE] }]).ops;
     const diamonds = (ops: readonly DrawOp[]) =>
-      // A diamond is outlined in ink; a tent in error is red all over.
+      // A diamond is outlined in ink; a piece in error is red all over.
       ops.filter(
         (o) => o.op === "polygon" && o.fill === COL_ERROR && o.outline !== o.fill,
       );
     // Each tile's half, at the side they share.
     expect(diamonds(side)).toHaveLength(2);
-    const corner = draw([{ set: [4, TENT, 9, TENT] }]).ops;
+    const corner = draw([{ set: [4, PIECE, 9, PIECE] }]).ops;
     expect(diamonds(corner)).toHaveLength(4);
   });
 
   it("draws a link's halves on both its cells, in the error color once found wrong", () => {
-    // Tent 0 linked to the tree at 1, the tree clue's index 0.
-    const linked = [{ set: [0, TENT], mark: [0, 0] }];
+    // The piece at 0 linked to the anchor at 1, the anchor clue's index 0.
+    const linked = [{ set: [0, PIECE], mark: [0, 0] }];
     const render0 = draw([]).render;
     const halves = (ops: readonly DrawOp[], color?: number) =>
       ops.filter(
@@ -113,7 +121,7 @@ describe("a fill game drawn by layers", () => {
 
   it("reddens a line's clue its line breaks", () => {
     // Row 2's count is 0.
-    const { ops } = draw([{ set: [8, TENT] }]);
+    const { ops } = draw([{ set: [8, PIECE] }]);
     expect(texts(ops, COL_ERROR)).toEqual(["0"]);
   });
 });

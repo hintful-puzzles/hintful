@@ -1,0 +1,198 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: pieces each joined to an anchor dealt beside it, the
+# join a link the player may draw, for the engine's tests of links (input,
+# drawing, a hint that reads some at a glance and asks for the rest), of a
+# deal that samples a partner beside each piece, and of the fill board's
+# answer, rules and mistakes. Two tiers, so a deal is seen to finish at its
+# own and not below.
+game: linking
+produces: shading
+sizes:
+  w: { min: 4 }
+  h: { min: 4 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a piece, 2 an empty square, and 3 an anchor, which holds neither.
+  value: { sort: cell, domain: "{d in range(1, 3) where (d = 3) = (clue(anchor, c) >= 0)}" }
+marks:
+  # A piece's link to its anchor.
+  link:
+    sort: cell
+    notation: "one of clues(anchor)"
+    means: "paired(at, at(v))"
+    while: "value(at) = 1"
+define:
+  anchors(c): "{q in clues(anchor) where at(q) in adj4(c)}"
+  has(q): "exists x in adj4(at(q)): link(x) = q and value(x) = 1"
+  free(c): "{q in anchors(c) where not has(q)}"
+  room(q): "{x in adj4(at(q)) where blank(x) or (value(x) = 1 and link(x) = none)}"
+  blank(c): "not known(c) and clue(anchor, c) < 0"
+  need(L): "clue(count, L) - count(c in cells(L) where value(c) = 1)"
+  open(L): "{c in cells(L) where blank(c)}"
+  # Whether filling f of the open squares O puts k pieces in them, none side
+  # by side: a piece is 1 and an empty square 2.
+  spread(f, O, k): >-
+    sum(y in O of f(y)) = 2 * |O| - k
+    and (forall y in O, z in before(y, O): not (f(y) = 1 and f(z) = 1 and z in adj4(y)))
+  fits(O, k, x, d): "exists fill f of O from cand where f(x) = d and spread(f, O, k): true"
+shape:
+  - "forall a in cells where value(a) = 1: forall b in adj8(a): value(b) != 1"
+rules:
+  pairs: "matched({c in cells where value(c) = 1}, {c in cells where value(c) = 3})"
+clues:
+  anchor:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 3"
+  count:
+    at: line
+    value: "range(0, |cells(at)|)"
+    complete: true
+    means: "count(c in cells(at) where value(c) = 1) = v"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: place a piece, key: T, glyph: "//\\", paint: tent }
+    2: { does: mark it empty, key: N, glyph: "   ", paint: ground }
+  given: { 3: { glyph: " T ", paint: tree } }
+  primary: 1
+  secondary: 2
+  blank: 2
+  straight: true
+  links: link
+  glance: [pieceLink, anchorLink]
+  askBefore: [lineCount]
+  boards: [6x6, 8x8]
+  hintMarks:
+    ring: the squares the step decides, or the link it asks for.
+    outline: what it reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: a fifth of the squares pieces, none touching, an anchor beside each
+  anchor: beside each piece, as the pairing put it
+  count: every row's and column's pieces
+  tier: one of the tiers, the board finished at it and not at the tier below
+  sample:
+    scatter: { value: 1, share: 0.2, apart: adj8 }
+    partner: { value: 3, along: adj4 }
+    rest: 2
+    noBareLine: true
+tiers: [Easy, Normal]
+names:
+  pieceLink: "a piece with one anchor left"
+  noAnchor: "a square beside no anchor"
+  anchorsDone: "anchors that all have their pieces"
+  nextToPiece: "pieces never touching"
+  anchorSingle: "an anchor with one square left"
+  anchorLink: "an anchor's only piece"
+  anchorDiagonal: "an anchor's two squares round a corner"
+  lineCount: "a line's count"
+# A board loads only where these solve it.
+techniques:
+  - kind: one.cell
+    as: pieceLink
+    tier: Easy
+    with:
+      square: "value(c) = 1 and link(c) = none"
+      options: free(c)
+      move: "forall q in U: mark(c, q)"
+    says:
+      terms: { c: c, K: U, anchor: "at(nth(U, 0))" }
+      marks: { reads: "{c} + adj4(c)" }
+      look: "{ring c: the ringed piece} has one anchor left beside it"
+      follows: "it must belong to {ring anchor: the ringed anchor}"
+      move: "draw {ring mark: the link}"
+  - id: noAnchor
+    tier: Easy
+    for: "S = {c in cells where blank(c) and |anchors(c)| = 0} where |S| > 0"
+    conclude: "forall c in S: place(c, 2)"
+    says:
+      terms: { S: S }
+      marks: { reads: "S" }
+      look: "no anchor is beside {ring: the ringed square | the ringed squares}"
+      move: "{ring: the ringed square | every ringed square} must be empty"
+  - id: anchorsDone
+    tier: Easy
+    for: >-
+      q in clues(anchor) where has(q),
+      S = {c in adj4(at(q)) where blank(c) and |free(c)| = 0} where |S| > 0
+    conclude: "forall c in S: place(c, 2)"
+    says:
+      terms: { S: S }
+      marks: { reads: "S + set(at(p) over c in S, p in anchors(c))" }
+      look: "every anchor beside {ring: the ringed square | the ringed squares} has its piece"
+      move: "{ring: the ringed square | every ringed square} must be empty"
+  - kind: peer.touch
+    as: nextToPiece
+    tier: Easy
+    with:
+      adj: adj8
+      fill: 1
+      rest: 2
+      square: blank(c)
+      piece: piece
+      pieces: pieces
+      how: ", even diagonally"
+      restWord: must be empty
+      terms: { S: "{c in adj8(t) where blank(c)}" }
+  - id: anchorSingle
+    tier: Easy
+    for: >-
+      q in clues(anchor) where not has(q),
+      R = room(q) where |R| < 2 and (forall x in R: blank(x))
+    conclude: "|R| > 0 and (forall x in R: place(x, 1) and mark(x, q))"
+    says:
+      terms: { anchor: "at(q)" }
+      marks: { reads: "{at(q)} + adj4(at(q))" }
+      look: "{outline anchor: this anchor}'s only open square is {ring: the ringed one}"
+      move: "its piece must go in it, with {ring mark: the link}"
+  - id: anchorLink
+    tier: Easy
+    for: "q in clues(anchor) where not has(q), R = room(q) where |R| = 1, x = nth(R, 0) where value(x) = 1"
+    conclude: "mark(x, q)"
+    says:
+      terms: { x: x, anchor: "at(q)" }
+      marks: { reads: "{at(q)} + adj4(at(q))" }
+      look: "{ring anchor: the ringed anchor} has no other square left for its piece"
+      follows: "its piece must be {ring x: the ringed one}"
+      move: "draw {ring mark: the link}"
+  - id: anchorDiagonal
+    tier: Normal
+    for: >-
+      q in clues(anchor) where not has(q), R = room(q) where |R| = 2,
+      a = nth(R, 0), b = nth(R, 1) where x(a) != x(b) and y(a) != y(b),
+      z = cell(x(a) + x(b) - x(at(q)), y(a) + y(b) - y(at(q))) where blank(z)
+    conclude: "place(z, 2)"
+    says:
+      terms: { z: z, anchor: "at(q)", pair: "{a} + {b}" }
+      marks: { reads: "{at(q)} + adj4(at(q)) + {z}" }
+      look: >-
+        {outline anchor: this anchor}'s piece must go in one of {outline pair: the two outlined squares};
+        either touches {ring: the ringed one}
+      move: "it must be empty"
+  - id: lineCount
+    tier: Easy
+    for: >-
+      L in lines, k = need(L), O = open(L) where |O| > 0,
+      T = {x in O where fits(O, k, x, 1)}, G = {x in O where fits(O, k, x, 2)}
+      where (exists x in O: x not in T or x not in G)
+    conclude: >-
+      forall x in O: (x in T or x in G)
+      and (x not in T implies place(x, 2)) and (x not in G implies place(x, 1))
+    says:
+      terms: { k: k }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      arms:
+        countMet:
+          when: "k = 0"
+          look: "{stripes: this {unit}} already has its pieces"
+          move: "{ring: its open square | its open squares} must be empty"
+        noSpareRoom:
+          when: "k > 0"
+          look: "{stripes: this {unit}} fits only the {k} pieces it needs"
+          move: >-
+            {ring 1: the ringed square | every ringed square} must be a piece{has 2: , and
+            {ring 2: the square between them | the squares between them} empty}

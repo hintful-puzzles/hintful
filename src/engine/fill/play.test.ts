@@ -1,11 +1,11 @@
 /**
  * A fill game's input, built from its `play:`, on the `playing` fixture, and
- * a link's on Tents' compiled module, each on a board built by hand.
+ * a link's on the `linking` one, each on a board built by hand.
  */
 
 import { describe, expect, it } from "vitest";
+import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as playing from "../../generated/engine/testing/fixtures/playing/playing.compiled.ts";
-import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import {
   CURSOR_DOWN,
@@ -321,42 +321,51 @@ describe("a fill game's input", () => {
 });
 
 describe("a fill game's link", () => {
-  const TENT = 1;
-  // Tents (T), trees (R) and grass (.), the trees at 1, 11 and 12.
-  const ANSWER = ["TR..", "...T", "...R", "RT.."];
-  function dealt(): FillBoard<tents.Dealt> {
-    const g = Uint8Array.from(ANSWER.join(""), (ch) => "_T.R".indexOf(ch));
-    return newBoard(tents, W, W, tents.deriveClues(g, spaceOf(tents, { w: W, h: W })));
+  const PIECE = 1;
+  // Pieces (P), anchors (A) and empty squares (.), the anchors at 1, 11 and
+  // 12.
+  const ANSWER = ["PA..", "...P", "...A", "AP.."];
+  function dealt(): FillBoard<linking.Dealt> {
+    const g = Uint8Array.from(ANSWER.join(""), (ch) => "_P.A".indexOf(ch));
+    return newBoard(
+      linking,
+      W,
+      W,
+      linking.deriveClues(g, spaceOf(linking, { w: W, h: W })),
+    );
   }
   const play_ = (
-    board: FillBoard<tents.Dealt>,
+    board: FillBoard<linking.Dealt>,
     ui: FillUi,
     steps: readonly (readonly [number, number])[],
-  ) => drive(tents, tents.play, board, ui, steps);
+  ) => drive(linking, linking.play, board, ui, steps);
 
-  it("joins a tree and the open square beside it with a left drag, placing the tent, and parts them", () => {
+  it("joins an anchor and the open square beside it with a left drag, placing the piece, and parts them", () => {
     const ui = newFillUi();
     const joined = play_(dealt(), ui, [
       [LEFT_BUTTON, 1],
       [LEFT_DRAG, 0],
       [LEFT_RELEASE, 0],
     ]).board;
-    expect(joined.values[0]).toBe(TENT);
+    expect(joined.values[0]).toBe(PIECE);
     expect(joined.mark[0]).toBe(0);
     const parted = play_(joined, ui, [
       [LEFT_BUTTON, 0],
       [LEFT_DRAG, 1],
       [LEFT_RELEASE, 1],
     ]).board;
-    expect(parted.values[0]).toBe(TENT);
+    expect(parted.values[0]).toBe(PIECE);
     expect(parted.mark[0]).toBe(-1);
   });
 
-  it("joins a tree to its tent with L and an arrow, and lets go of the tree's other tent", () => {
+  it("joins an anchor to its piece with L and an arrow, and lets go of the anchor's other piece", () => {
     const ui = newFillUi();
-    // The third tree, at 12, joined to a tent above it, then by key from the
-    // tree to the tent on its right.
-    let board = applyEdit(tents, dealt(), { set: [8, TENT, 13, TENT], mark: [8, 2] });
+    // The third anchor, at 12, joined to a piece above it, then by key from
+    // the anchor to the piece on its right.
+    let board = applyEdit(linking, dealt(), {
+      set: [8, PIECE, 13, PIECE],
+      mark: [8, 2],
+    });
     ui.cursor.x = 0;
     ui.cursor.y = 3;
     ui.cursor.visible = true;

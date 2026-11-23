@@ -106,11 +106,19 @@
                   link's moved onto it, and `render.test.ts`'s labels. Seen
                   to fail with `wrap`, the erase letter and `dealt` each
                   planted off.
-            - [ ] Next: a linking fixture (`links`, `glance`, `askBefore`,
-                  `deal.sample.partner`, `noBareLine`), taking the Tents
-                  cases left in `play`, `render`, `hint` and `board` and
-                  the sampling ones in `deal.test.ts`; `board.test.ts`'s
-                  upstream text format belongs in `tents.cases.yaml`.
+            - [x] `linking`: `links`, `glance`, `askBefore`,
+                  `deal.sample.partner` and `noBareLine`, two tiers; every
+                  Tents case in `play`, `render`, `hint`, `board` and
+                  `deal.test.ts` moved onto it. Upstream's ID grammar,
+                  params and text format are `tents.cases.yaml`'s. The
+                  at-a-glance walk is on a dealt board that asks a link
+                  with either glance technique planted out (the 4x4 hand
+                  board asks none either way); seen to fail with `links`,
+                  `noBareLine`, each glance and `partner`'s `along` planted.
+            - [ ] Next: a fixture for Unruly's cases in `pair.test.ts`
+                  (`click`, `default`, `boardTiers`, `variants`,
+                  `modifiers`, `deal.hide`, `sample.build`), then
+                  Kakurasu's in `hint.test.ts`.
 
 ## 4. The born games
 

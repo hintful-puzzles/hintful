@@ -1,12 +1,13 @@
 /**
  * A fill game's hint, on Kakurasu's compiled module and a board dealt from a
  * hand-drawn answer: its steps are worded by the description, made by edits,
- * followed by the player square by square, and they finish the board.
+ * followed by the player square by square, and they finish the board. A hint
+ * that asks for a link, on the `linking` fixture.
  */
 
 import { describe, expect, it } from "vitest";
+import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as kakurasu from "../../generated/games/kakurasu/kakurasu.compiled.ts";
-import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import type { HintStep } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
@@ -124,102 +125,112 @@ describe("a fill game's hint", () => {
 });
 
 describe("a fill game's hint that asks for a link", () => {
-  // Tents (T), trees (R) and grass (.): each tent's tree is beside it, the
-  // trees at 1, 11 and 12.
-  const TENTS = ["TR..", "...T", "...R", "RT.."];
-  const tentsGame = fillGame("tents", tents);
-  const TENT = 1;
+  // Pieces (P), anchors (A) and empty squares (.): each piece's anchor is
+  // beside it, the anchors at 1, 11 and 12.
+  const PIECES = ["PA..", "...P", "...A", "AP.."];
+  const linkingGame = fillGame("linking", linking);
+  const PIECE = 1;
   type Step = HintStep<Edit, FillHint>;
 
-  function tentsBoard(): FillBoard<tents.Dealt> {
-    const g = Uint8Array.from(TENTS.join(""), (ch) => "_T.R".indexOf(ch));
-    return newBoard(tents, W, W, tents.deriveClues(g, spaceOf(tents, { w: W, h: W })));
+  function linkingBoard(): FillBoard<linking.Dealt> {
+    const g = Uint8Array.from(PIECES.join(""), (ch) => "_P.A".indexOf(ch));
+    return newBoard(
+      linking,
+      W,
+      W,
+      linking.deriveClues(g, spaceOf(linking, { w: W, h: W })),
+    );
   }
 
   /** The first step that sets a mark, on the board the plan was asked on,
    * every step before it made. */
-  function firstLink(): { board: FillBoard<tents.Dealt>; step: Step } {
-    let board = tentsBoard();
+  function firstLink(): { board: FillBoard<linking.Dealt>; step: Step } {
+    let board = linkingBoard();
     for (let asked = 0; asked < 40; asked++) {
-      const got = tentsGame.hint?.plan(board);
+      const got = linkingGame.hint?.plan(board);
       if (!got?.ok) throw new Error("no hint");
       const [step] = got.steps;
       if (step.move.mark !== undefined) return { board, step };
-      board = applyEdit(tents, board, step.move);
+      board = applyEdit(linking, board, step.move);
     }
     throw new Error("no step asked for a link");
   }
 
-  it("places a tree's tent and rings the link it asks for, in the words", () => {
+  it("places an anchor's piece and rings the link it asks for, in the words", () => {
     const { board, step } = firstLink();
     const mark = step.move.mark ?? [];
     expect(mark).toHaveLength(2);
     const [cell, q] = mark;
-    const tree = board.dealt.tree.at[q];
-    expect(stepMarks(step).of("ring", LINK)).toEqual([{ cell, to: tree }]);
+    const anchor = board.dealt.anchor.at[q];
+    expect(stepMarks(step).of("ring", LINK)).toEqual([{ cell, to: anchor }]);
     expect(step.explanation).toMatch(/the link\.$/);
-    // Its move sets the tent where the square is open, and the gesture is the
-    // link's drag, which places it.
-    if (board.values[cell] === 0) expect(step.move.set).toEqual([cell, TENT]);
-    const ds = tentsGame.newDrawState(board, TS);
-    const ui = tentsGame.newUi(board);
+    // Its move sets the piece where the square is open, and the gesture is
+    // the link's drag, which places it.
+    if (board.values[cell] === 0) expect(step.move.set).toEqual([cell, PIECE]);
+    const ds = linkingGame.newDrawState(board, TS);
+    const ui = linkingGame.newUi(board);
     const at = (c: number) =>
-      tentsGame.targetVerbs?.geometry.pointAt(
+      linkingGame.targetVerbs?.geometry.pointAt(
         board,
         ds,
         { x: c % W, y: Math.floor(c / W) },
         ui,
       );
-    expect(tentsGame.hint?.gesture?.(board, ui, ds, step.move, step)).toEqual([
-      drag(at(cell) as Point, at(tree) as Point),
+    expect(linkingGame.hint?.gesture?.(board, ui, ds, step.move, step)).toEqual([
+      drag(at(cell) as Point, at(anchor) as Point),
     ]);
   });
 
-  it("follows the tent placed alone, then completes on the link", () => {
+  it("follows the piece placed alone, then completes on the link", () => {
     const { board, step } = firstLink();
     const [cell, q] = step.move.mark ?? [];
-    if (board.values[cell] !== 0) throw new Error("the first link's tent is placed");
-    const hint = tentsGame.hint;
+    if (board.values[cell] !== 0) throw new Error("the first link's piece is placed");
+    const hint = linkingGame.hint;
     if (hint === undefined) throw new Error("no hint");
-    const tent = { set: [cell, TENT] };
-    expect(hint.keepTrack(tent, step, board)).toBe("onTrack");
+    const piece = { set: [cell, PIECE] };
+    expect(hint.keepTrack(piece, step, board)).toBe("onTrack");
     expect(step.move).toEqual({ mark: [cell, q] });
-    const after = applyEdit(tents, board, tent);
+    const after = applyEdit(linking, board, piece);
     expect(hint.keepTrack({ mark: [cell, q] }, step, after)).toBe("completed");
-    // A link to another tree, or none, is off the step.
+    // A link to another anchor, or none, is off the step.
     expect(hint.keepTrack({ set: [cell, 2] }, step, after)).toBe("off");
   });
 
   /** The rungs of every step the hint walks from `board` to the end, each
    * step's move made. */
-  function walkRungs(board: FillBoard<tents.Dealt>): {
+  function walkRungs(board: FillBoard<linking.Dealt>): {
     rungs: string[];
-    board: FillBoard<tents.Dealt>;
+    board: FillBoard<linking.Dealt>;
   } {
     const rungs: string[] = [];
     for (let asked = 0; asked < 80; asked++) {
-      const got = tentsGame.hint?.plan(board);
+      const got = linkingGame.hint?.plan(board);
       if (!got?.ok) break;
       rungs.push(got.steps[0].rung);
-      board = applyEdit(tents, board, got.steps[0].move);
+      board = applyEdit(linking, board, got.steps[0].move);
     }
     return { rungs, board };
   }
+  // The techniques `play.glance` reads a link with.
   const linkRungs = (rungs: string[]) =>
-    rungs.filter((r) => r === "tentLink" || r === "treeLink");
+    rungs.filter((r) => (linking.play.links.glance as readonly string[]).includes(r));
+
+  const params = linkingGame.decodeParams("6x6de");
 
   it("asks for no link the board shows at a glance, and stops at the answer", () => {
-    const { rungs, board } = walkRungs(tentsBoard());
-    expect(tentsGame.status(board)).toBe("solved");
+    // A dealt board whose walk asks for links were either of the glance's
+    // techniques not read at a glance.
+    const desc = ",,,,,0,,0,,,,,,,0,,,,0,,0,,,,,,,0,,,,,,,0,,1,1,1,1,1,2,1,2,0,2,0,2";
+    const { rungs, board } = walkRungs(linkingGame.newState(params, desc));
+    expect(linkingGame.status(board)).toBe("solved");
     expect(linkRungs(rungs)).toEqual([]);
   });
 
   it("asks for a link one reading deeper only where a step rests on it", () => {
-    // A dealt board on which one tent's tree takes two readings to see.
-    const params = tentsGame.decodeParams("8x8de");
-    const desc = "afcak_ahbiaha,2,1,2,1,2,2,0,2,3,1,2,1,1,1,2,1";
-    const { rungs, board } = walkRungs(tentsGame.newState(params, desc));
-    expect(tentsGame.status(board)).toBe("solved");
-    expect(linkRungs(rungs)).toEqual(["tentLink"]);
+    // A dealt board on which one piece's anchor takes two readings to see.
+    const desc = ",,,,,,0,,0,,,,,,,,,0,0,,,,0,,,0,,,,,,,,0,,,2,1,1,1,1,1,3,0,2,1,0,1";
+    const { rungs, board } = walkRungs(linkingGame.newState(params, desc));
+    expect(linkingGame.status(board)).toBe("solved");
+    expect(linkRungs(rungs)).toEqual(["pieceLink"]);
   });
 });

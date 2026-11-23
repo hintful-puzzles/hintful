@@ -1,0 +1,40 @@
+# A defect planted in each of the fixture's techniques, which the soundness
+# checks under research/technique-check must find unsound.
+
+techniques:
+  # A square beside one anchor read as beside none.
+  noAnchor:
+    for: S = {c in cells where blank(c) and |anchors(c)| < 2} where |S| > 0
+  # A square beside an anchor with its piece read as empty whatever else is
+  # beside it.
+  anchorsDone:
+    for: >-
+      q in clues(anchor) where has(q), S = {c in adj4(at(q)) where blank(c)} where
+      |S| > 0
+  # A piece read as touching the squares two along its row too.
+  nextToPiece:
+    conclude: >-
+      forall c in cells where blank(c) and abs(x(c) - x(t)) <= 2 and abs(y(c) -
+      y(t)) <= 1: place(c, 2)
+  # A piece linked to no anchor read as no room for the anchor's own.
+  anchorSingle:
+    for: >-
+      q in clues(anchor) where not has(q), R = {x in adj4(at(q)) where blank(x)}
+      where |R| = 1
+  # An open square beside the anchor read as no room for its piece.
+  anchorLink:
+    for: >-
+      q in clues(anchor) where not has(q), R = {x in adj4(at(q)) where value(x) =
+      1 and link(x) = none} where |R| = 1, x = nth(R, 0) where value(x) = 1
+  # An anchor with three squares left read as two round a corner.
+  anchorDiagonal:
+    for: >-
+      q in clues(anchor) where not has(q), R = room(q) where |R| = 3, a = nth(R,
+      0), b = nth(R, 1) where x(a) != x(b) and y(a) != y(b), z = cell(x(a) +
+      x(b) - x(at(q)), y(a) + y(b) - y(at(q))) where blank(z)
+  # A line read as needing one piece more than its count.
+  lineCount:
+    for: >-
+      L in lines, k = need(L) + 1, O = open(L) where |O| > 0, T = {x in O where
+      fits(O, k, x, 1)}, G = {x in O where fits(O, k, x, 2)} where (exists x in
+      O: x not in T or x not in G)

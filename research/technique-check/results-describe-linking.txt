@@ -1,0 +1,24 @@
+ok  linking    pieceLink                      3  sound    (want sound   )     9 queries    0.1s
+ok  linking    pieceLink (planted)            3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/linking/linking.description.yaml#pieceLink: recorded sound, proved whole on all 1 boards
+ok  linking    noAnchor                       3  sound    (want sound   )     1 queries    0.0s
+ok  linking    noAnchor (planted)             3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  src/engine/testing/fixtures/linking/linking.description.yaml#noAnchor: recorded sound, proved whole on all 1 boards
+ok  linking    anchorsDone                    3  sound    (want sound   )     9 queries    0.0s
+ok  linking    anchorsDone (planted)          3  unsound  (want unsound )     2 queries    0.0s   at clue anchor 1
+ok  src/engine/testing/fixtures/linking/linking.description.yaml#anchorsDone: recorded sound, proved whole on all 1 boards
+ok  linking    nextToPiece                    3  sound    (want sound   )     9 queries    0.0s
+ok  linking    nextToPiece (planted)          3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/linking/linking.description.yaml#nextToPiece: recorded sound, proved whole on all 1 boards
+ok  linking    anchorSingle                   3  sound    (want sound   )     9 queries    0.1s
+ok  linking    anchorSingle (planted)         3  unsound  (want unsound )     1 queries    0.0s   at clue anchor 0
+ok  src/engine/testing/fixtures/linking/linking.description.yaml#anchorSingle: recorded sound, proved whole on all 1 boards
+ok  linking    anchorLink                     3  sound    (want sound   )     9 queries    0.1s
+ok  linking    anchorLink (planted)           3  unsound  (want unsound )     2 queries    0.0s   at clue anchor 1
+ok  src/engine/testing/fixtures/linking/linking.description.yaml#anchorLink: recorded sound, proved whole on all 1 boards
+ok  linking    anchorDiagonal                 3  sound    (want sound   )     9 queries    0.1s
+ok  linking    anchorDiagonal (planted)       3  unsound  (want unsound )     2 queries    0.0s   at clue anchor 1
+ok  src/engine/testing/fixtures/linking/linking.description.yaml#anchorDiagonal: recorded sound, proved whole on all 1 boards
+ok  linking    lineCount                      3  sound    (want sound   )     6 queries    0.2s
+ok  linking    lineCount (planted)            3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/linking/linking.description.yaml#lineCount: recorded sound, proved whole on all 1 boards

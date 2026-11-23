@@ -85,7 +85,29 @@ hint:
       moves:
         - {set: [0, 2, 1, 2, 3, 2, 4, 2, 12, 2, 13, 2, 15, 2, 19, 2, 21, 2, 22, 2, 23, 2, 25, 2, 26, 2, 30, 2, 31, 2, 32, 2, 33, 2, 34, 2, 41, 2, 50, 2, 52, 2, 54, 2, 57, 2]}
 
+ids:
+  # Upstream's desc: a run's letter is the open squares before its tree, `a`
+  # one and `_` none, and the numbers after the runs are the columns' first,
+  # then the rows'; the space counts the rows first.
+  - id: "10x10de:agaa_aidlcldbdbcadcbd,3,1,2,2,2,1,4,1,1,3,1,4,1,3,1,3,1,1,4,1"
+    writesBack: true
+    holds:
+      dealt.tree.at: [1, 9, 11, 13, 14, 16, 26, 31, 44, 48, 61, 66, 69, 74, 77, 81, 83, 88, 92, 95]
+      dealt.count.v: [1, 4, 1, 3, 1, 3, 1, 1, 4, 1, 3, 1, 2, 2, 2, 1, 4, 1, 1, 3]
+  # The last row's 1 made 11, on a row of 10.
+  - id: "10x10de:agaa_aidlcldbdbcadcbd,3,1,2,2,2,1,4,1,1,3,1,4,1,3,1,3,1,1,4,11"
+    refused: DESC_OUT_OF_RANGE
+
+params:
+  # Upstream's: the tier is the full ID's alone.
+  - {read: "10x12dt", full: "10x12dt", brief: "10x12"}
+  - {read: "9x7de", full: "9x7de"}
+
 positions:
+  # Upstream's text format, the last line's trailing spaces its
+  # `game_text_format`'s.
+  - id: "4x4de:cdcc,1,1,1,0,1,1,0,1"
+    text: "+---+---+---+---+---+\n| . | . | . | T | 1 |\n+---+---+---+---+---+\n| . | . | . | . | 1 |\n+---+---+---+---+---+\n| T | . | . | . | 0 |\n+---+---+---+---+---+\n| T | . | . | . | 1 |\n+---+---+---+---+---+\n| 1 | 1 | 1 | 0 |    \n+---+---+---+---+   \n"
   # Upstream's 4x4: trees at (3,0), (0,2) and (0,3); columns 1, 1, 1, 0 and
   # rows 1, 1, 0, 1. A tent at (1,3) brings grass round it, (1,2), (2,2) and
   # (2,3), and on the rest of the lines it completes: (3,3) in row 3, (1,0)
