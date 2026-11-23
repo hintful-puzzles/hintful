@@ -28,9 +28,10 @@ list read them at `153e4cf43`:
 | Crossing | 3,923 | a list of numbers at the board |
 | Map | 3,468 | a space whose cells are a partition's parts |
 
-Map comes last: its cells are a partition's parts, a capability of its own
-that the regions group (route task 1.3) may build first, and this change's
-gap list says which.
+The gap list (design.md, 2026-11-23) split the nine again: this change
+moves Solo, ABCD, Salad and Group, the Latin squares of numbers or letters,
+and its successor, filed at its archive, moves Undead, Rome, Magnets,
+Crossing and then Map, whose space of parts it builds itself.
 
 Saves of every moved game break, pre-approved by the owner for the whole
 initiative (`docs/descriptions.md`). Game IDs and links keep loading.
