@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a number on every square, shaded squares never side
+# by side, the clear ones joined and no number twice among them in a line,
+# for the fill engine's tests of numbers dealt as a Latin square's and a
+# shaded square's renumbered to repeat one (`deal.latin`), on a description
+# that names no game.
+game: numbering
+produces: shading
+sizes:
+  w: { min: 2, max: 12 }
+  h: { min: 2, max: 12 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+shape:
+  - "forall c in cells where value(c) = 1: forall p in adj4(c): value(p) = 2"
+  - "connected({c in cells where value(c) = 2})"
+clues:
+  number:
+    at: cell
+    value: "range(1, max(L in {row(at), col(at)} of |cells(L)|))"
+    complete: true
+    means: >-
+      value(at) = 1
+      or (forall L in {row(at), col(at)}, p in cells(L) where p != at and clue(number, p) = v:
+      value(p) = 1)
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "[ ]", paint: shade }
+    2: { does: circle it, key: X, glyph: "( )", paint: ring }
+  primary: 1
+  secondary: 2
+  blank: 2
+  # A square's own number, which counts no squares round it.
+  plain: [number]
+  boards: [5x5]
+  hintMarks:
+    ring: the square the step decides.
+    outline: the squares the step reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: a Latin square's numbers, and squares shaded at random while the clear squares stay joined
+  number: a repeated number on each shaded square
+  tier: the one tier
+  sample:
+    build: { value: 1 }
+  latin: { kind: number, under: 1 }
+id:
+  - cells: number
+tiers: [Easy]
+names:
+  besideShaded: "a square beside a shaded one"
+  sameLine: "a number already clear in its line"
+  sandwich: "a sandwich"
+  pair: "a touching pair"
+  boxedIn: "a clear square's last neighbor"
+techniques:
+  - id: besideShaded
+    tier: Easy
+    for: "c in cells where value(c) = 1, x in adj4(c) where not known(x)"
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{c}" }
+      look: "{ring: this square} is beside {outline: a shaded one}"
+      move: "it must be clear"
+  - id: sameLine
+    tier: Easy
+    for: "c in cells where value(c) = 2, n = clue(number, c)"
+    conclude: >-
+      forall L in {row(c), col(c)}, p in cells(L) where p != c and clue(number, p) = n:
+      place(p, 1)
+    says:
+      terms: { n: n }
+      marks: { outline: "{c}" }
+      look: "{outline: the clear {n}} shares a line with {ring: the ringed {n} | each ringed {n}}"
+      move: "{ring: that {n} | those {n}s} must be shaded"
+  - id: sandwich
+    tier: Easy
+    for: >-
+      L in lines, c in cells(L), e = nth(cells(L), index(c, cells(L)) + 2)
+      where e != none and clue(number, e) = clue(number, c)
+    conclude: "place(nth(cells(L), index(c, cells(L)) + 1), 2)"
+    says:
+      terms: { n: "clue(number, c)" }
+      marks: { outline: "{c, e}" }
+      look: "{outline: the outlined {n}s} sit one square apart"
+      move: "{ring: the square between them} must be clear"
+  - id: pair
+    tier: Easy
+    for: >-
+      L in lines, c in cells(L), q = nth(cells(L), index(c, cells(L)) + 1)
+      where q != none and clue(number, q) = clue(number, c)
+    conclude: >-
+      forall p in cells(L) where p != c and p != q and clue(number, p) = clue(number, c):
+      place(p, 1)
+    says:
+      terms: { n: "clue(number, c)" }
+      marks: { outline: "{c, q}", stripes: "cells(L)" }
+      look: "{outline: the outlined {n}s} touch"
+      move: "{ring: the ringed {n} | the ringed {n}s} must be shaded"
+  - kind: one.cell
+    as: boxedIn
+    tier: Easy
+    with:
+      square: "value(c) != 1"
+      options: "{p in adj4(c) where value(p) != 1}"
+      move: "place(first(U), 2)"
+    says:
+      marks: { outline: "{c}" }
+      look: "{ring: this square} is {outline: the outlined clear square}'s last unshaded neighbor"
+      move: "it must be clear"

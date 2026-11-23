@@ -10,7 +10,9 @@
  * on `climbing`, draws mended until no rule breaks and climbing toward the
  * tier, with dots alike side by side taken off; on `growing`, regions read
  * from walls and grown round dominoes sampled densely, some closed as
- * regions of their own; on `picturing`, an answer sampled as a picture.
+ * regions of their own; on `picturing`, an answer sampled as a picture; on
+ * `numbering`, numbers dealt as a Latin square's, a shaded square's
+ * renumbered to repeat a clear one.
  * Upstream's game ID
  * grammar is each game's own cases' (`tents.cases.yaml`'s `ids` and
  * `params`).
@@ -22,6 +24,7 @@ import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.comp
 import * as growing from "../../generated/engine/testing/fixtures/growing/growing.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
+import * as numbering from "../../generated/engine/testing/fixtures/numbering/numbering.compiled.ts";
 import * as picturing from "../../generated/engine/testing/fixtures/picturing/picturing.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
@@ -33,6 +36,7 @@ import { partners } from "../testing/symmetry-partners.ts";
 import { newBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, encodeDesc, givenOf, partitionOf } from "./game-id.ts";
+import { latinNumbers } from "./latin-numbers.ts";
 import {
   sampleAnswer,
   sampleDominoes,
@@ -572,5 +576,78 @@ describe("an answer sampled as a picture", () => {
     // 0.68 down the columns and 0.44 across them, 2026-11-23.
     expect(alike(2, 8, true)).toBeGreaterThan(0.6);
     expect(alike(2, 8, false)).toBeLessThan(0.55);
+  });
+});
+
+describe("numbers dealt as a Latin square's, a shaded square's repeating one", () => {
+  /** The lines of a board of `w` by `h`, rows then columns. */
+  const linesOf = (w: number, h: number): number[][] => [
+    ...Array.from({ length: h }, (_, y) =>
+      Array.from({ length: w }, (_, x) => y * w + x),
+    ),
+    ...Array.from({ length: w }, (_, x) =>
+      Array.from({ length: h }, (_, y) => y * w + x),
+    ),
+  ];
+
+  it("numbers a board with nothing shaded as a Latin square", () => {
+    for (const [w, h] of [
+      [5, 5],
+      [4, 6],
+    ]) {
+      const sp = spaceOf(numbering, { w, h });
+      const nums = latinNumbers(
+        new Uint8Array(w * h).fill(2),
+        sp,
+        1,
+        randomNew(`latin-${w}x${h}`),
+      );
+      for (const line of linesOf(w, h)) {
+        const seen = line.map((c) => nums[c]);
+        expect(new Set(seen).size).toBe(seen.length);
+        for (const n of seen) expect(n).toBeGreaterThanOrEqual(1);
+        for (const n of seen) expect(n).toBeLessThanOrEqual(Math.max(w, h));
+      }
+    }
+  });
+
+  it("deals no number twice among the clear squares of a line, and each shaded one again", () => {
+    const w = 7;
+    const sp = spaceOf(numbering, { w, h: w });
+    let shaded = 0;
+    let inBoth = 0;
+    for (let i = 0; i < 8; i++) {
+      const { desc, aux } = dealFill(
+        numbering,
+        numbering.deal,
+        { w, h: w, diff: 0 },
+        randomNew(`num-${i}`),
+      );
+      const { number } = descValue(
+        decodeDesc<numbering.Dealt>(numbering.deal, sp, numbering.clueMax, desc),
+      );
+      const g = Array.from(aux, (ch) => Number.parseInt(ch, 36));
+      const n = (c: number) => number.v[number.byAt[c]];
+      for (const line of linesOf(w, w)) {
+        const clear = line.filter((c) => g[c] === EMPTY).map(n);
+        expect(new Set(clear).size).toBe(clear.length);
+      }
+      /** Whether a clear square of `line` other than `c` holds `c`'s number. */
+      const repeats = (c: number, line: readonly number[]) =>
+        line.some((d) => d !== c && g[d] === EMPTY && n(d) === n(c));
+      for (const c of sp.cells) {
+        if (g[c] !== SHADED) continue;
+        shaded++;
+        const [row, col] = [
+          linesOf(w, w)[Math.floor(c / w)],
+          linesOf(w, w)[w + (c % w)],
+        ];
+        expect(repeats(c, row) || repeats(c, col)).toBe(true);
+        if (repeats(c, row) && repeats(c, col)) inBoth++;
+      }
+    }
+    // A number single in both lines is taken where there is one: 110 of 114
+    // shaded squares repeat one in both, 2026-11-23.
+    expect(inBoth / shaded).toBeGreaterThan(0.9);
   });
 });

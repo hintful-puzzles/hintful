@@ -1,0 +1,15 @@
+ok  numbering  besideShaded                   3  sound    (want sound   )     9 queries    0.0s
+ok  numbering  besideShaded (planted)         3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/numbering/numbering.description.yaml#besideShaded: recorded sound, proved whole on all 1 boards
+ok  numbering  sameLine                       3  sound    (want sound   )     9 queries    0.0s
+ok  numbering  sameLine (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/numbering/numbering.description.yaml#sameLine: recorded sound, proved whole on all 1 boards
+ok  numbering  sandwich                       3  sound    (want sound   )     6 queries    0.0s
+ok  numbering  sandwich (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/numbering/numbering.description.yaml#sandwich: recorded sound, proved whole on all 1 boards
+ok  numbering  pair                           3  sound    (want sound   )     6 queries    0.0s
+ok  numbering  pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/numbering/numbering.description.yaml#pair: recorded sound, proved whole on all 1 boards
+ok  numbering  boxedIn                        3  sound    (want sound   )     9 queries    0.0s
+ok  numbering  boxedIn (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/numbering/numbering.description.yaml#boxedIn: recorded sound, proved whole on all 1 boards

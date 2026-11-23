@@ -1,0 +1,18 @@
+# A defect planted in each of the fixture's techniques, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A square diagonal to a shaded one read as beside it.
+  besideShaded:
+    for: "c in cells where value(c) = 1, x in adj8(c) where not known(x)"
+  # A shaded number read as clear.
+  sameLine:
+    for: "c in cells where value(c) != 0, n = clue(number, c)"
+  # The square between read as shaded.
+  sandwich:
+    conclude: "place(nth(cells(L), index(c, cells(L)) + 1), 1)"
+  # Two equal numbers one apart read as touching.
+  pair:
+    for: >-
+      L in lines, c in cells(L), q = nth(cells(L), index(c, cells(L)) + 2)
+      where q != none and clue(number, q) = clue(number, c)

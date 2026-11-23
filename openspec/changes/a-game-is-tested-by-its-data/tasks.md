@@ -199,8 +199,16 @@
                   only along its length. Seen to fail with the smoothing,
                   the median, the line check and the side of two each
                   planted off.
-            - [ ] Next: the 5 left in `NO_FIXTURE_YET`: the deal's
-                  (`latin`, `oneIn`, `stripFrom`), and
+            - [x] `numbering`: `deal.latin`, on numbers none twice among
+                  a line's clear squares, the shaded ones apart and the clear
+                  ones joined (`deal.test.ts`): a board with nothing shaded
+                  numbered as a Latin square, square and not; a dealt one
+                  with no clear number twice in a line and each shaded number
+                  a clear one's again, in both its lines where it can be.
+                  Seen to fail with the generator not Latin, the renumbering
+                  and its preference for both lines each planted off.
+            - [ ] Next: the 4 left in `NO_FIXTURE_YET`: the deal's
+                  (`oneIn`, `stripFrom`), and
                   `produces: links`, `space.grid.hexagon`. `deal.oneIn` is
                   Sticks' one number on each line, not the grown
                   partition's `closed.oneIn`. `stripFrom` changes only which
