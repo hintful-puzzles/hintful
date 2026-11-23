@@ -457,6 +457,26 @@ commit. In design.md § "Decisions" 7's order.
         cull and singles; the reach's words (the clean, the cull, a note
         leg) stated by the description where they are not a row and a
         column; a cell's notes its own domain (an area's size).
+        Read for it (2026-11-23, at `e18f035c0`): `candidates.ts`'s
+        `candidateFill` refuses units other than `rows,cols` and runs
+        `runLatinCandidatePlan`; it moves to `runCandidatePlan` with
+        `regionsOf` (each unit's line and each distinct partition's part,
+        a part `holdsEvery` where its cells' domains together are as many
+        values as its cells), `singleReason`, `enc` with a cell's `all` its
+        domain, and the notes' words. `notes.ts`'s `reachOf` is the units'
+        peers; where the description has a placing technique of its own
+        (`placing`, Seismic's and `zoning`'s `cull`), the reach is what it
+        strikes from a lone placement, as the hand-written Seismic's
+        `seismicReach` reads it. The compiled `techniques` carry no kind,
+        so the compiler must say which ids are `one.cell`, `one.place` and
+        `peer.placed` (`describe/kinds.ts`), which the walk then leaves out
+        of its own rungs. The Latin words say "row or column" (`hint-text.ts`'s
+        `cleanObviousText`, `noteText`, `narrateLatinReason`'s
+        `regionsFull`); Seismic's description states its own (`phrases:
+        reach`, `steps: note`, `clean`, `cull`, `regionsFull`), which the
+        born walk would read in their place. `zoning` gains `marks: cand`
+        here, with tiers Easy and Normal and a starve-like technique, so the
+        walk is tested past the singles.
   - [ ] 2.7d The flip: `mode` the ruleset, the menu (4x4, 6x6, 6x8 and 7x9
         in both, Easy), the keypad to the largest area dealt, an area of one
         a leading technique, Seismic's tests to `seismic.cases.yaml`, its
