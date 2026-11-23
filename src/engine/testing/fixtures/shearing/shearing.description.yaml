@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: cells shaded or clear on a hexagon, and numbers
+# counting the shaded cells around them, for the fill engine's tests of a
+# board that is a hexagon stored sheared (`space.grid.hexagon`): its store,
+# its ID, its deal, its cursor and its drawing, on a description that names
+# no game.
+game: shearing
+produces: shading
+sizes:
+  w: { min: 2, max: 12 }
+  h: { min: 2, max: 12 }
+space:
+  grid: { w: "w", h: "h", hexagon: { outside: corner } }
+  units: []
+answer:
+  # 1 shaded, 2 clear.
+  value:
+    sort: cell
+    domain: "{d in range(1, 2) where d = 2 or (clue(corner, c) < 0 and clue(number, c) < 0)}"
+define:
+  # The six cells around c: the two diagonal steps that run with the shear
+  # are no neighbors.
+  around(c): "{p in adj8(c) where x(p) - x(c) != y(p) - y(c)}"
+  shaded(k): "count(p in around(k) where value(p) = 1)"
+  open(k): "count(p in around(k) where value(p) != 2)"
+clues:
+  # A cell of the store outside the hexagon.
+  corner:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 2"
+  # A number: its cell is clear, and as many around it are shaded.
+  number:
+    at: cell
+    value: "range(0, 6)"
+    means: "value(at) = 2 and count(p in around(at) where value(p) = 1) = v"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: "1", glyph: "###", paint: shade }
+    2: { does: mark it clear, key: "2", glyph: " x ", paint: clear }
+  primary: 1
+  secondary: 2
+  blank: 2
+  boards: [5x5]
+  hintMarks:
+    ring: the cell the step decides.
+    outline: the number the step reasons from.
+deal:
+  answer: a cell shaded at random, one in two
+  number: on each clear cell, then as many hidden as the board stays at its tier
+  tier: the one tier
+  sample:
+    scatter: { value: 1, share: 0.5, each: true }
+    rest: 2
+  hide: number
+id:
+  - digits: number
+    apart: "_"
+tiers: [Easy]
+names:
+  met: "a number already met"
+  short: "a number short of shaded cells"
+techniques:
+  - id: met
+    tier: Easy
+    for: "k in cells, n = clue(number, k) where n >= 0 and shaded(k) = n"
+    conclude: "forall c in around(k) where not known(c): place(c, 2)"
+    says:
+      terms: { value: n }
+      marks: { outline: "{k}" }
+      look: "{outline: the {value}} has its shaded cells"
+      move: "{ring: the open cell around it | the open cells around it} must be clear"
+  - id: short
+    tier: Easy
+    for: "k in cells, n = clue(number, k) where n >= 0 and open(k) = n"
+    conclude: "forall c in around(k) where not known(c): place(c, 1)"
+    says:
+      terms: { value: n }
+      marks: { outline: "{k}" }
+      look: "{outline: the {value}} needs every cell around it that is left"
+      move: "{ring: that cell | those cells} must be shaded"

@@ -1,0 +1,10 @@
+# A defect planted in each of the fixture's techniques, which the soundness
+# checks under research/technique-check must find unsound.
+
+techniques:
+  # A number one short of its shaded cells read as met.
+  met:
+    for: "k in cells, n = clue(number, k) where n >= 0 and shaded(k) + 1 = n"
+  # A number with one cell to spare read as needing every one.
+  short:
+    for: "k in cells, n = clue(number, k) where n >= 0 and open(k) = n + 1"

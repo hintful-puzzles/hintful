@@ -38,7 +38,7 @@ const FIXTURES = Object.entries(fixtureTexts).map(([key, text]) => ({
 
 /** The capabilities each fixture does not cover yet, while a born game names
  * them. Each leaves as a fixture names it. */
-const NO_FIXTURE_YET: readonly string[] = ["space.grid.hexagon"];
+const NO_FIXTURE_YET: readonly string[] = [];
 
 type Json = Readonly<Record<string, unknown>>;
 

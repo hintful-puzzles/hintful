@@ -60,7 +60,7 @@
 
 ## 3. Capabilities on their own descriptions
 
-- [ ] 3.1 Fixture descriptions under `src/engine/testing/` or beside the
+- [x] 3.1 Fixture descriptions under `src/engine/testing/` or beside the
       capability's tests, naming no game, and each capability a born
       game names tested on one. Count the capabilities and the ones
       covered; a capability no fixture reaches is listed, not skipped.
@@ -86,7 +86,7 @@
             painter in `render.test.ts` in place of Norinori (seen to fail
             with `joins: false`). `docs/testing.md` § "A capability is
             tested on a fixture".
-      - [ ] The ledger emptied, a fixture at a time, each moving the
+      - [x] The ledger emptied, a fixture at a time, each moving the
             engine tests that import a game's compiled module for that
             capability onto it
             (`git grep -l 'generated/games/.*compiled' -- 'src/engine/**/*.test.ts'`:
@@ -219,8 +219,18 @@
                   pick taken as a line's first square and a line's squares
                   left uncovered (each its own group), the last two in the
                   compiler.
-            - [ ] Next: `space.grid.hexagon`, the one left in
-                  `NO_FIXTURE_YET`.
+            - [x] `shearing`: `space.grid.hexagon`, on numbers counting
+                  the shaded cells among six around (`hexagon.test.ts`): the
+                  store half the height wider, its corners the outside kind
+                  and fixed, an ID writing the hexagon's cells alone; the
+                  outside kind derived on the corners alone (from
+                  `deriveClues`, since an ID writes no corner); the cursor
+                  starting on the hexagon, stepping to six neighbors on the
+                  pad and kept to the hexagon; rows drawn half a tile apart,
+                  no tile for a corner. Seen to fail with the ID's cells, the
+                  cursor's start, its `onBoard`, the pad, the shear, the
+                  drawn cells and (in the compiler) the corners each planted
+                  off. `NO_FIXTURE_YET` is empty.
 
 ## 4. The born games
 
