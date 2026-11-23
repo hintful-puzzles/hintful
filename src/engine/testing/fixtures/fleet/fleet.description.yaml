@@ -1,0 +1,146 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: straight pieces of the lengths a tally gives, none
+# touching even at a corner, with numbers counting each line's piece squares
+# and given squares drawn as their piece, for the fill engine's tests of a
+# tally the params give, a given square's shape, an answer laid a piece at a
+# time, a value only an ID writes and a flag that hides more, on a
+# description that names no game.
+game: fleet
+produces: shading
+sizes:
+  w: { min: 2, max: 9 }
+  h: { min: 2, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a piece square, 2 an empty one; a given square holds what it was
+  # given.
+  value:
+    sort: cell
+    domain: "{d in range(1, 2) where clue(seg, c) < 2 or (d = 2) = (clue(seg, c) = 2)}"
+define:
+  ship(x): "x != none and value(x) = 1"
+  shipsOf(L): "{x in cells(L) where value(x) = 1}"
+  rowPart(c): "stretch(row(c), c, shipsOf(row(c)))"
+  colPart(c): "stretch(col(c), c, shipsOf(col(c)))"
+  boat(c): "rowPart(c) + colPart(c)"
+  # A piece's first square, the one at its top or its left.
+  head(c): "value(c) = 1 and not ship(step(c, 1)) and not ship(step(c, 3))"
+  total: "sum(k in clues(fleet) of length(k) * boats(k))"
+  open(L): "{c in cells(L) where not known(c)}"
+  need(L): "clue(n, L) - count(c in cells(L) where value(c) = 1)"
+  pieces(c): "count(x in adj4(c) where ship(x))"
+shape:
+  - "forall a in cells where value(a) = 1: forall b in adj8(a) where b not in adj4(a): value(b) != 1"
+  - "forall c in cells where head(c): exists k in clues(fleet): length(k) = |boat(c)|"
+  - "forall k in clues(fleet), j in clues(fleet) where j != k: length(j) != length(k)"
+  - "count(c in cells where value(c) = 1) = total"
+clues:
+  # A number beside a row or column: how many of its squares hold a piece.
+  n:
+    at: line
+    value: "range(0, |cells(at)|)"
+    means: "count(c in cells(at) where value(c) = 1) = v"
+  # A given square: 2 empty, and a piece square of a shape, 3 any, 4 a piece
+  # of one square, 5 a piece's end, 6 its middle.
+  seg:
+    at: cell
+    value: "range(2, 6)"
+    means: >-
+      (v = 2 and value(at) = 2) or (v > 2 and value(at) = 1 and (v = 3
+      or (v = 4 and pieces(at) = 0) or (v = 5 and pieces(at) = 1)
+      or (v = 6 and pieces(at) = 2)))
+  # How many pieces of each length.
+  fleet:
+    at: board
+    fields:
+      length: { value: "range(1, max(L in lines of |cells(L)|))" }
+      boats: { value: "range(0, |cells|)" }
+    means: "count(c in cells where head(c) and |boat(c)| = length(k)) = boats(k)"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: place a piece square, key: B, glyph: " # ", paint: hull }
+    2: { does: mark it empty, key: W, glyph: " ~ ", paint: sea }
+  primary: 1
+  secondary: 2
+  blank: 2
+  # A given square is drawn as its piece, in the shape it was given.
+  shape: seg
+  straight: true
+  tally:
+    kind: fleet
+    size:
+      letter: f
+      kw: fleet
+      name: Fleet size
+      doc: The length of the longest piece.
+      max: 3
+      default: 2
+    counts:
+      kw: fleet-data
+      name: Fleet configuration
+      doc: How many pieces of each length, the shortest first.
+  boards: [5x5f2]
+  hintMarks:
+    ring: the squares the step decides.
+    outline: the piece square the step reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: the fleet, longest piece first, each where it fits, at random
+  n: every number, or as many hidden as the board still finishes where asked
+  seg: each square's shape, as many hidden as the board still finishes
+  tier: the one tier
+  sample:
+    pieces: { value: 1, rest: 2 }
+  # A piece square of any shape is the ID's alone: the deal gives a shape.
+  withhold: { seg: [3] }
+  hide: seg
+  hideFlag:
+    kind: n
+    letter: S
+    kw: strip-clues
+    name: Remove numbers
+    doc: Hide some of the row and column numbers.
+    words: with some numbers removed
+id:
+  - numbers: n
+    order: columns
+    hidden: "-"
+    closed: true
+  - glyphs: seg
+    values: { W: 2, V: 3, S: 4, E: 5, M: 6 }
+tiers: [Easy]
+names:
+  corner: "no two pieces touching at a corner"
+  full: "a line with all its piece squares"
+  room: "a line needing every open square"
+techniques:
+  - id: corner
+    tier: Easy
+    for: >-
+      c in cells where value(c) = 1,
+      x in adj8(c) where x not in adj4(c) and not known(x)
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{c}" }
+      look: "no two pieces touch at a corner"
+      move: "{ring: this square}, at a corner of {outline: the outlined one}, must be empty"
+  - id: full
+    tier: Easy
+    for: "L in lines, O = open(L) where |O| > 0 and clue(n, L) >= 0 and need(L) = 0"
+    conclude: "forall c in O: place(c, 2)"
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}} already has all its piece squares"
+      move: "{ring: its open square | its open squares} must be empty"
+  - id: room
+    tier: Easy
+    for: "L in lines, O = open(L) where |O| > 0 and clue(n, L) >= 0 and need(L) = |O|"
+    conclude: "forall c in O: place(c, 1)"
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}} still needs every open square"
+      move: "{ring: its open square | its open squares} must be piece squares"

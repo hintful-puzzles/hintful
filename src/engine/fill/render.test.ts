@@ -2,10 +2,12 @@
  * A fill game drawn by layers, on boards built by hand: what each layer puts
  * on the canvas, read from a recording. The painters and the labels are drawn
  * on fixtures, and a link, and the clues and errors a board's rules give, on
- * the `linking` one. A wash and a number drawn plain are `washing`'s.
+ * the `linking` one. A wash and a number drawn plain are `washing`'s, and a
+ * square given its piece's shape `fleet`'s.
  */
 
 import { describe, expect, it } from "vitest";
+import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as joining from "../../generated/engine/testing/fixtures/joining/joining.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as painting from "../../generated/engine/testing/fixtures/painting/painting.compiled.ts";
@@ -337,5 +339,33 @@ describe("a wash, and a number drawn plain", () => {
       open,
     );
     expect(fillGame("washing", washing).statusbarText).toBeUndefined();
+  });
+});
+
+describe("a square given its piece's shape", () => {
+  // A piece of two along the top of a 3x3, its left end given: the columns'
+  // counts, then the rows', then the end.
+  const game = fillGame("fleet", fleet);
+  const id = "3x3f2de,0,1:1,1,0,2,0,0,Eh";
+  const frame = (moves: { set: number[] }[]) =>
+    renderScenario({ game, id, moves }).recording.ops;
+  /** Each piece's outline's leftmost and rightmost x, in the top row. */
+  const topRow = (ops: readonly DrawOp[]) =>
+    ops.flatMap((o) => {
+      if (o.op !== "polygon" || Math.max(...o.points.map(([, y]) => y)) > TS) return [];
+      const xs = o.points.map(([x]) => x);
+      return [[Math.min(...xs), Math.max(...xs)]];
+    });
+
+  it("is drawn as its piece, shaped as in the answer before its neighbor is placed", () => {
+    const [given] = topRow(frame([]));
+    const [same, placed] = topRow(frame([{ set: [1, PIECE] }]));
+    expect(same).toEqual(given);
+    // It runs to the side it shares with the rest of its piece.
+    expect(given[1]).toBe(placed[0]);
+  });
+
+  it("is never written as a number: the only numbers are the lines'", () => {
+    expect(texts(frame([]))).toEqual(["2", "0", "0", "1", "1", "0"]);
   });
 });

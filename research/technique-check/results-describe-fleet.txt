@@ -1,0 +1,9 @@
+ok  fleet      corner                         3  sound    (want sound   )     9 queries    0.1s
+ok  fleet      corner (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/fleet/fleet.description.yaml#corner: recorded sound, proved whole on all 1 boards
+ok  fleet      full                           3  sound    (want sound   )     6 queries    0.1s
+ok  fleet      full (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/fleet/fleet.description.yaml#full: recorded sound, proved whole on all 1 boards
+ok  fleet      room                           3  sound    (want sound   )     6 queries    0.1s
+ok  fleet      room (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/fleet/fleet.description.yaml#room: recorded sound, proved whole on all 1 boards

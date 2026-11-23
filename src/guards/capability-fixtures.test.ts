@@ -40,7 +40,6 @@ const FIXTURES = Object.entries(fixtureTexts).map(([key, text]) => ({
  * them. Each leaves as a fixture names it. */
 const NO_FIXTURE_YET: readonly string[] = [
   "deal.grow",
-  "deal.hideFlag",
   "deal.latin",
   "deal.leaves",
   "deal.never",
@@ -51,14 +50,10 @@ const NO_FIXTURE_YET: readonly string[] = [
   "deal.sample.first",
   "deal.sample.mend",
   "deal.sample.picture",
-  "deal.sample.pieces",
   "deal.stripFrom",
   "deal.symmetric",
   "deal.thorough",
   "deal.unpair",
-  "deal.withhold",
-  "play.shape",
-  "play.tally",
   "produces: links",
   "space.grid.hexagon",
   "space.regions",

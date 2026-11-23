@@ -8,14 +8,15 @@
  */
 
 import { describe, expect, it } from "vitest";
+import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
 import { descValue } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
 import { newBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
-import { decodeDesc } from "./game-id.ts";
-import { sampleAnswer, sampleLines } from "./sample.ts";
+import { decodeDesc, givenOf } from "./game-id.ts";
+import { sampleAnswer, sampleLines, samplePieces } from "./sample.ts";
 
 const PIECE = 1;
 const SHADED = 1;
@@ -121,6 +122,89 @@ describe("an answer laid a line at a time", () => {
       expect(Array.from(solved.values, (v) => v.toString(36)).join("")).toBe(aux);
       if (diff > 0)
         expect(solveBoard(sizing, board, diff - 1).verdict).not.toBe("solved");
+    }
+  });
+});
+
+describe("an answer laid a piece at a time", () => {
+  /** Each piece of `g` on a `w`-wide board by its first cell, and its length. */
+  const pieces = (g: Uint8Array, w: number): number[] => {
+    const at = (c: number, dx: number, dy: number) => {
+      const x = (c % w) + dx;
+      const y = Math.floor(c / w) + dy;
+      return x >= 0 && y >= 0 && x < w && y * w < g.length ? y * w + x : null;
+    };
+    const run = (c: number, dx: number, dy: number): number => {
+      const n = at(c, dx, dy);
+      return n !== null && g[n] === PIECE ? 1 + run(n, dx, dy) : 1;
+    };
+    const lengths: number[] = [];
+    g.forEach((v, c) => {
+      const up = at(c, 0, -1);
+      const left = at(c, -1, 0);
+      if (v !== PIECE || (up !== null && g[up] === PIECE)) return;
+      if (left !== null && g[left] === PIECE) return;
+      lengths.push(Math.max(run(c, 1, 0), run(c, 0, 1)));
+    });
+    return lengths.sort();
+  };
+
+  it("lays the tally's pieces, straight, none touching even at a corner", () => {
+    const sp = spaceOf(fleet, { w: 6, h: 6 });
+    for (const seed of ["pieces-a", "pieces-b", "pieces-c"]) {
+      const g = samplePieces(fleet.deal.sample, 6, 6, [2, 1, 1], randomNew(seed));
+      if (g === null) throw new Error(`no room on ${seed}`);
+      expect(pieces(g, 6)).toEqual([1, 1, 2, 3]);
+      for (const c of sp.cells.filter((c) => g[c] === PIECE))
+        for (const o of sp.adj8[c].filter((o) => !sp.adj4[c].includes(o)))
+          expect(g[o]).not.toBe(PIECE);
+    }
+  });
+
+  it("never deals the value only an ID writes, though it holds on every piece", () => {
+    const sp = spaceOf(fleet, { w: 6, h: 6 });
+    const g = samplePieces(fleet.deal.sample, 6, 6, [2, 1, 1], null);
+    if (g === null) throw new Error("no room");
+    const { seg } = fleet.deriveClues(
+      g,
+      sp,
+      {},
+      {
+        fleet: { n: 3, length: [1, 2, 3], boats: [2, 1, 1] },
+      },
+    );
+    // Each piece square is given its shape, a lone one, an end or a middle.
+    expect(seg.at.length).toBe(36);
+    expect(new Set(seg.v)).toEqual(new Set([2, 4, 5, 6]));
+    // An ID gives it, and the board reads it.
+    const read = descValue(
+      decodeDesc<fleet.Dealt>(
+        fleet.deal,
+        spaceOf(fleet, { w: 2, h: 2 }),
+        fleet.clueMax,
+        "1,0,1,0,Vc",
+      ),
+    );
+    expect(Array.from(read.seg.v)).toEqual([3]);
+  });
+
+  it("hides the flag's kind too where the flag is on, and only there", () => {
+    const sp = spaceOf(fleet, { w: 5, h: 5 });
+    const shown = (hides: boolean, seed: string): number => {
+      const p = { w: 5, h: 5, diff: 0, tally: [2, 1], hides };
+      const { desc, aux } = dealFill(fleet, fleet.deal, p, randomNew(seed));
+      const clues = descValue(
+        decodeDesc<fleet.Dealt>(fleet.deal, sp, fleet.clueMax, desc),
+      );
+      const board = newBoard(fleet, 5, 5, { ...clues, ...givenOf(fleet.deal, p) });
+      const solved = solveBoard(fleet, board, 0);
+      expect(solved.verdict).toBe("solved");
+      expect(Array.from(solved.values, (v) => v.toString(36)).join("")).toBe(aux);
+      return clues.n.at.length;
+    };
+    for (const seed of ["flag-a", "flag-b", "flag-c"]) {
+      expect(shown(false, seed)).toBe(sp.lines.length);
+      expect(shown(true, seed)).toBeLessThan(sp.lines.length);
     }
   });
 });

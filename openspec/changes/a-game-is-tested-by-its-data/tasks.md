@@ -143,17 +143,23 @@
                   fail with the wash's bits, the preference, the rules'
                   reading and (in the compiler, for the fixture alone)
                   `plain` each planted off.
-            - [ ] Next: the 23 left in `NO_FIXTURE_YET`, grouped by what
-                  one board can show: the deal's (`grow`, `hideFlag`,
-                  `latin`, `leaves`, `never`, `oneIn`, `options`,
-                  `stripFrom`, `symmetric`, `thorough`, `unpair`,
-                  `withhold`, and `sample`'s `climb`, `dominoes`, `first`,
-                  `mend`, `picture`, `pieces`), play's (`shape`, `tally`),
-                  and `produces: links`, `space.grid.hexagon`,
-                  `space.regions`. A fleet-like fixture (`shape`, `tally`,
-                  `pieces`, `withhold`, `hideFlag`) and one of walls
-                  (`first`, `leaves`, `stripFrom`, `symmetric`, `options`)
-                  would each take several.
+            - [x] `fleet`: `play.tally`, `play.shape`,
+                  `deal.sample.pieces`, `deal.withhold` and
+                  `deal.hideFlag`, on straight pieces none touching even at
+                  a corner (`game-id.test.ts`, `deal.test.ts`,
+                  `render.test.ts`). Seen to fail with the tally's default
+                  counts, the sample's corner, the withheld value, the
+                  flag's hide and a given's shape in the painter each
+                  planted off; without `shape` the compiler refuses the
+                  fixture, its kind read as a number of no cells.
+            - [ ] Next: the 18 left in `NO_FIXTURE_YET`, grouped by what
+                  one board can show: the deal's (`grow`, `latin`,
+                  `leaves`, `never`, `oneIn`, `options`, `stripFrom`,
+                  `symmetric`, `thorough`, `unpair`, and `sample`'s
+                  `climb`, `dominoes`, `first`, `mend`, `picture`), and
+                  `produces: links`, `space.grid.hexagon`,
+                  `space.regions`. One of walls (`first`, `leaves`,
+                  `stripFrom`, `symmetric`, `options`) would take several.
 
 ## 4. The born games
 
