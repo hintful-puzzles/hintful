@@ -101,6 +101,16 @@
                   one and with the `given` hook planted off. A test that a
                   painter draws its error was dropped: the mistake outline
                   made it pass on a painter planted to ignore it.
+            - [x] `playing`: `play.dealt`, `erase`, `wrap`, `hides`,
+                  `sweepWith` and `labels`; `play.test.ts`'s cases but the
+                  link's moved onto it, and `render.test.ts`'s labels. Seen
+                  to fail with `wrap`, the erase letter and `dealt` each
+                  planted off.
+            - [ ] Next: a linking fixture (`links`, `glance`, `askBefore`,
+                  `deal.sample.partner`, `noBareLine`), taking the Tents
+                  cases left in `play`, `render`, `hint` and `board` and
+                  the sampling ones in `deal.test.ts`; `board.test.ts`'s
+                  upstream text format belongs in `tents.cases.yaml`.
 
 ## 4. The born games
 

@@ -1,9 +1,10 @@
 /**
- * A fill game's input, built from its `play:`, on Tents' compiled module and
- * a board dealt from a hand-drawn answer.
+ * A fill game's input, built from its `play:`, on the `playing` fixture, and
+ * a link's on Tents' compiled module, each on a board built by hand.
  */
 
 import { describe, expect, it } from "vitest";
+import * as playing from "../../generated/engine/testing/fixtures/playing/playing.compiled.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { UI_UPDATE } from "../contract/game.ts";
 import {
@@ -19,27 +20,23 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../input/pointer.ts";
-import { type FillBoard, newBoard, spaceOf } from "./board.ts";
+import { clueList } from "../solve/describe-runtime.ts";
+import {
+  type Clues,
+  type FillBoard,
+  type FillModule,
+  newBoard,
+  spaceOf,
+} from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { type FillPlay, type FillUi, fillInput, newFillUi } from "./play.ts";
 
-const TENT = 1;
-const GRASS = 2;
+const SHADED = 1;
+const CROSSED = 2;
 
-const play: FillPlay = tents.play;
-
-// Tents (T), trees (R) and grass (.), the trees at 1, 11 and 12.
-const ANSWER = ["TR..", "...T", "...R", "RT.."];
 const W = 4;
 const TS = 10;
 const ds = { tileSize: TS };
-const input = fillInput<tents.Dealt, typeof ds>(tents, play, () => 0);
-
-function dealt(): FillBoard<tents.Dealt> {
-  const g = Uint8Array.from(ANSWER.join(""), (ch) => "_T.R".indexOf(ch));
-  const sp = spaceOf(tents, { w: W, h: W });
-  return newBoard(tents, W, W, tents.deriveClues(g, sp));
-}
 
 const at = (c: number) => ({
   x: (c % W) * TS + TS / 2,
@@ -48,17 +45,20 @@ const at = (c: number) => ({
 const NOWHERE = { x: -1, y: -1 };
 
 /** The board after each of `steps`, a button at a cell, and the edits made. */
-function play_(
-  board: FillBoard<tents.Dealt>,
+function drive<C extends Clues<C>>(
+  module: FillModule<C>,
+  play: FillPlay,
+  board: FillBoard<C>,
   ui: FillUi,
   steps: readonly (readonly [number, number])[],
-): { board: FillBoard<tents.Dealt>; edits: Edit[] } {
+): { board: FillBoard<C>; edits: Edit[] } {
+  const input = fillInput<C, typeof ds>(module, play, () => 0);
   const edits: Edit[] = [];
   for (const [button, c] of steps) {
     const got = input.interpretMove(board, ui, ds, c < 0 ? NOWHERE : at(c), button);
     if (got !== null && got !== UI_UPDATE) {
       edits.push(got);
-      board = applyEdit(tents, board, got);
+      board = applyEdit(module, board, got);
     }
   }
   return { board, edits };
@@ -71,29 +71,67 @@ const click = (button: number, release: number, c: number) =>
   ] as const;
 
 describe("a fill game's input", () => {
+  // Squares dealt holding their value at 1 (shaded) and 11 (crossed); the
+  // line counts play no part.
+  const GIVEN = { 1: SHADED, 11: CROSSED };
+  function dealt(): FillBoard<playing.Dealt> {
+    const sp = spaceOf(playing, { w: W, h: W });
+    const { count } = playing.deriveClues(new Uint8Array(W * W).fill(CROSSED), sp);
+    const given = clueList(
+      Object.keys(GIVEN).map(Number),
+      Object.values(GIVEN),
+      sp.cells.length,
+    );
+    return newBoard(playing, W, W, { given, count });
+  }
+  // Both buttons' drags sweep where the description names no `sweepWith`.
+  const { sweepWith: _sweepWith, ...both } = playing.play as FillPlay;
+  const play_ = (
+    board: FillBoard<playing.Dealt>,
+    ui: FillUi,
+    steps: readonly (readonly [number, number])[],
+    play: FillPlay = both,
+  ) => drive(playing, play, board, ui, steps);
+  const previewed = (b: FillBoard<playing.Dealt>, ui: FillUi, play: FillPlay = both) =>
+    fillInput<playing.Dealt, typeof ds>(playing, play, () => 0).previewed(b, ui);
+
+  it("holds each square dealt its value, fixed", () => {
+    const board = dealt();
+    for (const [c, v] of Object.entries(GIVEN)) {
+      expect(board.values[Number(c)]).toBe(v);
+      expect(board.fixed[Number(c)]).toBe(1);
+    }
+    expect(board.fixed.reduce((a, b) => a + b, 0)).toBe(2);
+  });
+
   it("toggles a cell with its button's value, and leaves a fixed one", () => {
     const ui = newFillUi();
     let { board } = play_(dealt(), ui, click(LEFT_BUTTON, LEFT_RELEASE, 0));
-    expect(board.values[0]).toBe(TENT);
+    expect(board.values[0]).toBe(SHADED);
     ({ board } = play_(board, ui, click(LEFT_BUTTON, LEFT_RELEASE, 0)));
     expect(board.values[0]).toBe(0);
     ({ board } = play_(board, ui, click(RIGHT_BUTTON, RIGHT_RELEASE, 2)));
-    expect(board.values[2]).toBe(GRASS);
+    expect(board.values[2]).toBe(CROSSED);
     const { edits } = play_(board, ui, click(LEFT_BUTTON, LEFT_RELEASE, 1));
     expect(edits).toEqual([]);
   });
 
   it("paints the open cells of one row with a right drag, as it previews", () => {
     const ui = newFillUi();
-    const start = applyEdit(tents, dealt(), { set: [6, TENT] });
+    const start = applyEdit(playing, dealt(), { set: [6, SHADED] });
     // Down a little and along: the drag keeps to row 1.
     play_(start, ui, [
       [RIGHT_BUTTON, 4],
       [RIGHT_DRAG, 9],
       [RIGHT_DRAG, 7],
     ]);
-    const shown = input.previewed(start, ui);
-    expect(Array.from(shown.values.slice(4, 8))).toEqual([GRASS, GRASS, TENT, GRASS]);
+    const shown = previewed(start, ui);
+    expect(Array.from(shown.values.slice(4, 8))).toEqual([
+      CROSSED,
+      CROSSED,
+      SHADED,
+      CROSSED,
+    ]);
     const { board } = play_(start, ui, [[RIGHT_RELEASE, 7]]);
     expect(Array.from(board.values)).toEqual(Array.from(shown.values));
     expect(ui.drag.live).toBe(false);
@@ -101,14 +139,19 @@ describe("a fill game's input", () => {
 
   it("fills a row with a straight left drag, keeping the square ruled out", () => {
     const ui = newFillUi();
-    const start = applyEdit(tents, dealt(), { set: [6, GRASS] });
+    const start = applyEdit(playing, dealt(), { set: [6, CROSSED] });
     const { board, edits } = play_(start, ui, [
       [LEFT_BUTTON, 4],
       [LEFT_DRAG, 5],
       [LEFT_DRAG, 7],
       [LEFT_RELEASE, 7],
     ]);
-    expect(Array.from(board.values.slice(4, 8))).toEqual([TENT, TENT, GRASS, TENT]);
+    expect(Array.from(board.values.slice(4, 8))).toEqual([
+      SHADED,
+      SHADED,
+      CROSSED,
+      SHADED,
+    ]);
     expect(edits).toHaveLength(1);
   });
 
@@ -119,116 +162,177 @@ describe("a fill game's input", () => {
       [LEFT_DRAG, 5],
       [LEFT_DRAG, 10],
     ]);
-    const shown = input.previewed(dealt(), ui);
+    const shown = previewed(dealt(), ui);
     expect(Array.from(shown.values.slice(4, 12))).toEqual([
-      TENT,
-      TENT,
-      TENT,
+      SHADED,
+      SHADED,
+      SHADED,
       0,
       0,
       0,
       0,
-      3,
+      CROSSED,
     ]);
   });
 
   it("empties what the first square held along a drag that starts on it", () => {
     const ui = newFillUi();
-    const start = applyEdit(tents, dealt(), { set: [4, TENT, 5, TENT, 6, GRASS] });
+    const start = applyEdit(playing, dealt(), {
+      set: [4, SHADED, 5, SHADED, 6, CROSSED],
+    });
     const { board } = play_(start, ui, [
       [LEFT_BUTTON, 4],
       [LEFT_DRAG, 6],
       [LEFT_RELEASE, 6],
     ]);
-    expect(Array.from(board.values.slice(4, 7))).toEqual([0, 0, GRASS]);
+    expect(Array.from(board.values.slice(4, 7))).toEqual([0, 0, CROSSED]);
   });
 
   describe("where the drag follows the pointer", () => {
-    const { straight: _straight, ...free } = play;
-    const freeInput = fillInput<tents.Dealt, typeof ds>(tents, free, () => 0);
-    const drive = (
-      inp: typeof freeInput,
-      board: FillBoard<tents.Dealt>,
-      ui: FillUi,
-      steps: readonly (readonly [number, number])[],
-    ) => {
-      for (const [button, c] of steps) {
-        const got = inp.interpretMove(board, ui, ds, c < 0 ? NOWHERE : at(c), button);
-        if (got !== null && got !== UI_UPDATE) board = applyEdit(tents, board, got);
-      }
-      return board;
-    };
+    const { straight: _straight, ...free } = both;
 
     it("fills the squares it passes, round a corner, as one edit", () => {
       const ui = newFillUi();
-      const board = drive(freeInput, dealt(), ui, [
-        [RIGHT_BUTTON, 4],
-        [RIGHT_DRAG, 5],
-        [RIGHT_DRAG, 9],
-        [RIGHT_DRAG, 10],
-      ]);
-      const shown = freeInput.previewed(board, ui);
+      const { board } = play_(
+        dealt(),
+        ui,
+        [
+          [RIGHT_BUTTON, 4],
+          [RIGHT_DRAG, 5],
+          [RIGHT_DRAG, 9],
+          [RIGHT_DRAG, 10],
+        ],
+        free,
+      );
+      const shown = previewed(board, ui, free);
       expect(Array.from(shown.values.slice(4, 11))).toEqual([
-        GRASS,
-        GRASS,
+        CROSSED,
+        CROSSED,
         0,
         0,
         0,
-        GRASS,
-        GRASS,
+        CROSSED,
+        CROSSED,
       ]);
-      const done = drive(freeInput, board, ui, [[RIGHT_RELEASE, 10]]);
+      const done = play_(board, ui, [[RIGHT_RELEASE, 10]], free).board;
       expect(Array.from(done.values)).toEqual(Array.from(shown.values));
     });
 
     it("takes the squares between two far-apart pointer events", () => {
       const ui = newFillUi();
-      const board = drive(freeInput, dealt(), ui, [
-        [RIGHT_BUTTON, 4],
-        [RIGHT_DRAG, 7],
-        [RIGHT_RELEASE, 7],
-      ]);
+      const { board } = play_(
+        dealt(),
+        ui,
+        [
+          [RIGHT_BUTTON, 4],
+          [RIGHT_DRAG, 7],
+          [RIGHT_RELEASE, 7],
+        ],
+        free,
+      );
       expect(Array.from(board.values.slice(4, 8))).toEqual([
-        GRASS,
-        GRASS,
-        GRASS,
-        GRASS,
+        CROSSED,
+        CROSSED,
+        CROSSED,
+        CROSSED,
       ]);
     });
+  });
 
-    it("drags with one button alone where `sweepWith` names it", () => {
-      const one = fillInput<tents.Dealt, typeof ds>(
-        tents,
-        { ...free, sweepWith: "secondary" },
-        () => 0,
-      );
-      const left = drive(one, dealt(), newFillUi(), [
+  it("drags with one button alone where `sweepWith` names it", () => {
+    const left = play_(
+      dealt(),
+      newFillUi(),
+      [
         [LEFT_BUTTON, 4],
         [LEFT_DRAG, 5],
         [LEFT_RELEASE, 5],
-      ]);
-      expect(Array.from(left.values.slice(4, 6))).toEqual([TENT, 0]);
-      const right = drive(one, dealt(), newFillUi(), [
+      ],
+      playing.play,
+    ).board;
+    expect(Array.from(left.values.slice(4, 6))).toEqual([SHADED, 0]);
+    const right = play_(
+      dealt(),
+      newFillUi(),
+      [
         [RIGHT_BUTTON, 4],
         [RIGHT_DRAG, 5],
         [RIGHT_RELEASE, 5],
-      ]);
-      expect(Array.from(right.values.slice(4, 6))).toEqual([GRASS, GRASS]);
-    });
+      ],
+      playing.play,
+    ).board;
+    expect(Array.from(right.values.slice(4, 6))).toEqual([CROSSED, CROSSED]);
   });
 
   it("flips the hidden numbers with a press off the grid, a drag game's too", () => {
-    const hiding = fillInput<tents.Dealt, typeof ds>(
-      tents,
-      { ...play, hides: { value: TENT, pref: { kw: "k", name: "n" } } },
-      () => 0,
-    );
     const ui = newFillUi();
-    expect(hiding.interpretMove(dealt(), ui, ds, { x: 100, y: 5 }, LEFT_BUTTON)).toBe(
+    const input = fillInput<playing.Dealt, typeof ds>(playing, playing.play, () => 0);
+    expect(input.interpretMove(dealt(), ui, ds, { x: 100, y: 5 }, LEFT_BUTTON)).toBe(
       UI_UPDATE,
     );
     expect(ui.hiddenShown).toBe(true);
+    const { hides: _hides, ...plain } = both;
+    const off = fillInput<playing.Dealt, typeof ds>(playing, plain, () => 0);
+    expect(
+      off.interpretMove(dealt(), newFillUi(), ds, { x: 100, y: 5 }, LEFT_BUTTON),
+    ).not.toBe(UI_UPDATE);
   });
+
+  it("carries the cursor past the grid's edge to the other edge, where it wraps", () => {
+    const ui = newFillUi();
+    ui.cursor.visible = true;
+    ui.cursor.x = W - 1;
+    play_(dealt(), ui, [[CURSOR_RIGHT, -1]]);
+    expect(ui.cursor.x).toBe(0);
+    const { wrap: _wrap, ...edged } = both;
+    const stays = newFillUi();
+    stays.cursor.visible = true;
+    stays.cursor.x = W - 1;
+    play_(dealt(), stays, [[CURSOR_RIGHT, -1]], edged);
+    expect(stays.cursor.x).toBe(W - 1);
+  });
+
+  it("paints the secondary value from the keyboard with Shift, and over the primary with Ctrl", () => {
+    const ui = newFillUi();
+    ui.cursor.visible = true;
+    let board = applyEdit(playing, dealt(), { set: [4, SHADED] });
+    ({ board } = play_(board, ui, [[CURSOR_DOWN | MOD_SHFT, -1]]));
+    expect(board.values[0]).toBe(CROSSED);
+    expect(board.values[4]).toBe(SHADED);
+    ({ board } = play_(board, ui, [[CURSOR_DOWN | MOD_CTRL, -1]]));
+    expect(board.values[4]).toBe(CROSSED);
+    expect(board.values[8]).toBe(CROSSED);
+  });
+
+  it("places each value by its key, and empties a cell by the erase keys", () => {
+    const ui = newFillUi();
+    ui.cursor.visible = true;
+    let { board } = play_(dealt(), ui, [["s".charCodeAt(0), -1]]);
+    expect(board.values[0]).toBe(SHADED);
+    ({ board } = play_(board, ui, [["X".charCodeAt(0), -1]]));
+    expect(board.values[0]).toBe(CROSSED);
+    ({ board } = play_(board, ui, [["b".charCodeAt(0), -1]]));
+    expect(board.values[0]).toBe(0);
+    ({ board } = play_(board, ui, [[CURSOR_SELECT, -1]]));
+    expect(board.values[0]).toBe(SHADED);
+    ({ board } = play_(board, ui, [[8, -1]]));
+    expect(board.values[0]).toBe(0);
+  });
+});
+
+describe("a fill game's link", () => {
+  const TENT = 1;
+  // Tents (T), trees (R) and grass (.), the trees at 1, 11 and 12.
+  const ANSWER = ["TR..", "...T", "...R", "RT.."];
+  function dealt(): FillBoard<tents.Dealt> {
+    const g = Uint8Array.from(ANSWER.join(""), (ch) => "_T.R".indexOf(ch));
+    return newBoard(tents, W, W, tents.deriveClues(g, spaceOf(tents, { w: W, h: W })));
+  }
+  const play_ = (
+    board: FillBoard<tents.Dealt>,
+    ui: FillUi,
+    steps: readonly (readonly [number, number])[],
+  ) => drive(tents, tents.play, board, ui, steps);
 
   it("joins a tree and the open square beside it with a left drag, placing the tent, and parts them", () => {
     const ui = newFillUi();
@@ -263,32 +367,5 @@ describe("a fill game's input", () => {
     expect(board.mark[13]).toBe(2);
     expect(board.mark[8]).toBe(-1);
     expect(ui.cursor.x).toBe(1);
-  });
-
-  it("paints grass from the keyboard with Shift, and over tents with Ctrl", () => {
-    const ui = newFillUi();
-    ui.cursor.visible = true;
-    let board = applyEdit(tents, dealt(), { set: [4, TENT] });
-    ({ board } = play_(board, ui, [[CURSOR_DOWN | MOD_SHFT, -1]]));
-    expect(board.values[0]).toBe(GRASS);
-    expect(board.values[4]).toBe(TENT);
-    ({ board } = play_(board, ui, [[CURSOR_DOWN | MOD_CTRL, -1]]));
-    expect(board.values[4]).toBe(GRASS);
-    expect(board.values[8]).toBe(GRASS);
-  });
-
-  it("places each value by its key, and empties a cell by the erase keys", () => {
-    const ui = newFillUi();
-    ui.cursor.visible = true;
-    let { board } = play_(dealt(), ui, [["t".charCodeAt(0), -1]]);
-    expect(board.values[0]).toBe(TENT);
-    ({ board } = play_(board, ui, [["N".charCodeAt(0), -1]]));
-    expect(board.values[0]).toBe(GRASS);
-    ({ board } = play_(board, ui, [["b".charCodeAt(0), -1]]));
-    expect(board.values[0]).toBe(0);
-    ({ board } = play_(board, ui, [[CURSOR_SELECT, -1]]));
-    expect(board.values[0]).toBe(TENT);
-    ({ board } = play_(board, ui, [[8, -1]]));
-    expect(board.values[0]).toBe(0);
   });
 });

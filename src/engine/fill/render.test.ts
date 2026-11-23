@@ -1,16 +1,19 @@
 /**
- * A fill game drawn by layers, on Tents' compiled module and a board dealt
- * from a hand-drawn answer: what each layer puts on the canvas, read from a
- * recording.
+ * A fill game drawn by layers, on boards built by hand: what each layer puts
+ * on the canvas, read from a recording. The painters and the labels are drawn
+ * on fixtures; a link, and the clues and errors Tents' rules give, on Tents'
+ * compiled module until a fixture names a link.
  */
 
 import { describe, expect, it } from "vitest";
 import * as joining from "../../generated/engine/testing/fixtures/joining/joining.compiled.ts";
 import * as painting from "../../generated/engine/testing/fixtures/painting/painting.compiled.ts";
+import * as playing from "../../generated/engine/testing/fixtures/playing/playing.compiled.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import { PAINTERS } from "../render/pieces/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
+import { clueList } from "../solve/describe-runtime.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.ts";
 import type { FillMistake } from "./answer.ts";
@@ -113,11 +116,39 @@ describe("a fill game drawn by layers", () => {
     const { ops } = draw([{ set: [8, TENT] }]);
     expect(texts(ops, COL_ERROR)).toEqual(["0"]);
   });
+});
 
+describe("a fill game's labels", () => {
   it("draws fixed labels before each line, in a margin the board makes room for", () => {
-    const labels = { start: (i: number) => String(i + 1) };
-    const { ops, render } = draw([], { look: { ...look, labels } });
-    const plain = draw([]).render;
+    const sp = spaceOf(playing, { w: W, h: W });
+    const { count } = playing.deriveClues(new Uint8Array(W * W).fill(2), sp);
+    const state = newBoard(playing, W, W, {
+      given: clueList([], [], sp.cells.length),
+      count,
+    });
+    // Without `hides`, which keeps half a tile round the board to press.
+    const { hides: _hides, ...play } = playing.play;
+    const frame = (labels: FillLook<playing.Dealt>["labels"]) => {
+      const lookOf = { play, lineClues: playing.lineClues, labels };
+      const input = fillInput<playing.Dealt, { tileSize: number }>(
+        playing,
+        play,
+        () => 1,
+      );
+      const render = fillRender(playing, lookOf, input.previewed);
+      const dr = new RecordingDrawing(render.colors(DEFAULT_BACKGROUND));
+      render.redraw(dr, render.newDrawState(state, TS), {
+        state,
+        prev: null,
+        dir: 1,
+        ui: newFillUi(),
+        animTime: 0,
+        flash: NO_FLASH,
+      });
+      return { ops: dr.ops, render };
+    };
+    const { ops, render } = frame(playing.labels);
+    const plain = frame(undefined).render;
     expect(render.origin(TS, { w: W, h: W })).toBe(TS);
     expect(render.computeSize({ w: W, h: W }, TS).w).toBe(
       plain.computeSize({ w: W, h: W }, TS).w + TS - 1,
