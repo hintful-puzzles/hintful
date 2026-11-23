@@ -36,6 +36,19 @@ capability in the engine, written so that the next game uses it by writing
 a description. The review that set this course is
 `openspec/changes/archive/2026-11-21-architectural-review-blue-sky/design.md`.
 
+**A hard decision (owner, 2026-11-23): all of every game's imperative code
+becomes engine capabilities that other games can adopt.** That includes a
+game of a kind no other game shares, and the parts of a game that do not fit
+its family's shape. No game keeps code of its own as its end state. A
+capability with one user is a full success, provided another game could
+adopt it by writing a description. Code addressed to one game, which no
+other game could use in principle, is what this replaces.
+
+- **Adoptable is checked, not assumed.** A capability, or a description
+  key, is adoptable when `docs/descriptions.md` can say what it does
+  without naming the game that first used it, and its code reads only the
+  engine's vocabulary (the next bullet).
+
 - **Code is addressed to a concept, never to a game.** The test of a
   capability is that it reads only the engine's vocabulary: the board's
   elements, values, clues and marks, never a game's own types. That is why
@@ -77,9 +90,11 @@ obvious way, and the porter makes no decision that is not about the puzzle.
 - **A game that does not fit a convention is first a question about the
   convention.** The catalog is to grow, so today's exception is likely the
   first of a category: ask whether the shape can be made more flexible (a
-  parameter, a variant, a family of shapes). Only when it cannot does the game
-  take the override, which is first-class: the game writes the explicit form
-  and its change says why.
+  parameter, a variant, a family of shapes). Where it cannot, the engine
+  gains a capability for the shape the game has, which a later game can
+  adopt; the game does not keep an explicit form of its own (§ "Where the
+  engine is heading: a game is its description"). Its change says why the
+  convention could not stretch.
 - **Game-specific logic is never bent to fit a contract.**
 - **A hint's words are standardized**: the same deduction reads the same in
   every game, and a game keeps wording of its own only where it needs it. A

@@ -318,22 +318,21 @@ an accessor pair, not a `kw`.
   declare
 - **THEN** building the codec throws, naming the missing `kw`
 
-### Requirement: A params encoding the grammar does not fit stays hand-written
+### Requirement: A params encoding the grammar does not fit grows the grammar
 
-A game whose encoding the segment grammar cannot express SHALL keep a
-hand-written codec, which SHALL remain first-class and not be treated as debt.
-The grammar does not express a float-valued param, a leading letter before the
-dimensions, a field mapped to multi-character strings with defaults omitted,
-tail letters accepted in any order, or a boolean encoded as an integer. The
-grammar SHALL NOT grow an option to absorb a single game: an option SHALL
-serve several games, as `whenAbsent` does.
+A game whose params encoding the segment grammar cannot express SHALL be met by a new segment or option, which another game could adopt: it is stated in terms of the encoding's shape, such as a float-valued param or a letter before the dimensions, and never in terms of the game. An option with one user is allowed. A hand-written codec is a game not yet moved to the grammar, not a form a game keeps.
 
 #### Scenario: A bespoke codec is held to the same guarantee
 
-- **WHEN** a game keeps a hand-written codec
+- **WHEN** a game still has a hand-written codec
 - **THEN** its encodings are asserted by the same byte-stability guard as every
   declared one, so the two shapes differ in how they are written and not in
   what is promised
+
+#### Scenario: A shape only one game has
+
+- **WHEN** a game's params put a letter before the dimensions, and no other game's do
+- **THEN** the grammar gains an option for a leading letter, which a later game's declaration can name
 
 ### Requirement: The engine provides the two desc value alphabets
 

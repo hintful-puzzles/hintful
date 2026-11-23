@@ -98,8 +98,8 @@ The long form of each of these is `docs/doctrine.md`.
   there is one obvious way, and the porter makes no decision that is not about
   the puzzle.
 - **A game that does not fit a convention is first a question about the
-  convention.** Only when the shape cannot be made more flexible does the game
-  take an override, and it says why. Game logic is never bent to fit a contract.
+  convention.** Where it cannot stretch, the engine gains a capability another
+  game could adopt, never game code. Game logic is never bent to fit a contract.
 - **A game is heading to be its description alone.** Code is addressed to a
   concept, never to a game, and the framework owns what several games write.
   Refactor as you go: "noticeably cleaner" is reason enough.

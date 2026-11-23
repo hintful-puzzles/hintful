@@ -183,10 +183,11 @@ compatibility decision for the owner.
   skeleton's [`state.ts`](../src/skeleton/grid/state.ts).
 - **A segment names a `paramConfig` field by its `kw`** and uses that item's
   accessors, whatever representation the game gave the field.
-- **Hand-write a grammar the segments do not fit**, and add no segment
-  option for one game (`engine-params`, "A params encoding the grammar does
-  not fit stays hand-written"). Exemplars: a float (Netslide), a letter
-  before the dimensions (Cube), a loop over the tail (Mines).
+- **Grow the grammar for an encoding the segments do not fit**, with a
+  segment or option named for the shape, even if one game uses it
+  (`engine-params`, "A params encoding the grammar does not fit grows the
+  grammar"). Games still hand-written this way: a float (Netslide), a
+  letter before the dimensions (Cube), a loop over the tail (Mines).
 - **A params string is read whole or refused** (`engine-params`, "A params
   string is read whole or refused"): a letter the game does not read where
   it stands is never defaulted and never skipped. A declared codec does
