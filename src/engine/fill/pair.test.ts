@@ -3,12 +3,12 @@
  * cycle and digit keys, the givens dealt as fixed cells and written as
  * upstream's dot runs, a modifier in the params, the answer built by the
  * ladder and its givens hidden, and the pieces and line-shaped live errors
- * the board draws.
+ * the board draws. A piece drawn whole, which does not grow, is the `linking`
+ * fixture's.
  */
 
 import { describe, expect, it } from "vitest";
-import * as tents from "../../generated/games/tents/tents.compiled.ts";
-import { game as tentsGame } from "../../generated/games/tents/tents.game.ts";
+import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as unruly from "../../generated/games/unruly/unruly.compiled.ts";
 import { game as unrulyGame } from "../../generated/games/unruly/unruly.game.ts";
 import { givenSurface } from "../color/palette.ts";
@@ -29,6 +29,7 @@ import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, newBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { applyEdit, type Edit } from "./edit.ts";
+import { fillGame } from "./game.ts";
 import { decodeDesc, encodeDesc, type FillParams, fillParams } from "./game-id.ts";
 import { fillInput, newFillUi } from "./play.ts";
 import { fillRender, PLACE_ANIM_TIME } from "./render.ts";
@@ -179,11 +180,18 @@ describe("a placement's animation", () => {
   });
 
   it("does not run for a piece drawn whole", () => {
-    const p = tentsGame.decodeParams("4x4");
-    const b = tentsGame.newState(p, "cdcc,1,1,1,0,1,1,0,1");
+    // `linking`'s piece is the `tent` painter's, which does not grow.
+    const game = fillGame("linking", linking);
+    const g = Uint8Array.from("PA.....P...AAP..", (ch) => "_P.A".indexOf(ch));
+    const b = newBoard(
+      linking,
+      4,
+      4,
+      linking.deriveClues(g, spaceOf(linking, { w: 4, h: 4 })),
+    );
     const c = b.values.indexOf(0);
-    const tent = applyEdit(tents, b, { set: [c, 1] });
-    expect(tentsGame.animLength?.(b, tent, 1, newFillUi())).toBe(0);
+    const piece = applyEdit(linking, b, { set: [c, 1] });
+    expect(game.animLength?.(b, piece, 1, newFillUi())).toBe(0);
   });
 });
 
