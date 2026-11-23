@@ -77,7 +77,11 @@
       `engine/fill/tally-display.test.ts`'s, on plain values, which 3.1's
       tally fixture may take). A position draws under `preferences`,
       `draws` names a collection color (`yellow-wash`) for a surface with
-      no role, and `brings` is what its last move's placement rules out. `wordings` renders a technique's stated step from terms on
+      no role, and `brings` is what its last move's placement rules out.
+      Left: Pattern (the exhaustive absence), Singles (the `input`
+      section, for its wrapping cursor; its hidden shaded number is a
+      position's `preferences`), Sticks and Bricks (`input` for keys,
+      drags and the hexagon's shear). `wordings` renders a technique's stated step from terms on
       the compiled module (`BornGame.compiled`), the pieces named as the
       hint names them (`pairPieces`); `draws` takes `any` for a piece in
       the game's own colors. A position's
