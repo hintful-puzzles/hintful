@@ -858,6 +858,13 @@ describe("what the fill board reads of a description", () => {
         return j;
       }),
     ).toThrow(/a set of the answer's domain/);
+    // The hint's reading of an unnoted square is a board with notes' alone.
+    expect(() =>
+      compileTents((j: { play: { hintNotes: string } }) => {
+        j.play.hintNotes = "implicit";
+        return j;
+      }),
+    ).toThrow(/hintNotes: the hint reads notes, and `marks` declares none/);
   });
 
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {

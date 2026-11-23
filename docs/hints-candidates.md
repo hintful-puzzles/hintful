@@ -12,7 +12,11 @@ shares are in [`hints.md`](./hints.md), and how a step is drawn is in
 
 ## What every game does
 
-What a game with notes does beyond the skeleton, in order. The file that does
+A game born from its description whose board keeps notes writes none of
+this: the fill board does each step from the compiled module
+(`engine/fill/candidates.ts`, `docs/descriptions.md`).
+
+What a hand-written game with notes does beyond the skeleton, in order. The file that does
 each of these the shared way is
 [`keen/index.ts`](../src/games/keen/index.ts).
 

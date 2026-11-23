@@ -354,7 +354,7 @@ export const LATIN_RUNGS = {
 
 /** The Latin library, as the engine pairs it for every game that places
  * it. */
-const LATIN_LIBRARY: Library = {
+export const LATIN_LIBRARY: Library = {
   rungs: LATIN_RUNGS,
   placing: { "latin.placed": LATIN_PLACING[0] },
 };

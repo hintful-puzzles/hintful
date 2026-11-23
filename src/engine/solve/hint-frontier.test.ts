@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 import type { Point } from "../contract/types.ts";
 import type { CandidateReading } from "../hint/candidate-hint.ts";
+import { bornWithoutNotes } from "../testing/born-games.ts";
 import { dealt } from "../testing/dealt.ts";
 import { enrolledIn, gamesImporting, gamesUsing } from "../testing/enrollment.ts";
 import { HINT_GAMES } from "../testing/hint-games.ts";
@@ -117,13 +118,19 @@ describe("HintFrontier", () => {
   });
 });
 
+/** The hint games whose code may walk the candidate plan: all but a born
+ * board without notes, whose code is the fill board's (`bornWithoutNotes`). */
+const SPEAKS_THE_WALK: readonly string[] = HINT_GAMES.map(([id]) => id).filter(
+  (id) => !bornWithoutNotes(id),
+);
+
 /**
  * The games whose hint plans choose through a `HintFrontier` — derived from
  * each game's own code (it calls `runCandidatePlan` or the Latin preset over
  * it, either of which owns the frontier), never declared.
  */
 const FRONTIER_GAMES: readonly string[] = gamesUsing(
-  HINT_GAMES.map(([id]) => id),
+  SPEAKS_THE_WALK,
   ["runCandidatePlan", "runLatinCandidatePlan"].map((name) => ({
     module: "src/engine/hint/candidate-plan.ts",
     name,
@@ -139,7 +146,7 @@ const FRONTIER_GAMES: readonly string[] = gamesUsing(
  * genuinely imports without walking, this fails and says so, which is the
  * honest outcome; it is not a remembered count. */
 const PLAN_IMPORTERS: readonly string[] = gamesImporting(
-  HINT_GAMES.map(([id]) => id),
+  SPEAKS_THE_WALK,
   (m) => m === "src/engine/hint/candidate-plan.ts",
 );
 

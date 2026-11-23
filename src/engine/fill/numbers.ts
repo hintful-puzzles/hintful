@@ -11,7 +11,11 @@
 
 import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
 import type { KeyLabel, Point } from "../contract/types.ts";
-import { type CandidateMove, candidateGesture } from "../hint/candidate-hint.ts";
+import {
+  type CandidateMove,
+  candidateGesture,
+  DEFAULT_CANDIDATE_READING,
+} from "../hint/candidate-hint.ts";
 import type { PointerAction } from "../input/hint-gesture.ts";
 import { digitKeyCode, digitKeys } from "../input/key-labels.ts";
 import {
@@ -36,7 +40,7 @@ import {
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
-import type { FillUi } from "./play.ts";
+import type { FillPlay, FillUi } from "./play.ts";
 
 /** The largest value a board of numbers on the space `sp` holds: the top of
  * its domain, which is the board's, the same at every cell. */
@@ -47,15 +51,17 @@ function topValue<C>(module: FillModule<C>, sp: GridSpace): number {
 }
 
 /** `ui` as a board of numbers keeps it, which `newUi` gives it: the
- * note-taking cell's fields, and where the board keeps notes (`notes`) its
- * mode and preferences, as every game with notes starts them. */
-export function typedUi(ui: FillUi, notes: boolean): FillUi {
+ * note-taking cell's fields, and where the board keeps notes its mode and
+ * preferences, as every game with notes starts them, the hint's reading the
+ * one `play` declares. */
+export function typedUi(ui: FillUi, play: FillPlay): FillUi {
   ui.cursorFromKeyboard ??= false;
-  if (notes) {
+  if (play.notes === true) {
     ui.pencilMode ??= false;
     ui.pencilSticky ??= true;
     ui.pencilKeepHighlight ??= true;
     ui.autoPencil ??= false;
+    ui.candidateReading ??= play.hintNotes ?? DEFAULT_CANDIDATE_READING;
   }
   return ui;
 }

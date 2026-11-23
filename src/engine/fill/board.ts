@@ -25,6 +25,7 @@ import {
   runLadder,
   TIERS,
 } from "../solve/ladder-runtime.ts";
+import { LATIN_LIBRARY } from "../solve/latin.ts";
 import type { FillPlay } from "./play.ts";
 
 /** A board's clues by kind, a list kind's as lists (Pattern's runs), its
@@ -262,13 +263,14 @@ export function solveBoard<C>(
   return out(isAnswerOf(module, board, marks.grid) ? "solved" : "impossible");
 }
 
-/** The ladder on the board's clues with its variations on. */
-const ladderOf = <C>(module: LadderedFillModule<C>, board: FillBoard<C>) =>
+/** The ladder on the board's clues with its variations on, each library
+ * technique the description places (`use: latin.*`) the engine's. */
+export const ladderOf = <C>(module: LadderedFillModule<C>, board: FillBoard<C>) =>
   describedLadder(
     module as unknown as CompiledLadder<string, string, string>,
     board.dealt as never,
     {},
-    undefined,
+    LATIN_LIBRARY,
     board.variations,
   );
 

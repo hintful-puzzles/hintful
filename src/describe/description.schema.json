@@ -813,6 +813,10 @@
               "additionalProperties": false,
               "properties": {}
             },
+            "hintNotes": {
+              "enum": ["implicit", "populate"],
+              "description": "Where `marks` declares candidate notes, how the hint reads a square with none until the player chooses (the hint-notes preference): `implicit`, as every number its row and column leave it, writing notes only where a step rests on them; `populate`, every candidate penciled in first. `populate` where it is left out (`docs/hints-candidates.md` § \"Choosing the default\")."
+            },
             "values": {
               "type": "object",
               "description": "The values the player places, by the description's value: what its verb does (\"place a tent\"), the letter that places it, its three-character glyph in the text format, and the painter that draws it.",

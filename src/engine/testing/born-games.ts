@@ -79,3 +79,18 @@ export const BORN_GAMES: readonly BornGame[] = Object.entries(descriptions).flat
     ];
   },
 );
+
+/**
+ * Whether game `id` is born and its board keeps no notes (its compiled
+ * `play.notes`). A born game's code is the fill board's, which walks the
+ * candidate plan and speaks the Latin words for a board that keeps notes
+ * alone, so a guard asking what a game's code calls leaves such a game out:
+ * the code says the walk is there, and the game never takes it.
+ */
+export function bornWithoutNotes(id: string): boolean {
+  const born = BORN_GAMES.find((b) => b.id === id);
+  if (born === undefined) return false;
+  return (
+    (born.compiled["play"] as { readonly notes?: true } | undefined)?.notes !== true
+  );
+}

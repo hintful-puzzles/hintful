@@ -9,6 +9,7 @@
 import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
 import type { Point } from "../contract/types.ts";
 import { isDigit } from "../game-id/decimal.ts";
+import type { CandidateReading } from "../hint/candidate-hint.ts";
 import {
   cursorDelta,
   endDrag,
@@ -126,6 +127,10 @@ export interface FillPlay {
   /** Whether a board of numbers keeps the player's candidate notes, a set of
    * values an open cell (`notes.ts`): the description's mark of them. */
   readonly notes?: true;
+  /** Where the board keeps notes, how its hint reads a cell with none until
+   * the player chooses (`candidate-hint.ts`'s `CandidateReading`): the
+   * convention, `populate`, where the description says nothing. */
+  readonly hintNotes?: CandidateReading;
   /** The values the player places, by the description's value. */
   readonly values?: Readonly<Record<number, PlayValue>>;
   /** The values only the deal places, a fixed cell's. */
@@ -209,6 +214,9 @@ export interface FillUi {
   pencilSticky?: boolean;
   pencilKeepHighlight?: boolean;
   autoPencil?: boolean;
+  /** On a board that keeps notes, how its hint reads a cell with none (the
+   * `hint-notes` preference). */
+  candidateReading?: CandidateReading;
 }
 
 export function newFillUi(): FillUi {

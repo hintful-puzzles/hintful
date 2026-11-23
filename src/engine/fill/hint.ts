@@ -38,6 +38,7 @@ import {
   marksOf,
   solveBoard,
 } from "./board.ts";
+import type { CandidateFillHint } from "./candidates.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import { applyMove, type FillMove } from "./notes.ts";
 import type { FillPlay } from "./play.ts";
@@ -49,12 +50,18 @@ export interface FillTarget extends Point {
   readonly mark?: true;
 }
 
-export type FillHint = FiringHint<FillTarget>;
+/** What a step of the fill walk marks. */
+export type FiringFillHint = FiringHint<FillTarget>;
+
+/** A step's marks: the fill walk's, or on a board that keeps notes the
+ * candidate walk's (`candidates.ts`). */
+export type FillHint = FiringFillHint | CandidateFillHint;
 
 /** What the hint reads of a fill game's compiled module beside its ladder. */
 export interface FillHintModule<C> extends LadderedFillModule<C> {
-  /** Every kind of step a firing can be. */
-  readonly SAYS_KINDS: readonly string[];
+  /** Every kind of step a firing can be: none where the description words
+   * no technique of its own. */
+  readonly SAYS_KINDS?: readonly string[];
   readonly STATED?: Readonly<
     Record<
       string,
@@ -75,7 +82,7 @@ export interface FillHintModule<C> extends LadderedFillModule<C> {
 /** A fill game's `Game.hint`, but for its legend of marks, its gesture, and
  * what a placement rules out where the description says. */
 export interface FillHintHooks<C>
-  extends FiringHintParts<FillBoard<C>, FillMove, FillHint, string> {
+  extends FiringHintParts<FillBoard<C>, FillMove, FiringFillHint, string> {
   readonly rungs: readonly string[];
 }
 
@@ -106,15 +113,15 @@ export function pairPieces(
     : null;
 }
 
-export function fillHint<C extends object>(
-  module: FillHintModule<C>,
-): { hint: FillHintHooks<C>; rulesOut?: RulesOut<FillBoard<C>, FillMove> } {
-  const links = module.play?.links;
-  const pieces = pairPieces(module.play);
+/** A board's tier: the lowest at which the ladder finishes it as dealt,
+ * which a hint teaches nothing past. */
+export function tierOfBoard<C extends object>(
+  module: LadderedFillModule<C>,
+): (board: FillBoard<C>) => number {
   // A board's tier is its deal's, which no move changes: every board of one
   // game shares its `dealt`.
   const lowest = new WeakMap<C, number>();
-  const tierOf = (board: FillBoard<C>): number => {
+  return (board) => {
     const known = lowest.get(board.dealt);
     if (known !== undefined) return known;
     const top = module.tiers.length - 1;
@@ -124,6 +131,14 @@ export function fillHint<C extends object>(
     lowest.set(board.dealt, tier);
     return tier;
   };
+}
+
+export function fillHint<C extends object>(
+  module: FillHintModule<C>,
+): { hint: FillHintHooks<C>; rulesOut?: RulesOut<FillBoard<C>, FillMove> } {
+  const links = module.play?.links;
+  const pieces = pairPieces(module.play);
+  const tierOf = tierOfBoard(module);
 
   const described = describedFiringHint<
     FillBoard<C>,
@@ -236,7 +251,7 @@ export function fillHint<C extends object>(
     say: {},
   });
   return {
-    hint: { ...described.hint, rungs: module.SAYS_KINDS },
+    hint: { ...described.hint, rungs: module.SAYS_KINDS ?? [] },
     ...(described.rulesOut === undefined ? {} : { rulesOut: described.rulesOut }),
   };
 }

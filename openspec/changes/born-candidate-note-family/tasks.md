@@ -27,7 +27,7 @@ the `game-lines` ceiling; moves the game's tests to its `cases.yaml`;
 writes its spec deltas; and runs `npm run test:hint-sweeps` before its
 commit. In design.md § "Decisions" 7's order.
 
-- [ ] 2.1 The notes layer on the fill board, before any game flips, tested
+- [x] 2.1 The notes layer on the fill board, before any game flips, tested
       on a fixture description of its own, `squaring` (a small Latin square
       with givens, and then notes). No game moves in it. Three commits, each
       whole on its own:
@@ -53,14 +53,25 @@ commit. In design.md § "Decisions" 7's order.
         `NoteEncoding` for a fill-all that is not `1..w`. `squaring` keeps
         `cand`. The Ui's note fields start as every note game's (sticky on,
         keep-highlight on, auto-pencil off); their prefs are 2.1c's.
-  - [ ] 2.1c The candidate walk built from the compiled module (§ 2), the
+  - [x] 2.1c The candidate walk built from the compiled module (§ 2), the
         Latin library on the fill ladder (`ladderOf` passes
         `LATIN_LIBRARY`), and the four prefs with the reading's default
         declared; `squaring` then places `latin.*`. The walk's reach
         replaces `notes.ts`'s `reachOf` (the units' peers) for auto-pencil
         and Mark-all's clean (design.md § "Decisions" 1). A step's struck
         notes are drawn struck in the cell (`render.ts`'s note grid).
-- [ ] 2.2 Unequal born: clues at edges, a gapped grid, the chevron painter,
+        Built as `engine/fill/candidates.ts` (`candidateFill`): the
+        row/column preset, the library's strikes a leg a cell, worded by the
+        library; `play.hintNotes` declares the reading (`squaring` says
+        `implicit`); `notes.ts`'s `reachOf` is the one reach the walk,
+        auto-pencil and Mark-all read; the struck lane is an
+        `OverlaySidecar` on the tiles. The walk refuses units other than
+        rows and columns and a technique of the description's own: 2.2
+        gives it Unequal's own strikes, worded by `statedParts` over their
+        `step` or `fact`, and 2.7 Seismic's areas and its `cull` reach.
+- [ ] 2.2 Unequal born: the walk's rungs for the description's own
+      techniques (design.md § "Decisions" 2), clues at edges, a gapped grid,
+      the chevron painter,
       done marks on a clue, the cell-records segment, `order` renamed `w`,
       the alphabet past 9, the deal hiding from every clue (§ 5).
 - [ ] 2.3 Adjacent born: records flagged from both cells, the legacy `a`,
@@ -80,7 +91,8 @@ commit. In design.md § "Decisions" 7's order.
       hint reads stated in the description.
 - [ ] 2.7 Seismic born: a partition grown to drawn sizes before the answer,
       the answer searched under it, `T` a ruleset by a bare letter, its
-      reach from the compiled `cull`.
+      reach from the compiled `cull` (`notes.ts`'s `reachOf`), and the
+      walk's regions from units beyond rows and columns, its areas.
 
 ## 3. Finish
 

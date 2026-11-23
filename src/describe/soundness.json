@@ -47,8 +47,6 @@
   "src/engine/testing/fixtures/sizing/sizing.description.yaml#beside": "6e7c45701a7f011a",
   "src/engine/testing/fixtures/sizing/sizing.description.yaml#full": "110040676c15e353",
   "src/engine/testing/fixtures/sizing/sizing.description.yaml#room": "b2777d13a651d7b7",
-  "src/engine/testing/fixtures/squaring/squaring.description.yaml#placed": "09802adba826e5a1",
-  "src/engine/testing/fixtures/squaring/squaring.description.yaml#single": "9c5adb2ae7972ef2",
   "src/engine/testing/fixtures/stretching/stretching.description.yaml#tooLong": "879d33c6cf4d8230",
   "src/engine/testing/fixtures/stretching/stretching.description.yaml#twoClues": "6efa0bb94ecfcd0f",
   "src/engine/testing/fixtures/stretching/stretching.description.yaml#unreachable": "e5203882df688c20",

@@ -151,6 +151,9 @@ export interface PlayJson {
   /** Where the values are the answer's domain, typed into a selected cell:
    * then there are no `values` and no buttons. */
   numbers?: Record<string, never>;
+  /** Where the board keeps notes, how its hint reads a square with none
+   * until the player chooses: `populate` where it says nothing. */
+  hintNotes?: "implicit" | "populate";
   values?: Record<
     string,
     { does: string; key: string | string[]; glyph: string; paint: string }

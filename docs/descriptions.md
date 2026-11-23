@@ -236,7 +236,15 @@ research tools all read through it; the app never does.
   candidate notes: a board of numbers alone keeps them (`play.notes`,
   `engine/fill/notes.ts`), as the shared note-taking cell's moves, so its
   right press, Marks key, Mark-all, auto-pencil and the mistake check's
-  note half are every note-taking game's. `deal.sample: { latin: true }`
+  note half are every note-taking game's. Such a board is hinted by the
+  shared candidate walk (`engine/fill/candidates.ts`) in place of the fill
+  walk, with the four note preferences; `play.hintNotes` states the reading
+  a fresh game starts on (`docs/hints-candidates.md` § "Choosing the
+  default"), `populate` where it says nothing. The walk runs on rows and
+  columns, and its rungs are the Latin library's (`use: latin.*`, which the
+  fill ladder resolves as every Latin game's does), worded by the library;
+  it refuses a technique of the description's own until it can word one.
+  `deal.sample: { latin: true }`
   draws a Latin square. `play.click: cycle` goes round
   empty and both buttons' values. The right button rules out unless its
   value's painter is one of a pair of alike pieces (Unruly's disc), which

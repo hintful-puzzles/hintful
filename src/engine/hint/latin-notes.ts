@@ -6,6 +6,7 @@
  * it builds on `candidate-plan.ts`, which builds on that.
  */
 
+import type { CellMarks } from "../solve/cell-marks.ts";
 import { type Ladder, TIERS } from "../solve/ladder-runtime.ts";
 import { type LatinReason, type LatinRepeats, LatinSolver } from "../solve/latin.ts";
 import type { Mark, NoteEncoding } from "./candidate-hint.ts";
@@ -71,15 +72,20 @@ const LIBRARY_STRIKES: readonly string[] = ["latin.set", "latin.fish", "latin.wi
  * gives it. `split` cuts a firing's strikes into legs; one leg by default.
  * `Reason` is the game's reason union, which holds these.
  */
-export function latinStrikeRungs<M, H, Reason = LatinStrikeReason>(
-  on: NotesLadder<LatinSolver>,
+export function latinStrikeRungs<
+  M,
+  H,
+  Reason = LatinStrikeReason,
+  S extends CellMarks = LatinSolver,
+>(
+  on: NotesLadder<S>,
   o: number,
   split: (marks: Mark[]) => Mark[][] = (marks) => [marks],
 ): CandidateRung<M, H, Reason | LatinStrikeReason>[] {
   return on.ladder.entries
     .filter((e) => LIBRARY_STRIKES.includes(e.id))
     .map((e) =>
-      techniqueRung<M, H, Reason | LatinStrikeReason, LatinSolver>(on, e.id, (f) => {
+      techniqueRung<M, H, Reason | LatinStrikeReason, S>(on, e.id, (f) => {
         const reason = f.reasons[0] as LatinStrikeReason;
         return split(strikesOf(f, o)).map((strike) => ({ strike, reason }));
       }),

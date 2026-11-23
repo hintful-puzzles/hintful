@@ -4,7 +4,8 @@
 # fill engine's tests of a value drawn as its number and typed into a
 # selected square (`play.numbers`), the player's candidate notes (`marks:`),
 # givens compiled from `given:`, an answer sampled as a Latin square, and the
-# Latin library on the fill ladder, on a description that names no game.
+# Latin library on the fill ladder, which the candidate walk hints from the
+# notes, on a description that names no game.
 game: squaring
 produces: latin
 sizes:
@@ -22,9 +23,11 @@ shape:
 freedom: { kind: fill }
 play:
   numbers: {}
+  hintNotes: implicit
   boards: [4x4, 5x5]
   hintMarks:
     ring: the square the step decides.
+    strike: the notes the step crosses out.
     outline: the squares the step reasons from.
     stripes: the line the step is about.
 deal:
@@ -38,22 +41,18 @@ id:
     apart: _
 tiers: [Easy]
 names:
-  placed: "a placed number's row and column"
+  dup: "a placed number's row and column"
   single: "the only number left in a square"
-# A board loads only where deduction solves it, so it has the two steps that
-# solve the boards its tests load.
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only square left for a number"
+  set: "numbers already accounted for"
+  wing: "a wing"
+# The Latin library alone, which the candidate walk words: the hint of a board
+# with notes on the library's steps.
 techniques:
-  - id: placed
-    on: place
-    tier: Easy
-    for: "c in cells where known(c), d = value(c), u in units_of(c)"
-    conclude: "forall p in cells(u) where p != c: strike(p, d)"
-  - id: single
-    tier: Easy
-    for: "c in cells where not known(c) and |cand(c)| < 2"
-    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
-    says:
-      terms: { d: "first(cand(c))" }
-      marks: { stripes: "cells(row(c)) + cells(col(c))" }
-      look: "{ring: this square}'s row and column hold every number but {d}"
-      move: "it must be {d}"
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  - { use: latin.set, tier: Easy, rung: set }
+  - { use: latin.fish, tier: Easy, rung: set }
+  - { use: latin.wing, tier: Easy, rung: wing }

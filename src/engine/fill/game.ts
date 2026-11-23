@@ -12,6 +12,12 @@ import type { MarkRole } from "../contract/hint-words.ts";
 import { HEXAGON, SQUARE_GRID } from "../contract/sections.ts";
 import type { Point } from "../contract/types.ts";
 import { transposeDimensions } from "../game-id/params.ts";
+import {
+  autoPencilPref,
+  candidateReadingPref,
+  pencilKeepHighlightPref,
+  stickyPencilPref,
+} from "../hint/pencil-prefs.ts";
 import { drag, type PointerAction } from "../input/hint-gesture.ts";
 import { verbClicks } from "../input/target-verb.ts";
 import { PAINTERS, type PainterName } from "../render/pieces/index.ts";
@@ -36,6 +42,7 @@ import {
   solveBoard,
   spaceOf,
 } from "./board.ts";
+import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { type DealtFillModule, dealFill } from "./deal.ts";
 import type { Edit } from "./edit.ts";
 import {
@@ -52,7 +59,14 @@ import {
   variationsOf,
   withThorough,
 } from "./game-id.ts";
-import { type FillHint, type FillHintModule, fillHint, linkedCell } from "./hint.ts";
+import {
+  type FillHint,
+  type FillHintModule,
+  type FiringFillHint,
+  fillHint,
+  linkedCell,
+  tierOfBoard,
+} from "./hint.ts";
 import {
   applyMove,
   type FillMove,
@@ -77,7 +91,10 @@ import {
 import { answerSearched, searches } from "./search.ts";
 
 /** What a game born from its description's compiled module holds. */
-export interface BornModule<C> extends FillHintModule<C>, DealtFillModule<C> {
+export interface BornModule<C>
+  extends FillHintModule<C>,
+    CandidateFillModule<C>,
+    DealtFillModule<C> {
   readonly play: FillPlay;
   readonly lineClues: readonly (keyof C)[];
   readonly lineLists?: readonly (keyof C)[];
@@ -214,9 +231,26 @@ export function fillGame<C extends Clues<C> & object>(
       ui[field] = v;
     },
   });
+  const notes = play.notes === true;
+  // A board that keeps notes has these fields on its Ui (`typedUi`).
+  const noted = <U>(pref: GamePref<U>): GamePref<FillUi> =>
+    pref as unknown as GamePref<FillUi>;
   const prefs = [
     ...(play.wash?.pref === undefined ? [] : [flag(play.wash.pref, "washedMarks")]),
     ...(play.hides === undefined ? [] : [flag(play.hides.pref, "hiddenShown")]),
+    ...(!notes
+      ? []
+      : [
+          // The candidate walk refuses any regions but rows and columns.
+          noted(
+            autoPencilPref(
+              "When you place a number, remove it from pencil marks in its row and column",
+            ),
+          ),
+          noted(stickyPencilPref()),
+          noted(pencilKeepHighlightPref()),
+          noted(candidateReadingPref()),
+        ]),
   ];
   const numbered = module.numbers ?? [];
   const reading: AnswerReading<C> = {
@@ -287,8 +321,20 @@ export function fillGame<C extends Clues<C> & object>(
               boardSizeOf(module, p),
             ),
         };
-  const notes = play.notes === true;
+  const newUi = (b: FillBoard<C>): FillUi => {
+    const ui = typed === null ? newFillUi() : typedUi(newFillUi(), play);
+    // A hexagon's store has no cell at its top left; the cursor starts on
+    // the first that is the board's.
+    if (module.hexagon !== undefined)
+      ui.cursor.x =
+        Array.from({ length: b.w }, (_, x) => x).find((x) =>
+          inHexagon(b.w, b.h, x, 0),
+        ) ?? 0;
+    return ui;
+  };
   const { hint, rulesOut } = fillHint(module);
+  // A board that keeps notes is hinted by the candidate walk.
+  const walked = notes ? candidateFill(module, tierOfBoard(module), newUi) : null;
   // The values whose piece grows when placed.
   const growing = new Set(
     Object.entries(play.values ?? {})
@@ -314,17 +360,7 @@ export function fillGame<C extends Clues<C> & object>(
 
     newDesc: (p, rs) => dealFill(module, deal, p, rs),
     newState,
-    newUi: (b) => {
-      const ui = typed === null ? newFillUi() : typedUi(newFillUi(), notes);
-      // A hexagon's store has no cell at its top left; the cursor starts on
-      // the first that is the board's.
-      if (module.hexagon !== undefined)
-        ui.cursor.x =
-          Array.from({ length: b.w }, (_, x) => x).find((x) =>
-            inHexagon(b.w, b.h, x, 0),
-          ) ?? 0;
-      return ui;
-    },
+    newUi,
 
     ...inputs,
     executeMove: (b, m) => applyMove(module, b, fillMoveOf(m, `${id}: executeMove`)),
@@ -377,7 +413,7 @@ export function fillGame<C extends Clues<C> & object>(
         }),
     ...(rulesOut === undefined ? {} : { rulesOut }),
     hint: {
-      ...hint,
+      ...(walked ?? hint),
       marks: { roles: module.hintMarks },
       gesture: (b, ui, ds, move, step) => {
         if (typed !== null) return typed.gesture(b, ui, ds, move);
@@ -455,7 +491,8 @@ export function fillGame<C extends Clues<C> & object>(
         b,
         ui,
         ds,
-        step,
+        // A board of buttons keeps no notes, so its steps are the fill walk's.
+        step as HintStep<FillMove, FiringFillHint, string>,
         clicks,
       ),
       ...drags,

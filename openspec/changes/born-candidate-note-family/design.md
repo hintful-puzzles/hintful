@@ -301,10 +301,10 @@ the judge and `candidateGesture` serve it unchanged. Typed entries become
 places clears its cell's notes. The `Ui`'s pencil fields are on a board
 that keeps notes alone (`numbers.ts`'s `typedUi`), since the app and
 `pencil-mode-key.test.ts` read a `Ui` with a pencil mode as one that takes
-notes. What a placement rules out (auto-pencil, Mark-all's clean) is the
-cells sharing a unit with it (`GridSpace.peers`) as built at 2.1b; the
-candidate walk's reach (§ 2) replaces it at 2.1c, so the partitions a rule
-holds distinct and a stated `cull` strike too.
+notes. What a placement rules out (auto-pencil, Mark-all's clean, the
+walk's cull and implied notes) is one reach, `notes.ts`'s `reachOf`: the
+cells sharing a unit with it (`GridSpace.peers`), a partition listed among
+the units included. Seismic's flip makes it read a stated `cull`.
 
 ### 2. A born game with notes hints through the candidate walk
 
@@ -318,6 +318,15 @@ unless its wording says otherwise, and the words `statedParts` over its
 `step` or `fact` wording. That is what Keen's and Seismic's `buildSteps`
 write by hand today; it becomes the engine's, so a born game writes none.
 A game without notes keeps the fill walk.
+
+Built at 2.1c (`engine/fill/candidates.ts`) as far as the fixture needs:
+the row/column preset (`runLatinCandidatePlan`), whose regions are the
+units, and the Latin library's strikes as rungs, worded by the library.
+It refuses what it cannot yet walk rather than stall on it: units beyond
+rows and columns (Seismic's flip) and a technique of the description's own
+(Unequal's flip, its first). The reading a fresh game starts on is the
+description's `play.hintNotes`, the convention `populate` where it is left
+out, since the games differ (§ "The gap list", the prefs).
 
 ### 3. A value is drawn as its glyph, and the keypad is the domain
 

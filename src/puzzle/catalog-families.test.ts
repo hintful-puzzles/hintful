@@ -5,6 +5,7 @@
  * code.
  */
 import { describe, expect, it } from "vitest";
+import { bornWithoutNotes } from "../engine/testing/born-games.ts";
 import {
   gamesImporting,
   gamesUsing,
@@ -88,7 +89,11 @@ describe("a family the code can vouch for agrees with the code", () => {
     // The single-placement sentence (`narrateLatinReason`) is borrowed by games
     // that are not Latin squares, as the helpers are; the arms that state a
     // Latin rule are the strikes'.
-    const speakers = speaking([...puzzleIds], ["latinPremise"]);
+    // A born board without notes never speaks the walk its code reaches.
+    const speakers = speaking(
+      [...puzzleIds].filter((id) => !bornWithoutNotes(id)),
+      ["latinPremise"],
+    );
     // A known positive, so a scan that stopped seeing imports cannot pass.
     expect(speakers).toContain("keen");
     expect(speakers.filter((id) => !latin.includes(id))).toEqual([]);

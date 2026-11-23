@@ -14,9 +14,9 @@ import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
-import { editOf } from "./edit.ts";
 import { fillGame } from "./game.ts";
 import { encodeDesc } from "./game-id.ts";
+import { isCandidateMove } from "./notes.ts";
 import { numberInput } from "./numbers.ts";
 import { type FillUi, newFillUi } from "./play.ts";
 import { fillRender } from "./render.ts";
@@ -77,8 +77,11 @@ describe("a board of numbers' deal", () => {
     expect(isLatin(solved.values, 4)).toBe(true);
     const plan = game.hint.plan(b, undefined, game.newUi(b));
     if (!("steps" in plan)) throw new Error(`no plan: ${JSON.stringify(plan)}`);
-    const [c, v] = editOf(plan.steps[0].move, "a squaring step").set ?? [];
-    expect(v).toBe(solved.values[c]);
+    // Read as the player who has noted nothing reads it, a single places.
+    const move = plan.steps[0].move;
+    if (!isCandidateMove(move) || move.type !== "set" || move.pencil)
+      throw new Error(`not a placement: ${JSON.stringify(move)}`);
+    expect(move.n).toBe(solved.values[move.y * 4 + move.x]);
   });
 });
 

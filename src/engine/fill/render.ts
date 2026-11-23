@@ -58,7 +58,12 @@ import {
   type NoteSlot,
   noteGrid,
 } from "../mechanics/note-taking-cell.ts";
-import { drawRectCorners, drawThickRectOutline, glyphFont } from "../render/draw.ts";
+import {
+  drawRectCorners,
+  drawStrike,
+  drawThickRectOutline,
+  glyphFont,
+} from "../render/draw.ts";
 import { hatchPeriod } from "../render/hatch.ts";
 import {
   drawMarkSides,
@@ -71,6 +76,7 @@ import {
   ringTextBox,
 } from "../render/hint-mark.ts";
 import { liveErrors } from "../render/live-errors.ts";
+import { OverlaySidecar } from "../render/overlay-sidecar.ts";
 import {
   type PencilIndicatorStyle,
   pencilIndicatorBox,
@@ -145,6 +151,9 @@ export interface FillDrawState {
   readonly parts: { readonly walls: Uint8Array; readonly fills: Uint8Array } | null;
   /** Per cell, what it shows and the hint's marks on it. */
   readonly tiles: TileCache;
+  /** The notes the hint's step strikes, a lane the tiles' key has no room
+   * for: packed on a board that keeps notes alone. */
+  readonly struck: OverlaySidecar;
   /** Per line, its clue's error, hint and hatch. */
   readonly clues: TileCache;
   /** Per line, its list's error, hatch, cursor and font. */
@@ -770,6 +779,8 @@ export function fillRender<C extends Clues<C>>(
     n: number,
     // The cell's walls and fill, where the board deals a partition.
     part: { readonly walls: number; readonly fill: number } | null,
+    // The notes a hint's step strikes from the cell, bit `v` a value's.
+    struck: number,
     // A piece placed or taken away a moment ago: the value it grows from or
     // shrinks into, and how far it has got, 0 to 1.
     anim: { readonly from: number; readonly frac: number } | null = null,
@@ -847,12 +858,15 @@ export function fillRender<C extends Clues<C>>(
       const ink = word & FIXED ? COL_INK : word & ERR_AT ? COL_ERROR : COL_ENTRY;
       dr.drawText(origin, options, ink, numeral(v));
     }
-    // An open cell's notes, in a grid within it.
+    // An open cell's notes, in a grid within it, each the hint strikes
+    // crossed through in its own color, so it still reads as the player's.
     if (v === 0) {
       const shown = notesIn(noteWord);
       noteSlots(ts, [x, y, h], part?.walls ?? null, shown.length).forEach(
         ({ origin, options }, j) => {
           dr.drawText(origin, options, COL_PENCIL, numeral(shown[j]));
+          if (struck & (1 << shown[j]))
+            drawStrike(dr, origin, options.size, COL_PENCIL, tile);
         },
       );
     }
@@ -1400,6 +1414,13 @@ export function fillRender<C extends Clues<C>>(
     // with the link inside, an outline round the cells it reasons from, the
     // line it counts along striped, and the clue it counts with recolored.
     const marks = stepMarks(hint);
+    // The notes the step strikes, where the board keeps notes.
+    if (notes)
+      ds.struck.pack(
+        marks,
+        (x, y) => y * w + x,
+        (m) => 1 << m.n,
+      );
     const byReading = (cells: readonly MarkCell[]): MarkCell[] =>
       [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
     const targets = byReading(marks.of("ring", CELL));
@@ -1499,12 +1520,12 @@ export function fillRender<C extends Clues<C>>(
         // A growing piece is no key's: its tile is drawn every frame.
         if (before !== null && before[i] !== shown.values[i]) {
           ds.tiles.forget(i);
-          drawTile(dr, ts, [x, y, h], k, hk, lk, nk, n, part, {
+          drawTile(dr, ts, [x, y, h], k, hk, lk, nk, n, part, ds.struck.struck[i], {
             from: before[i],
             frac,
           });
         } else if (ds.tiles.changed(i, k, hk, lk, nk))
-          drawTile(dr, ts, [x, y, h], k, hk, lk, nk, n, part);
+          drawTile(dr, ts, [x, y, h], k, hk, lk, nk, n, part, ds.struck.struck[i]);
       }
 
     if (notes) drawPencilMode(dr, ds, state, ui);
@@ -1557,16 +1578,20 @@ export function fillRender<C extends Clues<C>>(
       return canvasOf(p, tally === undefined ? null : tallyOf(tally, p), tileOf(size));
     },
     colors,
-    newDrawState: (b, tileSize) => ({
-      tileSize: tileOf(tileSize),
-      parts: partsOf(b),
-      tiles: new TileCache(b.w * b.h, { words: 4 }),
-      clues: new TileCache(b.w + b.h),
-      lists: new TileCache(b.w + b.h),
-      marks: new HintMarks(),
-      tally: { shown: null },
-      pencilModeShown: null,
-    }),
+    newDrawState: (b, tileSize) => {
+      const struck = new OverlaySidecar(b.w * b.h);
+      return {
+        tileSize: tileOf(tileSize),
+        parts: partsOf(b),
+        tiles: new TileCache(b.w * b.h, { words: 4, overlays: [struck] }),
+        struck,
+        clues: new TileCache(b.w + b.h),
+        lists: new TileCache(b.w + b.h),
+        marks: new HintMarks(),
+        tally: { shown: null },
+        pencilModeShown: null,
+      };
+    },
     redraw,
     numbersLeft,
   };

@@ -14,6 +14,7 @@ import {
   type Mark,
   type NoteEncoding,
   obviousCandidateMarks,
+  type Reach,
   applyNoteMove as writeNotes,
 } from "../hint/candidate-hint.ts";
 import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
@@ -98,10 +99,11 @@ function encodingOf<C>(
 }
 
 /** The cells a value placed at `c` rules out of their notes: those sharing a
- * unit with it, which no value repeats in. */
-const reachOf = <C>(module: FillModule<C>, board: FillBoard<C>) => {
+ * unit with it, which no value repeats in. The one reach auto-pencil,
+ * Mark-all's clean and the candidate walk (`candidates.ts`) read. */
+export const reachOf = <C>(module: FillModule<C>, board: FillBoard<C>): Reach => {
   const { peers } = spaceOf(module, board);
-  return (c: number): readonly number[] => peers[c];
+  return (c) => peers[c];
 };
 
 /**
@@ -127,7 +129,8 @@ function applyNoteMove<C>(
       const pencil = placed.pencil.slice();
       pencil[c] = 0;
       if (move.autoElim === true && move.n > 0)
-        for (const p of reachOf(module, board)(c)) pencil[p] &= ~(1 << move.n);
+        for (const p of Array.from(reachOf(module, board)(c, move.n)))
+          pencil[p] &= ~(1 << move.n);
       return { ...placed, pencil };
     }
     if (notes === null) throw new Error("note: the board keeps no notes");

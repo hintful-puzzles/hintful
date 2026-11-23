@@ -212,6 +212,10 @@ export function playOf(
     throw new CompileError(
       "marks: candidate notes are a board of numbers', and play has no `numbers`",
     );
+  if (!notes && p.hintNotes !== undefined)
+    throw new CompileError(
+      "play hintNotes: the hint reads notes, and `marks` declares none",
+    );
   const plainPlay = {
     ...rest,
     ...(notes ? { notes } : {}),
