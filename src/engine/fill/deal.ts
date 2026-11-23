@@ -36,6 +36,7 @@ import {
   spaceOf,
 } from "./board.ts";
 import { dividePartition } from "./divide.ts";
+import { firstKindEach } from "./first-kind.ts";
 import {
   elementCount,
   encodeDesc,
@@ -291,9 +292,13 @@ export function dealFill<C extends Clues<C>>(
       module,
       deal,
       sp,
-      numbered(
-        module.deriveClues(g, sp, grown, given, (n) => randomUpto(rs, n)),
-        g,
+      firstKindEach(
+        deal,
+        p,
+        numbered(
+          module.deriveClues(g, sp, grown, given, (n) => randomUpto(rs, n)),
+          g,
+        ),
       ),
       tier,
       p.only === true,
@@ -601,10 +606,11 @@ function climbFill<C extends Clues<C>>(
   const drawn = (): C | null => {
     const whole = ++draws % RESTART_EVERY === 0;
     const g = sampleAnswer(sample, sp, rs, whole ? null : position) as Uint8Array;
-    const clues =
+    const derived =
       sample.mend === true
         ? mended(module, g, sp, given, variations, other)
         : module.deriveClues(g, sp, {}, given, (n) => randomUpto(rs, n));
+    const clues = derived === null ? null : firstKindEach(deal, p, derived);
     if (clues === null || !module.isAnswer(g, sp, clues, variations)) {
       position.fill(0);
       return null;

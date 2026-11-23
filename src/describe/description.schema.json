@@ -1592,6 +1592,31 @@
                 }
               }
             },
+            "firstKind": {
+              "type": "array",
+              "items": { "type": "string" },
+              "minItems": 2,
+              "uniqueItems": true,
+              "description": "Clue kinds at one place of which an element holds one clue: the first in this order the answer makes there, of those on (upstream mathrax.c's cascade)."
+            },
+            "kindLetters": {
+              "type": "array",
+              "minItems": 1,
+              "description": "Clue kinds the player switches on and off, each by its letter after the tier in a full ID, in this order, and a check box in Custom; every kind on where no letter is written, and a board's name saying which are on or off, whichever list is shorter (Mathrax's `A S M D E O`).",
+              "items": {
+                "type": "object",
+                "required": ["letter", "kind", "kw", "name", "doc", "word"],
+                "additionalProperties": false,
+                "properties": {
+                  "letter": { "type": "string", "pattern": "^[a-zA-Z]$" },
+                  "kind": { "type": "string" },
+                  "kw": { "type": "string" },
+                  "name": { "type": "string" },
+                  "doc": { "type": "string" },
+                  "word": { "type": "string" }
+                }
+              }
+            },
             "onlyFlag": {
               "type": "object",
               "required": ["kinds", "letter", "kw", "name", "doc", "words"],

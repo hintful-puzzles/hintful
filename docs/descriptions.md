@@ -308,7 +308,14 @@ research tools all read through it; the app never does.
   where it breaks, printed after the text's wall line it lies on, and
   written by `id:`'s `codes`, a kind's code and its number or a code that
   is a kind and a value whole, between runs of corners without one, the
-  longest code read first (`cornering` is the fixture). `digits` writes a
+  longest code read first (`cornering` is the fixture). `deal.firstKind:
+  [kind, …]` keeps one clue an element of kinds at one place, the first
+  in its order the answer makes there (Mathrax's cascade, where a parity
+  goes only where no sum or difference holds), and `deal.kindLetters`
+  switches kinds off, each by a letter after the tier in a full ID and a
+  check box in Custom, every kind on where no letter is written, the
+  board's name saying the shorter of those on and off
+  (`engine/fill/first-kind.ts`). `digits` writes a
   kind bounded by a size of at most 9 (Mathrax's givens, to `w`) a digit
   each. A hide keeps whole, until the asked tier's
   pass, a kind the lowest tier reads none of (signs over a Latin square's

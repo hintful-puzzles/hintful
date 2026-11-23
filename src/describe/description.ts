@@ -460,6 +460,29 @@ export function onlyFlagOf(json: DescriptionJson): OnlyFlagJson | null {
   return typeof g === "object" ? (g as unknown as OnlyFlagJson) : null;
 }
 
+/** `deal.firstKind`, where the description has one. */
+export function firstKindJsonOf(json: DescriptionJson): string[] | null {
+  const k = json.deal?.["firstKind"];
+  return Array.isArray(k) ? (k as unknown as string[]) : null;
+}
+
+/** `deal.kindLetters`, where the description has them. */
+export function kindLettersJsonOf(json: DescriptionJson): KindLetterJson[] | null {
+  const k = json.deal?.["kindLetters"];
+  return Array.isArray(k) ? (k as unknown as KindLetterJson[]) : null;
+}
+
+/** A kind of clue the player may switch off, by its letter after the tier
+ * and a check box in Custom (Mathrax's `A S M D E O`). */
+export interface KindLetterJson {
+  letter: string;
+  kind: string;
+  kw: string;
+  name: string;
+  doc: string;
+  word: string;
+}
+
 /** A setting the player may turn on, written after the tier by its letter,
  * under which `deal.oneKind` deals `kinds` alone (Keen's `m`). */
 export interface OnlyFlagJson {

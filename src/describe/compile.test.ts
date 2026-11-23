@@ -967,6 +967,56 @@ describe("what the fill board reads of a description", () => {
     );
   });
 
+  it("refuses a precedence of one kind or across places, and a letter taken or a kind not switchable", () => {
+    const source = "src/engine/testing/fixtures/cornering/cornering.description.yaml";
+    const cornering = sources.get(source);
+    if (cornering === undefined || !isFormal(cornering))
+      throw new Error("no cornering");
+    type Json = { deal: Record<string, unknown> };
+    const compileCornering = (edit: (j: Json) => void) => () => {
+      const j = structuredClone(cornering) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileCornering(() => {})()).toContain('"firstKind":["sum","difference"');
+    expect(
+      compileCornering((j) => {
+        j.deal["firstKind"] = ["sum", "given"];
+      }),
+    ).toThrow(/deal firstKind: two kinds or more, at one place/);
+    expect(
+      compileCornering((j) => {
+        j.deal["firstKind"] = ["sum", "nothing"];
+      }),
+    ).toThrow(/deal firstKind: no clue kind nothing/);
+    type Letter = { letter: string; kind: string };
+    const letters = (edit: (l: Letter[]) => void) =>
+      compileCornering((j) => {
+        edit(j.deal["kindLetters"] as Letter[]);
+      });
+    expect(
+      letters((l) => {
+        l[0].letter = "d";
+      }),
+    ).toThrow(/deal kindLetters: the letter d is taken/);
+    expect(
+      letters((l) => {
+        l[0].kind = "given";
+      }),
+    ).toThrow(/deal kindLetters: given is dealt whatever the params/);
+    expect(
+      letters((l) => {
+        l[1].letter = "A";
+      }),
+    ).toThrow(/deal kindLetters: a letter named twice/);
+  });
+
   it("refuses a walk's step under a rung its technique does not give", () => {
     const source = "src/engine/testing/fixtures/flanking/flanking.description.yaml";
     const flanking = sources.get(source);

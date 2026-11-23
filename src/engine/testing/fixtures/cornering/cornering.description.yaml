@@ -5,8 +5,10 @@
 # tests of a clue at a corner (dealt from the answer, written in the desc a
 # code a corner between runs of corners without one, drawn on a disc where
 # its squares meet, red where it breaks, printed in the text) on a
-# description that names no game. The three kinds never meet at one corner:
-# two pairs of a Latin square that add alike can take nothing else alike.
+# description that names no game. The sum, difference and same never meet at
+# one corner: two pairs of a Latin square that add alike can take nothing
+# else alike. Parity meets each, so a corner deals the first kind that holds
+# of those its letters switch on.
 game: cornering
 produces: latin
 sizes:
@@ -41,10 +43,14 @@ clues:
     at: corner
     value: "range(0, 0)"
     means: "forall c in cells(at): value(c) = value(across(at, c))"
+  parity:
+    at: corner
+    value: "range(0, 1)"
+    means: "forall c in cells(at): value(c) mod 2 = v"
 freedom: { kind: fill }
 play:
   numbers: {}
-  signs: { sum: "+", difference: "−", same: "=" }
+  signs: { sum: "+", difference: "−", same: "=", parity: [E, O] }
   hintNotes: implicit
   boards: [4x4, 5x5]
   hintMarks:
@@ -58,12 +64,21 @@ deal:
   sum: every corner's clue, then each hidden while the board still finishes
   tier: one of the tiers
   sample: { latin: true }
-  hide: [given, sum, difference, same]
+  hide: [given, sum, difference, same, parity]
+  hideFirst: [given]
+  firstKind: [sum, difference, same, parity]
+  kindLetters:
+    - { letter: A, kind: sum, kw: sum-clues, name: Sum clues, doc: Allows sum clues to appear., word: sum }
+    - { letter: S, kind: difference, kw: difference-clues, name: Difference clues, doc: Allows difference clues to appear., word: difference }
+    - { letter: E, kind: same, kw: same-clues, name: Same clues, doc: Allows same clues to appear., word: same }
+    - { letter: O, kind: parity, kw: parity-clues, name: Parity clues, doc: Allows E and O clues to appear., word: parity }
 # Upstream Mathrax's: the givens a digit each between runs of squares
-# without one, then a comma and a code a corner, `S0` the same's.
+# without one, then a comma and a code a corner, `S0` the same's, `E` and `O`
+# the parities'.
 id:
   - { digits: given }
-  - { codes: { A: sum, S: difference, S0: "same 0" }, before: "," }
+  - codes: { A: sum, S: difference, S0: "same 0", E: "parity 0", O: "parity 1" }
+    before: ","
 tiers: [Easy, Normal]
 names:
   dup: "a placed number's row and column"
@@ -71,8 +86,26 @@ names:
   regionsFull: "every other number already placed"
   hiddenSingle: "the only square left for a number"
   pair: "what a corner's clue allows"
+  parity: "what a corner's parity allows"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
+  # Square by square, each corner of it with a parity: a note of the other
+  # parity is struck.
+  - id: parity
+    tier: Easy
+    for: "c in cells, k in corners(c) where clue(parity, k) != none"
+    conclude: "forall d in cand(c) where d mod 2 != clue(parity, k): strike(c, d)"
+    says:
+      terms:
+        at: c
+        parity: "clue(parity, k)"
+      marks:
+        outline: "{x in cells(k)}"
+      wordings:
+        - when: "clue(parity, k) = 0"
+          look: "{outline: The E clue} means all four numbers round it are even"
+        - when: "true"
+          look: "{outline: The O clue} means all four numbers round it are odd"
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   # Square by square, each corner of it with a clue: a note nothing open

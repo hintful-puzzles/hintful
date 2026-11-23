@@ -294,6 +294,12 @@ export interface FillDeal {
   readonly oneKind?: { readonly kinds: readonly string[]; readonly partition: string };
   /** The setting under which `oneKind` deals some of its kinds alone. */
   readonly onlyFlag?: FillOnlyFlag;
+  /** Kinds at one place of which an element holds one clue: the first in
+   * this order the answer makes there. */
+  readonly firstKind?: readonly string[];
+  /** Kinds the player switches on and off, each by its letter after the
+   * tier, in this order; every one on where none is written. */
+  readonly kindLetters?: readonly FillKindLetter[];
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
   readonly universes: Readonly<Record<string, ClueUniverse>>;
@@ -370,6 +376,17 @@ export interface FillOnlyFlag {
   readonly words: string;
 }
 
+/** A kind of clue the player may switch off (`deal.kindLetters`). */
+export interface FillKindLetter {
+  readonly letter: string;
+  readonly kind: string;
+  readonly kw: string;
+  readonly name: string;
+  readonly doc: string;
+  /** What a board's name calls the kind, where it says which are on. */
+  readonly word: string;
+}
+
 /** A variation the player may switch on (`play.modifiers`). */
 export interface FillModifier {
   readonly letter: string;
@@ -407,6 +424,9 @@ export interface FillParams {
   /** Whether the deal deals some kinds alone, in a game whose deal has the
    * setting (`FillDeal.onlyFlag`); absent in any other. */
   only?: boolean;
+  /** The kinds of `FillDeal.kindLetters` on, in the letters' order, in a
+   * game whose deal has them; absent in any other. */
+  kinds?: readonly string[];
 }
 
 /** Each length's count of a tally of `size`, where the params name none:
@@ -574,6 +594,11 @@ export const optionOf = (deal: FillDeal, p: FillParams, name: string): number =>
   if (o === undefined) throw new Error(`deal: no option ${name}`);
   return p.options?.[name] ?? o.default;
 };
+
+/** The kinds of `deal.kindLetters` board `p` deals, in the letters' order:
+ * every one where `p` names none. */
+export const kindsOn = (deal: FillDeal, p: FillParams): readonly string[] =>
+  p.kinds ?? (deal.kindLetters ?? []).map((l) => l.kind);
 
 /** The variations `p` has on. */
 export const variationsOf = (p: FillParams): readonly string[] => p.variations ?? [];
@@ -786,6 +811,7 @@ export function fillParams(
     difficultyItem(tiers, "diff"),
     ...(deal.hideFlag === undefined ? [] : [flagItem(deal.hideFlag, "hides")]),
     ...(deal.onlyFlag === undefined ? [] : [flagItem(deal.onlyFlag, "only")]),
+    ...kindItems(deal),
     ...named.map(([variation, m]) =>
       modifierItem<FillParams>({
         kw: m.kw,
@@ -903,6 +929,7 @@ export function fillParams(
       ...(deal.onlyFlag === undefined
         ? []
         : [flag(paramConfig, deal.onlyFlag.letter, deal.onlyFlag.kw, { full: true })]),
+      ...(deal.kindLetters === undefined ? [] : [kindLettersSegment(deal.kindLetters)]),
       ...(deal.tally === undefined ? [] : [tallyCountsSegment(deal.tally)]),
     ]),
     validateParams(p, full) {
@@ -933,6 +960,8 @@ export function fillParams(
       }
       const outside = beyond(bounds.all, p);
       if (outside !== null) return `${outside}.`;
+      if (full && deal.kindLetters !== undefined && p.kinds?.length === 0)
+        return "At least one clue type must be enabled.";
       // An option is the deal's alone, so only a full ID's is held to its
       // range and its choice's bounds.
       if (full)
@@ -980,6 +1009,65 @@ export function fillParams(
         }
       }
       return null;
+    },
+  };
+}
+
+/** The Custom dialog's check box for each kind of `deal.kindLetters`; the
+ * first carries a board name's words for them all: which are on or which
+ * are off, whichever list is shorter, and nothing where every one is on. */
+function kindItems(deal: FillDeal): ParamConfigItem<FillParams>[] {
+  const letters = deal.kindLetters ?? [];
+  const words = (p: FillParams): string | null => {
+    const on = new Set(kindsOn(deal, p));
+    const said = (yes: boolean) =>
+      letters.filter((l) => on.has(l.kind) === yes).map((l) => l.word);
+    const [shown, hidden] = [said(true), said(false)];
+    if (hidden.length === 0) return null;
+    return shown.length <= hidden.length
+      ? `only ${shown.join("/")}`
+      : `no ${hidden.join("/")}`;
+  };
+  return letters.map((l, i) => ({
+    kw: l.kw,
+    name: l.name,
+    type: "boolean",
+    doc: l.doc,
+    ...(i === 0 ? { label: { slot: "tail" as const, words } } : {}),
+    get: (p) => kindsOn(deal, p).includes(l.kind),
+    set: (p, v) => {
+      const on = new Set(kindsOn(deal, p));
+      if (v) on.add(l.kind);
+      else on.delete(l.kind);
+      p.kinds = letters.map((x) => x.kind).filter((k) => on.has(k));
+    },
+  }));
+}
+
+/** The kinds on, each by its letter in the letters' order, which only a
+ * full ID carries and only where some kind is off: no letter is every kind
+ * (upstream mathrax.c's). */
+function kindLettersSegment(
+  letters: readonly FillKindLetter[],
+): ParamsSegment<FillParams> {
+  return {
+    encode: (p, full) => {
+      const on = p.kinds ?? letters.map((l) => l.kind);
+      if (!full || on.length === letters.length) return "";
+      return letters
+        .filter((l) => on.includes(l.kind))
+        .map((l) => l.letter)
+        .join("");
+    },
+    decode: (s, i, p) => {
+      const on: string[] = [];
+      for (const l of letters)
+        if (s[i] === l.letter) {
+          on.push(l.kind);
+          i++;
+        }
+      p.kinds = on.length === 0 ? letters.map((l) => l.kind) : on;
+      return i;
     },
   };
 }

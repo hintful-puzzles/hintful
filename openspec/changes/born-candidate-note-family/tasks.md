@@ -349,7 +349,7 @@ commit. In design.md § "Decisions" 7's order.
         broken clue's whole disc is red, where the hand-written one reddens
         the quarter at each square it breaks at: a difference the flip
         lists.
-  - [ ] 2.6b One clue a corner, the first kind in a precedence the answer
+  - [x] 2.6b One clue a corner, the first kind in a precedence the answer
         makes there (upstream's cascade, `deal.firstKind`), and the kinds
         switched on by letters after the tier, every kind where none is
         written (`ASMDEO`), with a check box each in Custom, the board's
@@ -357,7 +357,19 @@ commit. In design.md § "Decisions" 7's order.
         a refusal where none is on; on `cornering`, given a parity kind
         that meets a sum (codes `E` and `O`). Mathrax's equality is a kind
         of its own (`equal`, written `S0`), so each letter is one kind and
-        the precedence is upstream's order.
+        the precedence is upstream's order. Built as
+        `engine/fill/first-kind.ts`, run on the clues derived in the main
+        deal and in the climb; the params carry `kinds`, the kinds on.
+        Upstream's precedence A S = M D then parity only matters for a
+        parity: the other kinds never meet at a Latin square's corner.
+        Tested on two answers whose corner 0 is all odd, one also the
+        same (seen to fail with the precedence planted away).
+        Found: at the lowest tier the hide only takes off what the ladder
+        never read with every clue shown, and tries no clue one by one
+        (`hideUpTo`'s `tries`), so a `cornering` Easy deal keeps givens
+        and no corner clue at all. Mathrax's Easy deal is upstream's
+        givens stripped first, so 2.6d measures its boards against the
+        hand-written port's and decides how the hide reaches them.
   - [x] 2.6c A hide of some kinds first and the rest in one random order
         (`deal.hideFirst`, upstream mathrax.c's givens, then its clues),
         replacing `hideInTurn: true`, which Towers and `flanking` state as

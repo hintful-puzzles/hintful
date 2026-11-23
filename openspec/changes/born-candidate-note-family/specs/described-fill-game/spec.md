@@ -256,6 +256,29 @@ its ID SHALL write it, and its hint SHALL mark it there.
 - **THEN** the ID is read with the longest code that matches first, and
   written back byte for byte
 
+### Requirement: A born game may deal one kind of clue an element, of the kinds switched on
+
+A born game's `deal.firstKind` SHALL keep, at each element, the clue of the
+first of its kinds the answer makes there, and no other of them. A born
+game's `deal.kindLetters` SHALL give each of its kinds a check box in
+Custom and a letter after the tier in a full ID, written only where some
+kind is off and read in the letters' order; a board SHALL deal no clue of a
+kind switched off, a board with none on SHALL be refused, and a board's
+name SHALL say the shorter of the kinds on and the kinds off.
+
+#### Scenario: A parity where a sum holds
+
+- **WHEN** the answer's four squares round a corner are all odd and their
+  pairs are the same, and the precedence puts the same before parity
+- **THEN** the corner is dealt the same, and not a parity
+
+#### Scenario: Kinds switched off
+
+- **WHEN** a board is read from `5dnAO`
+- **THEN** it deals sums and parities alone, its name says "only sum/parity"
+  where it says the kinds, and it is written back as `5dnAO`, and as `5dn`
+  with every kind on
+
 ### Requirement: A born game's clue at every edge may be 0 or 1
 
 A born game's complete clue kind valued 0 or 1 at every edge (a bar) SHALL

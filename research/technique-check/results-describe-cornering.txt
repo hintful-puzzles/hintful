@@ -1,5 +1,11 @@
 --  cornering  no board of order 3 holds a difference clue, so no reading of one is checked there
 --  cornering  no board of order 3 holds a same clue, so no reading of one is checked there
-ok  cornering  pair                           3  sound    (want sound   )     9 queries    0.1s
+--  cornering  no board of order 3 holds a parity clue, so no reading of one is checked there
+ok  cornering  parity                         3  sound    (want sound   )     9 queries    0.2s
+BAD cornering  parity (planted)               3  sound    (want unsound )     9 queries    0.3s
+ok  cornering  parity                         4  sound    (want sound   )    16 queries    3.4s
+ok  cornering  parity (planted)               4  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/cornering/cornering.description.yaml#parity: recorded sound, proved whole on all 2 boards
+ok  cornering  pair                           3  sound    (want sound   )     9 queries    0.2s
 ok  cornering  pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
 ok  src/engine/testing/fixtures/cornering/cornering.description.yaml#pair: recorded sound, proved whole on all 1 boards

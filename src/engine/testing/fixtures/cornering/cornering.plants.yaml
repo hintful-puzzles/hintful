@@ -3,6 +3,9 @@
 # under research/technique-check must find unsound.
 
 techniques:
+  # A parity read as ruling out its own.
+  parity:
+    conclude: "forall d in cand(c) where d mod 2 = clue(parity, k): strike(c, d)"
   # A diagonal pair read as never equal, though its squares share no line.
   pair:
     conclude: >-

@@ -172,6 +172,9 @@ export function fillGame<C extends Clues<C> & object>(
         : { tally: tallyDefault(tally ?? deal.tally.size.default) }),
       ...(deal.hideFlag === undefined ? {} : { hides: false }),
       ...(deal.onlyFlag === undefined ? {} : { only: false }),
+      ...(deal.kindLetters === undefined
+        ? {}
+        : { kinds: deal.kindLetters.map((l) => l.kind) }),
       ...(deal.settings === undefined
         ? {}
         : {

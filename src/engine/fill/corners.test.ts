@@ -17,13 +17,15 @@ import {
   validateDesc,
 } from "../contract/desc-error.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
+import { describeParams } from "../game-id/param-label.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { firstKindEach } from "./first-kind.ts";
 import { fillGame } from "./game.ts";
-import { encodeDesc } from "./game-id.ts";
+import { encodeDesc, givenOf } from "./game-id.ts";
 
 const game = fillGame("cornering", cornering);
 type Board = FillBoard<cornering.Dealt>;
@@ -81,7 +83,7 @@ describe("a clue at a corner in the desc", () => {
           [g[tr], g[bl]],
         ];
       };
-      const { sum, difference, same } = b.dealt;
+      const { sum, difference, same, parity } = b.dealt;
       sum.at.forEach((k, i) => {
         for (const [a, z] of pairs(k)) expect(a + z).toBe(sum.v[i]);
       });
@@ -89,9 +91,86 @@ describe("a clue at a corner in the desc", () => {
         for (const [a, z] of pairs(k)) expect(Math.abs(a - z)).toBe(difference.v[i]);
       });
       for (const k of same.at) for (const [a, z] of pairs(k)) expect(a).toBe(z);
+      parity.at.forEach((k, i) => {
+        for (const c of sp.cornerCells[k]) expect(g[c] % 2).toBe(parity.v[i]);
+      });
       expect(sum.at.length + difference.at.length + same.at.length).toBeGreaterThan(0);
       expect(encodeDesc(cornering.deal, sp, b.dealt)).toBe(desc);
     }
+  });
+});
+
+describe("one clue a corner, of the kinds switched on", () => {
+  // Two Latin squares whose corner 0 alone is all odd: in the first, 1 3 /
+  // 3 1, its pairs are the same too; in the second, 1 3 / 5 1, they make
+  // nothing else alike.
+  const SAME = Uint8Array.from([
+    1, 3, 2, 4, 5, 3, 1, 4, 5, 2, 2, 4, 5, 1, 3, 4, 5, 3, 2, 1, 5, 2, 1, 3, 4,
+  ]);
+  const ODD = Uint8Array.from([
+    1, 3, 4, 5, 2, 5, 1, 2, 3, 4, 2, 4, 5, 1, 3, 3, 2, 1, 4, 5, 4, 5, 3, 2, 1,
+  ]);
+  const sp5 = spaceOf(cornering, board(5, "y,p"));
+  /** Each corner's kinds the deal keeps of what answer `g` makes, on a
+   * board with `kinds` on. */
+  const kept = (g: Uint8Array, kinds?: string[]) => {
+    const p = kinds === undefined ? params(5) : { ...params(5), kinds };
+    const all = cornering.deriveClues(g, sp5, {}, givenOf(cornering.deal, p));
+    const out = firstKindEach(cornering.deal, p, all);
+    const at = new Map<number, string[]>();
+    for (const kind of ["sum", "difference", "same", "parity"] as const)
+      for (const k of out[kind].at) at.set(k, [...(at.get(k) ?? []), kind]);
+    return { all, at };
+  };
+
+  it("keeps the first kind that holds at a corner, and parity only where none before it does", () => {
+    const same = kept(SAME);
+    expect(Array.from(same.all.parity.at)).toEqual([0]);
+    expect(Array.from(same.all.same.at)).toContain(0);
+    expect(same.at.get(0)).toEqual(["same"]);
+    const odd = kept(ODD);
+    expect(Array.from(odd.all.parity.at)).toEqual([0]);
+    expect(odd.at.get(0)).toEqual(["parity"]);
+    for (const kinds of [...same.at.values(), ...odd.at.values()])
+      expect(kinds).toHaveLength(1);
+  });
+
+  it("keeps none of a kind switched off, and a parity where a kind before it is off", () => {
+    const { at } = kept(SAME, ["sum", "difference", "parity"]);
+    expect([...at.values()].flat()).not.toContain("same");
+    expect(at.get(0)).toEqual(["parity"]);
+    expect(new Set([...kept(SAME, ["parity"]).at.values()].flat())).toEqual(
+      new Set(["parity"]),
+    );
+  });
+
+  it("writes the kinds on by their letters after the tier, and nothing for all", () => {
+    expect(game.encodeParams(params(5, NORMAL), true)).toBe("5dn");
+    const some = { ...params(5, NORMAL), kinds: ["sum", "parity"] };
+    expect(game.encodeParams(some, true)).toBe("5dnAO");
+    expect(game.encodeParams(some, false)).toBe("5");
+    expect(game.decodeParams("5dnAO").kinds).toEqual(["sum", "parity"]);
+    expect(game.decodeParams("5dn").kinds).toEqual([
+      "sum",
+      "difference",
+      "same",
+      "parity",
+    ]);
+    // Read in the letters' order alone, as upstream's six tests in turn.
+    expect(() => game.decodeParams("5dnOA")).toThrow();
+  });
+
+  it("names the shorter of the kinds on and off, and refuses none on", () => {
+    const named = (kinds: string[]) =>
+      describeParams(game, { ...params(5, NORMAL), kinds });
+    expect(named(["sum", "difference", "same", "parity"])).toBe("5x5 Normal");
+    expect(named(["sum"])).toBe("5x5 Normal, only sum");
+    expect(named(["sum", "difference", "same"])).toBe("5x5 Normal, no parity");
+    expect(game.validateParams?.({ ...params(5, NORMAL), kinds: [] }, true)).toBe(
+      "At least one clue type must be enabled.",
+    );
+    const box = game.paramConfig?.find((c) => c.kw === "parity-clues");
+    expect(box?.type).toBe("boolean");
   });
 });
 

@@ -27,9 +27,12 @@ import {
   type Description,
   type DescriptionJson,
   divideOf,
+  firstKindJsonOf,
   type GrowJson,
   growOf,
   type IdSegmentJson,
+  type KindLetterJson,
+  kindLettersJsonOf,
   noteMarkOf,
   type OneKindJson,
   type OnlyFlagJson,
@@ -1107,6 +1110,8 @@ export function dealOf(
   )
     throw new CompileError(`tierFlag: the letter ${tierFlag.letter} is taken`);
   const unusedLetters = json.unusedLetters ?? null;
+  const firstKind = firstKindOf(json, d);
+  const kindLetters = kindLettersOf(json, d);
   const taken = [
     ...settings.map((s) => s.letter),
     ...Object.values(options).map((o) => o.letter),
@@ -1114,6 +1119,7 @@ export function dealOf(
     ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
     ...(tierFlag === null ? [] : [tierFlag.letter]),
     ...(oneKind?.only == null ? [] : [oneKind.only.letter]),
+    ...(kindLetters ?? []).map((l) => l.letter),
     "d",
   ];
   if (
@@ -1121,6 +1127,9 @@ export function dealOf(
     taken.filter((l) => l === oneKind.only?.letter).length > 1
   )
     throw new CompileError(`deal onlyFlag: the letter ${oneKind.only.letter} is taken`);
+  for (const { letter } of kindLetters ?? [])
+    if (taken.filter((l) => l === letter).length > 1)
+      throw new CompileError(`deal kindLetters: the letter ${letter} is taken`);
   for (const letter of Object.keys(unusedLetters ?? {}))
     if (taken.includes(letter))
       throw new CompileError(`unusedLetters: the letter ${letter} is taken`);
@@ -1149,6 +1158,8 @@ export function dealOf(
     ...present("divide", divide),
     ...(oneKind === null ? {} : { oneKind: oneKind.deal }),
     ...present("onlyFlag", oneKind?.only ?? null),
+    ...present("firstKind", firstKind),
+    ...present("kindLetters", kindLetters),
     ...(grow === null
       ? {}
       : {
@@ -1271,6 +1282,47 @@ function oneKindDeal(
     deal: { kinds: one.kinds, partition },
     only,
   };
+}
+
+/** `deal.firstKind`: kinds at one place other than a part, where a part's
+ * one clue is `oneKind`'s; `null` where there is none. */
+function firstKindOf(json: DescriptionJson, d: Description): readonly string[] | null {
+  const kinds = firstKindJsonOf(json);
+  if (kinds === null) return null;
+  const places = new Set(kinds.map((k) => d.clueKinds.get(k)?.at));
+  for (const k of kinds) {
+    const c = d.clueKinds.get(k);
+    if (c === undefined) throw new CompileError(`deal firstKind: no clue kind ${k}`);
+    if (c.complete)
+      throw new CompileError(
+        `deal firstKind: ${k} is complete, a clue at every element`,
+      );
+  }
+  if (places.size !== 1 || kinds.length < 2)
+    throw new CompileError("deal firstKind: two kinds or more, at one place");
+  return kinds;
+}
+
+/** `deal.kindLetters`: each a kind of clue the deal deals, and a kind the
+ * board's own rules read none of; `null` where there are none. */
+function kindLettersOf(
+  json: DescriptionJson,
+  d: Description,
+): readonly KindLetterJson[] | null {
+  const letters = kindLettersJsonOf(json);
+  if (letters === null) return null;
+  for (const { kind } of letters) {
+    const c = d.clueKinds.get(kind);
+    if (c === undefined)
+      throw new CompileError(`deal kindLetters: no clue kind ${kind}`);
+    if (c.complete || kind === "given")
+      throw new CompileError(`deal kindLetters: ${kind} is dealt whatever the params`);
+  }
+  if (new Set(letters.map((l) => l.kind)).size !== letters.length)
+    throw new CompileError("deal kindLetters: a kind named twice");
+  if (new Set(letters.map((l) => l.letter)).size !== letters.length)
+    throw new CompileError("deal kindLetters: a letter named twice");
+  return letters;
 }
 
 /**
