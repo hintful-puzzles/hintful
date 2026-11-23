@@ -2,10 +2,11 @@
  * A clue the player marks done (`play.done`), grayed so the eye skips it.
  * The board keeps one flag a clue of each such kind, by its index in the
  * kind's list, so the mark is the same wherever the clue sits; where a press
- * finds it is the clue's place's (a gap, for a clue at an edge).
+ * finds it is the clue's place's (a gap, for a clue at an edge; its drawn
+ * text, for a clue at a part).
  */
 
-import type { Point } from "../contract/types.ts";
+import type { Point, Rect } from "../contract/types.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
@@ -20,6 +21,17 @@ import type { GridSpace } from "../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import type { FillPlay, FillUi } from "./play.ts";
+
+/** The clue of the part holding cell `c` on a board drawn at tile size
+ * `ts`, with the box it is drawn in (`FillRender.partClueBox`). */
+export type PartClueAt<C> = (
+  ts: number,
+  board: FillBoard<C>,
+  c: number,
+) => { readonly box: Rect; readonly kind: string; readonly k: number } | null;
+
+/** A tile size for a part clue's kind and index alone. */
+const KEY_TILE = 32;
 
 /** Marks clue `k` of kind `kind` done, or unmarks it. */
 export interface DoneMove {
@@ -81,17 +93,41 @@ export interface DoneInput<C, D> {
  * The done marks of a board drawn with `gap` pixels between its cells from
  * `origin`, where its clues sit at edges: a press in a gap marks the clue in
  * it, with either button, and a drag on through the gaps marks each that
- * looked the same, as upstream Unequal's does.
+ * looked the same, as upstream Unequal's does. Where its clues sit at parts
+ * (`partClue`), a press on a clue's text marks it, and a drag on marks
+ * those that looked the same alike.
  */
 export function doneInput<C extends Clues<C>, D extends { readonly tileSize: number }>(
   module: FillModule<C>,
   play: FillPlay,
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number,
+  partClue: PartClueAt<C> | null = null,
 ): DoneInput<C, D> | null {
   const nouns = Object.values(play.done ?? {});
   if (nouns.length === 0) return null;
   const pitch = (ts: number): number => ts + gap(ts);
+  const marked = (kind: string, k: number): DoneMove | null =>
+    kind in (play.done ?? {}) ? { type: "done", kind, k } : null;
+  /** The clue of a part drawn round `p`, a few pixels' slack about its
+   * text: a press elsewhere in its square selects the square. */
+  const partClueAt = (b: FillBoard<C>, ts: number, p: Point): DoneMove | null => {
+    if (partClue === null) return null;
+    const o = origin(ts, b);
+    const x = Math.floor((p.x - o) / pitch(ts));
+    const y = Math.floor((p.y - o) / pitch(ts));
+    if (x < 0 || y < 0 || x >= b.w || y >= b.h) return null;
+    const clue = partClue(ts, b, y * b.w + x);
+    if (clue === null) return null;
+    const { box } = clue;
+    const slack = Math.max(2, Math.floor(ts / 12));
+    const inside =
+      p.x >= box.x - slack &&
+      p.x < box.x + box.w + slack &&
+      p.y >= box.y - slack &&
+      p.y < box.y + box.h + slack;
+    return inside ? marked(clue.kind, clue.k) : null;
+  };
   /** The edge whose gap holds `p`, or `-1`: past a cell's right side and
    * within its height, or below it and within its width. */
   const edgeAt = (sp: GridSpace, b: FillBoard<C>, ts: number, p: Point): number => {
@@ -110,7 +146,8 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
     // One noun the help page says, the first kind's.
     noun: nouns[0],
     target: (b, ds, p) =>
-      clueAtEdge(module, play, b, edgeAt(spaceOf(module, b), b, ds.tileSize, p)),
+      clueAtEdge(module, play, b, edgeAt(spaceOf(module, b), b, ds.tileSize, p)) ??
+      partClueAt(b, ds.tileSize, p),
     apply: (_b, clue) => clue,
     button: "either",
     sweep: { holds: (b, { kind, k }) => (isDone(b, kind, k) ? 1 : 0) },
@@ -132,6 +169,10 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
       const step = stepOf(raw);
       if (step === null) return null;
       const { x, y } = ui.cursor;
+      // On a board of clues at parts, any arrow marks the cursor's own
+      // part's: its box is not read, so any tile size serves.
+      const clue = partClue?.(KEY_TILE, b, y * b.w + x) ?? null;
+      if (clue !== null) return marked(clue.kind, clue.k);
       const [nx, ny] = [x + step[1], y + step[2]];
       if (nx < 0 || ny < 0 || nx >= b.w || ny >= b.h) return null;
       const sp = spaceOf(module, b);

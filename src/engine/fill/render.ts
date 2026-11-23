@@ -188,6 +188,14 @@ export interface FillRender<C> {
   redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void;
   /** The numbers on cells not yet done, for the status bar. */
   numbersLeft(board: FillBoard<C>): number;
+  /** The clue of the part holding cell `c`, with the box it is drawn in at
+   * its part's first cell at tile size `ts`; `null` where the part has none
+   * or the board has no clues at parts. */
+  partClueBox(
+    ts: number,
+    board: FillBoard<C>,
+    c: number,
+  ): { readonly box: Rect; readonly kind: string; readonly k: number } | null;
 }
 
 const PREFERRED_TILE_SIZE = 32;
@@ -1789,5 +1797,22 @@ export function fillRender<C extends Clues<C>>(
     },
     redraw,
     numbersLeft,
+    partClueBox(ts, b, c) {
+      if (!labeled || walled === undefined) return null;
+      const { of, cells } = b.dealt[walled] as Partition;
+      const first = cells[of[c]][0];
+      const label = labelsOf(b).get(first);
+      if (label === undefined) return null;
+      const size = tileOf(ts);
+      depth = depthOf(b);
+      const at = [first % b.w, Math.floor(first / b.w), b.h] as const;
+      const walls = partsOf(b)?.walls[first] ?? null;
+      const { origin, options } = labelText(size, at, walls, label.text);
+      return {
+        box: textBox(origin, options, label.text),
+        kind: label.kind,
+        k: label.k,
+      };
+    },
   };
 }

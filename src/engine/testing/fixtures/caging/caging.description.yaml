@@ -43,6 +43,7 @@ freedom: { kind: fill }
 play:
   numbers: {}
   signs: { sum: "+", product: "×" }
+  done: { sum: cage clue, product: cage clue }
   boards: [4x4, 5x5]
   hintMarks:
     ring: the square the step decides.

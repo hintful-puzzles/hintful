@@ -324,7 +324,12 @@ export function fillGame<C extends Clues<C> & object>(
   const typed =
     play.numbers === undefined
       ? null
-      : numberInput<C, FillDrawState>(module, render.origin, render.gap);
+      : numberInput<C, FillDrawState>(
+          module,
+          render.origin,
+          render.gap,
+          render.partClueBox,
+        );
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;
   const inputs =

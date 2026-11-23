@@ -261,12 +261,12 @@ export function playOf(
       );
   }
   // A clue is marked done by a press where it is drawn, and the engine finds
-  // a press on a clue in a gap alone; the press goes to the board of numbers'
-  // input, which takes no press in a gap of its own.
+  // a press on a clue in a gap or on one at a part alone; the press goes to
+  // the board of numbers' input, which takes no press in a gap of its own.
   for (const k of Object.keys(p.done ?? {})) {
-    if (p.gaps?.[k] === undefined)
+    if (p.gaps?.[k] === undefined && p.signs?.[k] === undefined)
       throw new CompileError(
-        `play done: ${k} is no clue kind drawn in a gap, the one place a press marks a clue done`,
+        `play done: ${k} is no clue kind drawn in a gap or at a part, the places a press marks a clue done`,
       );
     if (p.numbers === undefined)
       throw new CompileError(

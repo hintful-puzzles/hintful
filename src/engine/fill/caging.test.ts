@@ -7,6 +7,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as caging from "../../generated/engine/testing/fixtures/caging/caging.compiled.ts";
+import { clueDoneColor } from "../color/palette.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import {
   DESC_OUT_OF_RANGE,
@@ -15,11 +16,23 @@ import {
   descBadCharacter,
   validateDesc,
 } from "../contract/desc-error.ts";
+import { UI_UPDATE } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
+import type { Color } from "../contract/types.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  LEFT_BUTTON,
+  MOD_CTRL,
+  MOD_SHFT,
+  RIGHT_BUTTON,
+} from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
+import type { AnyGame } from "../testing/input-probe.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
+import { expectDragRepeatsThePress } from "../testing/sweep-probe.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import { encodeDesc } from "./game-id.ts";
@@ -29,6 +42,7 @@ import { COL_INK } from "./render.ts";
 const game = fillGame("caging", caging);
 type Board = FillBoard<caging.Dealt>;
 
+const sameColor = (a: Color, b: Color): boolean => a.every((v, i) => v === b[i]);
 const params = (w: number, diff = 0, only = false) => ({ w, h: w, diff, only });
 const board = (w: number, desc: string): Board => game.newState(params(w), desc);
 /** The tier whose boards need a cage's clue read by the ways to fill it. */
@@ -129,6 +143,99 @@ describe("a part's clue drawn", () => {
     );
     expect(topNotes.length).toBeGreaterThan(0);
     for (const t of topNotes) expect(t.y).toBeGreaterThan(labelBottom);
+  });
+});
+
+describe("a part's clue marked done", () => {
+  const TS = 48;
+  const b = board(4, D4);
+  const ds = game.newDrawState(b, TS);
+  const colors = game.colors(DEFAULT_BACKGROUND);
+  const recorded = (s: Board) => {
+    const dr = new RecordingDrawing(colors);
+    game.redraw(dr, game.newDrawState(s, TS), {
+      state: s,
+      prev: null,
+      dir: 1,
+      ui: game.newUi(s),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
+    return dr.ops.filter((o): o is Extract<DrawOp, { op: "text" }> => o.op === "text");
+  };
+  /** A point inside the ink of clue `i` as drawn, from its left baseline. */
+  const onClue = (i: number) => {
+    const t = recorded(b)[i];
+    return { x: t.x + 2, y: t.y - 2 };
+  };
+  const pressed = (s: Board, p: { x: number; y: number }, button = LEFT_BUTTON) => {
+    const move = game.interpretMove(s, game.newUi(s), ds, p, button);
+    if (move === null || move === UI_UPDATE) throw new Error("the press made no move");
+    return game.executeMove(s, move);
+  };
+
+  it("is marked by a press on its text with either button, and unmarked by another", () => {
+    // The third clue is the third cage's, a sum: 9+.
+    const once = pressed(b, onClue(2));
+    expect(Array.from(once.done["sum"])).toEqual([0, 1, 0]);
+    expect(Array.from(once.done["product"])).toEqual([0, 0, 0, 0]);
+    const other = pressed(once, onClue(0), RIGHT_BUTTON);
+    expect(Array.from(other.done["product"])).toEqual([1, 0, 0, 0]);
+    expect(Array.from(pressed(other, onClue(2)).done["sum"])).toEqual([0, 0, 0]);
+  });
+
+  it("leaves a press elsewhere in the clue's square to select it", () => {
+    const t = recorded(b)[0];
+    // Below the clue's line, in the same square.
+    const below = { x: t.x + 2, y: t.y + TS / 2 };
+    const ui = game.newUi(b);
+    expect(game.interpretMove(b, ui, ds, below, LEFT_BUTTON)).toBe(UI_UPDATE);
+    expect(ui.cursor).toMatchObject({ x: 0, y: 0, visible: true });
+  });
+
+  it("is drawn gray, and red over it once it breaks", () => {
+    const gray = clueDoneColor(DEFAULT_BACKGROUND);
+    const isGray = (c: number) => sameColor(colors[c], gray);
+    const marked = pressed(b, onClue(0));
+    expect(recorded(b).filter((t) => isGray(t.color))).toHaveLength(0);
+    expect(
+      recorded(marked)
+        .filter((t) => isGray(t.color))
+        .map((t) => t.text),
+    ).toEqual(["2×"]);
+    // 2 and 3 multiply to 6, not 2: red, though marked done.
+    const broken = recorded(game.executeMove(marked, { set: [0, 2, 1, 3] }));
+    expect(broken.filter((t) => isGray(t.color))).toHaveLength(0);
+    expect(
+      broken
+        .filter((t) => sameColor(colors[t.color], colors[COL_ERROR]))
+        .map((t) => t.text),
+    ).toEqual(["2×"]);
+  });
+
+  it("is what a drag over the clues repeats", () => {
+    const declared = game.doneClues;
+    if (declared === undefined) throw new Error("no doneClues");
+    expectDragRepeatsThePress(
+      { ...game, defaultParams: () => params(4) } as unknown as AnyGame,
+      "caging",
+      declared,
+    );
+  });
+
+  it("is marked by Shift or Ctrl with any arrow, the clue of the cursor's own cage", () => {
+    const ui = game.newUi(b);
+    // The last square of the third cage, a sum of three, the second sum.
+    const c = b.dealt.cage.cells[2][2];
+    const [x, y] = [c % 4, Math.floor(c / 4)];
+    const top = recorded(b)[0];
+    const inC = { x: top.x + x * TS + TS / 2, y: top.y + y * TS + TS / 2 };
+    expect(game.interpretMove(b, ui, ds, inC, LEFT_BUTTON)).toBe(UI_UPDATE);
+    expect(ui.cursor).toMatchObject({ x, y });
+    const third = { type: "done", kind: "sum", k: 1 };
+    for (const key of [CURSOR_DOWN | MOD_SHFT, CURSOR_LEFT | MOD_CTRL])
+      expect(game.interpretMove(b, ui, ds, { x: 0, y: 0 }, key)).toEqual(third);
+    expect(ui.cursor).toMatchObject({ x, y });
   });
 });
 

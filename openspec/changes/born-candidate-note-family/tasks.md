@@ -165,8 +165,13 @@ commit. In design.md § "Decisions" 7's order.
         cells); each clue drawn at its part's first cell as its number and
         sign (`play.signs`), the notes below the label band, red where it
         breaks; the walk's stripes on a part.
-  - [ ] 2.4b Done marks on a clue at a part: the press, the key and the
-        gray, on `caging`.
+  - [x] 2.4b Done marks on a clue at a part: the press, the key and the
+        gray, on `caging`. The owner chose (2026-11-23) a press on the
+        clue's drawn text, with a little slack, marking it, and a press
+        elsewhere in the square selecting it as before; Shift or Ctrl with
+        an arrow marks the clue of the cage the cursor is in. The renderer
+        says where it drew a clue (`FillRender.partClueBox`), so the press
+        and the drawing share one box.
   - [ ] 2.4c The flip: Keen's tests to `keen.cases.yaml`, its TypeScript
         deleted, the `game-lines` ceiling lowered, its spec deltas; the
         menu, the `m` variant board, the tier bounds at 3x3. Learned in
@@ -175,6 +180,10 @@ commit. In design.md § "Decisions" 7's order.
         difference and quotient each state `|cells(at)| = 2` in their
         meaning; the sign is drawn on every clue, a products-only board's
         too (upstream draws none there): a difference the player sees.
+        Keen has no text format today; the engine's prints the cages'
+        walls and the numbers, and the flip gives it each cage's clue too
+        (a cell is three characters, so a clue such as `720×` goes beside
+        the grid, not in it).
 - [ ] 2.5 Towers born: clues at both ends of a line, `numbers` with its
       separator and the optional givens after `,`, a hide from a tier up,
       `fullLine` and `tallestNearest` stated as techniques, the tower

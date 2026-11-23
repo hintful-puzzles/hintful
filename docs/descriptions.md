@@ -271,8 +271,11 @@ research tools all read through it; the app never does.
   mark done, each with what one is called (`engine/fill/done.ts`): the board
   keeps a flag a clue, by kind and index, so the mark is one capability
   wherever a clue sits, and the game's `doneClues` writes the help's
-  `{{done-clues}}` sentence. A press finds a clue in a gap alone so far, on
-  a board of numbers, and the compiler refuses any other kind. A hide keeps whole, until the asked tier's
+  `{{done-clues}}` sentence. A press finds a clue in a gap, or on a part's
+  clue's drawn text (the renderer's `partClueBox`, a press elsewhere in its
+  square selecting it), on a board of numbers, and the compiler refuses any
+  other kind; Shift or Ctrl with an arrow marks the gap's clue that way, or
+  on a board of parts the cursor's own part's. A hide keeps whole, until the asked tier's
   pass, a kind the lowest tier reads none of (signs over a Latin square's
   singles), so the tier that reads it hides from it.
   `deal.sample: { latin: true }`

@@ -41,7 +41,7 @@ import {
 } from "../mechanics/note-taking-cell.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
-import { type DoneInput, type DoneMove, doneInput } from "./done.ts";
+import { type DoneInput, type DoneMove, doneInput, type PartClueAt } from "./done.ts";
 import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 
@@ -117,13 +117,14 @@ export function numberInput<
   module: FillModule<C>,
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number = () => 0,
+  partClue: PartClueAt<C> | null = null,
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
   const done =
     module.play === undefined
       ? null
-      : doneInput<C, D>(module, module.play, origin, gap);
+      : doneInput<C, D>(module, module.play, origin, gap, partClue);
   return {
     done,
     interpretMove(b, fillUi, ds, p, raw) {
