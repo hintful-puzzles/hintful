@@ -52,7 +52,9 @@
             order, a subset. Agreed on all 673 placements of the four
             declaring games before it was written; seen to fail with a
             technique dropped and with the premise check dropped.
-      - [ ] Absence over every picture of a small size.
+      - [ ] Absence over every picture of a small size (Pattern's "no
+            Unreasonable board up to 3x3"): `tiers.absent` with
+            `exhaustive: true`. Pattern needs only this to move.
 
 ## 3. Capabilities on their own descriptions
 
