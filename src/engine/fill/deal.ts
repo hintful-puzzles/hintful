@@ -123,6 +123,16 @@ const EVERY_CLUE_DRAW = 8;
  */
 const HIDING_RUN = 6;
 
+/**
+ * Draws in a row the lowest tier does not finish with every clue before a
+ * deal keeps one a higher tier finishes and hides from it there. Mosaic's
+ * narrow boards (40x5, 3x50 at Normal) are seldom finished by Easy and gave
+ * up after 10,000 draws without this; at 64 no menu board of Mosaic, Light
+ * Up or Boats deals with a different count of instructions than with none,
+ * where 32 cost Mosaic's 8x10 Normal 37% (2026-11-23).
+ */
+const SHORT_OF_LOWEST_RUN = 64;
+
 export function dealFill<C extends Clues<C>>(
   module: DealtFillModule<C>,
   deal: FillDeal,
@@ -311,29 +321,41 @@ export function dealFill<C extends Clues<C>>(
     return units.slice(0, hi).flat().sort(byIndex);
   };
   /**
-   * The clues with each of `kind`'s that may go hidden: at the lowest tier
-   * that finishes the board with every clue shown, and then at `tier` where
-   * `climb` is set; `null` where no tier up to `tier` finishes it.
+   * The clues with each of `kind`'s that may go hidden: at the lowest tier,
+   * and then at `tier`; `null` where the lowest does not finish the board
+   * with every clue shown.
    *
-   * Hiding at a tier above the lowest that finishes a board is slow, each try
-   * asking the higher tier (Mosaic's 10x10 Normal deal took twice as long and
-   * its 20x25 three times, measured 2026-11-22), so most clues go at the
-   * lowest. The tiers between it and `tier` hide nothing that `tier` would
-   * not and cost a pass each (Boats' 10x10 Hard, 507 solves a deal against
-   * 404 without them), and a draw the lowest tier does not finish is still a
-   * board of a higher one, which it once threw away (Light Up's 12x16 Normal,
-   * 40 draws a deal; 2026-11-23). Thorough, every clue is tried at each
-   * tier; otherwise none at the first and as many as the board's shorter
+   * Hiding at a tier above the lowest is slow, each try asking the higher
+   * tier, so a draw the lowest does not finish is drawn again, though it is
+   * a board of a higher one, until {@link SHORT_OF_LOWEST_RUN} such draws
+   * in a row: then it is hidden from at the lowest tier up to `tier` that
+   * finishes it. Hidden from so at once, Mosaic's 12x15 Normal deal took
+   * 84 ms against 43, its Unreasonable 240 against 131, and Light Up's 12x16
+   * Normal 68 against 80, bundled (2026-11-23). The tiers between the lowest and `tier` hide nothing that
+   * `tier` would not and cost a pass each (Boats' 10x10 Hard, 507 solves a
+   * deal against 404 without them). Thorough, every clue is tried at each
+   * tier; otherwise none at the lowest and as many as the board's shorter
    * side at `tier`.
+   *
+   * `forSearch` hides at that one tier, and skips the shortest run, for a
+   * hide a search's strip follows: the shortest run there took Mosaic's 12x15 Unreasonable deal from 2.6 G instructions
+   * to 4.4 and Bricks' 8x10 from 0.51 to 0.46 (2026-11-23).
    */
-  const hideUpTo = (clues: C, tier: number, climb = true): C | null => {
+  let shortOfLowest = 0;
+  const hideUpTo = (clues: C, tier: number, forSearch = false): C | null => {
     if (kind === undefined) return clues;
-    // Most draws the asked tier does not finish (Light Up's 12x16 Normal, 26
-    // of 36), which one solve at it says; a lower tier's solve is a part of
-    // that one, and is asked only of the draws kept.
-    if (!finishes(clues, tier)) return null;
+    // A draw the asked tier does not finish the lowest does not either, and
+    // the lowest's solve is the cheaper; the deal holds the board to the
+    // asked tier once its clues are hidden. Asking the asked tier first cost
+    // Mosaic's 8x10 Normal deal a third more (2026-11-23).
     let from = 0;
-    while (from < tier && !finishes(clues, from)) from++;
+    if (finishes(clues, 0)) shortOfLowest = 0;
+    else {
+      if (++shortOfLowest < SHORT_OF_LOWEST_RUN) return null;
+      from = 1;
+      while (from <= tier && !finishes(clues, from)) from++;
+      if (from > tier) return null;
+    }
     let shown = allShown(clues);
     // A firing reads only the clues its bindings name, so the board finishes
     // without the clues the ladder never read; where a technique reads one
@@ -345,12 +367,12 @@ export function dealFill<C extends Clues<C>>(
       .flat()
       .sort(byIndex);
     if (finishes(keeping(clues, pruned), from)) shown = pruned;
-    if (thorough) {
+    if (thorough && !forSearch) {
       const order = unitsOf(clues, shown);
       shuffle(order, rs);
       shown = shortestRun(clues, order, from);
     }
-    for (const t of climb && tier > from ? [from, tier] : [from]) {
+    for (const t of tier > from && !forSearch ? [from, tier] : [from]) {
       const order = unitsOf(clues, shown);
       shuffle(order, rs);
       const tries = thorough
@@ -387,20 +409,20 @@ export function dealFill<C extends Clues<C>>(
     const got = dealUnreasonable<Held>({
       label: `fill: ${module.tiers[p.diff]} deal (${p.w}x${p.h})`,
       draw() {
-        // A board some tier below the search's finishes is drawn until there
-        // is one, hidden from at the lowest such tier, so the every-clue try
-        // is one in its count of boards and not of pictures, most of which
-        // the ladder does not finish (the miscount took Mosaic's 10x10 median
-        // left undecided from 43 to 65).
+        // A board the lowest tier finishes is drawn until there is one, and
+        // hidden from at that tier, so the every-clue try is one in its count
+        // of boards and not of pictures, most of which the ladder does not
+        // finish (the miscount took Mosaic's 10x10 median left undecided from
+        // 43 to 65).
         const every = deal.stripFrom === "everyClue" || ++draws % EVERY_CLUE_DRAW === 0;
         const attempt = retryLimit("fill: a board to strip");
         for (;;) {
           attempt();
           const drawn = draw(0);
           if (drawn === null) continue;
-          const clues = every ? drawn.clues : hideUpTo(drawn.clues, top, false);
+          const clues = every ? drawn.clues : hideUpTo(drawn.clues, top, true);
           if (clues === null) {
-            drawRejected("fill: no tier below the search's finishes every clue");
+            drawRejected("fill: the lowest tier stops short of every clue");
             continue;
           }
           answer = drawn.g;
@@ -453,7 +475,7 @@ export function dealFill<C extends Clues<C>>(
     if (drawn === null) continue;
     const clues = hideUpTo(drawn.clues, p.diff);
     if (clues === null) {
-      drawRejected("fill: no tier up to the asked finishes every clue");
+      drawRejected("fill: the lowest tier stops short of every clue");
       continue;
     }
     if (!finishes(clues, p.diff)) {

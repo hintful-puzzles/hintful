@@ -1,5 +1,5 @@
 7x7 Easy #0: 11 steps, solved, 0afa36f61b735c74 [clueExact:4 clueFull:3 square:4]
-7x7 Normal #0: 12 steps, solved, 1c3570771bac99ad [clueExact:3 clueFull:4 darkSet:1 square:4]
+7x7 Normal #0: 8 steps, solved, 07717a49997a62e7 [clueExact:5 darkSet:1 square:2]
 7x7 Unreasonable #0: 7 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., f15a379f556027a7 [clueExact:3 clueFull:1 clueSet:2 darkSet:1]
 10x10 Easy #0: 21 steps, solved, 5bbcfc2649d20340 [clueExact:9 clueFull:7 square:5]
 7x7 Easy, Symmetry: None #0: 14 steps, solved, c85ff0c2edc8fcb2 [clueExact:2 clueFull:7 square:5]

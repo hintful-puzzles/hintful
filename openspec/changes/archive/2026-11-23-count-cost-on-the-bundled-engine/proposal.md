@@ -39,10 +39,15 @@ fails on the engine's parameter properties and on `import.meta.glob`.
 ### Modified Capabilities
 
 - `build-pipeline`: a cost comparison counts the engine as the app runs it.
+- `described-fill-game`: a hide throws away a draw the lowest tier does not
+  finish (added by task 3.2, when the re-count found
+  `cut-the-born-deal-cost` had made Mosaic's deal three times dearer).
 
 ## Impact
 
 `scripts/compare-cost.ts`, `scripts/checks/cost-walk.test.ts` (which
 becomes a bundle entry), `scripts/checks/deal-compare.test.ts`,
 `scripts/checks/deal-profile.test.ts`, `docs/method.md`,
-`docs/descriptions.md`. Nothing a player sees.
+`docs/descriptions.md`, and from 3.2 `src/engine/fill/deal.ts`. A player
+sees Mosaic's larger boards dealt faster, and other boards dealt for a seed
+by the born fill games; no save, ID or link changes.

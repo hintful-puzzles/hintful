@@ -135,3 +135,69 @@ Unreasonable 53 to 84; 12x15 Normal 40 to 88, Unreasonable 139 to 242;
 20x25 Normal 302 to 883. That is a menu board past 100 ms where it was
 not, which `docs/descriptions.md` § "Judging a family moved onto its
 description" has fixed in the engine; it is taken up below.
+
+## The hide mended (3.2), 2026-11-23
+
+Three parts of `cut-the-born-deal-cost`'s hide (`engine/fill/deal.ts`,
+`hideUpTo`) cost Mosaic, each found by switching it off alone and
+counting the bundle's deals (ten or twenty of a cell):
+
+- **A draw the lowest tier does not finish was kept** and hidden from at
+  the tier that does. Mosaic 12x15 Normal 84 to 43 ms a deal without it,
+  Unreasonable 240 to 131; Light Up 12x16 Normal 68 to 80. Light Up gains
+  a sixth from keeping them and Mosaic loses half, so a draw the lowest
+  tier does not finish is drawn again, as before that change, until 64 in
+  a row. The tier walk found why that change had kept them: Mosaic's
+  narrow Custom boards at Normal (37x5 to 41x5, 3x50, 4x50), which Easy
+  seldom finishes, gave up after 10,000 draws without them. After 64 such
+  draws one is kept, and those cells deal in 64 to 445 draws (`npm run
+  deal-walk`, three seeds a cell). At 64 every menu board measured (Mosaic
+  8x10 and 12x15, Light Up 12x16 and 10x10, Boats 10x10 Hard) deals with
+  the same count of instructions as with no run at all; at 32, Mosaic's
+  8x10 Normal cost 37% more, and at 16, its 12x15 Normal 63% more.
+- **The asked tier was solved first.** Once a draw must finish at the
+  lowest tier, that solve does nothing the lowest's does not, and the
+  lowest's is the cheaper: without it Mosaic 8x10 Normal −32%, Light Up
+  12x16 and 10x10 Normal −9% and −10%, Boats 8x8 Normal −6%, Boats 10x10
+  Hard +2%.
+- **The halving before a search's strip.** Without it Mosaic 12x15
+  Unreasonable 43.7 to 26.3 G, 8x10 −37%; Range neutral on its big
+  boards; Bricks 8x10 +10%, 6x7 +12% (about 5 ms a deal, against 170
+  saved on Mosaic's). Kept where no search follows: off everywhere,
+  Boats' 8x8 Normal cost 77% more.
+
+Against `f7304ce26`, `compare-cost`, three rounds, the run of 64 in:
+deals Mosaic −64.3%, Bricks +8.5%, Range +10.0%, Boats −1.3%, Light Up
+−0.7%, Unruly −0.2%, Sticks none; walks and steps unchanged (Singles and
+Clusters, which hide nothing, none before the run went in). Bundled CPU time a deal,
+the least of three runs of ten deals (start-up, 3 ms a deal, included):
+
+| Board | Before the cuts | Now | Hand-written |
+|---|---|---|---|
+| Mosaic 8x10 Unreasonable | 56 ms | 66–71 ms | 61 ms |
+| Mosaic 12x15 Normal | 43 ms | 41 ms | |
+| Mosaic 12x15 Unreasonable | 149 ms | 123–128 ms | 123 ms |
+| Mosaic 20x25 Normal | 309 ms | 305–313 ms | 281 ms |
+| Light Up 12x16 Normal | 109 ms | 83 ms | |
+| Light Up 12x16 Unreasonable | 188 ms | 85 ms | |
+| Boats 10x10 Hard | 133 ms | 101 ms | |
+
+"Before the cuts" is `cebb0c3fc`, "hand-written" Mosaic's at `1057f5dc4`.
+Taken beside a tier walk, so above the archive's quieter figures; read
+across a row. Mosaic's two boards past 100 ms are past it in the
+hand-written game too.
+
+The tier walk (`metrics/tier-walk.md`) over Mosaic, Light Up, Boats,
+Bricks, Range, Unruly and Sticks: no board below or above its tier, and no
+cell that `f7304ce26`'s walk dealt gives up. Mosaic reaches 1,022 cells
+where that walk reached 784 before leaving the rest out as slow. Its
+narrow Custom boards at Easy (40x5 and up, 5x38 and up, 3x50 to 50x6)
+give up, as those that walk reached did: Easy is the lowest tier, so no
+run hands over to another, and a draw that narrow Easy seldom finishes.
+That is a Custom size past any menu board, and is not filed.
+
+**Left as they are.** Singles' deal is +33% against the commit before the
+cuts, from the build that ladders from the lowest tier (12x12 Easy 63 to
+57 ms, 9x11 Normal 15 to 21), and still 24% below the hand-written one's
+count; Clusters' is +10%, from `climbFill`. Both are under 100 ms on every
+menu board.

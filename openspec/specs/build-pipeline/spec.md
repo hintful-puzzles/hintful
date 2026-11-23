@@ -1601,7 +1601,7 @@ SHALL be stated where the deferral is made.
 
 ### Requirement: Two trees' cost is compared in instructions retired
 
-The repository SHALL provide an on-demand command, `npm run compare-cost`, that walks and deals the same boards in a baseline tree and the working tree and reports, per game, the instructions each run retired net of its process's start-up, and their difference. A comparison SHALL NOT be reported in wall time or CPU time, which move with the machine's load. The command SHALL NOT be part of the gate.
+The repository SHALL provide an on-demand command, `npm run compare-cost`, that walks and deals the same boards in a baseline tree and the working tree and reports, per game, the instructions each run retired net of its process's start-up, and their difference. Each run SHALL be of the tree bundled as the app bundles it. A comparison SHALL NOT be reported in wall time or CPU time, which move with the machine's load. The command SHALL NOT be part of the gate.
 
 #### Scenario: A comparison on a loaded machine
 
@@ -1612,6 +1612,11 @@ The repository SHALL provide an on-demand command, `npm run compare-cost`, that 
 
 - **WHEN** the command runs where instructions retired cannot be read
 - **THEN** it fails, saying so, and reports no figure in place of the count
+
+#### Scenario: A born game against the hand-written one it replaced
+
+- **WHEN** a born game is compared against the commit before it was born
+- **THEN** neither tree's count holds a module runner's getter on a call between the compiled techniques and their runtime
 
 ### Requirement: A comparison reports the engine's own counts beside the instructions
 

@@ -255,13 +255,15 @@ research tools all read through it; the app never does.
   each be a formula of the sizes (Star Battle's `2 * stars`). The
   `domino` painter draws two alike pieces touching only each other as one.
   `deal.hide` then takes a kind's clues off
-  at the lowest tier that finishes the board with every clue, and then at
-  the asked tier: first every clue no firing's bindings read, then the
-  shortest run of a random order the board still finishes with, then each
-  other in a random order while it still finishes at that tier. A draw no
-  tier up to the asked finishes is thrown away. `deal.thorough` is the
+  at the lowest tier, and then at the asked tier: first every clue no
+  firing's bindings read, then the shortest run of a random order the board
+  still finishes with, then each other in a random order while it still
+  finishes at that tier. A draw the lowest tier does not finish with every
+  clue is thrown away, since hiding at a higher tier costs more than drawing
+  again, until a long run of them (a narrow board Easy seldom finishes):
+  then one is hidden from at the lowest tier that finishes it. `deal.thorough` is the
   setting that tries every clue at each tier, by its letter in the params;
-  off, from a width of `offFrom` by default, the first tier tries none,
+  off, from a width of `offFrom` by default, the lowest tier tries none,
   takes no shortest run, and the asked one tries as many as the board's
   shorter side. A last tier named Unreasonable is the search's: its
   deal strips clues while the search proves one answer and the ladder stops

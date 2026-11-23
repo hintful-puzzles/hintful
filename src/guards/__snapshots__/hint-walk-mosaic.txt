@@ -1,4 +1,4 @@
 3x3 Easy #0: 3 steps, solved, c89b067460237a48 [alone.exact:1 alone.met:2]
-8x10 Normal #0: 30 steps, solved, fd3e63213abda5c3 [alone.exact:11 alone.met:10 compared.more:6 compared.same:3]
-8x10 Unreasonable #0: 15 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 6fe2254d5fa4c599 [alone.exact:2 alone.met:5 compared.more:6 compared.same:2]
+8x10 Normal #0: 28 steps, solved, 3613ad4c7317508c [alone.exact:13 alone.met:11 compared.more:3 compared.same:1]
+8x10 Unreasonable #0: 9 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 610c482640ce7458 [alone.exact:3 alone.met:2 compared.more:3 compared.same:1]
 50x50 Easy #0: 1455 steps, solved, bf8b5f0ec26535de [alone.exact:729 alone.met:726]

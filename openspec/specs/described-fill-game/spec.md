@@ -119,20 +119,28 @@ Where `deal.sample` is `build`, the answer SHALL be built a random value on a
 random undecided cell at a time, each followed by what the ladder then
 decides, from its lowest tier and a tier higher after each build that meets
 a dead end or breaks a rule. Where `deal.hide` names a clue kind, its clues
-SHALL be taken away at the lowest tier that finishes the board with every
-clue, then at the asked tier, while the board finishes at each; a
-draw no tier up to the asked finishes SHALL be thrown away.
+SHALL be taken away at the lowest tier, then at the asked one, while the
+board finishes; a draw the lowest does not finish is drawn again, short of
+a long run of them.
 
 #### Scenario: An Unruly board keeps only the givens it needs
 
 - **WHEN** an Unruly board is dealt and any one of its givens is taken away
 - **THEN** the board no longer finishes at its tier
 
-#### Scenario: A Light Up board the lowest tier does not finish is kept
+#### Scenario: A Mosaic board the lowest tier does not finish is drawn again
 
-- **WHEN** a Light Up board is drawn at Normal whose every number Easy does
-  not finish and Normal does
-- **THEN** its numbers are hidden at Normal, and the board is not drawn again
+- **WHEN** a Mosaic 12x15 board is drawn at Normal whose every number Easy
+  does not finish and Normal does, after draws Easy finished
+- **THEN** it is thrown away and another drawn, since hiding its numbers at
+  Normal costs more than drawing again
+
+#### Scenario: A narrow Mosaic board still deals
+
+- **WHEN** a Mosaic 3x50 board is asked at Normal, whose draws Easy seldom
+  finishes with every number
+- **THEN** a board is dealt at Normal, hidden from at Normal once a run of
+  draws Easy did not finish has passed
 
 ### Requirement: A born game's deal setting is a param by its letter
 

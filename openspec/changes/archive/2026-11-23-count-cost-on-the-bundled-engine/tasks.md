@@ -29,7 +29,7 @@
 - [x] 3.1 Re-count the three born families against their baselines and
       record the table in design.md; correct `docs/descriptions.md` and
       `docs/method.md` where they read the old figures.
-- [ ] 3.2 Mend what the re-count found (design.md § "The born families
+- [x] 3.2 Mend what the re-count found (design.md § "The born families
       re-counted"): `cut-the-born-deal-cost` took Mosaic's 12x15 deals past
       100 ms and its 20x25 Normal from 302 to 883 ms. Most of it is the
       hide keeping a draw whose every clue Easy does not finish and hiding
