@@ -5,8 +5,8 @@ ahead, with a gap list as its first task, and the rules in design.md
 § "What every group does" in its design. The task is done when that change
 is archived, with its figures recorded in its own design.md.
 
-- [ ] 1.1 `measure-cost-by-instructions` archived (filed 2026-11-23).
-- [ ] 1.1.1 `a-game-is-tested-by-its-data` archived (filed 2026-11-23).
+- [x] 1.1 `measure-cost-by-instructions` archived (filed 2026-11-23).
+- [x] 1.1.1 `a-game-is-tested-by-its-data` archived (filed 2026-11-23).
 - [ ] 1.2 Latin squares and candidate notes.
 - [ ] 1.3 Regions and partitions.
 - [ ] 1.4 Lines and loops.
