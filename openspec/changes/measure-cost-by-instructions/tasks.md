@@ -63,6 +63,21 @@
       sentence stays as written, and this change's design.md holds the
       correction.
 
+## 4. The criteria a family is judged by
+
+- [ ] 4.1 Recommend the criteria that replace "each game needs fewer new
+      capabilities than the one before" (proposal.md § "What Changes"), and
+      write them in `docs/descriptions.md`, where a family's change reads
+      them. Starting points from the 2026-11-23 review: engine lines a game
+      costs against the game lines it removes; how many of a flip's needs
+      were met by what earlier flips built; option keys under `play:` and
+      `deal:` used by one game only; the cost comparison of § 2 within its
+      spread; hint steps unchanged unless explained. The owner accepts what
+      is recommended if it judges better than the current test, so nothing
+      waits on an answer. Verified by applying the criteria to the three
+      archived born changes with § 3's figures, recorded in this change's
+      design.md: they must say something the old test did not.
+
 ## Workflow follow-up
 
 - Commit each group; push at the session's end.

@@ -30,6 +30,8 @@ What exists, read 2026-11-23:
 - One command for it, so the next family's change does not rebuild a
   harness.
 - The plain-cell family's figures re-taken, and Boats' step count settled.
+- Criteria for judging a family moved onto its description, recommended
+  and written down (proposal.md § "What Changes").
 
 **Non-Goals:**
 

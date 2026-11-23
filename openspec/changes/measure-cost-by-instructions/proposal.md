@@ -39,6 +39,13 @@ each hint does less, which a player sees.
   count explained or its hint fixed.
 - **`docs/method.md` says how a cost is compared**, so a later change uses
   the count, not CPU time.
+- **New criteria for judging a family moved onto its description**,
+  replacing "each game needs fewer new capabilities than the one before",
+  which failed in both pilots and was set aside by the owner each time.
+  The implementer recommends them, written where the next family's change
+  reads them, with this change's figures as their first use. The owner
+  accepts whatever is recommended, provided it judges better than the
+  current test (the owner, 2026-11-23); no answer is waited on.
 
 Not in this change:
 
@@ -46,8 +53,6 @@ Not in this change:
   It runs on CI's Linux runners, virtual machines that are not known to
   expose the hardware counters an instruction count reads; that was not
   checked here, and moving the budget would be a change of its own.
-- The criteria a born family is judged by, which the owner is reworking
-  separately; this change supplies the instrument those criteria use.
 
 ## Capabilities
 
