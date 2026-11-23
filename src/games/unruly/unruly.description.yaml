@@ -99,7 +99,6 @@ play:
   secondary: 2
   # A click goes round empty, the button's piece and the other one.
   click: cycle
-  stroke: sweep
   dealt: given
   # Upstream's 6x6 and 8x8, and its 10x10 and 14x14 made upright boards of
   # about their area.

@@ -76,6 +76,24 @@ function axesOf(play: FillPlay): { row: number; column: number } | null {
   return row === undefined || column === undefined ? null : { row, column };
 }
 
+/** The Controls paragraph's sentence about the drag, for a game whose
+ * values are lines (`lines`) or not. */
+function dragWords(play: FillPlay, noun: string, lines: boolean): string {
+  const along = play.straight === true ? " along a row or column" : "";
+  if (lines)
+    return (
+      `Drag${along} to draw a line that way through each ${noun} you pass ` +
+      `over; a drag that starts on a line already running that way clears ` +
+      `them instead.`
+    );
+  const words =
+    `drag${along} to do the same to every ${noun} you pass over that looked ` +
+    `the same as the first.`;
+  return play.sweepWith === undefined
+    ? `Keep the button down and ${words}`
+    : `Keep the right button down and ${words} A left drag acts only where it began.`;
+}
+
 /** A value the player places: what its verb does, as the Controls paragraph
  * completes "Click a square to …", the key or keys that place it, a letter
  * or a digit, and how it is printed and painted. */
@@ -110,10 +128,9 @@ export interface FillPlay {
   readonly blank?: number;
   /** A letter that empties a cell, beside Backspace and Delete. */
   readonly erase?: string;
-  /** What a drag does: `line` paints the secondary value along one row or
-   * column, `sweep` repeats the pressed verb on every cell it passes that
-   * held what the pressed one held. */
-  readonly stroke: "line" | "sweep";
+  /** Whether a drag keeps to the row or column it runs along, where it
+   * otherwise follows the pointer. */
+  readonly straight?: true;
   /** The one button whose drag sweeps, where the other's acts where it began
    * alone; both sweep where absent. */
   readonly sweepWith?: "secondary";
@@ -142,8 +159,14 @@ export interface FillPlay {
 /** The engine's `Ui` for a fill game. */
 export interface FillUi {
   cursor: GridCursor;
-  /** The line stroke's drag, `null` in a game whose stroke is a sweep. */
-  drag: GridDrag | null;
+  /** The drag: where it began, and where the pointer is. */
+  drag: GridDrag;
+  /** The cells a drag that follows the pointer has passed, in order, the
+   * first the pressed one. */
+  path: number[];
+  /** Where the dragging pointer last was, so a fast drag takes the cells it
+   * passed between two events. */
+  last: Point;
   /** The button the live drag began with, `-1` where none did. */
   dragButton: number;
   /** Whether the dragging pointer is over the board. */
@@ -158,10 +181,12 @@ export interface FillUi {
   hiddenShown: boolean;
 }
 
-export function newFillUi(stroke: FillPlay["stroke"] = "line"): FillUi {
+export function newFillUi(): FillUi {
   return {
     cursor: newCursor(),
-    drag: stroke === "line" ? newDrag() : null,
+    drag: newDrag(),
+    path: [],
+    last: { x: 0, y: 0 },
     dragButton: -1,
     dragOk: false,
     linkArmed: false,
@@ -214,6 +239,8 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
 ): FillInput<C, D> {
   const { primary, secondary } = play;
   const axes = axesOf(play);
+  if (axes !== null && play.straight !== true)
+    throw new Error("play: a game whose values are lines drags straight");
   type Verb = TargetVerb<FillBoard<C>, FillUi, Point, Edit>;
   const geometry =
     module.hexagon === undefined
@@ -289,14 +316,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
         ? clicking(secondary, primary)
         : rulingOut(clicking(secondary, primary)),
     keyOnly,
-    ...(play.stroke === "sweep"
-      ? {
-          sweep: {
-            holds: (b: FillBoard<C>, t: Point) => b.values[t.y * b.w + t.x],
-            ...(play.sweepWith === undefined ? {} : { buttons: [play.sweepWith] }),
-          },
-        }
-      : {}),
+    drags: dragWords(play, geometry.noun, axes !== null),
   };
 
   const links = play.links;
@@ -349,29 +369,34 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
 
   function pendingEdit(b: FillBoard<C>, ui: FillUi): Edit | null {
     const drag = ui.drag;
-    if (drag === null || !drag.live || !ui.dragOk || ui.dragButton < 0) return null;
+    if (!drag.live || !ui.dragOk || ui.dragButton < 0) return null;
     const link = dragLink(b, ui, drag);
     if (link !== null) return link;
     const { sx, sy, ex, ey } = drag;
     if (axes !== null && (sx !== ex || sy !== ey)) return alongEdit(b, drag, axes);
-    // A left drag acts as a click where it began, and a right drag that never
-    // left its cell is a right click: each its button's verb.
-    if (ui.dragButton === LEFT_BUTTON || (sx === ex && sy === ey)) {
-      const made = buttonVerb(targetVerbs, ui.dragButton)?.apply(
-        b,
-        { x: sx, y: sy },
-        ui,
-      );
-      return made === undefined || made === null || made === UI_UPDATE ? null : made;
-    }
-    // A right drag paints the open cells along its line.
-    const set: number[] = [];
+    // The press is its button's verb where it began, and a drag gives every
+    // cell it passes that held what the first held what the first became.
+    const first = sy * b.w + sx;
+    const made = buttonVerb(targetVerbs, ui.dragButton)?.apply(b, { x: sx, y: sy }, ui);
+    if (made === undefined || made === null || made === UI_UPDATE) return null;
+    const sweeps = play.sweepWith === undefined || ui.dragButton === RIGHT_BUTTON;
+    const became = made.set?.[1];
+    if (!sweeps || became === undefined) return made;
+    const set = [first, became];
+    for (const c of play.straight === true ? lineCells(b, drag) : ui.path)
+      if (c !== first && !b.fixed[c] && b.values[c] === b.values[first])
+        set.push(c, became);
+    return { set };
+  }
+
+  /** The cells from a straight drag's start to its end, which share a row or
+   * a column. */
+  function lineCells(b: FillBoard<C>, { sx, sy, ex, ey }: GridDrag): number[] {
+    const cells: number[] = [];
     for (let y = Math.min(sy, ey); y <= Math.max(sy, ey); y++)
-      for (let x = Math.min(sx, ex); x <= Math.max(sx, ex); x++) {
-        const c = y * b.w + x;
-        if (!b.fixed[c] && b.values[c] === 0) set.push(c, secondary);
-      }
-    return set.length === 0 ? null : { set };
+      for (let x = Math.min(sx, ex); x <= Math.max(sx, ex); x++)
+        cells.push(y * b.w + x);
+    return cells;
   }
 
   /** A drag of either button where the values are lines: the line along the
@@ -393,9 +418,26 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
     return set.length === 0 ? null : { set };
   }
 
-  /** The line stroke: a press starts a drag, which keeps to one row or
-   * column, and its release makes the edit it previewed. */
-  function lineDrag(
+  /** Every cell the pointer passed from `from` to `to`, sampled a few pixels
+   * apart, added to a free drag's path. */
+  function follow(b: FillBoard<C>, ui: FillUi, ds: D, from: Point, to: Point): void {
+    const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 3));
+    for (let i = 1; i <= steps; i++) {
+      const q = {
+        x: from.x + ((to.x - from.x) * i) / steps,
+        y: from.y + ((to.y - from.y) * i) / steps,
+      };
+      const t = geometry.pointerTarget(b, ds, q, ui);
+      if (t === null) continue;
+      const c = t.y * b.w + t.x;
+      if (!ui.path.includes(c)) ui.path.push(c);
+    }
+  }
+
+  /** The drag: a press starts it, it keeps to one row or column where `play`
+   * says it is straight and follows the pointer otherwise, and its release
+   * makes the edit it previewed. */
+  function dragArm(
     b: FillBoard<C>,
     ui: FillUi,
     drag: GridDrag,
@@ -405,9 +447,11 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
   ): Arm {
     const at = targetVerbs.geometry.pointerTarget(b, ds, p, ui);
     if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
-      if (at === null) return null;
+      if (at === null) return PASS;
       ui.dragButton = button;
       startDrag(drag, at.x, at.y);
+      ui.path = [at.y * b.w + at.x];
+      ui.last = p;
       ui.dragOk = true;
       ui.linkArmed = false;
       pressTarget(targetVerbs, ui, at);
@@ -421,11 +465,16 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
       if (isMouseRelease(button)) ui.dragButton = -1;
       return UI_UPDATE;
     }
+    if (play.straight !== true) {
+      follow(b, ui, ds, ui.last, p);
+      ui.last = p;
+    }
     if (at === null) ui.dragOk = false;
     else {
-      // The coordinate that moved less goes back to the drag's start.
       const { sx, sy } = drag;
-      if (Math.abs(at.x - sx) < Math.abs(at.y - sy)) moveDrag(drag, sx, at.y);
+      // A straight drag's coordinate that moved less goes back to its start.
+      if (play.straight !== true) moveDrag(drag, at.x, at.y);
+      else if (Math.abs(at.x - sx) < Math.abs(at.y - sy)) moveDrag(drag, sx, at.y);
       else moveDrag(drag, at.x, sy);
       ui.dragOk = true;
     }
@@ -519,8 +568,8 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
     },
     interpretMove(b, ui, ds, p, raw) {
       const button = stripModifiers(raw);
-      if (ui.drag !== null && (isMouseDown(button) || ui.dragButton >= 0)) {
-        const got = lineDrag(b, ui, ui.drag, ds, p, button);
+      if (isMouseDown(button) || ui.dragButton >= 0) {
+        const got = dragArm(b, ui, ui.drag, ds, p, button);
         if (got !== PASS) return got;
       }
       // A press off the grid shows or hides the numbers the piece hides.

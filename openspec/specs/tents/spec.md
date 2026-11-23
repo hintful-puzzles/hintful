@@ -262,9 +262,9 @@ the same placements for what they do to the two lines alongside.
 `interpretMove` SHALL start a one-cell drag on a left or right press, extend it
 along the single nearer row or column, and enact it on release. A left click
 SHALL set a blank square to a tent or clear a non-blank square; a right click
-SHALL set a blank to a non-tent or clear a non-blank; a right-drag, and only
-a right one, SHALL set every blank square it covers to a non-tent. Trees SHALL
-never be modified.
+SHALL set a blank to a non-tent or clear a non-blank. A drag with either
+button SHALL give every square it covers that held what the pressed square
+held what the pressed square became. Trees SHALL never be modified.
 
 #### Scenario: A left click toggles a tent
 
@@ -275,6 +275,12 @@ never be modified.
 
 - **WHEN** the right button is dragged across a row of blank squares
 - **THEN** every covered blank square becomes a non-tent
+
+#### Scenario: A left-drag places tents along its line
+
+- **WHEN** the left button is dragged across a row of blank squares, one of
+  them already grass
+- **THEN** every other covered square becomes a tent, and the grass is kept
 
 ### Requirement: Controls: An arrow with Shift or Ctrl grasses the squares the cursor leaves and enters
 
@@ -296,8 +302,8 @@ A left drag between a tree and the square orthogonally beside it, in either
 direction, SHALL be the link gesture when that square holds a tent or is
 blank. It SHALL join the two, placing a tent on a blank square in the same
 move, or part them when they are already joined, and SHALL change no other
-square. A left drag that is not the link gesture SHALL act as a click at its
-start.
+square. A left drag that is not the link gesture SHALL be the drag every fill
+game makes.
 
 #### Scenario: A drag from a tree to a blank square places its tent joined
 

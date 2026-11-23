@@ -294,8 +294,11 @@ research tools all read through it; the app never does.
   by the rules, left open by Solve and never a hint's step, with a
   preference for drawing a secondary piece there. A technique run on
   placing runs on each value the board holds too, so a bulb the player
-  placed shines. `play.sweepWith: secondary` makes the sweep stroke the
-  secondary button's alone, the primary placing one piece where it began.
+  placed shines. A drag gives each square it passes that held what the pressed
+  one held what the pressed one became; `play.straight` keeps it to a row or
+  column, for a game whose clues are on rows and columns, and
+  `play.sweepWith: secondary` makes it the secondary button's alone, the
+  primary placing one piece where it began.
   A scatter may take a `first` too, and scatters on the cells left (Sticks'
   blocks). `deal.oneIn: { kind: group }` derives a kind whose meaning reads
   its own clues (Sticks' length reads `room`) once on a random cell of each

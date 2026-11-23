@@ -4,17 +4,20 @@
  */
 
 import { BLUE_WASH } from "../../color/colors.ts";
-import { INK, SHADED } from "../../color/palette.ts";
+import { RULED_OUT, SHADED } from "../../color/palette.ts";
 import { COL_ERROR } from "../../color/roles.ts";
 import { glyphFont } from "../draw.ts";
-import { drawPiecePart, JOINED_OPEN } from "../piece.ts";
-import type { Painter } from "./painter.ts";
+import { drawPiecePart, drawRuledOutCross, JOINED_OPEN } from "../piece.ts";
+import { type Painter, surfaceOf } from "./painter.ts";
 
-/** Water: the sea's wash, waves on a square the puzzle gave. */
+/** Water: the sea's wash, with the cross every fill game rules a square out
+ * with where the player marked it, and waves where the puzzle gave it. */
 export const sea: Painter = {
-  colors: () => [BLUE_WASH, INK],
+  colors: () => [BLUE_WASH, RULED_OUT],
   surface: 0,
-  paint() {},
+  paint(dr, tile, slot, error, _grown, occupied = false) {
+    if (!occupied) drawRuledOutCross(dr, surfaceOf(tile), error ? COL_ERROR : slot[1]);
+  },
   given(dr, { x, y, w: ts }, slot) {
     for (const frac of [0.42, 0.58])
       dr.drawText(

@@ -20,7 +20,6 @@ help:
     of its own, with a faint cross. A gray square with nothing in it is one
     you have not decided yet.
 
-    Drag across several squares to make them all what the first one became.
     Hold Shift while moving the cursor to mark clear every undecided square
     it leaves and enters, or Ctrl to mark those squares clear even where
     they are shaded.
@@ -106,7 +105,8 @@ play:
   # The answer is the shaded squares alone: an open square is clear.
   blank: 2
   click: cycle
-  stroke: sweep
+  # The clues are the runs of rows and columns.
+  straight: true
   dealt: given
   # Upstream's sizes, and its 15x15 first.
   boards: [10x10, 10x15, 15x15, 20x25, 30x30]

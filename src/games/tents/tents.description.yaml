@@ -14,8 +14,7 @@ help:
   controls: |-
     {{controls}}
 
-    Right-click and drag along a row or column to mark many squares at once
-    as grass. Hold Shift while moving the cursor to mark the empty squares
+    Hold Shift while moving the cursor to mark the empty squares
     it passes over as grass, or Ctrl to turn tents it passes over into grass
     as well.
 
@@ -147,7 +146,8 @@ play:
   # The answer is the tents alone: an open square is grass.
   blank: 2
   erase: B
-  stroke: line
+  # The clues count rows and columns.
+  straight: true
   links: link
   # A tent touching one tree still free, or a tree with one place left for
   # its tent, shows its link at a glance: the help says so, and the hint

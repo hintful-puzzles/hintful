@@ -672,13 +672,16 @@ the time to weigh one against the two exemplars.
 Preview the drag by recoloring the gathered cells, and put the recoloring in
 the diff key ([`rendering.md`](./rendering.md) § "The tile cache and the diff
 key"). Exemplars: [`clusters/index.ts`](../src/games/clusters/index.ts);
-a fill game's `stroke: sweep` ([`fill/play.ts`](../src/engine/fill/play.ts)).
+a fill game's drag without `play.straight` ([`fill/play.ts`](../src/engine/fill/play.ts)),
+which is this drag and the line-fill one below with one path apart: every
+square passed that held what the pressed one held becomes what it became.
 
 ### A line-fill drag picks a transformation
 
 The drag fills one row or column, and the press decides a `from → to` pair:
 every square of the line dragged out that reads `from` becomes `to`.
-Exemplar: a fill game's `stroke: line` ([`fill/play.ts`](../src/engine/fill/play.ts)).
+Exemplar: a fill game's `play.straight` ([`fill/play.ts`](../src/engine/fill/play.ts)),
+for a game whose clues are on rows and columns.
 
 - **Choose the axis at each drag event, not at the press.** Whichever
   coordinate has moved less snaps back to the anchor, so a drag can change

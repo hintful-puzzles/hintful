@@ -36,8 +36,9 @@ export interface Painter {
    * hull: {@link paint} is told the sides it runs on to, or `JOINED_OPEN`
    * where the board does not yet say which way it runs. */
   readonly runs?: boolean;
-  /** What a cell the puzzle gave holding the piece draws over it, to tell
-   * it from one the player placed (Boats' waves on given water). */
+  /** What a cell the puzzle gave holding the piece draws in place of
+   * {@link paint}, to tell it from one the player placed (Boats' waves on
+   * given water, where the player's water takes the cross). */
   given?(dr: GameDrawing, tile: Rect, slot: readonly number[]): void;
   /**
    * Draw the piece in `tile`, the cell's whole box, the color at index `i`

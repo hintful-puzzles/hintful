@@ -755,17 +755,18 @@ export function fillRender<C extends Clues<C>>(
     const occupied = n >= 0;
     if (shrinking !== undefined && anim !== null)
       shrinking.painter.paint(dr, tile, shrinking.slot, false, 1 - anim.frac, occupied);
-    piece?.painter.paint(
-      dr,
-      tile,
-      piece.slot,
-      (word & ERR_AT) !== 0,
-      anim?.frac ?? 1,
-      occupied,
-      ((lineWord >> JOIN_SHIFT) & 0xf) | (lineWord & SHAPE_OPEN ? JOINED_OPEN : 0),
-    );
     if (word & FIXED && piece?.painter.given !== undefined)
       piece.painter.given(dr, tile, piece.slot);
+    else
+      piece?.painter.paint(
+        dr,
+        tile,
+        piece.slot,
+        (word & ERR_AT) !== 0,
+        anim?.frac ?? 1,
+        occupied,
+        ((lineWord >> JOIN_SHIFT) & 0xf) | (lineWord & SHAPE_OPEN ? JOINED_OPEN : 0),
+      );
     // A broken piece's badge takes the middle, where the dot would be.
     if (
       play.dotted === true &&
@@ -1144,7 +1145,7 @@ export function fillRender<C extends Clues<C>>(
     const { w, h } = state;
     depth = depthOf(state);
     boardW = w;
-    const shown = ui.drag?.live ? previewed(state, ui) : state;
+    const shown = ui.drag.live ? previewed(state, ui) : state;
 
     if (ds.tiles.firstFrame()) {
       // A walled board's frame is a wall: each cell paints its own top and

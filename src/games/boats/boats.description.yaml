@@ -21,7 +21,7 @@ help:
 
     Unknown boat segments are represented by a small rectangle, and will automatically change into the correct shape when the surrounding squares are filled in.
 
-    Right-click and drag along a row or column to mark many squares at once as water. Hold Shift while moving the cursor to mark the empty squares it passes over as water, or Ctrl to turn boat segments it passes over into water as well.
+    Water you mark shows a cross, and water the puzzle gives shows waves. Hold Shift while moving the cursor to mark the empty squares it passes over as water, or Ctrl to turn boat segments it passes over into water as well.
   sections:
     - heading: The list of boats
       body: |-
@@ -254,7 +254,8 @@ play:
   click: cycle
   # A given segment is drawn as its piece, in the shape it was given.
   shape: seg
-  stroke: line
+  # The clues count rows and columns.
+  straight: true
   # The fleet: its longest boat's length after the grid's, each length's
   # count at the end.
   tally:

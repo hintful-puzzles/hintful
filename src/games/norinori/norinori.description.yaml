@@ -99,7 +99,6 @@ play:
   blank: 2
   # A click goes round empty, the button's mark and the other one.
   click: cycle
-  stroke: sweep
   # Four sizes at three tiers, half of them rectangles, fill a section's
   # twelve lines. A 10x10 board deals in a median of 0.5 s at worst and a
   # 12x12 one, left as a Custom size, in 1 to 2 s (2026-11-16).

@@ -27,7 +27,7 @@ mark water as the cursor moves.
 
 ## ADDED Requirements
 
-### Requirement: Display: Water the player marks shows the ruled-out cross
+### Requirement: Look: Water the player marks shows the ruled-out cross
 
 Water the player marks SHALL be drawn with the cross every fill game draws on a square it rules out, and water the puzzle gives SHALL be drawn with waves, so the two read apart.
 

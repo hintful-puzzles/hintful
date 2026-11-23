@@ -157,7 +157,8 @@ export interface PlayJson {
   secondary: number;
   blank?: number;
   erase?: string;
-  stroke: "line" | "sweep";
+  /** Whether a drag keeps to one row or column. */
+  straight?: true;
   /** The one button whose drag sweeps, where the other's does not. */
   sweepWith?: "secondary";
   /** A wash over the open cells where `when` holds, which read as the

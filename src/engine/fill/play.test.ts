@@ -96,7 +96,138 @@ describe("a fill game's input", () => {
     expect(Array.from(shown.values.slice(4, 8))).toEqual([GRASS, GRASS, TENT, GRASS]);
     const { board } = play_(start, ui, [[RIGHT_RELEASE, 7]]);
     expect(Array.from(board.values)).toEqual(Array.from(shown.values));
-    expect(ui.drag?.live).toBe(false);
+    expect(ui.drag.live).toBe(false);
+  });
+
+  it("fills a row with a straight left drag, keeping the square ruled out", () => {
+    const ui = newFillUi();
+    const start = applyEdit(tents, dealt(), { set: [6, GRASS] });
+    const { board, edits } = play_(start, ui, [
+      [LEFT_BUTTON, 4],
+      [LEFT_DRAG, 5],
+      [LEFT_DRAG, 7],
+      [LEFT_RELEASE, 7],
+    ]);
+    expect(Array.from(board.values.slice(4, 8))).toEqual([TENT, TENT, GRASS, TENT]);
+    expect(edits).toHaveLength(1);
+  });
+
+  it("keeps a straight drag to its row when the pointer wanders off it", () => {
+    const ui = newFillUi();
+    play_(dealt(), ui, [
+      [LEFT_BUTTON, 4],
+      [LEFT_DRAG, 5],
+      [LEFT_DRAG, 10],
+    ]);
+    const shown = input.previewed(dealt(), ui);
+    expect(Array.from(shown.values.slice(4, 12))).toEqual([
+      TENT,
+      TENT,
+      TENT,
+      0,
+      0,
+      0,
+      0,
+      3,
+    ]);
+  });
+
+  it("empties what the first square held along a drag that starts on it", () => {
+    const ui = newFillUi();
+    const start = applyEdit(tents, dealt(), { set: [4, TENT, 5, TENT, 6, GRASS] });
+    const { board } = play_(start, ui, [
+      [LEFT_BUTTON, 4],
+      [LEFT_DRAG, 6],
+      [LEFT_RELEASE, 6],
+    ]);
+    expect(Array.from(board.values.slice(4, 7))).toEqual([0, 0, GRASS]);
+  });
+
+  describe("where the drag follows the pointer", () => {
+    const { straight: _straight, ...free } = play;
+    const freeInput = fillInput<tents.Dealt, typeof ds>(tents, free, () => 0);
+    const drive = (
+      inp: typeof freeInput,
+      board: FillBoard<tents.Dealt>,
+      ui: FillUi,
+      steps: readonly (readonly [number, number])[],
+    ) => {
+      for (const [button, c] of steps) {
+        const got = inp.interpretMove(board, ui, ds, c < 0 ? NOWHERE : at(c), button);
+        if (got !== null && got !== UI_UPDATE) board = applyEdit(tents, board, got);
+      }
+      return board;
+    };
+
+    it("fills the squares it passes, round a corner, as one edit", () => {
+      const ui = newFillUi();
+      const board = drive(freeInput, dealt(), ui, [
+        [RIGHT_BUTTON, 4],
+        [RIGHT_DRAG, 5],
+        [RIGHT_DRAG, 9],
+        [RIGHT_DRAG, 10],
+      ]);
+      const shown = freeInput.previewed(board, ui);
+      expect(Array.from(shown.values.slice(4, 11))).toEqual([
+        GRASS,
+        GRASS,
+        0,
+        0,
+        0,
+        GRASS,
+        GRASS,
+      ]);
+      const done = drive(freeInput, board, ui, [[RIGHT_RELEASE, 10]]);
+      expect(Array.from(done.values)).toEqual(Array.from(shown.values));
+    });
+
+    it("takes the squares between two far-apart pointer events", () => {
+      const ui = newFillUi();
+      const board = drive(freeInput, dealt(), ui, [
+        [RIGHT_BUTTON, 4],
+        [RIGHT_DRAG, 7],
+        [RIGHT_RELEASE, 7],
+      ]);
+      expect(Array.from(board.values.slice(4, 8))).toEqual([
+        GRASS,
+        GRASS,
+        GRASS,
+        GRASS,
+      ]);
+    });
+
+    it("drags with one button alone where `sweepWith` names it", () => {
+      const one = fillInput<tents.Dealt, typeof ds>(
+        tents,
+        { ...free, sweepWith: "secondary" },
+        () => 0,
+      );
+      const left = drive(one, dealt(), newFillUi(), [
+        [LEFT_BUTTON, 4],
+        [LEFT_DRAG, 5],
+        [LEFT_RELEASE, 5],
+      ]);
+      expect(Array.from(left.values.slice(4, 6))).toEqual([TENT, 0]);
+      const right = drive(one, dealt(), newFillUi(), [
+        [RIGHT_BUTTON, 4],
+        [RIGHT_DRAG, 5],
+        [RIGHT_RELEASE, 5],
+      ]);
+      expect(Array.from(right.values.slice(4, 6))).toEqual([GRASS, GRASS]);
+    });
+  });
+
+  it("flips the hidden numbers with a press off the grid, a drag game's too", () => {
+    const hiding = fillInput<tents.Dealt, typeof ds>(
+      tents,
+      { ...play, hides: { value: TENT, pref: { kw: "k", name: "n" } } },
+      () => 0,
+    );
+    const ui = newFillUi();
+    expect(hiding.interpretMove(dealt(), ui, ds, { x: 100, y: 5 }, LEFT_BUTTON)).toBe(
+      UI_UPDATE,
+    );
+    expect(ui.hiddenShown).toBe(true);
   });
 
   it("joins a tree and the open square beside it with a left drag, placing the tent, and parts them", () => {

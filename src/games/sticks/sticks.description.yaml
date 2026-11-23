@@ -19,7 +19,7 @@ help:
   controls: |-
     {{controls}}
 
-    You can also drag along a row or a column to draw a line that way through each square it passes; a drag that starts on a line already running that way clears the squares it passes instead. Hold Shift or Ctrl while moving the cursor to draw a line through the square it leaves and the square it enters (Shift across the way it moves, Ctrl along it), or both to clear them.
+    Hold Shift or Ctrl while moving the cursor to draw a line through the square it leaves and the square it enters (Shift across the way it moves, Ctrl along it), or both to clear them.
   sections:
     - heading: When a line connects to a block
       body: |-
@@ -145,7 +145,8 @@ play:
   primary: 2
   secondary: 1
   click: cycle
-  stroke: line
+  # The values are lines, which a drag draws the way it runs.
+  straight: true
   # A number on a line sees along it as far as its line runs, which no block
   # of squares bounds.
   plain: [length]

@@ -2,7 +2,7 @@
 
 ### Requirement: A born game's drag makes what its first square became
 
-A drag with either button SHALL give every square it passes that held what the pressed square held what the pressed square became, and SHALL leave a fixed square, and one the player marked otherwise, as it was. Where the description's `play` names the drag `straight`, the drag SHALL keep to the row or column it starts along; otherwise it SHALL follow the pointer.
+A drag with either button SHALL give every square it passes that held what the pressed square held what the pressed square became, and SHALL leave a fixed square as it was. Where the description's `play` names the drag `straight`, the drag SHALL keep to the row or column it starts along; otherwise it SHALL follow the pointer. Where `play.sweepWith` names one button, the other's drag SHALL act where it began alone. The whole drag SHALL be one move, made on its release.
 
 #### Scenario: A straight left drag along a row
 

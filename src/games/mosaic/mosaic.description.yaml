@@ -12,10 +12,6 @@ help:
 
     Clicking a decided square again moves it on round shaded, clear and
     empty, and a right-click goes round the other way.
-
-    The drag works for clearing too: start on a shaded square and the
-    shaded squares you pass over are cleared with it. A whole drag is one
-    step of Undo.
   sections:
     - heading: What the squares show
       body: |-
@@ -106,7 +102,6 @@ play:
   secondary: 2
   # A click goes round empty, the button's mark and the other one.
   click: cycle
-  stroke: sweep
   # Upstream's six sizes, three of them made upright boards of about the same
   # area. The two smallest and the largest are on the menu at Easy alone,
   # since six sizes at three tiers are more lines than a section holds: a

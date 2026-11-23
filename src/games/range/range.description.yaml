@@ -121,7 +121,6 @@ play:
   blank: 2
   # A click goes round empty, the button's mark and the other one.
   click: cycle
-  stroke: sweep
   # A number sees along its row and its column as far as the shaded squares
   # let it, which is no block of squares.
   plain: [number]

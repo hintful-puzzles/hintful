@@ -789,7 +789,7 @@
         "play": {
           "type": "object",
           "description": "How the player fills the board, for a fill game the engine plays (`engine/fill/play.ts`): each value they place, the two buttons' values, the drag, and the link drawn as the one cell mark.",
-          "required": ["values", "primary", "secondary", "stroke"],
+          "required": ["values", "primary", "secondary"],
           "additionalProperties": false,
           "properties": {
             "values": {
@@ -852,13 +852,13 @@
               "pattern": "^[A-Z]$",
               "description": "A letter that empties a cell, beside Backspace and Delete."
             },
-            "stroke": {
-              "enum": ["line", "sweep"],
-              "description": "What a drag does: `line` paints the secondary value along one row or column, `sweep` repeats the pressed verb."
+            "straight": {
+              "const": true,
+              "description": "A drag keeps to the row or column it runs along, for a game whose clues are on rows and columns, and one whose values are lines; otherwise it follows the pointer. Either way it gives every square it passes that held what the pressed square held what the pressed square became."
             },
             "sweepWith": {
               "enum": ["secondary"],
-              "description": "The one button whose drag sweeps; the other's drag acts where it began alone (Light Up's bulbs, a row of which light each other). Both sweep where absent. With `stroke: sweep`."
+              "description": "The one button whose drag sweeps; the other's drag acts where it began alone (Light Up's bulbs, a row of which light each other). Both sweep where absent."
             },
             "wash": {
               "type": "object",

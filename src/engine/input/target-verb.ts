@@ -208,6 +208,9 @@ export interface TargetVerbs<State, Ui, DrawState, Target, Move> {
    * route to the same move: Net's half turn, or an erase key whose result the
    * buttons reach by cycling. */
   readonly keyOnly?: readonly KeyOnlyVerb<State, Ui, Target, Move>[];
+  /** The Controls paragraph's sentence about a drag the game's own arm makes,
+   * where it declares no `sweep`. */
+  readonly drags?: string;
 }
 
 /** A button, by the verb slot it applies. */
@@ -639,7 +642,7 @@ export function doneCluesMarkdown<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): s
 /** The Controls paragraph's sentence about the drag. */
 function sweepWords<S, U, D, T, M>(verbs: Verbs<S, U, D, T, M>): string {
   const sweep = verbs.sweep;
-  if (!sweep) return "";
+  if (!sweep) return verbs.drags === undefined ? "" : ` ${verbs.drags}`;
   if (sweep.says !== undefined) return ` ${sweep.says}`;
   const both = !sweep.buttons || (sweep.buttons.length === 2 && verbs.secondary);
   const which = both

@@ -84,7 +84,6 @@ play:
   secondary: 2
   # A click goes round empty, the button's piece and the other one.
   click: cycle
-  stroke: sweep
   dealt: dot
   boards: [7x7, 6x8, 9x9, 9x11]
   # A Normal deal's tail is long from about fifty squares up: of eight deals,

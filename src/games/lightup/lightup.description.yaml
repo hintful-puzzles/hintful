@@ -19,7 +19,7 @@ help:
   controls: |-
     {{controls}}
 
-    A click on a square holding the other button's mark empties it, so a cross never turns straight into a light, nor a light into a cross. A right drag crosses out the squares it passes; a left drag places one light, where it began.
+    A click on a square holding the other button's mark empties it, so a cross never turns straight into a light, nor a light into a cross. A left drag places one light because a row of lights would light each other.
 
     A square a light shines on is washed yellow. A light turns red when another lights it, a number when its lights are too many or it has no room left for them, and a cross when nothing can light its square any more.
 
@@ -101,7 +101,6 @@ play:
   blank: 2
   # A right drag crosses out the squares it passes; a left drag places one
   # bulb, where it began, since a row of bulbs light each other.
-  stroke: sweep
   sweepWith: secondary
   # A number counts the bulbs beside it, and the player need not cross the
   # squares round it that hold none, so it is never done.

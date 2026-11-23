@@ -111,7 +111,6 @@ play:
   blank: 2
   # A click goes round empty, the button's mark and the other one.
   click: cycle
-  stroke: sweep
   sizes:
     stars:
       letter: s

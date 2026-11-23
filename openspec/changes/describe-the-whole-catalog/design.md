@@ -35,7 +35,9 @@ the cells, not a value a cell, which the fill pilot left out on purpose
 **Lines and loops.** Loopy, Pearl, Tracks, Bridges, Spokes, Slant, Path,
 Signpost, Rome, Net. Needs: edge answers, as the regions group does, and
 the line-drawing input `engine/mechanics/line-drawing.ts` shares already.
-Tracks' square-marking drag is `one-drag-for-fill-games`' straight drag.
+Tracks' square-marking drag is the fill engine's `play.straight` drag; its
+rail drag, from a square that already carries track, stays its own (two kinds
+of target), as `one-drag-for-fill-games`' design records.
 
 **Numbers.** ABCD, Ascent, Crossing, Seismic. Mixed: each goes with
 whichever group above its gap list fits, decided by the first of those

@@ -13,8 +13,7 @@ help:
   controls: |-
     {{controls}}
 
-    Right-click and drag along a row or column to cross out many squares at
-    once. Hold Shift while moving the cursor to cross out the empty squares it
+    Hold Shift while moving the cursor to cross out the empty squares it
     passes over, or Ctrl to turn shaded squares it passes over into crosses as
     well.
 
@@ -90,7 +89,8 @@ play:
   # The answer is the shaded squares alone: an open square is crossed out.
   blank: 2
   erase: B
-  stroke: line
+  # The clues sum rows and columns.
+  straight: true
   labels: { start: "i + 1" }
   # Easy's line reading finishes few boards past 7x7, and none past 8x8.
   boards: [5x5, 5x7, 7x7]

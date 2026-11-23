@@ -208,7 +208,7 @@ export function domainOf(_sp: GridSpace, _cl: Dealt, _c: number): number {
 }
 
 /** How the player fills the board: the engine's `FillPlay`. */
-export const play = {"values":{"1":{"does":"shade it","key":"S","glyph":"###","paint":"shade"},"2":{"does":"mark it clear","key":"X","glyph":" x ","paint":"clear"}},"primary":1,"secondary":2,"blank":2,"click":"cycle","stroke":"sweep","dealt":"given"} as const;
+export const play = {"values":{"1":{"does":"shade it","key":"S","glyph":"###","paint":"shade"},"2":{"does":"mark it clear","key":"X","glyph":" x ","paint":"clear"}},"primary":1,"secondary":2,"blank":2,"click":"cycle","straight":true,"dealt":"given"} as const;
 
 /** The clue kinds at lines, drawn past each line's end. */
 export const lineClues = [] as const;

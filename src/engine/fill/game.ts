@@ -284,7 +284,7 @@ export function fillGame<C extends Clues<C> & object>(
     newDesc: (p, rs) => dealFill(module, deal, p, rs),
     newState,
     newUi: (b) => {
-      const ui = newFillUi(module.play.stroke);
+      const ui = newFillUi();
       // A hexagon's store has no cell at its top left; the cursor starts on
       // the first that is the board's.
       if (module.hexagon !== undefined)

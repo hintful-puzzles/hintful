@@ -141,9 +141,10 @@ describe("bricks", () => {
     const press = (x: number, y: number) => {
       const p = game.targetVerbs?.geometry.pointAt(board, ds, { x, y }, ui);
       if (p === undefined) throw new Error("no geometry");
-      const m = game.interpretMove(board, ui, ds, p, LEFT_BUTTON);
-      game.interpretMove(board, ui, ds, p, LEFT_RELEASE);
-      if (m !== null && m !== UI_UPDATE) board = game.executeMove(board, m);
+      for (const button of [LEFT_BUTTON, LEFT_RELEASE]) {
+        const m = game.interpretMove(board, ui, ds, p, button);
+        if (m !== null && m !== UI_UPDATE) board = game.executeMove(board, m);
+      }
     };
     // Row 2's first cell is the store's first, row 0's third its fourth;
     // neither holds a number.

@@ -177,10 +177,6 @@ export function playOf(
     wash,
     ...rest
   } = p;
-  if (rest.sweepWith !== undefined && rest.stroke !== "sweep")
-    throw new CompileError(
-      "play sweepWith: a button sweeps only where the stroke does",
-    );
   if (rest.hides !== undefined && p.values[rest.hides.value] === undefined)
     throw new CompileError(
       `play hides: ${rest.hides.value} is not a value the player places`,

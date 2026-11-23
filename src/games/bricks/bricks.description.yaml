@@ -19,8 +19,6 @@ help:
   controls: |-
     {{controls}}
 
-    Drag across several cells to make them all what the first one became.
-
     The number pad moves the cursor to all six neighbors of a cell: 4 and 6 along its row, 7 and 9 to the two cells above it, and 1 and 3 to the two below. Up and Down zigzag, keeping to the column the cursor is in. Hold Shift while moving the cursor to mark clear every empty cell it leaves and enters, or Ctrl to mark those cells clear even where they are shaded.
   sections:
     - heading: What the cells show
@@ -101,7 +99,6 @@ play:
   blank: 2
   # A click goes round empty, the button's mark and the other one.
   click: cycle
-  stroke: sweep
   boards: [6x7, 8x10]
   # Every 2x2 board with one answer the ladder stops short of holds one
   # brick, under the deal's 40% (enumerated 2026-11-02).
