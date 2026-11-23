@@ -70,8 +70,11 @@
       write them in `docs/descriptions.md`, where a family's change reads
       them. Starting points from the 2026-11-23 review: engine lines a game
       costs against the game lines it removes; how many of a flip's needs
-      were met by what earlier flips built; option keys under `play:` and
-      `deal:` used by one game only; the cost comparison of § 2 within its
+      were met by what earlier flips built; capabilities or keys that are
+      not adoptable by another game (`docs/doctrine.md`, the owner's
+      decision of 2026-11-23: one user is fine, game-specific is not);
+      what a new game born from its description costs; the cost
+      comparison of § 2 within its
       spread; hint steps unchanged unless explained. The owner accepts what
       is recommended if it judges better than the current test, so nothing
       waits on an answer. Verified by applying the criteria to the three
