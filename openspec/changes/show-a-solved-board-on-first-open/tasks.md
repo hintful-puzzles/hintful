@@ -16,7 +16,7 @@ Read from the code on 2026-11-23:
   deal another on Play. That fits a board dealt for this visit only; the
   session may still use it there.
 
-- [ ] 1.1 How the example board is made and shown, and returned from:
+- [x] 1.1 How the example board is made and shown, and returned from:
       a second midend in the view's place, or the live one with the
       player's board set aside. Where the example comes from: dealt at
       the opened size and solved, or a fixed board the description names
