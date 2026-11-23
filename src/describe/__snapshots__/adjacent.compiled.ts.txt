@@ -242,7 +242,7 @@ export function deriveClues(g: ArrayLike<number>, sp: GridSpace, _grown: object 
     const v_at = _a1[_i2];
     L3: {
       const v_v = (g[v_at] || -1);
-      if (!(((v_v) >>> 0 < 32 && ((rangeMask(1, sp.w) >> v_v) & 1) !== 0))) break L3;
+      if (!((1 <= v_v && v_v <= sp.w))) break L3;
       if (given_at.at(-1) !== v_at && clueHolds_given(g, sp, v_at, v_v)) { given_at.push(v_at); given_v.push(v_v); }
     }
   }

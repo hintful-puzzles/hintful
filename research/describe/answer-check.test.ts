@@ -8,7 +8,6 @@ import { entryMistakes, gridCell } from "../../src/engine/hint/entry-mistakes.ts
 import { brokenRules, searchAnswers } from "./answer-check.ts";
 import {
   type Binding,
-  keenBinding,
   mathraxBinding,
   saladBinding,
   soloBinding,
@@ -197,13 +196,10 @@ describe("the answer check from the description", () => {
     ];
     const all: string[] = [];
     const only = onlyGames();
-    const games = [
-      towersBinding,
-      soloBinding,
-      keenBinding,
-      mathraxBinding,
-      saladBinding,
-    ] as Binding<unknown, unknown>[];
+    const games = [towersBinding, soloBinding, mathraxBinding, saladBinding] as Binding<
+      unknown,
+      unknown
+    >[];
     for (const b of games.filter(
       (g) => only === null || only.includes(g.description.game),
     )) {
@@ -253,12 +249,6 @@ describe("the answer check from the description", () => {
       towersBinding as Binding<unknown, unknown>,
       "sees",
       "visible(at) >= v",
-    ],
-    [
-      "Keen, a product read as a sum",
-      keenBinding as Binding<unknown, unknown>,
-      "product",
-      "sum(c in cells(at) of value(c)) = v",
     ],
     [
       "Mathrax, E read as O",

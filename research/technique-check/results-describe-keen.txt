@@ -1,0 +1,9 @@
+ok  keen       cageEasy                       3  sound    (want sound   )    79 queries    2.8s
+ok  keen       cageEasy (planted)             3  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  src/games/keen/keen.description.yaml#cageEasy: recorded sound, proved whole on all 1 boards
+ok  keen       cage                           3  sound    (want sound   )    79 queries    3.3s
+ok  keen       cage (planted)                 3  unsound  (want unsound )    22 queries    0.7s   at region cage 21
+ok  src/games/keen/keen.description.yaml#cage: recorded sound, proved whole on all 1 boards
+ok  keen       cageLine                       3  sound    (want sound   )    79 queries    5.6s
+ok  keen       cageLine (planted)             3  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  src/games/keen/keen.description.yaml#cageLine: recorded sound, proved whole on all 1 boards

@@ -53,6 +53,7 @@ import {
   type FillModifier,
   type FillParams,
   fillParams,
+  partKindsOf,
   sizesOf,
   tallyClue,
   tallyDefault,
@@ -109,6 +110,10 @@ export interface BornModule<C>
     })[];
     readonly variants: readonly (Size & {
       readonly variations: readonly string[];
+      /** The deal's settings the board turns on (`FillDeal.onlyFlag`,
+       * `FillDeal.hideFlag`). */
+      readonly only?: boolean;
+      readonly hides?: boolean;
       readonly diff: number;
     })[];
   };
@@ -218,9 +223,11 @@ export function fillGame<C extends Clues<C> & object>(
     ...(variants.length === 0
       ? {}
       : {
-          variants: variants.map(({ w, h, variations, diff }) => ({
+          variants: variants.map(({ w, h, variations, diff, only, hides }) => ({
             ...sized({ w, h }, diff),
-            variations,
+            ...(variations.length === 0 ? {} : { variations }),
+            ...(only === true ? { only } : {}),
+            ...(hides === true ? { hides } : {}),
           })),
         }),
   };
@@ -260,6 +267,7 @@ export function fillGame<C extends Clues<C> & object>(
   ];
   const numbered = module.numbers ?? [];
   const gapKinds = gapKindsOf<C>(play);
+  const partKinds = partKindsOf(deal) as (keyof C & string)[];
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
     numbers: numbered as readonly (keyof C)[],
@@ -280,6 +288,9 @@ export function fillGame<C extends Clues<C> & object>(
     ...(deal.partitions === undefined
       ? {}
       : { partition: deal.partitions[0] as keyof C }),
+    ...(partKinds.length === 0
+      ? {}
+      : { partClues: { kinds: partKinds, signs: play.signs ?? {} } }),
     ...(gapKinds.length === 0
       ? {}
       : {

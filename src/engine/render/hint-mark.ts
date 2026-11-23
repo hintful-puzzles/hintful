@@ -322,7 +322,8 @@ const bounds = (rects: readonly Rect[]): Rect => {
 
 /** How thick {@link HintMarks} draws a ring on a cell of `band`: the band's
  * own width, as the outline is, and never under two pixels. */
-const ringThickness = (band: MarkBand): number => Math.max(2, band.outer + band.inner);
+export const ringThickness = (band: MarkBand): number =>
+  Math.max(2, band.outer + band.inner);
 
 /** One ring round `piece`, within the band its cells' repaint and erase
  * answer for, enclosing the piece's values and notes, and clear of the rest

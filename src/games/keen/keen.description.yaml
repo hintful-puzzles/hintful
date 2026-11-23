@@ -1,8 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Keen's help page, its rules, and the techniques `npm run describe`
-# compiles to keen.compiled.ts, which solver.ts runs.
 game: keen
+catalog:
+  name: Keen
+  aliases: [KenKen, Mathdoku, Calcudoku]
+  description: Arithmetic Latin square puzzle
+  objective: Complete the latin square in accordance with the arithmetic clues.
+  collection: original
+  family: latin
+  similar: KenKen®, Mathdoku
 help:
   rules: |-
     Fill in the grid with digits from 1 to the grid size, so that every
@@ -20,11 +26,16 @@ help:
 
     Right-click in a square and then type a number to add or remove the
     number as a pencil mark, indicating numbers that you think
-    *might* go in that square. {{sticky-pencil}}
+    *might* go in that square.
+
+    {{done-clues}} A click elsewhere in the square selects it as before.
+
+    {{sticky-pencil}}
 
     You can also use the arrow keys to move the selected square around.
     Press Enter to toggle between entering numbers and entering pencil
-    marks, and Backspace or Space to clear a square.
+    marks, and Backspace or Space to clear a square. Shift or Ctrl with an
+    arrow key marks the clue of the selected square's cage as done.
 
     {{mark-all}} Once every empty square has marks, the press crosses out
     of each the numbers already placed in its row and column.
@@ -101,15 +112,88 @@ clues:
   difference:
     at: cage
     value: "range(1, w - 1)"
-    means: "larger(at) - smaller(at) = v"
+    means: "|cells(at)| = 2 and larger(at) - smaller(at) = v"
   quotient:
     at: cage
     value: "range(2, w)"
-    means: "larger(at) = v * smaller(at)"
+    means: "|cells(at)| = 2 and larger(at) = v * smaller(at)"
 freedom: { kind: fill }
+play:
+  numbers: {}
+  signs: { sum: "+", product: "×", difference: "−", quotient: "÷" }
+  done: { sum: cage clue, product: cage clue, difference: cage clue, quotient: cage clue }
+  # 6x6 is the one size at every tier. The others have a tier each, which
+  # keeps the list short, and the variant is the one multiplication-only
+  # board. The default is upstream's, 6x6 at Normal.
+  boards: [4x4, 5x5, 6x6, 9x9]
+  default: 6x6
+  defaultTier: Normal
+  boardTiers:
+    4x4: [Easy, Easy]
+    5x5: [Easy, Easy]
+    9x9: [Normal, Normal]
+  variants: [{ board: 6x6, with: [multiplication-only], tier: Normal }]
+  # Measured 2026-10-05: none in 50,000 boards built at each tier above
+  # Normal, with every operation and with multiplication alone.
+  bounds:
+    tiers:
+      Tricky: { longer: { min: 4 } }
+      Hard: { longer: { min: 4 } }
+      Unreasonable: { longer: { min: 4 } }
+  hintMarks:
+    ring: the cell the step fills in with a number.
+    strike: the pencil marks the step crosses out.
+    outline: >-
+      what the step reasons from: "this cell", whose pencil marks it crosses
+      out, cells that between them already account for the numbers being
+      crossed out, the number just placed, or "the middle cell" a step weighs
+      and the cells it reads.
+    stripes: >-
+      the cage, row or column the sentence names: "this cage", "this row" or
+      "this column". Or the several rows or columns it names together, such
+      as "these 2 columns", where one number fits only the outlined cells.
 deal:
-  cages: the partition, connected cages of at most six cells, and each cage's sign and value
+  answer: a Latin square
+  cage: the cells in dominoes and then small cages, at random
+  sum: a cage's sum, product, difference or ratio
   tier: one of the tiers
+  sample: { latin: true }
+  divide: { partition: cage, pairs: 0.75, most: 6 }
+  # Upstream keen.c's: ratios, differences, products and sums in turn. A
+  # sum of two too small or too large to leave a choice, and above Normal a
+  # product of two with as few, is dealt only where nothing else is; a
+  # difference of the whole range, or a ratio above half the size, never.
+  oneKind:
+    kinds: [quotient, difference, product, sum]
+    poor:
+      sum: "|cells(at)| = 2 and (v <= 4 or v >= 2 * w - 2)"
+      product:
+        when: >-
+          |cells(at)| = 2 and count(k in range(1, w)
+          where v mod k = 0 and v / k <= w and v / k != k) <= 2
+        from: Tricky
+    never:
+      difference: "v = w - 1"
+      quotient: "2 * v > w"
+  onlyFlag:
+    kinds: [product]
+    letter: m
+    kw: multiplication-only
+    name: Multiplication only
+    doc: >-
+      When enabled, every cage's clue is a product: no sums, differences or
+      ratios. Such puzzles are rare above Tricky, and at 9x9 above Normal:
+      except at 4x4 and 6x6 the first can take a quarter of a minute to
+      appear, and a 9x9 above Tricky a minute or two.
+    words: multiplication only
+# Upstream's: the block structure, a comma, then a letter and a number a
+# cage, in the order of their first cells.
+id:
+  - blocks: cage
+  - parts: cage
+    before: ","
+    letters: { a: sum, m: product, s: difference, d: quotient }
+tierLetters: enhxu
 tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 names:
   dup: "a placed number's row and column"
@@ -149,13 +233,13 @@ techniques:
         marks: {}
         wordings:
           - when: "clue(sum, r) != none"
-            look: "No way to make {stripes: this cage} sum to {sum} puts {struckOr} in {ring at: this {noun}}"
+            look: "No way to make {stripes: this cage} sum to {numeral sum} puts {struckOr} in {ring at: this {noun}}"
           - when: "clue(product, r) != none"
-            look: "No way to make {stripes: this cage} multiply to {product} puts {struckOr} in {ring at: this {noun}}"
+            look: "No way to make {stripes: this cage} multiply to {numeral product} puts {struckOr} in {ring at: this {noun}}"
           - when: "clue(difference, r) != none"
-            look: "No way to make {stripes: this cage} differ by {difference} puts {struckOr} in {ring at: this {noun}}"
+            look: "No way to make {stripes: this cage} differ by {numeral difference} puts {struckOr} in {ring at: this {noun}}"
           - when: "clue(quotient, r) != none"
-            look: "No way to make {stripes: this cage} have a ratio of {quotient} puts {struckOr} in {ring at: this {noun}}"
+            look: "No way to make {stripes: this cage} have a ratio of {numeral quotient} puts {struckOr} in {ring at: this {noun}}"
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   # Cage by cage: a value no filling of the cage that makes its clue puts in
@@ -194,13 +278,13 @@ techniques:
       marks: { stripes: "cells(r)" }
       wordings:
         - when: "clue(sum, r) != none"
-          look: "{stripes: This cage} must sum to {sum}, and every way to fill it places {struckA} in its {if horizontal: row | column}"
+          look: "{stripes: This cage} must sum to {numeral sum}, and every way to fill it places {struckA} in its {if horizontal: row | column}"
         - when: "clue(product, r) != none"
-          look: "{stripes: This cage} must multiply to {product}, and every way to fill it places {struckA} in its {if horizontal: row | column}"
+          look: "{stripes: This cage} must multiply to {numeral product}, and every way to fill it places {struckA} in its {if horizontal: row | column}"
         - when: "clue(difference, r) != none"
-          look: "{stripes: This cage} must differ by {difference}, and every way to fill it places {struckA} in its {if horizontal: row | column}"
+          look: "{stripes: This cage} must differ by {numeral difference}, and every way to fill it places {struckA} in its {if horizontal: row | column}"
         - when: "clue(quotient, r) != none"
-          look: "{stripes: This cage} must have a ratio of {quotient}, and every way to fill it places {struckA} in its {if horizontal: row | column}"
+          look: "{stripes: This cage} must have a ratio of {numeral quotient}, and every way to fill it places {struckA} in its {if horizontal: row | column}"
   - { use: latin.set, tier: Tricky, rung: set }
   - { use: latin.fish, tier: Hard, rung: set }
   - { use: latin.wing, tier: Hard, rung: wing }

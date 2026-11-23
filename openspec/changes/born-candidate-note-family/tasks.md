@@ -143,7 +143,7 @@ commit. In design.md § "Decisions" 7's order.
       deal, typing, notes, a broken bar and a missing bar's breach in red,
       bars marked done by press, drag and Shift-arrow, a press on no bar
       doing nothing, the hint walked to the solve on both, light and dark.
-- [ ] 2.4 Keen born: clues at a partition's parts labeled at the first
+- [x] 2.4 Keen born: clues at a partition's parts labeled at the first
       cell, the block-structure segment, a small-part partition sampled on
       the answer, one kind an element chosen in the deal, the bare flag `m`;
       difference and quotient stated to sit on two cells; done marks on a
@@ -172,7 +172,7 @@ commit. In design.md § "Decisions" 7's order.
         an arrow marks the clue of the cage the cursor is in. The renderer
         says where it drew a clue (`FillRender.partClueBox`), so the press
         and the drawing share one box.
-  - [ ] 2.4c The flip: Keen's tests to `keen.cases.yaml`, its TypeScript
+  - [x] 2.4c The flip: Keen's tests to `keen.cases.yaml`, its TypeScript
         deleted, the `game-lines` ceiling lowered, its spec deltas; the
         menu, the `m` variant board, the tier bounds at 3x3. Learned in
         2.4a: a clue's number in a wording is `{numeral sum}`, as a bare
@@ -184,6 +184,47 @@ commit. In design.md § "Decisions" 7's order.
         walls and the numbers, and the flip gives it each cage's clue too
         (a cell is three characters, so a clue such as `720×` goes beside
         the grid, not in it).
+        Done: the engine gained a menu variant naming a deal's setting
+        (`with: [multiplication-only]`, the `onlyFlag`'s or a hide's kw),
+        each part's clue in the text format beside its row
+        (`reading.partClues`), a typed value drawn below a clue's line in
+        every cell of a board with clues at parts, as its notes are, and
+        `numeral` refusing a value no key draws, so a bare `{sum}` past 35
+        throws where it printed "¢". A clue is set at the largest size a
+        hint's ring on its cell still steps round (`ringFits`, now
+        exported): the hint sweeps found a cell under `120×` that no round
+        ring fits at a 32 px tile, as a ring is centered on the cell inside
+        its cage walls. Measured 2026-11-23: four characters fit from a
+        40 px tile up, five at none (a clue enclosed, or a ring centered
+        below the clue's line, fit no better). The compiler's `x in range(lo, hi)`
+        on a number compiles to a comparison: its mask held 0 to 31 alone,
+        so every clue of 32 or more was dropped from derivation, which
+        biased every Keen deal and left 9dnm, 8dhm and 7dxm undealt in
+        120 s (guarded in `caging.test.ts`, seen to fail planted). The
+        cases' params check reads an unreadable params string as a refusal.
+        Keen is the first board of typed numbers with region fills, and in
+        the dark scheme the cursor's deep amber was the yellow fill's own
+        color (0.04 apart): the owner chose (2026-11-23) to keep the fills
+        and give such a board its own dark wash (`regionHighlightWash`),
+        rather than draw Keen's cages plain as upstream does.
+        Differences from the hand-written Keen, each player-visible: cages
+        in the region fills, with that wash on the selected cell; the
+        sign on a products-only board's clues, and a clue of five characters
+        (four on a small tile) set smaller; a typed digit at half a tile below the clue's
+        line; done marks on cage clues;
+        an ID with no answer or more than one is refused; the hint rings
+        the notes it reasons from; large clues dealt as their parts make
+        them; saves break (approved). Rare cells timed after the fix
+        (2026-11-23, 120 s deadline): 3dnm 0.3 s, 4dxm 0.4 s, 6dum 0.2 s,
+        9dnm 0.2 s, 9dhm 0.9 s, 8dhm 1.0 s, 6dxm 2.6 s, 4dum 3.0 s, 5dxm
+        4.2 s, 7dxm 12.6 s; 9dxm is not dealt on three seeds (70% of tries
+        stop short of Hard, 30% finish below it), as the old port's test
+        only checked its params were accepted. Run in the app 2026-11-23:
+        a 6x6 Normal and a 6x6 Tricky dealt, typing, notes, a row
+        duplicate and its broken cage clue in red, a clue marked done by
+        press and by Shift-arrow, the hint walked to the solve on both
+        (its wording "multiply to 120", once "¢" and fixed here), the
+        "6x6 Normal, multiplication only" entry, light and dark.
 - [ ] 2.5 Towers born: clues at both ends of a line, `numbers` with its
       separator and the optional givens after `,`, a hide from a tier up,
       `fullLine` and `tallestNearest` stated as techniques, the tower

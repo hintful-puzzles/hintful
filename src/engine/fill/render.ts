@@ -37,6 +37,7 @@ import {
   PENCIL_BODY,
   pencilColor,
   playerEntryColor,
+  regionHighlightWash,
   surfaceGrid,
 } from "../color/palette.ts";
 import {
@@ -49,7 +50,7 @@ import {
 } from "../color/roles.ts";
 import type { Frame, GameDrawing } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
-import type { Color, Rect, Size } from "../contract/types.ts";
+import type { Color, DrawTextOptions, Point, Rect, Size } from "../contract/types.ts";
 import { regionFills } from "../generate/region-fill.ts";
 import {
   drawCellBackground,
@@ -75,6 +76,7 @@ import {
   type MarkCell,
   MarkOutlines,
   ringTextBox,
+  ringThickness,
 } from "../render/hint-mark.ts";
 import { liveErrors } from "../render/live-errors.ts";
 import { OverlaySidecar } from "../render/overlay-sidecar.ts";
@@ -99,7 +101,7 @@ import {
   walledBoxes,
   wallHalf,
 } from "../render/region-walls.ts";
-import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../render/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, ringFits, textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../render/win-wave.ts";
 import {
@@ -113,7 +115,7 @@ import {
 import { answerOf, type FillMistake, rulesOf } from "./answer.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "./board.ts";
 import { isDone } from "./done.ts";
-import { tallyOf } from "./game-id.ts";
+import { partKindsOf, tallyOf } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import type { FillMove } from "./notes.ts";
@@ -427,9 +429,7 @@ export function fillRender<C extends Clues<C>>(
 
   /** The kinds at the dealt partition's parts, each drawn at its part's
    * first cell as its number and its sign. */
-  const partKinds = Object.entries(module.deal?.universes ?? {})
-    .filter(([, u]) => u === "parts")
-    .map(([k]) => k as keyof C & string);
+  const partKinds = partKindsOf(module.deal) as (keyof C & string)[];
   const labeled = partKinds.length > 0;
 
   /** Each part's clue by its first cell: its kind, its index in the kind's
@@ -731,7 +731,8 @@ export function fillRender<C extends Clues<C>>(
     // pieces and must read as the board, lit, not as an object on it.
     if (play.wash !== undefined) out[COL_WASH] = YELLOW_WASH;
     if (typed) {
-      out[COL_HIGHLIGHT] = highlightWash(bg);
+      out[COL_HIGHLIGHT] =
+        walled === undefined ? highlightWash(bg) : regionHighlightWash(bg);
       out[COL_ENTRY] = playerEntryColor(bg);
       if (notes) {
         out[COL_PENCIL] = pencilColor(bg);
@@ -931,7 +932,7 @@ export function fillRender<C extends Clues<C>>(
     // A board of numbers draws each value as its numeral: a given in ink, the
     // player's in the entry color, red where a rule breaks at the cell.
     if (typed && v !== 0) {
-      const { origin, options } = numberText(ts, tx, ty);
+      const { origin, options } = valueText(ts, [x, y, h], part?.walls ?? null, tx, ty);
       const ink = word & FIXED ? COL_INK : word & ERR_AT ? COL_ERROR : COL_ENTRY;
       dr.drawText(origin, options, ink, numeral(v));
     }
@@ -1121,28 +1122,103 @@ export function fillRender<C extends Clues<C>>(
     walls: number | null,
     text: string,
   ) => {
+    const band = markBand(ts, at, walls);
+    const area = ringTextBox(band);
+    const place = (size: number) => {
+      const options = { ...labelFont(ts), size };
+      const ink = textBox({ x: 0, y: 0 }, options, text);
+      return { origin: { x: area.x - ink.x, y: area.y - ink.y }, options };
+    };
+    // Every glyph a clue says inks one width, so its length decides its size.
+    const key = `${ts}:${walls}:${text.length}`;
+    let size = labelSizes.get(key);
+    if (size === undefined) {
+      size = labelFont(ts).size;
+      while (size > 1 && !ringStepsRound(ts, at, walls, band, place(size), text))
+        size--;
+      labelSizes.set(key, size);
+    }
+    return place(size);
+  };
+
+  /** The most notes a cell's ring is fitted round under a clue: the digits,
+   * as no board of clues at parts is wider than nine. */
+  const NOTES_CHECKED = 9;
+
+  /** Each clue's size, by tile size, walls and length: see {@link labelText}. */
+  const labelSizes = new Map<string, number>();
+
+  /** Whether a hint's ring on cell `(x, y)`, centered on it, steps round its
+   * clue set at `t`: on the empty cell, and round every count of notes
+   * below the clue. A clue of four characters at a small tile, and of five at
+   * any, is set smaller until one does. */
+  const ringStepsRound = (
+    ts: number,
+    at: readonly [number, number, number],
+    walls: number | null,
+    band: MarkBand,
+    t: { origin: Point; options: DrawTextOptions },
+    text: string,
+  ): boolean => {
+    const avoid = [textBox(t.origin, t.options, text)];
+    const thickness = ringThickness(band);
+    const room = { ...band.box };
+    for (let count = 0; count <= NOTES_CHECKED; count++) {
+      const enclose = noteSlots(ts, at, walls, count).map(({ origin, options }) =>
+        textBox(origin, options, "8"),
+      );
+      if (ringFits(band.box, { enclose, avoid }, thickness, room, true) === null)
+        return false;
+    }
+    return true;
+  };
+
+  /** On a board of clues at parts, the part of cell `(x, y)` a hint's ring
+   * goes round below a clue's line, in every cell, so a clue neither shrinks
+   * what a cell holds nor moves it off its neighbors' rows. */
+  const belowClue = (
+    ts: number,
+    at: readonly [number, number, number],
+    walls: number | null,
+  ) => {
     const area = ringTextBox(markBand(ts, at, walls));
-    const options = labelFont(ts);
-    const ink = textBox({ x: 0, y: 0 }, options, text);
-    return { origin: { x: area.x - ink.x, y: area.y - ink.y }, options };
+    // A clue's digits and signs ink one height whatever they say.
+    const line = textBox({ x: 0, y: 0 }, labelFont(ts), "0");
+    const top = area.y + line.h + Math.max(1, Math.floor(ts / 32));
+    return { ...area, y: top, h: area.y + area.h - top };
   };
 
   /** Where `count` notes go in cell `(x, y)`, in order: the box a hint's
-   * ring goes round, so it encloses them all; on a board of clues at parts,
-   * its part below a clue's line in every cell, so a clue neither shrinks a
-   * cell's notes nor moves them off its neighbors' rows. */
+   * ring goes round, so it encloses them all, below a clue's line on a board
+   * of clues at parts. */
   const noteSlots = (
     ts: number,
     at: readonly [number, number, number],
     walls: number | null,
     count: number,
-  ): NoteSlot[] => {
-    const area = ringTextBox(markBand(ts, at, walls));
-    if (!labeled) return noteGrid(area, count);
-    // A clue's digits and signs ink one height whatever they say.
-    const line = textBox({ x: 0, y: 0 }, labelFont(ts), "0");
-    const top = area.y + line.h + Math.max(1, Math.floor(ts / 32));
-    return noteGrid({ ...area, y: top, h: area.y + area.h - top }, count);
+  ): NoteSlot[] =>
+    noteGrid(
+      labeled ? belowClue(ts, at, walls) : ringTextBox(markBand(ts, at, walls)),
+      count,
+    );
+
+  /** Where a typed value goes in cell `(x, y)`, its tile at `(tx, ty)`: the
+   * tile's middle; on a board of clues at parts, the middle of the cell below
+   * a clue's line, at half a tile as upstream keen.c's, so a clue never sits
+   * under the value. */
+  const valueText = (
+    ts: number,
+    at: readonly [number, number, number],
+    walls: number | null,
+    tx: number,
+    ty: number,
+  ) => {
+    if (!labeled) return numberText(ts, tx, ty);
+    const area = belowClue(ts, at, walls);
+    return {
+      origin: { x: tx + Math.floor(ts / 2), y: Math.floor(area.y + area.h / 2) },
+      options: glyphFont(Math.floor(ts / 2)),
+    };
   };
 
   /**
@@ -1403,13 +1479,15 @@ export function fillRender<C extends Clues<C>>(
     if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
     const ts = ds.tileSize;
     const at = y * w + x;
-    const text = numberText(ts, cellX(x, y, h, ts), coord(y, ts));
+    const walls = ds.parts?.walls[at] ?? null;
+    const tile: [number, number] = [cellX(x, y, h, ts), coord(y, ts)];
+    const text = numberText(ts, ...tile);
     // A part's clue is kept outside the ring, which goes round what the
     // cell holds below it.
     const label = labeled ? (labelsOf(b).get(at) ?? null) : null;
     const avoid: Rect[] = [];
     if (label !== null) {
-      const t = labelText(ts, [x, y, h], ds.parts?.walls[at] ?? null, label.text);
+      const t = labelText(ts, [x, y, h], walls, label.text);
       avoid.push(textBox(t.origin, t.options, label.text));
     }
     const enclosing = (enclose: RingClear["enclose"]): RingClear => ({
@@ -1417,13 +1495,15 @@ export function fillRender<C extends Clues<C>>(
       avoid,
     });
     const v = b.values[at];
-    if (typed && v !== 0)
-      return enclosing([textBox(text.origin, text.options, numeral(v))]);
+    if (typed && v !== 0) {
+      const t = valueText(ts, [x, y, h], walls, ...tile);
+      return enclosing([textBox(t.origin, t.options, numeral(v))]);
+    }
     const noted = notesIn(b.pencil?.[at] ?? 0);
     if (noted.length > 0)
       return enclosing(
-        noteSlots(ts, [x, y, h], ds.parts?.walls[at] ?? null, noted.length).map(
-          ({ origin, options }, j) => textBox(origin, options, numeral(noted[j])),
+        noteSlots(ts, [x, y, h], walls, noted.length).map(({ origin, options }, j) =>
+          textBox(origin, options, numeral(noted[j])),
         ),
       );
     const n = numberAt(b, at);

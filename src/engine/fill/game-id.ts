@@ -200,6 +200,12 @@ export type Universe = "cells" | "lines" | "edges";
  * one partition. */
 export type ClueUniverse = Universe | "parts";
 
+/** The clue kinds at the dealt partition's parts. */
+export const partKindsOf = (deal?: FillDeal): string[] =>
+  Object.entries(deal?.universes ?? {})
+    .filter(([, u]) => u === "parts")
+    .map(([k]) => k);
+
 /** How many elements kind `kind` may sit at on a board dealt `clues`. */
 export function elementCount<C extends Clues<C>>(
   deal: FillDeal,

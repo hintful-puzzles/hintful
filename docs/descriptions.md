@@ -53,7 +53,7 @@ itself is § "The file". A game whose techniques are stated:
    reads now (§ "Checking a technique sound").
 4. **Builds its ladder on the board's clues** with
    `describedLadder(module, dealt)`, or `latinLadder` where it places the
-   Latin library ([`keen/solver.ts`](../src/games/keen/solver.ts)).
+   Latin library ([`towers/solver.ts`](../src/games/towers/solver.ts)).
    The engine runs every technique on `dealt` where the module's
    `techniques` says it reads it, on placing and on striking too; a module
    none of whose techniques reads the clues takes `null`. The game names a
@@ -69,7 +69,7 @@ itself is § "The file". A game whose techniques are stated:
    A kind given on the squares where the board's array says so is
    `cluesWhere(array, given, value?)`;
    [`towers/state.ts`](../src/games/towers/state.ts) deals clues so and
-   [`keen/state.ts`](../src/games/keen/state.ts) cages. The board goes on
+   [`solo/state.ts`](../src/games/solo/state.ts) cages. The board goes on
    the space the module's `units` declare, `describedSpace(units, w, h,
    parts)` (`latinSpace(o)` is a Latin square's), asked for where it is
    needed: the runtime keeps every space it builds, so a game keeps none
@@ -207,7 +207,8 @@ research tools all read through it; the app never does.
   (the first the default unless `default:` names another, dealt at the first
   tier its menu offers it unless `defaultTier:` names another,
   `boardTiers:` a board that stops short of a tier, `variants:` the boards
-  after the grid), `play.hintMarks` its legend, `id:` its game ID's grammar,
+  after the grid, each `with:` variations or a deal setting's `kw` turned on,
+  Keen's `multiplication-only`), `play.hintMarks` its legend, `id:` its game ID's grammar,
   `tierLetters:` its params' tier letters and `unusedLetters:` the bare
   letters older IDs write after the size or the tier (Adjacent's `a`), read
   and never written, so upstream's IDs still load.
@@ -1787,7 +1788,9 @@ voice's `nouns`), which a ring's `{noun}` then says. A kind that states
 stays (Palisade, Separate) because the move says "a wall" or "walls" by the
 count of the leg's own ring, which no slot says without marking the words.
 `{a term}` says a value with its article ("an A") and `{numeral term}` a plain
-count where `{term}` is a value the board draws another way (a letter).
+count where `{term}` is a value the board draws another way (a letter). A
+clue's number is a count, not a value: Keen's `{numeral sum}`, as a bare
+`{sum}` of 16 reads "g" (a value past `z`'s throws).
 `{derived outline: words}` is a reference whose words claim what the board
 does not show, which `Narration.depth` counts; `{derived each outline: …}`
 claims it of each element apart, a fact apiece (Rect's clues a rectangle
@@ -2028,7 +2031,9 @@ the check. What a small board cannot cover:
   size (Seismic's, up to the region cells the board deals). **A binder
   over `range(a, b)` counts** its numbers, as the runtime's does, so a
   position along the round of Undead's slots is bound past `top`; an end
-  that reads the answer or a clue is held to `top`.
+  that reads the answer or a clue is held to `top`. A number's `in
+  range(a, b)` compiles to two comparisons, never the range's mask, which
+  holds 0 to 31 alone, while a clue's value (Keen's products) runs past it.
 - **A size larger than the board's cells is one unknown**, from its least
   to the cell count (Mines' `mines`, `openSizes`), not a world a value.
 - **A set the marks decide keeps its order**: `stretch` holds each cell of

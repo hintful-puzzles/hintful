@@ -1186,8 +1186,9 @@ states what it wants:
 - **A game keeps a division of its own only where its rule cannot be said
   as one of these, and says so at the division**, as Filling (its rule
   obliges a join where these permit one), Galaxies (a cell grows with its
-  mirror image) and Keen and Solo's Killer (they want pairs, and a merge
-  under a largest size deals regions at that size) do.
+  mirror image) and Solo's Killer (it wants pairs, and a merge under a
+  largest size deals regions at that size) do. A born game deals that
+  division by `deal.divide` (Keen's).
 - **Where the regions are the board's only clue, a division dealt at random
   seldom has one answer, and the engine mends it** with `mendDivision`
   ([`mend-division.ts`](../src/engine/generate/mend-division.ts)), whose doc says what
@@ -1345,8 +1346,7 @@ the boards a seed deals move").
   compare. Then ask which `dsf.c` the C was written for: code that says "the
   canonical index is the first square" and calls `dsf_canonify` is broken
   upstream, since the smallest element has its own call, `dsf_minimal`, which
-  a map precomputed after all merges answers (`buildMinimal` in
-  [`keen/state.ts`](../src/games/keen/state.ts)).
+  a map precomputed after all merges answers.
 
 ### Recover emergent parameters from upstream's boards
 
@@ -1570,8 +1570,8 @@ game with no clues, its techniques reading the grid as a table;
 for one born from its description, its clues between the cells, which the
 fill board deals and solves with no solver of its own;
 [`towers/solver.ts`](../src/games/towers/solver.ts) for clues beside the
-grid; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
-arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
+grid; [`keen.description.yaml`](../src/games/keen/keen.description.yaml)
+for per-cage arithmetic, born too; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
 symbol.
 
 - **Read a candidate as `has(c, n)` or `cubeGet(x, y, n)`.** Where
@@ -1599,13 +1599,12 @@ symbol.
   solver's remaining-possibility counts through `latinSolver`'s optional
   `cubeOut` (Unequal); omit `cubeOut` on the solve and hint path. Partition
   structurally over a generated square, then solver-gate on exactly the
-  target difficulty
-  ([`keen/generator.ts`](../src/games/keen/generator.ts)).
+  target difficulty (Keen's `deal.divide`,
+  [`engine/fill/divide.ts`](../src/engine/fill/divide.ts)).
 - **A cage or region game takes its minimal elements from the shared
   `Dsf`, and grows no min-tracking dsf of its own**: a map precomputed once
-  after all merges (`buildMinimal` in
-  [`keen/state.ts`](../src/games/keen/state.ts)): a single ascending pass is
-  exact whichever root union-by-size picks. First check whether the algorithm needs
+  after all merges, in a single ascending pass, which is exact whichever
+  root union-by-size picks. First check whether the algorithm needs
   a minimum at all, or only a same-class test, and whether the root's
   identity matters elsewhere (§ "Solver-gated generation");
   [`engine/board/dsf.ts`](../src/engine/board/dsf.ts)'s header says which call returns

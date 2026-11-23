@@ -18,7 +18,7 @@ this: the fill board does each step from the compiled module
 
 What a hand-written game with notes does beyond the skeleton, in order. The file that does
 each of these the shared way is
-[`keen/index.ts`](../src/games/keen/index.ts).
+[`mathrax/index.ts`](../src/games/mathrax/index.ts).
 
 1. Take the cell's highlight, entry and pencil mode from
    `note-taking-cell.ts` (`pressNoteTakingCell`, `toggleNoteTakingMode`):
@@ -90,7 +90,7 @@ Write `buildSteps` as one call to `runCandidatePlan`
 row/column preset"). The walk owns the loop and builds every step; the game
 supplies what carries its meaning, each a field of `CandidatePlan`, whose
 docs say what each decides and, for an optional hook, the game-shaped fact
-that needs it. Exemplar: [`keen/index.ts`](../src/games/keen/index.ts)'s
+that needs it. Exemplar: [`mathrax/index.ts`](../src/games/mathrax/index.ts)'s
 `buildSteps`. Requirements: "A shared candidate-elimination hint plan", "The
 walk owns the ladder", "The walk builds every step from the game's words",
 "The game keeps what carries its meaning".
@@ -715,9 +715,11 @@ within that:
   within a leg is fine. A firing whose premise names one digit across cells
   is one multi-cell step. Exemplars: a height a leg in
   [`towers/index.ts`](../src/games/towers/index.ts), a cell a leg in
-  [`keen/index.ts`](../src/games/keen/index.ts); guards `towers-hint.test.ts`
-  "a strike step never mixes heights", `keen-hint.test.ts` "a cage-strike
-  step's marks all lie in one cell".
+  [`engine/fill/candidates.ts`](../src/engine/fill/candidates.ts), which
+  walks a born game's own techniques, Keen's cages among them; guards
+  `towers-hint.test.ts` "a strike step never mixes heights",
+  `solo-hint.test.ts` "a deductive strike step's marks all lie in one cell
+  or all share one digit".
 
 ## Placements lead when the deductions are placements
 

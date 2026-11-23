@@ -226,7 +226,7 @@ What a scan can be told:
 
 - **`opening`**: moves played on a fresh board before the first hint, for a
   game whose deductions want a mark-all or whose board is dealt by the first
-  click (`keen-hint.test.ts`, `mines-hint.test.ts`). Give the callback its
+  click (`mathrax-hint.test.ts`, `mines-hint.test.ts`). Give the callback its
   return type (`(): SoloMove[] => …`): a bare literal widens to
   `{ type: string }` and every kind then fails to typecheck.
 - **`ui`**: the `Ui` the hint is asked under, for a kind a candidate reading

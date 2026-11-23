@@ -23,7 +23,8 @@
  *   not, and whether the desc is written back byte for byte (`writesBack`).
  * - `params`: a params string read, with what it is written back as
  *   (`full`, `brief`), its menu `label`, and whether it is `refused` when a
- *   board is to be dealt or `loads` when one arrives with its desc.
+ *   board is to be dealt (or read at all) or `loads` when one arrives with
+ *   its desc.
  * - `positions`: a game ID, `moves` played on it and `solve` after them, and
  *   what the engine reports there: `status`, `text`, `statusbar`, `breaks`
  *   (the rules the live errors name), `mistakes` (what Check & Save
@@ -71,7 +72,7 @@ import { type Clues, type FillBoard, type FillModule, spaceOf } from "../fill/bo
 import { encodeDesc, type FillDeal } from "../fill/game-id.ts";
 import { type FillHintModule, pairPieces } from "../fill/hint.ts";
 import { describeParams } from "../game-id/param-label.ts";
-import { paramsError } from "../game-id/params.ts";
+import { paramsError, UnreadableParams } from "../game-id/params.ts";
 import { statedSentence } from "../hint/stated.ts";
 import { Midend } from "../midend/midend.ts";
 import { describeAbsentTiers, describeDealtTiers } from "./absent-tiers.ts";
@@ -914,7 +915,17 @@ function openedAs(game: AnyGame, id: string): string {
 /** What of a params case the game does not do. */
 export function checkParams(game: AnyGame, c: ParamsCase): string[] {
   const out: string[] = [];
-  const p = game.decodeParams(c.read);
+  let p: ReturnType<AnyGame["decodeParams"]>;
+  try {
+    p = game.decodeParams(c.read);
+  } catch (e) {
+    // A string the codec cannot read is refused by its sentence.
+    if (!(e instanceof UnreadableParams) || c.refused === null || c.refused === false)
+      throw e;
+    return saysAs(c.refused, e.message)
+      ? []
+      : [`unreadable with "${e.message}", not ${shown(c.refused)}`];
+  }
   const was = (what: string, got: unknown, want: unknown) =>
     got === want ? [] : [`${what} ${JSON.stringify(got)}, not ${JSON.stringify(want)}`];
   if (c.full !== null)

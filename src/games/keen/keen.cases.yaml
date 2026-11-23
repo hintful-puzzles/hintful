@@ -1,0 +1,230 @@
+# Keen's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every rung its hint
+# takes, upstream's IDs read and written back, its params, and the cage
+# clues printed, broken and marked done.
+
+hint:
+  params:
+    - {w: 4, h: 4, diff: 0}
+    - {w: 6, h: 6, diff: 1}
+    - {w: 6, h: 6, diff: 2}
+    - {w: 6, h: 6, diff: 3}
+    - {w: 4, h: 4, diff: 3}
+  unreached:
+    note: >-
+      spoken under the reading that pencils in only as needed, and Keen's hint starts on the one that pencils every candidate in first (play.hintNotes)
+    regionsFull: >-
+      spoken under the reading that pencils in only as needed: where every candidate is penciled in first, a cell whose line holds every other number is a single
+  pins:
+    # Held on 60 of 4905 positions walked.
+    populate: "4de:aa_3a_a_c_a__b,m6m8a7a8s1m6"
+    # Held on 1275 of 4905 positions walked.
+    clean:
+      id: "6dh:_a_b__b_3a_3a_cab_9a4_3a_3a__,m9s1s2d2d2a9s2m6s4d3a9s1d2a14a7m6m12"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 2}, {x: 0, y: 0, n: 4}, {x: 0, y: 0, n: 5}, {x: 0, y: 0, n: 6}]}
+        - {type: set, x: 0, y: 0, n: 3, pencil: false, autoElim: false}
+    # Held on 4708 of 4905 positions walked.
+    dup: "4de:aa_3a_a_c_a__b,m6m8a7a8s1m6"
+    # Held on 4905 of 4905 positions walked.
+    single:
+      id: "6dh:_a_b__b_3a_3a_cab_9a4_3a_3a__,m9s1s2d2d2a9s2m6s4d3a9s1d2a14a7m6m12"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 2}, {x: 0, y: 0, n: 4}, {x: 0, y: 0, n: 5}, {x: 0, y: 0, n: 6}]}
+    # Held on 3809 of 4905 positions walked.
+    hiddenSingle:
+      id: "4de:_a_6a_b_aaba,m24a9d2s2m4s1d2"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 1}]}
+    # Held on 1257 of 4905 positions walked.
+    set:
+      id: "6dx:aa_3a_3a_6a_3aa_aa__aa_3a_3a3baa,m12a6s1s2a6s2d2a9m12m6a12s4m12d2d2s4d2"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 3}, {x: 2, y: 0, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 3}, {x: 3, y: 0, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 3}, {x: 1, y: 1, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 3}, {x: 1, y: 2, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 1}, {x: 2, y: 2, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 1}, {x: 3, y: 2, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 2, n: 1}, {x: 4, y: 2, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 3, n: 1}, {x: 4, y: 3, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 5, y: 2, n: 4}, {x: 5, y: 2, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 5, y: 3, n: 4}, {x: 5, y: 3, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 4, n: 3}, {x: 2, y: 4, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 1}, {x: 3, y: 3, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 4, n: 1}, {x: 3, y: 4, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 4, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 5, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 5, y: 4, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 5, y: 5, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 5, n: 3}, {x: 0, y: 5, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 5, n: 3}, {x: 1, y: 5, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 5, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 5, n: 5}]}
+    # Held on 39 of 4905 positions walked.
+    wing:
+      id: "4dx:a__aa_a_a_4ad,a5a11m24s2d2s1"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 2}, {x: 0, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 3}, {x: 1, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 3}, {x: 0, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 1}, {x: 2, y: 0, n: 2}, {x: 2, y: 0, n: 3}]}
+        - {type: set, x: 2, y: 0, n: 4, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 4}, {x: 2, y: 1, n: 4}, {x: 2, y: 2, n: 4}, {x: 2, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 1}, {x: 1, y: 1, n: 2}, {x: 1, y: 1, n: 3}]}
+        - {type: set, x: 1, y: 1, n: 4, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 4}, {x: 1, y: 2, n: 4}, {x: 1, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 2}]}
+        - {type: set, x: 2, y: 1, n: 3, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 3}, {x: 2, y: 2, n: 3}, {x: 2, y: 3, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 2, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 3}]}
+        - {type: set, x: 1, y: 3, n: 3, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 3}, {x: 3, y: 3, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 1}, {x: 3, y: 2, n: 2}]}
+    # Held on 305 of 4905 positions walked.
+    cageEasy:
+      id: "4de:aa_3a_a_c_a__b,m6m8a7a8s1m6"
+      moves:
+        - {type: pencilAll}
+    # Held on 3723 of 4905 positions walked.
+    cage:
+      id: "6dn:aab__b__a__a_3a_a_a__b__a_aa_a_a_7a_,d2d3s1d3a6s4s1s1d3m24a5m15s3a6m30m30a5"
+      moves:
+        - {type: pencilAll}
+    # Held on 2044 of 4905 positions walked.
+    cageLine:
+      id: "6dx:_aa__a__a_3aa_a4ca_a_8a_3a_ca_,a11a6s4a12a16m15d2m20s2d2m6s3a17d3s1"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 3}, {x: 1, y: 0, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 3}, {x: 2, y: 0, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 3}, {x: 3, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 0, n: 3}, {x: 4, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 1}, {x: 1, y: 1, n: 2}, {x: 1, y: 1, n: 3}, {x: 1, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 1}, {x: 1, y: 2, n: 2}, {x: 1, y: 2, n: 3}, {x: 1, y: 2, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 2, n: 1}, {x: 2, y: 2, n: 2}, {x: 2, y: 2, n: 3}, {x: 2, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 4}, {x: 2, y: 1, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 2}, {x: 3, y: 1, n: 4}, {x: 3, y: 1, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 2}, {x: 3, y: 2, n: 4}, {x: 3, y: 2, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 1, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 2, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}, {x: 0, y: 3, n: 2}, {x: 0, y: 3, n: 3}, {x: 0, y: 3, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 2}, {x: 0, y: 4, n: 3}, {x: 0, y: 4, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 3, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 5, y: 3, n: 4}, {x: 5, y: 3, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 5, y: 4, n: 4}, {x: 5, y: 4, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 5, n: 4}, {x: 0, y: 5, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 5, n: 4}, {x: 1, y: 5, n: 5}]}
+
+tiers:
+  # A 3x3 above Normal, with every operation and with multiplication alone.
+  absent: [3dh, 3dx, 3du, 3dhm, 3dxm, 3dum]
+  # Rare cells with multiplication alone, each dealt in under a second.
+  dealt: [3dnm, 4dxm, 6dum, 9dnm]
+
+ids:
+  # A 4x4 Easy board upstream's generator wrote, read and written back.
+  - {id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2", writesBack: true}
+  # Boards the hand-written port dealt.
+  - {id: "6dn:aac_b_12b_a_3a_3a__a4__a_3aa,d2m6m15a12d2a6a5d3s2s4m24s4s3d2m36a8s3", writesBack: true}
+  - {id: "6dx:_a3_a_3a_3aa_3a_3aa_3a__ba_3a__caa,m10m12d3m4a10s1m12m6d2s1a10a7a7s1s1s2", writesBack: true}
+  # A character the desc never holds; a clue missing, or one too many.
+  - {id: "4de:!!!,a1", refused: "/\"!\" where it can't have one/"}
+  - {id: "4de:aa_a_aa_ba_5a,a3", refused: DESC_TOO_SHORT}
+  - {id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2a1", refused: DESC_TOO_LONG}
+  # A sign needs its number.
+  - {id: "4de:aa_a_aa_ba_5a,ds1a9m4d2m6s2", refused: "/\"s\" where it can't have one/"}
+  # A repeat count the encoder never writes: two repeats are spelled "aa".
+  - {id: "4de:a2_a_aa_ba_5a,d2s1a9m4d2m6s2", refused: DESC_OUT_OF_RANGE}
+  # A block structure cut short by the comma.
+  - {id: "4de:aa_a,d2s1a9m4d2m6s2", refused: "/\",\" where it can't have one/"}
+  # Two different numbers of 1 to 4 differ by at most 3, and divide to at
+  # least 2.
+  - {id: "4de:aa_a_aa_ba_5a,d2s4a9m4d2m6s2", refused: DESC_OUT_OF_RANGE}
+  - {id: "4de:aa_a_aa_ba_5a,d1s1a9m4d2m6s2", refused: DESC_OUT_OF_RANGE}
+  # A difference on a cage of nine squares, the whole 3x3 board, holds
+  # nowhere.
+  - {id: "3de:l,s2", refused: DESC_CONTRADICTORY}
+  # A difference on a cage of three.
+  - {id: "4de:aa_a_aa_ba_5a,d2s1s2m4d2m6s2", refused: DESC_CONTRADICTORY}
+  # Another board, and a product of 5 no two numbers of 1 to 4 make.
+  - {id: "4de:__a__a_ba_a__a_b,m3d2s2a5m12s1a7", writesBack: true}
+  - {id: "4de:__a__a_ba_a__a_b,m5d2s2a5m12s1a7", refused: DESC_CONTRADICTORY}
+
+params:
+  # Upstream's: the size, the tier, then `m` for multiplication alone.
+  - {read: "6dh", full: "6dh", brief: "6"}
+  - {read: "6", full: "6dn"}
+  - {read: "5dem", full: "5dem", brief: "5"}
+  - {read: "6mdn", refused: "/a \"d\" where this puzzle reads none/"}
+  - {read: "6dnm", label: "6x6 Normal, multiplication only"}
+  - {read: "2de", refused: "Grid size must be at least 3."}
+  - {read: "10de", refused: "Grid size must be at most 9."}
+  - {read: "3dn", refused: false}
+  - {read: "3dh", refused: "No 3x3 puzzle is Tricky."}
+  - {read: "4dh", refused: false}
+
+positions:
+  # The cages' walls, and each clue after the row of its first square.
+  - id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2"
+    text: |
+      +---+---+---+---+
+      | .   . | .   . | 2÷ 1−
+      +---+---+---+---+
+      | . | . | .   . | 9+ 4× 2÷
+      +   +   +---+---+
+      | . | . | .   . | 6×
+      +   +---+---+   +
+      | . | .   . | . | 2−
+      +---+---+---+---+
+  # The board solved.
+  - id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2"
+    solve: true
+    status: solved
+  # Two 4s in the top left's ratio of 2 break the cage, and the row.
+  - id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2"
+    moves: [{set: [0, 4]}, {set: [1, 4]}]
+    breaks: [clue.quotient, shape.0]
+  # A clue marked done, and its mark undone.
+  - id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2"
+    moves: [{type: done, kind: quotient, k: 0}]
+    holds:
+      done.quotient: [1, 0]
+  - id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2"
+    moves: [{type: done, kind: quotient, k: 0}, {type: done, kind: quotient, k: 0}]
+    holds:
+      done.quotient: [0, 0]
+
+input:
+  # A number typed into the square the cursor is on, and cleared by 0, as
+  # by Backspace.
+  - id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2"
+    events:
+      - {key: right}
+      - {key: "3", holds: {values.1: 3}}
+      - {key: "0", holds: {values.1: 0}}
+  # Shift with an arrow marks the clue of the cursor's cage done, and again
+  # undone.
+  - id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2"
+    events:
+      - {key: right}
+      - {key: "shift+left", holds: {done.quotient: [1, 0]}}
+      - {key: "shift+right", holds: {done.quotient: [0, 0]}}

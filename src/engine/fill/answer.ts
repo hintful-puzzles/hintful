@@ -64,6 +64,12 @@ export interface AnswerReading<C> {
   readonly gap?: (board: FillBoard<C>, a: number, z: number) => string;
   /** The dealt partition, printed as walls between its parts. */
   readonly partition?: keyof C;
+  /** The clue kinds at the partition's parts, each printed after the row
+   * of its part's first cell as its number and its sign (`play.signs`). */
+  readonly partClues?: {
+    readonly kinds: readonly (keyof C & string)[];
+    readonly signs: Readonly<Record<string, string>>;
+  };
 }
 
 /** The board's one answer: where the game searches, the search's; in any
@@ -260,13 +266,15 @@ export function rulesOf<C>(module: FillModule<C>): RulesOf<FillBoard<C>> {
 /**
  * A box-drawn grid of each cell's glyph, `.` where it is open, with each
  * line clue in a box past the line's end: a row's on the right and a
- * column's below, and the box at their corner left open.
+ * column's below, and the box at their corner left open. A clue at a part
+ * is printed after the row of the part's first cell, left to right, since a
+ * clue such as `720×` is wider than a cell.
  */
 export function textFormat<C extends Clues<C>>(
   reading: AnswerReading<C>,
   board: FillBoard<C>,
 ): string {
-  const grid = gridFormat(reading, board);
+  const grid = withPartClues(reading, board, gridFormat(reading, board));
   const kinds = reading.lineLists ?? [];
   if (kinds.length === 0) return grid;
   const { w, h, dealt } = board;
@@ -296,6 +304,39 @@ export function textFormat<C extends Clues<C>>(
     return row.length === 0 ? line : `${line} ${row.join(" ")}`;
   });
   return [...above.map((l) => ` ${l}`), ...lines].join("\n");
+}
+
+/** `grid` with each row's part clues after it: those whose part's first
+ * cell is in the row, in the order of those cells. */
+function withPartClues<C extends Clues<C>>(
+  reading: AnswerReading<C>,
+  board: FillBoard<C>,
+  grid: string,
+): string {
+  const { partClues, partition } = reading;
+  if (partClues === undefined || partition === undefined) return grid;
+  const { w, dealt } = board;
+  const { cells } = dealt[partition] as Partition;
+  const byFirst = new Map<number, string>();
+  for (const kind of partClues.kinds) {
+    const list = listOf(dealt, kind);
+    list.at.forEach((r, k) => {
+      byFirst.set(cells[r][0], `${list.v[k]}${partClues.signs[kind] ?? ""}`);
+    });
+  }
+  // The grid's lines alternate a wall and a row of cells.
+  return grid
+    .split("\n")
+    .map((line, i) => {
+      if (i % 2 === 0) return line;
+      const y = (i - 1) / 2;
+      const row = [...byFirst]
+        .filter(([c]) => Math.floor(c / w) === y)
+        .sort(([a], [b]) => a - b)
+        .map(([, text]) => text);
+      return row.length === 0 ? line : `${line} ${row.join(" ")}`;
+    })
+    .join("\n");
 }
 
 /** {@link textFormat}'s grid: each cell and each line clue. */

@@ -165,8 +165,7 @@ never holds a bare cache array or a `started` flag.
   its own**, not a digit and a pencil bitmap in one word. A `1 << n` mark for `n` up to 31 still fits an `Int32`, sign bit and
   all. Candidate masks go through `engine/board/candidate-bits.ts`, which throws
   where a shift would wrap. Exemplar:
-  [`solo/render.ts`](../src/games/solo/render.ts) (`SoloDrawState`); Keen
-  packs both in one word because its order leaves room.
+  [`solo/render.ts`](../src/games/solo/render.ts) (`SoloDrawState`).
 
 ### Overlay sidecars
 

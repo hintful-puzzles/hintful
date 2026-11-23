@@ -311,4 +311,18 @@ describe("a deal", () => {
     const { desc } = game.newDesc(p, randomNew("only"));
     expect(board(4, desc).dealt.sum.at).toHaveLength(0);
   });
+
+  it("deals a clue past 31, as its part makes it", () => {
+    // A product of three squares of a 5x5 often passes 31; the most a
+    // clue's domain was once read as.
+    const most = Math.max(
+      ...["k", "l", "m"].flatMap((seed) =>
+        Array.from(
+          board(5, game.newDesc(params(5, 0, true), randomNew(seed)).desc).dealt.product
+            .v,
+        ),
+      ),
+    );
+    expect(most).toBeGreaterThan(31);
+  });
 });

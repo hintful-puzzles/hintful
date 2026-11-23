@@ -12,7 +12,6 @@ import type { PresetMenu } from "../../src/engine/contract/game.ts";
 import { presetMenu } from "../../src/engine/game-id/param-label.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { groupGame } from "../../src/games/group/index.ts";
-import { keenGame } from "../../src/games/keen/index.ts";
 import { mathraxGame } from "../../src/games/mathrax/index.ts";
 import { saladGame } from "../../src/games/salad/index.ts";
 import { seismicGame } from "../../src/games/seismic/index.ts";
@@ -21,6 +20,7 @@ import { DIFF_HARD, DIFF_TRICKY, SYMM_NONE } from "../../src/games/solo/state.ts
 import { towersGame } from "../../src/games/towers/index.ts";
 import { game as adjacentGame } from "../../src/generated/games/adjacent/adjacent.game.ts";
 import { game as clustersGame } from "../../src/generated/games/clusters/clusters.game.ts";
+import { game as keenGame } from "../../src/generated/games/keen/keen.game.ts";
 import { game as mosaicGame } from "../../src/generated/games/mosaic/mosaic.game.ts";
 import { game as starbattleGame } from "../../src/generated/games/starbattle/starbattle.game.ts";
 import { game as unequalGame } from "../../src/generated/games/unequal/unequal.game.ts";

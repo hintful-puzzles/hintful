@@ -631,6 +631,23 @@ function binary(e: Extract<Expr, { k: "bin" }>, scope: Scope, env: Env, out: Out
     const code = `rectHolds(sp, ${r.code}, ${a.code})`;
     return { code: op === "in" ? code : `!${code}`, sort: BOOL };
   }
+  // `x in range(lo, hi)` compares the number with the range's ends: a
+  // range's mask holds 0 to 31 alone, and a clue's value (a product of six
+  // squares) runs far past it.
+  if (
+    (op === "in" || op === "notin") &&
+    a.sort.k === "num" &&
+    e.b.k === "call" &&
+    e.b.fn === "range" &&
+    e.b.args.length === 2
+  ) {
+    const lo = compileExpr(e.b.args[0], scope, env, out);
+    const hi = compileExpr(e.b.args[1], scope, env, out);
+    expect(lo, "num", "range");
+    expect(hi, "num", "range");
+    const code = `(${lo.code} <= ${a.code} && ${a.code} <= ${hi.code})`;
+    return { code: op === "in" ? code : `!${code}`, sort: BOOL };
+  }
   const b = compileExpr(e.b, scope, env, out);
   if (a.sort.k === "int" || b.sort.k === "int") return exact(op, a, b, env);
   switch (op) {

@@ -90,8 +90,13 @@ function noteTaking(ui: FillUi): NoteTakingUi {
 }
 
 /** The glyph value `v` is drawn and typed as: a digit, and past nine a
- * letter, as the keypad's keys are labeled. */
-export const numeral = (v: number): string => String.fromCharCode(digitKeyCode(v));
+ * letter, as the keypad's keys are labeled. No key draws a value past `z`'s:
+ * one is a count or a clue, said `{numeral …}` in a hint. */
+export const numeral = (v: number): string => {
+  if (!Number.isInteger(v) || v < 1 || v > 35)
+    throw new Error(`no key draws the value ${v}: say a count as {numeral …}`);
+  return String.fromCharCode(digitKeyCode(v));
+};
 
 /** A board of numbers' input: `interpretMove`, the keypad, and the taps and
  * keys that make a move, which a hint's gesture shows. */

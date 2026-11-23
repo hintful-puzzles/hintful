@@ -439,6 +439,14 @@ const sizeOf =
     };
   };
 
+/** The Custom field of the deal's setting `key`, where it states one. */
+function dealSettingKw(json: DescriptionJson, key: string): string | null {
+  const f = json.deal?.[key];
+  return typeof f === "object" && f !== null && "kw" in f && typeof f.kw === "string"
+    ? f.kw
+    : null;
+}
+
 /**
  * `menu`, what the preset menu offers beside its grid of `boards`: the
  * default board where it is not the first, the tiers a board stops at, and
@@ -492,12 +500,21 @@ function menuOf(
       last: tierOf(last, "boardTiers"),
     })),
     variants: (variants ?? []).map((v) => {
-      for (const name of v.with)
+      // A deal's setting is named by its Custom field, a variation by its name.
+      const settings = Object.entries({
+        only: onlyFlagOf(json)?.kw ?? null,
+        hides: dealSettingKw(json, "hideFlag"),
+      }).filter(([, kw]) => kw !== null && v.with.includes(kw));
+      const variations = v.with.filter(
+        (name) => !settings.some(([, kw]) => kw === name),
+      );
+      for (const name of variations)
         if (json.variations?.[name] === undefined)
-          throw new CompileError(`play variants: ${name} is no variation`);
+          throw new CompileError(`play variants: ${name} is no variation or setting`);
       return {
         ...board(v.board, "variants"),
-        variations: v.with,
+        variations,
+        ...Object.fromEntries(settings.map(([field]) => [field, true])),
         diff: tierOf(v.tier, "variants"),
       };
     }),

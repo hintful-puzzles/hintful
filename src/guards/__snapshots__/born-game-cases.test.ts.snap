@@ -72,6 +72,21 @@ exports[`kakurasu: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`keen: pinned hint positions > says, at each pin 1`] = `
+{
+  "cage": "No way to make this cage have a ratio of 2 puts 5 in this cell, so the 5 must go.",
+  "cageEasy": "No way to make this cage multiply to 6 puts 4 in this cell, so the 4 must go.",
+  "cageLine": "This cage must sum to 16, and every way to fill it places a 6 in its column, so the 6 must go.",
+  "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
+  "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",
+  "hiddenSingle": "No other cell in this column can be 1, so this cell must be 1.",
+  "populate": "Start by penciling every candidate number into each empty cell.",
+  "set": "These 3 columns fit 5 only in the outlined cells, taking all 3 rows' 5, so the 5 must go.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 3.",
+  "wing": "Whatever goes in the middle cell, another outlined cell in line with this cell must have 2, so the 2 must go.",
+}
+`;
+
 exports[`lightup: pinned hint positions > says, at each pin 1`] = `
 {
   "clueExact": "This 3 needs 3 bulbs and has only 3 free neighbors, so each ringed square must hold a bulb.",

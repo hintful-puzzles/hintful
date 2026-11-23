@@ -418,9 +418,6 @@ Reach for `Dsf` for any partition or connectivity question. Exemplar:
 the same or the opposite value, it states the relation and the runtime keeps
 it (`EdgeRelation` in `describe-runtime/marks.ts`).
 
-- **For a class's minimal element, precompute a `minimal[i]` map after all
-  merges** (`buildMinimal` in `keen/state.ts`). It does not change the
-  canonical root.
 - **An upstream loop that uses the canonical root as an index bound**, and
   not as an identity to compare, decides by which members it skips which
   boards a solver-gated generator emits: its order deals the boards. `Dsf`
@@ -1009,7 +1006,7 @@ Reach for it when your game has a pencil mode. It is the "pencil mode is
 on" glyph, the same in every game and in the same
 place: the canvas's top-right corner. The position is the engine's; a game
 picks its three palette indices (`PencilIndicatorStyle`) and finds the
-room. Exemplar: `keen/render.ts`.
+room. Exemplar: `towers/render.ts`.
 
 - **Reserve `Math.max(yourMargin, pencilIndicatorReach(ts))`.** The reach
   is the glyph plus both insets, and the glyph is clamped between 20 and 48
@@ -1098,7 +1095,7 @@ from either side; a later leg's sentence is `edgeContinuation` in
 Reach for it in every game that carries `ui.pencilMode` and
 `ui.cursorFromKeyboard`: the player types values and pencils candidates. The
 game keeps its coordinates, its symbols and its
-own `Move`. Exemplar: `keen/index.ts`.
+own `Move`. Exemplar: `towers/index.ts`.
 
 - **Input**: `pressNoteTakingCell`, `tapNoteTakingCell` and
   `dragEnteredNoteTakingCell` resolve a press, a release and a drag;
@@ -1323,7 +1320,7 @@ family: pass `rs` for a random matching in generation and leave it out for a
 deterministic existence check (`tents/`). A repeated symbol, the `seed`
 hook, `cubeOut` and the family's generator shapes are in
 [`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
-`keen/solver.ts`. Its singles, sets, fish and wing are
+`mathrax/solver.ts`. Its singles, sets, fish and wing are
 `latin.compiled.ts`, compiled from `latin.description.yaml` by
 `npm run describe` and never edited by hand; `latinLadder` pairs each with
 its reason, and runs a described game's own on its clues
@@ -1674,7 +1671,7 @@ a strike names), `evidenceOf` (what a step's words outline and stripe),
 `populateThenClean`, and `keepCandidateHintTrack` and
 `refreshCandidateHintStep`. A board scan reads
 `grid.length`, so a board need not be square; `w` is only the row stride.
-Exemplar: `keen/index.ts`.
+Exemplar: `towers/index.ts`.
 
 - **`NoteEncoding.all(i)` must agree with the game's own fill-all move.**
   It is the full note set of a blank cell, per cell, for a game whose notes

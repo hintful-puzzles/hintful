@@ -191,3 +191,50 @@ note.
 - **WHEN** a player presses a sign between two cells, then presses it again
 - **THEN** the sign is drawn gray after the first press and in ink after the
   second, and no cell has changed
+
+### Requirement: A born game's menu may offer a board with a deal's setting on
+
+A variant board in a born game's preset menu MAY turn on a setting of its
+deal (the setting that deals some kinds alone, or the one that hides a
+kind), named by its Custom field, as it may a variation of the rules; the
+board SHALL then be dealt with that setting on.
+
+#### Scenario: Keen's multiplication-only board
+
+- **WHEN** Keen's preset menu is listed
+- **THEN** after its grid it offers "6x6 Normal, multiplication only"
+
+### Requirement: A born game's clue at a part is printed in its text format
+
+A born game's text format SHALL print each clue at a part of a dealt
+partition after the row of the part's first cell, its value and its sign,
+in the order of those cells.
+
+#### Scenario: A cage's clue as text
+
+- **WHEN** a board whose cages each carry a clue is copied as text
+- **THEN** each row of cells is followed by the clues of the cages that start
+  in it
+
+### Requirement: A clue's value is any its domain holds
+
+A born game SHALL deal, read and judge a clue's value anywhere in the range
+its description gives it, however large: `x in range(lo, hi)` compares `x`
+with the range's ends.
+
+#### Scenario: A product past 31
+
+- **WHEN** a multiplication-only board of `caging` is dealt at 5×5
+- **THEN** some cage may carry a product above 31
+
+### Requirement: A selected cell stands apart from a region fill
+
+On a board of typed numbers whose parts take the region fills, the selected
+cell's wash SHALL stand apart from every fill and from the grid line in both
+schemes, so the cursor shows in a cage of any color.
+
+#### Scenario: The cursor in a yellow cage in the dark scheme
+
+- **WHEN** the player selects a cell of a yellow cage in the dark scheme
+- **THEN** the cell is drawn in a wash the yellow fill and the grid line
+  around it can be told from

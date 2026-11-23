@@ -259,6 +259,20 @@ export function highlightWash(background: Color): Color {
   );
 }
 
+/** {@link highlightWash} on a board whose cells take the region fills (a
+ * born game's cages, `REGION_FILLS`): the light value is the same, and the
+ * dark one a dimmer amber, as the deep amber is the dark yellow fill's own
+ * color (0.04 apart, and a selected cell vanished in a yellow cage). It sits
+ * between the grid line and the fills, about 0.1 off each and off the margin,
+ * where a near-black met the grid line; the green entry and the blue note read
+ * better on it than on a fill (5.0 and 5.6 to 1, measured 2026-11-23). */
+export function regionHighlightWash(background: Color): Color {
+  return token(
+    [0.86 * background[0], 0.8 * background[1], 0.5 * background[2]],
+    [0.18, 0.14, 0.05],
+  );
+}
+
 /**
  * **Undecided**: an edge or line the player has explicitly marked as "I don't
  * know yet", distinct both from a drawn line and from an empty one. Loopy's

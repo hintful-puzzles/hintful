@@ -128,40 +128,6 @@ export function outsideRings(ops: readonly DrawOp[]): DrawOp[] {
   return out;
 }
 
-/** `color` draws exactly one straight `cells`-cell outline: `2·cells + 2` thin
- * sides, where a ring per cell would be `4·cells`. */
-function expectOneShape(
-  ops: readonly RectOp[],
-  color: number,
-  cells: number,
-  shape: string,
-): void {
-  const sides = markSides(ops, color);
-  expect(
-    sides.length,
-    `a ${cells}-cell ${shape} is ${2 * cells + 2} sides, not ${4 * cells} per-cell rings`,
-  ).toBe(2 * cells + 2);
-  for (const s of sides)
-    expect(isThin(s), `${shape} side ${s.w}x${s.h} is not thin — that is a fill`).toBe(
-      true,
-    );
-}
-
-/**
- * A contiguous `cells`-cell evidence region is **one contour**: `2·cells + 2`
- * sides for a straight line or rectangle-free run, never `4·cells`.
- *
- * The count is the assertion. A region drawn as one ring per cell, or one that
- * silently lost a cell, both come out at a different number.
- */
-export function expectContour(
-  ops: readonly RectOp[],
-  color: number,
-  cells: number,
-): void {
-  expectOneShape(ops, color, cells, "contour");
-}
-
 /**
  * A straight piece the step acts on — a domino — is **one ring** around its
  * squares: a pill about `squares` times as long as it is wide, never a ring

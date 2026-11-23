@@ -129,8 +129,9 @@ export function ringShape(
   return shape;
 }
 
-/** The ring {@link ringShape} draws, or `null` where none fits. */
-function ringFits(
+/** The ring {@link ringShape} draws, or `null` where none fits: for a game
+ * that sizes its text so one does. */
+export function ringFits(
   box: Rect,
   clear: RingClear,
   thickness: number,

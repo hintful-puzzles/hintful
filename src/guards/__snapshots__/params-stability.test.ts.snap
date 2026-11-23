@@ -294,7 +294,8 @@ preset:6x6 Hard  full=6dx  brief=6
 preset:6x6 Unreasonable  full=6du  brief=6
 preset:9x9 Normal  full=9dn  brief=9
 preset:6x6 Normal, multiplication only  full=6dnm  brief=6
-bump:w  full=7dn  brief=7"
+bump:w  full=7dn  brief=7
+bump:h  full=6dn  brief=6"
 `;
 
 exports[`encoded params are byte-stable > lightup 1`] = `

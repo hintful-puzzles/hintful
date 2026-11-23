@@ -189,14 +189,21 @@ describe("no game tests a button this frontend cannot send", () => {
     expect(emittableFromKeyMap).toContain(DELETE);
     expect(emittableFromKeyMap).toContain(ESCAPE);
     expect(emittableFromKeyMap).toContain(PuzzleButton.CURSOR_UP);
-    expect(sources.length).toBeGreaterThan(200);
+    // The sources shrink as games are born from their descriptions, so no
+    // count of them holds: the glob reads some, and each under a game's id.
+    expect(sources.length).toBeGreaterThan(0);
     // …and the panel half, which would otherwise contribute nothing silently
     // if the registry were empty at collection time. The path→id mapping is
     // asserted too: a glob whose shape changed would key every lookup on `""`
     // and quietly hand every game an empty panel.
     expect(panels.size).toBeGreaterThanOrEqual(12);
     expect(gameIdOf("src/games/unruly/index.ts")).toBe("unruly");
-    expect(new Set(sources.map((f) => gameIdOf(f.fileName))).size).toBeGreaterThan(50);
+    // A file in a game's folder, the registry beside them aside.
+    const inFolders = sources.filter((f) => f.fileName.split("/").length > 3);
+    expect(inFolders.length).toBeGreaterThan(0);
+    expect(
+      inFolders.filter((f) => gameIdOf(f.fileName) === "").map((f) => f.fileName),
+    ).toEqual([]);
   });
 
   it("finds the comparisons it claims to check", () => {
