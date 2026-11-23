@@ -5,7 +5,7 @@
  * code.
  */
 import { describe, expect, it } from "vitest";
-import { bornWithoutNotes } from "../engine/testing/born-games.ts";
+import { BORN_GAMES } from "../engine/testing/born-games.ts";
 import {
   gamesImporting,
   gamesUsing,
@@ -89,11 +89,21 @@ describe("a family the code can vouch for agrees with the code", () => {
     // The single-placement sentence (`narrateLatinReason`) is borrowed by games
     // that are not Latin squares, as the helpers are; the arms that state a
     // Latin rule are the strikes'.
-    // A born board without notes never speaks the walk its code reaches.
-    const speakers = speaking(
-      [...puzzleIds].filter((id) => !bornWithoutNotes(id)),
-      ["latinPremise"],
-    );
+    // A born game's code is the fill board's, which reaches every sentence;
+    // it speaks the Latin ones by the Latin library's rungs its description
+    // uses, and the rest of the walk is worded by the description.
+    const born = new Map(BORN_GAMES.map((b) => [b.id, b.description]));
+    const techniques = (d: Readonly<Record<string, unknown>>) =>
+      (d["techniques"] as readonly { readonly use?: string }[] | undefined) ?? [];
+    const speakers = [
+      ...speaking(
+        [...puzzleIds].filter((id) => !born.has(id)),
+        ["latinPremise"],
+      ),
+      ...[...born]
+        .filter(([, d]) => techniques(d).some((t) => t.use?.startsWith("latin.")))
+        .map(([id]) => id),
+    ];
     // A known positive, so a scan that stopped seeing imports cannot pass.
     expect(speakers).toContain("keen");
     expect(speakers.filter((id) => !latin.includes(id))).toEqual([]);
