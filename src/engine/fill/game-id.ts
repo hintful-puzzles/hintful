@@ -34,13 +34,14 @@ import {
   choice,
   dims,
   flag,
+  letters,
   num,
   type ParamsSegment,
   paramsCodec,
   size,
   unusedLetter,
 } from "../game-id/params-codec.ts";
-import { rulesetItem } from "../game-id/ruleset.ts";
+import { RULESET_KW, rulesetItem } from "../game-id/ruleset.ts";
 import { encodeRunLength } from "../game-id/run-length.ts";
 import { encodeWallRuns, readRegionWalls } from "../game-id/wall-runs.ts";
 import { regionNumbers } from "../generate/divide.ts";
@@ -163,19 +164,22 @@ export interface FillThorough {
 }
 
 /** A size beyond the grid's that the params give (`play.sizes`): its letter
- * in the params, and the Custom dialog's ruleset field, one ruleset a value
- * from the size's `min` up. A ruleset's `least` is the narrowest board it
- * has an answer on. */
-export interface FillSetting {
+ * in the params, before the number, or its `letters`, one written bare a
+ * value, `""` written as nothing (Seismic's Tectonic `T`); and the Custom
+ * dialog's ruleset field, one ruleset a value from the size's `min` up. A
+ * ruleset's `least` is the narrowest board it has an answer on. */
+export type FillSetting = (
+  | { readonly letter: string; readonly letters?: undefined }
+  | { readonly letters: readonly string[]; readonly letter?: undefined }
+) & {
   readonly size: string;
-  readonly letter: string;
   readonly min: number;
   readonly rulesets: readonly {
     readonly name: string;
     readonly rule: string;
     readonly least?: number;
   }[];
-}
+};
 
 /** Bounds on a board's size a choice of an option sets: on its sides, that
  * it is square, and a tier's own, by the tier's index. */
@@ -868,14 +872,17 @@ export function fillParams(
     ...paramsCodec(defaults, [
       deal.square === true ? size(paramConfig, "grid-size") : dims(paramConfig),
       ...unused("size"),
-      // A size the params give, written as the number itself.
+      // A size the params give, written as the number itself after its
+      // letter, or as its ruleset's bare letter (the ruleset field's).
       ...settings.map((s) =>
-        num(paramConfig, s.letter, {
-          get: (p) => p.sizes?.[s.size] ?? s.min,
-          set: (p, v) => {
-            p.sizes = { ...p.sizes, [s.size]: v };
-          },
-        }),
+        s.letters === undefined
+          ? num(paramConfig, s.letter, {
+              get: (p) => p.sizes?.[s.size] ?? s.min,
+              set: (p, v) => {
+                p.sizes = { ...p.sizes, [s.size]: v };
+              },
+            })
+          : letters(paramConfig, RULESET_KW, s.letters),
       ),
       ...(deal.tally === undefined ? [] : [tallySizeSegment(deal.tally)]),
       // An option only the deal reads, which only a full ID carries: absent,

@@ -241,13 +241,16 @@ export interface PlayJson {
   hintMarks?: Partial<Record<"ring" | "outline" | "stripes" | "strike", string>>;
 }
 
-/** A size beyond the grid's that the params give: its params letter, and a
- * ruleset for each of its values, each with the narrowest board it has an
- * answer on. */
-export interface SizeSettingJson {
-  letter: string;
+/** A size beyond the grid's that the params give: its params letter, written
+ * before the number, or its `letters`, one bare a value, `""` written as
+ * nothing (Seismic's Tectonic `T`); and a ruleset for each of its values,
+ * each with the narrowest board it has an answer on. */
+export type SizeSettingJson = (
+  | { letter: string; letters?: undefined }
+  | { letters: string[]; letter?: undefined }
+) & {
   rulesets: { name: string; rule: string; least?: number }[];
-}
+};
 
 /** Bounds on a board's two sides together: their sum, their product, the
  * shorter and the longer. */

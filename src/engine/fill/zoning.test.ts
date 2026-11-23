@@ -91,6 +91,40 @@ describe("the ID", () => {
   });
 });
 
+describe("a ruleset written as its bare letter", () => {
+  const corners = { w: 5, h: 5, diff: 0, sizes: { mode: 1 } };
+
+  it("is written after the size, the first ruleset as nothing, and read back", () => {
+    expect(game.encodeParams(params(5), true)).toBe("5x5de");
+    expect(game.encodeParams(corners, true)).toBe("5x5Dde");
+    expect(game.encodeParams(corners, false)).toBe("5x5D");
+    expect(game.decodeParams("5x5Dde")).toMatchObject(corners);
+    expect(game.decodeParams("5x5").sizes?.["mode"] ?? 0).toBe(0);
+  });
+
+  it("is the Custom dialog's game mode, and the menu's board", () => {
+    const mode = game.paramConfig?.find((c) => c.kw === "ruleset");
+    expect(mode?.type === "choices" ? mode.choices : null).toEqual([
+      "Sides",
+      "Corners",
+    ]);
+    expect(game.menu?.boards.map((b) => game.encodeParams(b, false))).toContain("5x5D");
+  });
+
+  it("deals the ruleset's areas, equal numbers apart at a corner too", () => {
+    for (const seed of ["a", "b", "c"]) {
+      const { desc } = game.newDesc(corners, randomNew(seed));
+      const b = game.newState(corners, desc);
+      for (const cs of b.dealt.area.cells) expect(cs.length).toBeLessThanOrEqual(5);
+      const g = solveBoard(zoning, b, 0).values;
+      for (let c = 0; c < 25; c++)
+        for (const d of [4, 6])
+          if (c + d < 25 && Math.abs((c % 5) - ((c + d) % 5)) === 1)
+            expect(g[c + d]).not.toBe(g[c]);
+    }
+  });
+});
+
 describe("typing", () => {
   it("offers keys to the largest area drawn, and refuses a number past the cell's area", () => {
     const keys = game.requestKeys?.(params(5)) ?? [];

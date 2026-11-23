@@ -223,7 +223,9 @@ research tools all read through it; the app never does.
   rules read that the grid is not measured in is the params' and is named in
   `play.sizes`: its letter, and one ruleset a value, each with the `least`
   board it has an answer on (Star Battle's `stars`, `s2`); a preset board
-  gives it after its `WxH` (`8x8s2`). A grid as high as it is wide
+  gives it after its `WxH` (`8x8s2`). With `letters` in place of `letter`,
+  each ruleset is written as its own bare letter, `""` as nothing
+  (Seismic's Tectonic, `6x6T`). A grid as high as it is wide
   (`grid: { w: w, h: w }`) has one size field and a bare-number ID. `play.dealt` names a
   clue kind meaning `value(at) = v` that the cell is dealt holding (Unruly's
   givens, which `id:` writes as `dots`); one whose meaning goes on after an

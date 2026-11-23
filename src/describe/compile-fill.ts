@@ -475,14 +475,25 @@ const sizeOf =
     options?: Record<string, number>;
     tally?: number;
   } => {
-    const m = /^(\d+)x(\d+)((?:[a-z]\d+)*)$/.exec(b);
+    const m = /^(\d+)x(\d+)((?:[a-z]\d+|[A-Za-z](?!\d))*)$/.exec(b);
     if (m === null) throw new CompileError(`play boards: ${b} is not WxH`);
     const sizes: Record<string, number> = Object.fromEntries(
       Object.keys(json.play?.sizes ?? {}).map((n) => [n, json.sizes[n]?.min ?? 0]),
     );
     const options: Record<string, number> = {};
     let tally: number | null = null;
-    for (const [, letter, n] of m[3].matchAll(/([a-z])(\d+)/g)) {
+    for (const [, letter, n] of m[3].matchAll(/([A-Za-z])(\d*)/g)) {
+      // A bare letter is a ruleset written by its own (`6x6T`, Tectonic).
+      if (n === "") {
+        const bare = Object.entries(json.play?.sizes ?? {}).find(([, s]) =>
+          s.letters?.includes(letter),
+        );
+        if (bare === undefined)
+          throw new CompileError(`play boards: ${b}: ${letter} is no ruleset's letter`);
+        const [name, s] = bare;
+        sizes[name] = (json.sizes[name]?.min ?? 0) + (s.letters ?? []).indexOf(letter);
+        continue;
+      }
       if (letter === json.play?.tally?.size.letter) {
         tally = Number(n);
         continue;
@@ -1107,7 +1118,7 @@ export function dealOf(
       );
   }
   const options = optionsJsonOf(json, tiers, [
-    ...settings.map((s) => s.letter),
+    ...settings.flatMap(settingLetters),
     ...(thorough === null ? [] : [thorough.letter]),
     ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
   ]);
@@ -1142,7 +1153,7 @@ export function dealOf(
   const firstKind = firstKindOf(json, d);
   const kindLetters = kindLettersOf(json, d);
   const taken = [
-    ...settings.map((s) => s.letter),
+    ...settings.flatMap(settingLetters),
     ...Object.values(options).map((o) => o.letter),
     ...(thorough === null ? [] : [thorough.letter]),
     ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
@@ -1429,12 +1440,18 @@ function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
     const range = json.sizes[size];
     if (range === undefined || !env.sizes.names.has(size))
       throw new CompileError(`play sizes: ${size} is no size beyond the grid's`);
-    if (taken.has(s.letter))
-      throw new CompileError(`play sizes: the letter ${s.letter} is taken`);
-    taken.add(s.letter);
+    for (const letter of settingLetters(s)) {
+      if (taken.has(letter))
+        throw new CompileError(`play sizes: the letter ${letter} is taken`);
+      taken.add(letter);
+    }
     if (range.max === undefined || s.rulesets.length !== range.max - range.min + 1)
       throw new CompileError(`play sizes: ${size} has not one ruleset a value`);
-    return { size, letter: s.letter, min: range.min, rulesets: s.rulesets };
+    const rest = { size, min: range.min, rulesets: s.rulesets };
+    if (s.letters === undefined) return { ...rest, letter: s.letter };
+    if (s.letters.length !== s.rulesets.length)
+      throw new CompileError(`play sizes: ${size} has not one letter a ruleset`);
+    return { ...rest, letters: s.letters };
   });
   // The Custom dialog has one ruleset field.
   if (out.length > 1)
@@ -1640,12 +1657,16 @@ function optionsJsonOf(
 }
 
 /** A size beyond the grid's as the deal holds it (`FillSetting`). */
-interface FillSettingJson {
+type FillSettingJson = ({ letter: string } | { letters: string[] }) & {
   size: string;
-  letter: string;
   min: number;
   rulesets: { name: string; rule: string; least?: number }[];
-}
+};
+
+/** The letters a setting is written by in the params: its one before the
+ * number, or each of its bare ones but the one written as nothing. */
+const settingLetters = (s: { letter?: string; letters?: readonly string[] }) =>
+  s.letter !== undefined ? [s.letter] : (s.letters ?? []).filter((l) => l !== "");
 
 /**
  * `growBy(sp, cl)`, what a grown partition's parts hold on a board: `holds`,

@@ -441,9 +441,13 @@ commit. In design.md § "Decisions" 7's order.
         keep-apart rule is harder, measured at its flip (2.7d). An area
         larger than the notes' notation (upstream's "more than nine
         squares") is not yet refused on reading: 2.7d.
-  - [ ] 2.7b A ruleset written as a bare letter (Seismic's `T`, nothing for
+  - [x] 2.7b A ruleset written as a bare letter (Seismic's `T`, nothing for
         the first), on `zoning`: a `play.sizes` setting with `letters` one
         a ruleset in place of a `letter` and the number.
+        Done: the params codec's `letters` segment, a menu board written
+        `5x5D`, and `zoning`'s second ruleset (equal numbers apart at a
+        corner too, areas of four or five by `divide.by`); the codec's
+        guard seen to fail planted back to a letter and a number.
   - [ ] 2.7c The walk over a dealt partition, on `zoning` with notes: its
         regions the units and each partition the rules hold distinct, a
         part holding each value of its cells' domain; the reach from the

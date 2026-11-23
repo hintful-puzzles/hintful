@@ -357,6 +357,13 @@ cell SHALL take no number past its part's size.
 - **THEN** no area is larger than 4, the board has one answer, and each
   area holds 1 to its size once
 
+#### Scenario: A ruleset written as its bare letter
+
+- **WHEN** a born game's ruleset setting names `letters: ["", T]` and a
+  board of the second ruleset is written
+- **THEN** its params are `6x6T`, the first ruleset's `6x6`, each read back
+  to its ruleset, and the Custom dialog offers both as its game mode
+
 #### Scenario: A number past the cell's area is not typed
 
 - **WHEN** a player selects a cell of an area of three and types 4

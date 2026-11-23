@@ -9,6 +9,9 @@ produces: numbers
 sizes:
   w: { min: 3, max: 12 }
   h: { min: 3, max: 12 }
+  # Which squares keep equal numbers apart: 0 those side by side, 1 those
+  # at a corner too.
+  mode: { min: 0, max: 1 }
 space:
   grid: { w: "w", h: "h" }
   regions: { area: dealt }
@@ -17,13 +20,27 @@ answer:
   # An area of N squares holds the numbers 1 to N.
   value: { sort: cell, domain: "range(1, |cells(area(c))|)" }
 given: [value]
+define:
+  # Whether p keeps an equal number from c: beside it, or with `mode` 1 at
+  # a corner too.
+  apart(c, p): "p in adj4(c) or (mode = 1 and p in adj8(c))"
 shape:
   - "forall r in area: distinct(value(c) over c in cells(r))"
-  - "forall c in cells, p in adj4(c): value(p) != value(c)"
+  - "forall c in cells, p in adj8(c) where apart(c, p): value(p) != value(c)"
 freedom: { kind: fill }
 play:
   numbers: {}
-  boards: [4x4, 5x5]
+  boards: [4x4, 5x5, 5x5D]
+  # The second ruleset is written as its bare letter, the first as nothing
+  # (Seismic's Tectonic `T`).
+  sizes:
+    mode:
+      letters: ["", D]
+      rulesets:
+        - name: Sides
+          rule: Two equal numbers may not be side by side.
+        - name: Corners
+          rule: Two equal numbers may not touch, even at a corner.
   hintMarks:
     ring: the square the step decides.
     outline: the squares the step reasons from.
@@ -33,7 +50,8 @@ deal:
   answer: searched under the areas
   given: every square's number, then each hidden while the board still finishes
   tier: the one tier
-  divide: { partition: area, sizes: [[2, 3, 4, 4]] }
+  # Areas of up to four, or with corners apart, of four or five.
+  divide: { partition: area, by: mode, sizes: [[2, 3, 4, 4], [4, 5]] }
   sample: { search: true }
   hide: given
 id:
@@ -45,12 +63,13 @@ names:
   single: "the only number left in a square"
   hidden: "the only square left for a number"
 techniques:
-  # A placed number leaves the rest of its area and the squares beside it.
+  # A placed number leaves the rest of its area and the squares it keeps
+  # apart.
   - kind: peer.placed
     as: cull
     tier: Easy
     with:
-      peer: "p in cells where p != c and (area(p) = area(c) or p in adj4(c))"
+      peer: "p in cells where p != c and (area(p) = area(c) or apart(c, p))"
   # A square down to one number holds it.
   - kind: one.cell
     as: lone

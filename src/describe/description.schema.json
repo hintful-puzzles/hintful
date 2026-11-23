@@ -990,7 +990,7 @@
             },
             "default": {
               "type": "string",
-              "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$",
+              "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$",
               "description": "The default board, one of `boards`, where it is not the first."
             },
             "defaultTier": {
@@ -1001,7 +1001,7 @@
               "type": "object",
               "description": "The first and last tier a board of `boards` is offered at, by its `WxH`, where it is not every tier.",
               "propertyNames": {
-                "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$"
+                "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
               },
               "additionalProperties": {
                 "type": "array",
@@ -1012,13 +1012,20 @@
             },
             "sizes": {
               "type": "object",
-              "description": "Each size beyond the grid's that the rules read, which the params give, by its name in `sizes`: its letter in the params, written as the number itself, and its rulesets, one for each value from the size's `min`, each with the narrowest board it has an answer on (`least`). The Custom dialog offers them as its game mode, and the help's `{{rulesets}}` lists them (Star Battle's stars).",
+              "description": "Each size beyond the grid's that the rules read, which the params give, by its name in `sizes`: its letter in the params, written before the number itself, or its `letters`, one written bare for each value, `\"\"` for the one written as nothing (Seismic's Tectonic `T`); and its rulesets, one for each value from the size's `min`, each with the narrowest board it has an answer on (`least`). The Custom dialog offers them as its game mode, and the help's `{{rulesets}}` lists them (Star Battle's stars).",
               "additionalProperties": {
                 "type": "object",
-                "required": ["letter", "rulesets"],
+                "required": ["rulesets"],
+                "oneOf": [{ "required": ["letter"] }, { "required": ["letters"] }],
                 "additionalProperties": false,
                 "properties": {
                   "letter": { "type": "string", "pattern": "^[a-z]$" },
+                  "letters": {
+                    "type": "array",
+                    "minItems": 2,
+                    "uniqueItems": true,
+                    "items": { "type": "string", "pattern": "^[A-Za-z]?$" }
+                  },
                   "rulesets": {
                     "type": "array",
                     "minItems": 1,
@@ -1075,7 +1082,7 @@
                 "properties": {
                   "board": {
                     "type": "string",
-                    "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$"
+                    "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
                   },
                   "with": { "type": "array", "items": { "type": "string" } },
                   "tier": { "type": "string" }
@@ -1146,7 +1153,7 @@
               "minItems": 1,
               "items": {
                 "type": "string",
-                "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$"
+                "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*|[A-Za-z](?![0-9]))*$"
               }
             },
             "hintMarks": {
