@@ -39,7 +39,13 @@
             option's symmetry, read from each compiled deal; seen to fail
             on Light Up, Range and Sticks with the half-turn copy and the
             hide's pairing planted wrong.
-      - [ ] A deal's clues are its answer's (with Boats or Singles).
+      - [x] A deal's clues are its answer's (`dealt-clues.test.ts`): a
+            withheld value never dealt, a hide flag's kind dealt everywhere
+            with the flag off and fewer with it on. That the clues are the
+            answer's is the rules' guards'; Singles' shaded repeats follow
+            from loading's uniqueness (an unrepeated shaded square could be
+            cleared). Seen to fail with the flag's kind hidden regardless,
+            and with the compiler's withheld filter planted off.
       - [x] What a placement brings (`placement-brings.test.ts`): each
             answer placement alone brings exactly what the live rules rule
             out with it, washed squares and matchings left out; laid in
