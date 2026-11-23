@@ -56,6 +56,12 @@ The arrow game's analysis, recorded at filing (2026-11-21):
 
 ## Open, for the session that takes this up
 
+- Re-plan against the fill board before starting
+  (`describe-the-whole-catalog`, task 1.5): this draft predates it.
+  Slide's moves are already described and compiled
+  (`describe/compile-position.ts`), so the model starts from that
+  declaration, not from Slide's code.
+
 - Prior art, by a subagent: the arrow-exit genre's rules and generators,
   one-axis sliding-block generators and solvers, and any engine that models
   pieces and move rules declaratively. Credit what is taken.

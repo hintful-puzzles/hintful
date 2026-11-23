@@ -1,0 +1,5 @@
+# A route, not a feature: each group's change it files carries that group's
+# spec deltas, and this change states no behavior of its own.
+schema: spec-driven
+created: 2026-11-23
+skip_specs: true
