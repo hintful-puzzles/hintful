@@ -242,7 +242,8 @@ Sticks lines along an axis, Bricks a hexagon, Pattern a list clue to a
 line, Singles a Latin square's numbers, Boats a tally of pieces the
 params give, and Star Battle a size the params give beyond the grid's.
 Its directory holds
-`<game>.description.yaml`, `<game>.plants.yaml` and `<game>.test.ts`.
+`<game>.description.yaml`, `<game>.plants.yaml` and `<game>.cases.yaml`,
+and no test code ([`testing.md`](./testing.md) § "What a new game ships").
 
 1. **Write the description** whole: help, rules, clues, techniques and
    their words as every described game does, and the parts a born game
@@ -252,9 +253,11 @@ Its directory holds
 2. **Measure the deal rate** before choosing the menu: what share of
    sampled answers each tier finishes, a size at a time. A size few deals
    finish is left off the menu, not tuned for.
-3. **Test it in `<game>.test.ts`**: `describeHintPins`, rescanned by
-   `npm run hint-scan -- <file>`, and the mistake outline a render scenario
-   paints. The cross-game guards read the born game as they read any other.
+3. **Test it in `<game>.cases.yaml`**: its `hint` pins, written by
+   `npm run hint-scan -- <the cases file>`, and the IDs, params and
+   positions only its statements decide, each with the outcome expected.
+   The mistake outline is `mistake-outline.test.ts`'s, and the cross-game
+   guards read the born game as they read any other.
 4. **The rest of § "What every game does"** from its step 6: help, spec,
    icons, the app, done.
 

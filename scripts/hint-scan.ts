@@ -21,7 +21,11 @@
  *   returns a stand-in and does not throw, so one in a `describe` body still
  *   lets the file be collected and its scan run.
  *
- * It writes only the test file it was given.
+ * A born game's pins are its `<game>.cases.yaml`'s `hint.pins`: given that
+ * file, this runs the guard that reads it for that game alone, and writes
+ * the pins there, keeping the file's comments.
+ *
+ * It writes only the file it was given.
  */
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -29,7 +33,18 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import ts from "typescript";
 import {
+  type Document,
+  isMap,
+  isScalar,
+  isSeq,
+  Pair,
+  parseDocument,
+  type Scalar,
+  YAMLMap,
+} from "yaml";
+import {
   type HintScanReport,
+  type KindScanReport,
   SCAN_REPORT_MARK,
 } from "../src/engine/testing/hint-scan-report.ts";
 
@@ -46,8 +61,13 @@ const all = args.includes("--all");
 const files = args.filter((a) => !a.startsWith("--"));
 if (files.length !== 1) fail("usage: npm run hint-scan -- <test file> [--all]");
 const file = path.relative(ROOT, path.resolve(files[0]));
-if (file.startsWith("..") || !file.endsWith(".test.ts"))
-  fail(`${files[0]} is not a test file of this repo`);
+/** A born game's cases file is scanned through the guard that reads it, with
+ * only that game's cases declared. */
+const CASES = /\.cases\.yaml$/;
+const casesGame = CASES.test(file) ? path.basename(file).replace(CASES, "") : null;
+const testFile = casesGame === null ? file : "src/guards/born-game-cases.test.ts";
+if (file.startsWith("..") || !(file.endsWith(".test.ts") || casesGame !== null))
+  fail(`${files[0]} is not a test file or a cases file of this repo`);
 
 interface VitestJson {
   testResults: {
@@ -63,10 +83,14 @@ function scan(): HintScanReport[] {
   try {
     const run = spawnSync(
       "npx",
-      ["vitest", "run", file, "--reporter=json", `--outputFile=${json}`],
+      ["vitest", "run", testFile, "--reporter=json", `--outputFile=${json}`],
       {
         cwd: ROOT,
-        env: { ...process.env, HINT_SCAN: "1" },
+        env: {
+          ...process.env,
+          HINT_SCAN: "1",
+          ...(casesGame === null ? {} : { GAME_CASES: casesGame }),
+        },
         stdio: ["ignore", "ignore", "pipe"],
         encoding: "utf8",
       },
@@ -97,7 +121,7 @@ function scan(): HintScanReport[] {
       fail(
         errors.trim()
           ? `${file} failed before any scan ran:\n${errors}`
-          : `${file} declares no scan: it has no describeHintPins call`,
+          : `${file} declares no scan: it has no ${casesGame === null ? "describeHintPins call" : "hint section"}`,
       );
     }
     return reports;
@@ -220,7 +244,95 @@ function rewrite(
   return { text: `{\n${entries.map((e) => `${e},`).join("\n")}\n}`, log, missing };
 }
 
+/** A position as a cases file writes it: the ID quoted, each move a map on
+ * its own line. */
+function positionNode(
+  doc: Document,
+  position: NonNullable<KindScanReport["position"]>,
+) {
+  const quoted = (id: string) => {
+    const s = doc.createNode(id) as Scalar;
+    s.type = "QUOTE_DOUBLE";
+    return s;
+  };
+  if (typeof position === "string") return quoted(position);
+  const node = doc.createNode({ id: position.id, moves: position.moves }) as YAMLMap;
+  node.set("id", quoted(position.id));
+  const moves = node.get("moves", true);
+  if (isSeq(moves))
+    for (const m of moves.items) if (isMap(m) || isSeq(m)) m.flow = true;
+  return node;
+}
+
+/** Write the one report into the cases file's `hint.pins`, as {@link rewrite}
+ * does a test file's, keeping the file's comments. */
+function writeCases(reports: readonly HintScanReport[]): never {
+  if (reports.length !== 1) fail(`${file} ran ${reports.length} scans, not one`);
+  const report = reports[0];
+  const sourcePath = path.join(ROOT, file);
+  const original = readFileSync(sourcePath, "utf8");
+  const doc = parseDocument(original, { version: "1.2", schema: "core" });
+  const hint = doc.get("hint", true);
+  if (!isMap(hint)) fail(`${file} has no hint section`);
+  const pins = hint.get("pins", true);
+  const written = new Map<string, Pair>();
+  if (isMap(pins))
+    for (const pair of pins.items)
+      if (isScalar(pair.key)) written.set(String(pair.key.value), pair as Pair);
+  const held = (n: number): string =>
+    ` Held on ${n} of ${report.walked} positions walked.`;
+  const next = new YAMLMap();
+  const log: string[] = [];
+  let missing = 0;
+  for (const [name, kind] of Object.entries(report.kinds)) {
+    const was = written.get(name);
+    written.delete(name);
+    const count = `${String(kind.held).padStart(6)}  ${name}`;
+    if (was !== undefined && kind.kept && !all) {
+      if (kind.held > 0 && isScalar(was.key)) was.key.commentBefore = held(kind.held);
+      next.items.push(was);
+      log.push(
+        `${count}: kept${kind.held === 0 ? " (by hand: the scan reaches none)" : ""}`,
+      );
+    } else if (kind.position !== null) {
+      const key = doc.createNode(name) as Scalar;
+      key.commentBefore = held(kind.held);
+      next.items.push(new Pair(key, positionNode(doc, kind.position)));
+      log.push(`${count}: ${was === undefined ? "pinned" : "pinned again"}`);
+    } else if (was !== undefined) {
+      next.items.push(was);
+      if (kind.kept) log.push(`${count}: kept (by hand: the scan reaches none)`);
+      else {
+        missing++;
+        log.push(`${count}: STALE, and the scan found no position`);
+      }
+    } else {
+      missing++;
+      log.push(`${count}: NOT FOUND (pin one by hand, or list it in unreached)`);
+    }
+  }
+  for (const name of written.keys())
+    log.push(`        ${name}: dropped (no such kind)`);
+  for (const [name, kind] of Object.entries(report.unreached))
+    log.push(
+      kind.held === 0
+        ? `${String(0).padStart(6)}  ${name}: unreached, as listed`
+        : `${String(kind.held).padStart(6)}  ${name}: listed unreached, but fires. Pin it: ${kind.pin}`,
+    );
+  hint.set("pins", next);
+  const text = doc.toString({ lineWidth: 0, flowCollectionPadding: false });
+  if (text !== original) writeFileSync(sourcePath, text);
+  console.log(
+    `${report.game}: ${report.walked} positions walked on ${report.boards} boards\n${log.join("\n")}`,
+  );
+  console.log(
+    text === original ? `\n${file}: every pin stands` : `\n${file}: pins written`,
+  );
+  process.exit(missing > 0 ? 1 : 0);
+}
+
 const reports = scan();
+if (casesGame !== null) writeCases(reports);
 const sourcePath = path.join(ROOT, file);
 const original = readFileSync(sourcePath, "utf8");
 const source = ts.createSourceFile(file, original, ts.ScriptTarget.Latest, true);

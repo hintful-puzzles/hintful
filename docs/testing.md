@@ -133,8 +133,9 @@ press, and a physical key reaching the game straight after. Exemplar:
 
 Pin one position for every rung the game declares, with one
 `describeHintPins` call in `<game>-hint.test.ts`, and let
-`npm run hint-scan -- <the test file>` write the pins. Never write a seed
-scan for a hint position.
+`npm run hint-scan -- <the test file>` write the pins; a born game's pins
+are its cases file's `hint` section, and the scan takes that file. Never
+write a seed scan for a hint position.
 
 `describeHintPins`
 ([`testing/hint-positions.ts`](../src/engine/testing/hint-positions.ts))
@@ -418,6 +419,17 @@ these are the ones that mislead:
   narrow. Put the whole predicate in one `filter`, or use a type guard.
 
 ## What a new game ships
+
+**A game born from its description ships test data, not tests**: its
+`<game>.cases.yaml`, which
+[`testing/game-cases.ts`](../src/engine/testing/game-cases.ts) reads (its
+header says what each section holds) and
+[`born-game-cases.test.ts`](../src/guards/born-game-cases.test.ts) runs.
+Every assertion is the engine's. A case the file cannot state, one that
+would need a loop or a branch, is an engine check missing: write it in the
+engine, for any game to name. An expectation written from the engine's own
+output, rather than known apart from it, says `recorded: true`. The rest of
+this section is for a game with code of its own.
 
 Ship the skeleton's three test files, filled in (§ "What every game does"
 says what each holds). A game has no oracle to compare with, so

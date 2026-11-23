@@ -34,6 +34,7 @@
 
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { BORN_GAMES } from "../engine/testing/born-games.ts";
 import { capabilitySets } from "../engine/testing/enrollment.ts";
 import { expectLedger } from "../engine/testing/ledger.ts";
 import {
@@ -108,6 +109,15 @@ function isCovered(sources: readonly ts.SourceFile[]): boolean {
   });
 }
 
+/** The born games, whose overlay `mistake-outline.test.ts` paints and
+ * asserts, from the population that guard reads. */
+const BORN = new Set(BORN_GAMES.map((b) => b.id));
+
+/** Whether a game's overlay is painted and asserted: a born game by the
+ * cross-game guard, any other by a test of its own. */
+const coveredGame = (id: string): boolean =>
+  BORN.has(id) || isCovered(testSources.get(id) ?? []);
+
 /**
  * Games that offer `findMistakes` but never render its overlay in a test.
  *
@@ -122,7 +132,6 @@ const NO_OVERLAY_TEST = [
   "filling",
   "group",
   "palisade",
-  "pattern",
   "undead",
 ];
 
@@ -139,7 +148,7 @@ describe("a game that finds mistakes has a test that paints them", () => {
     // report the shortfall as *growing* rather than the key as broken.
     const covered = capabilitySets()
       .filter((c) => c.members.includes("findMistakes"))
-      .filter((c) => isCovered(testSources.get(c.id) ?? []));
+      .filter((c) => coveredGame(c.id));
     expect(covered.length).toBeGreaterThanOrEqual(25);
   });
 
@@ -147,9 +156,7 @@ describe("a game that finds mistakes has a test that paints them", () => {
     const offers = capabilitySets()
       .filter((c) => c.members.includes("findMistakes"))
       .map((c) => c.id);
-    const uncovered = offers
-      .filter((id) => !isCovered(testSources.get(id) ?? []))
-      .sort();
+    const uncovered = offers.filter((id) => !coveredGame(id)).sort();
     expectLedger(uncovered, Object.fromEntries(NO_OVERLAY_TEST.map((id) => [id, id])), {
       table: "NO_OVERLAY_TEST",
       file: "src/guards/mistake-overlay-coverage.test.ts",

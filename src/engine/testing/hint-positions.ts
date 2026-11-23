@@ -27,7 +27,11 @@ import type { Game, HintStep } from "../contract/game.ts";
 import { RetryLimitExceeded } from "../contract/retry-limit.ts";
 import { randomNew } from "../random/index.ts";
 import { dealsPromptly } from "./dealt.ts";
-import { type HintScanReport, SCAN_REPORT_MARK } from "./hint-scan-report.ts";
+import {
+  type HintScanReport,
+  type KindScanReport,
+  SCAN_REPORT_MARK,
+} from "./hint-scan-report.ts";
 
 const env = (globalThis as { process?: { env?: Record<string, string | undefined> } })
   .process?.env;
@@ -110,6 +114,9 @@ export interface HintPositionScan<
    * given the one the hint offers (null where it refuses), and ends the line
    * with null. */
   stray?: (state: State, turn: number, hinted: Move | null) => Move | null;
+  /** The file `npm run hint-scan` writes the pins into, where it is not the
+   * test file declaring them: a game's cases file. */
+  source?: string;
 }
 
 /** A scan with the kinds it finds positions for, by name. */
@@ -156,7 +163,7 @@ function loadPosition<P, S, M, U, D, H, R extends string>(
 function scanHintPositions<P, S, M, U, D, H, R extends string>(
   scan: KindScan<P, S, M, U, D, H, R>,
 ): Pick<HintScanReport, "walked" | "boards"> & {
-  kinds: Record<string, { held: number; pin: string | null }>;
+  kinds: Record<string, KindScanReport>;
 } {
   const { game, descOf } = scan;
   const { hint } = game;
@@ -233,7 +240,22 @@ function scanHintPositions<P, S, M, U, D, H, R extends string>(
     kinds: Object.fromEntries(
       names.map((k) => {
         const b = best.get(k);
-        return [k, { held: held.get(k) ?? 0, pin: b ? pinSource(b.pin) : null }];
+        const position =
+          b === undefined
+            ? null
+            : typeof b.pin === "string"
+              ? b.pin
+              : {
+                  id: b.pin.id,
+                  moves:
+                    typeof b.pin.moves === "string"
+                      ? (JSON.parse(b.pin.moves) as unknown[])
+                      : [...b.pin.moves],
+                };
+        return [
+          k,
+          { held: held.get(k) ?? 0, pin: b ? pinSource(b.pin) : null, position },
+        ];
       }),
     ),
   };
@@ -297,6 +319,7 @@ function declarePins<P, S, M, U, D, H, R extends string>(
 ): (kind: string) => PinnedPosition<S, M, H, R> {
   const { game } = spec;
   const again = (): string => {
+    if (spec.source !== undefined) return `npm run hint-scan -- ${spec.source}`;
     const path = expect.getState().testPath ?? "<this file>";
     return `npm run hint-scan -- ${path.slice(path.indexOf("src/"))}`;
   };

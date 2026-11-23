@@ -14,6 +14,9 @@ export interface KindScanReport {
   held: number;
   /** The one to pin, as source text; null when it held on none. */
   pin: string | null;
+  /** The same position as data, for a cases file: a game ID, or one with the
+   * moves played on it. */
+  position: string | { id: string; moves: unknown[] } | null;
 }
 
 export interface HintScanReport {
