@@ -11,7 +11,10 @@ describe("a compiled answer check", () => {
   it("refuses a value outside the domain, however the rest reads", () => {
     const o = 4;
     const sp = latinSpace(o);
-    const none = { greater: clueList([], [], sp.edgeEnds.length / 2) };
+    const none = {
+      given: clueList([], [], o * o),
+      greater: clueList([], [], sp.edgeEnds.length / 2),
+    };
     const square = (shift: number) =>
       Uint8Array.from(
         { length: o * o },

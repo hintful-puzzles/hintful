@@ -1,4 +1,42 @@
+## MODIFIED Requirements
+
+### Requirement: A fill game is born from its description
+
+A game whose player fills a grid toward one hidden answer MAY be born from its
+description: `fillGame` of its compiled module SHALL be the whole game, its
+catalog entry, boards and hint legend read from `catalog:` and `play:`, and its
+directory SHALL hold no TypeScript but its tests.
+
+#### Scenario: Tents is its description
+
+- **WHEN** the catalog and the registry are read
+- **THEN** Tents, Kakurasu, Unruly, Mosaic and Norinori are in all of them, and no one
+  of their directories holds a TypeScript file that is not a test
+
+#### Scenario: The plain-cell family is its descriptions
+
+- **WHEN** the catalog and the registry are read
+- **THEN** Range, Star Battle, Clusters, Light Up, Sticks, Bricks, Pattern,
+  Singles and Boats are in all of them, and no one of their directories
+  holds a TypeScript file that is not a test
+
+#### Scenario: The candidate-note family is its descriptions
+
+- **WHEN** the catalog and the registry are read
+- **THEN** Unequal is in all of them, and its directory holds no TypeScript
+  file
+
 ## ADDED Requirements
+
+### Requirement: A born game's default board is dealt at the first tier its menu offers it
+
+A born game's default params SHALL be its default board at the first tier
+its menu offers that board, the lowest tier where the menu does not say.
+
+#### Scenario: A board the menu starts above Easy
+
+- **WHEN** a born game's default board is offered from Normal up
+- **THEN** its default params are that board at Normal
 
 ### Requirement: A born game's cells may take candidate notes
 
@@ -45,8 +83,8 @@ cell's notes in a grid within it, and offer one key a value of the domain.
 #### Scenario: A value past 9 is a letter
 
 - **WHEN** a born game's values run to 12 and a cell holds 10
-- **THEN** the cell shows `A`, and the keypad offers the keys 1 to 9 and
-  `A` to `C`
+- **THEN** the cell shows `a`, and the keypad offers the keys 1 to 9 and
+  `a` to `c`
 
 ### Requirement: A born game's clue may sit at an edge, a slot or a part
 

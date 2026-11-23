@@ -264,7 +264,7 @@ reasoning over other regions cannot take the preset".
 - **The generic Latin narration arms are shared.** `narrateLatinReason(reason,
   ns, vocab?)` in `hint-text.ts` owns `single`, `hiddenSingle`, `dup` and
   `set`; a game narrates its own arms and falls through to it.
-  Exemplar: `narrate` in [`unequal/index.ts`](../src/games/unequal/index.ts).
+  Exemplar: `narrate` in [`group/index.ts`](../src/games/group/index.ts).
 - **The value vocabulary is a parameter**: `LatinVocab { noun, value(n),
   cell?, be? }`. Omit it for plain numbers; `be` is the verb a square takes a
   value by (Rome's arrows "point"). **The one-value-left steps are every

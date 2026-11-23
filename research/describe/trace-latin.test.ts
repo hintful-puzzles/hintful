@@ -20,10 +20,10 @@ import { seismicGame } from "../../src/games/seismic/index.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import { DIFF_HARD, DIFF_TRICKY, SYMM_NONE } from "../../src/games/solo/state.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
-import { unequalGame } from "../../src/games/unequal/index.ts";
 import { game as clustersGame } from "../../src/generated/games/clusters/clusters.game.ts";
 import { game as mosaicGame } from "../../src/generated/games/mosaic/mosaic.game.ts";
 import { game as starbattleGame } from "../../src/generated/games/starbattle/starbattle.game.ts";
+import { game as unequalGame } from "../../src/generated/games/unequal/unequal.game.ts";
 import { game as unrulyGame } from "../../src/generated/games/unruly/unruly.game.ts";
 import { say } from "../progress.ts";
 

@@ -1136,7 +1136,8 @@ spent-clue drag, the cell drawing, the solver's driver and the generator
 (its order deals the boards). The game declares its clue as a `ClueKind` (what it
 says, whether every true one is dealt, whether both ends flag it, its
 compiled ladder and rules, its drawing and its text glyph) and writes its own `Game`,
-its reasons and its hint's sentences. Exemplars: `unequal/`, `adjacent/`.
+its reasons and its hint's sentences. Exemplar: `adjacent/`. A born game
+does all of this from its description on the fill board (`fill/`, Unequal).
 
 ### `fill/` — the board of a fill game, laid out from its description
 
@@ -1329,7 +1330,7 @@ hook, `cubeOut` and the family's generator shapes are in
 `latin.compiled.ts`, compiled from `latin.description.yaml` by
 `npm run describe` and never edited by hand; `latinLadder` pairs each with
 its reason, and runs a described game's own on its clues
-([`descriptions.md`](./descriptions.md); exemplar `unequal/solver.ts`).
+([`descriptions.md`](./descriptions.md); exemplar `adjacent/solver.ts`).
 `describe-runtime.ts` is what compiled code reads, and the modules under
 `describe-runtime/` hold it: the marks' interface, the numbered grid
 (`describedSpace`, `latinSpace`), kept by shape, and a game's `ClueList`s
@@ -1762,7 +1763,8 @@ Reach for it when a Latin game's hint deduces from the notes.
 library's set, fish and wing rungs of the plan, so the game writes legs
 only for its own techniques; `byCell` cuts a firing a leg a cell, for a
 game whose sentence names one cell's notes. Exemplars:
-`src/games/salad/hint.ts`, `src/games/unequal/index.ts`.
+`src/games/salad/hint.ts`; a born board's walk builds its rungs so from its
+description (`src/engine/fill/candidates.ts`).
 
 ### `stated.ts` — a step's words as its description states them
 

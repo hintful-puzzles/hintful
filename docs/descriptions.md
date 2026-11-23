@@ -204,8 +204,9 @@ research tools all read through it; the app never does.
   which hatch the line's clue in the margin too.
 - **A fill game born from its description declares the rest of a game**
   (Clusters, Kakurasu, Mosaic, Norinori, Range, Star Battle, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
-  (the first the default unless `default:` names another, `boardTiers:` a
-  board that stops short of a tier, `variants:` the boards after the grid),
+  (the first the default unless `default:` names another, dealt at the first
+  tier its menu offers it, `boardTiers:` a board that stops short of a tier,
+  `variants:` the boards after the grid),
   `play.hintMarks` its legend, `id:` its game ID's grammar and
   `tierLetters:` its params' tier letters, so upstream's IDs still load.
   A hand-written game's saves may break when it is moved onto a
@@ -243,7 +244,8 @@ research tools all read through it; the app never does.
   default"), `populate` where it says nothing. The walk runs on rows and
   columns, and its rungs are the Latin library's (`use: latin.*`, which the
   fill ladder resolves as every Latin game's does), worded by the library,
-  and after them the description's own, which strike: a firing a leg a cell,
+  and the description's own, which strike, tried before the library's
+  strikes since a player reads a clue before a set: a firing a leg a cell,
   each worded by the look of its `says`, of the fact its first note is where
   it words each fact (`fact:`), and recorded under the technique's id; a
   board of numbers without notes is refused a rung that strikes, since it

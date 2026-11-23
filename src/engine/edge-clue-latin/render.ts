@@ -79,7 +79,7 @@ export const PREFERRED_TILE_SIZE = 32;
 // redraw's last block.
 
 export const COL_GRID = FIRST_GAME_SLOT;
-export const COL_TEXT = FIRST_GAME_SLOT + 1;
+const COL_TEXT = FIRST_GAME_SLOT + 1;
 const COL_GUESS = FIRST_GAME_SLOT + 2;
 export const COL_PENCIL = FIRST_GAME_SLOT + 3;
 const COL_HIGHLIGHT = FIRST_GAME_SLOT + 4;

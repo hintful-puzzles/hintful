@@ -487,10 +487,11 @@ if (SHARE_LATIN.length > 0)
           const at = `${name}/${title}`;
           const { desc, aux } = dealt(game, params);
           let state = game.newState(params, desc);
-          // A Latin square's side, read off its grid: each game names it in
-          // its params its own way (`w`, `order`, `o`).
+          // A Latin square's side, read off its grid (a fill board's
+          // `values`): each game names it in its params its own way (`w`,
+          // `order`, `o`).
           // biome-ignore lint/suspicious/noExplicitAny: structural state access.
-          const w = Math.sqrt((state as any).grid.length);
+          const w = Math.sqrt(((state as any).grid ?? (state as any).values).length);
           expect(Number.isInteger(w), `${at}: a grid that is not square`).toBe(true);
           // Each plan is followed step by step, as a player following the
           // hint meets it, and asked again only when it runs out: a plan is

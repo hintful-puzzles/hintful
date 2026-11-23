@@ -17,7 +17,7 @@ import { saladGame } from "../../src/games/salad/index.ts";
 import { seismicGame } from "../../src/games/seismic/index.ts";
 import { soloGame } from "../../src/games/solo/index.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
-import { unequalGame } from "../../src/games/unequal/index.ts";
+import { game as unequalGame } from "../../src/generated/games/unequal/unequal.game.ts";
 import { game as unrulyGame } from "../../src/generated/games/unruly/unruly.game.ts";
 import { progress } from "./pilot.ts";
 

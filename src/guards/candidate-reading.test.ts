@@ -61,9 +61,9 @@ interface Cell {
  * A board as this file reads it: one slot per element with its notes, and
  * whether the element is blank. Every note-taking game keeps its notes in
  * `pencil` (`mark-all.test.ts` reads the same field). A grid game's element is
- * a cell and its entries are `grid`, 0 for blank, its width read off the
- * params it was dealt from (`boardWidth`); Map's is a region, and its entries are
- * `coloring`, -1 for blank.
+ * a cell and its entries are `grid` (a fill board's `values`), 0 for blank,
+ * its width read off the params it was dealt from (`boardWidth`); Map's is a
+ * region, and its entries are `coloring`, -1 for blank.
  */
 interface Board {
   notes: ArrayLike<number>;
@@ -75,10 +75,12 @@ interface Board {
 function boardOf(state: unknown, width: number | null): Board {
   const s = state as {
     grid?: ArrayLike<number>;
+    values?: ArrayLike<number>;
     coloring?: ArrayLike<number>;
     pencil: ArrayLike<number>;
   };
-  const { coloring, grid } = s;
+  const { coloring } = s;
+  const grid = s.grid ?? s.values;
   if (coloring) return { notes: s.pencil, blank: (i) => coloring[i] < 0, width: null };
   if (!grid) throw new Error("a board with neither grid nor coloring");
   const w = width ?? Math.sqrt(s.pencil.length);

@@ -125,11 +125,12 @@ const LONG_NARRATIONS: {
   spokenOn: Record<string, string>;
 }[] = [
   {
-    games: ["solo"],
+    games: ["solo", "unequal"],
     rungs: ["wing"],
     why: WING_NAMES_ITS_CELLS,
     spokenOn: {
       solo: "3x3de:a1a3c9c6_8b2a5b5b9a7_3f6c4a6a2a5c1f1_5a9b3b3a8b1_5c7c6a8a",
+      unequal: "5dx:0D,0L,0,5,0,0,0,0,0RL,0U,0D,0,0,3,0,0,0,0,0,3,0,0,0,0U,0,",
     },
   },
   {

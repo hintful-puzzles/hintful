@@ -238,7 +238,7 @@ not only of the hint.
 Exemplars: [`range/solver.ts`](../src/games/range/solver.ts) keeps a board
 only if it is uniquely solvable without guessing, and
 [`engine/edge-clue-latin/generator.ts`](../src/engine/edge-clue-latin/generator.ts)
-(Unequal's and Adjacent's) caps assembly below the recursive level.
+(Adjacent's) caps assembly below the recursive level.
 
 ### No option switches the generator's checks off
 
@@ -1568,9 +1568,9 @@ doubling as the uniqueness check), and the generator. The population is
 
 Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
 game with no clues, its techniques reading the grid as a table;
-[`unequal/solver.ts`](../src/games/unequal/solver.ts) for one with
-clues, which shares its driver with Adjacent's
-([`engine/edge-clue-latin/solver.ts`](../src/engine/edge-clue-latin/solver.ts));
+[`adjacent/solver.ts`](../src/games/adjacent/solver.ts) for one with
+clues, whose driver is
+[`engine/edge-clue-latin/solver.ts`](../src/engine/edge-clue-latin/solver.ts);
 [`towers/solver.ts`](../src/games/towers/solver.ts) for clues beside the
 grid; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
 arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated

@@ -66,7 +66,6 @@ import {
 } from "../../src/games/solo/state.ts";
 import { towersGame } from "../../src/games/towers/index.ts";
 import type { TowersParams, TowersState } from "../../src/games/towers/state.ts";
-import { unequalGame } from "../../src/games/unequal/index.ts";
 import { type Dealt, describedGame } from "./description.ts";
 import type { Clue } from "./evaluate.ts";
 import type { Elem, Space } from "./space.ts";
@@ -421,13 +420,6 @@ const edgeClueCommon = {
   },
 };
 const edgeClueDiffs = ["trivial", "easy", "tricky", "extreme", "recursive"] as const;
-
-export const unequalBinding: Binding<EdgeClueParams, EdgeClueState> = {
-  ...edgeClueCommon,
-  game: unequalGame,
-  description: describedGame("src/games/unequal/unequal.description.yaml"),
-  params: tiers([4, 5, 6], edgeClueDiffs).map((p) => ({ order: p.w, diff: p.diff })),
-};
 
 export const adjacentBinding: Binding<EdgeClueParams, EdgeClueState> = {
   ...edgeClueCommon,

@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import type { TechniqueJson } from "../../src/describe/description.ts";
 import { searchAnswers } from "./answer-check.ts";
-import { adjacentBinding, type Binding, unequalBinding } from "./bindings.ts";
+import { adjacentBinding, type Binding } from "./bindings.ts";
 import { runLadder } from "./ladder.ts";
 import { deal, label, progress, seedsPerParams, writeResult } from "./pilot.ts";
 
@@ -88,7 +88,7 @@ describe("the stated ladder", () => {
   it("ends where each game's own solver ends, at every tier", () => {
     const lines = [`Seeds per params: ${SEEDS}.`, ""];
     const all: string[] = [];
-    for (const b of [unequalBinding, adjacentBinding] as Binding<unknown, unknown>[]) {
+    for (const b of [adjacentBinding] as Binding<unknown, unknown>[]) {
       const t: Tally = {
         boards: 0,
         closuresCompared: 0,
@@ -121,15 +121,6 @@ describe("the stated ladder", () => {
       (ts) => ts.filter((t) => !("use" in t && t.use === "latin.wing")),
     ],
     [
-      "the sign's bound made strict, which is unsound",
-      (ts) =>
-        ts.map((t) =>
-          "id" in t && t.id === "sign"
-            ? { ...t, conclude: t.conclude.replace("d <= d2", "d < d2") }
-            : t,
-        ),
-    ],
-    [
       "sets narrowed to pairs",
       (ts) =>
         ts.map((t) =>
@@ -145,8 +136,8 @@ describe("the stated ladder", () => {
     ],
   ];
   for (const [name, plant] of planted)
-    it(`sees a planted defect in Unequal: ${name}`, () => {
-      const json = structuredClone(unequalBinding.description);
+    it(`sees a planted defect in Adjacent: ${name}`, () => {
+      const json = structuredClone(adjacentBinding.description);
       json.techniques = plant(json.techniques ?? []);
       const t: Tally = {
         boards: 0,
@@ -157,7 +148,10 @@ describe("the stated ladder", () => {
         fired: new Map(),
         differences: [],
       };
-      compare({ ...unequalBinding, description: json } as Binding<unknown, unknown>, t);
+      compare(
+        { ...adjacentBinding, description: json } as Binding<unknown, unknown>,
+        t,
+      );
       expect(t.differences.length).toBeGreaterThan(0);
     });
 });

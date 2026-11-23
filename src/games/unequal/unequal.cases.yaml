@@ -1,0 +1,138 @@
+# Unequal's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every rung its hint
+# takes, upstream's IDs read and written back, its params, and the signs
+# drawn, broken and marked done.
+
+hint:
+  params:
+    - {w: 5, h: 5, diff: 2}
+    - {w: 5, h: 5, diff: 3}
+  unreached:
+    populate: >-
+      spoken under the reading that pencils every candidate in first, and
+      Unequal's hint starts on the one that does not (play.hintNotes)
+  # The hand-written port's positions, its moves the note-taking cell's.
+  pins:
+    # Held on 71 of 891 positions walked.
+    clean:
+      id: "5dk:0,0,0R,0R,0,0,0U,0,0,0U,1,0D,0U,0R,0,5,0R,0,0,0U,0,0L,0,0L,0,"
+      moves: [{type: pencilAll}]
+    # Held on 431 of 891 positions walked.
+    note: "5dk:0,0,0R,0R,0,0,0U,0,0,0U,1,0D,0U,0R,0,5,0R,0,0,0U,0,0L,0,0L,0,"
+    # Held on 846 of 891 positions walked.
+    dup: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,"
+    # Held on 843 of 891 positions walked.
+    single:
+      id: "5dk:0,0,0D,3,5,0,0,0,0,3,0U,0,0,0,0,0,0,0,2,0,0,0U,4U,0,0,"
+      moves:
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 5}]}
+        - {type: set, x: 2, y: 0, n: 2, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 5}]}
+    # Held on 802 of 891 positions walked.
+    regionsFull: "5dx:0,0,0,4,0,0,5,3D,0,0,0,0,0,0,1,0,0D,0,1,3,0,0,0,0,0L,"
+    # Held on 769 of 891 positions walked.
+    hiddenSingle: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,"
+    # Held on 348 of 891 positions walked.
+    set:
+      id: "5dx:2,4,0,0,0,5,1,4,0,0U,0,0,0,5,0,0D,0,0,0,0,0,0,2,0,0,"
+      moves:
+        - {type: pencilAdd, marks: [{x: 4, y: 1, n: 2}, {x: 4, y: 1, n: 3}]}
+        - {type: set, x: 4, y: 0, n: 1, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 0, n: 3, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 0, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 4, y: 1, n: 3, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 3}, {x: 0, y: 4, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 3, n: 3}, {x: 0, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 4, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 3, n: 1}, {x: 3, y: 3, n: 4}]}
+    # Held on 252 of 891 positions walked.
+    wing:
+      id: "5dx:2,4,0,0,0,5,1,4,0,0U,0,0,0,5,0,0D,0,0,0,0,0,0,2,0,0,"
+      moves:
+        - {type: pencilAdd, marks: [{x: 4, y: 1, n: 2}, {x: 4, y: 1, n: 3}]}
+        - {type: set, x: 4, y: 0, n: 1, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 0, n: 3, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 0, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 4, y: 1, n: 3, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 3}, {x: 0, y: 4, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 3, n: 3}, {x: 0, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 4, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 3, n: 1}, {x: 3, y: 3, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 3, n: 2}, {x: 1, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 3, n: 2}, {x: 4, y: 3, n: 5}]}
+    # Held on 531 of 891 positions walked.
+    sign:
+      id: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,"
+      moves: [{type: pencilAll}]
+
+tiers:
+  # A 3x3 at Tricky or Unreasonable.
+  absent: [3dk, 3dr]
+
+ids:
+  # Boards the hand-written port dealt, read and written back.
+  - {id: "5dk:0,0,0,0,0,0,0,0,0,0,0,0L,0L,0D,0U,0,0,0,0RL,0D,0,0U,0,0U,0,", writesBack: true}
+  - {id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,", writesBack: true}
+  - {id: "5dx:0R,0,0,0L,2,0,0U,3D,0,0U,0,0,0,0,0,0R,0D,0D,0,0,0,0,0L,0U,0L,", writesBack: true}
+  # A sign flagged from both its ends says each is the greater; flagged
+  # from one, the board has many answers.
+  - {id: "4:0R,0L,0,0,0,0,0,0,0,0,0,0,0,0,0,0,", refused: DESC_CONTRADICTORY}
+  - {id: "4:0R,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,", refused: DESC_NOT_UNIQUE}
+  # Too few cells; a sign off the grid, by its letter or after another; a
+  # number past the size; a cell without its comma; a letter twice; a stray
+  # letter; text after the board.
+  - {id: "4:0,0,0", refused: "/too short/"}
+  - {id: "4:0U,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,", refused: DESC_OUT_OF_RANGE}
+  - {id: "4:5,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,", refused: DESC_OUT_OF_RANGE}
+  - {id: "4:0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0", refused: "/too short/"}
+  - {id: "4:0DD,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,", refused: '/"D"/'}
+  - {id: "4:0LR,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,", refused: DESC_OUT_OF_RANGE}
+  - {id: "4:a0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,", refused: '/"a"/'}
+  - {id: "4:0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,", refused: "/too long/"}
+
+params:
+  # Upstream's: the size, then the tier.
+  - {read: "6dx", full: "6dx", brief: "6"}
+  - {read: "5", full: "5de"}
+  - {read: "2dt", refused: "Grid size must be at least 3."}
+  - {read: "32dt", refused: "Grid size must be at most 31."}
+  - {read: "3dx", refused: false}
+  - {read: "3dk", refused: "No 3x3 puzzle is Tricky."}
+  - {read: "3dr", refused: "No 3x3 puzzle is Unreasonable."}
+  - {read: "4dk", refused: false}
+
+positions:
+  # The signs printed between the numbers, each drawn in its gap.
+  - id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,"
+    moves: [{set: [1, 4]}]
+    text: "+---+---+---+---+---+\n| 3   4   .   .   . |\n+ v                 +\n| .   . < .   .   1 |\n+     ^             +\n| .   .   .   .   . |\n+ v       v         +\n| .   .   .   .   . |\n+             v     +\n| .   .   . > 3   . |\n+---+---+---+---+---+\n"
+    draws: {polygon any: 7, polygon error: 0}
+  # A number above the given across its sign breaks the sign, drawn red.
+  - id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,"
+    moves: [{set: [5, 4]}]
+    breaks: [clue.greater]
+    mistakes: 1
+    draws: {polygon error: 1}
+  # A sign marked done, and its mark undone.
+  - id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,"
+    moves: [{type: done, kind: greater, k: 0}]
+    holds:
+      done.greater: [1, 0, 0, 0, 0, 0, 0]
+  - id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,"
+    moves: [{type: done, kind: greater, k: 0}, {type: done, kind: greater, k: 0}]
+    holds:
+      done.greater: [0, 0, 0, 0, 0, 0, 0]
+
+input:
+  # A number typed into the square the cursor is on, and cleared by 0, as
+  # by Backspace.
+  - id: "5dk:3D,0,0,0,0,0,0,0L,0,1,0D,0U,0D,0,0,0,0,0,0D,0,0,0,0R,3,0,"
+    events:
+      - {key: right}
+      - {key: "4", holds: {values.1: 4}}
+      - {key: "0", holds: {values.1: 0}}

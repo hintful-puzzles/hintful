@@ -4,7 +4,7 @@
  * `results-measure.txt`.
  */
 import { describe, it } from "vitest";
-import { adjacentBinding, type Binding, unequalBinding } from "./bindings.ts";
+import { adjacentBinding, type Binding } from "./bindings.ts";
 import { runLadder } from "./ladder.ts";
 import { deal, label, seedsPerParams, writeResult } from "./pilot.ts";
 
@@ -23,7 +23,7 @@ describe("the interpreter's cost", () => {
       `Seeds per params: ${SEEDS}; each timing the mean of ${REPEAT} runs.`,
       "",
     ];
-    for (const b of [unequalBinding, adjacentBinding] as Binding<unknown, unknown>[]) {
+    for (const b of [adjacentBinding] as Binding<unknown, unknown>[]) {
       const own = b.ownLadder;
       if (own === undefined) continue;
       for (const params of b.params) {

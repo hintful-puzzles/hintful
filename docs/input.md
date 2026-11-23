@@ -988,7 +988,7 @@ value" differ, and the first replaces Clear at nine.
 
 A quirk of the game's own gets a builder of the game's own (`edgeClueKeys` in
 [`engine/edge-clue-latin/play.ts`](../src/engine/edge-clue-latin/play.ts),
-Unequal's and Adjacent's). A quirk that is a fact about the digits lives in
+Adjacent's). A quirk that is a fact about the digits lives in
 the engine (`colorKeysZeroIsTen`), because `decimal.test.ts` forbids a
 game source to restate the digit codes. Explicit labels are carried word for word.
 

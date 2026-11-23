@@ -1,8 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Unequal's techniques and help page. `npm run describe` compiles the
-# techniques to unequal.compiled.ts, which solver.ts runs.
 game: unequal
+catalog:
+  name: Unequal
+  aliases: [Futoshiki]
+  description: Latin square puzzle
+  objective: Complete the latin square in accordance with the > signs.
+  collection: original
+  family: latin
+  similar: Futoshiki (ふと指揮)
 help:
   rules: |-
     Fill in the grid with numbers from 1 to the grid size, so that every
@@ -61,34 +67,74 @@ produces: latin
 words:
   cell: cell
 sizes:
-  order: { min: 3, max: 16 }
+  # The most a note mask holds (engine/board/candidate-bits.ts).
+  w: { min: 3, max: 31 }
 space:
-  grid: { w: "order", h: "order" }
+  grid: { w: "w", h: "w" }
   edges: true
   units: [rows, cols]
 answer:
-  value: { sort: cell, domain: "range(1, order)" }
+  value: { sort: cell, domain: "range(1, w)" }
 given: [value]
 marks:
-  cand: { sort: cell, notation: "set of range(1, order)" }
-  # A play aid with no meaning for the answer.
-  done: { sort: edge, notation: "bool" }
+  cand: { sort: cell, notation: "set of range(1, w)" }
 define:
   lesser(k): "other(at(k), v(k))"
 shape:
   - "latin(value, lines)"
 clues:
-  # v is the end at the open side of the sign. The game deals them column by
-  # column, each cell's signs up, right, down, left.
+  # v is the end at the open side of the sign.
   greater:
     at: edge
     value: "ends(at)"
     means: "value(v) > value(other(at, v))"
 freedom: { kind: fill }
+play:
+  numbers: {}
+  gaps: { greater: chevron }
+  done: { greater: sign }
+  hintNotes: implicit
+  # A small board at the lower tiers and a large one at the upper. Every
+  # board deals in a fraction of a second: 6x6 is left to the Custom dialog
+  # only to keep the menu short. The default is upstream's, 4x4 at Normal:
+  # an Easy board reads no sign, so it shows none.
+  boards: [4x4, 5x5, 7x7]
+  boardTiers:
+    4x4: [Normal, Normal]
+    5x5: [Easy, Hard]
+    7x7: [Tricky, Unreasonable]
+  # Measured 2026-10-05: of 400,000 3x3 boards built at Tricky, the tier
+  # below solved every one, and of 400,000 at Unreasonable the wing did
+  # (2026-10-28).
+  bounds:
+    tiers:
+      Tricky: { longer: { min: 4 } }
+      Unreasonable: { longer: { min: 4 } }
+  hintMarks:
+    ring: the cell the step fills in with a number.
+    strike: the pencil marks the step crosses out.
+    outline: >-
+      what the step reasons from: the two cells either side of a sign (the
+      one whose marks are struck, and "the outlined smaller side" or "larger
+      side" across it), the cells that already account for the numbers being
+      crossed out, the number just placed, or "the middle cell" a step
+      weighs and the cells it reads.
+    stripes: >-
+      the row or column the sentence names: "in this row". Or the several it
+      names together, such as "these 2 columns", where one number fits only
+      the outlined cells.
 deal:
-  clues: which true inequalities show, fewer at higher tiers
-  givens: how many
+  answer: a Latin square
+  given: every cell's number, then each hidden while the board still finishes
+  greater: every true sign, then each hidden while the board still finishes
   tier: one of the tiers
+  sample: { latin: true }
+  hide: [given, greater]
+# A record a cell, upstream's: its given number or 0, then the letters URDL
+# of the signs whose open side it is, and a comma.
+id:
+  - { records: given, sides: greater }
+tierLetters: tekxr
 tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 names:
   dup: "a placed number's row and column"
@@ -97,8 +143,7 @@ names:
   hiddenSingle: "the only cell left for a number"
   set: "numbers already accounted for"
   wing: "a wing"
-  greater: "the larger side of a sign"
-  lesser: "the smaller side of a sign"
+  sign: "a greater-than sign"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
@@ -109,7 +154,6 @@ techniques:
   - kind: rel.support
     as: sign
     tier: Normal
-    rung: [greater, lesser]
     with:
       group: >-
         k in clues(greater), big = v(k), small = lesser(k), c in {big, small},
@@ -137,7 +181,7 @@ techniques:
             look: "The larger side of {outline sign: this greater-than sign} can't hold the smallest number"
           - when: "c = big"
             look: "{outline small: the outlined smaller side} of {outline sign: this greater-than sign} is at least {lo}"
-          - when: "max(d2 in cand(big)) >= order"
+          - when: "max(d2 in cand(big)) >= w"
             look: "The smaller side of {outline sign: this greater-than sign} can't hold the largest number"
           - look: "{outline big: the outlined larger side} of {outline sign: this greater-than sign} is at most {hi}"
   - { use: latin.set, tier: Tricky, rung: set }

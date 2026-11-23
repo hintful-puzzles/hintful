@@ -59,7 +59,9 @@ function firingsOf(
   }[],
   width: number | null,
 ): Firing[] {
-  const n = (state0["grid"] as ArrayLike<number>).length;
+  // A hand-written note game names its entries `grid`; a fill board, `values`.
+  const entries = "grid" in state0 ? "grid" : "values";
+  const n = (state0[entries] as ArrayLike<number>).length;
   // A game with no dimension pair is square: a Latin square, a Sudoku.
   const w = width ?? Math.sqrt(n);
   if (!Number.isInteger(w)) throw new Error("a board of unknown width");
@@ -129,7 +131,7 @@ function firingsOf(
           }
         } else {
           f.wPairs.add(`${i}:*`);
-          if (key === "grid" && b[i] > 0) {
+          if (key === entries && b[i] > 0) {
             f.digits.add(b[i]);
             if (first && f.placed === null) f.placed = b[i];
           }

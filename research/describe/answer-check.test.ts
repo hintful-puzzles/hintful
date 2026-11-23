@@ -14,7 +14,6 @@ import {
   saladBinding,
   soloBinding,
   towersBinding,
-  unequalBinding,
 } from "./bindings.ts";
 import {
   deal,
@@ -201,7 +200,6 @@ describe("the answer check from the description", () => {
     const only = onlyGames();
     const games = [
       towersBinding,
-      unequalBinding,
       adjacentBinding,
       soloBinding,
       keenBinding,
@@ -257,12 +255,6 @@ describe("the answer check from the description", () => {
       towersBinding as Binding<unknown, unknown>,
       "sees",
       "visible(at) >= v",
-    ],
-    [
-      "Unequal, the sign read backwards",
-      unequalBinding as Binding<unknown, unknown>,
-      "greater",
-      "value(v) < value(other(at, v))",
     ],
     [
       "Adjacent, a missing bar read as nothing",

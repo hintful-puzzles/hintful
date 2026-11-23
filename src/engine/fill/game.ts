@@ -179,7 +179,11 @@ export function fillGame<C extends Clues<C> & object>(
             ),
           }),
     });
-  const defaultParams = (): FillParams => sized(byDefault);
+  // The default board is dealt at the first tier the menu offers it at, so a
+  // menu that starts a board above Easy never opens on a board it hides.
+  const defaultTier =
+    module.menu?.tiers.find((b) => isBoard(sized(byDefault), b))?.first ?? 0;
+  const defaultParams = (): FillParams => sized(byDefault, defaultTier);
   const params = fillParams(
     deal,
     module.tiers,

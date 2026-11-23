@@ -5762,34 +5762,29 @@ exports[`unequal > matches its recorded frames 1`] = `
   "away": [
     {
       "h": 32,
-      "op": "rect",
-      "rgb": "rgb(194, 194, 194)",
+      "op": "clip",
       "w": 32,
       "x": 72,
       "y": 72,
     },
     {
-      "fillRgb": "none",
-      "op": "polygon",
-      "outlineRgb": "rgb(139, 139, 139)",
-      "points": [
-        [
-          72,
-          72,
-        ],
-        [
-          103,
-          72,
-        ],
-        [
-          103,
-          103,
-        ],
-        [
-          72,
-          103,
-        ],
-      ],
+      "h": 32,
+      "op": "rect",
+      "rgb": "rgb(139, 139, 139)",
+      "w": 32,
+      "x": 72,
+      "y": 72,
+    },
+    {
+      "h": 31,
+      "op": "rect",
+      "rgb": "rgb(194, 194, 194)",
+      "w": 31,
+      "x": 73,
+      "y": 73,
+    },
+    {
+      "op": "unclip",
     },
     {
       "h": 20,
@@ -5803,77 +5798,82 @@ exports[`unequal > matches its recorded frames 1`] = `
   "entry": [
     {
       "h": 32,
-      "op": "rect",
-      "rgb": "rgb(181, 169, 105)",
+      "op": "clip",
       "w": 32,
       "x": 72,
       "y": 72,
     },
     {
-      "fillRgb": "none",
-      "op": "polygon",
-      "outlineRgb": "rgb(139, 139, 139)",
-      "points": [
-        [
-          72,
-          72,
-        ],
-        [
-          103,
-          72,
-        ],
-        [
-          103,
-          103,
-        ],
-        [
-          72,
-          103,
-        ],
-      ],
+      "h": 32,
+      "op": "rect",
+      "rgb": "rgb(139, 139, 139)",
+      "w": 32,
+      "x": 72,
+      "y": 72,
+    },
+    {
+      "h": 31,
+      "op": "rect",
+      "rgb": "rgb(181, 169, 105)",
+      "w": 31,
+      "x": 73,
+      "y": 73,
+    },
+    {
+      "op": "unclip",
     },
   ],
   "keyboard": [
     {
       "h": 32,
-      "op": "rect",
-      "rgb": "rgb(181, 169, 105)",
+      "op": "clip",
       "w": 32,
       "x": 72,
       "y": 72,
     },
     {
-      "fillRgb": "none",
-      "op": "polygon",
-      "outlineRgb": "rgb(139, 139, 139)",
-      "points": [
-        [
-          72,
-          72,
-        ],
-        [
-          103,
-          72,
-        ],
-        [
-          103,
-          103,
-        ],
-        [
-          72,
-          103,
-        ],
-      ],
+      "h": 32,
+      "op": "rect",
+      "rgb": "rgb(139, 139, 139)",
+      "w": 32,
+      "x": 72,
+      "y": 72,
+    },
+    {
+      "h": 31,
+      "op": "rect",
+      "rgb": "rgb(181, 169, 105)",
+      "w": 31,
+      "x": 73,
+      "y": 73,
+    },
+    {
+      "op": "unclip",
     },
   ],
   "notes": [
     {
       "h": 32,
-      "op": "rect",
-      "rgb": "rgb(194, 194, 194)",
+      "op": "clip",
       "w": 32,
       "x": 72,
       "y": 72,
+    },
+    {
+      "h": 32,
+      "op": "rect",
+      "rgb": "rgb(139, 139, 139)",
+      "w": 32,
+      "x": 72,
+      "y": 72,
+    },
+    {
+      "h": 31,
+      "op": "rect",
+      "rgb": "rgb(194, 194, 194)",
+      "w": 31,
+      "x": 73,
+      "y": 73,
     },
     {
       "fillRgb": "rgb(181, 169, 105)",
@@ -5881,41 +5881,21 @@ exports[`unequal > matches its recorded frames 1`] = `
       "outlineRgb": "rgb(181, 169, 105)",
       "points": [
         [
-          72,
-          72,
+          73,
+          73,
         ],
         [
           88,
-          72,
+          73,
         ],
         [
-          72,
+          73,
           88,
         ],
       ],
     },
     {
-      "fillRgb": "none",
-      "op": "polygon",
-      "outlineRgb": "rgb(139, 139, 139)",
-      "points": [
-        [
-          72,
-          72,
-        ],
-        [
-          103,
-          72,
-        ],
-        [
-          103,
-          103,
-        ],
-        [
-          72,
-          103,
-        ],
-      ],
+      "op": "unclip",
     },
     {
       "h": 20,
@@ -5928,7 +5908,7 @@ exports[`unequal > matches its recorded frames 1`] = `
     {
       "fillRgb": "rgb(235, 210, 47)",
       "op": "polygon",
-      "outlineRgb": "rgb(128, 128, 128)",
+      "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
           217,
@@ -5949,9 +5929,9 @@ exports[`unequal > matches its recorded frames 1`] = `
       ],
     },
     {
-      "fillRgb": "rgb(128, 128, 128)",
+      "fillRgb": "rgb(139, 139, 139)",
       "op": "polygon",
-      "outlineRgb": "rgb(128, 128, 128)",
+      "outlineRgb": "rgb(139, 139, 139)",
       "points": [
         [
           208,

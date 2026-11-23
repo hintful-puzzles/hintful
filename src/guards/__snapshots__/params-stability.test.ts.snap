@@ -923,7 +923,6 @@ bump:h  full=4x5dn  brief=4x5"
 
 exports[`encoded params are byte-stable > unequal 1`] = `
 "default  full=4de  brief=4
-preset:4x4 Easy  full=4dt  brief=4
 preset:5x5 Easy  full=5dt  brief=5
 preset:5x5 Normal  full=5de  brief=5
 preset:5x5 Tricky  full=5dk  brief=5
@@ -931,9 +930,12 @@ preset:5x5 Hard  full=5dx  brief=5
 preset:7x7 Tricky  full=7dk  brief=7
 preset:7x7 Hard  full=7dx  brief=7
 preset:7x7 Unreasonable  full=7dr  brief=7
+tier:0  full=4dt  brief=4
 tier:2  full=4dk  brief=4
 tier:3  full=4dx  brief=4
-tier:4  full=4dr  brief=4"
+tier:4  full=4dr  brief=4
+bump:w  full=5de  brief=5
+bump:h  full=4de  brief=4"
 `;
 
 exports[`encoded params are byte-stable > unruly 1`] = `

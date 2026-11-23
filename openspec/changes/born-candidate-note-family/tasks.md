@@ -68,7 +68,7 @@ commit. In design.md § "Decisions" 7's order.
         `OverlaySidecar` on the tiles. The walk refuses units other than
         rows and columns: 2.7 gives it Seismic's areas and its `cull`
         reach.
-- [ ] 2.2 Unequal born (design.md § "Decisions" 2 and 5), in three commits:
+- [x] 2.2 Unequal born (design.md § "Decisions" 2 and 5), in three commits:
   - [x] 2.2a Clues at edges (`at: edge`, `ends(at)`), the `records`/`sides`
         segment, `play.gaps` with the chevron painter (a gapped grid, a
         sign red where it breaks, printed in the text), and the walk's
@@ -95,15 +95,34 @@ commit. In design.md § "Decisions" 7's order.
         gap, or on a board of buttons: a later game adds the press its
         place needs (a slot, a part's label). The fixture is not in the
         app, so 2.2c's run looks at the gray in both schemes.
-  - [ ] 2.2c The flip: `order` renamed `w`, the alphabet past 9, the
+  - [x] 2.2c The flip: `order` renamed `w`, the alphabet past 9, the
         deal hiding from every clue, Unequal's tests to `cases.yaml`, its
         TypeScript deleted, the `game-lines` ceiling lowered and its spec
         deltas written; its rungs (upstream's greater/lesser beside the
         fixture's `sign`) settled there. Its run in the app includes a sign
         marked done, by press, drag and Shift-arrow, in light and dark.
+        Added: the default board is dealt at the first tier its menu
+        offers it (`fill/game.ts`); the guards that read a note board's
+        entries as `grid` read a fill board's `values` too. The rungs are
+        one, `sign`, recorded under the technique's id as every
+        description's own is; Check & save calls it "a greater-than sign".
+        Differences a player sees: the menu offers 4x4 at Normal, not at
+        Easy, whose boards show no sign (the default stays 4x4 Normal,
+        upstream's); a deal hides givens and signs in one random order, so
+        the mix shifts; past 9 a value is a letter from `a` (10), as in
+        Solo, where it was upstream's `0`-based digits; `0` clears at every
+        size; an ID with more than one answer is refused; the hint rings a
+        cell's number or notes with a circle, as every born game does,
+        where it drew a square in the gap; saves break (approved).
+        Run in the app 2026-11-23: a 5x5 Tricky deal, typing, notes, a
+        broken sign in red, signs marked done by press, drag and
+        Shift-arrow, the hint walked to the solve, light and dark.
 - [ ] 2.3 Adjacent born: records flagged from both cells, the legacy `a`,
       the bar painter and a missing bar's breach; `engine/edge-clue-latin/`
-      deleted (§ 4).
+      deleted (§ 4). Adjacent's spec reads its board off Unequal's ("Rules:
+      Adjacent shares Unequal's board and controls"), and Unequal's Purpose
+      still names the edge-clue square: both are rewritten here, and the
+      guides' exemplars that 2.2c repointed to Adjacent move on.
 - [ ] 2.4 Keen born: clues at a partition's parts labeled at the first
       cell, the block-structure segment, a small-part partition sampled on
       the answer, one kind an element chosen in the deal, the bare flag `m`;
