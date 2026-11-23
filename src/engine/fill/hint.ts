@@ -88,23 +88,29 @@ export function linkedCell<C>(
   return (board.dealt[links.clue as keyof C] as ClueList).at[q];
 }
 
-export function fillHint<C extends object>(
-  module: FillHintModule<C>,
-): { hint: FillHintHooks<C>; rulesOut?: RulesOut<FillBoard<C>, Edit> } {
-  const links = module.play?.links;
-  // Where every value is a piece of the pair, a step names it by the pair's
-  // word for it ("a block").
-  const pairs = Object.entries(module.play?.values ?? {}).map(
+/** The member of the pair each value's piece is, where every value's piece
+ * is one, so that a step names it by the pair's word for it ("a block");
+ * `null` where any is not. */
+export function pairPieces(
+  play?: Pick<FillPlay, "values">,
+): Readonly<Record<number, PairIndex>> | null {
+  const pairs = Object.entries(play?.values ?? {}).map(
     ([v, { paint }]) =>
       [
         Number(v),
         paint in PAINTERS ? PAINTERS[paint as PainterName].pair : undefined,
       ] as const,
   );
-  const pieces =
-    pairs.length > 0 && pairs.every(([, p]) => p !== undefined)
-      ? Object.fromEntries(pairs as (readonly [number, PairIndex])[])
-      : null;
+  return pairs.length > 0 && pairs.every(([, p]) => p !== undefined)
+    ? Object.fromEntries(pairs as (readonly [number, PairIndex])[])
+    : null;
+}
+
+export function fillHint<C extends object>(
+  module: FillHintModule<C>,
+): { hint: FillHintHooks<C>; rulesOut?: RulesOut<FillBoard<C>, Edit> } {
+  const links = module.play?.links;
+  const pieces = pairPieces(module.play);
   // A board's tier is its deal's, which no move changes: every board of one
   // game shares its `dealt`.
   const lowest = new WeakMap<C, number>();

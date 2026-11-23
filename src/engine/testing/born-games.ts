@@ -16,6 +16,10 @@ const descriptions = import.meta.glob<string>("../../games/*/*.description.yaml"
   import: "default",
   eager: true,
 });
+const compiledModules = import.meta.glob<Readonly<Record<string, unknown>>>(
+  "../../generated/games/*/*.compiled.ts",
+  { eager: true },
+);
 const casesFiles = import.meta.glob<string>("../../games/*/*.cases.yaml", {
   query: "?raw",
   import: "default",
@@ -30,6 +34,8 @@ export interface BornGame {
   readonly game: AnyGame;
   /** Its description, from the root. */
   readonly source: string;
+  /** The module its description compiles to. */
+  readonly compiled: Readonly<Record<string, unknown>>;
   /** Its cases file, from the root, and the text there; null where it has
    * none. */
   readonly cases: { readonly path: string; readonly text: string } | null;
@@ -49,6 +55,11 @@ export const BORN_GAMES: readonly BornGame[] = Object.entries(descriptions).flat
     const game = REGISTERED_GAMES.find(([g]) => g === id)?.[1];
     if (game === undefined)
       throw new Error(`${fromRoot(key)}: ${id} is not registered`);
+    const compiled = Object.entries(compiledModules).find(([p]) =>
+      p.endsWith(`/${id}/${id}.compiled.ts`),
+    )?.[1];
+    if (compiled === undefined)
+      throw new Error(`${fromRoot(key)}: ${id} has no compiled module`);
     const casesKey = casesPath(key);
     const casesText = casesFiles[casesKey];
     return [
@@ -56,6 +67,7 @@ export const BORN_GAMES: readonly BornGame[] = Object.entries(descriptions).flat
         id,
         game,
         source: fromRoot(key),
+        compiled,
         cases:
           casesText === undefined
             ? null

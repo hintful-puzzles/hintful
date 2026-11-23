@@ -1,0 +1,218 @@
+# Star Battle's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every kind of step its
+# hint takes, the stars in the params and the grid each needs, the regions
+# read from their walls, a star drawn, and the wordings no walk reaches.
+#
+# 5s1de:c2aacbca1bb2dc is a board the hand-written generator dealt. Its
+# regions, and the one answer:
+#
+#     A A A A B      . . * . .
+#     C A D D B      . . . . *
+#     C C D D D  ->  . * . . .
+#     E E D D D      . . . * .
+#     E D D D D      * . . . .
+
+values:
+  star: 1
+  empty: 2
+
+hint:
+  params:
+    - {w: 6, h: 6, diff: 2, sizes: {stars: 1}}
+    - {w: 8, h: 8, diff: 0, sizes: {stars: 2}}
+    - {w: 9, h: 9, diff: 1, sizes: {stars: 2}}
+  pins:
+    around:
+      id: "8s2de:eeca1caab3c3e1ebeb3h3caj2ah1a"
+      moves: [{set: [44, 1]}]
+    fullLine:
+      id: "6s1dt:1baa3aacabae1adc1aac1d1"
+      moves:
+        - {set: [24, 2, 25, 2, 26, 2, 27, 2]}
+        - {set: [30, 1]}
+        - {set: [31, 2]}
+    fullRegion:
+      id: "6s1dt:2b2a1ae4a1aac1bccababd"
+      moves:
+        - {set: [12, 2, 18, 2, 24, 2, 30, 2]}
+        - {set: [1, 2, 7, 2, 13, 2, 19, 2]}
+        - {set: [5, 2, 8, 2, 9, 2, 11, 2, 21, 2, 23, 2, 29, 2]}
+        - {set: [15, 2]}
+        - {set: [26, 2]}
+        - {set: [27, 2]}
+        - {set: [32, 2]}
+        - {set: [22, 2]}
+        - {set: [20, 1]}
+        - {set: [14, 2, 25, 2]}
+        - {set: [2, 2]}
+    exactLine:
+      id: "6s1dt:aab1bababbaaacbaj2e1a"
+      moves:
+        - {set: [30, 2, 31, 2, 32, 2, 35, 2]}
+        - {set: [24, 2, 28, 2, 29, 2]}
+        - {set: [0, 2, 6, 2]}
+        - {set: [4, 2, 9, 2, 10, 2, 15, 2, 16, 2, 21, 2, 22, 2]}
+    exactRegion:
+      id: "6s1dt:1baa3aacabae1adc1aac1d1"
+      moves: [{set: [24, 2, 25, 2, 26, 2, 27, 2]}]
+    confined.lines: "6s1dt:1baa3aacabae1adc1aac1d1"
+    confined.regions:
+      id: "6s1dt:2b2a1ae4a1aac1bccababd"
+      moves:
+        - {set: [12, 2, 18, 2, 24, 2, 30, 2]}
+        - {set: [1, 2, 7, 2, 13, 2, 19, 2]}
+    neededLine:
+      id: "8s2de:eeca1caab3c3e1ebeb3h3caj2ah1a"
+      moves:
+        - {set: [44, 1]}
+        - {set: [36, 2, 37, 2, 45, 2, 53, 2, 52, 2, 51, 2, 43, 2, 35, 2]}
+        - {set: [56, 2, 57, 2, 58, 2, 59, 2, 63, 2]}
+        - {set: [54, 2, 55, 2]}
+    neededRegion: "8s2de:eeca1caab3c3e1ebeb3h3caj2ah1a"
+    crowdedLine:
+      id: "6s1dt:bd1ca1caabbd1c1a2dba1ba"
+      moves: [{set: [32, 2, 33, 2, 34, 2, 35, 2]}]
+    crowdedRegion: "6s1dt:dca2cab1ab1eba3a1e1caa"
+    banded.lines:
+      id: "9s2dn:f2bc1dabbcba1ac1ad1a1a1bcdc2c4d1c1c2a1fbaga1a1aab3a"
+      moves: [{set: [64, 2]}, {set: [68, 2]}, {set: [70, 2]}]
+    banded.regions:
+      id: "6s1dt:dca2cab1ab1eba3a1e1caa"
+      moves: [{set: [4, 2]}, {set: [27, 2]}, {set: [34, 2]}]
+    starvedLine:
+      id: "6s1dt:2b2a1ae4a1aac1bccababd"
+      moves:
+        - {set: [12, 2, 18, 2, 24, 2, 30, 2]}
+        - {set: [1, 2, 7, 2, 13, 2, 19, 2]}
+        - {set: [5, 2, 8, 2, 9, 2, 11, 2, 21, 2, 23, 2, 29, 2]}
+        - {set: [15, 2]}
+        - {set: [26, 2]}
+        - {set: [27, 2]}
+        - {set: [32, 2]}
+    starvedRegion:
+      id: "6s1dt:dca2cab1ab1eba3a1e1caa"
+      moves:
+        - {set: [4, 2]}
+        - {set: [27, 2]}
+        - {set: [34, 2]}
+        - {set: [12, 2, 14, 2]}
+        - {set: [2, 2, 3, 2, 8, 2, 9, 2, 32, 2]}
+        - {set: [21, 2]}
+        - {set: [19, 2]}
+        - {set: [25, 2]}
+        - {set: [35, 2]}
+
+ids:
+  # Regions read from their walls, numbered as they are met.
+  - id: "5s1de:c2aacbca1bb2dc"
+    holds:
+      dealt.region.of: [0, 0, 0, 0, 1, 2, 0, 3, 3, 1, 2, 2, 3, 3, 3, 4, 4, 3, 3, 3, 4, 3, 3, 3, 3]
+      dealt.stars: 1
+  # Too short, too long, a stray character, and a region to every square.
+  - {id: "5s1de:c2aacbca1bb", refused: "/too short/"}
+  - {id: "5s1de:c2aacbca1bb2dc9", refused: "/too long/"}
+  - {id: "5s1de:c2aacbca1bb2d!", refused: '/"!"/'}
+  - {id: "5s1de:40", refused: DESC_MALFORMED}
+
+params:
+  # The stars and the square size, written as the hand-written game did.
+  - {read: "10s2dn", full: "10s2dn", brief: "10s2"}
+  # A grid too small for its stars.
+  - {read: "7s2de", refused: "Two stars: the grid size must be at least 8."}
+  - {read: "11s3de", refused: "Three stars: the grid size must be at least 12."}
+  - {read: "8s2de", refused: false}
+  - {read: "4s1de", refused: false}
+  - {read: "26s1de", refused: false}
+  - {read: "27s1de", refused: "Grid size must be at most 26."}
+
+positions:
+  # A board of two stars a line solves, every line and region holding its
+  # two.
+  - id: "8s2de:eeca1caab3c3e1ebeb3h3caj2ah1a"
+    solve: true
+    status: solved
+  # A star drawn, and an error where two touch at a corner, none where two
+  # are apart.
+  - id: "5s1de:c2aacbca1bb2dc"
+    draws: {polygon any: 0}
+  - id: "5s1de:c2aacbca1bb2dc"
+    moves: [{set: [2, star]}]
+    draws: {polygon any: 1}
+  - id: "5s1de:c2aacbca1bb2dc"
+    moves: [{set: [2, star, 9, star]}]
+    draws: {polygon error: 0}
+  - id: "5s1de:c2aacbca1bb2dc"
+    moves: [{set: [2, star, 8, star]}]
+    draws: {polygon error: "> 0"}
+
+# The walk's boards never meet a star that completes its unit and leaves it
+# nowhere for more, a starved star that completes all three or none, and a
+# needed square with no room left in its unit. Square 5 of a 4-wide grid
+# decided, 6 and 7 outlined.
+wordings:
+  - technique: starvedLine
+    wording: 0
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 1, row: true, mine: true, one: true, closesRow: true, closesCol: false, closesRegion: false, exhausted: true}
+    says: "A star on this square would complete its row, leaving this row nowhere for 2 more stars, so it must be empty."
+  # A star that blocks without completing anything.
+  - technique: starvedLine
+    wording: 1
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 1, row: true, mine: true, one: true, closesRow: true, closesCol: false, closesRegion: false}
+    says: "A star on this square would block the rest of this row, which would still need 2 stars, so it must be empty."
+  - technique: starvedLine
+    wording: 2
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 1, row: true, mine: true, one: true, closesRow: true, closesCol: false, closesRegion: false}
+    says: "A star on this square would block every open square of this row, leaving it no room for a star, so it must be empty."
+  - technique: starvedLine
+    wording: 3
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 3, row: true, mine: false, one: true, closesRow: true, closesCol: false, closesRegion: false}
+    says: "A star on this square would block the outlined squares, leaving this row room for 3, not 2, so it must be empty."
+  # The kinds a star completes, named in pairs.
+  - technique: starvedLine
+    wording: 0
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 1, row: true, mine: true, one: true, closesRow: true, closesCol: true, closesRegion: false, exhausted: false}
+    says: "/complete its row and column,/"
+  - technique: starvedLine
+    wording: 0
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 1, row: true, mine: true, one: true, closesRow: true, closesCol: false, closesRegion: true, exhausted: false}
+    says: "/complete its row and region,/"
+  - technique: starvedLine
+    wording: 0
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 1, row: true, mine: true, one: true, closesRow: false, closesCol: true, closesRegion: true, exhausted: false}
+    says: "/complete its column and region,/"
+  - technique: starvedLine
+    wording: 0
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 1, row: true, mine: true, one: true, closesRow: false, closesCol: false, closesRegion: true, exhausted: false}
+    says: "/complete its region,/"
+  # A needed square with no room left in the unit.
+  - technique: neededLine
+    wording: 0
+    width: 4
+    ring: [5]
+    marks: {outline: [6, 7]}
+    terms: {n: 2, room: 1, row: true, mine: true, one: true, closesRow: true, closesCol: false, closesRegion: false, none: true, placed: false}
+    says: "This row needs 2 stars and without this square has room for none, so that square must hold a star."

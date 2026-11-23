@@ -21,9 +21,8 @@
       wrong expectation.
       (`game-cases.ts`, its test on the fake game; `born-game-cases.test.ts`
       runs it; `npm run hint-scan` writes a cases file's pins. The
-      `input` and `wordings` sections of design.md are still to add, with
-      the first game that needs each: Bricks, Singles, Sticks; Clusters,
-      Star Battle.)
+      `input` section of design.md is still to add, with the first game
+      that needs it: Bricks, Singles, Sticks.)
 - [ ] 2.2 The cross-game guards for each kind in 1.1 that has none,
       each reading its population from what the games declare. See each
       fail on a planted defect before trusting it (`docs/method.md`
@@ -57,7 +56,11 @@
 - [ ] 4.1 Each born game's `*.test.ts` moved to data, one commit a game
       or a few, the cases of 1.1 kept as data or named by the guard that
       holds them. `npm run test:hint-sweeps` before the last commit.
-      Moved: Kakurasu, Unruly, Mosaic, Norinori, Range. A position's
+      Moved: Kakurasu, Unruly, Mosaic, Norinori, Range, Clusters, Star
+      Battle. `wordings` renders a technique's stated step from terms on
+      the compiled module (`BornGame.compiled`), the pieces named as the
+      hint names them (`pairPieces`); `draws` takes `any` for a piece in
+      the game's own colors. A position's
       `text` and `statusbar` take `null` for none shown. An ID case's `holds` is
       the codec's reading, so it may sit beside a `refused` (Norinori's
       walls read as regions on a board loading refuses); a position's

@@ -1,5 +1,18 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`clusters: pinned hint positions > says, at each pin 1`] = `
+{
+  "countFull.more": "The outlined block must touch two more blocks, and the outlined dotted block allows at most one block beside it, so this square, beside only the block, must hold a block.",
+  "countFull.same": "The outlined dotted block must touch one more disc, and the outlined dotted disc allows at most one disc beside it, so this square, beside only the dotted disc, must hold a block.",
+  "countShort.more": "The outlined block must touch two more blocks, and the outlined disc allows at most one block beside it, so this square, beside only the block, must hold a block.",
+  "refute.dotOvercount": "The outlined dotted disc beside this square already touches its one disc, so this square must hold a block.",
+  "refute.nearReach": "If this square held a block, its outlined disc neighbor couldn't touch two discs, so this square must hold a disc.",
+  "refute.nearSurrounded": "A disc in this square would seal its outlined block neighbor off from other blocks, so this square must hold a block.",
+  "refute.selfReach": "If this square held a block, at most one neighbor could ever match it, but it needs two, so it must hold a disc.",
+  "refute.selfSurrounded": "Every neighbor of this square holds a disc. Holding a block, it could never touch another block, so it must hold a disc.",
+}
+`;
+
 exports[`kakurasu: pinned hint positions > says, at each pin 1`] = `
 {
   "everyWay": "This row still needs 22, and every way to make it from its open squares shades the ringed square, so it must be shaded.",
@@ -41,6 +54,26 @@ exports[`range: pinned hint positions > says, at each pin 1`] = `
   "capped.satisfied": "This 2 already sees both of its clear squares (outlined), so the ringed square just past them must be shaded.",
   "cut": "Making this square shaded would cut off some of the outlined squares around it from the rest, so it must stay clear.",
   "reach": "This 4 needs more than the outlined square, so it must see along the striped run: the ringed square must be clear.",
+}
+`;
+
+exports[`starbattle: pinned hint positions > says, at each pin 1`] = `
+{
+  "around": "No star may touch the outlined star, even diagonally, so each ringed square must be empty.",
+  "banded.lines": "The 2 outlined regions need 4 stars, all in these 2 rows, which need only 4, so these squares must be empty.",
+  "banded.regions": "These 2 rows need 2 stars, all in the 2 outlined regions, which need only 2, so these squares must be empty.",
+  "confined.lines": "The outlined region must put its star in this row, which needs only that one, so these squares must be empty.",
+  "confined.regions": "This row must put its star in the outlined region, which needs only that one, so these squares must be empty.",
+  "crowdedLine": "A star on this square would touch every open square of this row, leaving it no room for a star, so it must be empty.",
+  "crowdedRegion": "A star on this square would touch every open square of this region, leaving it no room for a star, so it must be empty.",
+  "exactLine": "This column needs 1 star and has only 1 open square, so the ringed square must hold a star.",
+  "exactRegion": "This region needs 1 star and has only 1 open square, so the ringed square must hold a star.",
+  "fullLine": "This row already has its star, so each ringed square must be empty.",
+  "fullRegion": "This region already has its star, so the ringed square must be empty.",
+  "neededLine": "This row needs 2 stars and without this square has room for only 1, so that square must hold a star.",
+  "neededRegion": "This region needs 2 stars and without this square has room for only 1, so that square must hold a star.",
+  "starvedLine": "A star on this square would complete its region, leaving this column no open square, so it must be empty.",
+  "starvedRegion": "A star on this square would complete its column, leaving this region no open square, so it must be empty.",
 }
 `;
 

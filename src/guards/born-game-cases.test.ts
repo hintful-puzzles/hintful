@@ -22,11 +22,9 @@ const only = (globalThis as { process?: { env?: Record<string, string | undefine
 const NOT_YET_DATA: Readonly<Record<string, string>> = {
   boats: "boats.test.ts",
   bricks: "bricks.test.ts",
-  clusters: "clusters.test.ts",
   lightup: "lightup.test.ts",
   pattern: "pattern.test.ts",
   singles: "singles.test.ts",
-  starbattle: "starbattle.test.ts",
   sticks: "sticks.test.ts",
   tents: "tents.test.ts",
 };
@@ -62,5 +60,9 @@ describe("a born game's cases", () => {
 for (const born of BORN_GAMES) {
   if (born.cases === null) continue;
   if (only !== undefined && only !== born.id) continue;
-  describeGameCases(born.game, parseGameCases(born.cases.text, born.cases.path));
+  describeGameCases(
+    born.game,
+    parseGameCases(born.cases.text, born.cases.path),
+    born.compiled,
+  );
 }

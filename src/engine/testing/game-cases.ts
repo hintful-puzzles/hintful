@@ -27,6 +27,9 @@
  *   counts), the hint's first `steps`, `holds`, `draws` (ops counted by
  *   shape and color) and `circled` (the text inside each circle the hint
  *   draws), the frame drawn with the hint shown where it says `showHint`.
+ * - `wordings`: a technique's stated wording rendered from `terms`, on cells
+ *   numbered on a grid `width` wide (`ring`, and `marks` by role), and what
+ *   it `says`: for a wording no walk reaches.
  *
  * A message expected is written whole, as `/a pattern/`, or as the name of a
  * refusal constant (`DESC_NOT_UNIQUE`). An expectation the engine wrote,
@@ -49,8 +52,12 @@ import * as roles from "../color/roles.ts";
 import * as descErrors from "../contract/desc-error.ts";
 import { loadDesc, readBoard } from "../contract/desc-error.ts";
 import type { HintStep } from "../contract/game.ts";
+import { CELL } from "../contract/hint-words.ts";
+import type { Point } from "../contract/types.ts";
+import { type FillHintModule, pairPieces } from "../fill/hint.ts";
 import { describeParams } from "../game-id/param-label.ts";
 import { paramsError } from "../game-id/params.ts";
+import { statedSentence } from "../hint/stated.ts";
 import { Midend } from "../midend/midend.ts";
 import { describeAbsentTiers, describeDealtTiers } from "./absent-tiers.ts";
 import type { AnyGame } from "./enrollment.ts";
@@ -133,7 +140,8 @@ export interface PositionCase extends At {
   readonly mistakes: number | null;
   readonly steps: readonly StepShape[] | null;
   readonly holds: Readonly<Record<string, unknown>>;
-  /** By `<op> <color role>`, as `polygon error`. */
+  /** By `<op> <color role>`, as `polygon error`, or `<op> any` for every op
+   * of the shape, whatever its color: a piece in the game's own colors. */
   readonly draws: Readonly<Record<string, Count>>;
   /** Whether the frame `draws` counts is drawn with the hint shown. */
   readonly showHint: boolean;
@@ -141,6 +149,20 @@ export interface PositionCase extends At {
    * hint circles, where it circles a number. Read with the hint shown. */
   readonly circled: readonly string[] | null;
   readonly recorded: boolean;
+}
+
+/** A technique's stated wording rendered from terms, for a wording no walk
+ * reaches. Its cells are numbered on a grid `width` wide. */
+export interface WordingCase extends At {
+  readonly technique: string;
+  /** Which of the technique's step wordings, from 0. */
+  readonly wording: number;
+  readonly width: number;
+  readonly ring: readonly number[];
+  /** The cells each other role marks, by role. */
+  readonly marks: Readonly<Record<string, readonly number[]>>;
+  readonly terms: Readonly<Record<string, number | boolean>>;
+  readonly says: Said;
 }
 
 export interface GameCases {
@@ -154,6 +176,7 @@ export interface GameCases {
   readonly ids: readonly IdCase[];
   readonly params: readonly ParamsCase[];
   readonly positions: readonly PositionCase[];
+  readonly wordings: readonly WordingCase[];
 }
 
 /** Where the cases of the description at `source` are. */
@@ -179,7 +202,15 @@ const COLORS: Readonly<Record<string, number>> = Object.fromEntries(
   ),
 );
 
-const SECTIONS = ["values", "hint", "tiers", "ids", "params", "positions"] as const;
+const SECTIONS = [
+  "values",
+  "hint",
+  "tiers",
+  "ids",
+  "params",
+  "positions",
+  "wordings",
+] as const;
 
 /** Read `text`, the cases file at `path`. A malformed entry throws, naming
  * the file and the line. */
@@ -440,8 +471,12 @@ export function parseGameCases(text: string, path: string): GameCases {
       const draws: Record<string, Count> = {};
       for (const [key, n] of entries(e.get("draws"), `${where}.draws`, null)) {
         const [op, color] = key.split(" ");
-        if (op === undefined || color === undefined || !(color in COLORS))
-          fail(n, `${where}.draws: "${key}" is not "<op> <color role>"`);
+        if (
+          op === undefined ||
+          color === undefined ||
+          !(color in COLORS || color === "any")
+        )
+          fail(n, `${where}.draws: "${key}" is not "<op> <color role or any>"`);
         const v = js(n);
         const over = typeof v === "string" ? /^> (\d+)$/.exec(v) : null;
         if (over) draws[key] = { over: Number(over[1]) };
@@ -489,7 +524,71 @@ export function parseGameCases(text: string, path: string): GameCases {
     },
   );
 
-  return { path, values, hint, tiers, ids, params, positions };
+  const cellList = (node: unknown, where: string): number[] =>
+    items(node, where).map((n, k) => num(n, `${where}[${k}]`));
+  const wordings = items(top.get("wordings"), "wordings").map(
+    (node, i): WordingCase => {
+      const where = `wordings[${i}]`;
+      const e = entries(node, where, [
+        "technique",
+        "wording",
+        "width",
+        "ring",
+        "marks",
+        "terms",
+        "says",
+      ]);
+      const marks: Record<string, number[]> = {};
+      for (const [role, n] of entries(e.get("marks"), `${where}.marks`, null))
+        marks[role] = cellList(n, `${where}.marks.${role}`);
+      const terms: Record<string, number | boolean> = {};
+      for (const [term, n] of entries(e.get("terms"), `${where}.terms`, null)) {
+        const v = named(js(n), n);
+        if (typeof v !== "number" && typeof v !== "boolean")
+          fail(n, `${where}.terms.${term} is not a number or true or false`);
+        terms[term] = v as number | boolean;
+      }
+      const says = e.get("says");
+      if (says === undefined) return fail(node, `${where} says nothing`);
+      return {
+        line: lineOf(node),
+        technique: str(e.get("technique"), `${where}.technique`),
+        wording: opt(e.get("wording"), (n) => num(n, `${where}.wording`)) ?? 0,
+        width: num(e.get("width"), `${where}.width`),
+        ring: cellList(e.get("ring"), `${where}.ring`),
+        marks,
+        terms,
+        says: said(says, `${where}.says`),
+      };
+    },
+  );
+
+  return { path, values, hint, tiers, ids, params, positions, wordings };
+}
+
+/** What of a wording case the compiled module's words do not say. */
+function checkWording(
+  compiled: Readonly<Record<string, unknown>>,
+  c: WordingCase,
+): string[] {
+  const stated = (compiled as Pick<FillHintModule<object>, "STATED">).STATED;
+  const clauses = stated?.[c.technique]?.step?.[c.wording];
+  if (clauses === undefined)
+    return [`no wording ${c.wording} of ${c.technique} is stated`];
+  const at = (i: number): Point => ({ x: i % c.width, y: Math.floor(i / c.width) });
+  const pieces = pairPieces((compiled as Pick<FillHintModule<object>, "play">).play);
+  const { text } = statedSentence(clauses, {
+    kind: CELL,
+    at,
+    ring: c.ring.map(at),
+    marks: Object.fromEntries(
+      Object.entries(c.marks).map(([role, cells]) => [role, cells.map(at)]),
+    ),
+    terms: c.terms,
+    value: String,
+    ...(pieces === null ? {} : { piece: (v: number) => pieces[v] }),
+  });
+  return saysAs(c.says, text) ? [] : [`says "${text}", not ${shown(c.says)}`];
 }
 
 const isNumbers = (v: unknown): v is number[] =>
@@ -636,7 +735,9 @@ function drawn(ops: readonly DrawOp[], key: string): number {
   return ops.filter(
     (o) =>
       o.op === op &&
-      (("color" in o && o.color === color) || ("fill" in o && o.fill === color)),
+      (role === "any" ||
+        ("color" in o && o.color === color) ||
+        ("fill" in o && o.fill === color)),
   ).length;
 }
 
@@ -738,7 +839,11 @@ function kindOf(shape: KindShape): HintKind<unknown, unknown, unknown, string> {
  * Declare the tests a game's cases are: its pinned hint positions, its tier
  * cells, and one test a case, named by the line it is written on.
  */
-export function describeGameCases(game: AnyGame, cases: GameCases): void {
+export function describeGameCases(
+  game: AnyGame,
+  cases: GameCases,
+  compiled: Readonly<Record<string, unknown>> = {},
+): void {
   const { hint } = cases;
   if (hint !== null)
     describeHintPins({
@@ -771,4 +876,10 @@ export function describeGameCases(game: AnyGame, cases: GameCases): void {
   each("ids", cases.ids, (c) => c.id, checkId);
   each("params", cases.params, (c) => c.read, checkParams);
   each("positions", cases.positions, (c) => c.id, checkPosition);
+  each(
+    "wordings",
+    cases.wordings,
+    (c) => `${c.technique} ${c.wording}`,
+    (_game, c) => checkWording(compiled, c),
+  );
 }

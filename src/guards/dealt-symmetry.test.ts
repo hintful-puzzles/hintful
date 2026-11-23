@@ -16,11 +16,6 @@ import { BORN_GAMES } from "../engine/testing/born-games.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { leafPresets } from "../engine/testing/presets.ts";
 
-const modules = import.meta.glob<Record<string, unknown>>(
-  "../generated/games/*/*.compiled.ts",
-  { eager: true },
-);
-
 interface DealShape {
   readonly hide?: string;
   readonly symmetric?: "halfTurn";
@@ -54,10 +49,7 @@ function partners(symm: number, w: number, h: number, x: number, y: number): num
 type Params = { w: number; h: number; options?: Readonly<Record<string, number>> };
 
 const symmetric = BORN_GAMES.flatMap((born) => {
-  const entry = Object.entries(modules).find(([p]) =>
-    p.endsWith(`/${born.id}.compiled.ts`),
-  );
-  const deal = entry?.[1]["deal"] as DealShape | undefined;
+  const deal = born.compiled["deal"] as DealShape | undefined;
   if (deal === undefined) return [];
   const first = deal.sample?.first;
   if (deal.symmetric === undefined && first === undefined) return [];
