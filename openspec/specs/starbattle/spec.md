@@ -63,15 +63,14 @@ leads with it and the menu has a section for each.
 Star Battle SHALL refuse a grid narrower than 4 with one star to a row, 8
 with two and 12 with three, because no arrangement of stars exists there:
 two rows next to each other hold twice the stars with no two touching. The
-refusal SHALL name the least size for the stars asked for. It SHALL refuse a
-grid over 26, the regions its text form has letters for, and no size for
-the time its deal takes or the tier asked of it.
+refusal SHALL name the ruleset and the least size for it. It SHALL refuse a
+grid over 26, and no size for the time its deal takes or the tier asked of
+it.
 
 #### Scenario: Two stars on a 7x7
 
 - **WHEN** a 7x7 grid is asked for with two stars
-- **THEN** it is refused with "Grid size must be at least 8 with 2 stars to a
-  row."
+- **THEN** it is refused with "Two stars: the grid size must be at least 8."
 
 #### Scenario: A large grid is dealt
 
@@ -133,11 +132,12 @@ board they do not finish, which only a pasted ID can be, Solve SHALL refuse.
 
 ### Requirement: Controls: The star is the left button and the cross the right
 
-Star Battle's input is its declared target verbs. The left button SHALL put
-a star on a blank cell and cross it out on its second click, and the right
-button SHALL cross it out first, as the collection's other games place with
-the left button and rule out with the right. A drag SHALL repeat the pressed
-cell's change on the cells it passes that held what that cell held.
+Star Battle's buttons, keys and drag SHALL be those the fill engine derives
+from its description (`described-fill-game`): the left button SHALL put a
+star on a blank cell and cross it out on its second click, and the right
+button SHALL cross it out first; `S` and `X` SHALL place a star and a cross;
+a drag SHALL repeat the pressed cell's change on the cells it passes that
+held what that cell held. A hand-written Star Battle's save is not read.
 
 #### Scenario: Two left clicks
 
@@ -237,17 +237,17 @@ each mark in one click.
 ### Requirement: Look: A star is drawn as a star, and a region's border by the cells on each side
 
 A star SHALL be drawn as a five-pointed star in the collection's color for a
-placed piece, the puzzle's own mark in place of the shared piece shape, and a
-cross as the collection's ruled-out cross. A star SHALL be drawn in the
-error color while it touches another star or its row, column or region
-holds too many. A region's border SHALL be a heavy line of which each cell
-paints the half inside its own box, and a hint's ring and outline SHALL sit
-inside the cell's surface, never on that line.
+placed piece, growing as it is placed, and a cross as the collection's
+ruled-out cross. Two stars that touch SHALL take a diamond in the error
+color where they meet, as two touching pieces do in every game born from
+its description. A region's border SHALL be a heavy line, and a hint's ring
+and outline SHALL sit inside the cell's surface, never on that line.
 
 #### Scenario: Two stars at a corner
 
 - **WHEN** two stars are placed in cells that share a corner
-- **THEN** both are drawn in the error color
+- **THEN** each is drawn as a star, and a diamond in the error color sits on
+  the corner they share
 
 ### Requirement: Look: A cell's surface is its region's fill
 
@@ -271,14 +271,20 @@ and the win flash SHALL take the fill's place while they show.
 
 ### Requirement: Look: A star or cross is red where the board breaks a rule
 
-`redraw` SHALL draw in the error color each star or cross where the board
-breaks a rule (`Game.rules`): each of two stars that touch, every star of a
-row, column or region holding too many, and every cross of a row, column or
+Each star or cross SHALL be drawn in the error color where the board breaks
+a rule (`Game.rules`) other than two stars touching: every star of a row,
+column or region holding too many, and every cross of a row, column or
 region its crosses leave no room for its stars.
 
 #### Scenario: Two stars touch
 
 - **WHEN** two stars touch at a corner
+- **THEN** neither is drawn in the error color, and the diamond where they
+  meet is
+
+#### Scenario: Two stars in a row
+
+- **WHEN** a row of a one-star board holds two stars apart
 - **THEN** both are drawn in the error color
 
 #### Scenario: A row crossed out

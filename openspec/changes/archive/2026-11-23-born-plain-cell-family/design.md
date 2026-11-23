@@ -246,6 +246,55 @@ description, so later changes in this initiative do not ask
   session that ends part-way records the open flips in tasks.md, and the
   next session continues them.
 
+## The figures (3.1)
+
+Measured 2026-11-23, `0c15e5b38` against `75691d811`, the parent of the
+change's first commit. The figures are a record, not a gate (§ "Goals /
+Non-Goals").
+
+**Lines.** The hand-written TypeScript each flip removed under
+`src/games/`, against what its commit added net to `src/engine/` and
+`src/describe/`, tests and JSON excluded: Range 1,381 against 252; Star
+Battle 1,429 against 414; Clusters 1,506 against 257; Light Up 1,684
+against 722; Sticks 1,647 against 396; Bricks 1,838 against 431; Pattern
+2,066 against 721; Singles 1,166 against 216; Boats 2,949 against 1,003.
+In all, 15,666 lines went and the engine gained 4,412. The capabilities
+each flip added are in its task in tasks.md.
+
+**Time.** The method:
+
+- The boards: 280 dealt at the baseline, four on each menu board of at
+  most 100 cells, and every Star Battle board, whose params give its size
+  as one number the filter did not read. The same IDs
+  are loaded in both trees, and every one loads in both.
+- The walk: each board walked by `hint.plan` and `executeMove` to the end.
+- The clock: process CPU time, four rounds with the first dropped, two
+  runs a tree interleaved. The baseline's own two runs differed by up to
+  20% (Star Battle), so a difference under that is noise.
+- The deal: the same boards' params, dealt once each in each tree.
+
+Hint walk, the mean of the two runs' medians, the baseline's then the
+born tree's, for all of a game's boards:
+
+| Game | Boards | Walk | Change | Deal median |
+|---|---|---|---|---|
+| Range | 16 | 50 / 70 ms | +40% | 25 / 22 ms |
+| Star Battle | 72 | 726 / 810 ms | +12% | 92 / 86 ms |
+| Clusters | 40 | 163 / 140 ms | −14% | 14 / 13 ms |
+| Light Up | 24 | 51 / 53 ms | +4% | 20 / 50 ms |
+| Sticks | 24 | 146 / 182 ms | +25% | 151 / 79 ms |
+| Bricks | 16 | 47 / 60 ms | +28% | 20 / 26 ms |
+| Pattern | 8 | 42 / 61 ms | +45% | 13 / 13 ms |
+| Singles | 32 | 83 / 81 ms | −2% | 8 / 6 ms |
+| Boats | 48 | 257 / 244 ms | −5% | 10 / 19 ms |
+
+Step counts agree, except Pattern, at 403 steps to 413, and Boats, at 894
+to 1,460, because a firing that settles several squares is one step.
+The largest change per board is Pattern's, 2.4 ms over a whole 10x10
+game, then Sticks' and Range's, at 1.5 and 1.3 ms. Light Up's deal
+median rose to 50 ms, still under the 100 ms a deal is let cost
+unremarked. No player feels any of it.
+
 ## Open Questions
 
 None: 1.2's saves and the two games with candidate notes were answered by

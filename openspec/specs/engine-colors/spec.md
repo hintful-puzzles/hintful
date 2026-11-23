@@ -729,12 +729,12 @@ it holds.
 
 ### Requirement: A board colored half and half gives its clear squares a surface
 
-The engine SHALL provide the clear square through one helper
-(`drawClearSquare`): a surface of its own over the whole cell (`CLEAR`) with
-the ruled-out cross drawn faint on it (`CLEAR_MARK`). A game whose board is
-colored about half and half SHALL draw a cell known not to be shaded through
-it. A game where a few squares are the answer and the rest is a note SHALL
-keep the bare cross.
+The engine SHALL provide the clear square through one painter (`clear`,
+`engine/render/pieces/stock.ts`): a surface of its own over the whole cell
+(`CLEAR`) with the ruled-out cross drawn faint on it (`CLEAR_MARK`). A game
+whose board is colored about half and half SHALL draw a cell known not to be
+shaded with it. A game where a few squares are the answer and the rest is a
+note SHALL keep the bare cross.
 
 #### Scenario: The surface is the pair's second hue and the mark reads on it
 
@@ -747,28 +747,6 @@ keep the bare cross.
 
 - **WHEN** a game draws the clear square of a cell that holds a number
 - **THEN** the surface is drawn and no cross is
-
-### Requirement: A clear square whose middle is taken carries no cross
-
-`drawClearSquare` SHALL fill the whole cell with the surface, and SHALL draw
-the cross in the middle of the content box it is handed, or no cross where it
-is handed none. A game SHALL hand it none for a cell whose middle holds
-something else, a number for one, so that what the cell holds has the square
-to itself and is never crossed through. With no box named, the box is the
-cell.
-
-#### Scenario: A numbered square beside a bare one
-
-- **WHEN** a game clears two squares, one holding a number and one holding
-  nothing
-- **THEN** both are the clear surface, the bare one carries the faint cross
-  in its middle, and the numbered one carries its number and no cross
-
-#### Scenario: A lit clear square
-
-- **WHEN** the win flash lights a clear square that holds nothing
-- **THEN** the game hands the helper a flash color for the surface, and the
-  square keeps its cross
 
 ### Requirement: The palette holds one set of fills for regions
 
@@ -983,3 +961,16 @@ own part, so a tile cache repaints one cell without its neighbor.
 - **THEN** the two parts meet at the shared edge with no gap and no grid line
   between them
 - **AND** only the four outer corners are rounded
+
+### Requirement: A clear square whose middle holds a number carries no cross
+
+The `clear` painter SHALL draw the cross in the middle of a cell that holds
+nothing else, and SHALL draw none where the cell holds a number, so that the
+number has the square to itself and is never crossed through.
+
+#### Scenario: A numbered square beside a bare one
+
+- **WHEN** a game clears two squares, one holding a number and one holding
+  nothing
+- **THEN** both are the clear surface, the bare one carries the faint cross
+  in its middle, and the numbered one carries its number and no cross

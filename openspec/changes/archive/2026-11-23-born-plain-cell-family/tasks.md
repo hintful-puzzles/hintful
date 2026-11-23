@@ -189,10 +189,13 @@ order.
 
 ## 3. Finish
 
-- [ ] 3.1 Per game: lines removed against lines the engine gained, and
+- [x] 3.1 Per game: lines removed against lines the engine gained, and
       capabilities added; deal and hint-walk CPU time against the
       hand-written game on the same boards (the pilot's method, in its
-      archived `design.md` § "The figures (3.1)").
-- [ ] 3.2 Update `docs/descriptions.md` and `docs/new-game.md` for what
-      the family added.
-- [ ] 3.3 Commit, push, archive.
+      archived `design.md` § "The figures (3.1)"). Recorded in design.md
+      § "The figures (3.1)", 2026-11-23: 15,666 lines gone against 4,412
+      gained; walks from −14% to +45%, at most 2.4 ms a game.
+- [x] 3.2 Update `docs/descriptions.md` and `docs/new-game.md` for what
+      the family added. Each flip added its keys to `descriptions.md`;
+      `new-game.md` names what each moved game shows the board may be.
+- [x] 3.3 Commit, push, archive. Archived 2026-11-23 with the figures.

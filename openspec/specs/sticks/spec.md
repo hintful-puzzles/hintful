@@ -54,29 +54,11 @@ Blocks SHALL never take a line.
   block
 - **THEN** no move is made
 
-### Requirement: Params: Sticks refuses, for a deal only, a block percentage outside 5 to 100 and a quarter-turn symmetry off a square
-
-`validateParams` SHALL refuse, on a full parameter check only, a block
-percentage outside 5 to 100, and 4-way rotational symmetry on a grid that is
-not square.
-
-#### Scenario: A short check ignores the generation-only limits
-
-- **WHEN** a non-square grid with a block percentage of 0 and 4-way rotational
-  symmetry is checked without the full flag
-- **THEN** it is accepted
-
-#### Scenario: A full check refuses 4-way rotational symmetry off a square
-
-- **WHEN** a 5x6 grid with 4-way rotational symmetry is checked in full
-- **THEN** it is refused
-
 ### Requirement: Params: A Sticks params string may leave out its blocks, its symmetry and its difficulty
 
 Sticks' params (a size, a percentage of blocks, their symmetry and a tier),
-their bounds, encoding and label words SHALL be those its `paramConfig` and
-its declared codec give (`engine-params`, "A game declares its params encoding
-once, and both codec halves are derived"), and its menu what `presets` builds.
+their bounds, encoding and label words SHALL be those its description
+declares (`described-fill-game`), and its menu its description's boards.
 A string with no `b` SHALL decode as 20 percent, one with no `s` as 2-way
 rotational, and one with no difficulty letter as Easy.
 
@@ -93,26 +75,36 @@ rotational, and one with no difficulty letter as Easy.
 - **THEN** the params are 2 wide and 5 high, 20 percent blocks, no symmetry,
   and Unreasonable
 
-### Requirement: Params: Sticks refuses Unreasonable where no board needs it
+### Requirement: Params: Sticks refuses a block share outside 5 to 100, and, for a deal only, a quarter-turn symmetry off a square
 
-`validateParams` SHALL refuse, when a board is to be dealt, an Unreasonable
-2×2 board. The solver finishes every 2×2 board that has one fill.
+Sticks SHALL refuse a block percentage outside 5 to 100 wherever it is
+written, and, on a full parameter check only, 4-way rotational symmetry on a
+grid that is not square. No game ID upstream writes carries a percentage.
+
+#### Scenario: A short check admits a quarter turn off a square
+
+- **WHEN** `5x6b20s4` is checked without the full flag, and then with it
+- **THEN** the first is accepted and the second refused, as the grid must be
+  square
+
+#### Scenario: Too few blocks
+
+- **WHEN** `7x7b4s0de` is checked
+- **THEN** it is refused: the percentage must be at least 5
+
+### Requirement: Params: Sticks deals Unreasonable only on a board of five squares or more
+
+The description SHALL bound Unreasonable to an area of at least 5, so a 2×2
+is refused at Unreasonable when a board is to be dealt and a 2×3 is not; a
+2×2 board with one fill is one the ladder finishes.
 
 #### Scenario: A 2×2 board is not dealt at Unreasonable
 
 - **WHEN** a 2×2 board is asked for at Unreasonable
 - **THEN** it is refused with the sentence that no puzzle of that kind is
   Unreasonable
-- **AND** a 2×2 board is still dealt at Easy, and a 2×3 board is admitted at
+- **AND** a 2×2 board is still dealt at Easy, and a 2×3 board is dealt at
   Unreasonable
-
-#### Scenario: Every 2×2 board is tried
-
-- **WHEN** every set of blocks, every fill, every square a line's number
-  could sit on and every set of numbers left showing on a 2×2 board is given
-  to the solver, and those it leaves unfinished are counted
-- **THEN** none of them has exactly one fill
-- **AND** the same walk over a 2×3 board finds some that do
 
 ### Requirement: Description: Sticks descriptions use the run-length blank encoding
 
@@ -165,10 +157,11 @@ and a `_` anywhere else.
 
 ### Requirement: Generation: The Sticks generator keeps only what the solver completes
 
-The generator SHALL place blocks under the chosen symmetry, fill and clue
-the board, and retain a candidate only while the deductive solver deduces it to a
-unique completion; it SHALL then remove clues in a randomized order. At Easy
-it SHALL keep each removal only while the solver still completes the board.
+A board SHALL be dealt by the fill engine from the description
+(`described-fill-game`): blocks first at the share and symmetry asked for,
+then on each other square a line across or down, at even odds; one number
+on a random square of each line, and one on each block. The numbers SHALL be hidden in one random
+order, each kept hidden only while the ladder still finishes the board.
 
 #### Scenario: A clue the solver needs is put back
 
@@ -176,35 +169,21 @@ it SHALL keep each removal only while the solver still completes the board.
   solver does not complete
 - **THEN** that clue is put back, and the strip goes on to the next
 
-### Requirement: Generation: Uniqueness is held by a count, and not by the solver's verdict alone
-
-That a dealt board has exactly one fill SHALL be held by a count that branches
-on every cell the deduction leaves undecided, and not by the solver's verdict
-alone. That count SHALL itself be shown capable of reporting more than one
-solution, or the assertion is vacuous.
-
-#### Scenario: The uniqueness witness can report more than one
-
-- **WHEN** the search that propagates the shipped deduction and branches on the
-  cells it leaves undecided is run on a board carrying no clues at all
-- **THEN** it reports more than one solution
-
 ### Requirement: Generation: An Unreasonable Sticks board has one answer that the solver does not reach
 
-At Unreasonable the generator SHALL remove clues from a fill the solver
-completes, each only while the search still proves one fill within a budget
-of its own, well under the search's, and SHALL keep the board only when the
-solver stops short on it.
+At Unreasonable every draw SHALL strip from every number, each kept hidden
+only while the search still proves one fill, and the board SHALL be kept
+only where the ladder does not finish it.
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 
-- **WHEN** `newDesc` produces Unreasonable boards from 3×3 to 5×5
-- **THEN** the solver leaves each unfinished
-- **AND** exactly one fill fits each, by a count that has no search in it
+- **WHEN** `newDesc` produces Unreasonable boards from 2×3 to 7×7
+- **THEN** each opens, entered with no difficulty letter, as Unreasonable
+- **AND** Solve finishes each
 
 #### Scenario: The smallest boards and the largest preset carry the tier
 
-- **WHEN** an Unreasonable 2×5 board, a 3×3 board and a 10×10 board is dealt
+- **WHEN** an Unreasonable 2×3 board, a 3×3 board and a 7×7 board is dealt
 - **THEN** each is dealt, and the lowest difficulty that solves it is
   Unreasonable
 
@@ -234,27 +213,6 @@ unfinished, or invalid.
 - **WHEN** a board of blank cells carrying no clues at all is solved
 - **THEN** no cell is forced and the board is classified unfinished
 
-### Requirement: Solver: Sticks' search assumes the first blank square's line across, then up and down
-
-Where the solver stops, the search that counts a board's fills SHALL take the
-first blank square and assume its line runs across, and then up and down.
-
-#### Scenario: The search tells one answer from several and from none
-
-- **WHEN** the search runs on a 4×4 board the solver finishes, on one with
-  one fill that it does not reach, on one with no block and no number, and on
-  one whose corner square holds a 4 with a 1 beside it and a 1 below it
-- **THEN** it reports one answer for the first two, several for the third and
-  none for the fourth
-
-#### Scenario: The search agrees with a count that has no search in it
-
-- **WHEN** dealt boards from 3×3 to 4×4, the same with numbers taken away and
-  the same with one number changed are each counted by laying every white
-  square each way and reading the finished board against its numbers
-- **THEN** the search reports one answer exactly where one fill fits, several
-  where more do and none where none does
-
 ### Requirement: Solver: Sticks' ladder reads a number's room as the cells its line could still take
 
 A number's room SHALL be the run through it, along its line's way, of the cells that are no block, hold no line the other way, and with a line that way would carry no number but its own; the length clue's meaning SHALL read room the same way, so the live error marks read it on the board as it stands.
@@ -273,19 +231,6 @@ using a keyboard cursor with keys to place or clear a line.
 
 - **WHEN** an empty cell is left-clicked three times
 - **THEN** it holds a vertical line, then a horizontal line, then nothing
-
-### Requirement: Controls: A Sticks drag draws along its dominant axis
-
-A drag SHALL draw the orientation of its dominant axis across the cells it
-passes. A drag started on a line of the orientation it is dragged in SHALL
-instead clear the lines in the cells it passes.
-
-#### Scenario: Dragging draws a line
-
-- **WHEN** the pointer is dragged horizontally or vertically within the grid past
-  the drag threshold
-- **THEN** a line of the dragged orientation is placed in the cells the drag
-  crosses
 
 ### Requirement: Controls: Sticks' line keys set a line outright
 
@@ -323,6 +268,19 @@ only move the cursor.
   is pressed with Ctrl
 - **THEN** the cursor stays and that one square takes a horizontal line
 
+### Requirement: Controls: A Sticks drag draws along the row or column it moves in
+
+A drag SHALL draw, from the square it began on along the row or column it
+moves in, a line that way in each square it reaches; a drag started on a
+line that way SHALL clear them instead.
+
+#### Scenario: Dragging draws a line, and clears it
+
+- **WHEN** the pointer is dragged across two empty squares of a row, and then
+  the same drag is made again
+- **THEN** the first draws a horizontal line in both, and the second clears
+  them
+
 ### Requirement: Hint: A Sticks hint names the clue a tentative line would break, and how
 
 A step's explanation SHALL name **which clue** the tentative line would break
@@ -348,26 +306,6 @@ deductive game, and SHALL refer to a clue by the number the player can see.
 - **WHEN** a step forces a square that carries the number 2 to be vertical
 - **THEN** its explanation says that this 2 must be vertical
 
-### Requirement: Hint: A Sticks hint's marks count out against the words
-
-Where the explanation states a count (a run's length, the room a line has
-left, the lines or open sides a block's clue has) the marked squares SHALL
-number what the explanation says, so the player can count the picture against
-the words. Where the explanation names a run or a span, that run or span SHALL
-be the one the deduction actually walked.
-
-#### Scenario: The forced orientation is visible, not merely described
-
-- **WHEN** a hint step is displayed
-- **THEN** the forced square shows a line of the forced orientation in the hint
-  color, and no square shows a line in the placed-line color that the player
-  did not place
-
-#### Scenario: A length argument marks the run it counts
-
-- **WHEN** a step says a line would run a number's line to 3 squares
-- **THEN** exactly the 3 squares of that run are marked as evidence
-
 ### Requirement: Hint: Sticks calls the cell a block
 
 The game's words (its hint, its help page and its Custom dialog) SHALL call the
@@ -389,16 +327,6 @@ the squares in which a line one way would break a clue at once.
 - **THEN** with a line placed as the solution has it wherever the hint stops,
   the hint finishes the board
 
-### Requirement: Hint: The Sticks hint carries on from its last step, by the rules in order
-
-`hint` SHALL take, of the numbers that a line one way in a blank square would break, the one whose firing carries on from the squares its last step decided, and otherwise the first by its rule and then by the number's place in reading order. One firing SHALL be one journey, every square that number and rule force on that board.
-
-#### Scenario: A dealt board's first steps
-
-- **WHEN** a hint is asked for on the 5×5 board `3bB1b5c2aB3c2a2_2aB2b1` with no line placed
-- **THEN** the first step makes the top-left square, the 3, horizontal, since a vertical line there would leave it only 2 squares
-- **AND** the next journey makes the second and third squares of the top row horizontal, both by that 3, and the journey after it reasons from the 1 block
-
 ### Requirement: Hint: Sticks' rules are taken in order
 
 The rules a supposed line breaks SHALL be taken in this order: a block with more lines than its number, a line over two numbers, a line longer than its number, a block left too few open sides, a line with too little room.
@@ -407,6 +335,48 @@ The rules a supposed line breaks SHALL be taken in this order: a block with more
 
 - **WHEN** a line in a square would join a 2's line to a 1's, which is also too long for each
 - **THEN** the step speaks of the two numbers joined
+
+### Requirement: Hint: Sticks draws a hint's evidence with the fill engine's marks
+
+A step SHALL ring the square it decides and draw its evidence with the fill
+engine's hint marks (`described-fill-game`): the number or block the step is
+about outlined apart, in the color of the words that name it, and the
+squares its reason rests on outlined, as many as the words count.
+
+#### Scenario: The 0 block
+
+- **WHEN** a step makes the square beside a 0 block vertical
+- **THEN** the 0 block is ringed apart, and the square is ringed as the one
+  the step decides
+
+### Requirement: Hint: The Sticks hint carries on from its last step, then column by column
+
+The hint SHALL take, of the firings the ladder could make, the one that
+carries on from the squares its last step read and decided, and otherwise
+the first in the ladder's order: the squares column by column from the left,
+each column from the top.
+
+#### Scenario: A dealt board's first steps
+
+- **WHEN** a hint is asked for on the 5×5 board `3bB1b5c2aB3c2a2_2aB2b1` with
+  no line placed
+- **THEN** the first step makes the top-left square, the 3, horizontal, since
+  a vertical line there would leave it too little room
+- **AND** the next two make the second and third squares of the top row
+  horizontal, both by that 3, and the step after them reasons from the 1
+  block
+
+### Requirement: Status bar: The Sticks status bar counts the block numbers left
+
+The status bar SHALL read `Clues left: {n}`, counting the shown block
+numbers not yet met with every side decided, and SHALL be empty once none is
+left. A line's number is never counted.
+
+#### Scenario: A board as dealt, and solved
+
+- **WHEN** the 7×7 board `c5b2a2aB1a6a2_4dBB_3B2aB1aBB0e2cB2d2_3c4`, with
+  five numbered blocks, is opened, and then solved
+- **THEN** the status bar reads "Clues left: 5", and then is empty
 
 ### Requirement: Look: No two roles on the Sticks board share a color
 

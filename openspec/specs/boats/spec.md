@@ -23,10 +23,10 @@ list.
 
 ### Requirement: Rules: Boats flags a broken rule as the player plays
 
-The game SHALL flag live, once the board makes each certain: a line whose
-count is broken, its number in the error color; two boats touching even
-diagonally; a boat, or a run longer than the fleet's longest, of a size the
-fleet cannot accommodate; and a segment contradicting a given clue. On a
+The game SHALL flag live, once the board makes each certain, as the fill
+engine marks a broken rule: a line whose count is broken, its number in the
+error color; two boats touching even diagonally, by the diamond between
+them; and a run longer than the fleet's longest, by a bar along it. On a
 board the puzzle's solver completes, a board the live flags mark SHALL be a
 board on which `findMistakes` reports a cell.
 
@@ -40,7 +40,7 @@ board on which `findMistakes` reports a cell.
 
 - **WHEN** the fleet's longest boat has three squares and the player places
   four segments in a row, the squares round them still open
-- **THEN** each of the four is marked as a boat the fleet cannot accommodate
+- **THEN** the four are marked as a run the rules forbid
 
 ### Requirement: Rules: Boats is solved when the fleet is placed, without the water
 
@@ -81,7 +81,7 @@ boards.
 encoding `d` with `e`, `n`, `t` or `h` and `S` when numbers are removed, then
 in every encoding a comma and the count of boats of each size from one square
 up, parted by commas. `decodeParams` SHALL read a missing `f` as 4, a missing
-tier as Normal, a missing list as the pyramid (one boat of the largest size,
+tier as Easy, a missing list as the pyramid (one boat of the largest size,
 two of the next, and so on down), and a count the list lacks as none.
 
 #### Scenario: A Hard board with numbers removed
@@ -175,18 +175,19 @@ finished, at the second tier.
 - **THEN** the solver places a boat segment in the undecided square, and the
   hint gives that as its reason
 
-### Requirement: Generation: The Boats generator deals a unique board at exactly the requested difficulty
+### Requirement: Generation: Boats deals a fleet and gives each square's shape while the tier holds
 
-The generator SHALL use the solver to guarantee a unique solution at exactly
-the requested difficulty: it SHALL place a random fleet, derive the border
-clues, optionally hide border numbers while the board stays soluble, and reject
-any board not solvable at exactly the target difficulty.
+A deal SHALL lay the fleet, the longest boat first, in random stretches with
+room for it, number every row and column, give every square's shape and
+hide as many shapes as the board stays at its tier, and with Remove numbers
+the numbers too, in one random order. A board SHALL be kept where the ladder
+finishes it at its tier and not below, and with Remove numbers only where it
+hides a number. No given square SHALL be a segment of unknown shape.
 
-#### Scenario: A board that needs less than its tier is dealt again
+#### Scenario: A dealt board's givens are the answer's shapes
 
-- **WHEN** a stripped board solves, and the solver needed only a difficulty
-  below the one asked for
-- **THEN** the board is thrown away and another fleet is placed
+- **WHEN** a Boats board is dealt and solved
+- **THEN** each given square is water or the shape its boat gives it
 
 ### Requirement: Solver: Boats' solver is the ladder its description states
 
@@ -216,49 +217,18 @@ monotone in its cap allows.
   solves at the easiest cap
 - **THEN** it solves at every cap above it
 
-### Requirement: Controls: Boats declares its two verbs and its erase key, and adds a drag and a modifier stroke
+### Requirement: Controls: Boats' click goes round, and a right drag waters a line
 
-Boats' buttons and keys SHALL be those its `targetVerbs` declares, a verb that
-cycles a square through boat segment and water, one that places water, and a
-key that empties (`engine-input`, "The engine owns a declaring game's press
-and select keys"). `interpretMove` SHALL add two arms of its own, which this
-subject's other requirements state: a drag that fills a run along a single
-row or column, and an arrow held with Ctrl or Shift.
+A click SHALL take a square round empty, boat segment and water, the right
+button the other way round. A right drag SHALL mark water along one row or
+column, and Shift or Ctrl with an arrow SHALL mark water as the cursor moves,
+as in every fill game whose stroke is a line.
 
-#### Scenario: Filling a run of cells along a row
+#### Scenario: Two clicks make water
 
-- **WHEN** a drag begins in one cell and ends in another on the same row or column
-- **THEN** every cell between them is set to the dragged content in a single move
-
-### Requirement: Controls: A Boats drag fills its line as its first square changed
-
-A drag SHALL keep to the row or column it has moved further along, and on
-release SHALL make one fill from the pressed square to the last: each square
-holding what the pressed one held takes what the press makes of it, and a
-left drag from a boat segment, which makes water, SHALL water every square of
-the line that is no given. A release off the board SHALL change nothing. A
-press on the number at the right or the bottom edge SHALL act on the square
-beside it.
-
-#### Scenario: A drag from a boat segment waters the line
-
-- **WHEN** the player left-presses a placed boat segment and drags along a row
-  that holds an empty square and another placed segment
-- **THEN** on release each of those squares is water
-
-### Requirement: Controls: Boats' modifier arrows fill as the cursor moves
-
-Ctrl with an arrow SHALL move the keyboard cursor and place boat segments on
-the empty squares among the one it leaves and the one it enters, Shift with
-an arrow water on the empty ones, and both together SHALL empty each of the
-two that is no given.
-
-#### Scenario: Ctrl fills only what is empty
-
-- **WHEN** the cursor is on an empty square with a water square to its right,
-  and the player presses Ctrl with Right
-- **THEN** the first square holds a boat segment and the water is left as it
-  was
+- **WHEN** the player left-clicks an empty square twice
+- **THEN** it holds a boat segment after the first click and water after the
+  second
 
 ### Requirement: Hint: The Boats hint replays at the lowest cap that solves the board
 
@@ -319,21 +289,6 @@ part of that step and SHALL NOT be narrated as further deductions.
   rule makes water
 - **THEN** that water is shown in the same step, and no later hint narrates it
   as a deduction of its own
-
-### Requirement: Hint: A Boats hint marks a boat and water each in its own shape
-
-The two kinds of placement Boats admits, a boat segment and water, SHALL each
-be marked in the shape of the action it represents, so that one hint color
-cannot stand for two different actions.
-
-#### Scenario: A step that places both kinds marks each differently
-
-- **WHEN** a hint step asks for a boat segment on one square and water on
-  another
-- **THEN** the first is marked with a boat segment of no resolved shape and the
-  second with waves, both in the hint color
-- **AND** a square the step only reasons from is outlined and carries neither
-  mark
 
 ### Requirement: Hint: The Boats hint reads a segment for the squares round it
 
@@ -445,23 +400,6 @@ make water of the square below it, or to its right, that way.
 - **THEN** the step makes that square water, and says that if it held its
   row's last boat segment the striped column could no longer reach its number
 
-### Requirement: Hint: The Boats hint asks its techniques in a fixed order
-
-The hint SHALL take the first that fires: at Easy a given segment's squares,
-the diagonals, a line's free squares all boat, the fleet filling what is
-left, a middle segment's direction, the segment closed on three sides, a
-line that has its number, the hemmed-in square; at Normal the boat that must
-grow, the one run, the middle segment's line, the boat too long, the run too
-short; at Tricky the runs, the shared diagonals. A tier SHALL be asked only
-when every tier below it has nothing.
-
-#### Scenario: A boat segment is offered before the water
-
-- **WHEN** no segment has a square round it left to settle, one row has
-  exactly as many free squares as it still needs, and another already has
-  its number with squares still free
-- **THEN** the step is the first row's boat segments
-
 ### Requirement: Hint: A Boats journey shows its whole firing on every leg
 
 Every leg of a journey SHALL carry the sentence and the marks of the whole
@@ -485,6 +423,17 @@ A square's refutation at Hard SHALL say it was tried as its line's last boat seg
 
 - **WHEN** a square is refuted as its column's last water, and the sentence fits
 - **THEN** it begins "If this square were its column's last water,"
+
+### Requirement: Hint: The Boats hint carries on from its last step, then by its rules
+
+The hint SHALL take, of the firings the ladder could make, the one that
+carries on from the cells its last step read and decided, and otherwise
+the first by its rule.
+
+#### Scenario: A step that opens another
+
+- **WHEN** a hint step decides squares, and a rule can fire on one of them
+- **THEN** the next step is that firing, ahead of one elsewhere on the board
 
 ### Requirement: Look: The fleet display fits the canvas for every legal fleet
 
@@ -541,14 +490,16 @@ gave SHALL keep the water fill, and given water SHALL keep its waves.
 ### Requirement: Look: A given boat segment sits on the lifted surface of a given
 
 A boat segment the puzzle gave SHALL sit on the collection's lifted surface of
-a given, so it is told from a segment the player placed by the cell under it.
-The help page SHALL say that a given segment sits on a lighter square.
+a given, shaped as the answer runs through it, so it is told from a segment
+the player placed by the cell under it. The help page SHALL say that a given
+segment sits on a lighter square.
 
 #### Scenario: A given segment is told by the cell under it
 
 - **WHEN** a board with a given boat segment is drawn
 - **THEN** that segment's square is the lifted surface
-- **AND** a segment the player places is drawn on the water fill
+- **AND** a segment the player places is drawn on the undecided square's
+  surface
 
 ### Requirement: Look: Boats draws its waves and its collision diamond's edge in ink
 
@@ -594,15 +545,3 @@ boat of one as a disc. The fleet display SHALL draw its boats the same way.
 - **WHEN** three squares in a row hold a finished boat
 - **THEN** they are drawn as one hull, rounded at its two ends only, with no
   line across it
-
-### Requirement: Look: The win flash lights a boat whole
-
-During the win flash every square of a boat SHALL take the place in the sweep
-of the boat's middle, so the boat lights at once, its hull filled in the
-flash's color over its squares' own surface. A water square SHALL light at
-its own place in the sweep.
-
-#### Scenario: A boat of three under the flash
-
-- **WHEN** the highlight reaches the middle of a boat of three
-- **THEN** all three of its squares' hull is lit together

@@ -32,17 +32,6 @@ white.
 - **WHEN** a move paints the final black square of the unique solution
 - **THEN** the rules report no violation and `status` returns `"solved"`
 
-### Requirement: Rules: Range's move is a list of cell-sets
-
-A `RangeMove` SHALL be a list of cell-sets, each painting a cell black, white
-or empty, plus an optional solve flag. `executeMove` SHALL throw on an
-out-of-bounds or clue-cell target.
-
-#### Scenario: A move onto a clue throws
-
-- **WHEN** `executeMove` is given a move that sets a cell holding a clue
-- **THEN** it throws and the state it was given is unchanged
-
 ### Requirement: Rules: Range highlights errors live
 
 `redraw` SHALL frame in the error color, each frame, every square where the
@@ -92,15 +81,15 @@ of that size, and an ID with no difficulty letter SHALL decode as Easy.
 
 ### Requirement: Params: Range params are refused outside their bounds
 
-`validateParams` SHALL refuse a `w + h` above 128, which overflows the cell
-encoding, and, when `full`, a grid with both dimensions at most 2 (1×1, 1×2,
-2×1 and 2×2), which admits no good puzzle. It SHALL refuse no size for the
-time its deal takes, at either difficulty: a player can stop a deal.
+Range's description SHALL refuse a `w + h` above 128, which overflows the
+cell encoding, and a grid with both dimensions at most 2 (1×1, 1×2, 2×1 and
+2×2), which admits no good puzzle (`play.bounds`). It SHALL refuse no size
+for the time its deal takes, at either difficulty: a player can stop a deal.
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** `validateParams` is called with full generation on a 2×2 grid
-- **THEN** it returns a non-null error string
+- **WHEN** a 2×2 grid's params are checked
+- **THEN** they are refused
 
 #### Scenario: The largest boards are asked for at both difficulties
 
@@ -181,16 +170,18 @@ least two squares each way it SHALL contain at least one black square.
 
 ### Requirement: Generation: An Unreasonable Range board is an Easy one stripped further, a symmetric pair at a time
 
-At Unreasonable the generator SHALL strip an Easy board further: each
-symmetric pair of clues still showing SHALL go while the search still proves
-one answer, so its clues SHALL stay two-way rotationally symmetric.
+At Unreasonable the deal SHALL strip a board of the lowest tier further, the
+search tier's deal (`engine/fill/search.ts`): each symmetric pair of numbers
+still showing SHALL go while the search still proves one answer, so its
+numbers SHALL stay two-way rotationally symmetric (`deal.symmetric`).
 
 #### Scenario: A dealt Unreasonable board needs search and has one answer
 
-- **WHEN** `newDesc` produces Unreasonable boards from 2×3 to 6×9
-- **THEN** the three rules leave each unfinished and its clues are symmetric
-- **AND** exactly one shading fits each board of up to 25 squares, by a count
-  that has no search in it
+- **WHEN** a 6×9 board is dealt at Easy and at Unreasonable
+- **THEN** each square with a number has a number on the square a half turn
+  takes it to
+- **AND** the Unreasonable board's ladder stops short of it, and the search
+  proves it has one answer
 
 #### Scenario: The smallest boards and the largest preset carry the tier
 
@@ -237,17 +228,6 @@ dealt or pasted, however long a path its white squares form.
 
 - **WHEN** the solver runs on a 64×64 grid with no clue and nothing decided
 - **THEN** it returns having set no cell
-
-### Requirement: Solver: Range's Solve is one move that sets every non-clue cell
-
-`solve` SHALL return one move, carrying the solve flag, that sets every
-non-clue cell as the board's one answer has it.
-
-#### Scenario: Solve completes a generated board
-
-- **WHEN** the Solve command runs on a generated board
-- **THEN** it returns a move whose cell-sets paint every undecided cell, after
-  which `status` returns `"solved"` and `findErrors` reports no error
 
 ### Requirement: Solver: Range's search assumes the first undecided cell shaded, and then clear
 
@@ -304,35 +284,25 @@ white cells they already hold.
   the solver runs
 - **THEN** it decides every cell as the answer has it, whichever cell it was
 
-### Requirement: Controls: Range's two verbs cycle a cell's three states in opposite directions
+### Requirement: Controls: Range's controls are its description's
 
-The primary verb of Range's `targetVerbs` SHALL cycle a non-clue cell empty →
-black → white → empty and the secondary empty → white → black → empty, and a
-clue cell SHALL be inert.
+Range's buttons, keys and drag SHALL be those the fill engine derives from
+its description (`described-fill-game`): a click round blank, shaded and
+crossed out, a right click the other way; `S` and `X`; a sweeping drag;
+Shift-arrow crossing out. A numbered square SHALL be dealt clear and fixed.
+Every move SHALL be an engine `Edit`, and a hand-written Range's save is
+not read.
 
-#### Scenario: Left and right cycle in opposite directions
+#### Scenario: Two left clicks
 
-- **WHEN** an empty non-clue cell receives a left-button action, then another,
-  then another
-- **THEN** it passes black → white → empty
-- **AND** the same cell under three right-button actions passes white → black
-  → empty
+- **WHEN** a blank square is clicked twice with the left button
+- **THEN** it is shaded after the first click and crossed out after the
+  second
 
-#### Scenario: Clue cells reject marking
+#### Scenario: A numbered square
 
-- **WHEN** a marking action targets a cell holding a clue
-- **THEN** `interpretMove` returns `null` and the cell is unchanged
-
-### Requirement: Controls: Range's keyboard cursor marks white with shift
-
-Shift with a cursor direction SHALL mark the vacated and/or entered empty
-cells white.
-
-#### Scenario: A shifted step crosses both empty cells
-
-- **WHEN** the visible cursor sits on an empty cell and shift with a direction
-  moves it onto another empty cell
-- **THEN** one move marks both cells white
+- **WHEN** a board is dealt
+- **THEN** each numbered square holds clear and is fixed
 
 ### Requirement: Hint: A Range hint step states the deduction that forces its cell
 
@@ -402,15 +372,16 @@ the cells its ladder forces from the player's marks.
 
 ### Requirement: Hint: A shaded premise of a Range hint takes a doubled outline
 
-The cited shaded square of an `adjacency` deduction SHALL take a doubled
-outline in `COL_HINT_CELL`, and keep its piece.
+The cited shaded square of a `besideShaded` deduction SHALL be outlined as
+the step's evidence, and keep its piece; the square it forces SHALL be
+ringed.
 
 #### Scenario: A cited black square is outlined apart from the forced cell
 
-- **WHEN** an `adjacency` hint is displayed (a shaded square forces an adjacent
-  cell to be not shaded)
-- **THEN** the cited shaded premise takes a doubled outline in `COL_HINT_CELL`
-  and the forced cell is ringed `COL_HINT`
+- **WHEN** a `besideShaded` hint is displayed (a shaded square forces an
+  adjacent square to be clear)
+- **THEN** the cited shaded square is outlined and the forced square is
+  ringed
 
 ### Requirement: Hint: Range's hint walks its ladder a firing at a time
 
@@ -454,15 +425,15 @@ ink.
 
 ### Requirement: Look: A Range cell in error keeps its content
 
-A cell in error SHALL keep its content and take a frame in the error color at
-its edge, with a clue's number or a cross drawn in the error color. A shaded
-piece SHALL keep its own color.
+A cell in error SHALL keep its content. Two shaded squares side by side
+SHALL take a diamond on the side they share, and a broken number a badge in
+the error color. A shaded piece SHALL keep its own color.
 
 #### Scenario: A shaded cell in error is still a shaded piece
 
-- **WHEN** two orthogonally adjacent cells are both shaded
+- **WHEN** two orthogonally adjacent squares are both shaded
 - **THEN** each holds a piece in the shaded color
-- **AND** each cell is framed in the error color
+- **AND** a diamond in the error color sits on the side they share
 
 ### Requirement: Look: Range's cursor sits at the cell's corners
 
@@ -474,3 +445,16 @@ piece.
 - **WHEN** the keyboard cursor is shown on a shaded cell
 - **THEN** the cell holds its shaded piece
 - **AND** the cursor is drawn out at the cell's corners
+
+### Requirement: Look: A Range number is plain
+
+A Range number SHALL be drawn on its square and SHALL NOT turn faint, and
+the status bar SHALL count no numbers left: a number sees along its row and
+its column as far as the shaded squares let it, which is no block of
+squares (`play.plain`). A step's outline SHALL take a number it passes
+through as one of its squares, and SHALL circle none.
+
+#### Scenario: A step outlines a square with a number
+
+- **WHEN** a pinned step of each kind that reads a number is drawn
+- **THEN** no number on the board is circled

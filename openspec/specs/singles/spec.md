@@ -108,20 +108,19 @@ exactly and every decoded number lies in `1..max(w,h)`.
 - **WHEN** a desc whose length is not `w·h` is checked
 - **THEN** it is refused with a non-null error
 
-### Requirement: Generation: Singles tests a board one level below with the sneaky deduction
+### Requirement: Generation: Singles numbers a Latin square round the squares it covers
 
-What a Singles board dealt at a tier promises SHALL be the collection's
-(`engine-difficulty`, "Every tier promises one solution found at its cap" and
-"A difficulty tier binds the board it generates"), with one addition: the test
-that a board is *not* solvable one difficulty level below SHALL run with the
-sneaky generation-artifact deduction enabled.
+A deal SHALL cover squares at random on a Latin square's numbers, the ladder
+run after each keeping the covered squares apart and the clear ones joined,
+and SHALL then number each covered square to repeat a number of its row or
+column, one single in both where there is one. Every number is shown, and
+the board is kept where the ladder finishes it at its tier and not below.
 
-#### Scenario: Generated boards are uniquely solvable at their difficulty
+#### Scenario: A dealt board's shaded numbers repeat
 
-- **WHEN** a board is generated at difficulty D
-- **THEN** the solver solves it at D
-- **AND** (for Normal) the solver fails to solve it at the level below D even
-  with the sneaky deduction
+- **WHEN** a Singles board is dealt and solved
+- **THEN** every number is 1 to the longer side, and each shaded square's
+  number is another square's in its row or its column
 
 ### Requirement: Solver: Singles deductive solver
 
@@ -138,22 +137,12 @@ Singles' ladder SHALL be compiled from its description, each technique checked s
 - **WHEN** the solver at Normal meets an open square without which the squares not covered would be in two groups
 - **THEN** it makes the square clear, whether or not a covered square sits diagonally beside it
 
-### Requirement: Solver: Singles solve tries the current board, then the initial one
-
-`solve` SHALL attempt to solve the current state and then the initial state,
-returning the move that completes the board or an error when neither can be
-solved.
-
-#### Scenario: Solve reports failure on an unsolvable position
-
-- **WHEN** `solve` is called on a board the solver cannot complete
-- **THEN** it returns a non-null error and applies no move
-
 ### Requirement: Controls: Singles toggle moves
 
-The left-click verb of Singles' `targetVerbs` SHALL toggle a cell black
-(clearing it to empty if it was already black or circled), and the right-click
-verb SHALL toggle it circled (clearing it to empty if already set).
+The left-click verb SHALL shade a cell, emptying it where it is already
+shaded, and the right-click verb SHALL circle it, emptying it where it is
+already circled; each replaces the other's mark, as in every fill game whose
+click toggles.
 
 #### Scenario: Left-click cycles a cell through black and back to empty
 
@@ -347,30 +336,6 @@ side.
   would force one of the 3s and one of the 6s to be *shaded* next to each
   other, and *shaded* squares can't touch, so it must be *not shaded*."
 
-### Requirement: Hint: Singles' hint takes the number patterns once and the joining rules last
-
-The hint SHALL use every technique whatever the board's difficulty. Its plan
-SHALL open with what the player's own shaded and circled squares force, then
-take every sandwich, touching pair, corner and neighboring-line pair the
-numbers show, in that order, then what each square so decided forces in turn.
-An unshaded square's last way out SHALL be taken only when none of those is
-left, and a square whose shading would split the unshaded squares only when
-no last way out is left either.
-
-#### Scenario: A fresh board opens on its number patterns
-
-- **WHEN** a plan is asked for on the fresh 6×6 board
-  `146214162623436526534361613462465334`
-- **THEN** it opens with four sandwiches, a corner and four neighboring-line
-  pairs, before any step that reasons from a square already decided
-
-#### Scenario: An Easy board is taught a neighboring-line pair
-
-- **WHEN** a plan is asked for on a dealt Easy board whose numbers show a
-  neighboring-line pair
-- **THEN** the plan holds that step, though the solver certifies an Easy board
-  without it
-
 ### Requirement: Hint: The forced cell is banded as a ring, and every premise as an outline
 
 The forced cell(s) (the move) SHALL be banded `COL_HINT`. A premise, an
@@ -394,6 +359,19 @@ striped.
 
 - **WHEN** a hint for an adjacent equal pair is displayed
 - **THEN** the row or column the pair shares is striped
+
+### Requirement: Hint: The Singles hint carries on from its last step, then by its rules
+
+The hint SHALL take, of the firings the ladder could make, the one that
+carries on from the cells its last step read and decided, and otherwise
+the first by its rule.
+
+#### Scenario: A fresh board's first steps
+
+- **WHEN** a plan is asked for on the fresh 6×6 board
+  `146214162623436526534361613462465334`
+- **THEN** it opens with a sandwich, and its next step shades the 2 the
+  first one's clear 2 already holds in its row
 
 ### Requirement: Look: Singles draws pieces on a quiet surface
 
@@ -434,36 +412,6 @@ than the number of a cell that holds no piece.
 - **WHEN** a cell is blackened and the show-black-numbers preference is off
 - **THEN** the cell holds the shaded piece and no number is drawn
 
-### Requirement: Look: Singles errors are drawn in the error color
-
-A cell where the board breaks a rule (`Game.rules`), a square beside a
-blackened one read as clear, SHALL be drawn in the error color: the piece of a
-blackened cell, and the number and the ring of any other. The grid lines and
-the frame SHALL stay in the grid color on every board, since no board a
-player reaches is marked impossible: that mark is the solver's, on its own
-working copy.
-
-#### Scenario: An erroneous cell renders in the error color
-
-- **WHEN** two circled copies of a number share a row
-- **THEN** both numbers and their rings are drawn in the error color
-
-#### Scenario: Two numbers forced clear
-
-- **WHEN** two copies of a number in a row each sit beside a blackened cell
-- **THEN** both numbers are drawn in the error color
-
-#### Scenario: A corner cut off
-
-- **WHEN** the two squares beside a corner are blackened
-- **THEN** both pieces are drawn in the error color, as the cells that cut
-  the clear squares apart
-
-#### Scenario: A board full of errors keeps its grid
-
-- **WHEN** every cell of a row is blackened, so each is flagged
-- **THEN** the grid lines and the frame are drawn in the grid color
-
 ### Requirement: Look: Singles edge marks land beside the piece and the ring
 
 The cursor SHALL be brackets at the corners of the cursor cell, and the hint's
@@ -489,3 +437,20 @@ blackened cell's piece, SHALL be drawn over it as on any other frame.
 - **THEN** the flash plays on the ground of every cell, a blackened one's
   showing round its piece
 - **AND** a blackened cell's piece is drawn as it was
+
+### Requirement: Look: Singles marks a broken rule as the fill engine does
+
+A rule violation SHALL be marked on the board, always and with no mistake
+check asked for (`Game.rules`): a diamond between two shaded squares that
+touch, and a badge in the error color on a circled number another clear
+square of its row or column repeats.
+
+#### Scenario: Two shaded squares touch
+
+- **WHEN** two squares side by side are shaded
+- **THEN** a diamond is drawn on the line between them
+
+#### Scenario: Two circled copies of a number share a row
+
+- **WHEN** two copies of a number in a row are circled
+- **THEN** each is drawn on a badge in the error color

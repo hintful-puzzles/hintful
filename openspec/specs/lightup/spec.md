@@ -42,32 +42,31 @@ every numbered wall has exactly that many orthogonally adjacent bulbs.
 
 ### Requirement: Rules: Light Up ships findMistakes
 
-The game SHALL implement `findMistakes(state)`: re-solve the clues to the
-unique solution and flag every player bulb on a square the solution leaves
-bulb-less (`kind: "light"`) and every impossible-mark sitting on a solution
-bulb position (`kind: "mark"`). A flagged square SHALL render with a distinct
-error overlay that repaints on the frame it is computed.
+`findMistakes` SHALL report every square the player filled with what the
+answer does not give it: a bulb where the answer has none, and a cross where
+it has a bulb. A square the player left open SHALL never be reported. A
+reported square SHALL be outlined when the check hands `redraw` its mistakes.
 
 #### Scenario: Check & Save flags a wrong bulb
 
 - **WHEN** `findMistakes` runs on a board with a bulb where the unique
   solution has none
-- **THEN** that square is returned as a mistake and rendered with the mistake
-  overlay on the next redraw
+- **THEN** that square is returned as a mistake and outlined on the next
+  redraw
 
 #### Scenario: A merely-unhelpful mark is not flagged
 
-- **WHEN** a mark sits on a square the solution leaves empty
+- **WHEN** a cross sits on a square the solution leaves without a bulb
 - **THEN** it is not reported as a mistake
 
 ### Requirement: Rules: Light Up renders with live error feedback
 
-The live errors SHALL be where the board breaks a rule (`Game.rules`). A
-numbered wall that can no longer have its bulbs SHALL sit on a disc in the
-full error color, which stands off a wall in both schemes, its digit in that
-color's text color. A bulb another bulb lights SHALL be a disc in the full
-error color. A cross on a square nothing can light any more SHALL be drawn
-in the error color.
+The live errors SHALL be where the board breaks a rule, as the fill engine
+marks them (`described-fill-game`). An open square a bulb lights SHALL be read
+as holding no bulb, whether or not it is crossed. A numbered wall that can no
+longer have its bulbs SHALL take the red badge. A bulb another bulb lights
+SHALL be a disc in the full error color. A cross on a square nothing can
+light any more SHALL be drawn in the error color.
 
 #### Scenario: Overlapping bulbs render as errors
 
@@ -80,6 +79,12 @@ in the error color.
 - **THEN** its number sits on a disc in the full error color, not that color's
   wash
 
+#### Scenario: A lit square starves a number
+
+- **WHEN** a numbered 2 has two open neighbors, and a bulb elsewhere lights one
+  of them
+- **THEN** the 2 takes the red badge, though neither square is crossed
+
 #### Scenario: A square nothing can light
 
 - **WHEN** a square and every square that could light it hold a cross
@@ -87,68 +92,51 @@ in the error color.
 
 ### Requirement: Params: Light Up's parameters
 
-Params SHALL be `w`, `h`, `blackpc` (the percentage of walls), `symm` (none,
-2-way mirror, 2-way rotational, 4-way mirror or 4-way rotational, in that
-order) and `difficulty` (Easy, Normal or Unreasonable). They SHALL be encoded
-`{w}x{h}b{blackpc}s{symm}d{difficulty}` in full, and `{w}x{h}` in the short
-form.
+Params SHALL be the fill engine's (`described-fill-game`): `w`, `h`, the
+tier, and the description's two options, the percentage of walls (`b`) and
+the symmetry (`s`: none, 2-way mirror, 2-way rotational, 4-way mirror or
+4-way rotational, in that order). They SHALL be encoded `{w}x{h}b{walls}s{symmetry}d{tier}`
+in full, the tier `0`, `1` or `2`, and `{w}x{h}` in the short form.
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ w: 10, h: 10, blackpc: 20, symm: ROT2, difficulty: 1 }`
-  are encoded in full
+- **WHEN** the params of a 10×10 Normal board with 20% walls and 2-way
+  rotational symmetry are encoded in full
 - **THEN** the result is `10x10b20s2d1` and decoding it round-trips the params
-
-### Requirement: Params: Light Up reads a params string that leaves a field out, and the legacy r
-
-A params string with no `d` SHALL decode as Easy, and one with no `b` as the
-default's 20% walls. A params string that names no symmetry SHALL keep the
-default's 4-way rotational symmetry, demoted to 2-way rotational when `w ≠ h`.
-The legacy `r` flag SHALL decode as difficulty 2.
-
-#### Scenario: Lenient decode quirks
-
-- **WHEN** `18x10` is decoded with defaults carrying 4-way-rotational symmetry
-- **THEN** the symmetry demotes to 2-way rotational
-- **AND** a params string using the legacy `r` suffix decodes as difficulty 2
-
-#### Scenario: The short form of a Normal preset
-
-- **WHEN** `10x10`, the short form of `10x10b20s2d1`, is decoded
-- **THEN** it is a 10×10 Easy board with 20% walls and 4-way rotational
-  symmetry
 
 ### Requirement: Params: Light Up's params are validated
 
-`validateParams` SHALL refuse, of full params, a `blackpc` outside 5 to 100,
-4-way rotational symmetry on a grid that is not square, either 4-way symmetry
-on a grid whose width and height are both below 3, and a board too small for
-the tier asked for.
+Validation SHALL refuse, of full params, a share of walls outside 5 to 100,
+4-way rotational symmetry on a grid that is not square, either 4-way
+symmetry on a grid whose longer side is below 3, and a board on which no
+puzzle of the tier is dealt: above Easy a 2×2; at Normal a board whose
+longer side is below 4 under a 4-way symmetry; and at Unreasonable a board of
+fewer than 9 squares, or one whose longer side is below 4 under any
+symmetry.
 
 #### Scenario: Invalid params are rejected
 
-- **WHEN** full params carry a `blackpc` outside 5 to 100, or 4-way rotational
-  symmetry on a non-square grid
+- **WHEN** full params carry a share of walls outside 5 to 100, or 4-way
+  rotational symmetry on a non-square grid
 - **THEN** they are refused with a non-null error string
 
 #### Scenario: 4-way mirror symmetry on a non-square grid
 
-- **WHEN** `validateParams` is given a 5×7 grid with 4-way mirror symmetry
-- **THEN** it does not refuse the symmetry
+- **WHEN** a 5×7 grid with 4-way mirror symmetry is validated
+- **THEN** the symmetry is not refused
 
 #### Scenario: A board too small for its tier
 
-- **WHEN** full params ask for a 2×2 above Easy, a 3×3 at Normal under a 4-way
-  symmetry, or at `Unreasonable` a board of fewer than 9 squares, a 3×3 under
-  any symmetry or a 4×4 under 4-way mirror symmetry
+- **WHEN** full params ask for a 2×2 above Easy, a 3×3 or 2×3 at Normal under
+  a 4-way symmetry, or at Unreasonable a board of fewer than 9 squares or a
+  3×3 under any symmetry
 - **THEN** they are refused, saying that no such puzzle is of that tier
 
 #### Scenario: A 4×4 turned four ways is dealt at Unreasonable
 
-- **WHEN** full params ask for an `Unreasonable` 4×4 with 4-way rotational
+- **WHEN** full params ask for an Unreasonable 4×4 with 4-way rotational
   symmetry
-- **THEN** they are not refused, since such boards exist and the deal's
-  deadline answers how long one takes
+- **THEN** they are not refused, and a board is dealt
 
 #### Scenario: A board too small for its tier arrives written
 
@@ -168,10 +156,10 @@ wall, and SHALL NOT call it a black square.
 ### Requirement: Params: A Light Up label names its walls and symmetry only when they are unusual
 
 The label of a set of params SHALL add `N% walls` after the tier only when
-`blackpc` is not 20. It SHALL add the symmetry only when it is not the usual
-one for the size: 4-way rotational on a square grid of fewer than 50 squares
-and 2-way rotational on any other. The symmetry SHALL read as its name in the
-Custom dialog, and as `no symmetry` for none.
+the share of walls is not 20. It SHALL add the symmetry only when it is not
+the usual one for the size: a preset board's own, and 2-way rotational on
+any other board. The symmetry SHALL read as its name in the Custom dialog,
+and as `no symmetry` for none.
 
 #### Scenario: A board with more walls and no symmetry
 
@@ -184,13 +172,31 @@ Custom dialog, and as `no symmetry` for none.
 - **THEN** they read "7x7 Easy" and "10x10 Normal"
 - **AND** `10x10b20s4d1` reads "10x10 Normal, 4-way rotational"
 
+### Requirement: Params: Light Up reads a params string that leaves a field out as the defaults
+
+A params string with no `d` SHALL decode as Easy, one with no `b` as 20%
+walls, and one with no `s` as 2-way rotational symmetry. The legacy `r` flag
+SHALL decode as Unreasonable.
+
+#### Scenario: Lenient decode
+
+- **WHEN** `18x10` is decoded
+- **THEN** it is an Easy board with 20% walls and 2-way rotational symmetry
+- **AND** `7x7b20s4r` decodes as Unreasonable
+
 ### Requirement: Description: Light Up descriptions use the upstream run-length encoding
 
-The desc SHALL encode the grid row-major, one character per wall
-(`B` unnumbered, `0`–`4` numbered) with the open squares between them in the
-engine's run letters (`engine-params`, "The engine provides the run-letter
-description grammar"). `validateDesc` SHALL reject unknown characters, short
-descs and over-long descs.
+The desc SHALL be the fill engine's `digits` segment with letters
+(`described-fill-game`) over the grid row-major: a digit `0` to `4` a
+numbered wall, `B` a wall with no number, and a letter a run of open
+squares, upstream's encoding. `validateDesc` SHALL reject unknown characters,
+short descs and over-long descs.
+
+#### Scenario: Upstream's description is read
+
+- **WHEN** `Ba1f0a0` is read for `3x4`
+- **THEN** the corners are walls, the top right numbered 1 and the bottom two
+  numbered 0, and the other squares are open
 
 #### Scenario: A description round-trips
 
@@ -213,45 +219,32 @@ Light Up's ladder SHALL be compiled from its description and SHALL apply at Easy
 - **THEN** the solver succeeds with the difficulty-`d` technique set and fails
   with the difficulty-`d−1` set
 
-### Requirement: Generation: Normal adds the overlapping-set discount
-
-At Normal and above the solver SHALL test every set of which one square must
-hold a bulb against candidate squares that would rule the whole set out,
-marking such a candidate impossible. A set SHALL come from an unlit square, or
-from each combination of `n−m+1` of a clue's `n` free neighbors where `m`
-bulbs are still owed. The cheap deductions SHALL restart after a pass of
-discounts that ruled a square out.
-
-#### Scenario: A clue owing one bulb among three neighbors
-
-- **WHEN** a clue has three free neighbors and one bulb still to place
-- **THEN** its one set is all three neighbors, and a candidate square is
-  marked impossible only when a bulb there would rule out all three
-
 ### Requirement: Generation: Light Up generates solver-gated boards
 
-The generator SHALL place walls symmetrically per the symmetry mode, SHALL
-number every wall from a correct set of bulbs, and SHALL accept the grid only
-when the solver solves it at the target difficulty. It SHALL then strip
-numbers, keeping each removal only while the puzzle stays good, and SHALL
-reject a board that is then still solvable one difficulty lower.
+A board SHALL be dealt by the fill engine from the description
+(`described-fill-game`): walls placed first at the share and symmetry asked
+for, then bulbs, each on a random square no bulb lights, with what the ladder
+decides from them, until every square is decided; every wall then numbered.
+The numbers SHALL be hidden, each kept hidden only while the ladder still
+finishes the board, at Easy first and then at each tier up to the board's,
+and a board the tier below finishes SHALL be dealt again.
 
 #### Scenario: A removal that breaks the puzzle is put back
 
-- **WHEN** removing a number leaves the board unsolvable at the target
-  difficulty
-- **THEN** the number is restored
+- **WHEN** hiding a number leaves the board one the ladder does not finish at
+  the tier being hidden at
+- **THEN** the number is shown again
 
 ### Requirement: Generation: The generator adds walls when no board turns up
 
-After 20 failed grids the generator SHALL add 5 to `blackpc` while it is below
-90, and SHALL start again from the percentage asked for once it is not.
+After every 20 draws the deal refuses, the share of walls SHALL go up 5,
+to at most 90, and once past it SHALL start again from the share asked for:
+the description's `ramp` (`described-fill-game`).
 
 #### Scenario: A ramp from 20% reaches the top
 
-- **WHEN** generation asked for at 20% walls has failed at every step up to
-  90%
-- **THEN** the next round of grids is built at 20% again
+- **WHEN** a deal asked for at 20% walls has refused every draw up to 90%
+- **THEN** the next draws are at 20% again
 
 ### Requirement: Generation: An Unreasonable Light Up board is one only the search beneath the ladder finishes
 
@@ -272,48 +265,33 @@ Solve, the hint's refusal and the mistake check SHALL know a board's answer from
 - **THEN** it returns a move that leaves the board correctly and completely
   lit
 
-### Requirement: Controls: Light Up accepts pointer and cursor input
+### Requirement: Controls: Light Up's controls are the fill engine's
 
-The left-click verb of Light Up's `targetVerbs` SHALL toggle a bulb on an open
-square that carries no mark, and the right-click verb the impossible-mark on
-one that carries no bulb. On a wall, or a square that holds the other, a verb
-SHALL make no move. Only the right-click verb SHALL be repeated by a drag,
-because a row of bulbs light each other.
+Light Up's controls SHALL be the fill engine's (`described-fill-game`): a
+left click SHALL toggle a bulb and a right click a cross, a click on a square
+holding the other SHALL empty it, and `L` SHALL place a bulb and `X` or `I` a
+cross. A right drag SHALL cross the squares it passes; a left drag SHALL
+place one bulb, where it began. A wall SHALL never change. A hand-written
+Light Up's save is not read.
 
 #### Scenario: Left-click places and toggles a bulb
 
 - **WHEN** the player left-clicks an empty open square, then left-clicks it
   again
-- **THEN** a bulb appears (lighting its row and column to the nearest walls)
+- **THEN** a bulb appears, lighting its row and column to the nearest walls,
   and then disappears
 
-#### Scenario: Marks block bulbs
+#### Scenario: A click on the other's mark empties the square
 
-- **WHEN** the player left-clicks a square carrying an impossible-mark
-- **THEN** no move is produced and no history entry is created
+- **WHEN** the player left-clicks a square carrying a cross
+- **THEN** the square is empty, and holds neither a bulb nor a cross
 
 #### Scenario: A right-drag crosses a row
 
 - **WHEN** the player right-drags across three empty open squares
-- **THEN** all three carry the impossible-mark
+- **THEN** all three carry a cross
 - **AND WHEN** the player left-drags across three empty open squares
 - **THEN** only the first holds a bulb
-
-#### Scenario: The keyboard is refused where the click is
-
-- **WHEN** the cursor is on a square carrying an impossible-mark and the
-  player presses Enter
-- **THEN** no move is produced and no history entry is created
-
-### Requirement: Controls: Completing a Light Up board hides the cursor
-
-Completing the board SHALL hide the keyboard cursor.
-
-#### Scenario: The last bulb is placed from the keyboard
-
-- **WHEN** the cursor shows on the one square still to take a bulb and Enter
-  places it, leaving the grid correct
-- **THEN** the board is solved and no cursor is drawn on it
 
 ### Requirement: Preferences: A bulb can bring the crosses a full wall rules out
 
@@ -391,63 +369,53 @@ and SHALL NOT leave the reader to supply it.
   outlined ones as a place the bulb could go, and does not attribute the whole
   set to the other outlined squares
 
-### Requirement: Hint: A Light Up hint target is ringed with no bulb or mark previewed
+### Requirement: Hint: Light Up draws a hint's evidence with the fill engine's marks
 
-Each target square SHALL be ringed `COL_HINT` at its edge with no bulb or mark
-preview, so that a bulb or a cross already on it stays visible. A bulb target
-and a mark target SHALL look identical: the narration says which action it is.
+A step SHALL ring the squares it decides and draw its evidence with the fill
+engine's hint marks (`described-fill-game`): the number or the dark square
+the step is about outlined apart, in the color of the words that name it,
+and the other squares its reason rests on outlined.
 
-#### Scenario: A target keeps its content
+#### Scenario: A forced light
 
-- **WHEN** a forced-light step is displayed
-- **THEN** the target square is ringed `COL_HINT` with its content un-obscured
-
-### Requirement: Hint: Light Up draws a hint's evidence by what it is
-
-An evidence square SHALL keep its fill, lit or not, which is its premise, and
-take a doubled ring in `COL_HINT_CELL`; so SHALL the unlit square the
-deduction is about. The driving clue SHALL keep its white digit and be ringed
-at its wall's edge in `COL_HINT_CELL`, with a line in the digit's white
-inside the ring.
-
-#### Scenario: Evidence is visible as an area
-
-- **WHEN** a forced-light step is displayed
-- **THEN** each square of the corridor it reasons over, other than the target
-  and the square the deduction is about, takes a doubled ring in
-  `COL_HINT_CELL` and no fill of a hint color
+- **WHEN** a step puts a bulb on the only square left that can light a dark
+  square
+- **THEN** the dark square is outlined apart, and the other squares that
+  could light it are outlined
 
 #### Scenario: A hint step's marks stay inside its evidence
 
 - **WHEN** any grouped clue step is displayed
 - **THEN** every target square lies within the narrated clue's neighbor set
 
-### Requirement: Hint: The Light Up hint carries on from its last step, by the rules in order
+### Requirement: Hint: The Light Up hint carries on from its last step, then column by column
 
-`hint` SHALL take, of the firings the ladder could make, the one that carries on from the squares its last step read and decided, and otherwise the first in the ladder's order: the squares column by column from the left, each column from the top, a forced light at an unlit square and a clue's count at a numbered wall, and only where none fires, the discounts. A discount that rules out several squares SHALL be taken as consecutive steps of one square each.
+The hint SHALL take, of the firings the ladder could make, the one that
+carries on from the squares its last step read and decided, and otherwise
+the first in the ladder's order: the squares column by column from the left,
+each column from the top. A square a bulb lights SHALL never be a step's: the
+wash already shows it holds no bulb.
 
-#### Scenario: A walled-in square comes before the clue beside it
+#### Scenario: The 1 beside the 4
 
 - **WHEN** a hint is asked for on the 7×7 board `c2mBc2a1a4aBc2m1c` with
   nothing placed, whose fourth row reads 2, open, 1, open, 4, open, wall
-- **THEN** the first step puts a bulb on the open square between the 1 and the
-  4, which has a wall above it and a clue below, as the only square that can
-  light it
+- **THEN** the first step puts a bulb on each of the 4's four neighbors
 - **AND** the second step is the 1 to its left, which now has its bulb and
   crosses out its other free neighbors
 
 ### Requirement: Look: Light Up draws walls, bulbs and light on the collection's quiet surface
 
 `redraw` SHALL draw an open square no bulb lights as the collection's cell
-surface, with the collection's surface grid line between squares and a frame
-round the grid no heavier than that line. A lit square SHALL keep its yellow
-wash. A wall SHALL be a solid block in the collection's wall color, over its
-whole tile, so that adjacent walls read as one block.
+surface. A square a bulb lights, its own included, SHALL be washed yellow,
+under a bulb or a cross. A wall SHALL be a solid block in the collection's
+wall color over its whole tile, grid lines included, so that adjacent walls
+read as one block, and a number on it SHALL be white in both schemes.
 
 #### Scenario: An unlit square is surface and a lit one is washed
 
 - **WHEN** a board with one bulb is drawn
-- **THEN** the squares the bulb lights are filled with the lit wash
+- **THEN** the bulb's square and the squares it lights are washed
 - **AND** every other open square is the cell surface
 
 ### Requirement: Look: A clue and a bulb are one white in both schemes
@@ -477,10 +445,10 @@ ruled-out cross. It SHALL be suppressed on a lit square when the
 
 ### Requirement: Look: Light Up's cursor and completion flash
 
-The keyboard cursor SHALL be brackets at the corners of its square, clear of a
-bulb. The completion flash SHALL light the open squares only: a lit square
-SHALL be filled with a flash color in place of its yellow and keep its bulb,
-and a wall SHALL never be lit.
+The keyboard cursor and the completion flash SHALL be the fill engine's
+(`described-fill-game`): brackets at the corners of the cursor's square, and
+a sweep from the bottom left. A wall SHALL be drawn as on any other frame
+while the flash passes.
 
 #### Scenario: The cursor on a bulb
 
@@ -491,5 +459,4 @@ and a wall SHALL never be lit.
 #### Scenario: A wall in the bottom-left corner
 
 - **WHEN** a board whose bottom-left square is a wall is won
-- **THEN** the flash sets off from the open squares nearest that corner, and
-  the wall is drawn as on any other frame
+- **THEN** the wall is drawn as on any other frame

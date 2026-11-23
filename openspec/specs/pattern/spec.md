@@ -187,67 +187,30 @@ SHALL overwrite the cell, so a deliberate click can change a mark.
 - **THEN** the cell moves to the same next state, and likewise a right-click and
   Space
 
-### Requirement: Controls: Pattern accepts drag-fill rectangle and cursor input
+### Requirement: Controls: A Pattern drag sweeps
 
-A drag SHALL snap to a single row or column, except a drag whose target state
-is `Unknown`, which erases a rectangle. A release SHALL change the squares of
-the dragged rectangle through one `fill` move. Immutable cells SHALL never be
-overwritten.
+A drag SHALL give every square it passes that held what the pressed square
+held what the pressed square became, so a drag never rewrites a square the
+player marked otherwise, and an undecided square's drag never erases.
 
-#### Scenario: A drag that changes cells emits a move
+#### Scenario: A drag over a marked square
 
-- **WHEN** the player left-drags from an `Unknown` cell across cells not all
-  already `Full`
-- **THEN** release emits a `fill` move setting the blank cells of that line to
-  `Full`
+- **WHEN** the player drags from an undecided square, which a press shades,
+  across a square they marked clear onto an undecided one
+- **THEN** both undecided squares are shaded and the clear one stays clear
 
-#### Scenario: A no-op drag produces no move
+### Requirement: Controls: Shift or Ctrl with a Pattern move marks clear the squares the cursor leaves and enters
 
-- **WHEN** the player drags over cells that are all immutable
-- **THEN** no history-affecting move is produced
+A cursor move with Shift held SHALL mark clear each undecided square it
+leaves and enters, and with Ctrl each of those squares that is not already
+clear, shaded ones included, as the fill engine's other games do.
 
-### Requirement: Controls: A multi-cell paint drag leaves placed marks
+#### Scenario: A Shift stroke crosses a shaded square
 
-A multi-cell paint drag, one whose value is `Full` or `Empty` and whose
-rectangle covers more than one cell, SHALL fill only cells currently `Unknown`,
-so dragging across the board never rewrites a mark the player already placed. A
-clear drag, whose value is `Unknown`, SHALL still reset marked cells. This
-SHALL be carried by an `onlyBlank` flag on the `fill` move, honored by
-`executeMove` and previewed consistently by `redraw`.
-
-#### Scenario: A multi-cell paint drag leaves placed marks
-
-- **WHEN** the player drag-paints a line that crosses a cell they have already
-  marked the opposite color
-- **THEN** that already-marked cell keeps its color and only the blank cells of
-  the line are painted
-
-### Requirement: Controls: Pattern's keyboard stroke paints as the pointer's drag does
-
-A cursor move with Ctrl held SHALL set the square it leaves and the square it
-reaches to `Full`, with Shift to `Empty` and with both to `Unknown`, through
-the same rectangle `fill` move. A stroke that paints SHALL carry `onlyBlank`,
-as the pointer's paint drag does and upstream's stroke does not; one that
-clears SHALL NOT.
-
-#### Scenario: A keyboard stroke crosses a marked square
-
-- **WHEN** the cursor is on a square the player has marked `Empty` and moves
-  with Ctrl held onto an `Unknown` square
-- **THEN** the `Unknown` square becomes `Full` and the marked square stays
-  `Empty`, as a pointer paint drag over the same two squares would leave them
-
-#### Scenario: A keyboard stroke over two marked squares makes no move
-
-- **WHEN** the cursor moves with Ctrl or Shift held, alone, between two squares
-  that are both already `Full` or `Empty`
-- **THEN** the cursor moves and no history-affecting move is produced
-
-#### Scenario: A clearing stroke resets marked squares
-
-- **WHEN** the cursor moves with Ctrl and Shift both held between two marked
-  squares
-- **THEN** both become `Unknown`
+- **WHEN** the cursor moves with Shift held from a shaded square onto an
+  undecided one
+- **THEN** the undecided square is marked clear and the shaded one stays
+  shaded
 
 ### Requirement: Hint: Pattern's hint stops where the lines do
 
@@ -301,44 +264,41 @@ one arrangement fits".
   line with no clues, or the single-line intersection bottom rung)
 - **AND** no step carries a generic "only one arrangement fits" explanation
 
-### Requirement: Hint: A Pattern run's overlap is shaded, and a cell no run reaches is clear
-
-A step SHALL take one unbroken stretch of undecided cells of one line that
-every fit of the line's runs around its marks agrees on, all shaded or all
-clear. With each run packed as far to one end of its line as the line's marks
-allow, and then to the other, a stretch every cell of which one run covers
-both ways SHALL be narrated as that run's overlap, and a stretch no run covers
-anywhere between its two placings as out of reach. Every cell of a line with
-no clues SHALL be clear.
-
-#### Scenario: A run with no room to slide
-
-- **WHEN** the hint's plan on the 10×10 board
-  `8/6.1/4.1.1.1/4.1/4.3/2/2/2.2/2.1.2/1.2/3.2/3.2/5/5/2.2/5/1.2/3.1/6/8`
-  is read
-- **THEN** its seventh step shades the top four cells of the third column,
-  saying "This column's run of 4 has nowhere to slide, so these cells must be
-  shaded."
-- **AND** its nineteenth clears the top three cells of the sixth column,
-  saying "No run of this column's outlined clue can reach the ringed cells,
-  so those cells must be clear."
-
 ### Requirement: Hint: Pattern's hint continues from its last step
 
 `hint` SHALL take, of every stretch the ladder could settle, the one that
 continues from the cells the latest steps decided, and otherwise the first in
-the ladder's order: the rows from the top, then the columns from the left,
-and on a line its shaded stretches before its clear ones.
+the ladder's order: the rows from the top, then the columns from the left.
 
 #### Scenario: The plan follows the cells it decides
 
 - **WHEN** the hint's plan is read on the 10×10 board
   `8/6.1/4.1.1.1/4.1/4.3/2/2/2.2/2.1.2/1.2/3.2/3.2/5/5/2.2/5/1.2/3.1/6/8`
 - **THEN** its first step is the ninth row's, "This row's run of 6 can slide
-  only 4 cells, so these cells must be shaded.", the first row any run's
+  only 4 squares, so these squares must be shaded.", the first row any run's
   overlap reaches
-- **AND** its second is the fifth column's, which holds one of the cells the
-  first step shaded
+- **AND** its second is the fifth column's, which holds one of the squares
+  the first step shaded
+
+### Requirement: Hint: A Pattern run's overlap is shaded, and a square no run reaches is clear
+
+A step SHALL take one unbroken stretch of undecided squares of one line that
+every fit of the line's runs around its marks agrees on. A stretch one run
+covers packed either way SHALL be told as that run's slack, with the marked
+squares that hold it outlined, a stretch no run reaches as out of reach, and
+a line with no clues as all clear.
+
+#### Scenario: A run with no room to slide
+
+- **WHEN** the hint's plan on the 10×10 board
+  `8/6.1/4.1.1.1/4.1/4.3/2/2/2.2/2.1.2/1.2/3.2/3.2/5/5/2.2/5/1.2/3.1/6/8`
+  is read
+- **THEN** its seventh step shades the top four squares of the third column,
+  saying "This column's run of 4 has nowhere to slide, so these squares must
+  be shaded."
+- **AND** its nineteenth clears the top three squares of the sixth column,
+  saying "No run of this column can reach the ringed squares, so those
+  squares must be clear."
 
 ### Requirement: Look: Pattern doubles every fifth grid line, and its frame is one line thick
 
@@ -366,3 +326,15 @@ nothing.
   `Empty` cell is filled with the clear square's color and holds a cross in
   the square's faint color about its middle, and the `Unknown` cell is plain
   surface and holds nothing
+
+### Requirement: Look: Pattern's step stripes its line through the line's numbers
+
+A hint step SHALL stripe the row or column it reasons on, running on through
+that line's numbers in the margin, and the numbers SHALL stay in the ink's
+color, the error color, or the cursor's where the cursor is on the line.
+
+#### Scenario: A row's overlap
+
+- **WHEN** a step on a row's overlap is shown
+- **THEN** the row and its numbers are striped, and the squares it shades
+  are ringed

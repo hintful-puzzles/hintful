@@ -44,15 +44,15 @@ empty SHALL count as not shaded and SHALL NOT hold completion back.
 
 ### Requirement: Rules: Bricks' findMistakes reports a broken rule and a cell the answer contradicts
 
-`findMistakes` SHALL report every cell the rule pass flags and, on a board the
-solver finishes from its clues, every cell shaded or ruled out against that
-answer. A brick or a cross the answer contradicts SHALL be drawn in the error
-color when the check hands `redraw` its mistakes, beside the rule marks.
+`findMistakes` SHALL report every cell shaded or ruled out against the
+board's answer; a broken rule always holds one, since the board has one. A
+brick or a cross the answer contradicts SHALL be drawn in the error color
+when the check hands `redraw` its mistakes, beside the rule marks.
 
 #### Scenario: A rule violation is reported
 
 - **WHEN** the grid contains a rule violation and the player invokes Check & Save
-- **THEN** `findMistakes` reports the offending cells
+- **THEN** `findMistakes` reports a cell of it that the answer contradicts
 
 #### Scenario: A wrong cross that breaks no rule
 
@@ -77,39 +77,30 @@ which has no board of that tier.
 - **THEN** it is refused with "No 2x2 puzzle is Unreasonable.", and a 2×3 at
   the same tier is dealt
 
-### Requirement: Params: The undeclared Bricks tier still loads and is never dealt
-
-A full (generation-capable) parameter set carrying the undeclared tier,
-upstream's third, SHALL be refused with a message that lists the tiers that do
-exist: the tier refused has no name to give.
-
-#### Scenario: The undeclared tier is not generated
-
-- **WHEN** a full parameter set requesting the depth-2 tier is validated
-- **THEN** it is rejected with "Difficulty must be one of Easy, Unreasonable."
-- **AND** the same parameters validate successfully when a description is
-  supplied rather than generated
-
-#### Scenario: The generator refuses rather than exhausts its retries
-
-- **WHEN** the generator is called at that tier anyway
-- **THEN** it fails immediately, rather than rejecting candidates until its retry
-  budget is spent
-
 ### Requirement: Params: A Bricks params string may leave out its difficulty
 
 Bricks' params, their bounds and their encoding SHALL be those its
-`paramConfig` and its declared codec give (`engine-params`, "A game declares
-its params encoding once, and both codec halves are derived"), and its menu
-what `presets` lists. A string with no `d` SHALL decode as Easy. The
-difficulty letters SHALL stay upstream's, `n` for `Unreasonable` and `t` for
-the undeclared tier, so that an existing game ID names the same board.
+description declares (`described-fill-game`), and its menu its boards. A
+string with no `d` SHALL decode as Easy. The difficulty letters SHALL stay
+upstream's, `e` and `n` for `Unreasonable`, so that an existing game ID
+names the same board.
 
 #### Scenario: The Unreasonable preset
 
 - **WHEN** `6x7dn` is decoded
 - **THEN** it is the 6×7 `Unreasonable` board
 - **AND** its shared encoding is `6x7`, which decodes as Easy
+
+### Requirement: Params: Bricks reads upstream's Tricky as Unreasonable
+
+The letter `t`, upstream's third tier, which dealt only boards its Normal
+does, SHALL be read as `Unreasonable` and never written, so an ID carrying
+it opens and a params string carrying it deals.
+
+#### Scenario: A Tricky board upstream dealt
+
+- **WHEN** `7x6dt:ga6c3ac3a2af3_0_3b2_4ag` is opened
+- **THEN** it is the 7×6 Unreasonable board, and Solve finishes it
 
 ### Requirement: Description: Bricks descriptions use the run-length cell encoding
 
@@ -140,9 +131,10 @@ value out of range.
 
 Between two numbers with no blank cell between them a description SHALL hold
 `_`. A letter SHALL count from `a` for one blank cell to `z` for twenty-six,
-and `newState` SHALL read a run however it is split into letters. A number
-SHALL be from 0 to 7, and a 7 SHALL be a cell that cannot be shaded and
-counts nothing, drawn as `?`.
+`newState` SHALL read a run however it is split into letters, and a run
+written SHALL end at a corner of the hexagon, as upstream's does. A number
+SHALL be from 0 to 7, and a 7 SHALL be a hole: a given cell that cannot be
+shaded and counts nothing, drawn clear with no number.
 
 #### Scenario: A dealt 6×7 board
 
@@ -166,24 +158,18 @@ Bricks SHALL offer two tiers, Easy and `Unreasonable`. An Easy board SHALL be on
 - **THEN** the search finds it one answer
 - **AND** the ladder does not finish it
 
-### Requirement: Generation: The Bricks generator solves the fully numbered board before it removes a number
+### Requirement: Generation: Bricks builds its wall row by row from the bottom
 
-Before it removes any number the generator SHALL solve the fully numbered
-board, and SHALL start again when that solve does not complete: the numbering
-made after the Easy solve can take away the brick another brick rests on, and
-removing numbers cannot repair a board that does not solve.
+The deal SHALL lay the answer row by row from the bottom, each cell a brick
+two times in three where the rules still allow one, and SHALL draw again
+where fewer than two in five cells are bricks. The numbers are those on its
+clear cells, as many hidden as the board stays at its tier.
 
-#### Scenario: A board two squares wide loads from its own ID
+#### Scenario: Each tier at the smallest widths
 
-- **WHEN** a board is dealt at a width of two and a height of four or more, at
-  either difficulty
-- **THEN** the solver completes it at that difficulty
-- **AND** loading the board's game ID is accepted
-
-#### Scenario: A board at the smallest height loads from its own ID
-
-- **WHEN** a board is dealt at a height of two
-- **THEN** loading the board's game ID is accepted
+- **WHEN** boards are dealt at 2×3 and 3×2 Unreasonable and 2×10 Easy
+- **THEN** each has one answer, two in five of its cells bricks or more, and
+  opens at its tier from its own ID
 
 ### Requirement: Solver: The Bricks solver places cells by contradiction
 
@@ -213,9 +199,10 @@ Solve, the hint's refusal and the mistake check SHALL know a board's answer from
 
 ### Requirement: Controls: Bricks cells cycle by a click or a drag
 
-Bricks SHALL take its clicks and its keys from its `targetVerbs` declaration.
-The drag is the game's own: it SHALL paint the cells it crosses in one move. A
-numbered cell SHALL never be shadeable.
+Bricks SHALL take its clicks, its keys and its drag from its description's
+`play`: a click cycles a cell round empty, shaded and clear, the right
+button the other way, 1 shades and 0 or 2 marks clear, and a drag paints
+the cells it crosses in one move. A numbered cell SHALL never be shadeable.
 
 #### Scenario: Dragging paints a run of cells
 
@@ -235,18 +222,6 @@ pad, so of its digits only 0 paints.
 - **THEN** one of the two steps keeps its column in the stored grid and the other
   changes it
 
-### Requirement: Controls: Ctrl or Shift with a Bricks move paints the cells the cursor leaves and enters
-
-Ctrl with a move SHALL shade the cell the cursor leaves and the one it enters,
-Shift mark them clear, and both together empty them; a numbered cell among
-them is left as it is.
-
-#### Scenario: Ctrl with an arrow shades two cells
-
-- **WHEN** the cursor is on an empty cell with an empty cell to its right, and
-  the player presses Ctrl with Right
-- **THEN** one move shades both cells
-
 ### Requirement: Controls: Ctrl or Shift with a Bricks move that paints nothing makes no move
 
 Ctrl or Shift with a move SHALL name in its move only cells that take a color
@@ -260,6 +235,19 @@ where it did not.
   pressed with the arrow that points off the board
 - **THEN** the game declines the key, and the board and the cursor are as
   they were
+
+### Requirement: Controls: Shift or Ctrl with a Bricks move marks clear the cells the cursor leaves and enters
+
+Shift with a move SHALL mark clear each empty cell of the two the cursor
+leaves and enters, and Ctrl each shaded one as well; a numbered cell among
+them is left as it is. A move on the number pad SHALL stroke as an arrow
+does.
+
+#### Scenario: Ctrl with the pad's 7
+
+- **WHEN** the cursor is on an empty cell with an empty cell above it, and
+  the player presses Ctrl with the pad's 7
+- **THEN** the cursor moves up and both cells are marked clear
 
 ### Requirement: Hint: A Bricks hint step explains why the move is forced
 
@@ -315,21 +303,38 @@ Every hint step SHALL give as its reason the technique that forced its cell, and
 - **WHEN** hint plans are recorded over dealt boards replayed from shares of their answers
 - **THEN** each of the five techniques gives some step its reason
 
-### Requirement: Hint: The Bricks hint carries on from its last step, by the rules in order
+### Requirement: Hint: The Bricks hint carries on from its last step, then by its rules
 
-`hint` SHALL take, of the firings the ladder could make, the one that carries on from the cells its last step read and decided, and otherwise the first by its rule: a shaded brick stranded, a number left short, three in a row, a brick resting on nothing, a number given too many. A firing that forces several cells SHALL be taken as consecutive steps of one cell each: clockwise round the number or brick it reasons from, and left to right along a row.
+The hint SHALL take, of the firings the ladder could make, the one that
+carries on from the cells its last step read and decided, and otherwise
+the first by its rule: a shaded brick stranded, a number left short, three
+in a row, a brick resting on nothing, a number given too many.
 
-#### Scenario: A number with all its bricks
+#### Scenario: A dealt board's first steps
 
-- **WHEN** a hint is asked for where a number has all its shaded neighbors and three of its neighbors are empty, and no other rule forces a cell
-- **THEN** the next three steps clear those three cells clockwise from above, each by that number
+- **WHEN** a hint is asked for on the 4×4 board `2b1c0c2_2b1` with no cell
+  decided
+- **THEN** the first step shades the cell right of the top-left 2, since the
+  2 cannot reach its count without it
+- **AND** the next shades the cell beneath it, by the same 2
+
+### Requirement: Status bar: The Bricks status bar counts the numbers left
+
+The status bar SHALL read `Clues left: {n}`, counting the shown numbers with
+a neighbor still undecided or a count broken, and SHALL be empty once none
+is left.
+
+#### Scenario: A board as dealt, and solved
+
+- **WHEN** upstream's 7×6 Easy board `2c1_3ab0c2_3fb2_2a5a3fb2a2a2` is
+  opened, and then solved
+- **THEN** the status bar reads "Clues left: 13", and then is empty
 
 ### Requirement: Look: Bricks draws its marks beside the piece
 
 The keyboard cursor and both of a hint's rings SHALL be drawn in the margin a
-piece leaves round itself, so none lands on a piece. A gravity mark, which
-straddles the edge between two cells, SHALL carry a rim that parts it from the
-pieces it overlaps.
+piece leaves round itself, so none lands on a piece, on the cell's sheared
+place.
 
 #### Scenario: A ring on a shaded cell leaves the piece whole
 
@@ -358,20 +363,13 @@ the lifted surface of a given. No cell SHALL carry a bevel.
 - **WHEN** a board is drawn
 - **THEN** each numbered cell is the lifted surface, and no other cell is
 
-### Requirement: Look: Bricks draws in red where the board breaks a rule
+### Requirement: Look: Bricks marks a broken rule as the fill engine does
 
 A rule violation SHALL be marked on the board, always and with no mistake
-check asked for (`Game.rules`), as every game marks one: a bar over three or
-more shaded cells in a row, an error diamond under a shaded cell that can
-rest on nothing, both squares beneath it clear, a number or the board's edge,
-and in the error color the number of a clue that can no longer count its
-bricks. While a drag is in flight the marks SHALL be those of the board the
-drag previews.
-
-#### Scenario: A drag shows the row it is about to make
-
-- **WHEN** a drag in flight previews three shaded cells in a row
-- **THEN** the bar is drawn over them before the drag is released
+check asked for (`Game.rules`): a bar over three shaded cells in a row, a
+shaded cell that can rest on nothing in the error color, and the number of a
+clue that can no longer count its bricks in the error color. While a drag is
+in flight the marks SHALL be those of the board the drag previews.
 
 #### Scenario: A committed row of three is marked at once
 
@@ -382,4 +380,4 @@ drag previews.
 
 - **WHEN** a shaded cell has one square beneath it still empty and the other
   clear
-- **THEN** no diamond is drawn under it
+- **THEN** it is drawn in its own color
