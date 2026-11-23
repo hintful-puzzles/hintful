@@ -195,7 +195,6 @@ deal:
       ramp: { every: 20, step: 5, top: 90 }
     build: { value: 1 }
   hide: number
-  leaves: wall
   # An Unreasonable board is stripped from every number, as the hand-written
   # generator stripped every one. Hidden first at the lowest tier that
   # finishes it, thirty deals each of the 12x16 and the 10x10 took 7.8 s of

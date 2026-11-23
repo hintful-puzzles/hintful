@@ -54,6 +54,11 @@ a game's tests to data instead of each inventing part of the format.
 ### Modified Capabilities
 
 - `testing`: a born game's tests are data the engine reads.
+- `described-fill-game`: `deal.leaves` is retired. A fixture could not see
+  it, and neither could Light Up, its one game: the answer deals the bare
+  wall on every wall, and the game ID writes a numbered wall as its number,
+  so all 45 deals tried came out the same with it or without it
+  (2026-11-23).
 
 ## Impact
 

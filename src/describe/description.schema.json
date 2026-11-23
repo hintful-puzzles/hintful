@@ -1333,10 +1333,6 @@
               "additionalProperties": { "type": "string" },
               "description": "By clue kind at cells, a formula of `at` giving the cells it is the one clue of: the deal shows one in each such group, at a random member, valued as its meaning holds with it the only clue of its kind (Sticks' number, one on each line). Its meaning may then read its own kind's clues."
             },
-            "leaves": {
-              "type": "string",
-              "description": "A one-valued clue kind at cells that `hide`'s clue sits over: it is dealt only where no clue of `hide`'s is shown, so a clue hidden leaves it at its cell (Light Up's wall, under its number)."
-            },
             "options": {
               "type": "object",
               "description": "Settings the params give that only the deal reads, by name, each written in a full game ID as its letter and a number: a number from `min` to `max`, or with `choices` the index of one, each choice with its `bounds` on the board's size, of which `square` asks a square board, and its `words` in a board's name. Neither is offered on the preset menu but as a board names it after its `WxH` (`7x7s4`).",

@@ -41,13 +41,10 @@ const FIXTURES = Object.entries(fixtureTexts).map(([key, text]) => ({
 const NO_FIXTURE_YET: readonly string[] = [
   "deal.grow",
   "deal.latin",
-  "deal.leaves",
   "deal.never",
   "deal.oneIn",
-  "deal.options",
   "deal.sample.climb",
   "deal.sample.dominoes",
-  "deal.sample.first",
   "deal.sample.mend",
   "deal.sample.picture",
   "deal.stripFrom",

@@ -710,42 +710,25 @@ function keepingAll<C extends Clues<C>>(
       k as keyof C,
       of.map((i) => i - offsets[n]),
       sp[deal.universes[k]].length,
-      n === 0 ? (deal.leaves as keyof C | undefined) : undefined,
     );
   }
   return kept;
 }
 
 /** The clues with only the clues `shown` of kind `kind`, by their indices
- * in its list. Where kind `leaves` lies under `kind` (`deal.leaves`), it is
- * dealt on each cell a clue of `kind` is hidden from, and on none it is shown
- * on. */
+ * in its list. */
 function keepingOf<C extends Clues<C>>(
   clues: C,
   kind: keyof C,
   shown: readonly number[],
   elements: number,
-  leaves?: keyof C,
 ): C {
   const all = clues[kind] as ClueList;
-  const kept = {
+  return {
     ...clues,
     [kind]: clueList(
       shown.map((i) => all.at[i]),
       shown.map((i) => all.v[i]),
-      elements,
-    ),
-  };
-  if (leaves === undefined) return kept;
-  const on = new Set(shown.map((i) => all.at[i]));
-  const under = [...(clues[leaves] as ClueList).at, ...all.at]
-    .filter((c, i, cs) => !on.has(c) && cs.indexOf(c) === i)
-    .sort((a, b) => a - b);
-  return {
-    ...kept,
-    [leaves]: clueList(
-      under,
-      under.map(() => 0),
       elements,
     ),
   };

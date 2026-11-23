@@ -3,12 +3,14 @@
  * that the params give and the rules read, its rulesets as the Custom
  * dialog's game mode with the narrowest board each has an answer on, and the
  * bounds the board and a tier keep beyond the sizes'. On the `fleet` fixture,
- * a tally of pieces the params give, and the flag that hides more clues.
+ * a tally of pieces the params give, and the flag that hides more clues; on
+ * `walling`, options only the deal reads.
  */
 
 import { describe, expect, it } from "vitest";
 import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
+import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import { type FillParams, tallyClue } from "./game-id.ts";
@@ -156,5 +158,48 @@ describe("a flag that hides more clues", () => {
     expect(flag.get(p)).toBe(true);
     flag.set(p, false);
     expect(p.hides).toBe(false);
+  });
+});
+
+describe("options only the deal reads", () => {
+  const wallingGame = fillGame("walling", walling);
+  const p = (w: number, h: number, walls: number, symmetry: number): FillParams => ({
+    w,
+    h,
+    diff: 0,
+    options: { walls, symmetry },
+  });
+
+  it("are written by their letters in a full ID alone, their defaults where absent", () => {
+    expect(wallingGame.encodeParams(p(6, 6, 30, 1), true)).toBe("6x6b30s1de");
+    expect(wallingGame.encodeParams(p(6, 6, 30, 1), false)).toBe("6x6");
+    expect(wallingGame.decodeParams("6x6b30s1")).toEqual(p(6, 6, 30, 1));
+    expect(wallingGame.decodeParams("6x6")).toEqual(p(6, 6, 20, 2));
+  });
+
+  it("are the Custom dialog's: a number, and a choice by its name", () => {
+    const q = p(6, 6, 20, 2);
+    const share = wallingGame.paramConfig.find((i) => i.name === "%age of walls");
+    const symmetry = wallingGame.paramConfig.find((i) => i.name === "Symmetry");
+    if (share?.type !== "string" || symmetry?.type !== "choices")
+      throw new Error("no options");
+    share.set(q, "45");
+    symmetry.set(q, 3);
+    expect(q.options).toEqual({ walls: 45, symmetry: 3 });
+    expect(symmetry.choices).toEqual([
+      "None",
+      "2-way mirror",
+      "2-way rotational",
+      "4-way mirror",
+      "4-way rotational",
+    ]);
+  });
+
+  it("refuse a number past its bounds, and a choice the board's shape does not allow", () => {
+    const no = (q: FillParams) => refusal(q, wallingGame);
+    expect(no(p(6, 6, 4, 2))).toBe("%age of walls must be between 5 and 100.");
+    expect(no(p(6, 5, 20, 4))).toBe("4-way rotational: the grid must be square.");
+    expect(no(p(6, 5, 20, 3))).toBeNull();
+    expect(no(p(6, 6, 20, 4))).toBeNull();
   });
 });

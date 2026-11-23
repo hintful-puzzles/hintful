@@ -3,16 +3,21 @@
  * beside each piece and draws again an answer that leaves a line bare, and a
  * dealt board finishes at its tier and not below. On the `sizing` fixture, an
  * answer is laid a line at a time, as many in each as the params' size says.
- * Upstream's game ID grammar
- * is each game's own cases' (`tents.cases.yaml`'s `ids` and `params`).
+ * On `fleet`, a piece at a time as a tally says, a value no deal gives and a
+ * flag that hides more; on `walling`, walls laid first at an option's share
+ * and symmetry, each left where its number is hidden. Upstream's game ID
+ * grammar is each game's own cases' (`tents.cases.yaml`'s `ids` and
+ * `params`).
  */
 
 import { describe, expect, it } from "vitest";
 import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
+import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { descValue } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
+import { partners } from "../testing/symmetry-partners.ts";
 import { newBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, givenOf } from "./game-id.ts";
@@ -206,5 +211,50 @@ describe("an answer laid a piece at a time", () => {
       expect(shown(false, seed)).toBe(sp.lines.length);
       expect(shown(true, seed)).toBeLessThan(sp.lines.length);
     }
+  });
+});
+
+describe("walls laid first, at the share and the symmetry the options give", () => {
+  const W = 6;
+  const sp = spaceOf(walling, { w: W, h: W });
+  /** A board dealt with `options`, its clues as read back and its answer. */
+  const dealt = (options: Record<string, number>, seed: string) => {
+    const p = { w: W, h: W, diff: 0, options };
+    const { desc, aux } = dealFill(walling, walling.deal, p, randomNew(seed));
+    const clues = descValue(
+      decodeDesc<walling.Dealt>(walling.deal, sp, walling.clueMax, desc),
+    );
+    const solved = solveBoard(walling, newBoard(walling, W, W, clues), 0);
+    expect(solved.verdict).toBe("solved");
+    expect(Array.from(solved.values, (v) => v.toString(36)).join("")).toBe(aux);
+    const walls = sp.cells.filter((c) => aux[c] === "3");
+    return { clues, walls };
+  };
+
+  it("matches each wall at each symmetry", () => {
+    for (const symmetry of [0, 1, 2, 3, 4]) {
+      const { walls } = dealt({ walls: 20, symmetry }, `symmetry-${symmetry}`);
+      expect(walls.length).toBeGreaterThan(0);
+      for (const c of walls)
+        for (const q of partners(symmetry, W, W, c % W, Math.floor(c / W)))
+          expect(walls).toContain(q);
+    }
+  });
+
+  it("lays more walls at a higher share", () => {
+    const at = (walls: number) =>
+      dealt({ walls, symmetry: 0 }, `share-${walls}`).walls.length;
+    expect(at(10)).toBeLessThan(at(50));
+  });
+
+  it("writes a bare wall where its number is hidden, and only there", () => {
+    let left = 0;
+    for (const seed of ["leaves-a", "leaves-b", "leaves-c"]) {
+      const { clues, walls } = dealt({ walls: 30, symmetry: 2 }, seed);
+      const marked = [...clues.wall.at, ...clues.number.at].sort((a, b) => a - b);
+      expect(marked).toEqual(walls);
+      left += clues.wall.at.length;
+    }
+    expect(left).toBeGreaterThan(0);
   });
 });

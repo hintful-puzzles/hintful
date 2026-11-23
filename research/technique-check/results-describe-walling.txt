@@ -1,0 +1,9 @@
+ok  walling    beside                         3  sound    (want sound   )     9 queries    0.1s
+ok  walling    beside (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/walling/walling.description.yaml#beside: recorded sound, proved whole on all 1 boards
+ok  walling    met                            3  sound    (want sound   )     9 queries    0.0s
+ok  walling    met (planted)                  3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/walling/walling.description.yaml#met: recorded sound, proved whole on all 1 boards
+ok  walling    room                           3  sound    (want sound   )     9 queries    0.1s
+ok  walling    room (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/walling/walling.description.yaml#room: recorded sound, proved whole on all 1 boards

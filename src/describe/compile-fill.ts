@@ -773,15 +773,6 @@ export function dealOf(
         "deal sample: first cells are kept by a scatter of `each` that does not climb",
       );
   }
-  const leaves = json.deal?.["leaves"];
-  if (leaves !== undefined) {
-    if (typeof leaves !== "string" || !isMarker(leaves))
-      throw new CompileError(
-        `deal leaves: ${String(leaves)} is no cell's one-valued marker`,
-      );
-    if (!hides)
-      throw new CompileError("deal leaves: what a hidden clue leaves, and no hide");
-  }
   const options = optionsJsonOf(json, tiers, [
     ...settings.map((s) => s.letter),
     ...(thorough === null ? [] : [thorough.letter]),
@@ -824,7 +815,6 @@ export function dealOf(
     sample,
     ...(hides ? { hide } : {}),
     ...(stripFrom === undefined ? {} : { stripFrom }),
-    ...(typeof leaves === "string" ? { leaves } : {}),
     ...present("tierFlag", tierFlag),
     ...present("tierAliases", tierAliases),
     ...(typeof unpair === "string" ? { unpair } : {}),

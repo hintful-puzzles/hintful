@@ -5,45 +5,19 @@
  * Light Up's and Sticks' walls). For every born game whose compiled deal
  * declares either, each board dealt at its presets, and at each symmetry its
  * option offers on the first preset, has every such cell's partners too.
- *
- * The partners are written here from the geometry, apart from the
- * generator's copy (`engine/generate/symmetric-blacks.ts`), so a wrong copy
- * fails rather than agreeing with itself.
  */
 import { describe, expect, it } from "vitest";
 import { paramsError } from "../engine/game-id/params.ts";
 import { BORN_GAMES } from "../engine/testing/born-games.ts";
 import { dealt } from "../engine/testing/dealt.ts";
 import { leafPresets } from "../engine/testing/presets.ts";
+import { partners } from "../engine/testing/symmetry-partners.ts";
 
 interface DealShape {
   readonly hide?: string;
   readonly symmetric?: "halfTurn";
   readonly sample?: { readonly first?: { value: number; symmetry: string } };
   readonly options?: Readonly<Record<string, { default: number }>>;
-}
-
-/** The cells a cell at (x, y) of a w by h board must be matched by under
- * upstream's symmetry `symm` (`SYMM_*`: none, 2-way mirror, 2-way rotational,
- * 4-way mirror, 4-way rotational). */
-function partners(symm: number, w: number, h: number, x: number, y: number): number[] {
-  const at = ([px, py]: [number, number]) => py * w + px;
-  const flipV: [number, number] = [x, h - 1 - y];
-  const half: [number, number] = [w - 1 - x, h - 1 - y];
-  switch (symm) {
-    case 0:
-      return [];
-    case 1:
-      return [at(flipV)];
-    case 2:
-      return [at(half)];
-    case 3:
-      return [at(flipV), at([w - 1 - x, y]), at(half)];
-    case 4:
-      return [at([w - 1 - y, x]), at(half), at([y, h - 1 - x])];
-    default:
-      throw new Error(`no symmetry ${symm}`);
-  }
 }
 
 type Params = { w: number; h: number; options?: Readonly<Record<string, number>> };

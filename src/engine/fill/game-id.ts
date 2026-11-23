@@ -170,9 +170,6 @@ export interface FillDeal {
   /** Where a search tier's strip starts every draw: from every clue, not
    * from a board of the lowest tier one draw in eight (Sticks'). */
   readonly stripFrom?: "everyClue";
-  /** The one-valued kind at cells that `hide`'s clue sits over: dealt where
-   * none of `hide`'s is shown, so a clue hidden leaves it. */
-  readonly leaves?: string;
   /** A bare letter older IDs write for a tier, by its index: read, never
    * written. */
   readonly tierFlag?: { readonly letter: string; readonly tier: number };

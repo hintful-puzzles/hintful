@@ -152,14 +152,22 @@
                   flag's hide and a given's shape in the painter each
                   planted off; without `shape` the compiler refuses the
                   fixture, its kind read as a number of no cells.
-            - [ ] Next: the 18 left in `NO_FIXTURE_YET`, grouped by what
+            - [x] `walling`: `deal.options` and `deal.sample.first`, walls
+                  laid first at an option's share and symmetry
+                  (`game-id.test.ts`, `deal.test.ts`; the symmetry's
+                  partners now `testing/symmetry-partners.ts`, shared with
+                  `dealt-symmetry.test.ts`). Seen to fail with an option
+                  read as its default and the symmetry planted off.
+                  `deal.leaves` is retired, not covered: planted off it
+                  failed nothing, and Light Up dealt the same 45 boards
+                  without it (proposal.md § "Capabilities").
+            - [ ] Next: the 15 left in `NO_FIXTURE_YET`, grouped by what
                   one board can show: the deal's (`grow`, `latin`,
-                  `leaves`, `never`, `oneIn`, `options`, `stripFrom`,
-                  `symmetric`, `thorough`, `unpair`, and `sample`'s
-                  `climb`, `dominoes`, `first`, `mend`, `picture`), and
-                  `produces: links`, `space.grid.hexagon`,
-                  `space.regions`. One of walls (`first`, `leaves`,
-                  `stripFrom`, `symmetric`, `options`) would take several.
+                  `never`, `oneIn`, `stripFrom`, `symmetric`, `thorough`,
+                  `unpair`, and `sample`'s `climb`, `dominoes`, `mend`,
+                  `picture`), and `produces: links`, `space.grid.hexagon`,
+                  `space.regions`. `stripFrom` changes only which draw a
+                  strip starts from, so its test needs a way to see that.
 
 ## 4. The born games
 

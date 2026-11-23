@@ -287,9 +287,10 @@ research tools all read through it; the app never does.
   an answer that breaks a rule, and a tier higher after each that does),
   and `first` lays another first on a share of the cells, as symmetric as an
   option asks (Light Up's walls, `engine/generate/symmetric-blacks.ts`), its
-  `ramp` raising the share as draws are refused. `deal.leaves` names the
-  kind a hidden clue leaves on its cell (a numbered wall's bare wall), which
-  `digits`' `letters` writes as a capital. `play.wash` washes each open cell
+  `ramp` raising the share as draws are refused. A one-valued marker under a
+  number (a numbered wall's bare wall) needs no word: the answer deals it on
+  every such cell, and `digits` writes the number where one is shown and the
+  marker's capital (`letters`) where it is hidden. `play.wash` washes each open cell
   its formula holds of: drawn under its piece, read as the secondary value
   by the rules, left open by Solve and never a hint's step, with a
   preference for drawing a secondary piece there. A technique run on

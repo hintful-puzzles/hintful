@@ -1,0 +1,132 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: walls dealt first on a share of the board, as
+# symmetric as asked, numbers on walls counting the shaded squares beside
+# them, and shaded squares none side by side, for the fill engine's tests of
+# options only the deal reads, cells laid first at an option's share and
+# symmetry, and a wall left where its number is hidden, on a description
+# that names no game.
+game: walling
+produces: shading
+sizes:
+  w: { min: 2, max: 9 }
+  h: { min: 2, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 is a shaded square, 2 a crossed one, and 3 a wall.
+  value:
+    sort: cell
+    domain: "{d in range(1, 3) where (d = 3 and not floor(c)) or (d < 3 and floor(c))}"
+define:
+  floor(c): "clue(wall, c) < 0 and clue(number, c) < 0"
+  shaded(k): "count(p in adj4(k) where value(p) = 1)"
+  open(k): "{p in adj4(k) where floor(p) and not known(p)}"
+shape:
+  - "forall c in cells, x in adj4(c): not (value(c) = 1 and value(x) = 1)"
+clues:
+  # A wall that shows no number.
+  wall:
+    at: cell
+    value: "range(0, 0)"
+    means: "value(at) = 3"
+  # A numbered wall, with as many shaded squares beside it.
+  number:
+    at: cell
+    value: "range(0, 4)"
+    means: "value(at) = 3 and count(p in adj4(at) where value(p) = 1) = v"
+  # A square the board is dealt holding.
+  given:
+    at: cell
+    value: "range(1, 2)"
+    means: "value(at) = v"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  given:
+    3: { glyph: "[#]", paint: wall }
+  primary: 1
+  secondary: 2
+  blank: 2
+  dealt: given
+  boards: [5x5]
+  hintMarks:
+    ring: the squares the step decides.
+    outline: the number or shaded square the step reasons from.
+deal:
+  answer: walls at the share and symmetry asked, then shaded squares at random, none side by side
+  wall: on each wall that shows no number
+  number: on each wall, then as many hidden as the board still finishes, each leaving its wall
+  given: every square's piece, then as many hidden as the board still finishes
+  tier: the one tier
+  options:
+    walls:
+      letter: b
+      kw: percentage-of-walls
+      name: "%age of walls"
+      min: 5
+      max: 100
+      default: 20
+      words: "{n}% walls"
+      doc: Roughly what share of the grid is walls.
+    symmetry:
+      letter: s
+      kw: symmetry
+      name: Symmetry
+      default: 2
+      doc: How the walls are arranged.
+      choices:
+        - { name: None, words: no symmetry }
+        - name: 2-way mirror
+        - name: 2-way rotational
+        - name: 4-way mirror
+        - name: 4-way rotational
+          bounds: { square: true }
+  sample:
+    first: { value: 3, share: walls, symmetry: symmetry }
+    # Each square alone, so a draw with two side by side is drawn again.
+    scatter: { value: 1, share: 0.15, each: true }
+    rest: 2
+  hide: [number, given]
+id:
+  - digits: number
+    letters: { B: wall }
+  - dots: given
+    cases: [2, 1]
+tiers: [Easy]
+names:
+  beside: "no two shaded squares side by side"
+  met: "a number with all its shaded squares"
+  room: "a number needing every open square beside it"
+techniques:
+  - id: beside
+    tier: Easy
+    for: "c in cells where value(c) = 1, x in open(c)"
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{c}" }
+      look: "no two shaded squares sit side by side"
+      move: "{ring: this square}, beside {outline: the outlined one}, must be crossed out"
+  - id: met
+    tier: Easy
+    for: >-
+      k in cells where clue(number, k) >= 0 and shaded(k) = clue(number, k),
+      O = open(k) where |O| > 0
+    conclude: "forall x in O: place(x, 2)"
+    says:
+      marks: { outline: "{k}" }
+      look: "{outline: this number} already has all its shaded squares"
+      move: "{ring: its open square | its open squares} must be crossed out"
+  - id: room
+    tier: Easy
+    for: >-
+      k in cells where clue(number, k) >= 0,
+      O = open(k) where |O| > 0 and clue(number, k) - shaded(k) = |O|
+    conclude: "forall x in O: place(x, 1)"
+    says:
+      marks: { outline: "{k}" }
+      look: "{outline: this number} needs every open square beside it"
+      move: "{ring: its open square | its open squares} must be shaded"
