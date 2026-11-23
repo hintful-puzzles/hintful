@@ -8,10 +8,15 @@
 import { describe, expect, it } from "vitest";
 import * as zoning from "../../generated/engine/testing/fixtures/zoning/zoning.compiled.ts";
 import { DESC_OUT_OF_RANGE, validateDesc } from "../contract/desc-error.ts";
+import type { HintStep } from "../contract/game.ts";
+import type { CandidateReading } from "../hint/candidate-hint.ts";
 import { randomNew } from "../random/index.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { type CandidateFillHint, candidateFill } from "./candidates.ts";
 import { fillGame } from "./game.ts";
 import { encodeDesc } from "./game-id.ts";
+import type { FillHint } from "./hint.ts";
+import type { FillMove } from "./notes.ts";
 
 const game = fillGame("zoning", zoning);
 type Board = FillBoard<zoning.Dealt>;
@@ -122,6 +127,121 @@ describe("a ruleset written as its bare letter", () => {
           if (c + d < 25 && Math.abs((c % 5) - ((c + d) % 5)) === 1)
             expect(g[c + d]).not.toBe(g[c]);
     }
+  });
+});
+
+describe("the walk of a board's notes in areas", () => {
+  type Step = HintStep<FillMove, FillHint>;
+  const at = (mode: number, diff = 0) => ({ w: 3, h: 3, diff, sizes: { mode } });
+  /** Three rows of three, nothing given. */
+  const blank = (mode: number): Board => game.newState(at(mode), "f5,i");
+  const dealt = (w: number, mode: number, diff: number, seed: string): Board => {
+    const p = { w, h: w, diff, sizes: { mode } };
+    return game.newState(p, game.newDesc(p, randomNew(seed)).desc);
+  };
+  const plan = (b: Board, reading: CandidateReading): Step[] => {
+    const got = game.hint.plan(b, undefined, {
+      ...game.newUi(b),
+      candidateReading: reading,
+    });
+    if (!got.ok) throw new Error(`no plan: ${JSON.stringify(got)}`);
+    return got.steps;
+  };
+
+  it("finishes a board of either ruleset and tier, under either reading", () => {
+    const rungs = new Map<string, number>();
+    let boards = 0;
+    for (const mode of [0, 1])
+      for (const diff of [0, 1])
+        for (const reading of ["populate", "implicit"] as const)
+          for (const seed of ["a", "b"]) {
+            let b = dealt(5, mode, diff, `${mode}${diff}${seed}`);
+            for (let k = 0; game.status(b) !== "solved"; k++) {
+              if (k > 200) throw new Error("the walk runs on");
+              const [step] = plan(b, reading);
+              rungs.set(step.rung, (rungs.get(step.rung) ?? 0) + 1);
+              b = game.executeMove(b, step.move);
+            }
+            boards++;
+          }
+    expect(boards).toBe(16);
+    // A Normal board needs the description's own starve, and an area's
+    // single is read in its area.
+    expect(rungs.get("starve")).toBeGreaterThan(0);
+    expect(rungs.get("hiddenSingle")).toBeGreaterThan(0);
+  });
+
+  it("names a single's area, striped whole, and notes the starved area first", () => {
+    const steps = [0, 1].flatMap((mode) =>
+      ["a", "b", "c"].flatMap((seed) => plan(dealt(5, mode, 1, seed), "implicit")),
+    );
+    // A step of the walk of notes is marked by its highlights.
+    const marked = (s?: Step) => s?.highlights as CandidateFillHint | undefined;
+    const hidden = steps.find((s) => s.rung === "hiddenSingle");
+    expect(hidden?.explanation).toMatch(/^No other square in this area can be \d/);
+    expect(marked(hidden)?.hatch?.length).toBeGreaterThan(1);
+    // Under the implicit reading a starve rests on the area's notes, written
+    // first: its `reads` mark.
+    const k = steps.findIndex((s) => s.rung === "starve");
+    expect(k).toBeGreaterThan(0);
+    expect(marked(steps[k])?.reads?.length).toBeGreaterThan(0);
+    expect(steps[k - 1].rung).toBe("note");
+  });
+
+  it("strikes a placed number from its area and beside it, or touching it", () => {
+    for (const [mode, struck] of [
+      [0, [1, 3, 5, 7]],
+      [1, [0, 1, 2, 3, 5, 6, 7, 8]],
+    ] as const) {
+      const b0 = blank(mode);
+      const all = game.markAll?.(b0);
+      if (all === null || all === undefined) throw new Error("no mark-all");
+      // Each square's notes are its own area's numbers: 1 to 3.
+      const b1 = game.executeMove(b0, all);
+      expect(Array.from(b1.pencil ?? [])).toEqual(Array(9).fill(0b1110));
+      const b2 = game.executeMove(b1, {
+        type: "set",
+        x: 1,
+        y: 1,
+        n: 1,
+        pencil: false,
+        autoElim: true,
+      });
+      const lost = [...Array(9).keys()].filter(
+        (c) => c !== 4 && ((b2.pencil?.[c] ?? 0) & 0b10) === 0,
+      );
+      expect(lost).toEqual(struck);
+    }
+  });
+
+  it("says how far a placed number reaches in the ruleset's words", () => {
+    for (const [mode, near] of [
+      [0, "beside"],
+      [1, "touching"],
+    ] as const) {
+      const steps = plan(dealt(5, mode, 0, "w"), "populate");
+      const clean = steps.find((s) => s.rung === "clean");
+      expect(clean?.explanation).toBe(
+        `Now clear the easy ones: cross out any number already in its square's area or in a square ${near} it.`,
+      );
+      const dup = steps.find((s) => s.rung === "dup");
+      expect(dup?.explanation).toMatch(
+        new RegExp(
+          `^The \\d just placed can't repeat in its area or the squares ${near} it`,
+        ),
+      );
+    }
+  });
+
+  it("is refused on a board in parts whose description words none of its steps", () => {
+    const b = blank(0);
+    expect(() =>
+      candidateFill(
+        { ...zoning, STEPS: undefined },
+        () => 0,
+        () => game.newUi(b),
+      ),
+    ).toThrow(/words the walk's steps/);
   });
 });
 

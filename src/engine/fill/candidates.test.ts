@@ -15,7 +15,6 @@ import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import type { FillBoard } from "./board.ts";
-import { candidateFill } from "./candidates.ts";
 import { fillGame } from "./game.ts";
 import type { FillHint } from "./hint.ts";
 import { type FillMove, isCandidateMove } from "./notes.ts";
@@ -140,14 +139,6 @@ describe("the candidate walk of a board that keeps notes", () => {
       game.newUi(b),
     );
     expect(verdict?.followed).toBe(true);
-  });
-
-  it("walks rows and columns, and refuses any other units", () => {
-    const tier = () => 0;
-    const ui = () => game.newUi(NEEDS_A_SET);
-    expect(() => candidateFill({ ...squaring, units: ["rows"] }, tier, ui)).toThrow(
-      /rows and columns, not rows/,
-    );
   });
 });
 

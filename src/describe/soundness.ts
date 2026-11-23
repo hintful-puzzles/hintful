@@ -80,14 +80,15 @@ function canonical(x: unknown): string {
   return JSON.stringify(x);
 }
 
-/** `x` with the `says` of every technique in it left out: what a hint's step
- * speaks of is no part of what a technique proves. */
+/** `x` with the `says` of every technique in it left out, and the kind of
+ * rule it was placed as: what a hint's step speaks of, and what the walk knows
+ * it by, are no part of what a technique proves. */
 function withoutSays(x: unknown): unknown {
   if (Array.isArray(x)) return x.map(withoutSays);
   if (typeof x !== "object" || x === null) return x;
   return Object.fromEntries(
     Object.entries(x)
-      .filter(([k]) => k !== "says")
+      .filter(([k]) => k !== "says" && k !== "fromKind")
       .map(([k, v]) => [k, withoutSays(v)]),
   );
 }

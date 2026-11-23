@@ -737,6 +737,8 @@ export interface StatedTechnique {
   /** The defect planted in a technique a kind of rule expanded to
    * (`kinds.ts`), which a game's plants file then does not state. */
   plant?: { for?: string; conclude?: string };
+  /** The kind of rule it was placed as (`kinds.ts`), where it was. */
+  fromKind?: string;
 }
 
 /** What a technique's hint step speaks of. `arms` splits the step by which
@@ -1199,6 +1201,10 @@ export interface Technique {
    * where the description names it nothing. */
   name: string | null;
   on: "place" | "strike" | null;
+  /** The kind of rule it was placed as (`kinds.ts`), `null` where it is
+   * stated: the walk of a board's notes knows its own singles and cull by
+   * it. */
+  kind: string | null;
   binders: Binder[];
   premise: Expr | null;
   conclude: Expr;
@@ -1388,6 +1394,7 @@ export function parseTechnique(
   return {
     id,
     on: stated.on ?? null,
+    kind: stated.fromKind ?? null,
     binders,
     premise: stated.premise === undefined ? null : at("premise", stated.premise),
     conclude: at("conclude", stated.conclude),

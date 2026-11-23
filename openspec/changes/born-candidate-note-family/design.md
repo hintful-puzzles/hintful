@@ -303,8 +303,9 @@ that keeps notes alone (`numbers.ts`'s `typedUi`), since the app and
 `pencil-mode-key.test.ts` read a `Ui` with a pencil mode as one that takes
 notes. What a placement rules out (auto-pencil, Mark-all's clean, the
 walk's cull and implied notes) is one reach, `notes.ts`'s `reachOf`: the
-cells sharing a unit with it (`GridSpace.peers`), a partition listed among
-the units included. Seismic's flip makes it read a stated `cull`.
+cells sharing a unit with it (`GridSpace.peers`), and those the techniques
+run on placing strike it from where every cell could hold anything (2.7c:
+`zoning`'s and Seismic's `cull`, a `peer.placed`).
 
 ### 2. A born game with notes hints through the candidate walk
 

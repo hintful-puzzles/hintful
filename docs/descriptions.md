@@ -251,11 +251,26 @@ research tools all read through it; the app never does.
   shared candidate walk (`engine/fill/candidates.ts`) in place of the fill
   walk, with the four note preferences; `play.hintNotes` states the reading
   a fresh game starts on (`docs/hints-candidates.md` § "Choosing the
-  default"), `populate` where it says nothing. The walk runs on rows and
-  columns, and its rungs are the Latin library's (`use: latin.*`, which the
+  default"), `populate` where it says nothing. The walk reads a value's
+  places in the rows and columns, where they are the units, and in each part
+  of a dealt partition a rule holds distinct (`forall r in P:
+  distinct(value(c) over c in cells(r))`, compiled to `distinctParts`); a
+  part holds every value its cells' domains hold where those are as many as
+  its cells, and a cell's notes are its own domain (`zoning`'s areas). Any
+  other units the compiler refuses. A placed value rules itself out of its
+  units and of what the techniques run on placing strike (`peer.placed`):
+  the one reach auto-pencil, Mark-all's clean and the walk read
+  (`notes.ts`'s `reachOf`). Where that is more than a row and a column, the
+  description words the walk's `clean`, `note`, `cull` and `regionsFull` as
+  `steps`, over the terms the walk supplies them and the board's sizes
+  (`engine/fill/walk-steps.ts`, a ruleset's words chosen by a `when` on its
+  size). The walk's singles are its own, so a technique placed as `one.cell`
+  or `one.place` is none of its rungs (the compiled `techniques` say the
+  kind each was placed as). Its rungs are the Latin library's (`use: latin.*`, which the
   fill ladder resolves as every Latin game's does), worded by the library,
   and the description's own, tried before the library's strikes since a
-  player reads a clue before a set. A strike's firing is a leg a cell, or a
+  player reads a clue before a set; a `reads` mark names the cells whose
+  notes the step reasons from, which the implicit reading writes first. A strike's firing is a leg a cell, or a
   leg a value from all its cells where `says` has `shown: value` (Towers'
   heights), each worded by the look of its `says`, of the fact its first
   note is where it words each fact (`fact:`), its `{ring}` the leg's cells

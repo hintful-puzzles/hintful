@@ -867,6 +867,59 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/hintNotes: the hint reads notes, and `marks` declares none/);
   });
 
+  it("holds a board of notes to the regions its walk reads, and their words", () => {
+    const source = "src/engine/testing/fixtures/zoning/zoning.description.yaml";
+    const zoning = sources.get(source);
+    if (zoning === undefined || !isFormal(zoning)) throw new Error("no zoning");
+    type Json = {
+      space: { units: string[] };
+      shape: string[];
+      steps: Record<string, { terms: Record<string, string> }>;
+    };
+    const compileZoning = (over: (j: Json) => void) => {
+      const j = structuredClone(zoning) as unknown as Json;
+      over(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    const code = compileZoning(() => {});
+    expect(code).toContain('export const distinctParts = ["area"] as const;');
+    // The walk's singles are its own, known by the kind they were placed as.
+    expect(code).toContain('kind: "one.cell"');
+    expect(code).toContain('kind: "one.place"');
+    expect(() =>
+      compileZoning((j) => {
+        j.space.units = ["rows"];
+      }),
+    ).toThrow(/walk of the notes reads rows and columns, not rows/);
+    // Its areas' rule dropped, no part holds a value once.
+    expect(() =>
+      compileZoning((j) => {
+        j.shape = j.shape.slice(1);
+      }),
+    ).toThrow(/no partition a rule holds distinct/);
+    expect(() =>
+      compileZoning((j) => {
+        delete j.steps["cull"];
+      }),
+    ).toThrow(/steps: cull is unworded/);
+    expect(() =>
+      compileZoning((j) => {
+        j.steps["cull"].terms["far"] = "number";
+      }),
+    ).toThrow(/steps cull: the walk supplies no term far/);
+    expect(() =>
+      compileZoning((j) => {
+        j.steps["cull"].terms["n"] = "flag";
+      }),
+    ).toThrow(/steps cull: term n is a number/);
+  });
+
   it("refuses a rung that strikes on a board of numbers without notes", () => {
     const source = "src/engine/testing/fixtures/ordering/ordering.description.yaml";
     const ordering = sources.get(source);

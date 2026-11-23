@@ -1,0 +1,10 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A square kept apart from only one of the area's places struck.
+  starve:
+    conclude: >-
+      forall c in cells where area(c) != r and not known(c) and n in cand(c)
+      and (exists h in H: apart(c, h)): strike(c, n)

@@ -205,6 +205,22 @@ write no hint code.
 - **THEN** each step strikes one value, and is recorded under the rung its
   arm names, which Check & save names a move by
 
+#### Scenario: A board in areas is walked in its areas
+
+- **WHEN** a born game with notes has no units, and a rule holds each part
+  of a dealt partition distinct, and a value has one place left in a part
+- **THEN** the hint places it there, naming the part by the partition's name
+  and striping it, and a placed value's cull, auto-pencil and Mark-all's
+  clean strike it from what the description's techniques run on placing
+  strike, in the words the description states for that reach
+
+#### Scenario: A board in areas whose walk is unworded is refused
+
+- **WHEN** a born game with notes reads its values' places in a partition's
+  parts, and its description words not every one of the walk's `clean`,
+  `note`, `cull` and `regionsFull`
+- **THEN** the description does not compile
+
 ### Requirement: A born game's values may be a number line
 
 A born game MAY declare its values a number line, and the board SHALL then

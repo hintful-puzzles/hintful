@@ -8,8 +8,14 @@
  * set and strike notes as the player does.
  *
  * Its regions are the space's rows and columns, each holding every value
- * once, as on every Latin board; the library's strikes are worded by the
- * library (`hint-text.ts`'s Latin words), a firing a leg a cell.
+ * once, as on every Latin board, and the parts of each dealt partition the
+ * rules hold distinct (`distinctParts`), a part holding every value its
+ * cells' domains hold where they hold as many as it has cells (a `zoning`
+ * area of N squares holds 1 to N). Its singles are the walk's own, so the
+ * techniques placed as `one.cell` and `one.place` are none of its rungs. The
+ * library's strikes are worded by the library (`hint-text.ts`'s Latin words),
+ * a firing a leg a cell; where a placed value rules itself out of more than
+ * its row and column, the description words how far (`WALK_STEPS`).
  */
 
 import type { Game, HintStep } from "../contract/game.ts";
@@ -32,20 +38,37 @@ import {
   LATIN_RUNGS,
   type NotesLadder,
   type PlanRung,
-  runLatinCandidatePlan,
+  runCandidatePlan,
   strikesOf,
   techniqueRung,
 } from "../hint/candidate-plan.ts";
 import {
+  candidateConclusions,
+  cleanObviousText,
+  cleanStruckText,
   type LatinVocab,
   latinPremise,
   narrateLatinReason,
+  noteText,
+  placedRulesOut,
+  populateText,
 } from "../hint/hint-text.ts";
-import type { GenericLatinReason } from "../hint/latin-hint.ts";
+import {
+  type CellRegion,
+  type GenericLatinReason,
+  rowColRegions,
+  singleReasonOf,
+} from "../hint/latin-hint.ts";
 import { byCell, latinStrikeRungs } from "../hint/latin-notes.ts";
 import { type Clauses, statedParts, statedSentence } from "../hint/stated.ts";
+import { type StepTable, type StepType, stepVoice } from "../hint/step-voice.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
-import { PLACE } from "../solve/describe-runtime.ts";
+import {
+  type GridSpace,
+  type Partition,
+  PLACE,
+  popcount,
+} from "../solve/describe-runtime.ts";
 import {
   type Firing as LadderFiring,
   type Said,
@@ -55,6 +78,7 @@ import { type FillBoard, type LadderedFillModule, ladderOf, spaceOf } from "./bo
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
 import { numeral } from "./numbers.ts";
 import { slotPoint } from "./slots.ts";
+import { WALK_STEPS, type WalkStep } from "./walk-steps.ts";
 
 /** What a step of the candidate walk marks: the shared highlights. */
 export type CandidateFillHint = CandidateHighlights;
@@ -85,7 +109,29 @@ export interface CandidateFillModule<C> extends LadderedFillModule<C> {
       { readonly step?: readonly Clauses[]; readonly fact?: readonly Clauses[] }
     >
   >;
+  /** The description's `steps`, among them the walk's it words. Their terms
+   * are each step's own, which no one type over every step admits. */
+  readonly STEPS?: StepTable<Readonly<Record<string, UntypedStep>>>;
+  /** The dealt partitions whose parts hold no value twice. */
+  readonly distinctParts?: readonly string[];
 }
+
+/** A step of the description's whose terms and marks are not known here. */
+interface UntypedStep extends StepType {
+  readonly terms: never;
+  readonly marks: never;
+}
+
+/** A region the walk reads a value's places in: a row or a column, or a part
+ * of a partition, named by the partition's name. */
+type FillRegion = CellRegion &
+  (
+    | { readonly line: "row" | "col"; readonly index: number }
+    | { readonly line?: undefined; readonly name: string; readonly cells: number[] }
+  );
+
+/** The kinds of rule whose firings are the walk's own singles. */
+const WALKS: ReadonlySet<string> = new Set(["one.cell", "one.place"]);
 
 /** A firing's strikes a leg a value, from every cell it strikes it in. */
 function byValue(marks: readonly Mark[]): Mark[][] {
@@ -96,11 +142,14 @@ function byValue(marks: readonly Mark[]): Mark[][] {
 
 /** Why a technique of the description's own struck or placed: its rung, the
  * technique's id or the arm that held, and what it states: a strike's look,
- * or a placement's sentence, a journey's later leg saying its `again`. */
+ * or a placement's sentence, a journey's later leg saying its `again`; and
+ * the cells whose notes it reasons from that its words do not outline, its
+ * `reads` mark (`zoning`'s starved area), which the walk notes first. */
 interface OwnReason {
   readonly kind: string;
   readonly premise?: Narration;
   readonly say?: (later: boolean) => Sentence;
+  readonly reads?: readonly Point[];
 }
 
 /** Why a step of the walk is forced: the library's reasons, or the
@@ -151,15 +200,25 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   tierOf: (board: FillBoard<C>) => number,
   uiOf: (board: FillBoard<C>) => Ui,
 ): CandidateFillHooks<C, Ui> {
-  if (module.units.join() !== "rows,cols")
-    throw new Error(
-      `a board's notes are walked on rows and columns, not ${module.units.join(", ")}`,
-    );
   // The description's own techniques, beside the library's, each worded by
   // what it states (`ownLegs`). A step's rung is the arm that held where
   // arms split it, each named for one of its rungs, else its one rung (Keen's
   // `cageEasy` is a `cage`), else its id: what the names say a step by.
-  const own = module.ladder.filter((e) => !e.id.startsWith("latin.")).map((e) => e.id);
+  const own = module.ladder
+    .filter(
+      (e) =>
+        !e.id.startsWith("latin.") && !WALKS.has(module.techniques[e.id]?.kind ?? ""),
+    )
+    .map((e) => e.id);
+  const steps = module.STEPS;
+  // The steps the description words for the walk, where it words them all.
+  const walkSteps =
+    steps !== undefined &&
+    Object.keys(WALK_STEPS).every((id) => Object.hasOwn(steps, id))
+      ? steps
+      : null;
+  if (walkSteps === null && module.units.length === 0)
+    throw new Error("a board of notes in parts words the walk's steps (`WALK_STEPS`)");
   const kindsOf = (id: string): string[] => {
     const arms = (module.SAYS_KINDS ?? [])
       .filter((k) => k.startsWith(`${id}.`))
@@ -202,6 +261,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     const marks = Object.fromEntries(
       Object.entries(says.marks ?? {}).map(([role, els]) => [role, els.map(at)]),
     );
+    const reads = marks["reads"];
     // A slot lies a step beyond its line's end, off the cells.
     const termAt = Object.fromEntries(
       (module.techniques[id]?.slotTerms ?? []).map((name) => [
@@ -249,6 +309,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           kind,
           say: (later) => statedSentence(clauses, { ...context, later }),
         },
+        ...(reads === undefined ? {} : { reads }),
       });
     }
     if (places.length > 0) {
@@ -263,7 +324,14 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       const { clauses, context } = wordsOf(strikes.indexOf(strike[0]), strike);
       const { look } = statedParts(clauses, { ...context, struck: valuesOf(strike) });
       if (look === undefined) throw new Error(`${kind} states no look to strike by`);
-      return { strike, reason: { kind, premise: look } };
+      return {
+        strike,
+        reason: {
+          kind,
+          premise: look,
+          ...(reads === undefined ? {} : { reads }),
+        },
+      };
     });
   }
 
@@ -290,29 +358,78 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       },
       enc: { values: 31 - Math.clz32(domain) },
     };
-    const steps: HintStep<FillMove, CandidateFillHint, PlanRung<Reason>>[] = [];
-    runLatinCandidatePlan<FillMove, CandidateFillHint, Reason>({
+    const out: HintStep<FillMove, CandidateFillHint, PlanRung<Reason>>[] = [];
+    const regions = regionsOf(board, sp);
+    const words = walkWords(board);
+    runCandidatePlan<FillMove, CandidateFillHint, Reason, FillRegion>({
       w,
-      steps,
+      steps: out,
       grid,
       pencil,
+      enc: { values: on.enc.values, all: (c) => module.domainOf(sp, board.dealt, c) },
       moves: FILL_CANDIDATE_MOVES,
       reach: reachOf(module, board),
       autoClean,
       reading,
       ...(judging === undefined ? {} : { judging }),
       label: "fill candidate plan",
+      regionsOf: (x, y) => regions[y * w + x],
+      singleReason: (n, why) =>
+        why.kind !== "hidden" || why.region.line !== undefined
+          ? singleReasonOf(n, why as Parameters<typeof singleReasonOf>[1])
+          : {
+              kind: "hiddenSingle",
+              n,
+              unit: {
+                name: why.region.name,
+                cells: why.region.cells.map((c) => ({
+                  x: c % w,
+                  y: Math.floor(c / w),
+                })),
+              },
+            },
       placeWords: (m, reason, continues) => {
-        if (!isOwn(reason)) return { words: narrateLatinReason(reason, m, w, vocab) };
+        if (!isOwn(reason))
+          return {
+            words:
+              words !== null && reason.kind === "regionsFull"
+                ? words.regionsFull(m)
+                : narrateLatinReason(reason, m, w, vocab),
+          };
         if (reason.say === undefined)
           throw new Error(`${reason.kind} strikes, and places nothing`);
         return { words: reason.say(continues) };
       },
       strikeWords: (marks, reason) => {
-        if (!isOwn(reason)) return latinPremise(reason, marks, vocab);
+        if (!isOwn(reason))
+          return words !== null && reason.kind === "dup"
+            ? {
+                premise: placedRulesOut(reason, numeral, words.cull(reason.n)),
+                where: `from the other ${vocab.cell}s`,
+              }
+            : latinPremise(reason, marks, vocab);
         if (reason.premise === undefined)
           throw new Error(`${reason.kind} places, and strikes nothing`);
-        return { premise: reason.premise };
+        return {
+          premise: reason.premise,
+          ...(reason.reads === undefined ? {} : { reads: reason.reads }),
+        };
+      },
+      conclude: candidateConclusions({ value: numeral, cell: vocab.cell }),
+      notes: {
+        populate: populateText(vocab.noun, vocab.cell),
+        cleanObvious:
+          words?.clean ??
+          cleanObviousText(vocab.noun, "standing", "row or column", vocab.cell),
+        note: (at, values, every) =>
+          words !== null
+            ? words.note(at, values, every)
+            : noteText(at, values.map(numeral), every, {
+                noun: vocab.noun,
+                placedVerb: "standing",
+                regions: "row or column",
+                cell: vocab.cell,
+              }),
       },
       // The description's own techniques first: it states them for its
       // clues, which a player reads before a set or a wing. One that places
@@ -332,14 +449,66 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           byCell,
         ),
       ],
-      notes: {
-        noun: vocab.noun,
-        placedVerb: "standing",
-        value: numeral,
-        cell: vocab.cell,
-      },
     });
-    return steps;
+    return out;
+  }
+
+  /** Each cell's regions, in the order a hidden single is named by: its row
+   * and column, then its part of each partition the rules hold distinct. */
+  function regionsOf(board: FillBoard<C>, sp: GridSpace): FillRegion[][] {
+    const { w } = board;
+    const parts = (module.distinctParts ?? []).map((name) => {
+      const p = board.dealt[name as keyof C] as Partition;
+      return p.cells.map((cells): FillRegion => {
+        let held = 0;
+        for (const c of cells) held |= module.domainOf(sp, board.dealt, c);
+        return {
+          name,
+          cells: [...cells],
+          holdsEvery: popcount(held) === cells.length,
+        };
+      });
+    });
+    return Array.from({ length: board.w * board.h }, (_, c) => [
+      ...(module.units.length === 0 ? [] : rowColRegions(c % w, Math.floor(c / w), w)),
+      ...(module.distinctParts ?? []).map(
+        (name, k) => parts[k][(board.dealt[name as keyof C] as Partition).of[c]],
+      ),
+    ]);
+  }
+
+  /** The walk's words the description states for `board`, each told the
+   * board's sizes beside its own terms; `null` where it states none, and
+   * the walk says a row and a column. */
+  function walkWords(board: FillBoard<C>) {
+    if (walkSteps === null) return null;
+    // Its terms are what `WALK_STEPS` gives each, which the compiler held the
+    // description to.
+    const voice = stepVoice<Readonly<Record<string, StepType>>, Point>(
+      walkSteps as unknown as StepTable<Readonly<Record<string, StepType>>>,
+      { kind: CELL, value: numeral, noun: vocab.cell, valueNoun: vocab.noun },
+    );
+    const dealt = board.dealt as Readonly<Record<string, unknown>>;
+    const sizes = Object.fromEntries(
+      Object.keys(module.deal?.sizes ?? {}).flatMap((k) =>
+        typeof dealt[k] === "number" ? [[k, dealt[k]]] : [],
+      ),
+    );
+    const said = (ring: readonly Point[], terms: object) => ({
+      ring,
+      terms: { ...sizes, ...terms },
+    });
+    const sentence = (id: WalkStep, ring: readonly Point[], terms: object): Sentence =>
+      voice.sentence(id, said(ring, terms));
+    const move = (id: WalkStep, terms: object): string =>
+      voice.part(id, "move", said([], terms)).text;
+    return {
+      clean: cleanStruckText(move("clean", {})),
+      note: (at: Point, values: number[], every: boolean): Sentence =>
+        sentence("note", [at], { vs: values, unruled: every }),
+      cull: (n: number): string => move("cull", { n }),
+      regionsFull: (m: Mark): Sentence => sentence("regionsFull", [m], { n: m.n }),
+    };
   }
 
   const names = (module.NAMES ?? {}) as RungNames<string>;

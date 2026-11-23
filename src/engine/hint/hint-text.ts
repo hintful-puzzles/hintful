@@ -94,9 +94,17 @@ export function cleanObviousText(
   // in the help"). The notes it names are the ones it strikes. A game whose
   // values are only "in" a region, never placed or standing, gives no verb.
   const already = placedVerb === "" ? "already" : `already ${placedVerb}`;
+  return cleanStruckText(`any ${noun} ${already} in its ${cell}'s ${regions}`);
+}
+
+/** The obvious-cleanup step of {@link cleanObviousText}, with what it crosses
+ * out named whole: a game whose reach is more than a row and a column words it
+ * (`zoning`: "any number already in its square's area or in a square beside
+ * it"). */
+export function cleanStruckText(struck: string): (marks: readonly Note[]) => Sentence {
   return (marks) =>
     unshaped(
-      phrase`Now clear the easy ones: cross out ${mark.as("strike", NOTE, marks, `any ${noun} ${already} in its ${cell}'s ${regions}`)}.`,
+      phrase`Now clear the easy ones: cross out ${mark.as("strike", NOTE, marks, struck)}.`,
       "setup",
     );
 }

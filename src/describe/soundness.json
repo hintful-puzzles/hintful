@@ -64,6 +64,7 @@
   "src/engine/testing/fixtures/zoning/zoning.description.yaml#areaSingle": "1fb136a69589c608",
   "src/engine/testing/fixtures/zoning/zoning.description.yaml#cull": "2fb8b4b2ffeb6290",
   "src/engine/testing/fixtures/zoning/zoning.description.yaml#lone": "717837a428fc40de",
+  "src/engine/testing/fixtures/zoning/zoning.description.yaml#starve": "9dfb0fc9f7af1cf1",
   "src/games/abcd/abcd.description.yaml#placed": "04e31cd9d302c71d",
   "src/games/abcd/abcd.description.yaml#placedDiagonal": "9a302609d4c1a3e9",
   "src/games/abcd/abcd.description.yaml#runs": "d996ec0598a14e1f",

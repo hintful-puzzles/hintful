@@ -60,8 +60,9 @@ export const striking: readonly { id: StrikingId; variation?: string }[] = [
  * does (`describedLadder`). A fill game's names the bindings of a firing
  * that name a clue it reads: a cell's, or a clue's index by its kind; the
  * terms its firings say that name slots, which it marks off the grid;
- * whether it leads, placing with no notes read; whether its steps strike a
- * value each; and its one rung, where that is not its id. */
+ * the kind of rule it was placed as; whether it leads, placing with no
+ * notes read; whether its steps strike a value each; and its one rung,
+ * where that is not its id. */
 export const techniques = {
   line: { dealt: true, run: line, reads: {"cells":["c"],"clues":{}} },
 } as const;

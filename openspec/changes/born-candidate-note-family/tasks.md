@@ -448,7 +448,7 @@ commit. In design.md § "Decisions" 7's order.
         `5x5D`, and `zoning`'s second ruleset (equal numbers apart at a
         corner too, areas of four or five by `divide.by`); the codec's
         guard seen to fail planted back to a letter and a number.
-  - [ ] 2.7c The walk over a dealt partition, on `zoning` with notes: its
+  - [x] 2.7c The walk over a dealt partition, on `zoning` with notes: its
         regions the units and each partition the rules hold distinct, a
         part holding each value of its cells' domain; the reach from the
         compiled `peer.placed` (`notes.ts`'s `reachOf`) for the cull,
@@ -477,6 +477,30 @@ commit. In design.md § "Decisions" 7's order.
         born walk would read in their place. `zoning` gains `marks: cand`
         here, with tiers Easy and Normal and a starve-like technique, so the
         walk is tested past the singles.
+        Done: the compiler lists the partitions a rule holds distinct
+        (`distinctParts`) and the kind each technique was placed as
+        (`techniques`' `kind`, carried through `kinds.ts`'s expansion as
+        `fromKind`, which the soundness fingerprint leaves out); the walk
+        runs `runCandidatePlan` with each cell's row and column, where those
+        are the units, and its parts, a hidden single in a part named by the
+        partition's name; `reachOf` is the units' peers and what the placing
+        techniques strike, so every born game's reach is unchanged where its
+        placing is `latin.placed`. The walk's words a description states
+        where the reach is more than a row and a column are `clean`, `note`,
+        `cull` and `regionsFull` (`engine/fill/walk-steps.ts`), each told the
+        board's sizes, so a ruleset's words are a `when` on its size: the
+        compiler requires all four there, refuses any term the walk does not
+        supply, and refuses units other than rows and columns. A technique's
+        `reads` mark is now the walk's premise (`zoning`'s starve notes its
+        area first under the implicit reading); Towers' `arrangement` stated
+        `reads: L` already, so its steps now carry their line as premise: its
+        walk fingerprint moved, every board's steps and rungs unchanged.
+        Seismic's flip rewords its
+        `tectonic` flag as `mode`, and its `singleton` is 2.7d's leading
+        technique. Tested in `zoning.test.ts` (16 boards walked to the solve,
+        both rulesets, tiers and readings; the reach per ruleset; the words)
+        and `compile.test.ts`; the reach and the `reads` seen to fail
+        planted.
   - [ ] 2.7d The flip: `mode` the ruleset, the menu (4x4, 6x6, 6x8 and 7x9
         in both, Easy), the keypad to the largest area dealt, an area of one
         a leading technique, Seismic's tests to `seismic.cases.yaml`, its

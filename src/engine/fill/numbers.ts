@@ -47,6 +47,7 @@ import {
   type Clues,
   type FillBoard,
   type FillModule,
+  type LadderedFillModule,
   spaceOf,
 } from "./board.ts";
 import { type DoneInput, type DoneMove, doneInput, type PartClueAt } from "./done.ts";
@@ -150,7 +151,7 @@ export function numberInput<
   C extends Clues<C>,
   D extends { readonly tileSize: number },
 >(
-  module: FillModule<C>,
+  module: LadderedFillModule<C>,
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number = () => 0,
   partClue: PartClueAt<C> | null = null,

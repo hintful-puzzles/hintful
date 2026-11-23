@@ -63,11 +63,12 @@ export const striking: readonly { id: StrikingId; variation?: string }[] = [
  * does (`describedLadder`). A fill game's names the bindings of a firing
  * that name a clue it reads: a cell's, or a clue's index by its kind; the
  * terms its firings say that name slots, which it marks off the grid;
- * whether it leads, placing with no notes read; whether its steps strike a
- * value each; and its one rung, where that is not its id. */
+ * the kind of rule it was placed as; whether it leads, placing with no
+ * notes read; whether its steps strike a value each; and its one rung,
+ * where that is not its id. */
 export const techniques = {
-  adjacent: { dealt: true, run: adjacent, reads: {"cells":["a","b"],"clues":{}} },
-  adjacentSet: { dealt: true, run: adjacentSet, reads: {"cells":["a","b"],"clues":{}} },
+  adjacent: { dealt: true, run: adjacent, reads: {"cells":["a","b"],"clues":{}}, kind: "rel.support" },
+  adjacentSet: { dealt: true, run: adjacentSet, reads: {"cells":["a","b"],"clues":{}}, kind: "rel.support" },
 } as const;
 
 /** The ladder: each technique's tier, on its scale where that is not the

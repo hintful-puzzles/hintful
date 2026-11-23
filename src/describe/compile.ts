@@ -359,6 +359,7 @@ export function compileGame(
   const own = d.techniques.filter((t) => !t.id.includes("."));
   const compiled = own.map((t) => ({
     id: t.id,
+    kind: t.kind,
     byValue: t.says?.byValue === true,
     rung: t.rungs.length === 1 && t.rungs[0] !== t.id ? t.rungs[0] : null,
     ...compileTechnique(t, env),
@@ -536,8 +537,9 @@ export function compileGame(
     " * does (`describedLadder`). A fill game's names the bindings of a firing",
     " * that name a clue it reads: a cell's, or a clue's index by its kind; the",
     " * terms its firings say that name slots, which it marks off the grid;",
-    " * whether it leads, placing with no notes read; whether its steps strike a",
-    " * value each; and its one rung, where that is not its id. */",
+    " * the kind of rule it was placed as; whether it leads, placing with no",
+    " * notes read; whether its steps strike a value each; and its one rung,",
+    " * where that is not its id. */",
     "export const techniques = {",
     ...compiled.map(
       (c) =>
@@ -660,10 +662,17 @@ export function compileGame(
  * `number`, since a literal `0` would type a parameter defaulted to the
  * easiest tier as accepting no other. */
 /** What the walk of a board's notes reads of a technique, past its entry's
- * own: whether it leads, whether its steps strike a value each, and its one
- * rung where that is not its id. */
-function walkOf(c: { leads: boolean; byValue: boolean; rung: string | null }): string {
-  return `${c.leads ? ", leads: true" : ""}${c.byValue ? ", byValue: true" : ""}${
+ * own: the kind of rule it was placed as, whether it leads, whether its steps
+ * strike a value each, and its one rung where that is not its id. */
+function walkOf(c: {
+  kind: string | null;
+  leads: boolean;
+  byValue: boolean;
+  rung: string | null;
+}): string {
+  return `${c.kind === null ? "" : `, kind: ${JSON.stringify(c.kind)}`}${
+    c.leads ? ", leads: true" : ""
+  }${c.byValue ? ", byValue: true" : ""}${
     c.rung === null ? "" : `, rung: ${JSON.stringify(c.rung)}`
   }`;
 }

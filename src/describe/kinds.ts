@@ -1068,5 +1068,6 @@ export function expandKind(
     ...statement,
     ...(says === undefined ? {} : { says }),
     plant: fill(kind.plant, args),
+    fromKind: placed.kind,
   };
 }

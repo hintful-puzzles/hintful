@@ -32,7 +32,7 @@ export const lineUnit = (line: "row" | "col"): Unit =>
   line === "row" ? "row" : "column";
 
 /** A step as `StepsById` types it. */
-interface StepType {
+export interface StepType {
   readonly ring: string | readonly string[];
   readonly terms: object;
   readonly marks: object;

@@ -129,13 +129,16 @@ export type LadderedFillModule<C> = FillModule<C> &
      * clues; the terms its firings say that name slots, which its words mark
      * in the margin beyond a line's end; whether it places reading no notes,
      * so the walk offers it before they are set up; whether its steps
-     * strike a value each, from every square it strikes it in; and the one
-     * rung its steps are recorded under, where that is not its id. */
+     * strike a value each, from every square it strikes it in; the one
+     * rung its steps are recorded under, where that is not its id; and the
+     * kind of rule it was placed as, by which the walk knows its own
+     * singles. */
     readonly techniques: Readonly<
       Record<
         string,
         {
           readonly dealt: boolean;
+          readonly kind?: string;
           readonly slotTerms?: readonly string[];
           readonly leads?: boolean;
           readonly byValue?: boolean;

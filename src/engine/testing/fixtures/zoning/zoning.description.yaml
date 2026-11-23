@@ -20,6 +20,8 @@ answer:
   # An area of N squares holds the numbers 1 to N.
   value: { sort: cell, domain: "range(1, |cells(area(c))|)" }
 given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, |cells(area(c))|)" }
 define:
   # Whether p keeps an equal number from c: beside it, or with `mode` 1 at
   # a corner too.
@@ -49,7 +51,7 @@ deal:
   areas: the partition, connected areas of a size drawn from a list
   answer: searched under the areas
   given: every square's number, then each hidden while the board still finishes
-  tier: the one tier
+  tier: one of the tiers
   # Areas of up to four, or with corners apart, of four or five.
   divide: { partition: area, by: mode, sizes: [[2, 3, 4, 4], [4, 5]] }
   sample: { search: true }
@@ -57,11 +59,51 @@ deal:
 id:
   - walls: area
   - { digits: given, before: "," }
-tiers: [Easy]
+tiers: [Easy, Normal]
 names:
   dup: "a placed number's area and neighbors"
   single: "the only number left in a square"
-  hidden: "the only square left for a number"
+  regionsFull: "every other number placed nearby"
+  hiddenSingle: "the only square left for a number"
+  starve: "a number an area needs"
+# The walk's words for how far a placed number reaches: its area, and the
+# squares beside it, or with `mode` 1 touching it.
+steps:
+  clean:
+    ring: cell
+    terms: { mode: number }
+    wordings:
+      - when: mode = 1
+        move: "any number already in its square's area or in a square touching it"
+      - move: "any number already in its square's area or in a square beside it"
+  note:
+    ring: cell
+    terms: { mode: number, vs: values, unruled: flag }
+    wordings:
+      - when: unruled
+        look: "No number stands in {ring}'s area or near it yet"
+        move: "pencil in every one"
+      - when: mode = 1
+        look: "Only {vs} {vs: isn't | aren't} already in {ring}'s area or a square touching it"
+        move: "pencil {vs: it | them} in"
+      - look: "Only {vs} {vs: isn't | aren't} already in {ring}'s area or a square beside it"
+        move: "pencil {vs: it | them} in"
+  cull:
+    ring: cell
+    terms: { mode: number, n: number }
+    wordings:
+      - when: mode = 1
+        move: "area or the squares touching it"
+      - move: "area or the squares beside it"
+  regionsFull:
+    ring: cell
+    terms: { mode: number, n: number }
+    wordings:
+      - when: mode = 1
+        look: "Every other number is already in {ring}'s area or a square touching it"
+        move: "it can only be {n}"
+      - look: "Every other number is already in {ring}'s area or a square beside it"
+        move: "it can only be {n}"
 techniques:
   # A placed number leaves the rest of its area and the squares it keeps
   # apart.
@@ -79,8 +121,25 @@ techniques:
   - kind: one.place
     as: areaSingle
     tier: Easy
-    rung: hidden
+    rung: hiddenSingle
     with:
       group: "r in area, n in range(1, |cells(r)|) where not (exists c in cells(r): value(c) = n)"
       set: cells(r)
       value: n
+  # Every place an area has left for its n keeps an n from a square outside
+  # it, so that square cannot hold n: an n there would leave the area none.
+  - id: starve
+    tier: Normal
+    for: >-
+      r in area, n in range(1, |cells(r)|) where not (exists c in cells(r): value(c) = n),
+      H = {h in cells(r) where not known(h) and n in cand(h)} where |H| > 0
+    conclude: >-
+      forall c in cells where area(c) != r and not known(c) and n in cand(c)
+      and (forall h in H: apart(c, h)): strike(c, n)
+    says:
+      terms: { n: n, corners: "mode = 1" }
+      # The area's notes are where it can put its n: the premise.
+      marks: { stripes: "cells(r)", reads: "cells(r)" }
+      look: >-
+        Every square {stripes: this area} has left for its {n} is {if corners:
+        touching | beside} {ring}

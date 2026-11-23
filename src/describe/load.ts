@@ -166,10 +166,10 @@ function withBreaks(data: DescriptionFile, path: string): DescriptionFile {
   } as unknown as DescriptionFile;
 }
 
-/** A JSON reviver dropping the plant a kind's technique carries, which the
- * statement it expands into has no field for. */
+/** A JSON reviver dropping the plant a kind's technique carries and the kind
+ * it was placed as, which the statement it expands into has no field for. */
 const unplanted = (key: string, v: unknown): unknown =>
-  key === "plant" ? undefined : v;
+  key === "plant" || key === "fromKind" ? undefined : v;
 
 function valid(data: unknown, path: string): void {
   if (validate(data)) return;

@@ -17,7 +17,14 @@ import {
   type Reach,
   applyNoteMove as writeNotes,
 } from "../hint/candidate-hint.ts";
-import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import { CellMarks } from "../solve/cell-marks.ts";
+import {
+  type FillBoard,
+  type FillModule,
+  type LadderedFillModule,
+  ladderOf,
+  spaceOf,
+} from "./board.ts";
 import { applyDone, type DoneMove, isDoneShaped } from "./done.ts";
 import { applyEdit, type Edit, editOf } from "./edit.ts";
 
@@ -77,7 +84,7 @@ export function fillMoveOf(move: unknown, context: string): FillMove {
 
 /** The board after `move`. */
 export const applyMove = <C>(
-  module: FillModule<C>,
+  module: LadderedFillModule<C>,
   board: FillBoard<C>,
   move: FillMove,
 ): FillBoard<C> =>
@@ -103,12 +110,32 @@ function encodingOf<C>(
 }
 
 /** The cells a value placed at `c` rules out of their notes: those sharing a
- * unit with it, which no value repeats in. The one reach auto-pencil,
- * Mark-all's clean and the candidate walk (`candidates.ts`) read. */
-export const reachOf = <C>(module: FillModule<C>, board: FillBoard<C>): Reach => {
-  const { peers } = spaceOf(module, board);
-  return (c) => peers[c];
-};
+ * unit with it, which no value repeats in, and those the techniques run on
+ * placing strike it from where every cell could hold anything (a `zoning`
+ * area and its neighbors). The one reach auto-pencil, Mark-all's clean and
+ * the candidate walk (`candidates.ts`) read; asked once a cell and value. */
+export function reachOf<C>(module: LadderedFillModule<C>, board: FillBoard<C>): Reach {
+  const sp = spaceOf(module, board);
+  const { placing } = ladderOf(module, board);
+  const reached = new Map<number, readonly number[]>();
+  return (c, n) => {
+    const key = c * 32 + n;
+    const known = reached.get(key);
+    if (known !== undefined) return known;
+    const grid = new Uint8Array(board.values.length);
+    grid[c] = n;
+    const m = new CellMarks(sp, ~0, grid);
+    m.cands.fill(~0);
+    m.cands[c] = 1 << n;
+    for (const run of placing) run(m, c);
+    const out = new Set(sp.peers[c]);
+    for (const p of sp.cells) if (p !== c && ((m.cands[p] >> n) & 1) === 0) out.add(p);
+    // The peers in the space's order, as a hint's marks list them.
+    const cells = [...out];
+    reached.set(key, cells);
+    return cells;
+  };
+}
 
 /**
  * The board after the note-taking cell's move `move`: a note toggled on an
@@ -118,7 +145,7 @@ export const reachOf = <C>(module: FillModule<C>, board: FillBoard<C>): Reach =>
  * that does throws.
  */
 function applyNoteMove<C>(
-  module: FillModule<C>,
+  module: LadderedFillModule<C>,
   board: FillBoard<C>,
   move: CandidateMove,
 ): FillBoard<C> {
@@ -154,7 +181,7 @@ function applyNoteMove<C>(
  * otherwise each note a placed value rules out (`adaptiveMarkAll`). `null`
  * where there is nothing to do, or the board keeps no notes. */
 export function markAll<C>(
-  module: FillModule<C>,
+  module: LadderedFillModule<C>,
   board: FillBoard<C>,
 ): CandidateMove | null {
   const notes = board.pencil;
