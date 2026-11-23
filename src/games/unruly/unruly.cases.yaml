@@ -1,0 +1,94 @@
+# Unruly's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every kind of step its
+# hint takes, upstream's givens read as the right pieces, and the size its
+# unique rule allows.
+
+values:
+  block: 1
+  disc: 2
+
+hint:
+  # No preset turns unique rows on at the top tier, and only a board dealt
+  # with it fires that rung.
+  params:
+    - {w: 14, h: 14, diff: 2}
+    - {w: 8, h: 8, diff: 2, variations: [unique]}
+  pins:
+    # Held on 2221 of 2243 positions walked.
+    threes: "14x14dn:BBADaFcaCdMFCCCdfcCEfebdDbBobBABAMABgajJBGBacjac"
+    # Held on 1810 of 2243 positions walked.
+    lastGap:
+      id: "8x8udn:aDcfCBbiBbgDACfCCd"
+      moves:
+        - {set: [17, 2]}
+        - {set: [43, 2]}
+        - {set: [46, 2]}
+        - {set: [25, 1]}
+        - {set: [52, 2]}
+        - {set: [53, 1]}
+        - {set: [21, 1]}
+        - {set: [37, 2]}
+        - {set: [61, 2]}
+        - {set: [38, 1]}
+        - {set: [62, 1]}
+    # Held on 1493 of 2243 positions walked.
+    quota:
+      id: "8x8udn:MBAaAIjabCaIBdcba"
+      moves:
+        - {set: [13, 2]}
+        - {set: [35, 1]}
+        - {set: [38, 1]}
+        - {set: [53, 2]}
+        - {set: [62, 1]}
+        - {set: [34, 2]}
+        - {set: [45, 1]}
+        - {set: [46, 2]}
+    # Held on 1550 of 2243 positions walked.
+    lastOne:
+      id: "8x8udn:AcabHbatBcaDicCb"
+      moves:
+        - {set: [2, 1]}
+        - {set: [1, 2]}
+        - {set: [5, 1]}
+        - {set: [18, 1]}
+        - {set: [41, 1]}
+        - {set: [44, 1]}
+        - {set: [9, 1]}
+        - {set: [10, 2]}
+        - {set: [51, 1]}
+        - {set: [31, 2]}
+        - {set: [55, 2]}
+        - {set: [7, 1]}
+    # Held on 402 of 2243 positions walked.
+    unique:
+      id: "8x8udn:MBAaAIjabCaIBdcba"
+      moves:
+        - {set: [13, 2]}
+        - {set: [35, 1]}
+        - {set: [38, 1]}
+        - {set: [53, 2]}
+        - {set: [62, 1]}
+        - {set: [34, 2]}
+        - {set: [45, 1]}
+        - {set: [46, 2]}
+        - {set: [32, 1, 33, 1]}
+        - {set: [25, 2]}
+        - {set: [5, 1, 21, 1, 29, 1]}
+        - {set: [6, 2, 22, 2, 30, 2]}
+
+ids:
+  # Upstream's dot runs: a block's letter is uppercase and a disc's
+  # lowercase, its offset from `a` the run of empty squares before it, and
+  # the board ends at its last piece.
+  - id: "6x6:aBdIAEbceaca"
+    holds:
+      values: [disc, 0, block, 0, 0, 0, disc, 0, 0, 0, 0, 0, 0, 0, 0, block, block, 0, 0, 0, 0, block, 0, disc, 0, 0, disc, 0, 0, 0, 0, disc, disc, 0, 0, disc]
+      fixed: [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1]
+
+params:
+  # 14 different rows of six squares keep the rules (OEIS A177790), so a
+  # board six wide is at most 14 high with unique rows, and unbounded
+  # without.
+  - {read: "6x14u", refused: false}
+  - {read: "6x16u", refused: "Unique rows and columns: a grid 6 wide can be at most 14 high."}
+  - {read: "6x16", refused: false}

@@ -9,3 +9,37 @@ exports[`kakurasu: pinned hint positions > says, at each pin 1`] = `
   "tooMuch": "This row still needs only 4, and the ringed square is worth more, so it must be clear.",
 }
 `;
+
+exports[`mosaic: pinned hint positions > says, at each pin 1`] = `
+{
+  "alone.exact": "This 4 needs 4 shaded squares and has only 4 open squares, so each ringed square must be shaded.",
+  "alone.met": "This 0 takes no shaded squares, so each ringed square must be clear.",
+  "compared.more": "This 4 needs 2 more shaded squares than this 2, so each ringed square outside the 2's block must be shaded, and each ringed square outside the 4's block must be clear.",
+  "compared.same": "Both 3s need 3 shaded squares, and the left 3's all lie in the right 3's block, so each ringed square must be clear.",
+}
+`;
+
+exports[`norinori: pinned hint positions > says, at each pin 1`] = `
+{
+  "alone": "This square has no neighbor that could pair with it, so it must be clear.",
+  "between": "This square would touch 2 shaded squares if it were shaded, so it must be clear.",
+  "blocked": "With this square shaded, this region has no room for its second shaded square in a domino, given the outlined square, so this square must be clear.",
+  "claimed": "This shaded square must pair inside this region, which needs one more shaded square, so these squares must be clear.",
+  "crowded": "With this square shaded, this region has no room for 2 shaded squares as dominoes, so this square must be clear.",
+  "domino": "These two shaded squares make a domino, and no other shaded square may touch it, so these squares must be clear.",
+  "exactRegion": "This region needs 2 shaded squares and has only 2 open squares, so each ringed square must be shaded.",
+  "fullRegion": "This region already has its two shaded squares, so the ringed square must be clear.",
+  "neededRegion": "This region needs 2 shaded squares as dominoes and without this square has room for only 1, given the outlined square, so that square must be shaded.",
+  "partner": "This shaded square has no shaded neighbor and only one open one, so the ringed square must be shaded.",
+}
+`;
+
+exports[`unruly: pinned hint positions > says, at each pin 1`] = `
+{
+  "lastGap": "This column already has all its discs (outlined), so the ringed square must hold a block.",
+  "lastOne": "The last disc in this column fits only in an outlined cell without making three blocks, so this cell must hold a block.",
+  "quota": "This row already has all its discs (outlined), so each ringed square must hold a block.",
+  "threes": "The outlined cells already hold blocks, so this cell would make three in a row: it must hold a disc.",
+  "unique": "This row's discs all sit where the outlined row's do, so a disc in this cell would copy it: it must hold a block.",
+}
+`;

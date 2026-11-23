@@ -16,15 +16,17 @@
  * - `tiers`: `absent` and `dealt`, the cells `describeAbsentTiers` and
  *   `describeDealtTiers` take.
  * - `ids`: a game ID, what it opens as (`opens`, the params the midend then
- *   holds, or `refused`) and what the board it deals `holds`.
+ *   holds, or `refused`) and what its desc reads as (`holds`), refused or
+ *   not.
  * - `params`: a params string read, with what it is written back as
  *   (`full`, `brief`), its menu `label`, and whether it is `refused` when a
  *   board is to be dealt or `loads` when one arrives with its desc.
  * - `positions`: a game ID, `moves` played on it and `solve` after them, and
  *   what the engine reports there: `status`, `text`, `statusbar`, `breaks`
  *   (the rules the live errors name), `mistakes` (what Check & Save
- *   counts), the hint's first `steps`, `holds`, and `draws` (ops counted by
- *   shape and color).
+ *   counts), the hint's first `steps`, `holds`, `draws` (ops counted by
+ *   shape and color) and `circled` (the text inside each circle the hint
+ *   draws), the frame drawn with the hint shown where it says `showHint`.
  *
  * A message expected is written whole, as `/a pattern/`, or as the name of a
  * refusal constant (`DESC_NOT_UNIQUE`). An expectation the engine wrote,
@@ -45,7 +47,7 @@ import {
 } from "yaml";
 import * as roles from "../color/roles.ts";
 import * as descErrors from "../contract/desc-error.ts";
-import { loadDesc } from "../contract/desc-error.ts";
+import { loadDesc, readBoard } from "../contract/desc-error.ts";
 import type { HintStep } from "../contract/game.ts";
 import { describeParams } from "../game-id/param-label.ts";
 import { paramsError } from "../game-id/params.ts";
@@ -129,6 +131,11 @@ export interface PositionCase extends At {
   readonly holds: Readonly<Record<string, unknown>>;
   /** By `<op> <color role>`, as `polygon error`. */
   readonly draws: Readonly<Record<string, Count>>;
+  /** Whether the frame `draws` counts is drawn with the hint shown. */
+  readonly showHint: boolean;
+  /** The text drawn at the center of each unfilled circle, sorted: what the
+   * hint circles, where it circles a number. Read with the hint shown. */
+  readonly circled: readonly string[] | null;
   readonly recorded: boolean;
 }
 
@@ -363,8 +370,6 @@ export function parseGameCases(text: string, path: string): GameCases {
     };
     if (c.opens !== null && c.refused !== null)
       fail(node, `${where} both opens and is refused`);
-    if (c.refused !== null && Object.keys(c.holds).length > 0)
-      fail(node, `${where} is refused, so holds no board`);
     return c;
   });
 
@@ -410,6 +415,8 @@ export function parseGameCases(text: string, path: string): GameCases {
         "steps",
         "holds",
         "draws",
+        "showHint",
+        "circled",
         "recorded",
       ]);
       const draws: Record<string, Count> = {};
@@ -452,6 +459,13 @@ export function parseGameCases(text: string, path: string): GameCases {
               ),
         holds: holds(e.get("holds"), `${where}.holds`),
         draws,
+        showHint: opt(e.get("showHint"), (n) => bool(n, `${where}.showHint`)) ?? false,
+        circled:
+          e.get("circled") === undefined
+            ? null
+            : items(e.get("circled"), `${where}.circled`).map((n, k) =>
+                str(n, `${where}.circled[${k}]`),
+              ),
         recorded: opt(e.get("recorded"), (n) => bool(n, `${where}.recorded`)) ?? false,
       };
     },
@@ -527,32 +541,39 @@ function holdsDiffers(
 
 /** The board `id` deals, or the refusal. */
 function load(game: AnyGame, id: string): { state: unknown } | { error: string } {
-  const colon = id.indexOf(":");
-  if (colon < 0) throw new Error(`${id} is not a game ID with a desc`);
-  const loaded = loadDesc(
-    game,
-    game.decodeParams(id.slice(0, colon)),
-    id.slice(colon + 1),
-  );
+  const [params, desc] = splitId(id);
+  const loaded = loadDesc(game, game.decodeParams(params), desc);
   return loaded.ok ? { state: loaded.value } : { error: loaded.error };
 }
 
-/** What of an ID case the game does not do: empty when it holds. */
+/** A game ID's params and desc. */
+function splitId(id: string): [string, string] {
+  const colon = id.indexOf(":");
+  if (colon < 0) throw new Error(`${id} is not a game ID with a desc`);
+  return [id.slice(0, colon), id.slice(colon + 1)];
+}
+
+/** What of an ID case the game does not do: empty when it holds. What the
+ * board `holds` is the codec's reading of the desc, so a case may say what a
+ * board refused as unplayable reads as. */
 export function checkId(game: AnyGame, c: IdCase): string[] {
   const out: string[] = [];
   const loaded = load(game, c.id);
   if (c.refused !== null) {
-    if (!("error" in loaded)) return ["loads, where it should be refused"];
-    if (!saysAs(c.refused, loaded.error))
+    if (!("error" in loaded)) out.push("loads, where it should be refused");
+    else if (!saysAs(c.refused, loaded.error))
       out.push(`refused with "${loaded.error}", not ${shown(c.refused)}`);
-    return out;
-  }
-  if ("error" in loaded) return [`refused: ${loaded.error}`];
+  } else if ("error" in loaded) return [`refused: ${loaded.error}`];
   if (c.opens !== null) {
     const opened = openedAs(game, c.id);
     if (opened !== c.opens) out.push(`opens as ${opened}, not ${c.opens}`);
   }
-  out.push(...holdsDiffers(c.holds, loaded.state));
+  if (Object.keys(c.holds).length > 0) {
+    const [params, desc] = splitId(c.id);
+    const read = readBoard(game, game.decodeParams(params), desc);
+    if (!read.ok) out.push(`reads as no board: ${read.error}`);
+    else out.push(...holdsDiffers(c.holds, read.value));
+  }
   return out;
 }
 
@@ -599,6 +620,20 @@ function drawn(ops: readonly DrawOp[], key: string): number {
       o.op === op &&
       (("color" in o && o.color === color) || ("fill" in o && o.fill === color)),
   ).length;
+}
+
+/** The text drawn at the center of each unfilled circle, one per center,
+ * sorted; "none" where no text is. */
+function circledTexts(ops: readonly DrawOp[]): string[] {
+  const centers = new Set<string>();
+  for (const o of ops)
+    if (o.op === "circle" && o.fill === -1) centers.add(`${o.cx},${o.cy}`);
+  return [...centers]
+    .map((c) => {
+      const text = ops.find((o) => o.op === "text" && `${o.x},${o.y}` === c);
+      return text?.op === "text" ? text.text : "none";
+    })
+    .sort();
 }
 
 /** What of a position case the game does not do. */
@@ -650,13 +685,17 @@ export function checkPosition(game: AnyGame, c: PositionCase): string[] {
       });
   }
   out.push(...holdsDiffers(c.holds, state));
-  if (c.mistakes !== null || Object.keys(c.draws).length > 0) {
+  const { circled } = c;
+  if (c.mistakes !== null || Object.keys(c.draws).length > 0 || circled !== null) {
     const frame = renderScenario({
       game,
       id: c.id,
       moves,
       showMistakes: c.mistakes !== null,
+      showHint: c.showHint || circled !== null,
     });
+    if (circled !== null)
+      was("circles", circledTexts(frame.recording.ops), [...circled].sort());
     if (c.mistakes !== null) was("mistakes", frame.mistakeCount, c.mistakes);
     for (const [key, want] of Object.entries(c.draws)) {
       const n = drawn(frame.recording.ops, key);

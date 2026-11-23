@@ -24,15 +24,12 @@ const NOT_YET_DATA: Readonly<Record<string, string>> = {
   bricks: "bricks.test.ts",
   clusters: "clusters.test.ts",
   lightup: "lightup.test.ts",
-  mosaic: "mosaic.test.ts",
-  norinori: "norinori.test.ts",
   pattern: "pattern.test.ts",
   range: "range.test.ts",
   singles: "singles.test.ts",
   starbattle: "starbattle.test.ts",
   sticks: "sticks.test.ts",
   tents: "tents.test.ts",
-  unruly: "unruly.test.ts",
 };
 
 describe("a born game's cases", () => {

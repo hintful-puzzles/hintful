@@ -42,13 +42,21 @@
       capability's tests, naming no game, and each capability a born
       game names tested on one. Count the capabilities and the ones
       covered; a capability no fixture reaches is listed, not skipped.
+      Until then a capability whose check a count cannot state is tested
+      in its engine module's tests on its one game's compiled module, as
+      Tents' already are: the `joins` painter on Norinori
+      (`engine/fill/render.test.ts`), which a fixture replaces.
 
 ## 4. The born games
 
 - [ ] 4.1 Each born game's `*.test.ts` moved to data, one commit a game
       or a few, the cases of 1.1 kept as data or named by the guard that
       holds them. `npm run test:hint-sweeps` before the last commit.
-      Moved: Kakurasu. The rest are `NOT_YET_DATA` in
+      Moved: Kakurasu, Unruly, Mosaic, Norinori. An ID case's `holds` is
+      the codec's reading, so it may sit beside a `refused` (Norinori's
+      walls read as regions on a board loading refuses); a position's
+      `circled` reads the text inside each hint circle (Mosaic). The
+      rest are `NOT_YET_DATA` in
       `born-game-cases.test.ts`, which only shrinks; each game's
       outline case leaves for `mistake-outline.test.ts`.
 - [ ] 4.2 `docs/testing.md` § "What a new game ships" (and

@@ -84,4 +84,13 @@ describe("a case, checked", () => {
       expect(failures(wrong), wrong).not.toEqual([]);
     }
   });
+
+  it("reads what a board refused as unplayable holds", () => {
+    const stuck = { ...fakeGame, finishesByDeduction: () => false };
+    const check = (text: string) => read(text).ids.flatMap((c) => checkId(stuck, c));
+    const id = "ids:\n  - id: t3:g3-1\n    refused: DESC_NOT_DEDUCIBLE\n";
+    expect(check(`${id}    holds: { target: 3 }\n`)).toEqual([]);
+    expect(check(`${id}    holds: { target: 4 }\n`)).not.toEqual([]);
+    expect(check("ids:\n  - id: t3:g3-1\n    holds: { target: 3 }\n")).not.toEqual([]);
+  });
 });

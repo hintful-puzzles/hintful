@@ -5,11 +5,12 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { game as norinori } from "../../generated/games/norinori/norinori.game.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
-import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
+import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.ts";
 import type { FillMistake } from "./answer.ts";
 import { type FillBoard, newBoard, spaceOf } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
@@ -128,5 +129,23 @@ describe("a fill game drawn by layers", () => {
       "3",
       "4",
     ]);
+  });
+});
+
+describe("a piece that joins", () => {
+  // Norinori's shaded square is the one painter that joins (`Painter.joins`),
+  // until the capability has a description of its own.
+  it("draws two side by side as one piece, and two apart each in its own cell", () => {
+    // Each half reaches the side it shares with the other, where the other's
+    // begins.
+    const id = "6x6dn:1c2aabeb2b2b2aa1c3daf";
+    const meet = (moves: { set: number[] }[]) => {
+      const xs = renderScenario({ game: norinori, id, moves }).recording.ops.flatMap(
+        (o) => (o.op === "polygon" ? [o.points.map(([x]) => x)] : []),
+      );
+      return xs.some((a) => xs.some((b) => Math.max(...a) === Math.min(...b)));
+    };
+    expect(meet([{ set: [0, 1, 1, 1] }])).toBe(true);
+    expect(meet([{ set: [0, 1, 2, 1] }])).toBe(false);
   });
 });

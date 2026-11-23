@@ -1,0 +1,50 @@
+# Norinori's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every kind of step its
+# hint takes, the regions read from their walls, and a region's breach drawn
+# on its squares.
+
+values:
+  shaded: 1
+  clear: 2
+
+hint:
+  params:
+    - {w: 6, h: 6, diff: 1}
+    - {w: 6, h: 6, diff: 2}
+  seeds: 48
+  pins:
+    domino: "6x6dn:1c2aabeb2b2b2aa1c3daf"
+    partner: "6x6dn:eaacb1bbabb1b5a5aah"
+    between: "6x6dn:ebab1babaa1c2fa3ac1a1c"
+    alone: "6x6dn:eaacb1bbabb1b5a5aah"
+    claimed: "6x6dn:1abb2a2adeacaa1d3c3b2a"
+    fullRegion: "6x6dt:bca4b2a2fa2abaa1db2bb1"
+    exactRegion: "6x6dn:1c2aabeb2b2b2aa1c3daf"
+    neededRegion: "6x6dn:a1c4b1a1aaa1ib1b3adb1b1"
+    blocked: "6x6dn:2cada2aa1a2fcb1b1ac1aaba"
+    crowded: "6x6dt:f2aa3a4a2ada1aaadb1e1a"
+
+ids:
+  # Two regions of a 4x4, the left two columns and the right two, numbered
+  # in reading order: a wall after one gap, then after two, three times, and
+  # thirteen gaps to the end. Deduction alone does not finish it, so it is
+  # read but not played.
+  - id: "4x4:abbbm"
+    refused: DESC_NOT_DEDUCIBLE
+    holds:
+      dealt.region.of: [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]
+  # The top left square walled off alone, which cannot hold two shaded.
+  - id: "4x4:1kk"
+    refused: DESC_MALFORMED
+
+positions:
+  # Three along the bottom row's region: a breach of the region that lies in
+  # a line and is no run, so each square is red and no bar is drawn.
+  - id: "6x6dn:1c2aabeb2b2b2aa1c3daf"
+    moves: [{set: [30, shaded, 31, shaded, 32, shaded]}]
+    draws: {polygon error: 3, rect error: 0}
+  # The second row's third and fourth squares are a region of their own:
+  # both crosses that leave it no room are red, and no diamond is drawn.
+  - id: "6x6dn:1c2aabeb2b2b2aa1c3daf"
+    moves: [{set: [8, clear, 9, clear]}]
+    draws: {polygon error: 0, line error: 4}
