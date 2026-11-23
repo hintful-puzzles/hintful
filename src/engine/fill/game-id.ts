@@ -66,8 +66,8 @@ import { type Sample, samplePieces } from "./sample.ts";
  * letter's case (`cases`, lowercase then uppercase), after `before` and
  * written only where one is dealt where `before` is given; a list kind's
  * lists, `.` within one and `/` between two; or a kind's values, the first
- * after `before` and the rest after commas, in the space's order or the
- * columns first. */
+ * after `before` and the rest after commas (or `between`), in the space's
+ * order or the columns first. */
 export type IdSegment =
   | { readonly runs: string }
   | { readonly walls: string }
@@ -82,6 +82,9 @@ export type IdSegment =
   | {
       readonly digits: string;
       readonly apart?: string;
+      /** Written before the segment, which is written only where a clue of
+       * the kind is dealt (Towers' givens after `,`). */
+      readonly before?: string;
       /** A one-valued kind at cells written in the stream as its capital
        * letter, by the letter. */
       readonly letters?: Readonly<Record<string, string>>;
@@ -95,6 +98,8 @@ export type IdSegment =
   | {
       readonly numbers: string;
       readonly before?: string;
+      /** What stands between two elements, where not a comma. */
+      readonly between?: string;
       readonly order?: "columns";
       /** What an element without a clue is written as, where not nothing. */
       readonly hidden?: string;
@@ -194,7 +199,7 @@ export interface FillOption {
 }
 
 /** The elements of the space a clue kind sits at. */
-export type Universe = "cells" | "lines" | "edges";
+export type Universe = "cells" | "lines" | "edges" | "slots";
 
 /** The elements a clue kind sits at: the space's, or the parts of the deal's
  * one partition. */
@@ -1042,8 +1047,8 @@ function elements(
 ): readonly number[] {
   const { w, h } = sp;
   if (order !== "columns") return sp[universe];
-  if (universe === "edges")
-    throw new Error("id: an edge's kind is written in its order");
+  if (universe === "edges" || universe === "slots")
+    throw new Error(`id: a kind at ${universe} is written in their order`);
   if (universe === "lines") return [...sp.lines.slice(h), ...sp.lines.slice(0, h)];
   const out: number[] = [];
   for (let x = 0; x < w; x++) for (let y = 0; y < h; y++) out.push(y * w + x);
@@ -1145,6 +1150,9 @@ export function encodeDesc<C extends Clues<C>>(
     }
     if ("digits" in seg) {
       const list = listOf(seg.digits);
+      // Behind its mark, the segment is written only where it holds a clue.
+      if (seg.before !== undefined && list.at.length === 0) continue;
+      out += seg.before ?? "";
       const cells = boardCells(deal, sp);
       const marked = Object.entries(seg.letters ?? {}).map(
         ([letter, kind]) => [letter, listOf(kind)] as const,
@@ -1252,7 +1260,7 @@ export function encodeDesc<C extends Clues<C>>(
     const list = listOf(seg.numbers);
     elements(sp, universeOf(deal, seg.numbers), seg.order).forEach((e, i) => {
       if (i === 0) out += seg.before ?? "";
-      else if (seg.closed !== true) out += ",";
+      else if (seg.closed !== true) out += seg.between ?? ",";
       const v = list.valueAt[e];
       out += v >= 0 ? String(v) : (seg.hidden ?? "");
       if (seg.closed === true) out += ",";
@@ -1314,6 +1322,109 @@ function readGlyphs(
 
 /** A `lists` segment: every element's list, an empty one written as
  * nothing, held in the space's order. */
+/**
+ * A `digits` segment's clues, by kind: its own kind's, and each kind its
+ * letters, the numbers after them and its `also` numbers stand for. A digit
+ * is one cell's clue, a letter a run of 1 to 26 without one; the last run is
+ * written, so the cells end with the segment. With `apart`, a clue is a whole
+ * number, and `apart` is between two with no run between them, exactly
+ * there. Behind its `before`, the segment is read only where the mark is.
+ */
+function readDigits<C extends Clues<C>>(
+  r: DescReader,
+  deal: FillDeal,
+  sp: GridSpace,
+  clueMax: ClueMax<C>,
+  seg: Extract<IdSegment, { readonly digits: string }>,
+): Map<string, ClueList> {
+  const kind = seg.digits as keyof C;
+  const all = sp.cells.length;
+  const out = new Map<string, ClueList>();
+  if (seg.before !== undefined && !r.accept(seg.before)) {
+    out.set(seg.digits, clueList([], [], all));
+    return out;
+  }
+  const least = deal.least?.[seg.digits] ?? 0;
+  const cells = boardCells(deal, sp);
+  const n = cells.length;
+  const at: number[] = [];
+  const v: number[] = [];
+  const letters = seg.letters ?? {};
+  const also = seg.also ?? {};
+  const markedAt = markedStart(deal, sp, cells, [
+    ...Object.values(letters),
+    ...Object.values(also),
+  ]);
+  // The largest number the segment reads: its own kind's, or one that
+  // stands for another kind.
+  const topAlso = Math.max(-1, ...Object.keys(also).map(Number));
+  const after = seg.after ?? {};
+  const numberedAt = new Map<string, { at: number[]; v: number[] }>(
+    Object.values(after).map((k) => [k, { at: [], v: [] }]),
+  );
+  const isRun = (x: string) => x >= "a" && x <= "z";
+  const isLetter = (x: string) => x in letters;
+  // Whether the cell before was written, so a clue here has no run before it.
+  let afterClue = false;
+  for (let pos = 0; pos < n; ) {
+    if (r.peekIs(isRun)) {
+      pos += r.char().charCodeAt(0) - 96;
+      if (pos > n) r.fail(DESC_TOO_LONG);
+      afterClue = false;
+      continue;
+    }
+    const c = cells[pos];
+    if (r.peekIs(isLetter)) {
+      const letter = r.char();
+      markedAt.get(letters[letter])?.push(c);
+      const k = after[letter];
+      if (k !== undefined && r.peekIs(isDigit)) {
+        const value = Number(r.char());
+        if (value > maxOf(clueMax, k as keyof C, sp, c)) r.fail(DESC_OUT_OF_RANGE);
+        const got = numberedAt.get(k);
+        got?.at.push(c);
+        got?.v.push(value);
+      }
+      pos++;
+      afterClue = true;
+      continue;
+    }
+    const max = Math.max(maxOf(clueMax, kind, sp, c), topAlso);
+    let value: number;
+    if (seg.apart === undefined) {
+      value = Number(r.char(isDigit));
+      if (value < least || value > max) r.fail(DESC_OUT_OF_RANGE);
+    } else {
+      if (afterClue) r.expect(seg.apart);
+      value = r.int(least, max);
+    }
+    pos++;
+    afterClue = true;
+    const other = also[String(value)];
+    if (other !== undefined) {
+      markedAt.get(other)?.push(c);
+      continue;
+    }
+    if (value > maxOf(clueMax, kind, sp, c)) r.fail(DESC_OUT_OF_RANGE);
+    at.push(c);
+    v.push(value);
+  }
+  out.set(seg.digits, clueList(at, v, all));
+  for (const [k, got] of numberedAt) out.set(k, clueList(got.at, got.v, all));
+  for (const [k, marked] of markedAt) {
+    const sorted = marked.toSorted((a, b) => a - b);
+    out.set(
+      k,
+      clueList(
+        sorted,
+        sorted.map(() => 0),
+        all,
+      ),
+    );
+  }
+  return out;
+}
+
 function readLists<C extends Clues<C>>(
   r: DescReader,
   deal: FillDeal,
@@ -1465,90 +1576,8 @@ export function decodeDesc<C extends Clues<C>>(
         continue;
       }
       if ("digits" in seg) {
-        // A digit is one cell's clue, a letter a run of 1 to 26 without one;
-        // the last run is written, so the cells end with the segment. With
-        // `apart`, a clue is a whole number, and `apart` is between two with
-        // no run between them, exactly there.
-        const kind = seg.digits as keyof C;
-        const least = deal.least?.[seg.digits] ?? 0;
-        const cells = boardCells(deal, sp);
-        const n = cells.length;
-        const at: number[] = [];
-        const v: number[] = [];
-        const letters = seg.letters ?? {};
-        const also = seg.also ?? {};
-        const markedAt = markedStart(deal, sp, cells, [
-          ...Object.values(letters),
-          ...Object.values(also),
-        ]);
-        // The largest number the segment reads: its own kind's, or one that
-        // stands for another kind.
-        const topAlso = Math.max(-1, ...Object.keys(also).map(Number));
-        const after = seg.after ?? {};
-        const numberedAt = new Map<string, { at: number[]; v: number[] }>(
-          Object.values(after).map((k) => [k, { at: [], v: [] }]),
-        );
-        const isRun = (x: string) => x >= "a" && x <= "z";
-        const isLetter = (x: string) => x in letters;
-        // Whether the cell before was written, so a clue here has no run
-        // before it.
-        let afterClue = false;
-        for (let pos = 0; pos < n; ) {
-          if (r.peekIs(isRun)) {
-            pos += r.char().charCodeAt(0) - 96;
-            if (pos > n) r.fail(DESC_TOO_LONG);
-            afterClue = false;
-            continue;
-          }
-          const c = cells[pos];
-          if (r.peekIs(isLetter)) {
-            const letter = r.char();
-            markedAt.get(letters[letter])?.push(c);
-            const k = after[letter];
-            if (k !== undefined && r.peekIs(isDigit)) {
-              const value = Number(r.char());
-              if (value > maxOf(clueMax, k as keyof C, sp, c))
-                r.fail(DESC_OUT_OF_RANGE);
-              const got = numberedAt.get(k);
-              got?.at.push(c);
-              got?.v.push(value);
-            }
-            pos++;
-            afterClue = true;
-            continue;
-          }
-          const max = Math.max(maxOf(clueMax, kind, sp, c), topAlso);
-          let value: number;
-          if (seg.apart === undefined) {
-            value = Number(r.char(isDigit));
-            if (value < least || value > max) r.fail(DESC_OUT_OF_RANGE);
-          } else {
-            if (afterClue) r.expect(seg.apart);
-            value = r.int(least, max);
-          }
-          pos++;
-          afterClue = true;
-          const other = also[String(value)];
-          if (other !== undefined) {
-            markedAt.get(other)?.push(c);
-            continue;
-          }
-          if (value > maxOf(clueMax, kind, sp, c)) r.fail(DESC_OUT_OF_RANGE);
-          at.push(c);
-          v.push(value);
-        }
-        const all = sp.cells.length;
-        out[kind] = clueList(at, v, all);
-        for (const [k, got] of numberedAt)
-          out[k as keyof C] = clueList(got.at, got.v, all);
-        for (const [k, marked] of markedAt) {
-          const sorted = marked.toSorted((a, b) => a - b);
-          out[k as keyof C] = clueList(
-            sorted,
-            sorted.map(() => 0),
-            all,
-          );
-        }
+        for (const [kind, list] of readDigits(r, deal, sp, clueMax, seg))
+          out[kind as keyof C] = list;
         continue;
       }
       if ("dots" in seg) {
@@ -1594,7 +1623,7 @@ export function decodeDesc<C extends Clues<C>>(
       elements(sp, universe, seg.order).forEach((e, i) => {
         if (i === 0) {
           if (seg.before !== undefined) r.expect(seg.before);
-        } else if (seg.closed !== true) r.expect(",");
+        } else if (seg.closed !== true) r.expect(seg.between ?? ",");
         // An absent clue is written as `hidden`, or as nothing.
         if (seg.hidden !== undefined && r.accept(seg.hidden)) {
           if (seg.closed === true) r.expect(",");
@@ -1602,7 +1631,7 @@ export function decodeDesc<C extends Clues<C>>(
         }
         if (seg.hidden === undefined && !r.peekIs(isDigit)) return;
         at.push(e);
-        v.push(r.int(0, maxOf(clueMax, kind, sp, e)));
+        v.push(r.int(deal.least?.[seg.numbers] ?? 0, maxOf(clueMax, kind, sp, e)));
         if (seg.closed === true) r.expect(",");
       });
       // The elements in the space's order, as a list is held.

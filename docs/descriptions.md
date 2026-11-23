@@ -272,11 +272,22 @@ research tools all read through it; the app never does.
   mark done, each with what one is called (`engine/fill/done.ts`): the board
   keeps a flag a clue, by kind and index, so the mark is one capability
   wherever a clue sits, and the game's `doneClues` writes the help's
-  `{{done-clues}}` sentence. A press finds a clue in a gap, or on a part's
+  `{{done-clues}}` sentence. A press finds a clue in a gap, on a part's
   clue's drawn text (the renderer's `partClueBox`, a press elsewhere in its
-  square selecting it), on a board of numbers, and the compiler refuses any
-  other kind; Shift or Ctrl with an arrow marks the gap's clue that way, or
-  on a board of parts the cursor's own part's. A hide keeps whole, until the asked tier's
+  square selecting it), or in a slot's margin square, on a board of numbers,
+  and the compiler refuses any other kind; Shift or Ctrl with an arrow marks
+  the gap's clue that way, on a board of parts the cursor's own part's, and
+  on a board of slots the clue at that end of the cursor's line. A clue at a
+  slot (`at: slot`, beyond either end of a line, Towers') is dealt over the
+  slots and drawn in a margin a tile and an eighth wide round the grid, at
+  both ends of every line, red where it breaks, hatched with its line, and
+  outlined where a step reasons from it: a technique's term of sort slot is
+  named in the compiled `techniques`' `slotTerms`, and the walk marks it a
+  step beyond its line's end (`engine/fill/slots.ts`). It is printed in a rim
+  round the text's grid, and `id:`'s `numbers` writes it with `between: "/"`;
+  `digits`' `before` is written, with its segment, only where its kind has a
+  clue (Towers' givens after `,`), and holds no other kind (`flanking` is the
+  fixture). A hide keeps whole, until the asked tier's
   pass, a kind the lowest tier reads none of (signs over a Latin square's
   singles), so the tier that reads it hides from it.
   `deal.sample: { latin: true }`

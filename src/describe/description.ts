@@ -292,6 +292,7 @@ export type IdSegmentJson =
   | {
       digits: string;
       apart?: string;
+      before?: string;
       letters?: Record<string, string>;
       after?: Record<string, string>;
       also?: Record<string, string>;
@@ -299,6 +300,7 @@ export type IdSegmentJson =
   | {
       numbers: string;
       before?: string;
+      between?: string;
       order?: "columns";
       hidden?: string;
       closed?: true;

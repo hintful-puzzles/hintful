@@ -52,6 +52,7 @@ import {
 import { type FillBoard, type LadderedFillModule, ladderOf, spaceOf } from "./board.ts";
 import { type FillMove, isCandidateMove, reachOf } from "./notes.ts";
 import { numeral } from "./numbers.ts";
+import { slotPoint } from "./slots.ts";
 
 /** What a step of the candidate walk marks: the shared highlights. */
 export type CandidateFillHint = CandidateHighlights;
@@ -160,6 +161,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     id: string,
     f: LadderFiring,
     w: number,
+    h: number,
   ): Firing<FillMove, CandidateFillHint, Reason> {
     const { says } = f.reasons[0] as Said<unknown, StatedSays>;
     const stated = module.STATED?.[id];
@@ -168,6 +170,13 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       Object.entries(says.marks ?? {}).map(([role, els]) => [role, els.map(at)]),
     );
     const strikes = strikesOf(f, w);
+    // A slot lies a step beyond its line's end, off the cells.
+    const termAt = Object.fromEntries(
+      (module.techniques[id]?.slotTerms ?? []).map((name) => [
+        name,
+        (s: number) => slotPoint(w, h, s),
+      ]),
+    );
     return byCell(strikes).map((strike) => {
       const fact = says.facts?.[strikes.indexOf(strike[0])];
       const clauses =
@@ -180,6 +189,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           : statedParts(clauses, {
               kind: CELL,
               at,
+              termAt,
               ring: [{ x: strike[0].x, y: strike[0].y }],
               marks,
               terms: { ...says.terms, ...fact?.terms },
@@ -241,7 +251,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       rungs: [
         ...own.map((id) =>
           techniqueRung<FillMove, CandidateFillHint, Reason>(on, id, (f) =>
-            ownLegs(id, f, w),
+            ownLegs(id, f, w, board.h),
           ),
         ),
         ...latinStrikeRungs<FillMove, CandidateFillHint, Reason, CellMarks>(

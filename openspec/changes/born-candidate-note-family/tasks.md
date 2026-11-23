@@ -229,6 +229,34 @@ commit. In design.md § "Decisions" 7's order.
       separator and the optional givens after `,`, a hide from a tier up,
       `fullLine` and `tallestNearest` stated as techniques, the tower
       painter drawing past its tile with its hit test and 2D/3D preference.
+      In three commits, read at `973039781` (2026-11-23):
+  - [x] 2.5a Clues at slots (`at: slot`, a clue at each end of every
+        line), tested on a fixture of its own, `flanking` (a Latin square
+        with, at some line ends, the sum of the two squares nearest it):
+        derived over `sp.slots`; written by `numbers` with a separator of
+        its own (named `between: "/"`, as `apart` is `digits`' own), and a `digits` segment after a `before`
+        that is written only where a clue is dealt (Towers' `,` givens);
+        drawn in a tile's margin at both ends of each line, red where
+        broken, hatched where a step stripes its line, gray where marked
+        done (a press or drag on it, Shift or Ctrl with an arrow); printed
+        in the text format's rims; and a technique's term of sort slot
+        outlined in its margin by the walk (`STATED`'s term sorts).
+        Done: the term sorts reach the walk as `techniques`' `slotTerms`,
+        only the slot ones, which is all it reads. `numbers` now honors
+        its kind's least value (it read from 0). The compiler refuses a
+        `before` segment holding another kind. A fixture is not in the
+        app, so the browser look is 2.5c's, on Towers.
+  - [ ] 2.5b The walk's own placements: a technique of the description's
+        own that places (Towers' `facing`), one tried before the walk sets
+        up its notes where it reads none (`fullLine`, `tallestNearest`), a
+        firing whose legs are a value each (`byHeight`), a rung chosen by a
+        term (`bounds`' `near`), and a journey's later legs worded by
+        `again`; on `flanking`.
+  - [ ] 2.5c The flip: the hide of givens then clues, the clues from a
+        tier up; the tower painter (3D, drawing past its tile, its hit
+        test, the 2D/3D preference); Towers' tests to `towers.cases.yaml`,
+        its TypeScript deleted, the `game-lines` ceiling lowered, its spec
+        deltas, and the run in the app.
 - [ ] 2.6 Mathrax born: clues at corners, a kind precedence switched by
       option letters, a hide of givens before clues, the board word the
       hint reads stated in the description.

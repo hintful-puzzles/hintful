@@ -121,7 +121,15 @@ export type LadderedFillModule<C> = FillModule<C> &
   Pick<CompiledLadder<string, never>, "ladder"> & {
     readonly placing: readonly { readonly id: string; readonly variation?: string }[];
     readonly striking: readonly { readonly id: string; readonly variation?: string }[];
-    readonly techniques: Readonly<Record<string, { readonly dealt: boolean }>>;
+    /** Each of the description's own techniques: whether it reads the
+     * clues, and the terms its firings say that name slots, which its
+     * words mark in the margin beyond a line's end. */
+    readonly techniques: Readonly<
+      Record<
+        string,
+        { readonly dealt: boolean; readonly slotTerms?: readonly string[] }
+      >
+    >;
   };
 
 export interface FillBoard<C> {

@@ -1,0 +1,10 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A note made into the sum by a partner one too large.
+  flank:
+    conclude: >-
+      forall d in cand(c) where not (exists e in cand(o): e != d and d + e = v + 1):
+      strike(c, d)

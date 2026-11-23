@@ -49,7 +49,7 @@ import {
   rolePalette,
 } from "../color/roles.ts";
 import type { Frame, GameDrawing } from "../contract/game.ts";
-import { CELL, stepMarks } from "../contract/hint-words.ts";
+import { CELL, type StepMarks, stepMarks } from "../contract/hint-words.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../contract/types.ts";
 import { regionFills } from "../generate/region-fill.ts";
 import {
@@ -122,6 +122,7 @@ import type { FillMove } from "./notes.ts";
 import { numeral } from "./numbers.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import type { SearchedFillModule } from "./search.ts";
+import { slotAt, slotClueAt, slotPoint } from "./slots.ts";
 import {
   drawTally,
   tallyAcross,
@@ -140,6 +141,9 @@ export interface FillLook<C> {
   readonly play: FillPlay;
   /** The clue kinds at lines, drawn past each line's end. */
   readonly lineClues: readonly (keyof C)[];
+  /** The clue kinds at slots, each drawn in the margin beyond its line's
+   * end, at both ends of every line. */
+  readonly slotClues?: readonly (keyof C)[];
   /** The list kinds at lines, each list stacked before its line's start. */
   readonly lineLists?: readonly (keyof C)[];
   /** The fixed text before each line's start, by the line's index along its
@@ -166,6 +170,9 @@ export interface FillDrawState {
   /** Per edge, the clue in its gap and its error, where the board has
    * gaps. */
   readonly gaps: TileCache;
+  /** Per slot, its clue's error, done mark, hatch and outline, where the
+   * board has clues at slots. */
+  readonly slots: TileCache;
   readonly marks: HintMarks;
   /** What the tally beneath the board shows found, `null` before it is
    * drawn. */
@@ -406,6 +413,8 @@ export function fillRender<C extends Clues<C>>(
 ): FillRender<C> {
   const { play, lineClues, labels } = look;
   const lineLists = look.lineLists ?? [];
+  const slotClues = look.slotClues ?? [];
+  const slotted = slotClues.length > 0;
   const labelStart = labels?.start;
   // The dealt partition drawn as walls and fills: one, as no game deals two.
   const walled = module.deal?.partitions?.[0] as (keyof C & string) | undefined;
@@ -668,10 +677,20 @@ export function fillRender<C extends Clues<C>>(
       : play.hides === undefined
         ? 1
         : Math.floor(ts / 2);
+  // A board with clues at slots keeps a tile's margin round it for them, and
+  // an eighth more, upstream towers.c's BORDER, or the rim where that is wider.
+  const slotMargin = (ts: number): number => Math.max(ts + Math.floor(ts / 8), rim(ts));
   const startAt = (ts: number, d: number): number =>
-    labelStart !== undefined ? ts : d > 0 ? d * ts + Math.floor(ts / 4) : rim(ts);
+    labelStart !== undefined
+      ? ts
+      : d > 0
+        ? d * ts + Math.floor(ts / 4)
+        : slotted
+          ? slotMargin(ts)
+          : rim(ts);
   const start = (ts: number): number => startAt(ts, depth);
-  const end = (ts: number): number => (lineClues.length > 0 ? ts + 2 : rim(ts));
+  const end = (ts: number): number =>
+    lineClues.length > 0 ? ts + 2 : slotted ? slotMargin(ts) : rim(ts);
   // A board with clues at edges has a gap between every two cells to draw
   // them in, half a tile wide (upstream unequal.c's).
   const gapKinds = gapKindsOf<C>(play);
@@ -1312,6 +1331,7 @@ export function fillRender<C extends Clues<C>>(
       }
     const lineErrors = new Set<number>();
     const gapErrors = new Set<number>();
+    const slotErrors = new Set<number>();
     // A broken number is drawn as a badge (`numberStates`), not on the piece;
     // a part's clue red at its part's first cell.
     for (const [kind, broken] of errors.clues)
@@ -1319,13 +1339,67 @@ export function fillRender<C extends Clues<C>>(
         const at = listOf(state.dealt, kind as keyof C).at[q];
         if (lineClues.includes(kind as keyof C) || lineLists.includes(kind as keyof C))
           lineErrors.add(at);
+        else if (slotClues.includes(kind as keyof C)) slotErrors.add(at);
         else if (play.gaps?.[kind] !== undefined) gapErrors.add(at);
         else if (partKinds.includes(kind as keyof C & string))
           lineWord[(state.dealt[walled as keyof C] as Partition).cells[at][0]] |=
             LABEL_BROKEN;
         else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
       }
-    return { word, lineWord, lineErrors, gapErrors };
+    return { word, lineWord, lineErrors, gapErrors, slotErrors };
+  }
+
+  /**
+   * Each slot's clue, in the margin beyond its line's end: red where the rules
+   * break it, gray where the player marks it done, hatched where a step
+   * stripes its line, and outlined where a step reasons from it.
+   */
+  function drawSlots(
+    dr: GameDrawing,
+    ds: FillDrawState,
+    b: FillBoard<C>,
+    slotErrors: ReadonlySet<number>,
+    stripedLine: number,
+    marks: StepMarks,
+  ): void {
+    if (!slotted) return;
+    const ts = ds.tileSize;
+    const { w, h } = b;
+    const sp = spaceOf(module, b);
+    // A step names a slot by the square it lies in, off the grid.
+    const outlined = new Set(
+      marks.of("outline", CELL).map((c) => slotAt(w, h, c.x, c.y)),
+    );
+    for (const s of sp.slots) {
+      const clue = slotClueAt(slotClues, b, s);
+      const p = slotPoint(w, h, s);
+      // The slot's line, as `stripedLine` numbers it: the rows, then the
+      // columns.
+      const line = p.y >= 0 && p.y < h ? p.y : h + p.x;
+      const err = slotErrors.has(s);
+      const done = clue !== null && isDone(b, clue.kind, clue.k);
+      const key =
+        (err ? 1 : 0) |
+        (stripedLine === line ? 2 : 0) |
+        (done ? 4 : 0) |
+        (outlined.has(s) ? 8 : 0);
+      if (!ds.slots.changed(s, key)) continue;
+      const box = { x: coord(p.x, ts), y: coord(p.y, ts), w: ts, h: ts };
+      dr.drawRect(box, COL_BACKGROUND);
+      if (key & 2) dr.drawHatch(box, hatchPeriod(ts));
+      if (clue !== null)
+        dr.drawText(
+          { x: box.x + Math.floor(ts / 2), y: box.y + Math.floor(ts / 2) },
+          glyphFont(Math.floor(ts / 2)),
+          err ? COL_ERROR : done ? COL_DONE : COL_INK,
+          String(clue.v),
+        );
+      if (key & 8) {
+        const thick = Math.max(2, Math.floor(ts / 16));
+        drawThickRectOutline(dr, box.x, box.y, ts, ts, thick, COL_HINT_OUTLINE);
+      }
+      dr.drawUpdate(box);
+    }
   }
 
   /** The list of line `k`, the first of the list kinds that has one: empty
@@ -1661,7 +1735,10 @@ export function fillRender<C extends Clues<C>>(
     }
 
     // The live errors, on the board as the drag would leave it.
-    const { word, lineWord, lineErrors, gapErrors } = errorWords(state, shown);
+    const { word, lineWord, lineErrors, gapErrors, slotErrors } = errorWords(
+      state,
+      shown,
+    );
 
     addMistakesAndLinks(word, shown, mistakes ?? []);
 
@@ -1679,11 +1756,14 @@ export function fillRender<C extends Clues<C>>(
     const byReading = (cells: readonly MarkCell[]): MarkCell[] =>
       [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
     const targets = byReading(marks.of("ring", CELL));
+    // A clue at a slot is outlined in its margin, and lies on no tile.
+    const onGrid = (c: { x: number; y: number }): boolean =>
+      c.x >= 0 && c.y >= 0 && c.x < w && c.y < h;
     // An outlined number is the number the step reasons from: it is circled,
     // and its block outlined whole, apart from the rest of the area. A plain
     // number has no block, and outlined is a square of the area like any
     // other: the step names the one it counts from by its term.
-    const outlined = byReading(marks.of("outline", CELL));
+    const outlined = byReading(marks.of("outline", CELL).filter(onGrid));
     const blocked = (c: { x: number; y: number }): boolean => {
       const kind = numberAt(state, c.y * w + c.x)?.kind;
       return kind !== undefined && clueCells[kind] !== undefined;
@@ -1731,7 +1811,7 @@ export function fillRender<C extends Clues<C>>(
     const whole = (l: FillLink): boolean => ringed.has(l.cell) && ringed.has(l.to);
     const inPill = new Set(askedLinks.filter(whole).flatMap((l) => [l.cell, l.to]));
     const unlinked = targets.filter((c) => !inPill.has(c.y * w + c.x));
-    const stripes = marks.of("stripes", CELL);
+    const stripes = marks.of("stripes", CELL).filter(onGrid);
     for (const p of stripes) hintWord[p.y * w + p.x] |= HINT_LINE;
     // The striped line, where the stripes lie along one: a line of one cell is
     // a row.
@@ -1810,6 +1890,7 @@ export function fillRender<C extends Clues<C>>(
 
     if (notes) drawPencilMode(dr, ds, state, ui);
     if (gapped) drawGaps(dr, ds, state, gapErrors);
+    drawSlots(dr, ds, state, slotErrors, stripedLine, marks);
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
     ds.marks.paint(dr, unlinked, area, markStyle);
@@ -1870,6 +1951,7 @@ export function fillRender<C extends Clues<C>>(
         clues: new TileCache(b.w + b.h),
         lists: new TileCache(b.w + b.h),
         gaps: new TileCache(gapped ? spaceOf(module, b).edges.length : 0),
+        slots: new TileCache(slotted ? spaceOf(module, b).slots.length : 0),
         marks: new HintMarks(),
         tally: { shown: null },
         pencilModeShown: null,

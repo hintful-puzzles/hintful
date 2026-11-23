@@ -497,6 +497,8 @@ function freshChecked(r: Recheck, id: string, env: Env): void {
 export interface CompiledTechnique {
   readonly code: string;
   readonly clues: boolean;
+  /** The terms its firings say that name slots. */
+  readonly slotTerms: readonly string[];
   readonly reads: {
     readonly cells: readonly string[];
     readonly clues: Readonly<Record<string, string>>;
@@ -1134,9 +1136,21 @@ function techniqueFunction(t: Technique, fnName: string, env: Env): CompiledTech
   ];
   const named = (s: { sort: Sort }): string | null =>
     s.sort.k === "elem" ? s.sort.e : null;
+  // The terms a firing says that name slots, which a fill board marks in its
+  // margin, off the cells every other term names.
+  const slotTerms = new Set<string>();
+  for (const sortsOf of [
+    ...saysFields.variants.map((v) => v.sorts),
+    tenv.factSays?.sorts ?? new Map<string, Sort>(),
+  ])
+    for (const [name, s] of sortsOf) {
+      const of = s.k === "set" ? s.of : s;
+      if (of.k === "elem" && of.e === "slot") slotTerms.add(name);
+    }
   return {
     code: lines.join("\n"),
     clues: readsClues.yes,
+    slotTerms: [...slotTerms],
     reads: {
       cells: sorts.filter((s) => named(s) === "cell").map((s) => s.name),
       clues: Object.fromEntries(

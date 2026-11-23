@@ -107,6 +107,22 @@ its ID SHALL write it, and its hint SHALL mark it there.
 - **THEN** the board draws it in the gap between the edge's two cells, and
   a broken one is drawn as broken
 
+#### Scenario: A clue beyond each end of a line
+
+- **WHEN** a born game deals a clue kind at slots
+- **THEN** the board keeps a margin a tile wide round the grid, draws each
+  clue in the margin square beyond its line's end, at both ends of every
+  line, red where it breaks and hatched where a hint step stripes its line,
+  prints the clues in a rim round the text format's grid, and a hint step
+  that reasons from one outlines it in its margin square
+
+#### Scenario: Clues at slots in a game ID
+
+- **WHEN** a born game's ID writes its slots' clues between slashes and its
+  givens after a comma (upstream Towers')
+- **THEN** the ID is read and written back byte for byte, and the comma and
+  the givens are written only where a square is given
+
 ### Requirement: A born game's clue at every edge may be 0 or 1
 
 A born game's complete clue kind valued 0 or 1 at every edge (a bar) SHALL
@@ -191,6 +207,13 @@ note.
 - **WHEN** a player presses a sign between two cells, then presses it again
 - **THEN** the sign is drawn gray after the first press and in ink after the
   second, and no cell has changed
+
+#### Scenario: A clue beyond a line's end marked from the keyboard
+
+- **WHEN** the board's clues sit at slots, and the player presses Shift or
+  Ctrl with an arrow
+- **THEN** the clue at that end of the selected cell's row or column is
+  marked done
 
 ### Requirement: A born game's menu may offer a board with a deal's setting on
 

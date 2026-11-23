@@ -3,7 +3,7 @@
  * The board keeps one flag a clue of each such kind, by its index in the
  * kind's list, so the mark is the same wherever the clue sits; where a press
  * finds it is the clue's place's (a gap, for a clue at an edge; its drawn
- * text, for a clue at a part).
+ * text, for a clue at a part; its margin square, for a clue at a slot).
  */
 
 import type { Point, Rect } from "../contract/types.ts";
@@ -21,6 +21,7 @@ import type { GridSpace } from "../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import type { FillPlay, FillUi } from "./play.ts";
+import { slotAt, slotClueAt } from "./slots.ts";
 
 /** The clue of the part holding cell `c` on a board drawn at tile size
  * `ts`, with the box it is drawn in (`FillRender.partClueBox`). */
@@ -95,7 +96,9 @@ export interface DoneInput<C, D> {
  * it, with either button, and a drag on through the gaps marks each that
  * looked the same, as upstream Unequal's does. Where its clues sit at parts
  * (`partClue`), a press on a clue's text marks it, and a drag on marks
- * those that looked the same alike.
+ * those that looked the same alike. Where they sit at slots (`slotKinds`), a
+ * press on one in the margin marks it, and Shift or Ctrl with an arrow marks
+ * the one at that end of the cursor's line.
  */
 export function doneInput<C extends Clues<C>, D extends { readonly tileSize: number }>(
   module: FillModule<C>,
@@ -103,12 +106,27 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number,
   partClue: PartClueAt<C> | null = null,
+  slotKinds: readonly (keyof C)[] = [],
 ): DoneInput<C, D> | null {
   const nouns = Object.values(play.done ?? {});
   if (nouns.length === 0) return null;
   const pitch = (ts: number): number => ts + gap(ts);
   const marked = (kind: string, k: number): DoneMove | null =>
     kind in (play.done ?? {}) ? { type: "done", kind, k } : null;
+  /** The clue at slot `s`, where it is one marked done. */
+  const atSlot = (b: FillBoard<C>, s: number): DoneMove | null => {
+    if (s < 0) return null;
+    const clue = slotClueAt(slotKinds, b, s);
+    return clue === null ? null : marked(clue.kind, clue.k);
+  };
+  /** The clue in the margin square round `p`, beyond a line's end. */
+  const slotClueOf = (b: FillBoard<C>, ts: number, p: Point): DoneMove | null => {
+    if (slotKinds.length === 0) return null;
+    const o = origin(ts, b);
+    const x = Math.floor((p.x - o) / pitch(ts));
+    const y = Math.floor((p.y - o) / pitch(ts));
+    return atSlot(b, slotAt(b.w, b.h, x, y));
+  };
   /** The clue of a part drawn round `p`, a few pixels' slack about its
    * text: a press elsewhere in its square selects the square. */
   const partClueAt = (b: FillBoard<C>, ts: number, p: Point): DoneMove | null => {
@@ -147,7 +165,8 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
     noun: nouns[0],
     target: (b, ds, p) =>
       clueAtEdge(module, play, b, edgeAt(spaceOf(module, b), b, ds.tileSize, p)) ??
-      partClueAt(b, ds.tileSize, p),
+      partClueAt(b, ds.tileSize, p) ??
+      slotClueOf(b, ds.tileSize, p),
     apply: (_b, clue) => clue,
     button: "either",
     sweep: { holds: (b, { kind, k }) => (isDone(b, kind, k) ? 1 : 0) },
@@ -173,6 +192,14 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
       // part's: its box is not read, so any tile size serves.
       const clue = partClue?.(KEY_TILE, b, y * b.w + x) ?? null;
       if (clue !== null) return marked(clue.kind, clue.k);
+      // On a board of clues at slots, the clue at that end of the cursor's
+      // line.
+      if (slotKinds.length > 0) {
+        const [dx, dy] = [step[1], step[2]];
+        const ex = dx === 0 ? x : dx < 0 ? -1 : b.w;
+        const ey = dy === 0 ? y : dy < 0 ? -1 : b.h;
+        return atSlot(b, slotAt(b.w, b.h, ex, ey));
+      }
       const [nx, ny] = [x + step[1], y + step[2]];
       if (nx < 0 || ny < 0 || nx >= b.w || ny >= b.h) return null;
       const sp = spaceOf(module, b);

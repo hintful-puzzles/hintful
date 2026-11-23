@@ -123,13 +123,14 @@ export function numberInput<
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number = () => 0,
   partClue: PartClueAt<C> | null = null,
+  slotKinds: readonly (keyof C)[] = [],
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
   const done =
     module.play === undefined
       ? null
-      : doneInput<C, D>(module, module.play, origin, gap, partClue);
+      : doneInput<C, D>(module, module.play, origin, gap, partClue, slotKinds);
   return {
     done,
     interpretMove(b, fillUi, ds, p, raw) {

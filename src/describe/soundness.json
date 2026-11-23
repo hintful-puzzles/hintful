@@ -9,6 +9,7 @@
   "src/engine/testing/fixtures/climbing/climbing.description.yaml#alone": "ad2e686f18c3b611",
   "src/engine/testing/fixtures/climbing/climbing.description.yaml#dotHas": "43345f85f5ebad25",
   "src/engine/testing/fixtures/climbing/climbing.description.yaml#lastRoom": "a728316cc87776f6",
+  "src/engine/testing/fixtures/flanking/flanking.description.yaml#flank": "4ef7a25f1993998f",
   "src/engine/testing/fixtures/fleet/fleet.description.yaml#corner": "c78f60c8a7865d24",
   "src/engine/testing/fixtures/fleet/fleet.description.yaml#full": "525af4a50710ee9d",
   "src/engine/testing/fixtures/fleet/fleet.description.yaml#room": "51f641bd9ffbc4d1",

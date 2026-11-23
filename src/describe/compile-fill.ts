@@ -261,12 +261,17 @@ export function playOf(
       );
   }
   // A clue is marked done by a press where it is drawn, and the engine finds
-  // a press on a clue in a gap or on one at a part alone; the press goes to
-  // the board of numbers' input, which takes no press in a gap of its own.
+  // a press on a clue in a gap, at a slot or on one at a part alone; the
+  // press goes to the board of numbers' input, which takes no press off its
+  // squares of its own.
   for (const k of Object.keys(p.done ?? {})) {
-    if (p.gaps?.[k] === undefined && p.signs?.[k] === undefined)
+    if (
+      p.gaps?.[k] === undefined &&
+      p.signs?.[k] === undefined &&
+      d.clueKinds.get(k)?.at !== "slot"
+    )
       throw new CompileError(
-        `play done: ${k} is no clue kind drawn in a gap or at a part, the places a press marks a clue done`,
+        `play done: ${k} is no clue kind drawn in a gap, at a slot or at a part, the places a press marks a clue done`,
       );
     if (p.numbers === undefined)
       throw new CompileError(
@@ -295,6 +300,11 @@ export function playOf(
   const isList = (k: string) => (env.clues.get(k) as ClueKind).list;
   const lineClues = atLines.filter((k) => !isList(k));
   const lineLists = atLines.filter(isList);
+  const slotClues = [...d.clueKinds].filter(([, c]) => c.at === "slot").map(([k]) => k);
+  if (slotClues.length > 0 && (lineClues.length > 0 || lineLists.length > 0))
+    throw new CompileError(
+      `clue ${slotClues[0]}: a clue at a slot is drawn in the margins, where a line's clue is`,
+    );
   // A rule over a dealt partition's parts breaks at the cells it counts, which
   // may happen to lie in a row and still are no run.
   const overParts = (src: string): boolean => {
@@ -315,6 +325,13 @@ export function playOf(
     "",
     "/** The clue kinds at lines, drawn past each line's end. */",
     `export const lineClues = ${JSON.stringify(lineClues)} as const;`,
+    ...(slotClues.length === 0
+      ? []
+      : [
+          "",
+          "/** The clue kinds at slots, each drawn in the margin beyond its line's end. */",
+          `export const slotClues = ${JSON.stringify(slotClues)} as const;`,
+        ]),
     ...(lineLists.length === 0
       ? []
       : [
@@ -706,6 +723,15 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
       for (const letter of Object.keys(seg.letters ?? {}))
         if (seg.apart === letter)
           throw new CompileError(`id: the letter ${letter} is the digits' apart`);
+      // The segment behind its mark is written where its own kind has a
+      // clue, so it holds no other kind's.
+      if (
+        seg.before !== undefined &&
+        more.length + Object.keys(seg.also ?? {}).length > 0
+      )
+        throw new CompileError(
+          `id: digits of ${kind} after ${seg.before}, written only where ${kind} has a clue, and another kind in the segment`,
+        );
       // A letter's number is one digit, written straight after it.
       for (const [letter, k] of Object.entries(after)) {
         const vs = valuesOf(d, k);
@@ -883,8 +909,8 @@ export function dealOf(
     json.tierLetters ?? tiers.map((t) => t[0]?.toLowerCase() ?? "").join("");
   if (tierLetters.length !== tiers.length || new Set(tierLetters).size !== tiers.length)
     throw new CompileError(`tierLetters: ${tierLetters} is not one letter a tier`);
-  // A clue a fill game deals sits at a cell, a line, an edge or a dealt
-  // partition's part; the tally, the params' clue at the board, is none it
+  // A clue a fill game deals sits at a cell, a line, a slot beyond a line's
+  // end, an edge or a dealt partition's part; the tally, the params' clue at the board, is none it
   // deals.
   const universes = Object.fromEntries(
     [...d.clueKinds]
@@ -893,7 +919,7 @@ export function dealOf(
         const u = env.regions.has(c.at) ? "parts" : UNIVERSE[c.at];
         if (u === undefined)
           throw new CompileError(
-            `clue ${k}: a fill game's clue sits at a cell, a line, an edge or a part`,
+            `clue ${k}: a fill game's clue sits at a cell, a line, a slot, an edge or a part`,
           );
         return [k, u];
       }),
@@ -1580,6 +1606,7 @@ const UNIVERSE: Readonly<Partial<Record<string, string>>> = {
   cell: "cells",
   line: "lines",
   edge: "edges",
+  slot: "slots",
 };
 
 /** The clue kinds `deal.never` names: dealt by no deal, carried only by an
@@ -1851,7 +1878,7 @@ export function derivedClues(
     }
     if (c.value === null || sorts.per || sorts.list || universe === undefined)
       throw new CompileError(
-        `clue ${kind}: a sampled deal derives a clue of one value at a cell, a line, an edge or a part`,
+        `clue ${kind}: a sampled deal derives a clue of one value at a cell, a line, a slot, an edge or a part`,
       );
     const readsClues = { yes: false };
     const scratch: string[] = [];

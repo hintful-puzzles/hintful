@@ -528,12 +528,17 @@ export function compileGame(
     "/** Each of the description's own techniques, by id, and whether it reads",
     " * what the board deals: the engine runs each on the board's clues where it",
     " * does (`describedLadder`). A fill game's names the bindings of a firing",
-    " * that name a clue it reads: a cell's, or a clue's index by its kind. */",
+    " * that name a clue it reads: a cell's, or a clue's index by its kind; and",
+    " * the terms its firings say that name slots, which it marks off the grid. */",
     "export const techniques = {",
     ...compiled.map(
       (c) =>
         `  ${c.id}: { dealt: ${c.clues}, run: ${c.id}${
           json.play === undefined ? "" : `, reads: ${JSON.stringify(c.reads)}`
+        }${
+          json.play === undefined || c.slotTerms.length === 0
+            ? ""
+            : `, slotTerms: ${JSON.stringify(c.slotTerms)}`
         } },`,
     ),
     "} as const;",

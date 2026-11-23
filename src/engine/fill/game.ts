@@ -94,6 +94,7 @@ export interface BornModule<C>
   readonly play: FillPlay;
   readonly lineClues: readonly (keyof C)[];
   readonly lineLists?: readonly (keyof C)[];
+  readonly slotClues?: readonly (keyof C)[];
   readonly labels?: { readonly start?: (i: number) => string };
   readonly deal: FillDeal;
   readonly clueMax: ClueMax<C>;
@@ -285,6 +286,7 @@ export function fillGame<C extends Clues<C> & object>(
           ),
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
+    ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
     ...(deal.partitions === undefined
       ? {}
       : { partition: deal.partitions[0] as keyof C }),
@@ -327,6 +329,7 @@ export function fillGame<C extends Clues<C> & object>(
       play,
       lineClues: module.lineClues,
       ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
+      ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
       ...(module.labels === undefined ? {} : { labels: module.labels }),
     },
     (b, ui) => buttons?.previewed(b, ui) ?? b,
@@ -340,6 +343,7 @@ export function fillGame<C extends Clues<C> & object>(
           render.origin,
           render.gap,
           render.partClueBox,
+          module.slotClues ?? [],
         );
   const buttons: FillInput<C, FillDrawState> | null =
     typed === null ? fillInput(module, play, render.origin, render.gap) : null;

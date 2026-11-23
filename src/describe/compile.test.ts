@@ -923,6 +923,41 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play done: count is no clue kind drawn in a gap/);
   });
 
+  it("refuses a clue at a slot beside a line's clue, and digits behind a mark holding another kind", () => {
+    const source = "src/engine/testing/fixtures/flanking/flanking.description.yaml";
+    const flanking = sources.get(source);
+    if (flanking === undefined || !isFormal(flanking)) throw new Error("no flanking");
+    type Json = {
+      clues: Record<string, { at: string; value: string; means: string }>;
+      id: Record<string, unknown>[];
+    };
+    const compileFlanking = (edit: (j: Json) => void) => {
+      const j = structuredClone(flanking) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileFlanking(() => {})).toContain('export const slotClues = ["flank"]');
+    expect(() =>
+      compileFlanking((j) => {
+        j.clues["line"] = { at: "line", value: "range(1, w)", means: "true" };
+      }),
+    ).toThrow(
+      /clue flank: a clue at a slot is drawn in the margins, where a line's clue is/,
+    );
+    expect(() =>
+      compileFlanking((j) => {
+        j.clues["mark"] = { at: "cell", value: "range(0, 0)", means: "true" };
+        j.id[1] = { ...j.id[1], letters: { B: "mark" } };
+      }),
+    ).toThrow(/id: digits of given after ,, written only where given has a clue/);
+  });
+
   it("refuses a bar where its board cannot draw, write or deal it", () => {
     const source = "src/games/adjacent/adjacent.description.yaml";
     const adjacent = sources.get(source);

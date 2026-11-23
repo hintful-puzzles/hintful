@@ -34,6 +34,7 @@ import {
 import type { Edit } from "./edit.ts";
 import type { FillMove } from "./notes.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
+import { slotClueAt } from "./slots.ts";
 
 /** A cell the player's board holds against the answer: its value, the mark
  * on it, or its notes, which leave the answer out. */
@@ -55,6 +56,8 @@ export interface AnswerReading<C> {
   /** The list kinds at lines: a column's printed stacked above it, and a
    * row's after it. */
   readonly lineLists?: readonly (keyof C)[];
+  /** The clue kinds at slots, printed in a rim round the grid. */
+  readonly slotClues?: readonly (keyof C)[];
   /** The clue kinds written as numbers on their cells, printed there in
    * place of the cell's value. */
   readonly numbers?: readonly (keyof C)[];
@@ -274,7 +277,11 @@ export function textFormat<C extends Clues<C>>(
   reading: AnswerReading<C>,
   board: FillBoard<C>,
 ): string {
-  const grid = withPartClues(reading, board, gridFormat(reading, board));
+  const grid = withSlotClues(
+    reading,
+    board,
+    withPartClues(reading, board, gridFormat(reading, board)),
+  );
   const kinds = reading.lineLists ?? [];
   if (kinds.length === 0) return grid;
   const { w, h, dealt } = board;
@@ -304,6 +311,38 @@ export function textFormat<C extends Clues<C>>(
     return row.length === 0 ? line : `${line} ${row.join(" ")}`;
   });
   return [...above.map((l) => ` ${l}`), ...lines].join("\n");
+}
+
+/** `grid` in a rim of the clues at its slots: each column's above and below
+ * the middle of its cell, and each row's before and after it, a clue's
+ * place blank where it has none. */
+function withSlotClues<C extends Clues<C>>(
+  reading: AnswerReading<C>,
+  board: FillBoard<C>,
+  grid: string,
+): string {
+  const kinds = reading.slotClues ?? [];
+  if (kinds.length === 0) return grid;
+  const { w, h } = board;
+  const clue = (s: number): string => {
+    const at = slotClueAt(kinds, board, s);
+    return at === null ? " " : String(at.v);
+  };
+  // A cell's text is three characters after a one-character wall, so a
+  // column's middle is two past its wall, behind the rows' two-character
+  // margin.
+  const across = (first: number): string =>
+    `  ${Array.from({ length: w }, (_, x) => `  ${clue(first + x)} `).join("")}`.trimEnd();
+  // The grid's lines alternate a wall and a row of cells.
+  const lines = grid
+    .trimEnd()
+    .split("\n")
+    .map((line, i) =>
+      i % 2 === 1 && (i - 1) / 2 < h
+        ? `${clue(2 * w + (i - 1) / 2)} ${line} ${clue(2 * w + h + (i - 1) / 2)}`.trimEnd()
+        : `  ${line}`,
+    );
+  return `${[across(0), ...lines, across(w)].join("\n")}\n`;
 }
 
 /** `grid` with each row's part clues after it: those whose part's first
