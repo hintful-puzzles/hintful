@@ -248,7 +248,7 @@ describe("a kind of rule expands to the technique it stands for", () => {
     expect(t["says"]).toMatchObject({
       terms: { by: "by" },
       arms: {
-        more: { when: "|RA| > 0", look: "a", move: expect.stringContaining(" ob f") },
+        more: { when: "|RA| > 0", look: "a", move: expect.stringContaining(" ob} f") },
       },
     });
   });

@@ -255,12 +255,15 @@ research tools all read through it; the app never does.
   each be a formula of the sizes (Star Battle's `2 * stars`). The
   `domino` painter draws two alike pieces touching only each other as one.
   `deal.hide` then takes a kind's clues off
-  a tier at a time from the lowest: first every clue no firing's bindings
-  read, then each other in a random order while the board still finishes at
-  that tier. `deal.thorough` is the setting that tries every clue at each
-  tier, by its letter in the params; off, from a width of `offFrom` by
-  default, the lowest tier tries none and each above it as many as the
-  board's shorter side. A last tier named Unreasonable is the search's: its
+  at the lowest tier that finishes the board with every clue, and then at
+  the asked tier: first every clue no firing's bindings read, then the
+  shortest run of a random order the board still finishes with, then each
+  other in a random order while it still finishes at that tier. A draw no
+  tier up to the asked finishes is thrown away. `deal.thorough` is the
+  setting that tries every clue at each tier, by its letter in the params;
+  off, from a width of `offFrom` by default, the first tier tries none,
+  takes no shortest run, and the asked one tries as many as the board's
+  shorter side. A last tier named Unreasonable is the search's: its
   deal strips clues while the search proves one answer and the ladder stops
   short (`engine/fill/search.ts`). A cell kind the player does not fill and
   that is not `play.dealt` is a number drawn on its cell, its cells read
@@ -277,7 +280,9 @@ research tools all read through it; the app never does.
   number in a range or one of named choices, a choice with the size bounds
   it binds; a preset board names one after its `WxH` (`7x7s4`), and a label
   names one only where it is not that board's, or the default. `build:
-  { value }` lays that value alone, each on a cell that may still hold it,
+  { value }` lays that value alone, each on a cell that may still hold it
+  (a build ladders at the lowest tier until one meets a dead end or builds
+  an answer that breaks a rule, and a tier higher after each that does),
   and `first` lays another first on a share of the cells, as symmetric as an
   option asks (Light Up's walls, `engine/generate/symmetric-blacks.ts`), its
   `ramp` raising the share as draws are refused. `deal.leaves` names the

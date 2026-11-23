@@ -95,15 +95,15 @@
 
 ## boats
 
-135 cells dealt, 120 refused, 1 left out as slow.
+135 cells dealt, 116 refused, 1 left out as slow.
 
 - `3x3f2dn,2,1` asked Normal: gave up on 3
 - `3x3f2dt,2,1` asked Tricky: gave up on 3
 - `3x3f2dh,2,1` asked Hard: gave up on 3
-- `10x10f2dn,2,1` asked Normal: 5.4 s
-- `2x2f1dn,1` refused: No puzzle with one boat is Normal.
-- `2x2f1dt,1` refused: No puzzle with one boat is Tricky.
-- `2x2f1dh,1` refused: No puzzle with one boat is Hard.
+- `10x10f2dh,2,1` asked Hard: 4.4 s
+- `2x2f1dn,1` refused: No puzzle with one piece in its fleet is Normal.
+- `2x2f1dt,1` refused: No puzzle with one piece in its fleet is Tricky.
+- `2x2f1dh,1` refused: No puzzle with one piece in its fleet is Hard.
 - `4x4f3de,3,2,1` refused: The fleet does not fit into the grid.
 - `4x4f3dn,3,2,1` refused: The fleet does not fit into the grid.
 - `4x4f3dt,3,2,1` refused: The fleet does not fit into the grid.
@@ -140,52 +140,48 @@
 - `6x4f3dn,3,2,1` refused: The fleet does not fit into the grid.
 - `6x4f3dt,3,2,1` refused: The fleet does not fit into the grid.
 - `6x4f3dh,3,2,1` refused: The fleet does not fit into the grid.
-- `6x6f1dn,1` refused: No puzzle with one boat is Normal.
-- `6x6f1dt,1` refused: No puzzle with one boat is Tricky.
-- `6x6f1dh,1` refused: No puzzle with one boat is Hard.
-- `2x8f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `2x8f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `2x8f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `2x8f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `3x8f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `3x8f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `3x8f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `3x8f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `4x8f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `4x8f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `4x8f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `4x8f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `5x8f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `5x8f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `5x8f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `5x8f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `6x8f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `6x8f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `6x8f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `6x8f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x2f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x2f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x2f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x2f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x3f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x3f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x3f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x3f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x4f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x4f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x4f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x4f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x5f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x5f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x5f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x5f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x6f4de,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x6f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x6f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x6f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `8x8f1dn,1` refused: No puzzle with one boat is Normal.
-- `8x8f1dt,1` refused: No puzzle with one boat is Tricky.
-- `8x8f1dh,1` refused: No puzzle with one boat is Hard.
+- `6x6f1dn,1` refused: No puzzle with one piece in its fleet is Normal.
+- `6x6f1dt,1` refused: No puzzle with one piece in its fleet is Tricky.
+- `6x6f1dh,1` refused: No puzzle with one piece in its fleet is Hard.
+- `2x9f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `2x9f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `2x9f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `2x9f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `3x9f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `3x9f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `3x9f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `3x9f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `4x9f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `4x9f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `4x9f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `4x9f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `5x9f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `5x9f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `5x9f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `5x9f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x2f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x2f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x2f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x2f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x3f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x3f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x3f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x3f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x4f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x4f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x4f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x4f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x5f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x5f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x5f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x5f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x6f4de,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x6f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x6f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x6f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
+- `7x9f1dn,1` refused: No puzzle with one piece in its fleet is Normal.
+- `7x9f1dt,1` refused: No puzzle with one piece in its fleet is Tricky.
+- `7x9f1dh,1` refused: No puzzle with one piece in its fleet is Hard.
 - `2x10f4de,4,3,2,1` refused: The fleet does not fit into the grid.
 - `2x10f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
 - `2x10f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
@@ -218,10 +214,10 @@
 - `10x5f4dn,4,3,2,1` refused: The fleet does not fit into the grid.
 - `10x5f4dt,4,3,2,1` refused: The fleet does not fit into the grid.
 - `10x5f4dh,4,3,2,1` refused: The fleet does not fit into the grid.
-- `10x10f1dn,1` refused: No puzzle with one boat is Normal.
-- `10x10f1dt,1` refused: No puzzle with one boat is Tricky.
-- `10x10f1dh,1` refused: No puzzle with one boat is Hard.
-- left out: `10x10f3dn,3,2,1`
+- `10x10f1dn,1` refused: No puzzle with one piece in its fleet is Normal.
+- `10x10f1dt,1` refused: No puzzle with one piece in its fleet is Tricky.
+- `10x10f1dh,1` refused: No puzzle with one piece in its fleet is Hard.
+- left out: `10x10f3dh,3,2,1`
 
 ## bricks
 
@@ -242,24 +238,31 @@
 
 ## clusters
 
-104 cells dealt, 13 refused, 23 left out as slow.
+172 cells dealt, 14 refused, 0 left out as slow.
 
-- `10x10dt` asked Normal: 3.1 s
-- `10x8dt` asked Normal: 5.6 s
-- `1x1de` refused: Width times height must be at least 2.
-- `1x1dt` refused: Width times height must be at least 2.
-- `2x2de` refused: Width or height must be at least three.
-- `2x2dt` refused: Width or height must be at least three.
-- `3x3dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- `1x7dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- `7x1dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- `1x8dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- `8x1dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- `1x9dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- `9x1dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- `1x10dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- `10x1dt` refused: Normal needs a board of at least 12 squares, at least two wide.
-- left out: `2x7dt` `3x7dt` `4x7dt` `5x7dt` `6x7dt` `8x7dt` `9x7dt` `10x7dt` `7x2dt` `7x3dt` `7x4dt` `7x5dt` `7x6dt` `7x8dt` `7x9dt` `7x10dt` `8x2dt` `8x3dt` `8x4dt` `8x5dt` `8x6dt` `8x9dt` `8x10dt`
+- `3x3du` asked Unreasonable: gave up on 3
+- `1x7du` asked Unreasonable: gave up on 3
+- `7x1du` asked Unreasonable: gave up on 3
+- `1x8du` asked Unreasonable: gave up on 3
+- `6x1du` asked Unreasonable: gave up on 3
+- `6x2du` asked Unreasonable: gave up on 3
+- `1x9du` asked Unreasonable: gave up on 3
+- `9x1du` asked Unreasonable: gave up on 3
+- `1x11du` asked Unreasonable: gave up on 3
+- `1x1de` refused: The number of squares must be at least 2.
+- `1x1dt` refused: The number of squares must be at least 2.
+- `1x1du` refused: The number of squares must be at least 2.
+- `2x2de` refused: Width or height must be at least 3.
+- `2x2dt` refused: Width or height must be at least 3.
+- `2x2du` refused: Width or height must be at least 3.
+- `3x3dt` refused: No 3x3 puzzle is Normal.
+- `1x7dt` refused: No 1x7 puzzle is Normal.
+- `7x1dt` refused: No 7x1 puzzle is Normal.
+- `1x8dt` refused: No 1x8 puzzle is Normal.
+- `6x1dt` refused: No 6x1 puzzle is Normal.
+- `1x9dt` refused: No 1x9 puzzle is Normal.
+- `9x1dt` refused: No 9x1 puzzle is Normal.
+- `1x11dt` refused: No 1x11 puzzle is Normal.
 
 ## dominosa
 
@@ -342,144 +345,103 @@
 
 ## lightup
 
-268 cells dealt, 132 refused, 80 left out as slow.
+343 cells dealt, 95 refused, 0 left out as slow.
 
-- `12x12b11s4d2` asked Unreasonable: 3.6 s
-- `11x11b10s2d2` asked Unreasonable: 3.3 s
-- `14x14b5s2d2` asked Unreasonable: 10.7 s
-- `2x2b1s4d0` refused: Percentage of walls must be between 5% and 100%.
-- `2x2b1s4d1` refused: Percentage of walls must be between 5% and 100%.
-- `2x2b1s4d2` refused: Percentage of walls must be between 5% and 100%.
-- `3x3b2s4d0` refused: Percentage of walls must be between 5% and 100%.
-- `3x3b2s4d1` refused: Percentage of walls must be between 5% and 100%.
-- `3x3b2s4d2` refused: Percentage of walls must be between 5% and 100%.
-- `4x4b3s4d0` refused: Percentage of walls must be between 5% and 100%.
-- `4x4b3s4d1` refused: Percentage of walls must be between 5% and 100%.
-- `4x4b3s4d2` refused: Percentage of walls must be between 5% and 100%.
-- `5x5b4s4d0` refused: Percentage of walls must be between 5% and 100%.
-- `5x5b4s4d1` refused: Percentage of walls must be between 5% and 100%.
-- `5x5b4s4d2` refused: Percentage of walls must be between 5% and 100%.
-- `2x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `2x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `2x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `3x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `3x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `3x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `4x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `4x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `4x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `5x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `5x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `5x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `6x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `6x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `6x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `8x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `8x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `8x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `9x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `9x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `9x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `10x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `10x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `10x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `11x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `11x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `11x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `12x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `12x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `12x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `13x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `13x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `13x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `14x7b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `14x7b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `14x7b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x2b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x2b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x2b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x3b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x3b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x3b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x4b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x4b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x4b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x5b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x5b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x5b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x6b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x6b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x6b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x8b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x8b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x8b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x9b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x9b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x9b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x10b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x10b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x10b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x11b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x11b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x11b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x12b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x12b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x12b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x13b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x13b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x13b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x14b20s4d0` refused: 4-fold symmetry is only available with square grids.
-- `7x14b20s4d1` refused: 4-fold symmetry is only available with square grids.
-- `7x14b20s4d2` refused: 4-fold symmetry is only available with square grids.
-- `7x7b1s4d0` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b1s4d1` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b1s4d2` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b2s4d0` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b2s4d1` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b2s4d2` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b3s4d0` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b3s4d1` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b3s4d2` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b4s4d0` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b4s4d1` refused: Percentage of walls must be between 5% and 100%.
-- `7x7b4s4d2` refused: Percentage of walls must be between 5% and 100%.
-- `2x2b1s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `2x2b1s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `2x2b1s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `3x3b2s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `3x3b2s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `3x3b2s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `4x4b3s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `4x4b3s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `4x4b3s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `5x5b4s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `5x5b4s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `5x5b4s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b1s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b1s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b1s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b2s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b2s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b2s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b3s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b3s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b3s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b4s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b4s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `10x10b4s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b1s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b1s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b1s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b2s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b2s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b2s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b3s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b3s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b3s2d2` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b4s2d0` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b4s2d1` refused: Percentage of walls must be between 5% and 100%.
-- `14x14b4s2d2` refused: Percentage of walls must be between 5% and 100%.
-- left out: `13x13b12s4d2` `14x14b13s4d2` `14x14b14s4d2` `14x14b15s4d2` `14x14b16s4d2` `14x14b17s4d2` `14x14b18s4d2` `14x14b19s4d2` `14x14b20s4d2` `7x7b20s4d2` `7x7b5s4d2` `7x7b7s4d2` `7x7b8s4d2` `7x7b9s4d2` `7x7b10s4d2` `7x7b11s4d2` `7x7b12s4d2` `7x7b13s4d2` `7x7b14s4d2` `7x7b15s4d2` `7x7b16s4d2` `7x7b17s4d2` `7x7b18s4d2` `7x7b19s4d2` `12x12b11s2d2` `13x13b12s2d2` `14x14b13s2d2` `14x14b14s2d2` `14x14b15s2d2` `14x14b16s2d2` `14x14b17s2d2` `14x14b18s2d2` `14x14b19s2d2` `14x14b20s2d2` `2x10b20s2d2` `3x10b20s2d2` `4x10b20s2d2` `5x10b20s2d2` `6x10b20s2d2` `7x10b20s2d2` `8x10b20s2d2` `9x10b20s2d2` `10x10b20s2d2` `11x10b20s2d2` `12x10b20s2d2` `13x10b20s2d2` `14x10b20s2d2` `10x2b20s2d2` `10x3b20s2d2` `10x4b20s2d2` `10x5b20s2d2` `10x6b20s2d2` `10x7b20s2d2` `10x8b20s2d2` `10x9b20s2d2` `10x11b20s2d2` `10x12b20s2d2` `10x13b20s2d2` `10x14b20s2d2` `10x10b5s2d2` `10x10b6s2d2` `10x10b7s2d2` `10x10b8s2d2` `10x10b10s2d2` `10x10b11s2d2` `10x10b12s2d2` `10x10b13s2d2` `10x10b14s2d2` `10x10b15s2d2` `10x10b16s2d2` `10x10b17s2d2` `10x10b18s2d2` `10x10b19s2d2` `14x14b6s2d2` `14x14b7s2d2` `14x14b8s2d2` `14x14b9s2d2` `14x14b10s2d2` `14x14b11s2d2` `14x14b12s2d2`
+- `2x2b5s4d0` refused: 4-way rotational: width or height must be at least 3.
+- `2x2b5s4d1` refused: 4-way rotational: width or height must be at least 3.
+- `2x2b5s4d2` refused: 4-way rotational: width or height must be at least 3.
+- `3x3b6s4d1` refused: No 3x3 puzzle with 4-way rotational symmetry is Normal.
+- `3x3b6s4d2` refused: No 3x3 puzzle with 4-way rotational symmetry is Unreasonable.
+- `12x13b16s4d0` refused: 4-way rotational: the grid must be square.
+- `12x13b16s4d1` refused: 4-way rotational: the grid must be square.
+- `12x13b16s4d2` refused: 4-way rotational: the grid must be square.
+- `12x14b17s4d0` refused: 4-way rotational: the grid must be square.
+- `12x14b17s4d1` refused: 4-way rotational: the grid must be square.
+- `12x14b17s4d2` refused: 4-way rotational: the grid must be square.
+- `12x15b18s4d0` refused: 4-way rotational: the grid must be square.
+- `12x15b18s4d1` refused: 4-way rotational: the grid must be square.
+- `12x15b18s4d2` refused: 4-way rotational: the grid must be square.
+- `12x16b19s4d0` refused: 4-way rotational: the grid must be square.
+- `12x16b19s4d1` refused: 4-way rotational: the grid must be square.
+- `12x16b19s4d2` refused: 4-way rotational: the grid must be square.
+- `12x16b20s4d0` refused: 4-way rotational: the grid must be square.
+- `12x16b20s4d1` refused: 4-way rotational: the grid must be square.
+- `12x16b20s4d2` refused: 4-way rotational: the grid must be square.
+- `2x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `2x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `2x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `3x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `3x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `3x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `4x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `4x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `4x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `5x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `5x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `5x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `6x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `6x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `6x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `8x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `8x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `8x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `9x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `9x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `9x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `10x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `10x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `10x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `11x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `11x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `11x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `12x7b20s4d0` refused: 4-way rotational: the grid must be square.
+- `12x7b20s4d1` refused: 4-way rotational: the grid must be square.
+- `12x7b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x2b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x2b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x2b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x3b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x3b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x3b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x4b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x4b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x4b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x5b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x5b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x5b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x6b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x6b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x6b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x8b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x8b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x8b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x9b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x9b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x9b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x10b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x10b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x10b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x11b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x11b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x11b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x12b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x12b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x12b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x13b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x13b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x13b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x14b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x14b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x14b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x15b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x15b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x15b20s4d2` refused: 4-way rotational: the grid must be square.
+- `7x16b20s4d0` refused: 4-way rotational: the grid must be square.
+- `7x16b20s4d1` refused: 4-way rotational: the grid must be square.
+- `7x16b20s4d2` refused: 4-way rotational: the grid must be square.
+- `2x2b5s2d1` refused: No 2x2 puzzle is Normal.
+- `2x2b5s2d2` refused: No 2x2 puzzle with 2-way rotational symmetry is Unreasonable.
+- `3x3b6s2d2` refused: No 3x3 puzzle with 2-way rotational symmetry is Unreasonable.
 
 ## loopy
 
@@ -1078,6 +1040,37 @@
 - `3dn` refused: Size 3 has no Normal or Unreasonable puzzles; use Easy or Tricky.
 - `3dr` refused: Size 3 has no Normal or Unreasonable puzzles; use Easy or Tricky.
 
+## mosaic
+
+784 cells dealt, 0 refused, 1127 left out as slow.
+
+- `17x17du` asked Unreasonable: 5.1 s
+- `20x20dn` asked Normal: 3.1 s
+- `34x34de` asked Easy: 4.0 s
+- `38x5du` asked Unreasonable: 8.8 s
+- `40x5de` asked Easy: gave up on 1; 3.3 s
+- `43x5dn` asked Normal: 3.3 s
+- `21x10du` asked Unreasonable: 3.2 s
+- `47x10dn` asked Normal: 3.3 s
+- `24x15du` asked Unreasonable: 5.3 s
+- `34x15dn` asked Normal: 3.1 s
+- `14x25du` asked Unreasonable: 3.9 s
+- `23x25dn` asked Normal: 4.2 s
+- `29x29h0du` asked Unreasonable: 3.9 s
+- `3x50h0de` asked Easy: gave up on 3
+- `4x50h0de` asked Easy: gave up on 3
+- `5x50h0de` asked Easy: gave up on 2
+- `5x50h0dn` asked Normal: 4.1 s
+- `50x3h0de` asked Easy: gave up on 3
+- `50x4h0de` asked Easy: gave up on 3
+- `50x5h0de` asked Easy: gave up on 3
+- `50x6h0de` asked Easy: gave up on 1
+- left out: `18x18du` `19x19du` `20x20du` `21x21dn` `21x21du` `22x22dn` `22x22du` `23x23dn` `23x23du` `24x24dn` `24x24du` `25x25dn` `25x25du` `26x26dn` `26x26du` `27x27dn` `27x27du` `28x28dn` `28x28du` `29x29dn` `29x29du` `30x30dn` `30x30du` `31x31dn` `31x31du` `32x32dn` `32x32du` `33x33dn` `33x33du` `34x34dn` `34x34du` `35x35de` `35x35dn` `35x35du` `36x36de` `36x36dn` `36x36du` `37x37de` `37x37dn` `37x37du` `38x38de` `38x38dn` `38x38du` `39x39de` `39x39dn` `39x39du` `40x40de` `40x40dn` `40x40du` `41x41de` `41x41dn` `41x41du` `42x42de` `42x42dn` `42x42du` `43x43de` `43x43dn` `43x43du` `44x44de` `44x44dn` `44x44du` `45x45de` `45x45dn` `45x45du` `46x46de` `46x46dn` `46x46du` `47x47de` `47x47dn` `47x47du` `48x48de` `48x48dn` `48x48du` `49x49de` `49x49dn` `49x49du` `50x50de` `50x50dn` `50x50du` `4x3de` `4x3dn` `4x3du` `5x3de` `5x3dn` `5x3du` `6x3de` `6x3dn` `6x3du` `7x3de` `7x3dn` `7x3du` `8x3de` `8x3dn` `8x3du` `9x3de` `9x3dn` `9x3du` `10x3de` `10x3dn` `10x3du` `11x3de` `11x3dn` `11x3du` `12x3de` `12x3dn` `12x3du` `13x3de` `13x3dn` `13x3du` `14x3de` `14x3dn` `14x3du` `15x3de` `15x3dn` `15x3du` `16x3de` `16x3dn` `16x3du` `17x3de` `17x3dn` `17x3du` `18x3de` `18x3dn` `18x3du` `19x3de` `19x3dn` `19x3du` `20x3de` `20x3dn` `20x3du` `21x3de` `21x3dn` `21x3du` `22x3de` `22x3dn` `22x3du` `23x3de` `23x3dn` `23x3du` `24x3de` `24x3dn` `24x3du` `25x3de` `25x3dn` `25x3du` `26x3de` `26x3dn` `26x3du` `27x3de` `27x3dn` `27x3du` `28x3de` `28x3dn` `28x3du` `29x3de` `29x3dn` `29x3du` `30x3de` `30x3dn` `30x3du` `31x3de` `31x3dn` `31x3du` `32x3de` `32x3dn` `32x3du` `33x3de` `33x3dn` `33x3du` `34x3de` `34x3dn` `34x3du` `35x3de` `35x3dn` `35x3du` `36x3de` `36x3dn` `36x3du` `37x3de` `37x3dn` `37x3du` `38x3de` `38x3dn` `38x3du` `39x3de` `39x3dn` `39x3du` `40x3de` `40x3dn` `40x3du` `41x3de` `41x3dn` `41x3du` `42x3de` `42x3dn` `42x3du` `43x3de` `43x3dn` `43x3du` `44x3de` `44x3dn` `44x3du` `45x3de` `45x3dn` `45x3du` `46x3de` `46x3dn` `46x3du` `47x3de` `47x3dn` `47x3du` `48x3de` `48x3dn` `48x3du` `49x3de` `49x3dn` `49x3du` `50x3de` `50x3dn` `50x3du` `3x4de` `3x4dn` `3x4du` `3x5de` `3x5dn` `3x5du` `3x6de` `3x6dn` `3x6du` `3x7de` `3x7dn` `3x7du` `3x8de` `3x8dn` `3x8du` `3x9de` `3x9dn` `3x9du` `3x10de` `3x10dn` `3x10du` `3x11de` `3x11dn` `3x11du` `3x12de` `3x12dn` `3x12du` `3x13de` `3x13dn` `3x13du` `3x14de` `3x14dn` `3x14du` `3x15de` `3x15dn` `3x15du` `3x16de` `3x16dn` `3x16du` `3x17de` `3x17dn` `3x17du` `3x18de` `3x18dn` `3x18du` `3x19de` `3x19dn` `3x19du` `3x20de` `3x20dn` `3x20du` `3x21de` `3x21dn` `3x21du` `3x22de` `3x22dn` `3x22du` `3x23de` `3x23dn` `3x23du` `3x24de` `3x24dn` `3x24du` `3x25de` `3x25dn` `3x25du` `3x26de` `3x26dn` `3x26du` `3x27de` `3x27dn` `3x27du` `3x28de` `3x28dn` `3x28du` `3x29de` `3x29dn` `3x29du` `3x30de` `3x30dn` `3x30du` `3x31de` `3x31dn` `3x31du` `3x32de` `3x32dn` `3x32du` `3x33de` `3x33dn` `3x33du` `3x34de` `3x34dn` `3x34du` `3x35de` `3x35dn` `3x35du` `3x36de` `3x36dn` `3x36du` `3x37de` `3x37dn` `3x37du` `3x38de` `3x38dn` `3x38du` `3x39de` `3x39dn` `3x39du` `3x40de` `3x40dn` `3x40du` `3x41de` `3x41dn` `3x41du` `3x42de` `3x42dn` `3x42du` `3x43de` `3x43dn` `3x43du` `3x44de` `3x44dn` `3x44du` `3x45de` `3x45dn` `3x45du` `3x46de` `3x46dn` `3x46du` `3x47de` `3x47dn` `3x47du` `3x48de` `3x48dn` `3x48du` `3x49de` `3x49dn` `3x49du` `3x50de` `3x50dn` `3x50du` `39x5du` `40x5du` `41x5de` `41x5du` `42x5de` `42x5du` `43x5de` `43x5du` `44x5de` `44x5dn` `44x5du` `45x5de` `45x5dn` `45x5du` `46x5de` `46x5dn` `46x5du` `47x5de` `47x5dn` `47x5du` `48x5de` `48x5dn` `48x5du` `49x5de` `49x5dn` `49x5du` `50x5de` `50x5dn` `50x5du` `5x4de` `5x4dn` `5x4du` `5x6de` `5x6dn` `5x6du` `5x7de` `5x7dn` `5x7du` `5x8de` `5x8dn` `5x8du` `5x9de` `5x9dn` `5x9du` `5x10de` `5x10dn` `5x10du` `5x11de` `5x11dn` `5x11du` `5x12de` `5x12dn` `5x12du` `5x13de` `5x13dn` `5x13du` `5x14de` `5x14dn` `5x14du` `5x15de` `5x15dn` `5x15du` `5x16de` `5x16dn` `5x16du` `5x17de` `5x17dn` `5x17du` `5x18de` `5x18dn` `5x18du` `5x19de` `5x19dn` `5x19du` `5x20de` `5x20dn` `5x20du` `5x21de` `5x21dn` `5x21du` `5x22de` `5x22dn` `5x22du` `5x23de` `5x23dn` `5x23du` `5x24de` `5x24dn` `5x24du` `5x25de` `5x25dn` `5x25du` `5x26de` `5x26dn` `5x26du` `5x27de` `5x27dn` `5x27du` `5x28de` `5x28dn` `5x28du` `5x29de` `5x29dn` `5x29du` `5x30de` `5x30dn` `5x30du` `5x31de` `5x31dn` `5x31du` `5x32de` `5x32dn` `5x32du` `5x33de` `5x33dn` `5x33du` `5x34de` `5x34dn` `5x34du` `5x35de` `5x35dn` `5x35du` `5x36de` `5x36dn` `5x36du` `5x37de` `5x37dn` `5x37du` `5x38de` `5x38dn` `5x38du` `5x39de` `5x39dn` `5x39du` `5x40de` `5x40dn` `5x40du` `5x41de` `5x41dn` `5x41du` `5x42de` `5x42dn` `5x42du` `5x43de` `5x43dn` `5x43du` `5x44de` `5x44dn` `5x44du` `5x45de` `5x45dn` `5x45du` `5x46de` `5x46dn` `5x46du` `5x47de` `5x47dn` `5x47du` `5x48de` `5x48dn` `5x48du` `5x49de` `5x49dn` `5x49du` `5x50de` `5x50dn` `5x50du` `22x10du` `23x10du` `24x10du` `25x10du` `26x10du` `27x10du` `28x10du` `29x10du` `30x10du` `31x10du` `32x10du` `33x10du` `34x10du` `35x10du` `36x10du` `37x10du` `38x10du` `39x10du` `40x10du` `41x10du` `42x10du` `43x10du` `44x10du` `45x10du` `46x10du` `47x10du` `48x10dn` `48x10du` `49x10dn` `49x10du` `50x10dn` `50x10du` `8x4dn` `8x4du` `8x6dn` `8x6du` `8x7dn` `8x7du` `8x9dn` `8x9du` `8x11dn` `8x11du` `8x12dn` `8x12du` `8x13dn` `8x13du` `8x14dn` `8x14du` `8x15dn` `8x15du` `8x16dn` `8x16du` `8x17dn` `8x17du` `8x18dn` `8x18du` `8x19dn` `8x19du` `8x20dn` `8x20du` `8x21dn` `8x21du` `8x22dn` `8x22du` `8x23dn` `8x23du` `8x24dn` `8x24du` `8x25dn` `8x25du` `8x26dn` `8x26du` `8x27dn` `8x27du` `8x28dn` `8x28du` `8x29dn` `8x29du` `8x30dn` `8x30du` `8x31dn` `8x31du` `8x32dn` `8x32du` `8x33dn` `8x33du` `8x34dn` `8x34du` `8x35dn` `8x35du` `8x36dn` `8x36du` `8x37dn` `8x37du` `8x38dn` `8x38du` `8x39dn` `8x39du` `8x40dn` `8x40du` `8x41dn` `8x41du` `8x42dn` `8x42du` `8x43dn` `8x43du` `8x44dn` `8x44du` `8x45dn` `8x45du` `8x46dn` `8x46du` `8x47dn` `8x47du` `8x48dn` `8x48du` `8x49dn` `8x49du` `8x50dn` `8x50du` `25x15du` `26x15du` `27x15du` `28x15du` `29x15du` `30x15du` `31x15du` `32x15du` `33x15du` `34x15du` `35x15dn` `35x15du` `36x15dn` `36x15du` `37x15dn` `37x15du` `38x15dn` `38x15du` `39x15dn` `39x15du` `40x15dn` `40x15du` `41x15dn` `41x15du` `42x15dn` `42x15du` `43x15dn` `43x15du` `44x15dn` `44x15du` `45x15dn` `45x15du` `46x15dn` `46x15du` `47x15dn` `47x15du` `48x15dn` `48x15du` `49x15dn` `49x15du` `50x15dn` `50x15du` `12x4dn` `12x4du` `12x6dn` `12x6du` `12x7dn` `12x7du` `12x8dn` `12x8du` `12x9dn` `12x9du` `12x11dn` `12x11du` `12x13dn` `12x13du` `12x14dn` `12x14du` `12x16dn` `12x16du` `12x17dn` `12x17du` `12x18dn` `12x18du` `12x19dn` `12x19du` `12x20dn` `12x20du` `12x21dn` `12x21du` `12x22dn` `12x22du` `12x23dn` `12x23du` `12x24dn` `12x24du` `12x25dn` `12x25du` `12x26dn` `12x26du` `12x27dn` `12x27du` `12x28dn` `12x28du` `12x29dn` `12x29du` `12x30dn` `12x30du` `12x31dn` `12x31du` `12x32dn` `12x32du` `12x33dn` `12x33du` `12x34dn` `12x34du` `12x35dn` `12x35du` `12x36dn` `12x36du` `12x37dn` `12x37du` `12x38dn` `12x38du` `12x39dn` `12x39du` `12x40dn` `12x40du` `12x41dn` `12x41du` `12x42dn` `12x42du` `12x43dn` `12x43du` `12x44dn` `12x44du` `12x45dn` `12x45du` `12x46dn` `12x46du` `12x47dn` `12x47du` `12x48dn` `12x48du` `12x49dn` `12x49du` `12x50dn` `12x50du` `15x25du` `16x25du` `17x25du` `18x25du` `19x25du` `20x25du` `21x25du` `22x25du` `23x25du` `24x25dn` `24x25du` `26x25dn` `26x25du` `27x25dn` `27x25du` `28x25dn` `28x25du` `29x25dn` `29x25du` `30x25dn` `30x25du` `31x25dn` `31x25du` `32x25dn` `32x25du` `33x25dn` `33x25du` `34x25dn` `34x25du` `35x25dn` `35x25du` `36x25dn` `36x25du` `37x25dn` `37x25du` `38x25dn` `38x25du` `39x25dn` `39x25du` `40x25dn` `40x25du` `41x25dn` `41x25du` `42x25dn` `42x25du` `43x25dn` `43x25du` `44x25dn` `44x25du` `45x25dn` `45x25du` `46x25dn` `46x25du` `47x25dn` `47x25du` `48x25dn` `48x25du` `49x25dn` `49x25du` `50x25dn` `50x25du` `20x4dn` `20x4du` `20x6dn` `20x6du` `20x7dn` `20x7du` `20x8dn` `20x8du` `20x9dn` `20x9du` `20x11dn` `20x11du` `20x12dn` `20x12du` `20x13dn` `20x13du` `20x14dn` `20x14du` `20x16dn` `20x16du` `20x17dn` `20x17du` `20x18dn` `20x18du` `20x19dn` `20x19du` `20x21dn` `20x21du` `20x22dn` `20x22du` `20x23dn` `20x23du` `20x24dn` `20x24du` `20x26dn` `20x26du` `20x27dn` `20x27du` `20x28dn` `20x28du` `20x29dn` `20x29du` `20x30dn` `20x30du` `20x31dn` `20x31du` `20x32dn` `20x32du` `20x33dn` `20x33du` `20x34dn` `20x34du` `20x35dn` `20x35du` `20x36dn` `20x36du` `20x37dn` `20x37du` `20x38dn` `20x38du` `20x39dn` `20x39du` `20x40dn` `20x40du` `20x41dn` `20x41du` `20x42dn` `20x42du` `20x43dn` `20x43du` `20x44dn` `20x44du` `20x45dn` `20x45du` `20x46dn` `20x46du` `20x47dn` `20x47du` `20x48dn` `20x48du` `20x49dn` `20x49du` `20x50dn` `20x50du` `30x30h0du` `31x31h0du` `32x32h0du` `33x33h0du` `34x34h0du` `35x35h0du` `36x36h0du` `37x37h0du` `38x38h0du` `39x39h0du` `40x40h0du` `41x41h0du` `42x42h0du` `43x43h0du` `44x44h0du` `45x45h0du` `46x46h0du` `47x47h0du` `48x48h0du` `49x49h0du` `50x50h0du` `3x50h0du` `4x50h0du` `5x50h0du` `6x50h0dn` `6x50h0du` `7x50h0dn` `7x50h0du` `8x50h0dn` `8x50h0du` `9x50h0dn` `9x50h0du` `10x50h0dn` `10x50h0du` `11x50h0dn` `11x50h0du` `12x50h0dn` `12x50h0du` `13x50h0dn` `13x50h0du` `14x50h0dn` `14x50h0du` `15x50h0dn` `15x50h0du` `16x50h0dn` `16x50h0du` `17x50h0dn` `17x50h0du` `18x50h0dn` `18x50h0du` `19x50h0dn` `19x50h0du` `20x50h0dn` `20x50h0du` `21x50h0dn` `21x50h0du` `22x50h0dn` `22x50h0du` `23x50h0dn` `23x50h0du` `24x50h0dn` `24x50h0du` `25x50h0dn` `25x50h0du` `26x50h0dn` `26x50h0du` `27x50h0dn` `27x50h0du` `28x50h0dn` `28x50h0du` `29x50h0dn` `29x50h0du` `30x50h0dn` `30x50h0du` `31x50h0dn` `31x50h0du` `32x50h0dn` `32x50h0du` `33x50h0dn` `33x50h0du` `34x50h0dn` `34x50h0du` `35x50h0dn` `35x50h0du` `36x50h0dn` `36x50h0du` `37x50h0dn` `37x50h0du` `38x50h0dn` `38x50h0du` `39x50h0dn` `39x50h0du` `40x50h0dn` `40x50h0du` `41x50h0dn` `41x50h0du` `42x50h0dn` `42x50h0du` `43x50h0dn` `43x50h0du` `44x50h0dn` `44x50h0du` `45x50h0dn` `45x50h0du` `46x50h0dn` `46x50h0du` `47x50h0dn` `47x50h0du` `48x50h0dn` `48x50h0du` `49x50h0dn` `49x50h0du` `50x3h0dn` `50x3h0du` `50x4h0dn` `50x4h0du` `50x5h0dn` `50x5h0du` `50x6h0dn` `50x6h0du` `50x7h0dn` `50x7h0du` `50x8h0dn` `50x8h0du` `50x9h0dn` `50x9h0du` `50x10h0dn` `50x10h0du` `50x11h0dn` `50x11h0du` `50x12h0dn` `50x12h0du` `50x13h0dn` `50x13h0du` `50x14h0dn` `50x14h0du` `50x15h0dn` `50x15h0du` `50x16h0dn` `50x16h0du` `50x17h0dn` `50x17h0du` `50x18h0dn` `50x18h0du` `50x19h0dn` `50x19h0du` `50x20h0dn` `50x20h0du` `50x21h0dn` `50x21h0du` `50x22h0dn` `50x22h0du` `50x23h0dn` `50x23h0du` `50x24h0dn` `50x24h0du` `50x25h0dn` `50x25h0du` `50x26h0dn` `50x26h0du` `50x27h0dn` `50x27h0du` `50x28h0dn` `50x28h0du` `50x29h0dn` `50x29h0du` `50x30h0dn` `50x30h0du` `50x31h0dn` `50x31h0du` `50x32h0dn` `50x32h0du` `50x33h0dn` `50x33h0du` `50x34h0dn` `50x34h0du` `50x35h0dn` `50x35h0du` `50x36h0dn` `50x36h0du` `50x37h0dn` `50x37h0du` `50x38h0dn` `50x38h0du` `50x39h0dn` `50x39h0du` `50x40h0dn` `50x40h0du` `50x41h0dn` `50x41h0du` `50x42h0dn` `50x42h0du` `50x43h0dn` `50x43h0du` `50x44h0dn` `50x44h0du` `50x45h0dn` `50x45h0du` `50x46h0dn` `50x46h0du` `50x47h0dn` `50x47h0du` `50x48h0dn` `50x48h0du` `50x49h0dn` `50x49h0du`
+
+## norinori
+
+111 cells dealt, 0 refused, 0 left out as slow.
+
 ## path
 
 209 cells dealt, 0 refused, 28 left out as slow.
@@ -1098,6 +1091,48 @@
 - `3x13dt` asked Tricky: gave up on 1; 8.2 s
 - left out: `4x10dt` `6x10dt` `8x10dt` `9x10dt` `11x10dt` `12x10dt` `13x10dt` `10x3dt` `10x4dt` `10x6dt` `10x8dt` `10x9dt` `10x11dt` `10x12dt` `10x13dt` `4x13dt` `6x13dt` `8x13dt` `9x13dt` `11x13dt` `12x13dt` `13x3dt` `13x4dt` `13x6dt` `13x8dt` `13x9dt` `13x11dt` `13x12dt`
 
+## pattern
+
+487 cells dealt, 11 refused, 0 left out as slow.
+
+- `4x4du` asked Unreasonable: gave up on 2
+- `3x15de` asked Easy: gave up on 2
+- `3x15du` asked Unreasonable: gave up on 3
+- `4x15du` asked Unreasonable: gave up on 1
+- `15x3du` asked Unreasonable: gave up on 2
+- `3x25de` asked Easy: gave up on 3
+- `3x25du` asked Unreasonable: gave up on 3
+- `4x25de` asked Easy: gave up on 2
+- `4x25du` asked Unreasonable: gave up on 3
+- `5x25du` asked Unreasonable: gave up on 1
+- `6x25du` asked Unreasonable: gave up on 1
+- `20x3de` asked Easy: gave up on 3
+- `20x3du` asked Unreasonable: gave up on 3
+- `20x4du` asked Unreasonable: gave up on 3
+- `3x30de` asked Easy: gave up on 3
+- `3x30du` asked Unreasonable: gave up on 3
+- `4x30de` asked Easy: gave up on 3
+- `4x30du` asked Unreasonable: gave up on 3
+- `5x30du` asked Unreasonable: gave up on 2
+- `6x30du` asked Unreasonable: gave up on 1
+- `30x3de` asked Easy: gave up on 3
+- `30x3du` asked Unreasonable: gave up on 3
+- `30x4de` asked Easy: gave up on 2
+- `30x4du` asked Unreasonable: gave up on 3
+- `30x5du` asked Unreasonable: gave up on 2
+- `30x6du` asked Unreasonable: gave up on 1
+- `1x1du` refused: No 1x1 puzzle is Unreasonable.
+- `2x2du` refused: No 2x2 puzzle is Unreasonable.
+- `3x3du` refused: No 3x3 puzzle is Unreasonable.
+- `1x10du` refused: No 1x10 puzzle is Unreasonable.
+- `10x1du` refused: No 10x1 puzzle is Unreasonable.
+- `1x15du` refused: No 1x15 puzzle is Unreasonable.
+- `15x1du` refused: No 15x1 puzzle is Unreasonable.
+- `1x25du` refused: No 1x25 puzzle is Unreasonable.
+- `20x1du` refused: No 20x1 puzzle is Unreasonable.
+- `1x30du` refused: No 1x30 puzzle is Unreasonable.
+- `30x1du` refused: No 30x1 puzzle is Unreasonable.
+
 ## pearl
 
 46 cells dealt, 1 refused, 31 left out as slow.
@@ -1109,6 +1144,24 @@
 - `9x12dt` asked Normal: 9.2 s
 - `5x5dt` refused: Width plus height must be at least 11 for Normal.
 - left out: `10x11de` `10x11dt` `10x12de` `10x12dt` `5x6de` `5x6dt` `7x6de` `7x6dt` `8x6de` `8x6dt` `9x6de` `9x6dt` `10x6de` `10x6dt` `6x5de` `6x5dt` `6x7de` `6x7dt` `6x8de` `6x8dt` `6x9de` `6x9dt` `6x10de` `6x10dt` `6x11de` `6x11dt` `6x12de` `6x12dt` `10x5de` `10x7de` `10x9de`
+
+## range
+
+186 cells dealt, 12 refused, 0 left out as slow.
+
+- `3x3du` asked Unreasonable: gave up on 3
+- `1x1de` refused: Width or height must be at least 3.
+- `1x1du` refused: Width or height must be at least 3.
+- `2x2de` refused: Width or height must be at least 3.
+- `2x2du` refused: Width or height must be at least 3.
+- `1x9du` refused: No 1x9 puzzle is Unreasonable.
+- `6x1du` refused: No 6x1 puzzle is Unreasonable.
+- `1x12du` refused: No 1x12 puzzle is Unreasonable.
+- `8x1du` refused: No 8x1 puzzle is Unreasonable.
+- `1x13du` refused: No 1x13 puzzle is Unreasonable.
+- `9x1du` refused: No 9x1 puzzle is Unreasonable.
+- `1x16du` refused: No 1x16 puzzle is Unreasonable.
+- `11x1du` refused: No 11x1 puzzle is Unreasonable.
 
 ## rome
 
@@ -1164,7 +1217,7 @@
 
 ## singles
 
-180 cells dealt, 2 refused, 0 left out as slow.
+178 cells dealt, 2 refused, 0 left out as slow.
 
 - `2x2dk` refused: No 2x2 puzzle is Normal.
 - `3x3dk` refused: No 3x3 puzzle is Normal.
@@ -1286,6 +1339,64 @@
 - `6x2dh` refused: Unreasonable 6x2 puzzles are too rare to deal.
 - left out: `3x4dh` `5x4dh` `6x4dh` `4x3dh` `4x5dh` `4x6dh`
 
+## starbattle
+
+29 cells dealt, 36 refused, 16 left out as slow.
+
+- `4s1dn` asked Normal: gave up on 1; 20.5 s
+- `10s1dt` asked Tricky: 4.5 s
+- `11s1de` asked Easy: 4.6 s
+- `8s2dt` asked Tricky: 7.3 s
+- `11s2dn` asked Normal: 10.3 s
+- `12s2de` asked Easy: 99.2 s
+- `12s3dt` asked Tricky: 35.1 s
+- `4s2de` refused: Two stars: the grid size must be at least 8.
+- `4s2dn` refused: Two stars: the grid size must be at least 8.
+- `4s2dt` refused: Two stars: the grid size must be at least 8.
+- `5s2de` refused: Two stars: the grid size must be at least 8.
+- `5s2dn` refused: Two stars: the grid size must be at least 8.
+- `5s2dt` refused: Two stars: the grid size must be at least 8.
+- `6s2de` refused: Two stars: the grid size must be at least 8.
+- `6s2dn` refused: Two stars: the grid size must be at least 8.
+- `6s2dt` refused: Two stars: the grid size must be at least 8.
+- `7s2de` refused: Two stars: the grid size must be at least 8.
+- `7s2dn` refused: Two stars: the grid size must be at least 8.
+- `7s2dt` refused: Two stars: the grid size must be at least 8.
+- `4s3de` refused: Three stars: the grid size must be at least 12.
+- `4s3dn` refused: Three stars: the grid size must be at least 12.
+- `4s3dt` refused: Three stars: the grid size must be at least 12.
+- `5s3de` refused: Three stars: the grid size must be at least 12.
+- `5s3dn` refused: Three stars: the grid size must be at least 12.
+- `5s3dt` refused: Three stars: the grid size must be at least 12.
+- `6s3de` refused: Three stars: the grid size must be at least 12.
+- `6s3dn` refused: Three stars: the grid size must be at least 12.
+- `6s3dt` refused: Three stars: the grid size must be at least 12.
+- `7s3de` refused: Three stars: the grid size must be at least 12.
+- `7s3dn` refused: Three stars: the grid size must be at least 12.
+- `7s3dt` refused: Three stars: the grid size must be at least 12.
+- `8s3de` refused: Three stars: the grid size must be at least 12.
+- `8s3dn` refused: Three stars: the grid size must be at least 12.
+- `8s3dt` refused: Three stars: the grid size must be at least 12.
+- `9s3de` refused: Three stars: the grid size must be at least 12.
+- `9s3dn` refused: Three stars: the grid size must be at least 12.
+- `9s3dt` refused: Three stars: the grid size must be at least 12.
+- `10s3de` refused: Three stars: the grid size must be at least 12.
+- `10s3dn` refused: Three stars: the grid size must be at least 12.
+- `10s3dt` refused: Three stars: the grid size must be at least 12.
+- `11s3de` refused: Three stars: the grid size must be at least 12.
+- `11s3dn` refused: Three stars: the grid size must be at least 12.
+- `11s3dt` refused: Three stars: the grid size must be at least 12.
+- left out: `5s1dn` `6s1dn` `7s1dn` `8s1dn` `9s1dn` `10s1dn` `11s1dn` `11s1dt` `12s1de` `12s1dn` `12s1dt` `9s2dt` `10s2dt` `11s2dt` `12s2dn` `12s2dt`
+
+## sticks
+
+166 cells dealt, 1 refused, 13 left out as slow.
+
+- `8x10b5s2de` asked Easy: 3.4 s
+- `8x10b6s2du` asked Unreasonable: 4.0 s
+- `2x2b5s2du` refused: No 2x2 puzzle is Unreasonable.
+- left out: `8x10b6s2de` `8x10b7s2de` `8x10b7s2du` `8x10b8s2de` `8x10b8s2du` `8x10b9s2de` `8x10b9s2du` `8x10b10s2de` `8x10b10s2du` `8x10b11s2de` `8x10b11s2du` `8x10b12s2de` `8x10b12s2du`
+
 ## subsets
 
 2 cells dealt, 0 refused, 0 left out as slow.
@@ -1329,7 +1440,7 @@
 
 ## unruly
 
-114 cells dealt, 144 refused, 0 left out as slow.
+111 cells dealt, 129 refused, 0 left out as slow.
 
 - `7x7dt` refused: Width and height must both be even.
 - `7x7de` refused: Width and height must both be even.
@@ -1340,9 +1451,12 @@
 - `11x11dt` refused: Width and height must both be even.
 - `11x11de` refused: Width and height must both be even.
 - `11x11dn` refused: Width and height must both be even.
-- `13x13dt` refused: Width and height must both be even.
-- `13x13de` refused: Width and height must both be even.
-- `13x13dn` refused: Width and height must both be even.
+- `12x13dt` refused: Width and height must both be even.
+- `12x13de` refused: Width and height must both be even.
+- `12x13dn` refused: Width and height must both be even.
+- `12x15dt` refused: Width and height must both be even.
+- `12x15de` refused: Width and height must both be even.
+- `12x15dn` refused: Width and height must both be even.
 - `7x6dt` refused: Width and height must both be even.
 - `7x6de` refused: Width and height must both be even.
 - `7x6dn` refused: Width and height must both be even.
@@ -1352,9 +1466,6 @@
 - `11x6dt` refused: Width and height must both be even.
 - `11x6de` refused: Width and height must both be even.
 - `11x6dn` refused: Width and height must both be even.
-- `13x6dt` refused: Width and height must both be even.
-- `13x6de` refused: Width and height must both be even.
-- `13x6dn` refused: Width and height must both be even.
 - `6x7dt` refused: Width and height must both be even.
 - `6x7de` refused: Width and height must both be even.
 - `6x7dn` refused: Width and height must both be even.
@@ -1367,6 +1478,9 @@
 - `6x13dt` refused: Width and height must both be even.
 - `6x13de` refused: Width and height must both be even.
 - `6x13dn` refused: Width and height must both be even.
+- `6x15dt` refused: Width and height must both be even.
+- `6x15de` refused: Width and height must both be even.
+- `6x15dn` refused: Width and height must both be even.
 - `7x8dt` refused: Width and height must both be even.
 - `7x8de` refused: Width and height must both be even.
 - `7x8dn` refused: Width and height must both be even.
@@ -1376,9 +1490,6 @@
 - `11x8dt` refused: Width and height must both be even.
 - `11x8de` refused: Width and height must both be even.
 - `11x8dn` refused: Width and height must both be even.
-- `13x8dt` refused: Width and height must both be even.
-- `13x8de` refused: Width and height must both be even.
-- `13x8dn` refused: Width and height must both be even.
 - `8x7dt` refused: Width and height must both be even.
 - `8x7de` refused: Width and height must both be even.
 - `8x7dn` refused: Width and height must both be even.
@@ -1391,54 +1502,36 @@
 - `8x13dt` refused: Width and height must both be even.
 - `8x13de` refused: Width and height must both be even.
 - `8x13dn` refused: Width and height must both be even.
-- `7x10dt` refused: Width and height must both be even.
-- `7x10de` refused: Width and height must both be even.
-- `7x10dn` refused: Width and height must both be even.
-- `9x10dt` refused: Width and height must both be even.
-- `9x10de` refused: Width and height must both be even.
-- `9x10dn` refused: Width and height must both be even.
-- `11x10dt` refused: Width and height must both be even.
-- `11x10de` refused: Width and height must both be even.
-- `11x10dn` refused: Width and height must both be even.
-- `13x10dt` refused: Width and height must both be even.
-- `13x10de` refused: Width and height must both be even.
-- `13x10dn` refused: Width and height must both be even.
-- `10x7dt` refused: Width and height must both be even.
-- `10x7de` refused: Width and height must both be even.
-- `10x7dn` refused: Width and height must both be even.
-- `10x9dt` refused: Width and height must both be even.
-- `10x9de` refused: Width and height must both be even.
-- `10x9dn` refused: Width and height must both be even.
-- `10x11dt` refused: Width and height must both be even.
-- `10x11de` refused: Width and height must both be even.
-- `10x11dn` refused: Width and height must both be even.
-- `10x13dt` refused: Width and height must both be even.
-- `10x13de` refused: Width and height must both be even.
-- `10x13dn` refused: Width and height must both be even.
-- `7x14dt` refused: Width and height must both be even.
-- `7x14de` refused: Width and height must both be even.
-- `7x14dn` refused: Width and height must both be even.
-- `9x14dt` refused: Width and height must both be even.
-- `9x14de` refused: Width and height must both be even.
-- `9x14dn` refused: Width and height must both be even.
-- `11x14dt` refused: Width and height must both be even.
-- `11x14de` refused: Width and height must both be even.
-- `11x14dn` refused: Width and height must both be even.
-- `13x14dt` refused: Width and height must both be even.
-- `13x14de` refused: Width and height must both be even.
-- `13x14dn` refused: Width and height must both be even.
-- `14x7dt` refused: Width and height must both be even.
-- `14x7de` refused: Width and height must both be even.
-- `14x7dn` refused: Width and height must both be even.
-- `14x9dt` refused: Width and height must both be even.
-- `14x9de` refused: Width and height must both be even.
-- `14x9dn` refused: Width and height must both be even.
-- `14x11dt` refused: Width and height must both be even.
-- `14x11de` refused: Width and height must both be even.
-- `14x11dn` refused: Width and height must both be even.
-- `14x13dt` refused: Width and height must both be even.
-- `14x13de` refused: Width and height must both be even.
-- `14x13dn` refused: Width and height must both be even.
+- `8x15dt` refused: Width and height must both be even.
+- `8x15de` refused: Width and height must both be even.
+- `8x15dn` refused: Width and height must both be even.
+- `7x12dt` refused: Width and height must both be even.
+- `7x12de` refused: Width and height must both be even.
+- `7x12dn` refused: Width and height must both be even.
+- `9x12dt` refused: Width and height must both be even.
+- `9x12de` refused: Width and height must both be even.
+- `9x12dn` refused: Width and height must both be even.
+- `11x12dt` refused: Width and height must both be even.
+- `11x12de` refused: Width and height must both be even.
+- `11x12dn` refused: Width and height must both be even.
+- `7x16dt` refused: Width and height must both be even.
+- `7x16de` refused: Width and height must both be even.
+- `7x16dn` refused: Width and height must both be even.
+- `9x16dt` refused: Width and height must both be even.
+- `9x16de` refused: Width and height must both be even.
+- `9x16dn` refused: Width and height must both be even.
+- `11x16dt` refused: Width and height must both be even.
+- `11x16de` refused: Width and height must both be even.
+- `11x16dn` refused: Width and height must both be even.
+- `12x7dt` refused: Width and height must both be even.
+- `12x7de` refused: Width and height must both be even.
+- `12x7dn` refused: Width and height must both be even.
+- `12x9dt` refused: Width and height must both be even.
+- `12x9de` refused: Width and height must both be even.
+- `12x9dn` refused: Width and height must both be even.
+- `12x11dt` refused: Width and height must both be even.
+- `12x11de` refused: Width and height must both be even.
+- `12x11dn` refused: Width and height must both be even.
 - `7x7udt` refused: Width and height must both be even.
 - `7x7ude` refused: Width and height must both be even.
 - `7x7udn` refused: Width and height must both be even.
@@ -1448,9 +1541,12 @@
 - `11x11udt` refused: Width and height must both be even.
 - `11x11ude` refused: Width and height must both be even.
 - `11x11udn` refused: Width and height must both be even.
-- `13x13udt` refused: Width and height must both be even.
-- `13x13ude` refused: Width and height must both be even.
-- `13x13udn` refused: Width and height must both be even.
+- `12x13udt` refused: Width and height must both be even.
+- `12x13ude` refused: Width and height must both be even.
+- `12x13udn` refused: Width and height must both be even.
+- `12x15udt` refused: Width and height must both be even.
+- `12x15ude` refused: Width and height must both be even.
+- `12x15udn` refused: Width and height must both be even.
 - `7x8udt` refused: Width and height must both be even.
 - `7x8ude` refused: Width and height must both be even.
 - `7x8udn` refused: Width and height must both be even.
@@ -1460,9 +1556,6 @@
 - `11x8udt` refused: Width and height must both be even.
 - `11x8ude` refused: Width and height must both be even.
 - `11x8udn` refused: Width and height must both be even.
-- `13x8udt` refused: Width and height must both be even.
-- `13x8ude` refused: Width and height must both be even.
-- `13x8udn` refused: Width and height must both be even.
 - `8x7udt` refused: Width and height must both be even.
 - `8x7ude` refused: Width and height must both be even.
 - `8x7udn` refused: Width and height must both be even.
@@ -1475,4 +1568,7 @@
 - `8x13udt` refused: Width and height must both be even.
 - `8x13ude` refused: Width and height must both be even.
 - `8x13udn` refused: Width and height must both be even.
+- `8x15udt` refused: Width and height must both be even.
+- `8x15ude` refused: Width and height must both be even.
+- `8x15udn` refused: Width and height must both be even.
 

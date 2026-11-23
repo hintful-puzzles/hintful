@@ -8,6 +8,7 @@
  */
 
 import { shuffle } from "../board/shuffle.ts";
+import { drawRejected } from "../contract/deal-census.ts";
 import { retryLimit } from "../contract/retry-limit.ts";
 import { placeSymmetricBlacks } from "../generate/symmetric-blacks.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
@@ -60,6 +61,7 @@ import {
 } from "./sample.ts";
 import {
   type SearchedFillModule,
+  searchAgainst,
   searchBoard,
   searchedPositions,
   searches,
@@ -210,10 +212,28 @@ export function dealFill<C extends Clues<C>>(
   };
   /** The draws so far, which a ramp of the `first` cells' share counts. */
   let layouts = 0;
+  /**
+   * The tier a build ladders at, which climbs a tier at each build that met
+   * a dead end or built an answer that breaks a rule. A higher tier steers
+   * some builds clear of both (Unruly's 12x16 built at the lowest took 1,169
+   * draws a deal and 3 at its whole ladder, Singles' 12x12 Tricky 259 and 1)
+   * and decides nothing in others, where it is only paid for (Light Up's
+   * 12x16 built the same answers at the lowest, a third of the cost;
+   * 2026-11-23).
+   */
+  let buildTier = 0;
+  const climbBuild = (stage: string): null => {
+    buildTier = Math.min(buildTier + 1, module.tiers.length - 1);
+    return drawRejected(stage);
+  };
+  const built = (sample: BuiltSample): Uint8Array | null => {
+    const g = buildAnswer(module, deal, sample, sp, p, rs, layouts++, buildTier);
+    return g === DEAD_END ? climbBuild("fill: the build met a dead end") : g;
+  };
   const draw = (tier: number): { g: Uint8Array; clues: C } | null => {
     const g =
       "build" in sample
-        ? buildAnswer(module, deal, sample, sp, p, rs, layouts++)
+        ? built(sample)
         : "dominoes" in sample
           ? sampleDominoes(sample, sp, rs)
           : "lines" in sample
@@ -230,14 +250,17 @@ export function dealFill<C extends Clues<C>>(
                       ? null
                       : firstLaid(sample.first, deal, p, rs, layouts++),
                   );
-    if (g === null) return null;
+    if (g === null) return drawRejected("fill: the sample drew no answer");
     const grown = grownRound(g, tier);
     if (grown === null) return null;
     const derived = numbered(
       module.deriveClues(g, sp, grown, given, (n) => randomUpto(rs, n)),
       g,
     );
-    if (!module.isAnswer(g, sp, derived, variations)) return null;
+    if (!module.isAnswer(g, sp, derived, variations))
+      return "build" in sample
+        ? climbBuild("fill: the answer built breaks a rule")
+        : drawRejected("fill: the answer drawn breaks a rule");
     if (kind === undefined) return { g, clues: derived };
     const list = derived[kind] as ClueList;
     // A clue whose partner square has none cannot be shown symmetrically.
@@ -270,33 +293,69 @@ export function dealFill<C extends Clues<C>>(
     return out;
   };
   /**
-   * The clues with each of `kind`'s that may go hidden, a tier at a time from
-   * the lowest up to `tier`, or `null` where the lowest does not finish the
-   * board with every clue shown. A board of a tier is one of the tier below
-   * with more hidden: one whose every clue the lowest tier does not finish is
-   * slow to hide from, each try asking the higher tier (Mosaic's 10x10 Normal
-   * deal took twice as long and its 20x25 three times, measured 2026-11-22).
-   * Thorough, every clue is tried at each tier; otherwise none at the lowest
-   * and as many as the board's shorter side at each above it.
+   * The shortest run from the start of `units` whose clues alone of the
+   * hidden kinds tier `t` finishes the board with, found by halving: the
+   * whole of them finishes it. A thorough hide tries each of the run after
+   * it, as it would each of the whole: a board of 100 clues of which 15
+   * stay is some 7 solves and 15, not 100 (Boats' 10x10, 2026-11-23).
    */
-  const hideUpTo = (clues: C, tier: number): C | null => {
+  const shortestRun = (clues: C, units: readonly number[][], t: number): number[] => {
+    let lo = 0;
+    let hi = units.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (finishes(keeping(clues, units.slice(0, mid).flat().sort(byIndex)), t))
+        hi = mid;
+      else lo = mid + 1;
+    }
+    return units.slice(0, hi).flat().sort(byIndex);
+  };
+  /**
+   * The clues with each of `kind`'s that may go hidden: at the lowest tier
+   * that finishes the board with every clue shown, and then at `tier` where
+   * `climb` is set; `null` where no tier up to `tier` finishes it.
+   *
+   * Hiding at a tier above the lowest that finishes a board is slow, each try
+   * asking the higher tier (Mosaic's 10x10 Normal deal took twice as long and
+   * its 20x25 three times, measured 2026-11-22), so most clues go at the
+   * lowest. The tiers between it and `tier` hide nothing that `tier` would
+   * not and cost a pass each (Boats' 10x10 Hard, 507 solves a deal against
+   * 404 without them), and a draw the lowest tier does not finish is still a
+   * board of a higher one, which it once threw away (Light Up's 12x16 Normal,
+   * 40 draws a deal; 2026-11-23). Thorough, every clue is tried at each
+   * tier; otherwise none at the first and as many as the board's shorter
+   * side at `tier`.
+   */
+  const hideUpTo = (clues: C, tier: number, climb = true): C | null => {
     if (kind === undefined) return clues;
-    if (!finishes(clues, 0)) return null;
+    // Most draws the asked tier does not finish (Light Up's 12x16 Normal, 26
+    // of 36), which one solve at it says; a lower tier's solve is a part of
+    // that one, and is asked only of the draws kept.
+    if (!finishes(clues, tier)) return null;
+    let from = 0;
+    while (from < tier && !finishes(clues, from)) from++;
     let shown = allShown(clues);
     // A firing reads only the clues its bindings name, so the board finishes
     // without the clues the ladder never read; where a technique reads one
     // its bindings do not name, it does not, and every clue is tried. A unit
     // goes only where none of it was read.
-    const read = cluesRead(module, board(clues), 0, kinds);
+    const read = cluesRead(module, board(clues), from, kinds);
     const pruned = unitsOf(clues, shown)
       .filter((u) => u.some((i) => read.has(i)))
       .flat()
-      .sort((a, b) => a - b);
-    if (finishes(keeping(clues, pruned), 0)) shown = pruned;
-    for (let t = 0; t <= tier; t++) {
+      .sort(byIndex);
+    if (finishes(keeping(clues, pruned), from)) shown = pruned;
+    if (thorough) {
       const order = unitsOf(clues, shown);
       shuffle(order, rs);
-      const tries = thorough ? order : order.slice(0, t === 0 ? 0 : Math.min(p.w, p.h));
+      shown = shortestRun(clues, order, from);
+    }
+    for (const t of climb && tier > from ? [from, tier] : [from]) {
+      const order = unitsOf(clues, shown);
+      shuffle(order, rs);
+      const tries = thorough
+        ? order
+        : order.slice(0, t === from ? 0 : Math.min(p.w, p.h));
       for (const unit of tries) {
         const without = shown.filter((j) => !unit.includes(j));
         if (finishes(keeping(clues, without), t)) shown = without;
@@ -314,7 +373,7 @@ export function dealFill<C extends Clues<C>>(
       label: `fill: ${module.tiers[p.diff]} deal (${p.w}x${p.h})`,
       draw: () => draw(p.diff),
       deduced: (b) => finishes(b.clues, top),
-      answer: (b, budget) => searchBoard(module, board(b.clues), budget),
+      answer: (b, budget) => searchAgainst(module, board(b.clues), b.g, budget),
     });
     return { desc: encodeDesc(deal, sp, got.clues), aux: encodeAnswer(got.g) };
   }
@@ -328,18 +387,22 @@ export function dealFill<C extends Clues<C>>(
     const got = dealUnreasonable<Held>({
       label: `fill: ${module.tiers[p.diff]} deal (${p.w}x${p.h})`,
       draw() {
-        // A board of the lowest tier is drawn until there is one, so the
-        // every-clue try is one in its count of boards and not of pictures,
-        // most of which the lowest tier does not finish (the miscount took
-        // Mosaic's 10x10 median left undecided from 43 to 65).
+        // A board some tier below the search's finishes is drawn until there
+        // is one, hidden from at the lowest such tier, so the every-clue try
+        // is one in its count of boards and not of pictures, most of which
+        // the ladder does not finish (the miscount took Mosaic's 10x10 median
+        // left undecided from 43 to 65).
         const every = deal.stripFrom === "everyClue" || ++draws % EVERY_CLUE_DRAW === 0;
-        const attempt = retryLimit(`fill: ${module.tiers[0]} board to strip`);
+        const attempt = retryLimit("fill: a board to strip");
         for (;;) {
           attempt();
           const drawn = draw(0);
           if (drawn === null) continue;
-          const clues = every ? drawn.clues : hideUpTo(drawn.clues, 0);
-          if (clues === null) continue;
+          const clues = every ? drawn.clues : hideUpTo(drawn.clues, top, false);
+          if (clues === null) {
+            drawRejected("fill: no tier below the search's finishes every clue");
+            continue;
+          }
           answer = drawn.g;
           return { all: clues, shown: allShown(clues) };
         }
@@ -378,7 +441,7 @@ export function dealFill<C extends Clues<C>>(
         }
       },
       deduced: (b) => finishes(held(b), top),
-      answer: (b, budget) => searchBoard(module, board(held(b)), budget),
+      answer: (b, budget) => searchAgainst(module, board(held(b)), answer, budget),
     });
     return { desc: encodeDesc(deal, sp, held(got)), aux: encodeAnswer(answer) };
   }
@@ -389,12 +452,24 @@ export function dealFill<C extends Clues<C>>(
     const drawn = draw(p.diff);
     if (drawn === null) continue;
     const clues = hideUpTo(drawn.clues, p.diff);
-    if (clues === null || !finishes(clues, p.diff)) continue;
-    if (p.diff > 0 && finishes(clues, p.diff - 1)) continue;
+    if (clues === null) {
+      drawRejected("fill: no tier up to the asked finishes every clue");
+      continue;
+    }
+    if (!finishes(clues, p.diff)) {
+      drawRejected("fill: the tier stops short with the clues left");
+      continue;
+    }
+    if (p.diff > 0 && finishes(clues, p.diff - 1)) {
+      drawRejected("fill: the tier below finishes the board");
+      continue;
+    }
     // A board the hide flag asked to hide a kind hides one of it (upstream
     // boats.c refused a stripped board that showed every number).
-    if (deal.hideFlag !== undefined && p.hides === true && !hidesAny(clues, deal, sp))
+    if (deal.hideFlag !== undefined && p.hides === true && !hidesAny(clues, deal, sp)) {
+      drawRejected("fill: the board hides none of the flag's kind");
       continue;
+    }
     return { desc: encodeDesc(deal, sp, clues), aux: encodeAnswer(drawn.g) };
   }
 }
@@ -552,6 +627,8 @@ function unpaired<C extends Clues<C>>(clues: C, kind: keyof C, sp: GridSpace): C
   const shown = shownOf(list).filter((i) => !off.has(i));
   return keepingOf(clues, kind, shown, sp.cells.length);
 }
+
+const byIndex = (a: number, b: number): number => a - b;
 
 /** The indices of a list's clues. */
 const shownOf = (list: ClueList): number[] => Array.from(list.at.keys());
@@ -735,8 +812,9 @@ function firstLaid(
 /**
  * An answer built by the ladder (`sample: build`): a random value of its
  * domain, or the build's one value, on a random undecided cell, then every
- * cell the whole ladder decides from those, until none is left; `null` where
- * a placement left no answer. The board is built on the clues a blank board
+ * cell the ladder up to `tier` decides from those, until none is left;
+ * {@link DEAD_END} where a placement left no answer or a cell undecided, and
+ * `null` where the board offers none at all. The board is built on the clues a blank board
  * derives, which are none where the clues are the placed cells (Unruly's
  * givens). Upstream's unruly.c `unruly_fill_game`. With `first`, its value is
  * dealt first on a share of the cells, as symmetric as the options ask, and
@@ -751,7 +829,8 @@ function buildAnswer<C extends Clues<C>>(
   p: FillParams,
   rs: RandomState,
   draw: number,
-): Uint8Array | null {
+  tier: number,
+): Uint8Array | typeof DEAD_END | null {
   const { first } = sample;
   const start =
     first === undefined
@@ -781,12 +860,7 @@ function buildAnswer<C extends Clues<C>>(
   // placement: a fresh solve each time cost a 12x16 Light Up deal seconds.
   const { marks, ok, entries } = marksOf(module, board);
   if (!ok) return null;
-  const ladder = ladderTechniques(
-    marks,
-    entries,
-    { [TIERS]: module.tiers.length - 1 },
-    {},
-  );
+  const ladder = ladderTechniques(marks, entries, { [TIERS]: tier }, {});
   if (runLadder(marks, ladder)) return null;
   const build = sample.build === true ? null : sample.build;
   const order = Array.from(sp.cells);
@@ -805,12 +879,13 @@ function buildAnswer<C extends Clues<C>>(
       if (marks.has(c, v) && (only === null || v === only)) values.push(v);
     }
     if (values.length === 0) {
-      if (only === null) return null;
+      if (only === null) return DEAD_END;
       continue;
     }
     marks.place(c, pickValue(values, build, rs));
-    if (runLadder(marks, ladder)) return null;
+    if (runLadder(marks, ladder)) return DEAD_END;
   }
+  if (marks.grid.includes(0)) return DEAD_END;
   const least = build?.least;
   if (
     least !== undefined &&
@@ -836,6 +911,10 @@ function pickValue(
     return build.value;
   return others[randomUpto(rs, others.length)];
 }
+
+/** What a build returns where a placement left no answer or a cell undecided:
+ * a sign that its ladder was too low to steer it. */
+const DEAD_END = "dead end";
 
 /** The resolution a build's share is drawn at. */
 const CHANCE = 1 << 20;

@@ -348,7 +348,9 @@ export const KINDS: Readonly<Record<string, Kind>> = {
       arms: {
         more: {
           when: "|RA| > 0",
-          move: "{ring 1: the ringed {noun} | each ringed {noun}} $outsideB $fillWord{has 2: , and {ring 2: the ringed {noun} | each ringed {noun}} $outsideA $restWord}",
+          // Where each lies is said inside its ring, which tells two rings
+          // of one noun apart.
+          move: "{ring 1: the ringed {noun} $outsideB | each ringed {noun} $outsideB} $fillWord{has 2: , and {ring 2: the ringed {noun} $outsideA | each ringed {noun} $outsideA} $restWord}",
           long: "a step that fills one count's squares and clears the other's says where each of the two lies, so the player can tell which ringed square takes which",
         },
         // The look has said that A's squares all lie in B's.

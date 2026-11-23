@@ -197,6 +197,12 @@ deal:
     build: { value: 1 }
   hide: number
   leaves: wall
+  # An Unreasonable board is stripped from every number, as the hand-written
+  # generator stripped every one. Hidden first at the lowest tier that
+  # finishes it, thirty deals each of the 12x16 and the 10x10 took 7.8 s of
+  # CPU time, against 4.8 s from every number and 5.1 s hand-written
+  # (2026-11-23).
+  stripFrom: everyClue
 # Upstream's game ID: a digit a numbered wall, `B` a wall with none, and a
 # letter a run of squares.
 id:

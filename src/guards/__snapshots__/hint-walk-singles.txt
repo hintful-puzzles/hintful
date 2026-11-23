@@ -1,2 +1,2 @@
-5x5 Easy #0: 18 steps, solved, e815ec8651ddbc24 [besideCovered:6 sameLine:6 sandwich:6]
-5x5 Normal #0: 15 steps, solved, de4d0e2c9c859f94 [besideCovered:5 boxedIn:2 sameLine:5 sandwich:3]
+5x5 Easy #0: 13 steps, solved, ae38da01ac60694f [besideCovered:6 sameLine:6 sandwich:1]
+5x5 Normal #0: 17 steps, solved, 744e5c8ebe4becb0 [besideCovered:5 boxedIn:4 sameLine:6 sandwich:2]

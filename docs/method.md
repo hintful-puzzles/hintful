@@ -152,6 +152,16 @@ it a cost. A figure in milliseconds, such as whether a deal stays under the
 100 ms a player does not notice, is still CPU time, taken as the least of
 several runs, as `scripts/checks/cpu-unit.ts` takes its unit.
 
+A count taken under vitest is of the engine behind its module runner, which
+reads every import through a getter, where the app's bundle binds it
+directly. A described game's compiled techniques call their runtime through
+a barrel, two getters a call, and a hand-written game calls few, so a
+vitest comparison of the two overstates the described one: Light Up's
+deal read 3.2 times its hand-written one there and 1.5 times bundled
+(`cut-the-born-deal-cost`, 2026-11-23). Compare a described game against a
+hand-written one on bundles of both trees until `compare-cost` counts one
+(`count-cost-on-the-bundled-engine`).
+
 ## Retire a dead instruction
 
 When an instruction has gone stale, fixing the one part you noticed leaves

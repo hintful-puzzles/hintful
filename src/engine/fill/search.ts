@@ -9,12 +9,15 @@
 
 import { SEARCH_TIER } from "../contract/difficulty.ts";
 import { type Answer, answerCache, solvedPositions } from "../solve/answer-search.ts";
+import type { CellMarks } from "../solve/cell-marks.ts";
 import type { ClueList, GridSpace, Partition } from "../solve/describe-runtime.ts";
+import { ladderTechniques, runLadder, TIERS } from "../solve/ladder-runtime.ts";
 import {
   asDealt,
   type FillBoard,
+  isAnswerOf,
   type LadderedFillModule,
-  solveBoard,
+  marksOf,
   spaceOf,
 } from "./board.ts";
 import type { FillDeal } from "./game-id.ts";
@@ -87,6 +90,12 @@ interface SearchFrom {
  * an open cell is assumed each value its domain allows. The cell is the
  * first open one of the group with the fewest open, where either way is
  * likeliest to settle the rest of it; with no group, the first open cell.
+ *
+ * A branch forks its parent's marks, so its ladder goes on from where the
+ * parent's stopped, what it struck included, and not from the values alone:
+ * a search solved each position afresh took over a third of Light Up's
+ * 12x16 Unreasonable deal (2026-11-23), and the hand-written search it
+ * replaced forked as well.
  */
 export function searchedPositions<C>(
   module: SearchedFillModule<C>,
@@ -98,19 +107,26 @@ export function searchedPositions<C>(
   const dealt = asDealt(board);
   const sp = spaceOf(module, board);
   const groups = groupsOf(module, board, sp);
-  return solvedPositions(
+  const root = marksOf(
+    module,
+    from.start === undefined ? dealt : { ...dealt, values: from.start },
+  );
+  const { placing, striking } = root.marks;
+  const found = solvedPositions<CellMarks | null, Uint8Array>(
     {
-      start: (from.start ?? dealt.values).slice(),
-      deduce(values) {
-        const got = solveBoard(module, { ...dealt, values }, cap);
-        values.set(got.values);
-        return got.verdict === "solved"
-          ? "solved"
-          : got.verdict === "impossible"
-            ? "contradiction"
-            : "stuck";
+      // Marks the dealt values already contradict are a position with no
+      // answer.
+      start: root.ok ? root.marks : null,
+      deduce(m) {
+        if (m === null) return "contradiction";
+        if (runLadder(m, ladderTechniques(m, root.entries, { [TIERS]: cap }, {})))
+          return "contradiction";
+        if (m.grid.includes(0)) return "stuck";
+        return isAnswerOf(module, board, m.grid) ? "solved" : "contradiction";
       },
-      assume(values) {
+      assume(m) {
+        if (m === null) return [];
+        const values = m.grid;
         let at = values.indexOf(0);
         let fewest = Number.POSITIVE_INFINITY;
         for (const group of groups) {
@@ -122,22 +138,27 @@ export function searchedPositions<C>(
         }
         if (at < 0) return [];
         const vs: number[] = [];
-        for (let m = module.domainOf(sp, board.dealt, at); m !== 0; m &= m - 1)
-          vs.push(31 - Math.clz32(m & -m));
+        for (let d = module.domainOf(sp, board.dealt, at); d !== 0; d &= d - 1) {
+          const v = 31 - Math.clz32(d & -d);
+          if (m.has(at, v)) vs.push(v);
+        }
         const last = from.last?.(at);
         if (last !== undefined && vs.includes(last))
           vs.sort((a, b) => (a === last ? 1 : b === last ? -1 : 0));
         return vs.map((v) => {
-          const next = values.slice();
-          next[at] = v;
+          const next = m.fork();
+          next.placing = placing;
+          next.striking = striking;
+          next.place(at, v);
           return next;
         });
       },
-      solution: (values) => values,
+      solution: (m) => Uint8Array.from(m?.grid ?? []),
       budget: from.budget ?? SEARCH_BUDGET,
     },
     limit,
   );
+  return found?.map((m) => Uint8Array.from(m?.grid ?? [])) ?? null;
 }
 
 /** The board's answers up to two, by {@link searchedPositions} from the
@@ -152,6 +173,30 @@ export function searchBoard<C>(
   if (found.length === 0) return { kind: "none" };
   if (found.length > 1) return { kind: "several" };
   return { kind: "one", solution: found[0] };
+}
+
+/**
+ * {@link searchBoard} of a board dealt round `answer`: whether it is the
+ * board's one answer. The search assumes each cell's value in `answer` last,
+ * and goes depth first, so it meets `answer` only once every other branch is
+ * spent: the first answer it meets is the verdict. A board with one answer
+ * takes the whole search either way, but one with several stops at the first
+ * other, where asking for two would go on to find `answer` as well (Light
+ * Up's 12x16 Unreasonable deal asks some 74 such a deal, 2026-11-23).
+ */
+export function searchAgainst<C>(
+  module: SearchedFillModule<C>,
+  board: FillBoard<C>,
+  answer: ArrayLike<number>,
+  budget: number = SEARCH_BUDGET,
+): Answer<Uint8Array> {
+  const found = searchedPositions(module, board, { budget, last: (c) => answer[c] }, 1);
+  if (found === null) return { kind: "out-of-reach" };
+  if (found.length === 0) return { kind: "none" };
+  const [first] = found;
+  for (let c = 0; c < first.length; c++)
+    if (first[c] !== answer[c]) return { kind: "several" };
+  return { kind: "one", solution: first };
 }
 
 /** Keyed on a board's clues, which every state of one game shares. */
