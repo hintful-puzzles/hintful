@@ -34,6 +34,8 @@ export interface BornGame {
   readonly game: AnyGame;
   /** Its description, from the root. */
   readonly source: string;
+  /** Its description, as read. */
+  readonly description: Readonly<Record<string, unknown>>;
   /** The module its description compiles to. */
   readonly compiled: Readonly<Record<string, unknown>>;
   /** Its cases file, from the root, and the text there; null where it has
@@ -67,6 +69,7 @@ export const BORN_GAMES: readonly BornGame[] = Object.entries(descriptions).flat
         id,
         game,
         source: fromRoot(key),
+        description: data,
         compiled,
         cases:
           casesText === undefined

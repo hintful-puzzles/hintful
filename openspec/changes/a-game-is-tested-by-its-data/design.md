@@ -192,13 +192,19 @@ fixtures.
 
 The first is data: a placement and the edit it brings (`positions` with
 `brings`). The second, each tent of an answer against the help's rule,
-loops: an engine check, "what a placement brings is what its `rulesOut`
-techniques conclude from it", for every game that declares `rulesOut`.
+loops: a guard, `placement-brings.test.ts`, for every game that declares
+`rulesOut`. Its oracle is the live rules, not the techniques `bring` walks
+(which would agree with itself): a placement alone brings exactly the open
+squares where the same value would break, with it, a statement neither
+breaks alone. A washed square is left out (the board already shows it
+holding none), and so is a matching (which partner a placement takes is
+the whole board's to settle). Laid in order the answer's placements bring
+a subset: Norinori's named techniques leave out a square between two
+shaded ones, which the rules rule out.
 
 ### Fits no kind
 
 - Pattern's exhaustive absence (§ 4), pending `tiers.absent.exhaustive`.
-- Tents' bring-each-tent rule (§ 9), pending the `rulesOut` check.
 - Boats' "counts a boat found only once it is shut in by water": a
   tally-display question (`wholePieces`), the tally capability's, tested on
   a fixture.

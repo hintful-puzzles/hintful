@@ -24,7 +24,8 @@
  * - `positions`: a game ID, `moves` played on it and `solve` after them, and
  *   what the engine reports there: `status`, `text`, `statusbar`, `breaks`
  *   (the rules the live errors name), `mistakes` (what Check & Save
- *   counts), the hint's first `steps`, `holds`, `draws` (ops counted by
+ *   counts), the hint's first `steps`, `holds`, `brings` (what the last
+ *   move's placement rules out, `Game.rulesOut`), `draws` (ops counted by
  *   shape and color: a role, or one of the collection's colors) and
  *   `circled` (the text inside each circle the hint draws), the frame drawn
  *   under the `preferences` given, and with the hint shown where it says
@@ -143,6 +144,9 @@ export interface PositionCase extends At {
   readonly mistakes: number | null;
   readonly steps: readonly StepShape[] | null;
   readonly holds: Readonly<Record<string, unknown>>;
+  /** What the last of `moves` brings (`Game.rulesOut`), `null` for nothing;
+   * absent, not checked. */
+  readonly brings?: unknown;
   /** By `<op> <color role>`, as `polygon error`, or `<op> any` for every op
    * of the shape, whatever its color: a piece in the game's own colors. */
   readonly draws: Readonly<Record<string, Count>>;
@@ -483,6 +487,7 @@ export function parseGameCases(text: string, path: string): GameCases {
         "mistakes",
         "steps",
         "holds",
+        "brings",
         "draws",
         "preferences",
         "showHint",
@@ -546,6 +551,9 @@ export function parseGameCases(text: string, path: string): GameCases {
                 ]),
               ),
         holds: holds(e.get("holds"), `${where}.holds`),
+        ...(e.has("brings")
+          ? { brings: named(js(e.get("brings")), e.get("brings")) }
+          : {}),
         draws,
         preferences,
         showHint: opt(e.get("showHint"), (n) => bool(n, `${where}.showHint`)) ?? false,
@@ -801,15 +809,28 @@ export function checkPosition(game: AnyGame, c: PositionCase): string[] {
   const loaded = load(game, c.id);
   if ("error" in loaded) return [`refused: ${loaded.error}`];
   let state = loaded.state;
+  let before = state;
   const moves = [...c.moves];
-  for (const m of c.moves) state = game.executeMove(state, m);
+  for (const m of c.moves) {
+    before = state;
+    state = game.executeMove(state, m);
+  }
+  const brought = ((): string[] => {
+    if (c.brings === undefined) return [];
+    if (game.rulesOut === undefined) return ["declares nothing a placement rules out"];
+    if (c.moves.length === 0) return ["has no move to bring anything"];
+    const got = JSON.stringify(game.rulesOut.bring(before, state));
+    return got === JSON.stringify(c.brings)
+      ? []
+      : [`brings ${got}, not ${JSON.stringify(c.brings)}`];
+  })();
   if (c.solve) {
     const solved = game.solve(state, state);
     if (!solved.ok) return [`no answer to play: ${solved.error}`];
     state = game.executeMove(state, solved.move);
     moves.push(solved.move);
   }
-  const out: string[] = [];
+  const out: string[] = [...brought];
   const was = (what: string, got: unknown, want: unknown) => {
     if (JSON.stringify(got) !== JSON.stringify(want))
       out.push(`${what} ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);

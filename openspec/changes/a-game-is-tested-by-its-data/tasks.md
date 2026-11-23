@@ -37,7 +37,12 @@
             on Light Up, Range and Sticks with the half-turn copy and the
             hide's pairing planted wrong.
       - [ ] A deal's clues are its answer's (with Boats or Singles).
-      - [ ] What a placement brings (`rulesOut`).
+      - [x] What a placement brings (`placement-brings.test.ts`): each
+            answer placement alone brings exactly what the live rules rule
+            out with it, washed squares and matchings left out; laid in
+            order, a subset. Agreed on all 673 placements of the four
+            declaring games before it was written; seen to fail with a
+            technique dropped and with the premise check dropped.
       - [ ] Absence over every picture of a small size.
 
 ## 3. Capabilities on their own descriptions
@@ -57,8 +62,9 @@
       or a few, the cases of 1.1 kept as data or named by the guard that
       holds them. `npm run test:hint-sweeps` before the last commit.
       Moved: Kakurasu, Unruly, Mosaic, Norinori, Range, Clusters, Star
-      Battle, Light Up. A position draws under `preferences`, and `draws`
-      names a collection color (`yellow-wash`) for a surface with no role. `wordings` renders a technique's stated step from terms on
+      Battle, Light Up, Tents. A position draws under `preferences`,
+      `draws` names a collection color (`yellow-wash`) for a surface with
+      no role, and `brings` is what its last move's placement rules out. `wordings` renders a technique's stated step from terms on
       the compiled module (`BornGame.compiled`), the pieces named as the
       hint names them (`pairPieces`); `draws` takes `any` for a piece in
       the game's own colors. A position's

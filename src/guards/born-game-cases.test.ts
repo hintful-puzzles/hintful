@@ -25,7 +25,6 @@ const NOT_YET_DATA: Readonly<Record<string, string>> = {
   pattern: "pattern.test.ts",
   singles: "singles.test.ts",
   sticks: "sticks.test.ts",
-  tents: "tents.test.ts",
 };
 
 describe("a born game's cases", () => {

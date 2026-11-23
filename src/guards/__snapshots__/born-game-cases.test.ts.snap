@@ -87,6 +87,24 @@ exports[`starbattle: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`tents: pinned hint positions > says, at each pin 1`] = `
+{
+  "betweenThem": "This row fits only the 4 tents it needs, so every ringed square must be a tent, and the square between them grass.",
+  "lineCount.allOpen": "This row needs 3 more tents and has only 3 open squares, so every ringed square must be a tent.",
+  "lineCount.countMet": "This row's number is 0, so its open squares must be grass.",
+  "lineCount.noSpareRoom": "This row fits only the 2 tents it needs, so the ringed square must be a tent.",
+  "lineNeighbors": "Wherever this row's 2 remaining tents go, one touches each ringed square, so every ringed square must be grass.",
+  "linkAlone": "Every other tree by the ringed tent has its tent (outlined), so it must belong to the ringed tree: draw the link.",
+  "nextToTent": "No tent may touch the outlined tent, even diagonally, so the ringed square must be grass.",
+  "noTree": "No tree is beside the ringed squares, so every ringed square must be grass.",
+  "tentLink": "Every other tree by the ringed tent has its tent (outlined), so it must belong to the ringed tree: draw the link.",
+  "treeDiagonal": "This tree's tent must go in one of the two outlined squares; either touches the ringed one, so it must be grass.",
+  "treeLink": "The outlined tent belongs to another tree, so the ringed tree's tent must be the ringed one: draw the link.",
+  "treeSingle": "This tree's only open square is the ringed one, so its tent must go in it, with the link.",
+  "treesDone": "Every tree beside the ringed square has its tent (outlined), so the ringed square must be grass.",
+}
+`;
+
 exports[`unruly: pinned hint positions > says, at each pin 1`] = `
 {
   "lastGap": "This column already has all its discs (outlined), so the ringed square must hold a block.",
