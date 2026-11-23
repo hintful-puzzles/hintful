@@ -22,7 +22,6 @@ const only = (globalThis as { process?: { env?: Record<string, string | undefine
 const NOT_YET_DATA: Readonly<Record<string, string>> = {
   boats: "boats.test.ts",
   bricks: "bricks.test.ts",
-  lightup: "lightup.test.ts",
   pattern: "pattern.test.ts",
   singles: "singles.test.ts",
   sticks: "sticks.test.ts",

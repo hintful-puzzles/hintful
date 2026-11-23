@@ -17,6 +17,16 @@ describe("a cases file, read", () => {
     expect(() => read("ids:\n  - id: t3:x\n    refused: DESC_NO_SUCH\n")).toThrow(
       `${PATH}:3: ids[0].refused: no refusal DESC_NO_SUCH`,
     );
+    expect(() =>
+      read("positions:\n  - id: t3:g3-1\n    draws: {rect mauve-wash: 1}\n"),
+    ).toThrow(`${PATH}:3: positions[0].draws: "rect mauve-wash" is not`);
+    expect(() =>
+      read("positions:\n  - id: t3:g3-1\n    preferences: {kw: [1]}\n"),
+    ).toThrow(`${PATH}:3: positions[0].preferences.kw is not`);
+    expect(
+      read("positions:\n  - id: t3:g3-1\n    draws: {rect yellow-wash: 1}\n")
+        .positions[0].draws,
+    ).toEqual({ "rect yellow-wash": { exactly: 1 } });
   });
 
   it("reads a value's name as its number in moves and in what a board holds", () => {

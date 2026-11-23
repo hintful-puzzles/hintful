@@ -1,0 +1,104 @@
+# Light Up's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every kind of step its
+# hint takes, upstream's IDs read as the right walls, the sizes each tier and
+# symmetry refuses, the wash a bulb casts and what it hides, and what is
+# drawn in the error color.
+
+values:
+  bulb: 1
+  cross: 2
+  wall: 3
+
+hint:
+  params:
+    - {w: 7, h: 7, diff: 0, options: {walls: 20, symmetry: 4}}
+    - {w: 10, h: 10, diff: 1, options: {walls: 20, symmetry: 2}}
+  pins:
+    clueFull: "7x7b20s4d0:e0a3c1cBqBc1c3a1e"
+    clueExact: "10x10b20s2d1:eBgB2b2b3jBiBa3bBBd3Bb1aBi1j1b1bB1gBe"
+    square:
+      id: "7x7b20s4d0:bBf1g1aB1b1a2bB1aBg0fBb"
+      moves: [{set: [32, 2, 40, 2, 38, 2]}]
+    darkSet:
+      id: "10x10b20s2d1:eBb1b1Ba0a1fBh1gBb2a3cBBc2a1bBg2hBfBa2aB2b2b2e"
+      moves: [{set: [4, 2, 15, 2, 24, 2, 13, 2]}, {set: [3, 1]}]
+    clueSet:
+      id: "10x10b20s2d1:eBb1b1Ba0a1fBh1gBb2a3cBBc2a1bBg2hBfBa2aB2b2b2e"
+      moves: [{set: [4, 2, 15, 2, 24, 2, 13, 2]}, {set: [3, 1]}, {set: [17, 2]}]
+
+ids:
+  # Upstream's IDs: a digit a numbered wall, B a bare one, a letter a run of
+  # open squares.
+  - id: "3x4:Ba1f0a0"
+    holds:
+      values: [wall, 0, wall, 0, 0, 0, 0, 0, 0, wall, 0, wall]
+      dealt.number.at: [2, 9, 11]
+      dealt.number.v: [1, 0, 0]
+      dealt.wall.at: [0]
+  # A board too small for its tier loads when it comes with its desc.
+  - id: "2x2b20s0d1:a0b"
+    holds: {values.1: wall}
+
+params:
+  - {read: "10x10b25s0d1", full: "10x10b25s0d1"}
+  # Upstream's bare r is Unreasonable, and a board with no walls or
+  # symmetry given takes the usual.
+  - {read: "7x7b20s4r", full: "7x7b20s4d2"}
+  - {read: "18x10", full: "18x10b20s2d0"}
+  # Walls and symmetry are labeled only where they are not the board's
+  # usual.
+  - {read: "7x7b30s0d0", label: "7x7 Easy, 30% walls, no symmetry"}
+  - {read: "7x7b20s4d0", label: "7x7 Easy"}
+  - {read: "10x10b20s2d1", label: "10x10 Normal"}
+  - {read: "10x10b20s4d1", label: "10x10 Normal, 4-way rotational"}
+  # The sizes no board of a tier or symmetry is dealt on.
+  - {read: "2x2b20s0d0", refused: false}
+  - {read: "2x2b20s0d1", refused: "/No 2x2 puzzle is Normal/", loads: true}
+  - {read: "2x4b20s0d2", refused: "/is Unreasonable/"}
+  - {read: "3x3b20s0d2", refused: false}
+  - {read: "3x3b20s2d2", refused: "/2-way rotational symmetry is Unreasonable/"}
+  - {read: "3x3b20s3d1", refused: "/4-way mirror symmetry is Normal/"}
+  - {read: "4x4b20s4d2", refused: false}
+  - {read: "4x5b20s4d0", refused: "/must be square/"}
+  - {read: "7x7b4s0d0", refused: "/at least 5/"}
+
+positions:
+  # A bulb at the right of the second row washes its row and the crossed
+  # square under it: four squares. The cross is drawn there, or not, as the
+  # player prefers, and the wash is drawn either way.
+  - id: "3x4:Ba1f0a0"
+    moves: [{set: [5, bulb]}, {set: [8, cross]}]
+    draws: {rect yellow-wash: 4, line any: "> 0"}
+  - id: "3x4:Ba1f0a0"
+    moves: [{set: [5, bulb]}, {set: [8, cross]}]
+    preferences: {show-lit-blobs: false}
+    draws: {rect yellow-wash: 4, line any: 0}
+  # A lit open square holds no bulb, so the board is solved with it left
+  # open.
+  - id: "3x4:Ba1f0a0"
+    solve: true
+    status: solved
+    holds:
+      values: [wall, 0, wall, 0, 0, bulb, 0, bulb, 0, wall, 0, wall]
+  # The open square of the top row sees only its column: crossed whole,
+  # nothing can light it, and its cross is drawn in the error color.
+  - id: "3x4:Ba1f0a0"
+    moves: [{set: [1, cross]}, {set: [4, cross]}, {set: [7, cross]}, {set: [10, cross]}]
+    draws: {line error: "> 0"}
+  - id: "3x4:Ba1f0a0"
+    moves: [{set: [4, cross]}, {set: [7, cross]}, {set: [10, cross]}]
+    draws: {line error: 0}
+  # Two bulbs that light each other are drawn in the error color, one alone
+  # is not.
+  - id: "3x4:Ba1f0a0"
+    moves: [{set: [3, bulb]}]
+    draws: {circle error: 0}
+  - id: "3x4:Ba1f0a0"
+    moves: [{set: [3, bulb]}, {set: [5, bulb]}]
+    draws: {circle error: "> 0"}
+  # The fourth row: 2, open, 1, open, 4, open, wall. The hint fills the 4,
+  # and carries on to the 1 beside it, whose bulb is the 4's left one.
+  - id: "7x7:c2mBc2a1a4aBc2m1c"
+    steps:
+      - {rung: clueExact, set: [18, bulb, 26, bulb, 32, bulb, 24, bulb]}
+      - {rung: clueFull, set: [16, cross, 30, cross, 22, cross]}

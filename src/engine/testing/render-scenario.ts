@@ -16,7 +16,7 @@
  */
 
 import type { Game, HintStep } from "../contract/game.ts";
-import type { Color, Point, Size } from "../contract/types.ts";
+import type { Color, ConfigValues, Point, Size } from "../contract/types.ts";
 import { Midend } from "../midend/midend.ts";
 import { RecordingDrawing } from "./recording-drawing.ts";
 
@@ -37,6 +37,9 @@ export interface RenderScenario<Params, State, Move, Ui, DrawState, Mistake> {
   /** Game `Move`s to replay before capture, applied directly (not via
    * pointer events) — the deterministic way to reach a board state. */
   moves?: readonly Move[];
+  /** Preferences the player has set, keyed as the Preferences dialog keys
+   * them. */
+  preferences?: ConfigValues;
   /** Compute and show the mistake overlay (the `findMistakes` hook). */
   showMistakes?: boolean;
   /** Compute and show a hint: the step its plan opens with. */
@@ -157,6 +160,7 @@ function capture<Params, State, Move, Ui, DrawState, Mistake>(
   const midend = new Midend(game);
   const err = midend.newGameFromId(id);
   if (err) throw new Error(`renderScenario: invalid id "${id}": ${err}`);
+  if (scenario.preferences) midend.setPreferences(scenario.preferences);
 
   if (moves && moves.length > 0) midend.playMoves(moves);
 

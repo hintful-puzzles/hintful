@@ -57,7 +57,8 @@
       or a few, the cases of 1.1 kept as data or named by the guard that
       holds them. `npm run test:hint-sweeps` before the last commit.
       Moved: Kakurasu, Unruly, Mosaic, Norinori, Range, Clusters, Star
-      Battle. `wordings` renders a technique's stated step from terms on
+      Battle, Light Up. A position draws under `preferences`, and `draws`
+      names a collection color (`yellow-wash`) for a surface with no role. `wordings` renders a technique's stated step from terms on
       the compiled module (`BornGame.compiled`), the pieces named as the
       hint names them (`pairPieces`); `draws` takes `any` for a piece in
       the game's own colors. A position's

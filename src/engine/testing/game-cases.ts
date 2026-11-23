@@ -25,8 +25,10 @@
  *   what the engine reports there: `status`, `text`, `statusbar`, `breaks`
  *   (the rules the live errors name), `mistakes` (what Check & Save
  *   counts), the hint's first `steps`, `holds`, `draws` (ops counted by
- *   shape and color) and `circled` (the text inside each circle the hint
- *   draws), the frame drawn with the hint shown where it says `showHint`.
+ *   shape and color: a role, or one of the collection's colors) and
+ *   `circled` (the text inside each circle the hint draws), the frame drawn
+ *   under the `preferences` given, and with the hint shown where it says
+ *   `showHint`.
  * - `wordings`: a technique's stated wording rendered from `terms`, on cells
  *   numbered on a grid `width` wide (`ring`, and `marks` by role), and what
  *   it `says`: for a wording no walk reaches.
@@ -48,12 +50,13 @@ import {
   type Node,
   parseDocument,
 } from "yaml";
+import * as collection from "../color/colors.ts";
 import * as roles from "../color/roles.ts";
 import * as descErrors from "../contract/desc-error.ts";
 import { loadDesc, readBoard } from "../contract/desc-error.ts";
 import type { HintStep } from "../contract/game.ts";
 import { CELL } from "../contract/hint-words.ts";
-import type { Point } from "../contract/types.ts";
+import type { Color, ConfigValues, Point } from "../contract/types.ts";
 import { type FillHintModule, pairPieces } from "../fill/hint.ts";
 import { describeParams } from "../game-id/param-label.ts";
 import { paramsError } from "../game-id/params.ts";
@@ -143,6 +146,9 @@ export interface PositionCase extends At {
   /** By `<op> <color role>`, as `polygon error`, or `<op> any` for every op
    * of the shape, whatever its color: a piece in the game's own colors. */
   readonly draws: Readonly<Record<string, Count>>;
+  /** The preferences the frame is drawn under, keyed as the Preferences
+   * dialog keys them. */
+  readonly preferences: ConfigValues;
   /** Whether the frame `draws` counts is drawn with the hint shown. */
   readonly showHint: boolean;
   /** The text drawn at the center of each unfilled circle, sorted: what the
@@ -198,6 +204,20 @@ const COLORS: Readonly<Record<string, number>> = Object.fromEntries(
   Object.entries(roles).flatMap(([k, v]) =>
     k.startsWith("COL_") && typeof v === "number"
       ? [[k.slice(4).toLowerCase().replaceAll("_", "-"), v]]
+      : [],
+  ),
+);
+
+/** The collection's colors a `draws` key may name instead (`yellow-wash`),
+ * for a surface a game paints in one with no role: matched by the palette
+ * slot holding that very color. */
+const NAMED: Readonly<Record<string, Color>> = Object.fromEntries(
+  Object.entries(collection).flatMap(([k, v]) =>
+    /^[A-Z_]+$/.test(k) &&
+    Array.isArray(v) &&
+    v.length === 3 &&
+    v.every(Number.isFinite)
+      ? [[k.toLowerCase().replaceAll("_", "-"), v as Color]]
       : [],
   ),
 );
@@ -464,19 +484,34 @@ export function parseGameCases(text: string, path: string): GameCases {
         "steps",
         "holds",
         "draws",
+        "preferences",
         "showHint",
         "circled",
         "recorded",
       ]);
+      const preferences: Record<string, string | boolean | number> = {};
+      for (const [kw, n] of entries(
+        e.get("preferences"),
+        `${where}.preferences`,
+        null,
+      )) {
+        const v = js(n);
+        if (typeof v !== "string" && typeof v !== "boolean" && typeof v !== "number")
+          fail(n, `${where}.preferences.${kw} is not a word, number, or true or false`);
+        preferences[kw] = v as string | boolean | number;
+      }
       const draws: Record<string, Count> = {};
       for (const [key, n] of entries(e.get("draws"), `${where}.draws`, null)) {
         const [op, color] = key.split(" ");
         if (
           op === undefined ||
           color === undefined ||
-          !(color in COLORS || color === "any")
+          !(color in COLORS || color in NAMED || color === "any")
         )
-          fail(n, `${where}.draws: "${key}" is not "<op> <color role or any>"`);
+          fail(
+            n,
+            `${where}.draws: "${key}" is not "<op> <color role, collection color or any>"`,
+          );
         const v = js(n);
         const over = typeof v === "string" ? /^> (\d+)$/.exec(v) : null;
         if (over) draws[key] = { over: Number(over[1]) };
@@ -512,6 +547,7 @@ export function parseGameCases(text: string, path: string): GameCases {
               ),
         holds: holds(e.get("holds"), `${where}.holds`),
         draws,
+        preferences,
         showHint: opt(e.get("showHint"), (n) => bool(n, `${where}.showHint`)) ?? false,
         circled:
           e.get("circled") === undefined
@@ -728,16 +764,21 @@ export function checkParams(game: AnyGame, c: ParamsCase): string[] {
   return out;
 }
 
-/** How many of `ops` are `<op> <color role>`, by color or fill. */
-function drawn(ops: readonly DrawOp[], key: string): number {
-  const [op, role] = key.split(" ");
-  const color = COLORS[role];
+/** How many of `ops` are `<op> <color>`, by color or fill, the color a role
+ * or a slot of `palette` holding the collection's color of that name. */
+function drawn(ops: readonly DrawOp[], key: string, palette: readonly Color[]): number {
+  const [op, name] = key.split(" ");
+  const slots = new Set(
+    name in COLORS
+      ? [COLORS[name]]
+      : palette.flatMap((c, i) => (c === NAMED[name] ? [i] : [])),
+  );
   return ops.filter(
     (o) =>
       o.op === op &&
-      (role === "any" ||
-        ("color" in o && o.color === color) ||
-        ("fill" in o && o.fill === color)),
+      (name === "any" ||
+        ("color" in o && slots.has(o.color)) ||
+        ("fill" in o && slots.has(o.fill))),
   ).length;
 }
 
@@ -810,6 +851,7 @@ export function checkPosition(game: AnyGame, c: PositionCase): string[] {
       game,
       id: c.id,
       moves,
+      preferences: c.preferences,
       showMistakes: c.mistakes !== null,
       showHint: c.showHint || circled !== null,
     });
@@ -817,7 +859,7 @@ export function checkPosition(game: AnyGame, c: PositionCase): string[] {
       was("circles", circledTexts(frame.recording.ops), [...circled].sort());
     if (c.mistakes !== null) was("mistakes", frame.mistakeCount, c.mistakes);
     for (const [key, want] of Object.entries(c.draws)) {
-      const n = drawn(frame.recording.ops, key);
+      const n = drawn(frame.recording.ops, key, frame.palette);
       if ("exactly" in want ? n !== want.exactly : n <= want.over)
         out.push(
           `draws ${n} ${key}, not ${"exactly" in want ? want.exactly : `over ${want.over}`}`,
