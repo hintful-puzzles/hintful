@@ -147,7 +147,7 @@ registered games whose `hint` is written (`hasHint`), derived by
 
 Exemplars: Palisade (grouped multi-leg deductions),
 [`src/games/range/`](../src/games/range/) (a compiled ladder walked a firing
-at a time, `hint.plan` and `hint.keepTrack`, and the highlight), [`src/games/towers/`](../src/games/towers/)
+at a time, `hint.plan` and `hint.keepTrack`, and the highlight), [`src/games/mathrax/`](../src/games/mathrax/)
 (candidate elimination), and [`src/games/inertia/`](../src/games/inertia/)
 (no deduction: verified claims, a stable marked subgoal, a recompute-stable
 plan).
@@ -643,7 +643,8 @@ On the candidate walk the conclusion is not the game's to write: a strike's
 words are its premise, and the walk ends the sentence by the move the step
 makes (`hints-candidates.md` § "The shared candidate-hint machinery"). The
 game's sentences there only have to read well before ", so …". Exemplar:
-`premise` in [`towers/index.ts`](../src/games/towers/index.ts).
+`clueBounds`' looks in
+[`towers.description.yaml`](../src/games/towers/towers.description.yaml).
 
 ### One noun, two closings
 
@@ -890,7 +891,7 @@ On the candidate walk the game writes no stamp
   before it reads a single with no notes on such a plan.
 - **A candidate game's pin scan gives `ui` a rule that splits its boards
   between the two readings**, since `populate` is spoken only under one and
-  `note` only under the other (`towers-hint.test.ts`).
+  `note` only under the other (`mathrax-hint.test.ts`).
 
 ### Every step is a gesture
 
@@ -1031,7 +1032,7 @@ Rules for any recorder:
   pass, under a routine that loops over every clue, puts several firings in
   one step. Make each clue or line routine return as soon as it fires on the
   recording path, and assert that every struck mark of a step lies within the
-  step's narrated area (`towers-hint.test.ts`).
+  step's narrated area (`mathrax-hint.test.ts`).
 - **A solver that queues ops and cascades** attaches the reason to the queued
   op and records each op where it changes a flag, the cascade building its
   own reason at the apply site.
@@ -1425,9 +1426,12 @@ calls it before every display and moves past a resolved step.
 
 Every candidate game whose moves clear notes as a side effect needs one: a
 plan built with auto-pencil off holds explicit strike legs, and turning it on
-makes a placement strike those notes first. Exemplar: Towers, with
-`towers-stale-hint.test.ts` driving the real `Midend` through the preference
-flip. `hint-resume.test.ts` asserts no plan step is a no-op when reached.
+makes a placement strike those notes first. Exemplar: the fill board's
+(`engine/fill/candidates.ts`), with `engine/fill/stale-hint.test.ts`
+driving the real `Midend` through the preference flip. The `Midend` also
+drops a stored plan when a preference changes, so the test fails only with
+both gone. `hint-resume.test.ts` asserts no plan step is a no-op when
+reached.
 
 ### A plan's copy is the board, no further on and no further back
 

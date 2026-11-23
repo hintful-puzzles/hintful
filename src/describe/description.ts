@@ -538,10 +538,12 @@ interface FirstJson {
 
 /** A game's nouns, compiled into its module as `WORDS`: the engine's
  * lexicon words `{noun}` (a board position, "square" unless the game's genre
- * says "cell") and `{alongside}` (how a deduction's cells share a unit with the
+ * says "cell"), `{valueNoun}` (a value, "number" unless the game says
+ * otherwise) and `{alongside}` (how a deduction's cells share a unit with the
  * one it decides, "in line with" unless the game's units differ). */
 export interface GameWords {
   cell?: string;
+  value?: string;
   alongside?: string;
 }
 

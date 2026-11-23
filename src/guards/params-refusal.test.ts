@@ -164,7 +164,8 @@ describe("a params refusal", () => {
     // An unmatched glob yields `{}`, and every assertion below would then pass
     // over nothing.
     expect(Object.keys(tree).length).toBeGreaterThan(300);
-    expect(found.validators).toBeGreaterThan(40);
+    // Far under the count, which falls as games are born from descriptions.
+    expect(found.validators).toBeGreaterThan(20);
     expect(found.refusals.length).toBeGreaterThan(100);
   });
 

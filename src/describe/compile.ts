@@ -626,6 +626,15 @@ export function compileGame(
     "",
     code.join("\n\n"),
   ].join("\n");
+  // A technique is exported under its id, beside the module's own tables.
+  const exported = new Set<string>();
+  for (const [, name] of body.matchAll(/^export (?:const|function) (\w+)/gm)) {
+    if (exported.has(name))
+      throw new Error(
+        `${json.game}: "${name}" names a technique and one of the module's own exports: rename the technique`,
+      );
+    exported.add(name);
+  }
   return `${[
     HEADER(source),
     "",

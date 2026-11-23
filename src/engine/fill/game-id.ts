@@ -246,6 +246,12 @@ export interface FillDeal {
   /** A kind of `hide` kept whole on a board below a tier, by the tier's
    * index. */
   readonly hideFrom?: Readonly<Record<string, number>>;
+  /** A kind of `hide` hidden whole on a board below a tier, by the tier's
+   * index, and within bounds: the answer is drawn again until the board
+   * finishes without it. */
+  readonly hideWhole?: Readonly<
+    Record<string, { readonly below: number; readonly bounds: SizeBounds }>
+  >;
   /** Where a search tier's strip starts every draw: from every clue, not
    * from a board of the lowest tier one draw in eight (Sticks'). */
   readonly stripFrom?: "everyClue";
@@ -681,6 +687,10 @@ const MEASURES: Readonly<
     above: "Width and height must both be at most",
   },
 };
+
+/** Whether board `p` is within `bounds`. */
+export const within = (bounds: SizeBounds, p: FillParams): boolean =>
+  beyond(bounds, p) === null;
 
 /** What a board `p` past one of `bounds` is told, without its full stop, or
  * `null` within them. */

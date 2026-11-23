@@ -74,7 +74,7 @@ const FILL_CANDIDATE_MOVES: CandidateMoveAdapter<FillMove> = {
 export interface CandidateFillModule<C> extends LadderedFillModule<C> {
   /** What a player calls each rung, which Check & save names a move by. */
   readonly NAMES?: Readonly<Record<string, string>>;
-  readonly WORDS?: { readonly cell?: string };
+  readonly WORDS?: { readonly cell?: string; readonly value?: string };
   /** Every kind of step the description's own techniques say: an id, or
    * `id.arm` where an arm splits its steps. */
   readonly SAYS_KINDS?: readonly string[];
@@ -174,7 +174,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   const ownSet = new Set(ownKinds);
   const isOwn = (r: Reason): r is OwnReason => ownSet.has(r.kind);
   const vocab: LatinVocab = {
-    noun: "number",
+    noun: module.WORDS?.value ?? "number",
     value: numeral,
     cell: module.WORDS?.cell ?? "square",
   };
@@ -229,6 +229,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           terms: { ...says.terms, ...fact?.terms },
           value: numeral,
           noun: vocab.cell,
+          valueNoun: vocab.noun,
         },
       };
     };

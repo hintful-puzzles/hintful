@@ -46,8 +46,6 @@ import {
   type SoloState,
   SYMM_NONE,
 } from "../../src/games/solo/state.ts";
-import { towersGame } from "../../src/games/towers/index.ts";
-import type { TowersParams, TowersState } from "../../src/games/towers/state.ts";
 import { type Dealt, describedGame } from "./description.ts";
 import type { Clue } from "./evaluate.ts";
 import type { Elem } from "./space.ts";
@@ -76,32 +74,7 @@ export interface Binding<P, S> {
   mistakeKinds?: Readonly<Record<string, string>>;
 }
 
-const tiers = <D extends string>(sizes: number[], diffs: readonly D[]) =>
-  sizes.flatMap((w) => diffs.map((diff) => ({ w, diff })));
-
 const cellAt = (space: { cells: Elem[] }, i: number): Elem => space.cells[i];
-
-export const towersBinding: Binding<TowersParams, TowersState> = {
-  game: towersGame,
-  description: describedGame("src/games/towers/towers.description.yaml"),
-  params: tiers([4, 5, 6], ["easy", "hard", "extreme", "unreasonable"] as const),
-  dealt: (s) => ({
-    sizes: { w: s.w },
-    givens: s.immutable,
-    clues: (space) => {
-      const slots = space.names.get("slots") as Elem[];
-      return [...s.clues].flatMap((v, i) =>
-        v === 0 ? [] : [{ kind: "sees", at: slots[i], v }],
-      );
-    },
-  }),
-  entries: (s) => s.grid,
-  withEntries: (s, values, notes) => ({
-    ...s,
-    grid: Int8Array.from(values),
-    pencil: notes ? Int32Array.from(notes) : new Int32Array(s.w * s.w),
-  }),
-};
 
 const MATHRAX_KIND: Readonly<Record<number, string>> = {
   [CLUE_ADD]: "sum",

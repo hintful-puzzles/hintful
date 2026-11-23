@@ -8,38 +8,52 @@
  * `move-judge-games.test.ts`.
  */
 import { describe, expect, it } from "vitest";
-import { towersGame } from "../../games/towers/index.ts";
-import type { TowersState } from "../../games/towers/state.ts";
-import { NAMES } from "../../generated/games/towers/towers.compiled.ts";
+import { type Dealt, NAMES } from "../../generated/games/towers/towers.compiled.ts";
+import { game } from "../../generated/games/towers/towers.game.ts";
+import type { FillBoard } from "../fill/board.ts";
+import type { FillMove } from "../fill/notes.ts";
 import { dealt } from "../testing/dealt.ts";
 import { verdictOf } from "./move-judge.ts";
 
-const game = towersGame;
+type Board = FillBoard<Dealt>;
+
 const params = game.defaultParams();
 const { desc, aux } = dealt(game, params);
-const fresh = (): TowersState => game.newState(params, desc);
+const fresh = (): Board => game.newState(params, desc);
 
 const answer = (() => {
   const s = fresh();
   const solved = game.solve(s, s, aux);
   if (!solved?.ok) throw new Error("Towers did not solve its own board");
-  return game.executeMove(s, solved.move).grid;
+  return game.executeMove(s, solved.move).values;
 })();
 
-function with_(s: TowersState, edit: (t: TowersState) => void): TowersState {
-  const t = { ...s, grid: s.grid.slice(), pencil: s.pencil.slice() };
-  edit(t);
-  return t;
+/** `s` with its values and notes as `edit` leaves them. */
+function with_(
+  s: Board,
+  edit: (values: Uint8Array, pencil: Int32Array) => void,
+): Board {
+  const values = s.values.slice();
+  const pencil = (s.pencil ?? new Int32Array(values.length)).slice();
+  edit(values, pencil);
+  return { ...s, values, pencil };
 }
+
+/** The first open cell. */
+const open = (s: Board): number => s.values.findIndex((v) => v === 0);
 
 /** What a player calls the deduction of a step of `rung`. */
 const nameOf = (rung: string): string => NAMES[rung as keyof typeof NAMES];
 
 const DIRECT = /^Your last move follows from (?!the board)/;
 
-const placed = (s: TowersState, i: number, n = answer[i]): TowersState =>
-  with_(s, (t) => {
-    t.grid[i] = n;
+/** Whether a step places a value. */
+const places = (step: { move: FillMove }): boolean =>
+  "type" in step.move && step.move.type === "set";
+
+const placed = (s: Board, i: number, n = answer[i]): Board =>
+  with_(s, (values) => {
+    values[i] = n;
   });
 
 describe("candidateJudge", () => {
@@ -65,7 +79,7 @@ describe("candidateJudge", () => {
       .find(
         (step) =>
           step.rung === res.steps[0].rung &&
-          step.move.type === "set" &&
+          places(step) &&
           step.continuesPrevious !== true,
       );
     if (later === undefined) throw new Error("the hint fires its first rung once");
@@ -82,7 +96,7 @@ describe("candidateJudge", () => {
       const res = game.hint.plan(s, board.aux, game.newUi(s));
       if (!res?.ok) continue;
       const later = res.steps.find(
-        (step) => step.continuesPrevious === true && step.move.type === "set",
+        (step) => step.continuesPrevious === true && places(step),
       );
       if (later === undefined) continue;
       const v = game.hint.judgeMove?.(s, game.executeMove(s, later.move));
@@ -95,8 +109,8 @@ describe("candidateJudge", () => {
 
   it("says a placement only a chain reaches follows a few steps on", () => {
     const s = fresh();
-    const chained = [...s.grid.keys()]
-      .filter((i) => s.grid[i] === 0)
+    const chained = [...s.values.keys()]
+      .filter((i) => s.values[i] === 0)
       .map((i) => game.hint.judgeMove?.(s, placed(s, i)))
       .find((v) => v?.words.text.includes("a few steps on"));
     if (!chained) throw new Error("no placement on the board took a chain");
@@ -111,7 +125,7 @@ describe("candidateJudge", () => {
 
   it("tells apart a value the walk never places", () => {
     const s = fresh();
-    const i = [...s.grid.keys()].find((k) => s.grid[k] === 0) ?? -1;
+    const i = open(s);
     // Check & save judges only a sound board, so a wrong value stands in
     // for a right move no deduction reaches.
     const wrong = (answer[i] % s.w) + 1;
@@ -120,10 +134,10 @@ describe("candidateJudge", () => {
     expect(v?.words.text).toBe(verdictOf({ kind: "unforced" }).words.text);
   });
 
-  const penciled = (s: TowersState): TowersState =>
-    with_(s, (t) => {
-      for (let i = 0; i < t.grid.length; i++)
-        if (t.grid[i] === 0) for (let n = 1; n <= t.w; n++) t.pencil[i] |= 1 << n;
+  const penciled = (s: Board): Board =>
+    with_(s, (values, pencil) => {
+      for (let i = 0; i < values.length; i++)
+        if (values[i] === 0) for (let n = 1; n <= s.w; n++) pencil[i] |= 1 << n;
     });
 
   it("does not judge penciling every candidate in", () => {
@@ -133,18 +147,18 @@ describe("candidateJudge", () => {
 
   it("judges notes written into a cell with none by what they leave out", () => {
     const s = fresh();
-    const i = [...s.grid.keys()].find((k) => s.grid[k] === 0) ?? -1;
-    const one = with_(s, (t) => {
-      t.pencil[i] = 1 << answer[i];
+    const i = open(s);
+    const one = with_(s, (_values, pencil) => {
+      pencil[i] = 1 << answer[i];
     });
     expect(game.hint.judgeMove?.(s, one)?.followed).toBe(true);
   });
 
   it("judges a note struck from a cell's notes", () => {
     const s = penciled(fresh());
-    const i = [...s.grid.keys()].find((k) => s.grid[k] === 0) ?? -1;
-    const struck = with_(s, (t) => {
-      t.pencil[i] &= ~(1 << ((answer[i] % s.w) + 1));
+    const i = open(s);
+    const struck = with_(s, (_values, pencil) => {
+      pencil[i] &= ~(1 << ((answer[i] % s.w) + 1));
     });
     expect(game.hint.judgeMove?.(s, struck)?.followed).toBe(true);
   });

@@ -1569,8 +1569,8 @@ game with no clues, its techniques reading the grid as a table;
 [`adjacent.description.yaml`](../src/games/adjacent/adjacent.description.yaml)
 for one born from its description, its clues between the cells, which the
 fill board deals and solves with no solver of its own;
-[`towers/solver.ts`](../src/games/towers/solver.ts) for clues beside the
-grid; [`keen.description.yaml`](../src/games/keen/keen.description.yaml)
+[`towers.description.yaml`](../src/games/towers/towers.description.yaml)
+for clues beside the grid, born too; [`keen.description.yaml`](../src/games/keen/keen.description.yaml)
 for per-cage arithmetic, born too; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
 symbol.
 

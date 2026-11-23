@@ -142,7 +142,8 @@ never holds a bare cache array or a `started` flag.
   paints its neighbors are loops a game writes around `changed`, with one
   `TileCache` per family. A tile that paints into its neighbors reads
   `overlayMoved` for them before the loop and `forget`s what it painted
-  over. Exemplar: [`towers/render.ts`](../src/games/towers/render.ts).
+  over. Exemplar: [`engine/fill/render.ts`](../src/engine/fill/render.ts)
+  (a raised value).
 - **A tile that moves keys as never drawn (-1) and is forced while it
   moves**, by a term of its own after `changed` (`|| animating`), so the
   frame after the move, which keys it at rest, repaints it too. Exemplars:
@@ -160,7 +161,7 @@ never holds a bare cache array or a `started` flag.
   needs more bits grows by a word: a `TileCache` built with `words` (up to
   four) compares them together, or an overlay sidecar carries it (§ "When
   the packed key runs out of bits"). Exemplar:
-  [`towers/render.ts`](../src/games/towers/render.ts).
+  [`engine/fill/render.ts`](../src/engine/fill/render.ts).
 - **When the candidate set alone exceeds about 26 bits, key it in a word of
   its own**, not a digit and a pencil bitmap in one word. A `1 << n` mark for `n` up to 31 still fits an `Int32`, sign bit and
   all. Candidate masks go through `engine/board/candidate-bits.ts`, which throws
@@ -340,7 +341,7 @@ misses the cache, so an overlay missing from the diff test still paints.
 - **What the game's own test owes is the look.**
   `src/guards/mistake-overlay-coverage.test.ts` requires a test that paints the
   overlay and asserts what it drew; a `renderScenario` `showMistakes` frame
-  does. A test that also paints twice, as `towers.test.ts` ("highlights a
+  does. A test that also paints twice, as `abcd.test.ts` ("highlights a
   mistake even when the cell was already drawn") does, proves the repaint
   again in the game's own words, and nothing requires it.
 - **The bug needs an overlay handed to the painter beside the key.** A

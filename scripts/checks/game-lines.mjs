@@ -13,7 +13,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const CEILING = 131_889;
+const CEILING = 129_786;
 
 const games = fileURLToPath(new URL("../../src/games", import.meta.url));
 let lines = 0;

@@ -47,6 +47,7 @@ import {
   piecesOf,
   sizesOf,
   variationsOf,
+  within,
 } from "./game-id.ts";
 import { type GrowSizes, growPartition } from "./grow.ts";
 import { latinNumbers } from "./latin-numbers.ts";
@@ -165,10 +166,20 @@ export function dealFill<C extends Clues<C>>(
    * numbering of them all (`offsetsOf`). */
   const keeping = (clues: C, shown: readonly number[]): C =>
     keepingAll(clues, deal, kinds, sp, shown);
-  /** Every hidden clue's index in that numbering. */
+  /** The hidden kinds this board hides whole (`deal.hideWhole`). */
+  const whole = kinds.filter((k) => {
+    const h = deal.hideWhole?.[k];
+    return h !== undefined && p.diff < h.below && within(h.bounds, p);
+  });
+  /** Every hidden clue's index in that numbering, but those of a kind hidden
+   * whole: a board that does not finish without them is drawn again. */
   const allShown = (clues: C): number[] => {
     const offsets = offsetsOf(clues, kinds);
-    return Array.from({ length: offsets[offsets.length - 1] }, (_, i) => i);
+    const hiddenWhole = (i: number): boolean =>
+      whole.includes(kinds[offsets.findLastIndex((o) => o <= i)]);
+    return Array.from({ length: offsets[offsets.length - 1] }, (_, i) => i).filter(
+      (i) => !hiddenWhole(i),
+    );
   };
   const spent = { moves: 0 };
   /** The partition grown round `g` for tier `tier`, by its name, where the

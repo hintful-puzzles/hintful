@@ -357,8 +357,9 @@ could take now, and the frontier chooses. Its duties:
   the same fact rules out is one firing. Seismic's trial placement is the
   case, stated as its `starve` technique.
 
-Exemplar: `extremeClueLines` in
-[`towers/index.ts`](../src/games/towers/index.ts) (note-free).
+Exemplar: `fullLine` in
+[`towers.description.yaml`](../src/games/towers/towers.description.yaml)
+(note-free).
 
 ## Continue from the last step
 
@@ -419,12 +420,14 @@ check vouches for them".
   gate is read off the ladder's order, so the game writes none. The tier is
   not enough: Abcd's `runs` is as easy as its single, and ungated it
   crowds the singles out.
-- **A harder technique continues the work in hand while it waits**: one of
-  a harder tier than the ladder's easiest still offers a firing that reads
-  a cell the latest steps wrote (`RungContext.continues`, the frontier's own
-  test), beside the singles. Waiting outright, a plan leaves the work for a single elsewhere and comes back;
-  `hint-frontier.test.ts` measures it. One of the singles' own tier waits
-  outright, so Abcd's `runs` cannot crowd them out this way either.
+- **A waiting technique continues the work in hand**: whatever its tier, it
+  still offers a firing that reads a cell the latest steps wrote
+  (`RungContext.continues`, the frontier's own test), beside the singles.
+  Waiting outright, a plan leaves the work for a single elsewhere and comes
+  back; `hint-frontier.test.ts` measures it. A continuing single is still
+  taken first, so all a continuing firing displaces is a single elsewhere:
+  Abcd's `packed` takes more steps this way, and its walks grow no longer.
+  Towers, whose clue strikes share the singles' tier, needed it.
 - **The board's tier bounds what the hint teaches**: a `NotesLadder` carries
   the board's `caps`, and a technique the solver would not run at them
   offers nothing, so a harder technique cannot step in on an easier board,
@@ -697,13 +700,15 @@ within that:
   without the preference teaches every cull.
 - **Show a clue that forces cells outright as one placement journey, before
   populate.** A clue at an extreme value can force a line with no notes
-  needed; the solver reaches it as a cascade of eliminations. Detect it in
-  the plan, off the clues, as a note-free rung of the game's own: first leg
-  unflagged, the rest continuing and narrated tersely. Populate is lazy, so
-  it comes only when an elimination first needs something to cross out.
-  Exemplar: `extremeClueLines` in
-  [`towers/index.ts`](../src/games/towers/index.ts); guard
-  `towers-hint.test.ts` "populates before the first elimination".
+  needed; the solver reaches it as a cascade of eliminations. State it as a
+  technique that places and reads no note, which the compiler marks as
+  leading: the walk offers it before the notes are set up, first leg
+  unflagged, the rest continuing and narrated by its `again`. Populate is
+  lazy, so it comes only when an elimination first needs something to cross
+  out. Exemplar: `fullLine` in
+  [`towers.description.yaml`](../src/games/towers/towers.description.yaml);
+  guard `engine/fill/own-steps.test.ts` "is offered on a board with no
+  notes, before they are set up".
 - **A firing's legs follow what the narration names singular.** The game's
   `legs` cut a technique's firing into legs (`byCell` in
   [`engine/hint/latin-notes.ts`](../src/engine/hint/latin-notes.ts) cuts by cell), and
@@ -713,12 +718,11 @@ within that:
   sentence. A firing whose premise is a whole region (a cage) splits by
   cell, the shaded region constant across the journey, and a list of values
   within a leg is fine. A firing whose premise names one digit across cells
-  is one multi-cell step. Exemplars: a height a leg in
-  [`towers/index.ts`](../src/games/towers/index.ts), a cell a leg (or a value
-  a leg, where its description says `shown: value`) in
+  is one multi-cell step. Exemplars: a cell a leg, or a value a leg where
+  the description says `shown: value` (Towers' heights), in
   [`engine/fill/candidates.ts`](../src/engine/fill/candidates.ts), which
   walks a born game's own techniques, Keen's cages among them; guards
-  `towers-hint.test.ts` "a strike step never mixes heights",
+  `engine/fill/own-steps.test.ts` "strikes one number a step",
   `solo-hint.test.ts` "a deductive strike step's marks all lie in one cell
   or all share one digit".
 

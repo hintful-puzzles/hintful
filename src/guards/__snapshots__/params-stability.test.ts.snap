@@ -871,7 +871,9 @@ preset:5x5 Unreasonable  full=5du  brief=5
 preset:6x6 Easy  full=6de  brief=6
 preset:6x6 Normal  full=6dh  brief=6
 preset:6x6 Tricky  full=6dx  brief=6
-preset:6x6 Unreasonable  full=6du  brief=6"
+preset:6x6 Unreasonable  full=6du  brief=6
+bump:w  full=6de  brief=6
+bump:h  full=5de  brief=5"
 `;
 
 exports[`encoded params are byte-stable > tracks 1`] = `

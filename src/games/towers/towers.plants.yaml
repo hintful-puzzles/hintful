@@ -4,11 +4,17 @@
 # unsound.
 
 techniques:
+  # The line climbing toward the clue.
+  fullLine:
+    conclude: "forall c in L where not known(c): place(c, w - index(c, L))"
+  # The next tallest beside the clue.
+  tallestNearest:
+    conclude: "place(c, w - 1)"
   facing:
     conclude: >-
-      forall s in P, c = nth(sight(s), clue(sees, s)): w in cand(c) and place(c,
-      w)
-  bounds:
+      forall s in P, c = nth(sight(s), clue(sees, s)): (not known(c) or value(c)
+      = w) and place(c, w)
+  clueBounds:
     conclude: >-
       (near implies (forall h in short(L, far(L, R)): strike(c0, h))) and (near
       or (forall K = (domain - P) + set(value(c) over c in L where known(c) and

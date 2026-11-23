@@ -203,7 +203,7 @@ Backspace, Delete and Clear, never upstream's `'\b'` (8).
   `index.ts`.
 - **An arm of the game's own calls `isEraseKey` where it decides what the
   key means**, and passes the decision on, never the button. Exemplar:
-  `isClear` in [`towers/index.ts`](../src/games/towers/index.ts).
+  `isClear` in [`mathrax/index.ts`](../src/games/mathrax/index.ts).
 - **Do not `switch` on a button that may be an erase key.** A `case` cannot
   call a predicate, so a gate that calls `isEraseKey` in front of a `switch`
   with `case 8:` alone is dead at the last step. Where a `switch` is kept, it
@@ -512,7 +512,7 @@ lands on it and what it holds, and drives the drag with `beginSweep`,
   member carries it and no guard finds it otherwise. A `holds` that reads the
   wrong array typechecks and drags nothing.
 
-Exemplars: `clueDrag` in [`towers/index.ts`](../src/games/towers/index.ts);
+Exemplars: `clueDrag` in [`undead/index.ts`](../src/games/undead/index.ts);
 `crossDrag` in [`engine/mechanics/line-drawing.ts`](../src/engine/mechanics/line-drawing.ts).
 
 ## Keyboard cursors
@@ -879,7 +879,7 @@ absolute sets and not toggles. Exemplar: `setEdge` in
 **A game that types values implements `requestKeys(params): KeyLabel[]`.** An
 absent hook is an empty keypad, and on touch the panel is the only way to
 type. Normative: the on-screen-keys requirements of `engine-input`.
-Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `towers/index.ts`,
+Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `engine/fill/numbers.ts`,
 [`undead/index.ts`](../src/games/undead/index.ts) (keys with word labels).
 
 - **Build digits with `digitKeys(n)`** from

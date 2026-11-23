@@ -134,11 +134,13 @@ export interface NotesLadder<S extends CellMarks = CellMarks> {
  * the solver reaches it only once those before it are spent: by tier alone,
  * Abcd's `runs`, as easy as its single, would crowd the singles out.
  *
- * A technique of a harder tier than the ladder's easiest is work the board
- * needs rather than another reading of the singles' difficulty, so while it
- * waits it still offers a firing that continues the plan's latest steps
- * (`continues`), beside the singles. Waiting outright, a plan leaves the work in hand for a single elsewhere and comes
- * back: a seventh of Adjacent's jumps passed over a bar step that continued.
+ * While it waits it still offers a firing that continues the plan's latest
+ * steps (`continues`), beside the singles, whatever its tier: the frontier
+ * still takes a continuing single first, so all it gives up is a single
+ * elsewhere. Waiting outright, a plan leaves the work in hand for a single
+ * elsewhere and comes back: a seventh of Adjacent's jumps passed over a bar
+ * step that continued, and an eighth of Towers' over a clue's strike, at
+ * its singles' tier.
  * A technique past the board's `caps` offers nothing.
  *
  * A technique that `leads` places, and is the game's signature step, so it
@@ -158,12 +160,10 @@ export function techniqueRung<M, H, Reason, S extends CellMarks = CellMarks>(
   if (at < 0) throw new Error(`no technique ${id} in the ladder`);
   if (!admits(entries[at], on.caps)) return () => [];
   const last = at > 0 && !leads;
-  const harder = entries[at].tier > Math.min(...entries.map((e) => e.tier));
   const bit = on.enc.bit ?? ((n: number): number => 1 << n);
   return ({ populated, nothingEarlier, shown, continues }) => {
     if (!populated && !leads) return [];
     const waits = last && !nothingEarlier;
-    if (waits && !harder) return [];
     const m = on.marks();
     for (let i = 0; i < m.cands.length; i++) {
       let cands = 0;

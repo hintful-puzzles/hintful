@@ -285,26 +285,49 @@ commit. In design.md § "Decisions" 7's order.
         (`fill/raised.test.ts`, its three repaint and press tests seen to
         fail planted). The compiler refuses `raised` with gaps or clues at
         parts.
-  - [ ] 2.5e The flip: `facing`, `fullLine` and `tallestNearest` as
+  - [x] 2.5e The flip: `facing`, `fullLine` and `tallestNearest` as
         placing techniques and `bounds` as arms (2.5b); Towers' tests to
         `towers.cases.yaml`, its TypeScript deleted, the `game-lines`
         ceiling lowered, its spec deltas, and the run in the app.
-        What the flip states and checks (2026-11-23, from 2.5c and 2.5d):
-        `play.numbers: { raised: true }`, `deal.hide: [given, sees]` with
-        `hideInTurn: true` and `hideFrom: { sees: Normal }`, `tierLetters:
-        ehxu`, the menu 4x4, 5x5 and 6x6 Easy with 5x5 Easy the default,
-        Tricky and Unreasonable from 4x4 (`play.bounds`, as Keen's), the
-        catalog from `catalog.ts`. Upstream deals small Easy boards (w up to
-        5) with no givens, redrawing a square whose clues alone do not
-        finish at Easy; the born deal hides givens while the board finishes,
-        so it may keep some: measure how often on the 4x4 and 5x5 Easy menu
-        boards, and list it as a difference or state it. In the browser,
-        look at the right frame line beside the right column's slots (a
-        slot's background is drawn from `coord(w)`, the line's own pixel
-        column), a tower top over a clue above and over the corner, and the
-        pencil-mode indicator in the corner after a top-right tower comes
-        and goes. The numeral is three fifths of a tile, where Towers drew
-        half: a difference.
+        Built: `fullLine` and `tallestNearest` place and read no note, so
+        they lead, as `facing` now does (its conclusion reads `value`, not
+        `cand`); `bounds` is `clueBounds`, its `near` and plain readings
+        the arms `lineFull` and `lowerBound`. The compiler refuses a
+        technique id the module exports (`bounds` clashed with
+        `play.bounds`' table). The menu keeps the old port's every size
+        at every tier (the plan's "Easy only" would have taken boards
+        away; params-stability is unchanged), 5x5 Easy the default.
+        Measured 2026-11-23, 200 deals each: the hide in turn left givens
+        on 65 4x4 and 169 5x5 Easy boards, where upstream shows none;
+        `deal.hideWhole` (built here, waiting on a fixture in
+        `capability-fixtures.test.ts`, since no fixture's Easy finishes
+        without its givens) brings both to 0. `words.value` names the
+        value a height for the library's and the walk's sentences. The
+        stale-hint test moved to `engine/fill/stale-hint.test.ts` on
+        `flanking`, seen to fail only with both the Midend's clear on a
+        preference change and `refreshStep` planted. Run in Chrome: 4x4
+        Easy and 5x5 Normal deals, typing, notes and fill marks, a repeat
+        and two clues red live, done by press, drag and Shift-arrow, a
+        hint walked to the solve, light and dark, 2D and 3D, the wash on
+        a tower's faces, a tower top over a clue and the corner, and the
+        pencil-mode indicator through a top-right tower's undo and redo.
+        The right and bottom frame lines were missing beside the slots (a
+        slot cleared over `coord(w)`), fixed in the engine for every board
+        with slots there, its test seen to fail planted. The hint sweeps
+        found the implicit-notes walk passing over a continuing firing on
+        21 of 182 jumps (the old port, 8 of 153): `clueBounds` shares the
+        singles' tier, and a technique of that tier waited outright. A
+        waiting technique now offers a continuing firing whatever its tier
+        (`techniqueRung`), 15 of 184; Abcd's, Solo's and Towers' walks
+        moved, every one still solved and none longer.
+        Differences a player sees: the text format is the engine's framed
+        grid; the auto-pencil preference says "number"; the single and set
+        sentences are the library's, saying "height"; the numeral is three
+        fifths of a tile, where Towers drew half; above Easy the deal hides
+        givens before clues, so the mix shifts; an ID with no answer or
+        several is refused; the hint rings notes; done clues are gray; a
+        repeat is the engine's marker, not red numerals; saves break
+        (approved).
 - [ ] 2.6 Mathrax born: clues at corners, a kind precedence switched by
       option letters, a hide of givens before clues, the board word the
       hint reads stated in the description.

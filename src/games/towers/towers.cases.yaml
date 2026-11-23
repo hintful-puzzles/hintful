@@ -1,0 +1,217 @@
+# Towers' cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every rung its hint
+# takes, upstream's IDs read and written back, its params, and the clues
+# printed, broken and marked done.
+
+hint:
+  params:
+    - {w: 4, h: 4, diff: 0}
+    - {w: 5, h: 5, diff: 0}
+    - {w: 5, h: 5, diff: 1}
+    - {w: 5, h: 5, diff: 2}
+    - {w: 4, h: 4, diff: 3}
+  unreached:
+    note: >-
+      spoken under the reading that pencils in only as needed, and Towers' hint starts on the one that pencils every candidate in first (play.hintNotes)
+    regionsFull: >-
+      spoken under the reading that pencils in only as needed: where every candidate is penciled in first, a cell whose line holds every other height is a single
+  pins:
+    # Held on 267 of 2564 positions walked.
+    populate: "5dh:////4///4/3///2////3//3/2/"
+    # Held on 882 of 2564 positions walked.
+    clean:
+      id: "5dx:2/2//2////////3///////2/,a2k3k"
+      moves:
+        - {type: pencilAll}
+    # Held on 2281 of 2564 positions walked.
+    dup: "4de:1/2/4/2/3/3/1/2/1/2/4/2/3/3/1/2"
+    # Held on 2411 of 2564 positions walked.
+    single:
+      id: "5dh:2/2//2//1//////3///////2/,a2k3k"
+      moves:
+        - {type: set, x: 0, y: 4, n: 5, pencil: false, autoElim: false}
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 2}, {x: 0, y: 0, n: 5}, {x: 2, y: 0, n: 2}, {x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 3}, {x: 4, y: 0, n: 2}, {x: 0, y: 1, n: 5}, {x: 1, y: 1, n: 2}, {x: 3, y: 1, n: 3}, {x: 0, y: 2, n: 3}, {x: 0, y: 2, n: 5}, {x: 1, y: 2, n: 2}, {x: 1, y: 2, n: 3}, {x: 2, y: 2, n: 3}, {x: 4, y: 2, n: 3}, {x: 0, y: 3, n: 5}, {x: 1, y: 3, n: 2}, {x: 3, y: 3, n: 3}, {x: 1, y: 4, n: 2}, {x: 1, y: 4, n: 5}, {x: 2, y: 4, n: 5}, {x: 3, y: 4, n: 3}, {x: 3, y: 4, n: 5}, {x: 4, y: 4, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 3}]}
+    # Held on 1590 of 2564 positions walked.
+    hiddenSingle:
+      id: "5dx:///4/2/////1/2///4/3//4///"
+      moves:
+        - {type: set, x: 4, y: 4, n: 5, pencil: false, autoElim: false}
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 4, y: 0, n: 5}, {x: 4, y: 1, n: 5}, {x: 4, y: 2, n: 5}, {x: 4, y: 3, n: 5}, {x: 0, y: 4, n: 5}, {x: 1, y: 4, n: 5}, {x: 2, y: 4, n: 5}, {x: 3, y: 4, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 5}, {x: 3, y: 1, n: 5}, {x: 3, y: 2, n: 5}]}
+    # Held on 418 of 2564 positions walked.
+    set:
+      id: "4du://////3//3/2/////3/3"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 4}, {x: 2, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 4}, {x: 1, y: 0, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 1, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 2}]}
+    # Held on 366 of 2564 positions walked.
+    wing:
+      id: "5dx://1/2/5//2/4/////1/3//////"
+      moves:
+        - {type: set, x: 4, y: 0, n: 1, pencil: false, autoElim: false}
+        - {type: set, x: 4, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 4, y: 2, n: 3, pencil: false, autoElim: false}
+        - {type: set, x: 4, y: 3, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 4, y: 4, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 0, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 2, n: 5, pencil: false, autoElim: false}
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 5}, {x: 1, y: 0, n: 1}, {x: 1, y: 0, n: 5}, {x: 3, y: 0, n: 1}, {x: 3, y: 0, n: 5}, {x: 0, y: 1, n: 2}, {x: 0, y: 1, n: 5}, {x: 1, y: 1, n: 2}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 5}, {x: 3, y: 1, n: 2}, {x: 1, y: 2, n: 3}, {x: 1, y: 2, n: 5}, {x: 2, y: 2, n: 3}, {x: 2, y: 2, n: 5}, {x: 3, y: 2, n: 3}, {x: 3, y: 2, n: 5}, {x: 0, y: 3, n: 4}, {x: 0, y: 3, n: 5}, {x: 1, y: 3, n: 4}, {x: 2, y: 3, n: 4}, {x: 2, y: 3, n: 5}, {x: 3, y: 3, n: 4}, {x: 0, y: 4, n: 5}, {x: 1, y: 4, n: 5}, {x: 2, y: 4, n: 5}, {x: 3, y: 4, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 4, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 4, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 5}]}
+        - {type: set, x: 1, y: 1, n: 5, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 5}]}
+        - {type: set, x: 3, y: 3, n: 5, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 4, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 4, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 2, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 2, n: 4}]}
+        - {type: set, x: 2, y: 2, n: 4, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 4}]}
+        - {type: set, x: 0, y: 1, n: 4, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 4}, {x: 0, y: 4, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 3, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 2}]}
+    # Held on 110 of 2564 positions walked.
+    fullLine: "4de:1/2/4/2/3/3/1/2/1/2/4/2/3/3/1/2"
+    # Held on 163 of 2564 positions walked.
+    tallestNearest: "4de:1/2/3/2/3/3/2/1/1/2/3/3/2/3/2/1"
+    # Held on 110 of 2564 positions walked.
+    facing: "5dx:////3//4//2/3//3/3///3/3///"
+    # Held on 1037 of 2564 positions walked.
+    lineFull:
+      id: "5dh:2/2//2//1//////3///////2/,a2k3k"
+      moves:
+        - {type: set, x: 0, y: 4, n: 5, pencil: false, autoElim: false}
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 0, y: 0, n: 2}, {x: 0, y: 0, n: 5}, {x: 2, y: 0, n: 2}, {x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 3}, {x: 4, y: 0, n: 2}, {x: 0, y: 1, n: 5}, {x: 1, y: 1, n: 2}, {x: 3, y: 1, n: 3}, {x: 0, y: 2, n: 3}, {x: 0, y: 2, n: 5}, {x: 1, y: 2, n: 2}, {x: 1, y: 2, n: 3}, {x: 2, y: 2, n: 3}, {x: 4, y: 2, n: 3}, {x: 0, y: 3, n: 5}, {x: 1, y: 3, n: 2}, {x: 3, y: 3, n: 3}, {x: 1, y: 4, n: 2}, {x: 1, y: 4, n: 5}, {x: 2, y: 4, n: 5}, {x: 3, y: 4, n: 3}, {x: 3, y: 4, n: 5}, {x: 4, y: 4, n: 5}]}
+    # Held on 879 of 2564 positions walked.
+    lowerBound:
+      id: "5dh:////4///4/3///2////3//3/2/"
+      moves:
+        - {type: pencilAll}
+    # Held on 1162 of 2564 positions walked.
+    arrangement:
+      id: "4du:///////2//3///2///,i1d1a"
+      moves:
+        - {type: pencilAll}
+        - {type: pencilStrike, marks: [{x: 1, y: 0, n: 1}, {x: 2, y: 0, n: 1}, {x: 1, y: 1, n: 1}, {x: 2, y: 1, n: 1}, {x: 0, y: 2, n: 1}, {x: 2, y: 2, n: 1}, {x: 3, y: 2, n: 1}, {x: 0, y: 3, n: 1}, {x: 1, y: 3, n: 1}, {x: 3, y: 3, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 4}, {x: 1, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 1, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 0, n: 4}]}
+
+tiers:
+  # A 3x3 above Normal.
+  absent: [3dx, 3du]
+
+ids:
+  # Boards the hand-written port dealt, read and written back.
+  - {id: "5dh:/2//2//3/4//2////3///3////,d2b3q", writesBack: true}
+  - {id: "5dh:///////1///3////2//2/4/1/,t3b1a", writesBack: true}
+  - {id: "5de:2/2/1/5/3/2/2/3/1/3/3/1/3/2/2/2/2/1/3/2", writesBack: true}
+  - {id: "5dx:/2/5//////2/4///1////2//3/", writesBack: true}
+  # A board a player reported, its tier left out.
+  - {id: "5:2/4/3/2/1/2/1/3/2/3/3/1/3/4/2/1/3/3/2/2", writesBack: true}
+  # A clue short, or one too many; givens short, or past the board.
+  - {id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2", refused: "/too short/"}
+  - {id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4/", refused: "/too long/"}
+  - {id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1i", refused: "/too short/"}
+  - {id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1k", refused: "/too long/"}
+  # A wrong character among the clues; one after them other than a comma.
+  - {id: "4de:4x/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4", refused: '/"x"/'}
+  - {id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4!", refused: "/too long/"}
+  # A `_` anywhere but between two given numbers.
+  - {id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,_e1j", refused: '/"_"/'}
+  # A clue or a given past the size.
+  - {id: "4de:5/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4", refused: DESC_OUT_OF_RANGE}
+  - {id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e5j", refused: DESC_OUT_OF_RANGE}
+  # Two clues of 4 facing along a line; no clue at all.
+  - {id: "4de:4/2/2/1/4/2/2/4/4/2/2/1/1/2/2/4", refused: DESC_CONTRADICTORY}
+  - {id: "4de:///////////////", refused: DESC_NOT_UNIQUE}
+
+params:
+  # Upstream's: the size, then the tier.
+  - {read: "6du", full: "6du", brief: "6"}
+  - {read: "5", full: "5de"}
+  - {read: "5dh", full: "5dh", brief: "5"}
+  - {read: "5de", label: "5x5 Easy"}
+  - {read: "2de", refused: "Grid size must be at least 3."}
+  - {read: "10de", refused: "Grid size must be at most 9."}
+  - {read: "3dh", refused: false}
+  - {read: "3dx", refused: "No 3x3 puzzle is Tricky."}
+  - {read: "3du", refused: "No 3x3 puzzle is Unreasonable."}
+  - {read: "4dx", refused: false}
+
+positions:
+  # The clues printed round the grid.
+  - id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1j"
+    text: |2
+          4   2   2   1
+        +---+---+---+---+
+      4 | . | . | . | . | 1
+        +---+---+---+---+
+      2 | . | 1 | . | . | 2
+        +---+---+---+---+
+      2 | . | . | . | . | 2
+        +---+---+---+---+
+      1 | . | . | . | . | 4
+        +---+---+---+---+
+          1   2   2   4
+  # The board solved.
+  - id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1j"
+    solve: true
+    status: solved
+  # A second 1 beside the given one breaks its row, and the clue of 2 at
+  # the row's left end.
+  - id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1j"
+    moves: [{set: [4, 1]}]
+    breaks: [clue.sees, shape.0]
+  # A clue marked done, and its mark undone.
+  - id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1j"
+    moves: [{type: done, kind: sees, k: 0}]
+    holds:
+      done.sees: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  - id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1j"
+    moves: [{type: done, kind: sees, k: 0}, {type: done, kind: sees, k: 0}]
+    holds:
+      done.sees: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+input:
+  # A height typed into the square the cursor is on, and cleared by 0, as
+  # by Backspace.
+  - id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1j"
+    events:
+      - {key: right}
+      - {key: "3", holds: {values.1: 3}}
+      - {key: "0", holds: {values.1: 0}}
+  # Shift with an arrow marks done the clue at that end of the cursor's row
+  # or column, and again undone: above the top left, and left of it. The
+  # first arrow shows the cursor.
+  - id: "4de:4/2/2/1/1/2/2/4/4/2/2/1/1/2/2/4,e1j"
+    events:
+      - {key: up}
+      - {key: "shift+up", holds: {done.sees: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}}
+      - {key: "shift+left", holds: {done.sees: [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]}}
+      - {key: "shift+up", holds: {done.sees: [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0]}}

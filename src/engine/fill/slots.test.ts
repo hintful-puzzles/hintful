@@ -33,7 +33,11 @@ import {
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import type { AnyGame } from "../testing/input-probe.ts";
-import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
+import {
+  type DrawOp,
+  opsOfKind,
+  RecordingDrawing,
+} from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { expectDragRepeatsThePress } from "../testing/sweep-probe.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
@@ -131,6 +135,29 @@ describe("a clue at a slot in the desc", () => {
     expect(inTurn.given).toBeLessThan(mixed.given);
     expect(inTurn.flank).toBeGreaterThan(mixed.flank);
   });
+
+  it("hides the squares whole below a tier on a small board, and keeps some elsewhere", () => {
+    // Below the tier after Normal, which the fixture has none of: its Easy
+    // finishes no board without a square, its `rest` reading one.
+    const deal: FillDeal = {
+      ...flanking.deal,
+      hideWhole: { given: { below: NORMAL + 1, bounds: { longer: { max: 4 } } } },
+    };
+    /** The squares a Normal deal of `deal` leaves on a `w` by `w` board,
+     * over some seeds. */
+    const given = (w: number) => {
+      let n = 0;
+      for (const seed of ["a", "b", "c", "d", "e", "f"]) {
+        const p = params(w, NORMAL);
+        const { desc } = dealFill(flanking, deal, p, randomNew(seed));
+        n += game.newState(p, desc).dealt.given.at.length;
+      }
+      return n;
+    };
+    expect(given(4)).toBe(0);
+    // Past the bounds a square is kept, as without the setting.
+    expect(given(5)).toBeGreaterThan(0);
+  });
 });
 
 describe("a slot's clue drawn", () => {
@@ -179,6 +206,22 @@ describe("a slot's clue drawn", () => {
         middle(slotPoint(4, 4, s)),
       ]),
     );
+  });
+
+  it("keeps the grid's frame whole beside the slots right of the board and below it", () => {
+    const rects = opsOfKind(draw(b), "rect");
+    /** The color of the last rect painted over `p`. */
+    const top = (p: Point) =>
+      rects.findLast(
+        (r) => p.x >= r.x && p.x < r.x + r.w && p.y >= r.y && p.y < r.y + r.h,
+      )?.rgb;
+    // The left line, which no slot reaches, is the frame's color.
+    const frame = top({ x: o, y: o + TS / 2 });
+    expect(frame).toBeDefined();
+    for (let i = 0; i < 4; i++) {
+      expect(top({ x: o + 4 * TS, y: o + i * TS + TS / 2 })).toBe(frame);
+      expect(top({ x: o + i * TS + TS / 2, y: o + 4 * TS })).toBe(frame);
+    }
   });
 
   /** Row 1's first square holds 4: with 1 above it, the sum above column 0

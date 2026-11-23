@@ -1484,6 +1484,11 @@ export function fillRender<C extends Clues<C>>(
       const box = { x: coord(p.x, ts), y: coord(p.y, ts), w: ts, h: ts };
       dr.drawRect(box, COL_BACKGROUND);
       if (key & 2) dr.drawHatch(box, hatchPeriod(ts));
+      // The grid's frame runs down the first column of a slot right of the
+      // board and along the first row of one below it.
+      const frame = ds.parts === null ? COL_GRID : COL_WALL;
+      if (p.x === w) dr.drawRect({ x: box.x, y: box.y, w: 1, h: ts }, frame);
+      if (p.y === h) dr.drawRect({ x: box.x, y: box.y, w: ts, h: 1 }, frame);
       if (clue !== null)
         dr.drawText(
           { x: box.x + Math.floor(ts / 2), y: box.y + Math.floor(ts / 2) },
@@ -1773,7 +1778,6 @@ export function fillRender<C extends Clues<C>>(
     }
   }
 
-  /** The pencil-mode indicator, at the canvas's top right. */
   /** The raised values that reach into the tile at `(x, y)` of board `b`,
    * which may be off the board, in the order they are painted over it. */
   const raisedIntoOf =

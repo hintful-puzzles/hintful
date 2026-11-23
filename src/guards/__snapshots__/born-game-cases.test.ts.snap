@@ -195,6 +195,24 @@ exports[`tents: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`towers: pinned hint positions > says, at each pin 1`] = `
+{
+  "arrangement": "No way for clue 2 to show exactly 2 towers along its line puts height 3 in this cell, so the 3 must go.",
+  "clean": "Now clear the easy ones: cross out any height already standing in its cell's row or column.",
+  "dup": "The 1 just placed can't repeat in its row and column, so the 1 must go from the other cells.",
+  "facing": "These facing clues sum to one more than the grid size, so their line's tallest is pinned: this cell must be 5.",
+  "fullLine": "Clue 4 sees every tower in this line, so heights must climb 1, 2, … from the clue: this cell must be 1.",
+  "hiddenSingle": "No other cell in this column can be 5, so this cell must be 5.",
+  "lineFull": "Clue 2 already sees 1 tower in the line, so the cell nearest it must top all between; height 1 can't, so the 1 must go.",
+  "lowerBound": "Clue 4 sees exactly 4 towers along its line; height 5 so near it would hide too many, so the 5 must go.",
+  "populate": "Start by penciling every candidate height into each empty cell.",
+  "set": "The outlined cells already account for 1 and 2 between them, so 1 and 2 must go.",
+  "single": "Every other height has been ruled out in this cell, so it can only be 4.",
+  "tallestNearest": "Clue 1 sees one tower in its line, so the tallest must stand next to it: this cell must be 4.",
+  "wing": "Whatever goes in the middle cell, another outlined cell in line with this cell must have 3, so the 3 must go.",
+}
+`;
+
 exports[`unequal: pinned hint positions > says, at each pin 1`] = `
 {
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",

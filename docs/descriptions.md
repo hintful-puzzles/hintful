@@ -53,7 +53,7 @@ itself is § "The file". A game whose techniques are stated:
    reads now (§ "Checking a technique sound").
 4. **Builds its ladder on the board's clues** with
    `describedLadder(module, dealt)`, or `latinLadder` where it places the
-   Latin library ([`towers/solver.ts`](../src/games/towers/solver.ts)).
+   Latin library ([`mathrax/solver.ts`](../src/games/mathrax/solver.ts)).
    The engine runs every technique on `dealt` where the module's
    `techniques` says it reads it, on placing and on striking too; a module
    none of whose techniques reads the clues takes `null`. The game names a
@@ -68,7 +68,7 @@ itself is § "The file". A game whose techniques are stated:
    that the grid is not measured in (Salad's `nums`, Seismic's `mode`).
    A kind given on the squares where the board's array says so is
    `cluesWhere(array, given, value?)`;
-   [`towers/state.ts`](../src/games/towers/state.ts) deals clues so and
+   [`filling/state.ts`](../src/games/filling/state.ts) deals clues so and
    [`solo/state.ts`](../src/games/solo/state.ts) cages. The board goes on
    the space the module's `units` declare, `describedSpace(units, w, h,
    parts)` (`latinSpace(o)` is a Latin square's), asked for where it is
@@ -262,7 +262,7 @@ research tools all read through it; the app never does.
   `again`; one that places, strikes nothing and reads no `cand`, which the
   compiler finds, leads: it is offered before the notes are set up. A step
   is recorded under the arm that held where `arms` split it, each named for
-  one of the technique's `rung:`s (`bounds`' `near`), else under its one
+  one of the technique's `rung:`s (`clueBounds`' `near`), else under its one
   rung, else its id; the compiler refuses an arm no rung names, and the walk
   a step `names:` does not name, since Check & save names a move by it. A
   board of numbers without notes is refused a rung that strikes, since it
@@ -400,7 +400,11 @@ research tools all read through it; the app never does.
   them, or with `hideInTurn: true` in its order, every clue of one tried
   before any of the next (Towers' givens, then its clues);
   `hideFrom: { kind: Tier }` keeps a kind whole on a board below that tier
-  (`flanking` is the fixture); `stripFrom: everyClue` starts every search-tier draw from every clue,
+  (`flanking` is the fixture); `hideWhole: { kind: { below: Tier, longer:
+  { max: 5 } } }` hides every clue of a kind on a board below that tier and
+  within those bounds (`play.bounds`' measures), the answer drawn again
+  until the board finishes without it (Towers' Easy boards up to 5x5, which
+  show no given, as upstream's); `stripFrom: everyClue` starts every search-tier draw from every clue,
   where the lowest tier's boards leave the search too little to strip.
   `digits`' `after: { B: kind }` writes one digit of that kind straight
   after a letter's cell (Sticks' `B2`). A bar painter `across` or `down`
@@ -786,7 +790,9 @@ marks and grid that enumerates its bindings and hands the first binding
 whose conclusion changes the marks to `fire`
 ([`compile.ts`](../src/describe/compile.ts)'s header says how terms are
 represented). A formula that mixes sorts or names what the grid does not
-have is refused at compile time.
+have is refused at compile time. The function is exported under the
+technique's id, beside the module's own tables, so an id such as `bounds`,
+`deal` or `tiers` is refused: rename the technique (Towers' `clueBounds`).
 
 **A hint and a solve run the same function two ways.** A hint passes
 `fire`, is told each firing before any fact is made, and stops at the first,
@@ -1491,7 +1497,9 @@ a game that places one is found by `git grep -l "kind: <kind>" src/games`.
   added to every placement's; a placement's `with` gives only what differs.
   A `kindWords` name a kind does not take is ignored for it, so a term
   reading one kind's binding goes in that placement's `with.terms`. A game
-  whose squares are cells says so in `words: { cell: cell }`.
+  whose squares are cells says so in `words: { cell: cell }`, and one whose
+  values are not numbers in `words: { value: height }`, which a hint says as
+  `{valueNoun}` and the candidate walk's own sentences use.
 - **A game's `says:` beside a placement is laid over the kind's own**, and a
   kind with no words of its own takes it whole. A kind that carries its own
   sentence is placed without it by `says: false`, for a game whose hint

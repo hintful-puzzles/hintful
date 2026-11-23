@@ -78,6 +78,57 @@ tier SHALL show every clue of the kind.
 - **WHEN** a `flanking` board is dealt at Easy, its sums hidden from Normal
 - **THEN** it shows the sum at every slot
 
+### Requirement: A born game may hide a kind whole on a small board below a tier
+
+`deal.hideWhole` MAY name, for a kind of `hide`, a tier other than the
+lowest and size bounds in `play.bounds`' measures: a board below that tier
+and within those bounds SHALL show no clue of the kind, its answer drawn
+again until the board finishes without them. Elsewhere the kind SHALL be
+hidden as without the setting. The compiler SHALL refuse a kind the deal does
+not hide, a tier the game lacks or its lowest, and a measure it does not
+know.
+
+#### Scenario: Towers' small Easy boards
+
+- **WHEN** a Towers board of 4×4 or 5×5 is dealt at Easy
+- **THEN** no square holds a given
+- **AND** a 6×6 Easy board may keep some
+
+### Requirement: A born game's hint may call its values by a noun of its own
+
+`words.value` MAY name what a value is called; the hint SHALL say it where
+it says `{valueNoun}`, and the candidate walk's own sentences SHALL use it in
+place of "number".
+
+#### Scenario: A height
+
+- **WHEN** a Towers hint places a value as the only one left in its cell
+- **THEN** its sentence calls the value a height
+
+### Requirement: A technique's id is no name the module exports
+
+The compiler SHALL refuse a description one of whose technique ids is a name
+the compiled module exports for itself, such as `bounds`, `deal` or `tiers`,
+since the technique is compiled to a function of that name beside them.
+
+#### Scenario: A technique named bounds
+
+- **WHEN** a description whose `play` has `bounds` names a technique `bounds`
+- **THEN** it is refused, saying to rename the technique
+
+### Requirement: A slot beside the board keeps the grid's frame
+
+A slot right of the board or below it SHALL draw its piece of the grid's
+frame again after it is cleared, so the frame stays whole through every
+repaint of the slot.
+
+#### Scenario: A clue right of the board
+
+- **WHEN** a board with clues right of it and below it is drawn, and a slot
+  beside it is repainted for a hint's stripes or a done mark
+- **THEN** the frame's line runs unbroken along the board's right and bottom
+  edges
+
 ### Requirement: A born game's default board is dealt at the first tier its menu offers it
 
 A born game's default params SHALL be its default board at the first tier

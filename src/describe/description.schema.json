@@ -1436,6 +1436,22 @@
               "additionalProperties": { "type": "string" },
               "description": "By kind of `hide`, the tier from which the deal hides it: a board below that tier shows every clue of the kind (Towers' clues at Easy)."
             },
+            "hideWhole": {
+              "type": "object",
+              "description": "By kind of `hide`, a board on which the deal hides every clue of it: one below the tier `below` and within the size bounds given beside it, as `play.bounds` states them. The answer is drawn again until the board finishes without the kind (upstream towers.c's Easy boards up to 5x5, which show no given).",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["below"],
+                "additionalProperties": false,
+                "properties": {
+                  "below": { "type": "string" },
+                  "sum": { "$ref": "#/$defs/sizeBound" },
+                  "area": { "$ref": "#/$defs/sizeBound" },
+                  "shorter": { "$ref": "#/$defs/sizeBound" },
+                  "longer": { "$ref": "#/$defs/sizeBound" }
+                }
+              }
+            },
             "oneIn": {
               "type": "object",
               "additionalProperties": { "type": "string" },
@@ -1807,6 +1823,10 @@
             "cell": {
               "type": "string",
               "description": "What the game calls a board position, where its genre says \"cell\" and not the default \"square\"."
+            },
+            "value": {
+              "type": "string",
+              "description": "What the game calls a value, `{valueNoun}` in a hint's words, where it is not the default \"number\" (Towers' heights)."
             },
             "alongside": {
               "type": "string",

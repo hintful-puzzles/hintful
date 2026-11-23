@@ -381,8 +381,9 @@ describe("a kept hint plan leaves the board alone, and its every step changes it
           ).toEqual([]);
           const after = game.executeMove(state, step.move);
           // The engine guarantees a displayed step is never stale. The
-          // Towers-specific trigger (auto-pencil resolving a later step) has
-          // its own end-to-end test; this is the intrinsic form for every hint
+          // trigger of a board of notes (auto-pencil resolving a later step)
+          // has its own end-to-end test, `engine/fill/stale-hint.test.ts`;
+          // this is the intrinsic form for every hint
           // game: a plan whose own steps, replayed in order (the exact-follow
           // path), include one that is already a no-op when reached.
           expect(

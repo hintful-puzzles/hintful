@@ -473,6 +473,9 @@ export function stepsBlock(
     "export const voice = <E>(v: Voice<E>): StepVoice<StepsById<E>, E> =>",
     `  stepVoice<StepsById<E>, E>(STEPS, { ${[
       ...(words?.cell === undefined ? [] : [`noun: ${JSON.stringify(words.cell)}, `]),
+      ...(words?.value === undefined
+        ? []
+        : [`valueNoun: ${JSON.stringify(words.value)}, `]),
       ...(words?.alongside === undefined
         ? []
         : [`alongside: ${JSON.stringify(words.alongside)}, `]),

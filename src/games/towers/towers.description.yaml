@@ -1,8 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Towers' help page, its rules, and the techniques `npm run describe`
-# compiles to towers.compiled.ts, which solver.ts runs.
 game: towers
+catalog:
+  name: Towers
+  aliases: [Skyscrapers]
+  description: Tower-placing Latin square puzzle
+  objective: Complete the latin square of towers in accordance with the clues.
+  collection: original
+  family: latin
+  similar: Skyscrapers
 help:
   rules: |-
     Fill in the grid with towers whose heights range from 1 to the grid
@@ -34,8 +40,9 @@ help:
     of each the heights already standing in its row and column.
   hints: |-
     **Hint** explains the next step rather than simply making it. It begins
-    with any clue of 1 or of the full grid size, which place towers outright
-    with no pencil marks needed, then fills in every cell's pencil marks
+    with any clue of 1 or of the full grid size, and any facing clues that
+    add to one more than it, which place towers outright with no pencil
+    marks needed, then fills in every cell's pencil marks
     (the same as pressing **Fill marks**), crosses out the heights already standing
     in each row and column, and then works from your own
     marks, so it carries on from wherever you are. If a tower you've placed
@@ -74,6 +81,7 @@ help:
 produces: latin
 words:
   cell: cell
+  value: height
 sizes:
   w: { min: 3, max: 9 }
 space:
@@ -85,8 +93,6 @@ answer:
 given: [value]
 marks:
   cand: { sort: cell, notation: "set of range(1, w)" }
-  # A play aid with no meaning for the answer.
-  done: { sort: slot, notation: "bool" }
 define:
   visible(s): "count(c in sight(s) where forall c2 in before(c, sight(s)): value(c2) < value(c))"
   # The towers a line shows from its first cell before it reaches c.
@@ -114,10 +120,50 @@ clues:
       visible(at) = v and (exists c in sight(at) where value(c) = w:
       shownBefore(sight(at), c) = v - 1)
 freedom: { kind: fill }
+play:
+  numbers: { raised: true }
+  done: { sees: clue }
+  # Upstream's three sizes, each at every tier; its default 5x5.
+  boards: [4x4, 5x5, 6x6]
+  default: 5x5
+  # Measured 2026-10-05: none in 50,000 boards built at each tier above
+  # Normal.
+  bounds:
+    tiers:
+      Tricky: { longer: { min: 4 } }
+      Unreasonable: { longer: { min: 4 } }
+  hintMarks:
+    ring: the cell the step fills in with a height.
+    strike: the heights the step crosses out of the pencil marks.
+    outline: >-
+      what the step reasons from: "this cell", whose heights it crosses out,
+      the clue it counts, in its slot beside the grid, the tower just placed,
+      the cells of a set, or "the middle cell" a step weighs and the cells it
+      reads.
+    stripes: >-
+      the line the sentence names: the row or column a clue sees along,
+      through the clue slots at both its ends. Or the several rows or columns
+      it names together, such as "these 2 columns", where one height fits
+      only the outlined cells.
+# Upstream towers.c's: its givens hidden first, then above Easy its clues;
+# an Easy board up to 5x5 shows no given, its square drawn again until the
+# clues alone finish it.
 deal:
-  clues: which slots show
-  givens: how many
+  answer: a Latin square
+  given: every cell's height, then each hidden while the board still finishes; none on an Easy board up to 5x5
+  sees: every clue, then above Easy each hidden, once no more cells can be, while the board still finishes
   tier: one of the tiers
+  sample: { latin: true }
+  hide: [given, sees]
+  hideInTurn: true
+  hideFrom: { sees: Normal }
+  hideWhole: { given: { below: Normal, longer: { max: 5 } } }
+# Upstream's: the clues a slot at a time between slashes, top, bottom, left
+# and right, then a comma and the givens where there are any.
+id:
+  - { numbers: sees, between: "/" }
+  - { digits: given, apart: "_", before: "," }
+tierLetters: ehxu
 tiers: [Easy, Normal, Tricky, Unreasonable]
 names:
   dup: "a placed height's row and column"
@@ -134,25 +180,60 @@ names:
   arrangement: "every way a clue's line can fill"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
+  # A clue as large as the grid sees every tower, so its line climbs 1, 2, …
+  # away from it. One clue a firing, its cells a journey from the clue. It
+  # reads no notes, so the hint offers it before they are set up.
+  - id: fullLine
+    tier: Easy
+    for: >-
+      k in clues(sees), s = at(k), L = sight(s)
+      where v(k) = w and (exists c in L: not known(c))
+    conclude: "forall c in L where not known(c): place(c, index(c, L) + 1)"
+    says:
+      terms: { s: s, v: "v(k)", L: L }
+      marks: {}
+      fact:
+        terms: { n: "index(c, L) + 1" }
+        look: "{outline s: Clue {numeral v}} sees every tower in {stripes L: this line}"
+        follows: "heights must climb 1, 2, … from the clue"
+        move: "{ring} must be {n}"
+        again: "{stripes L: the same line} from {outline s: clue {numeral v}}"
+  # A clue of 1 sees only the tallest tower, so it stands next to the clue.
+  - id: tallestNearest
+    tier: Easy
+    for: "k in clues(sees), s = at(k), c = first(sight(s)) where v(k) = 1 and not known(c)"
+    conclude: "place(c, w)"
+    says:
+      terms: { s: s, v: "v(k)", L: "sight(s)", n: w }
+      marks: {}
+      look: "{outline s: Clue {numeral v}} sees one tower in {stripes L: its line}"
+      follows: "the tallest must stand next to it"
+      move: "{ring} must be {n}"
   # Facing clues that sum to w + 1 see a line climbing to its tallest tower
   # from both ends, so the tallest stands as many cells from one clue as that
   # clue says. Every such line in one firing, the columns before the rows, as
-  # upstream's one-off did. A cell that can no longer hold it makes the marks
-  # inconsistent.
+  # upstream's one-off did. A cell that holds another height makes the board
+  # inconsistent; the notes are not read, so the hint offers it before they
+  # are set up.
   - id: facing
     tier: Easy
-    rung: facing
     for: >-
       P = {s in slots where index(s, slots) < index(opposite(s), slots)
       and clue(sees, s) + clue(sees, opposite(s)) = w + 1}
       where |P| > 0
     conclude: >-
       forall s in P, c = nth(sight(s), clue(sees, s) - 1):
-      w in cand(c) and place(c, w)
+      (not known(c) or value(c) = w) and place(c, w)
     # The hint names the pair whose tallest each placement is.
     says:
-      terms: { P: P }
+      terms: {}
       marks: {}
+      fact:
+        terms: { S: "{s, opposite(s)}", L: "sight(s)", n: w }
+        look: "{outline S: These facing clues} sum to one more than the grid size"
+        follows: "{derived stripes L: their line}'s tallest is pinned"
+        move: "{ring} must be {n}"
+        again: "{outline S: these facing clues} too"
   # Clue by clue, in the order dealt, two readings of the towers its line
   # already shows; the first that strikes anything is the firing.
   #
@@ -165,7 +246,7 @@ techniques:
   # Otherwise, a height that can still be seen, K (not placed behind one at
   # least two taller, as upstream's loop reads it), with r of K above it,
   # cannot stand within v - r - 1 cells of the clue: the tallest first.
-  - id: bounds
+  - id: clueBounds
     tier: Easy
     rung: [lineFull, lowerBound]
     for: >-
@@ -181,10 +262,26 @@ techniques:
       and not (exists c2 in before(c, L): value(c2) > value(c) + 1)),
       i in domain, h = w + 1 - i where h in K,
       j in range(0, v - |K - range(1, h)| - 2): strike(nth(L, j), h)))
-    # The hint names the clue, and which reading struck.
+    # The hint names the clue, and which reading struck: a height a step. The
+    # clue's other towers are already in sight deeper in, so the one it still
+    # needs is the nearest cell, which must stand taller than every tower
+    # between them.
     says:
-      terms: { s: s, v: v, near: near }
+      shown: value
+      terms: { s: s, v: v, L: L, seen: "v - 1" }
       marks: {}
+      arms:
+        lineFull:
+          when: near
+          look: >-
+            {outline s: Clue {numeral v}} already sees {numeral seen} {seen: tower | towers} in
+            {derived stripes L: the line}, so the cell nearest it must top all
+            between; height {struck} can't
+        lowerBound:
+          when: "true"
+          look: >-
+            {outline s: Clue {numeral v}} sees exactly {numeral v} towers along {derived stripes
+            L: its line}; height {struck} so near it would hide too many
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   # Clue by clue, and cell by cell along its line: a height no filling of the
@@ -199,83 +296,15 @@ techniques:
       set: L
       each: "{q}"
       fits: "distinct(f(x) over x in L) and seen(f, L) = v"
-    # The hint names the clue.
+    # The hint names the clue, a height a step. Which arrangements the clue
+    # allows depends on every cell of its line.
     says:
-      terms: { s: s, v: v }
-      marks: {}
+      shown: value
+      terms: { s: s, v: v, L: L }
+      marks: { reads: L }
+      look: >-
+        No way for {outline s: clue {numeral v}} to show exactly {numeral v} towers along
+        {derived stripes L: its line} puts height {struck} in {ring}
   - { use: latin.set, tier: Normal, rung: set }
   - { use: latin.fish, tier: Tricky, rung: set }
   - { use: latin.wing, tier: Tricky, rung: wing }
-# The steps the planner emits that no firing is: the clue sentences the walk
-# tells in its own words, the hidden single and the naked set. A clue is
-# outlined in its slot beside the grid and the line it sees along is striped
-# through both clue slots; `v` is the clue's number and `n` the height the
-# step decides or strikes. A line the clue's value alone does not decide is
-# `derived`: the sentence claims something of every arrangement of it.
-steps:
-  # The clue sees every tower, so heights climb from it. A later leg of the
-  # journey does not restate that, only the line it is still working along.
-  fullLine:
-    ring: cell
-    terms: { v: number, n: number }
-    marks: { outline: [clue], stripes: [line] }
-    move: "{ring} must be {n}"
-    wordings:
-      - again: "{stripes line: the same line} from {outline clue: clue {v}}"
-        look: "{outline clue: Clue {v}} sees every tower in {stripes line: this line}"
-        follows: "heights must climb 1, 2, … from the clue"
-  tallestNearest:
-    ring: cell
-    terms: { v: number, n: number }
-    marks: { outline: [clue], stripes: [line] }
-    look: "{outline clue: Clue {v}} sees one tower in {stripes line: its line}"
-    follows: "the tallest must stand next to it"
-    move: "{ring} must be {n}"
-  # Two clues at the two ends of one line.
-  facing:
-    ring: cell
-    terms: { n: number }
-    marks: { outline: [clues], stripes: [line] }
-    look: "{outline clues: These facing clues} sum to one more than the grid size"
-    follows: "{derived stripes line: their line}'s tallest is pinned"
-    move: "{ring} must be {n}"
-  # The strike steps below are premises, which the walk concludes with the move
-  # it makes. The clue's other towers are already in sight deeper in, so the
-  # one it still needs is the nearest cell, which must stand taller than every
-  # tower between them: `seen` of them are.
-  lineFull:
-    ring: cell
-    terms: { v: number, seen: number, n: number }
-    marks: { outline: [clue], stripes: [line] }
-    look: >-
-      {outline clue: Clue {v}} already sees {seen} {seen: tower | towers} in
-      {derived stripes line: the line}, so the cell nearest it must top all
-      between; height {n} can't
-  lowerBound:
-    ring: cell
-    terms: { v: number, n: number }
-    marks: { outline: [clue], stripes: [line] }
-    look: >-
-      {outline clue: Clue {v}} sees exactly {v} towers along {derived stripes
-      line: its line}; height {n} so near it would hide too many
-  arrangement:
-    ring: cell
-    terms: { v: number, n: number }
-    marks: { outline: [clue], stripes: [line] }
-    look: >-
-      No way for {outline clue: clue {v}} to show exactly {v} towers along
-      {derived stripes line: its line} puts height {n} in {ring}
-  # The height is qualified in the single's sentence and bare where the engine's
-  # sentences say it (`TOWERS_VOCAB`), since the qualified form runs past the
-  # narration limit there.
-  hiddenSingle:
-    ring: cell
-    terms: { axis: unit, n: number }
-    marks: { stripes: [line] }
-    look: "No other cell in {stripes line: this {axis}} can be height {n}"
-    move: "{ring} must be {n}"
-  set:
-    ring: cell
-    terms: { n: number }
-    marks: { outline: [set] }
-    look: "{outline set} already account for a fixed set of heights that includes {n}"
