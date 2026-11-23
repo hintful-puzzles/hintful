@@ -17,13 +17,8 @@ import {
 } from "../input/pointer.ts";
 import { dragMarkVerbs, type TargetVerbs } from "../input/target-verb.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
-import {
-  type Clues,
-  type FillBoard,
-  type FillModule,
-  listOf,
-  spaceOf,
-} from "./board.ts";
+import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 
 /** Marks clue `k` of kind `kind` done, or unmarks it. */
@@ -55,19 +50,20 @@ export function applyDone<C>(board: FillBoard<C>, move: DoneMove): FillBoard<C> 
 export const isDone = <C>(board: FillBoard<C>, kind: string, k: number): boolean =>
   board.done[kind]?.[k] === 1;
 
-/** The done move for the clue at edge `e`, the first of the kinds marked
- * done that has one; `null` where none does. */
-function clueAtEdge<C>(
+/** The done move for the clue drawn at edge `e`, the first of the kinds
+ * marked done that has one; `null` where none does. */
+function clueAtEdge<C extends Clues<C>>(
+  module: FillModule<C>,
   play: FillPlay,
   board: FillBoard<C>,
   e: number,
 ): DoneMove | null {
   if (e < 0) return null;
-  for (const kind of Object.keys(play.done ?? {})) {
-    const k = listOf(board.dealt, kind as keyof C).byAt[e];
-    if (k >= 0) return { type: "done", kind, k };
-  }
-  return null;
+  const clue = gapClueAt(gapKindsOf<C>(play), board, spaceOf(module, board), e);
+  if (clue === null || !clue.painter.shows(clue.clue)) return null;
+  return clue.name in (play.done ?? {})
+    ? { type: "done", kind: clue.name, k: clue.k }
+    : null;
 }
 
 /** A board's done marks: the drag declaration (`Game.doneClues`), and the
@@ -114,7 +110,7 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
     // One noun the help page says, the first kind's.
     noun: nouns[0],
     target: (b, ds, p) =>
-      clueAtEdge(play, b, edgeAt(spaceOf(module, b), b, ds.tileSize, p)),
+      clueAtEdge(module, play, b, edgeAt(spaceOf(module, b), b, ds.tileSize, p)),
     apply: (_b, clue) => clue,
     button: "either",
     sweep: { holds: (b, { kind, k }) => (isDone(b, kind, k) ? 1 : 0) },
@@ -139,7 +135,7 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
       const [nx, ny] = [x + step[1], y + step[2]];
       if (nx < 0 || ny < 0 || nx >= b.w || ny >= b.h) return null;
       const sp = spaceOf(module, b);
-      return clueAtEdge(play, b, sp.edgeOf(y * b.w + x, ny * b.w + nx));
+      return clueAtEdge(module, play, b, sp.edgeOf(y * b.w + x, ny * b.w + nx));
     },
   };
 }

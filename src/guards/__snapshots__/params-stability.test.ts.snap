@@ -27,7 +27,8 @@ preset:7x7 Tricky  full=7dk  brief=7
 preset:7x7 Hard  full=7dx  brief=7
 preset:7x7 Unreasonable  full=7dr  brief=7
 tier:4  full=5dr  brief=5
-bump:order  full=6de  brief=6"
+bump:w  full=6de  brief=6
+bump:h  full=5de  brief=5"
 `;
 
 exports[`encoded params are byte-stable > ascent 1`] = `

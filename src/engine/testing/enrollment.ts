@@ -278,8 +278,8 @@ const fromHere = (key: string): string =>
  *
  * A game's own code includes each **game family** it imports: an engine
  * directory that builds part of a `Game` (a `family` in
- * `engine-directories.ts`), such as `edge-clue-latin/`, which Unequal and
- * Adjacent play on. What two games share cannot live in either, and a game
+ * `engine-directories.ts`), such as `fill/`, which every game born from its
+ * description plays on. What two games share cannot live in either, and a game
  * that runs the shared mechanic there has neither hand-rolled it nor hidden
  * it. The engine's other directories are not a game's own code: they are the
  * mechanics the guards ask after. */
@@ -300,14 +300,11 @@ export const gameSourceFiles: ReadonlyMap<string, readonly SourceFile[]> = (() =
   // A glob is a literal, so each family is named; the count below fails when
   // a declared family is missing from it. A wider glob would make every guard
   // that enrolls games read, and so be selected by, every engine module.
-  const engineDirs = import.meta.glob<string>(
-    ["../edge-clue-latin/*.ts", "../fill/*.ts"],
-    {
-      query: "?raw",
-      import: "default",
-      eager: true,
-    },
-  );
+  const engineDirs = import.meta.glob<string>(["../fill/*.ts"], {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  });
   const familyDirs = new Set(
     ENGINE_DIRECTORIES.filter((d) => d.kind === "family").map((d) => d.dir),
   );

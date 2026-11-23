@@ -1,4 +1,6 @@
-ok  adjacent   adjacent                       current: recorded src/games/adjacent/adjacent.description.yaml#adjacent 2fb58118aa866778
+ok  adjacent   adjacent                       3  sound    (want sound   )     3 queries    0.0s
+ok  adjacent   adjacent (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 3
+ok  src/games/adjacent/adjacent.description.yaml#adjacent: recorded sound, proved whole on all 1 boards
 ok  adjacent   adjacentSet                    3  sound    (want sound   )     3 queries    0.0s
 ok  adjacent   adjacentSet (planted)          3  unsound  (want unsound )     1 queries    0.0s   at line 3
 ok  src/games/adjacent/adjacent.description.yaml#adjacentSet: recorded sound, proved whole on all 1 boards

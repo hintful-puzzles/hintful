@@ -35,6 +35,7 @@ play:
   click: cycle
   boards: [4x4, 6x6]
   default: 6x6
+  defaultTier: Normal
   boardTiers: { 4x4: [Easy, Easy] }
   variants: [{ board: 6x6, with: [unique], tier: Normal }]
   modifiers:

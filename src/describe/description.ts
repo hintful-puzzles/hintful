@@ -120,6 +120,9 @@ export interface DescriptionJson {
   tierLetters?: string;
   /** A bare letter older game IDs write for a tier: read, never written. */
   tierFlag?: { letter: string; tier: string };
+  /** Bare letters older game IDs write, each after the size or the tier: read,
+   * and never written. */
+  unusedLetters?: Record<string, "size" | "tier">;
   tierAliases?: Record<string, string>;
   tiers?: string[];
   /** What a placement rules out at a glance, which the engine's `auto-cross`
@@ -204,6 +207,9 @@ export interface PlayJson {
   shape?: string;
   /** The default board, `WxH`, where it is not the first. */
   default?: string;
+  /** The tier the default board is dealt at, where it is not the first the
+   * menu offers it at. */
+  defaultTier?: string;
   /** The first and last tier a board is offered at, by its `WxH`. */
   boardTiers?: Record<string, [string, string]>;
   /** The boards after the menu's grid: a size, its variations and its tier. */
@@ -1161,6 +1167,9 @@ export interface ClueKind {
    * (Crossing's digits of a number), and its values. Empty for any other. */
   fields: ReadonlyMap<string, { at: string | null; list: boolean; value: Expr }>;
   means: Expr;
+  /** Whether every element carries one, so an absent clue is a fact: a deal
+   * hides none, and an ID may leave one of its values unwritten. */
+  complete: boolean;
 }
 
 /** Where a clue that sits at no element is: a whole-board clue, as a
@@ -1500,6 +1509,7 @@ export function loadDescription(
         }),
       ),
       means: at(`clue ${kind}`, c.means),
+      complete: c.complete === true,
     });
   }
   const tiers = json.tiers ?? [];

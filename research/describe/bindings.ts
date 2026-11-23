@@ -6,13 +6,6 @@
 
 import type { DescriptionJson } from "../../src/describe/description.ts";
 import type { Game } from "../../src/engine/contract/game.ts";
-import { solveEdgeClues } from "../../src/engine/edge-clue-latin/solver.ts";
-import {
-  ADJTHAN,
-  type EdgeClueParams,
-  type EdgeClueState,
-} from "../../src/engine/edge-clue-latin/state.ts";
-import { adjacentGame } from "../../src/games/adjacent/index.ts";
 import { keenGame } from "../../src/games/keen/index.ts";
 import {
   C_ADD,
@@ -68,7 +61,7 @@ import { towersGame } from "../../src/games/towers/index.ts";
 import type { TowersParams, TowersState } from "../../src/games/towers/state.ts";
 import { type Dealt, describedGame } from "./description.ts";
 import type { Clue } from "./evaluate.ts";
-import type { Elem, Space } from "./space.ts";
+import type { Elem } from "./space.ts";
 
 /** The game's members the pilot drives, at the game's own types. */
 // biome-ignore lint/suspicious/noExplicitAny: a binding holds any game's moves, ui and draw state.
@@ -86,25 +79,12 @@ export interface Binding<P, S> {
   notes?(s: S): ArrayLike<number>;
   /** The state with these values in every cell the player may change. */
   withEntries(s: S, values: ArrayLike<number>, notes?: ArrayLike<number>): S;
-  /** The game's own solver from the givens, capped at a tier: the level it
-   * returns and the candidates it ends with, by cell, bit `1 << v`. */
-  ownLadder?(s: S, cap: number): { level: number; masks: Int32Array };
   /** Whether the game refuses the player this value in this cell, which a
    * planted entry then leaves out (Salad's cross on a given ball). */
   refuses?(s: S, cell: number, v: number): boolean;
   /** The game's mistake kinds as the rules' (`cell` or `note`), where its
    * own are more (Salad's `cross`, a value entered wrong). */
   mistakeKinds?: Readonly<Record<string, string>>;
-}
-
-/** A Latin solver's `o³` cube, `(x·o + y)·o + (n−1)`, as masks by cell. */
-function cubeMasks(cube: Uint8Array, o: number): Int32Array {
-  const masks = new Int32Array(o * o);
-  for (let x = 0; x < o; x++)
-    for (let y = 0; y < o; y++)
-      for (let n = 1; n <= o; n++)
-        if (cube[(x * o + y) * o + n - 1]) masks[y * o + x] |= 1 << n;
-  return masks;
 }
 
 const tiers = <D extends string>(sizes: number[], diffs: readonly D[]) =>
@@ -351,79 +331,4 @@ export const saladBinding: Binding<SaladParams, SaladState> = {
   },
   refuses: (s, cell, v) => v === s.nums + 1 && s.gridclues[cell] === CIRCLE,
   mistakeKinds: { cross: "cell" },
-};
-
-/** One reading for both games: the state's clue kind says which description
- * it is. */
-function edgeClueDealt(s: EdgeClueState): Dealt {
-  const o = s.order;
-  return {
-    sizes: { order: o },
-    givens: s.immutable,
-    clues: (space) => {
-      const out: Clue[] = [];
-      for (let i = 0; i < o * o; i++)
-        for (const d of ADJTHAN) {
-          const x = (i % o) + d.dx;
-          const y = Math.floor(i / o) + d.dy;
-          if (x < 0 || y < 0 || x >= o || y >= o) continue;
-          const j = y * o + x;
-          const flagged = (s.clueFlags[i] & d.f) !== 0;
-          if (!s.kind.complete) {
-            if (flagged)
-              out.push({
-                kind: "greater",
-                at: edgeOf(space, i, j),
-                v: cellAt(space, i),
-              });
-          } else if (j > i) {
-            // Every edge carries one: a bar or none, the clue kind complete.
-            out.push({ kind: "bar", at: edgeOf(space, i, j), v: flagged ? 1 : 0 });
-          }
-        }
-      return out;
-    },
-  };
-}
-
-function edgeOf(space: Space, i: number, j: number): Elem {
-  const edge = space.fns.get("edge");
-  if (edge === undefined) throw new Error("no edges in the space");
-  return edge([space.cells[i], space.cells[j]]) as Elem;
-}
-
-const edgeClueCommon = {
-  dealt: edgeClueDealt,
-  entries: (s: EdgeClueState) => s.grid,
-  notes: (s: EdgeClueState) => s.pencil,
-  withEntries: (
-    s: EdgeClueState,
-    values: ArrayLike<number>,
-    notes?: ArrayLike<number>,
-  ) => ({
-    ...s,
-    grid: Int8Array.from(values),
-    pencil: notes ? Int32Array.from(notes) : new Int32Array(s.order * s.order),
-  }),
-  ownLadder: (s: EdgeClueState, cap: number) => {
-    const o = s.order;
-    const cube = new Uint8Array(o * o * o);
-    const level = solveEdgeClues(
-      o,
-      s.kind,
-      s.clueFlags,
-      Uint8Array.from(s.immutable),
-      cap,
-      cube,
-    );
-    return { level, masks: cubeMasks(cube, o) };
-  },
-};
-const edgeClueDiffs = ["trivial", "easy", "tricky", "extreme", "recursive"] as const;
-
-export const adjacentBinding: Binding<EdgeClueParams, EdgeClueState> = {
-  ...edgeClueCommon,
-  game: adjacentGame,
-  description: describedGame("src/games/adjacent/adjacent.description.yaml"),
-  params: tiers([4, 5, 6], edgeClueDiffs).map((p) => ({ order: p.w, diff: p.diff })),
 };

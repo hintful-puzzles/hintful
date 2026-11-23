@@ -7,7 +7,6 @@ import { describe, expect, it } from "vitest";
 import { entryMistakes, gridCell } from "../../src/engine/hint/entry-mistakes.ts";
 import { brokenRules, searchAnswers } from "./answer-check.ts";
 import {
-  adjacentBinding,
   type Binding,
   keenBinding,
   mathraxBinding,
@@ -200,7 +199,6 @@ describe("the answer check from the description", () => {
     const only = onlyGames();
     const games = [
       towersBinding,
-      adjacentBinding,
       soloBinding,
       keenBinding,
       mathraxBinding,
@@ -257,12 +255,6 @@ describe("the answer check from the description", () => {
       "visible(at) >= v",
     ],
     [
-      "Adjacent, a missing bar read as nothing",
-      adjacentBinding as Binding<unknown, unknown>,
-      "bar",
-      "v = 1 implies abs(value(end1(at)) - value(end2(at))) = 1",
-    ],
-    [
       "Keen, a product read as a sum",
       keenBinding as Binding<unknown, unknown>,
       "product",
@@ -305,8 +297,8 @@ describe("the answer check from the description", () => {
         undealt: [],
         kinds: new Map(),
       };
-      // The middle size only. On 4x4 Adjacent, two boards, the bars alone
-      // decide every mutant and the answer, so that defect goes unseen there.
+      // The middle size only: on the smallest, the clues alone may decide
+      // every mutant and the answer, so a defect goes unseen there.
       const n = b.params.length / 3;
       const small = b.params.filter((_, i) => i >= n && i < 2 * n);
       check({ ...b, description: json, params: small }, t);

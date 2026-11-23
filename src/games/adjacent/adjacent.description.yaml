@@ -1,10 +1,12 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
-# Adjacent's techniques and help page. Its clue kind is complete: every edge
-# carries a bar or none, and none says the two are not consecutive.
-# `npm run describe` compiles the techniques to adjacent.compiled.ts, which
-# solver.ts runs.
 game: adjacent
+catalog:
+  name: Adjacent
+  description: Consecutive-number Latin square puzzle
+  objective: Complete the latin square so that a bar joins exactly the neighbors one apart.
+  collection: original
+  family: latin
 help:
   rules: |-
     Fill in the grid with numbers from 1 to the grid size, so that every
@@ -65,18 +67,17 @@ produces: latin
 words:
   cell: cell
 sizes:
-  order: { min: 3, max: 16 }
+  # The most a note mask holds (engine/board/candidate-bits.ts).
+  w: { min: 3, max: 31 }
 space:
-  grid: { w: "order", h: "order" }
+  grid: { w: "w", h: "w" }
   edges: true
   units: [rows, cols]
 answer:
-  value: { sort: cell, domain: "range(1, order)" }
+  value: { sort: cell, domain: "range(1, w)" }
 given: [value]
 marks:
-  cand: { sort: cell, notation: "set of range(1, order)" }
-  # A play aid with no meaning for the answer.
-  done: { sort: edge, notation: "bool" }
+  cand: { sort: cell, notation: "set of range(1, w)" }
 define:
   fits(e, a, b): "(clue(bar, e) = 1) = (abs(a - b) = 1)"
 shape:
@@ -85,13 +86,57 @@ clues:
   # 1 is a bar, 0 none.
   bar:
     at: edge
-    value: "{0, 1}"
+    value: "range(0, 1)"
     complete: true
     means: "(v = 1) = (abs(value(end1(at)) - value(end2(at))) = 1)"
 freedom: { kind: fill }
+play:
+  numbers: {}
+  gaps: { bar: bar }
+  done: { bar: bar }
+  hintNotes: implicit
+  # A small board at the lower tiers and a large one at the upper. Every
+  # board deals in a fraction of a second: 6x6 is left to the Custom dialog
+  # only to keep the menu short. The default is upstream's, 5x5 at Normal.
+  boards: [5x5, 7x7]
+  defaultTier: Normal
+  boardTiers:
+    5x5: [Easy, Hard]
+    7x7: [Tricky, Unreasonable]
+  # Below 5, a board has no tier above Normal.
+  bounds:
+    tiers:
+      Tricky: { longer: { min: 5 } }
+      Hard: { longer: { min: 5 } }
+      Unreasonable: { longer: { min: 5 } }
+  hintMarks:
+    ring: the cell the step fills in with a number.
+    strike: the pencil marks the step crosses out.
+    outline: >-
+      what the step reasons from: the two cells either side of a bar, or of
+      no bar at all (the one whose marks are struck, and "its neighbor"), the
+      cells that already account for the numbers being crossed out, the
+      number just placed, or "the middle cell" a step weighs and the cells it
+      reads.
+    stripes: >-
+      the row or column the sentence names: "in this row". Or the several it
+      names together, such as "these 2 columns", where one number fits only
+      the outlined cells.
 deal:
-  givens: how many
+  answer: a Latin square
+  given: every cell's number, then each hidden while the board still finishes
+  bar: every edge's, a bar exactly where its two numbers differ by one
   tier: one of the tiers
+  sample: { latin: true }
+  hide: given
+# A record a cell, upstream's: its given number or 0, then the letters URDL
+# of its bars, each written from both its cells, and a comma.
+id:
+  - { records: given, sides: bar }
+# Upstream deals Adjacent as a mode of Unequal, writing an `a` after the size,
+# so its game IDs still open.
+unusedLetters: { a: size }
+tierLetters: tekxr
 tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 names:
   dup: "a placed number's row and column"
@@ -112,7 +157,6 @@ techniques:
   - kind: rel.support
     as: adjacent
     tier: Normal
-    rung: adjacent
     with:
       group: "L in cols, a in cells(L) where known(a), b in adj4(a), e = edge(a, b)"
       end: b
@@ -133,7 +177,6 @@ techniques:
   - kind: rel.support
     as: adjacentSet
     tier: Tricky
-    rung: adjacentSet
     with:
       group: "L in cols, a in cells(L), b in adj4(a), e = edge(a, b)"
       end: b

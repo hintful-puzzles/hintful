@@ -2,8 +2,9 @@
 
 ## Purpose
 Unequal (Futoshiki), the Latin-square puzzle whose greater-than signs between
-squares constrain neighbors. It plays on the edge-clue Latin square it shares
-with Adjacent (`adjacent`). This spec holds the puzzle's
+squares constrain neighbors. It is born from its description, and plays on
+the fill board's board of numbers (`described-fill-game`). This spec holds
+the puzzle's
 rules, its params and description formats, its controls and keypad, what its
 generator promises, how its board looks, its mistake check, and its explained
 deduction hint. What it shares with every note-taking game is in

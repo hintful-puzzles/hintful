@@ -235,10 +235,8 @@ not only of the hint.
   does"). A narrated objective with a solution fallback is the sanctioned
   non-deductive form.
 
-Exemplars: [`range/solver.ts`](../src/games/range/solver.ts) keeps a board
-only if it is uniquely solvable without guessing, and
-[`engine/edge-clue-latin/generator.ts`](../src/engine/edge-clue-latin/generator.ts)
-(Adjacent's) caps assembly below the recursive level.
+Exemplar: [`range/solver.ts`](../src/games/range/solver.ts) keeps a board
+only if it is uniquely solvable without guessing.
 
 ### No option switches the generator's checks off
 
@@ -1568,9 +1566,9 @@ doubling as the uniqueness check), and the generator. The population is
 
 Exemplars: [`group/solver.ts`](../src/games/group/solver.ts) for a described
 game with no clues, its techniques reading the grid as a table;
-[`adjacent/solver.ts`](../src/games/adjacent/solver.ts) for one with
-clues, whose driver is
-[`engine/edge-clue-latin/solver.ts`](../src/engine/edge-clue-latin/solver.ts);
+[`adjacent.description.yaml`](../src/games/adjacent/adjacent.description.yaml)
+for one born from its description, its clues between the cells, which the
+fill board deals and solves with no solver of its own;
 [`towers/solver.ts`](../src/games/towers/solver.ts) for clues beside the
 grid; [`keen/solver.ts`](../src/games/keen/solver.ts) for per-cage
 arithmetic; [`salad/solver.ts`](../src/games/salad/solver.ts) for a repeated
@@ -1581,8 +1579,7 @@ symbol.
   flat reads verbatim with a comment: re-deriving them moves solver verdicts.
   The same holds for a generator that reads the cube through a transposed
   index, and for one that shuffles two clue lists in two separate `shuffle`
-  calls: both decide the board, so reproduce them
-  ([`engine/edge-clue-latin/generator.ts`](../src/engine/edge-clue-latin/generator.ts)).
+  calls: both decide the board, so reproduce them.
 - **A clue that constrains a cell without placing a digit uses the `seed`
   hook.** `latinSolver` seeds its marks from the working grid, which covers
   every given digit; `LatinSolverConfig.seed` is where a mark that only rules

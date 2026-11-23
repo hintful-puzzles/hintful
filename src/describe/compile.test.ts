@@ -923,6 +923,64 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play done: count is no clue kind drawn in a gap/);
   });
 
+  it("refuses a bar where its board cannot draw, write or deal it", () => {
+    const source = "src/games/adjacent/adjacent.description.yaml";
+    const adjacent = sources.get(source);
+    if (adjacent === undefined || !isFormal(adjacent)) throw new Error("no adjacent");
+    type Json = {
+      clues: { bar: { complete?: boolean; value: string } };
+      play: { gaps: Record<string, string>; defaultTier?: string };
+      deal: { hide: string | string[] };
+      unusedLetters: Record<string, string>;
+    };
+    const compileAdjacent = (edit: (j: Json) => void) => {
+      const j = structuredClone(adjacent) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    const edited = (f: (j: Json) => void) => () => compileAdjacent(f);
+    expect(compileAdjacent(() => {})).toContain('"both":true');
+    // A bar left out of the record where it is 0 must be complete.
+    expect(
+      edited((j) => {
+        delete j.clues.bar.complete;
+      }),
+    ).toThrow(/id: sides of bar, which is not an edge's clue valued one of its ends/);
+    expect(
+      edited((j) => {
+        j.clues.bar.value = "range(0, 2)";
+      }),
+    ).toThrow(/id: sides of bar/);
+    expect(
+      edited((j) => {
+        j.play.gaps = { bar: "chevron" };
+      }),
+    ).toThrow(/play gaps: chevron draws a clue valued one of its ends, and bar is not/);
+    expect(
+      edited((j) => {
+        j.deal.hide = ["given", "bar"];
+      }),
+    ).toThrow(/deal hide: bar is complete, so none of it is hidden/);
+    expect(
+      edited((j) => {
+        j.unusedLetters = { d: "size" };
+      }),
+    ).toThrow(/unusedLetters: the letter d is taken/);
+    expect(
+      edited((j) => {
+        j.play.defaultTier = "Unreasonable";
+      }),
+    ).toThrow(
+      /play defaultTier: the menu does not offer the default board at Unreasonable/,
+    );
+  });
+
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
     expect(() =>
       compileTents((j: { play: { secondary: number } }) => {

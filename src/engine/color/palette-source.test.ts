@@ -379,7 +379,7 @@ it("no game holds the ring's ink", () => {
  * the stripes in its own (`resolvePalette`).
  *
  * Counted by game id over `gameSourceFiles`, which credits a shared family's
- * renderer (`engine/edge-clue-latin/`) to every game that draws with it, and
+ * renderer (`engine/fill/`) to every game that draws with it, and
  * each painter a born game's `paint:` names to that game. A game whose
  * palette starts from `rolePalette` takes every role `roles.ts` fills, read
  * off that file's own import from `palette.ts`.

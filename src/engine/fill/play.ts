@@ -192,8 +192,10 @@ export interface FillPlay {
 /** The engine's `Ui` for a fill game. */
 export interface FillUi {
   cursor: GridCursor;
-  /** The drag: where it began, and where the pointer is. */
-  drag: GridDrag;
+  /** The drag: where it began, and where the pointer is. A board of numbers
+   * keeps none: its one drag is the done marks' sweep, which the engine's
+   * target verbs hold (`numbers.ts`). */
+  drag?: GridDrag;
   /** The cells a drag that follows the pointer has passed, in order, the
    * first the pressed one. */
   path: number[];
@@ -418,7 +420,8 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
 
   function pendingEdit(b: FillBoard<C>, ui: FillUi): Edit | null {
     const drag = ui.drag;
-    if (!drag.live || !ui.dragOk || ui.dragButton < 0) return null;
+    if (drag === undefined || !drag.live || !ui.dragOk || ui.dragButton < 0)
+      return null;
     const link = dragLink(b, ui, drag);
     if (link !== null) return link;
     const { sx, sy, ex, ey } = drag;
@@ -618,6 +621,7 @@ export function fillInput<C extends Clues<C>, D extends Tiled>(
     interpretMove(b, ui, ds, p, raw) {
       const button = stripModifiers(raw);
       if (isMouseDown(button) || ui.dragButton >= 0) {
+        ui.drag ??= newDrag();
         const got = dragArm(b, ui, ui.drag, ds, p, button);
         if (got !== PASS) return got;
       }

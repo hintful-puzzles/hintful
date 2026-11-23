@@ -117,12 +117,32 @@ commit. In design.md § "Decisions" 7's order.
         Run in the app 2026-11-23: a 5x5 Tricky deal, typing, notes, a
         broken sign in red, signs marked done by press, drag and
         Shift-arrow, the hint walked to the solve, light and dark.
-- [ ] 2.3 Adjacent born: records flagged from both cells, the legacy `a`,
+- [x] 2.3 Adjacent born: records flagged from both cells, the legacy `a`,
       the bar painter and a missing bar's breach; `engine/edge-clue-latin/`
       deleted (§ 4). Adjacent's spec reads its board off Unequal's ("Rules:
       Adjacent shares Unequal's board and controls"), and Unequal's Purpose
       still names the edge-clue square: both are rewritten here, and the
       guides' exemplars that 2.2c repointed to Adjacent move on.
+      Capabilities added: a `complete` kind valued 0 or 1 at every edge,
+      dealt whole and never hidden, its records written from both ends
+      and refused from one; a painter says whether it draws an end or a
+      number (`bar`, its outline where a 0 breaks), the compiler holding
+      each `play.gaps` kind to it; a press marks done only a clue its
+      painter draws; `unusedLetters` (read, never written);
+      `play.defaultTier`; an own rung's `{ring}` and `{struck}`. A board of
+      numbers keeps no buttons' drag on its Ui, which the drag-cancel guard
+      read as a drag no press arms (Unequal's since 2.2c). `research/
+      describe/`'s ladder and measure tools retired with their only
+      subject, Adjacent's own ladder. Differences a player sees: a deal
+      hides givens alone, from a Latin square, so the mix shifts; past 9
+      a value is a letter from `a`; sizes run to 31 (were 16); an ID with
+      more than one answer is refused; the hint rings a cell's number or
+      notes; a gap with no bar takes no done mark; saves break (approved).
+      The menu, its first board 5x5 Easy, and `5` reading as 5x5 Normal
+      are kept. Run in the app 2026-11-23: a 5x5 Easy and a 5x5 Tricky
+      deal, typing, notes, a broken bar and a missing bar's breach in red,
+      bars marked done by press, drag and Shift-arrow, a press on no bar
+      doing nothing, the hint walked to the solve on both, light and dark.
 - [ ] 2.4 Keen born: clues at a partition's parts labeled at the first
       cell, the block-structure segment, a small-part partition sampled on
       the answer, one kind an element chosen in the deal, the bare flag `m`;

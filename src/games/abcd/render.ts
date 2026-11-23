@@ -20,9 +20,9 @@
 import { valueBit } from "../../engine/board/candidate-bits.ts";
 import { fromCoord as geometryFromCoord } from "../../engine/board/geometry.ts";
 import { mkhighlight } from "../../engine/color/color-mkhighlight.ts";
+import { GRAY } from "../../engine/color/colors.ts";
 import {
   cellSurface,
-  GRID_MID,
   highlightWash,
   INK,
   PENCIL_BODY,
@@ -118,7 +118,7 @@ export function colors(defaultBackground: Color): Color[] {
   const { background: inner } = mkhighlight(defaultBackground);
   const out = rolePalette(outer);
   out[COL_INNERBG] = inner;
-  out[COL_GRID] = GRID_MID;
+  out[COL_GRID] = GRAY;
   out[COL_BORDERLETTER] = abcdBorderLetter(outer);
   out[COL_TEXT] = INK;
   out[COL_GUESS] = playerEntryColor(inner);

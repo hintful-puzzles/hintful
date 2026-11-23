@@ -1382,9 +1382,10 @@ export function fillRender<C extends Clues<C>>(
           ? 0
           : 1 |
             (clue.kind << 1) |
-            (clue.toward << 8) |
+            (clue.clue.toward << 8) |
             (err ? 1 << 10 : 0) |
-            (done ? 1 << 11 : 0);
+            (done ? 1 << 11 : 0) |
+            (clue.clue.value << 12);
       if (!ds.gaps.changed(e, key)) continue;
       const a = sp.edgeEnds[2 * e];
       const [x, y] = [a % b.w, Math.floor(a / b.w)];
@@ -1401,8 +1402,9 @@ export function fillRender<C extends Clues<C>>(
       clue?.painter.paint(
         dr,
         gap,
-        clue.toward,
+        clue.clue,
         err ? COL_ERROR : done ? COL_DONE : COL_INK,
+        err,
       );
       dr.unclip();
       dr.drawUpdate(open);
@@ -1434,7 +1436,7 @@ export function fillRender<C extends Clues<C>>(
     const { w, h } = state;
     depth = depthOf(state);
     boardW = w;
-    const shown = ui.drag.live ? previewed(state, ui) : state;
+    const shown = ui.drag?.live ? previewed(state, ui) : state;
 
     if (ds.tiles.firstFrame()) {
       // A walled board's frame is a wall: each cell paints its own top and

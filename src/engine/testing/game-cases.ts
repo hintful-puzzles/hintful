@@ -938,23 +938,30 @@ export function checkParams(game: AnyGame, c: ParamsCase): string[] {
   return out;
 }
 
-/** How many of `ops` are `<op> <color>`, by color or fill, the color a role
- * or a slot of `palette` holding the collection's color of that name. */
+/** How many of `ops` are `<op> <color>`, by color, fill or outline, the
+ * color a role or a slot of `palette` holding the collection's color of that
+ * name. */
 function drawn(ops: readonly DrawOp[], key: string, palette: readonly Color[]): number {
   const [op, name] = key.split(" ");
+  const named = NAMED[name];
   const slots = new Set(
     name in COLORS
       ? [COLORS[name]]
-      : palette.flatMap((c, i) => (c === NAMED[name] ? [i] : [])),
+      : palette.flatMap((c, i) =>
+          named !== undefined && sameColor(c, named) ? [i] : [],
+        ),
   );
   return ops.filter(
     (o) =>
       o.op === op &&
       (name === "any" ||
         ("color" in o && slots.has(o.color)) ||
-        ("fill" in o && slots.has(o.fill))),
+        ("fill" in o && slots.has(o.fill)) ||
+        ("outline" in o && slots.has(o.outline))),
   ).length;
 }
+
+const sameColor = (a: Color, b: Color): boolean => a.every((v, i) => v === b[i]);
 
 /** The text drawn at the center of each unfilled circle, one per center,
  * sorted; "none" where no text is. */

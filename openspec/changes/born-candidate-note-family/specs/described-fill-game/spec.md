@@ -23,19 +23,27 @@ directory SHALL hold no TypeScript but its tests.
 #### Scenario: The candidate-note family is its descriptions
 
 - **WHEN** the catalog and the registry are read
-- **THEN** Unequal is in all of them, and its directory holds no TypeScript
-  file
+- **THEN** Unequal and Adjacent are in all of them, and neither directory
+  holds a TypeScript file
 
 ## ADDED Requirements
 
 ### Requirement: A born game's default board is dealt at the first tier its menu offers it
 
 A born game's default params SHALL be its default board at the first tier
-its menu offers that board, the lowest tier where the menu does not say.
+its menu offers that board, the lowest tier where the menu does not say,
+unless its description names a tier the menu offers it at
+(`play.defaultTier`).
 
 #### Scenario: A board the menu starts above Easy
 
 - **WHEN** a born game's default board is offered from Normal up
+- **THEN** its default params are that board at Normal
+
+#### Scenario: A default tier named
+
+- **WHEN** a born game offers its default board from Easy and names Normal
+  as its default tier
 - **THEN** its default params are that board at Normal
 
 ### Requirement: A born game's cells may take candidate notes
@@ -98,6 +106,36 @@ its ID SHALL write it, and its hint SHALL mark it there.
 - **WHEN** a born game deals a clue kind at an edge
 - **THEN** the board draws it in the gap between the edge's two cells, and
   a broken one is drawn as broken
+
+### Requirement: A born game's clue at every edge may be 0 or 1
+
+A born game's complete clue kind valued 0 or 1 at every edge (a bar) SHALL
+be dealt at every edge and never hidden, drawn where it is 1 and not where
+it is 0, and written in a record a cell from both ends of each edge whose
+clue is 1, an edge written from one end alone refused. Where a 0 breaks its
+meaning, the board SHALL draw its outline as broken. A press SHALL mark done
+only a clue that is drawn.
+
+#### Scenario: A bar written from one of its cells alone
+
+- **WHEN** a desc flags a bar from one of its two cells
+- **THEN** the desc is refused as contradictory
+
+#### Scenario: A missing bar breaks
+
+- **WHEN** two neighbors no bar joins hold numbers one apart
+- **THEN** the bar's outline is drawn as broken in their gap
+
+### Requirement: A born game reads a letter older IDs write and writes none
+
+A born game's description MAY name bare letters older game IDs write after
+the size or after the tier; such a letter SHALL be read, change nothing, and
+never be written.
+
+#### Scenario: Upstream's Adjacent letter
+
+- **WHEN** Adjacent's params `5adk` are read
+- **THEN** they are those of `5dk`, written without the `a`
 
 ### Requirement: A born game's givens are its description's `given:`
 

@@ -104,12 +104,20 @@ function sharedByValue(): Map<string, string> {
   out.set(key(lowlight), "mkhighlight.lowlight");
   for (const [name, value] of Object.entries({ ...colors, ...roles })) {
     if (typeof value === "function") {
-      const derived =
-        value.length === 2
-          ? (value as (b: Color, h: Color) => Color)(background, highlight)
-          : (value as (b: Color) => Color)(background);
+      // Not every function exported is a derivation from the background:
+      // `wordOf` names a color and refuses one it has no word for.
+      let derived: unknown;
+      try {
+        derived =
+          value.length === 2
+            ? (value as (b: Color, h: Color) => Color)(background, highlight)
+            : (value as (b: Color) => Color)(background);
+      } catch {
+        continue;
+      }
       if (!Array.isArray(derived) || derived.length !== 3) continue;
-      if (!out.has(key(derived))) out.set(key(derived), `${name}()`);
+      const color = derived as Color;
+      if (!out.has(key(color))) out.set(key(color), `${name}()`);
     } else if (Array.isArray(value) && value.length === 3) {
       if (!out.has(key(value as Color))) out.set(key(value as Color), name);
     }

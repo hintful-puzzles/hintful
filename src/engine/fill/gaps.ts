@@ -4,18 +4,21 @@
  * text format alike.
  */
 
-import { EDGE_PAINTERS, type EdgePainter, type Side } from "../render/pieces/edge.ts";
+import {
+  EDGE_PAINTERS,
+  type EdgeClue,
+  type EdgePainter,
+} from "../render/pieces/edge.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, listOf } from "./board.ts";
 import type { FillPlay } from "./play.ts";
 
 /** The clue in the gap of edge `e`: the index of its kind among `play.gaps`'
- * and that kind's painter, and the side, from its valued end, its other end
- * lies on. */
+ * and that kind's painter, and the clue as the painter reads it. */
 export interface GapClue {
   readonly kind: number;
   readonly painter: EdgePainter;
-  readonly toward: Side;
+  readonly clue: EdgeClue;
   /** The kind's name, and the clue's index in its list. */
   readonly name: string;
   readonly k: number;
@@ -44,9 +47,10 @@ export function gapClueAt<C extends Clues<C>>(
     const [a, z] = [sp.edgeEnds[2 * e], sp.edgeEnds[2 * e + 1]];
     // `z` is right of `a` or below it.
     const right = Math.floor(z / b.w) === Math.floor(a / b.w);
-    const fromA = list.v[k] === a;
-    const toward: Side = right ? (fromA ? 1 : 3) : fromA ? 2 : 0;
-    return { kind: i, painter, toward, name: kind, k };
+    // A number is drawn from `a`, and an end from that end.
+    const fromA = painter.of === "number" || list.v[k] === a;
+    const toward = right ? (fromA ? 1 : 3) : fromA ? 2 : 0;
+    return { kind: i, painter, clue: { toward, value: list.v[k] }, name: kind, k };
   }
   return null;
 }

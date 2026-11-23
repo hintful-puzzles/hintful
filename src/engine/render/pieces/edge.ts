@@ -1,7 +1,8 @@
 /**
  * The painters that draw a clue at an edge in the gap between its two cells
  * (`play.gaps`, `engine/fill/render.ts`), by the name a description gives.
- * A clue valued one of the edge's ends is drawn toward the other end.
+ * A clue valued one of the edge's ends is drawn toward the other end; a clue
+ * valued a number, from the edge's end above or left of the other.
  */
 
 import type { GameDrawing } from "../../contract/game.ts";
@@ -10,15 +11,33 @@ import type { Rect } from "../../contract/types.ts";
 /** A direction from a cell, up, right, down and left. */
 export type Side = 0 | 1 | 2 | 3;
 
+/** A clue as its painter reads it: the side, from the end the clue is drawn
+ * from, its other end lies on, and its value, where it is a number. */
+export interface EdgeClue {
+  readonly toward: Side;
+  readonly value: number;
+}
+
 export interface EdgePainter {
+  /** What the clues it draws are valued: one of the edge's ends, or a
+   * number. */
+  readonly of: "end" | "number";
   /**
    * Draw the clue in `gap`, the box between the two cells, in the palette's
-   * slot `color`. `toward` is the side, from the end the clue is valued, its
-   * other end lies on.
+   * slot `color`; `broken` where the clue breaks.
    */
-  paint(dr: GameDrawing, gap: Rect, toward: Side, color: number): void;
+  paint(
+    dr: GameDrawing,
+    gap: Rect,
+    clue: EdgeClue,
+    color: number,
+    broken: boolean,
+  ): void;
+  /** Whether the clue is drawn on a board where it holds: a press marks only
+   * a clue that is. */
+  shows(clue: EdgeClue): boolean;
   /** The clue as one character of the board's text, between its cells. */
-  glyph(toward: Side): string;
+  glyph(clue: EdgeClue): string;
 }
 
 /**
@@ -27,7 +46,8 @@ export interface EdgePainter {
  * points, two pixels thick.
  */
 const chevron: EdgePainter = {
-  paint(dr, gap, toward, color) {
+  of: "end",
+  paint(dr, gap, { toward }, color) {
     // Across the gap's short side, a quarter in; along it, half each way.
     const across = toward === 1 || toward === 3;
     const thin = across ? gap.w : gap.h;
@@ -57,9 +77,50 @@ const chevron: EdgePainter = {
       color,
     );
   },
-  glyph: (toward) => "^>v<"[toward],
+  shows: () => true,
+  glyph: ({ toward }) => "^>v<"[toward],
 };
 
-export const EDGE_PAINTERS = { chevron } as const satisfies Record<string, EdgePainter>;
+/**
+ * A bar across the gap where the clue is 1, and none where it is 0
+ * (upstream unequal.c's `draw_adjs`): a band a quarter of the gap thick down
+ * its middle. A 0 that breaks, two neighbors one apart with no bar, is the
+ * band's outline.
+ */
+const bar: EdgePainter = {
+  of: "number",
+  paint(dr, gap, clue, color, broken) {
+    if (clue.value === 0 && !broken) return;
+    const across = clue.toward === 1 || clue.toward === 3;
+    const thin = across ? gap.w : gap.h;
+    const at = Math.floor((3 * (thin + 1)) / 8);
+    const width = Math.floor((thin + 1) / 4);
+    const band = across
+      ? { x: gap.x + at, y: gap.y, w: width, h: gap.h }
+      : { x: gap.x, y: gap.y + at, w: gap.w, h: width };
+    if (clue.value !== 0) {
+      dr.drawRect(band, color);
+      return;
+    }
+    const [r, b] = [band.x + band.w - 1, band.y + band.h - 1];
+    dr.drawPolygon(
+      [
+        { x: band.x, y: band.y },
+        { x: r, y: band.y },
+        { x: r, y: b },
+        { x: band.x, y: b },
+      ],
+      -1,
+      color,
+    );
+  },
+  shows: (clue) => clue.value !== 0,
+  glyph: (clue) => (clue.value === 0 ? " " : clue.toward === 1 ? "|" : "-"),
+};
+
+export const EDGE_PAINTERS = { chevron, bar } as const satisfies Record<
+  string,
+  EdgePainter
+>;
 
 export type EdgePainterName = keyof typeof EDGE_PAINTERS;

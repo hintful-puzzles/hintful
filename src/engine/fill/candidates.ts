@@ -23,6 +23,7 @@ import {
   candidateHint,
   keepCandidateHintTrack,
   refreshCandidateHintStep,
+  valuesOf,
 } from "../hint/candidate-hint.ts";
 import { candidateJudge, type RungNames } from "../hint/candidate-judge.ts";
 import {
@@ -151,7 +152,9 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
    * A firing of the description's own technique `id` as legs, a cell each,
    * as the walk strikes notes a cell at a time: each worded by the look of
    * what the technique states, of the fact its first note is where it words
-   * each fact, else of its step. The walk says what the leg strikes.
+   * each fact, else of its step. The walk says what the leg strikes; a look
+   * may name the leg's cell (`{ring}`) and the values it strikes
+   * (`{struck}`).
    */
   function ownLegs(
     id: string,
@@ -177,11 +180,12 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           : statedParts(clauses, {
               kind: CELL,
               at,
-              ring: [],
+              ring: [{ x: strike[0].x, y: strike[0].y }],
               marks,
               terms: { ...says.terms, ...fact?.terms },
               value: numeral,
               noun: vocab.cell,
+              struck: valuesOf(strike),
             }).look;
       if (look === undefined) throw new Error(`${id} states no look to strike by`);
       return { strike, reason: { kind: id, premise: look } };

@@ -34,6 +34,7 @@ import {
   type ParamsSegment,
   paramsCodec,
   size,
+  unusedLetter,
 } from "../game-id/params-codec.ts";
 import { rulesetItem } from "../game-id/ruleset.ts";
 import { encodeRunLength } from "../game-id/run-length.ts";
@@ -102,8 +103,10 @@ export type IdSegment =
   | { readonly glyphs: string; readonly values: Readonly<Record<string, number>> }
   /** A record a cell, closed by a comma: its clue of `records` as a number,
    * 0 for none, then a side letter (`SIDES`) for each clue of `sides`, a kind
-   * at edges valued one of the edge's ends, that it is the value of. */
-  | { readonly records: string; readonly sides: string };
+   * at edges valued one of the edge's ends, that it is the value of. Where
+   * `both`, `sides` is valued 0 or 1 at every edge, and an edge's clue 1 is
+   * written from both its ends (upstream's Adjacent), every other edge's 0. */
+  | { readonly records: string; readonly sides: string; readonly both?: true };
 
 /** A record's side letters, up, right, down and left (upstream unequal.c's
  * `adjthan` order). */
@@ -199,6 +202,9 @@ export interface FillDeal {
   /** A bare letter older IDs write for a tier, by its index: read, never
    * written. */
   readonly tierFlag?: { readonly letter: string; readonly tier: number };
+  /** Bare letters older IDs write after the size or the tier: read, never
+   * written, and changing nothing. */
+  readonly unusedLetters?: Readonly<Record<string, "size" | "tier">>;
   /** Retired tier letters a `d` may carry, each read as a tier's index. */
   readonly tierAliases?: Readonly<Record<string, number>>;
   /** The clue kind at a cell of which two side by side and alike are both
@@ -706,10 +712,15 @@ export function fillParams(
         p.thorough = v;
       },
     });
+  const unused = (after: "size" | "tier") =>
+    Object.entries(deal.unusedLetters ?? {})
+      .filter(([, at]) => at === after)
+      .map(([letter]) => unusedLetter<FillParams>(letter));
   return {
     paramConfig,
     ...paramsCodec(defaults, [
       deal.square === true ? size(paramConfig, "grid-size") : dims(paramConfig),
+      ...unused("size"),
       // A size the params give, written as the number itself.
       ...settings.map((s) =>
         num(paramConfig, s.letter, {
@@ -768,6 +779,7 @@ export function fillParams(
       ...(deal.tierFlag === undefined ? [] : [tierFlagSegment(deal.tierFlag)]),
       ...(deal.tierAliases === undefined ? [] : [tierAliasSegment(deal.tierAliases)]),
       choice(paramConfig, "d", "difficulty", deal.tierLetters, { full: true }),
+      ...unused("tier"),
       ...(deal.hideFlag === undefined
         ? []
         : [flag(paramConfig, deal.hideFlag.letter, deal.hideFlag.kw, { full: true })]),
@@ -852,8 +864,6 @@ export function fillParams(
   };
 }
 
-/** A bare letter older IDs write for a tier, before the tier's own `d`: read
- * as that tier, and never written. */
 /** A retired tier letter, read after `d` as the tier it stands for and never
  * written (Bricks' `t`, upstream's Tricky, whose boards are Unreasonable). */
 function tierAliasSegment(
@@ -870,6 +880,8 @@ function tierAliasSegment(
   };
 }
 
+/** A bare letter older IDs write for a tier, before the tier's own `d`: read
+ * as that tier, and never written. */
 function tierFlagSegment(
   flag: NonNullable<FillDeal["tierFlag"]>,
 ): ParamsSegment<FillParams> {
@@ -1096,7 +1108,8 @@ export function encodeDesc<C extends Clues<C>>(
         out += String(Math.max(0, numbers.valueAt[c]));
         for (let d = 0; d < SIDES.length; d++) {
           const n = across(sp, c, d);
-          if (n >= 0 && sides.valueAt[sp.edgeOf(c, n)] === c) out += SIDES[d];
+          if (n >= 0 && sides.valueAt[sp.edgeOf(c, n)] === (seg.both ? 1 : c))
+            out += SIDES[d];
         }
         out += ",";
       }
@@ -1211,19 +1224,21 @@ function readLists<C extends Clues<C>>(
 }
 
 /** A `records` segment: a cell's number (0 for none) and the sides whose
- * edge's clue it is the value of, a record a cell, each closed by a comma. */
+ * edge's clue it is the value of, or, where `both`, whose edge's clue is 1,
+ * a record a cell, each closed by a comma. */
 function readRecords<C extends Clues<C>>(
   r: DescReader,
   deal: FillDeal,
   sp: GridSpace,
   clueMax: ClueMax<C>,
-  seg: { readonly records: string; readonly sides: string },
+  seg: { readonly records: string; readonly sides: string; readonly both?: true },
 ): readonly [ClueList, ClueList] {
   const kind = seg.records as keyof C;
   const least = deal.least?.[seg.records] ?? 1;
   const at: number[] = [];
   const v: number[] = [];
-  // The end each edge's clue is valued, -1 for none.
+  // The end each edge's clue is valued, -1 for none; where `both`, one less
+  // than the ends that write it.
   const end = new Int32Array(sp.edges.length).fill(-1);
   for (const c of sp.cells) {
     const n = r.int(0, maxOf(clueMax, kind, sp, c));
@@ -1237,11 +1252,24 @@ function readRecords<C extends Clues<C>>(
       const other = across(sp, c, d);
       if (other < 0) r.fail(DESC_OUT_OF_RANGE);
       const e = sp.edgeOf(c, other);
+      if (seg.both) end[e]++;
       // A clue valued both its ends says two things of one edge.
-      if (end[e] >= 0) r.fail(DESC_CONTRADICTORY);
-      end[e] = c;
+      else if (end[e] >= 0) r.fail(DESC_CONTRADICTORY);
+      else end[e] = c;
     }
     r.expect(",");
+  }
+  if (seg.both) {
+    // An edge written from one end alone says two things of it.
+    if (sp.edges.some((e) => end[e] === 0)) r.fail(DESC_CONTRADICTORY);
+    return [
+      clueList(at, v, sp.cells.length),
+      clueList(
+        sp.edges,
+        sp.edges.map((e) => (end[e] > 0 ? 1 : 0)),
+        sp.edges.length,
+      ),
+    ];
   }
   const edges = sp.edges.filter((e) => end[e] >= 0);
   return [

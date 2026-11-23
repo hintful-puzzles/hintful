@@ -988,6 +988,10 @@
               "pattern": "^[1-9][0-9]*x[1-9][0-9]*([a-z][1-9][0-9]*)*$",
               "description": "The default board, one of `boards`, where it is not the first."
             },
+            "defaultTier": {
+              "type": "string",
+              "description": "The tier the default board is dealt at, one the menu offers it at, where it is not the first (upstream's Adjacent, 5x5 Normal where the menu offers 5x5 from Easy)."
+            },
             "boardTiers": {
               "type": "object",
               "description": "The first and last tier a board of `boards` is offered at, by its `WxH`, where it is not every tier.",
@@ -1278,7 +1282,7 @@
                 "type": "object",
                 "required": ["records", "sides"],
                 "additionalProperties": false,
-                "description": "A record a cell, each closed by a comma: the cell's clue of `records` as a number, 0 for none, then a letter `U`, `R`, `D` or `L` for each side whose clue of `sides`, a clue at an edge whose value is one of its ends, has this cell as its value (upstream's Unequal).",
+                "description": "A record a cell, each closed by a comma: the cell's clue of `records` as a number, 0 for none, then a letter `U`, `R`, `D` or `L` for each side whose clue of `sides`, a clue at an edge whose value is one of its ends, has this cell as its value (upstream's Unequal). Where `sides` is instead valued 0 or 1 and complete, the letter is written from both ends of each edge whose clue is 1 (upstream's Adjacent).",
                 "properties": {
                   "records": { "type": "string" },
                   "sides": { "type": "string" }
@@ -1300,6 +1304,12 @@
             "letter": { "type": "string", "pattern": "^[a-z]$" },
             "tier": { "type": "string" }
           }
+        },
+        "unusedLetters": {
+          "type": "object",
+          "description": "Bare letters older game IDs write for a setting this game has no field for, each after the size or after the tier (Adjacent's `a` after the size, from when upstream dealt it as a mode of Unequal): read, changing nothing, and never written.",
+          "propertyNames": { "pattern": "^[a-z]$" },
+          "additionalProperties": { "enum": ["size", "tier"] }
         },
         "tierAliases": {
           "type": "object",

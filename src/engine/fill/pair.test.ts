@@ -143,8 +143,8 @@ describe("a fill game of two alike pieces", () => {
     expect(decodeParams("8x8dn")).toEqual({ w: 8, h: 8, diff: 1 });
   });
 
-  it("starts on its default board, and offers each board at its tiers, then the variant", () => {
-    expect(game.defaultParams()).toEqual({ w: 6, h: 6, diff: 0 });
+  it("starts on its default board at its default tier, and offers each board at its tiers, then the variant", () => {
+    expect(game.defaultParams()).toEqual({ w: 6, h: 6, diff: 1 });
     const lines = (presetGrid(game.paramConfig, game.menu).submenu ?? []).map((m) =>
       m.params === undefined ? "" : game.encodeParams(m.params, true),
     );

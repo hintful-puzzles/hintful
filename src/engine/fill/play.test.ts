@@ -134,7 +134,7 @@ describe("a fill game's input", () => {
     ]);
     const { board } = play_(start, ui, [[RIGHT_RELEASE, 7]]);
     expect(Array.from(board.values)).toEqual(Array.from(shown.values));
-    expect(ui.drag.live).toBe(false);
+    expect(ui.drag?.live).toBe(false);
   });
 
   it("fills a row with a straight left drag, keeping the square ruled out", () => {

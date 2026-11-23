@@ -1,6 +1,6 @@
 // Compiled by `npm run describe` from src/games/adjacent/adjacent.description.yaml: edit that, not this.
 
-import { type ClueList, type Fire, type GridSpace, type Marks, type Violation, STRIKE, clueAt, freshBinding, heldIn, overDomain, rangeMask, setOf, staleChecking, stoppedAt, undecided } from "../../../engine/solve/describe-runtime.ts";
+import { type ClueList, type Fire, type GridSpace, type Marks, type Violation, STRIKE, clueAt, clueList, freshBinding, heldIn, overDomain, rangeMask, setOf, staleChecking, stoppedAt, undecided } from "../../../engine/solve/describe-runtime.ts";
 
 const DEV = import.meta.env.DEV;
 
@@ -8,6 +8,7 @@ const DEV = import.meta.env.DEV;
  * cells for each cell, its clues by kind, and the sizes a technique or the
  * rules read that the grid does not give. */
 export interface Dealt {
+  given: ClueList;
   bar: ClueList;
 }
 
@@ -62,8 +63,8 @@ export const striking: readonly { id: StrikingId; variation?: string }[] = [
  * does (`describedLadder`). A fill game's names the bindings of a firing
  * that name a clue it reads: a cell's, or a clue's index by its kind. */
 export const techniques = {
-  adjacent: { dealt: true, run: adjacent },
-  adjacentSet: { dealt: true, run: adjacentSet },
+  adjacent: { dealt: true, run: adjacent, reads: {"cells":["a","b"],"clues":{}} },
+  adjacentSet: { dealt: true, run: adjacentSet, reads: {"cells":["a","b"],"clues":{}} },
 } as const;
 
 /** The ladder: each technique's tier, on its scale where that is not the
@@ -114,10 +115,15 @@ export function isAnswer(g: ArrayLike<number>, sp: GridSpace, cl: Dealt): boolea
     }
   }
   if (!(_q1)) return false;
-  for (let _k7 = 0; _k7 < cl.bar.at.length; _k7++) {
-    const _at8 = cl.bar.at[_k7];
-    const _v9 = cl.bar.v[_k7];
-    if (!(((_v9 === 1) === (Math.abs(((g[sp.edgeEnds[2 * _at8]] || -1) - (g[sp.edgeEnds[2 * _at8 + 1]] || -1))) === 1)))) return false;
+  for (let _k7 = 0; _k7 < cl.given.at.length; _k7++) {
+    const _at8 = cl.given.at[_k7];
+    const _v9 = cl.given.v[_k7];
+    if (!(((g[_at8] || -1) === _v9))) return false;
+  }
+  for (let _k10 = 0; _k10 < cl.bar.at.length; _k10++) {
+    const _at11 = cl.bar.at[_k10];
+    const _v12 = cl.bar.v[_k10];
+    if (!(((_v12 === 1) === (Math.abs(((g[sp.edgeEnds[2 * _at11]] || -1) - (g[sp.edgeEnds[2 * _at11 + 1]] || -1))) === 1)))) return false;
   }
   return true;
 }
@@ -172,32 +178,125 @@ export function violations(g0: ArrayLike<number>, sp: GridSpace, cl: Dealt): Vio
   } catch (e) {
     undecided(e);
   }
-  for (let _k11 = 0; _k11 < cl.bar.at.length; _k11++) {
-    const _at12 = cl.bar.at[_k11];
-    const _v13 = cl.bar.v[_k11];
+  for (let _k11 = 0; _k11 < cl.given.at.length; _k11++) {
+    const _at12 = cl.given.at[_k11];
+    const _v13 = cl.given.v[_k11];
     _rd.length = 0;
     _wit = null;
     let _vd14: number = 2;
-    const _lf15 = (): boolean => {
-      return ((_v13 === 1) === (Math.abs((heldIn(g, sp.edgeEnds[2 * _at12], _rd) - heldIn(g, sp.edgeEnds[2 * _at12 + 1], _rd))) === 1));
-    };
     try {
-      _vd14 = _lf15() ? 1 : 0;
+      if (_at12 < 0 || g[_at12] > 0) {
+        if (_at12 >= 0) _rd.push(_at12);
+        _vd14 = (_at12 < 0 ? -1 : g[_at12]) === _v13 ? 1 : 0;
+      } else if (!(_v13 > 0 && _v13 < 32 && (_domain >> _v13) & 1)) {
+        _vd14 = 0;
+      }
     } catch (e) {
       undecided(e);
-      const _x16 = stoppedAt();
-      if (_x16 >= 0) _vd14 = overDomain(g, _x16, _domain, _rd, _lf15);
     }
     if (_vd14 === 0 && _sure === 1) {
-      _out.push({ rule: "clue.bar", clue: _k11, at: (_wit ?? _rd).slice() });
+      _out.push({ rule: "clue.given", clue: _k11, at: (_wit ?? _rd).slice() });
+    }
+  }
+  for (let _k15 = 0; _k15 < cl.bar.at.length; _k15++) {
+    const _at16 = cl.bar.at[_k15];
+    const _v17 = cl.bar.v[_k15];
+    _rd.length = 0;
+    _wit = null;
+    let _vd18: number = 2;
+    const _lf19 = (): boolean => {
+      return ((_v17 === 1) === (Math.abs((heldIn(g, sp.edgeEnds[2 * _at16], _rd) - heldIn(g, sp.edgeEnds[2 * _at16 + 1], _rd))) === 1));
+    };
+    try {
+      _vd18 = _lf19() ? 1 : 0;
+    } catch (e) {
+      undecided(e);
+      const _x20 = stoppedAt();
+      if (_x20 >= 0) _vd18 = overDomain(g, _x20, _domain, _rd, _lf19);
+    }
+    if (_vd18 === 0 && _sure === 1) {
+      _out.push({ rule: "clue.bar", clue: _k15, at: (_wit ?? _rd).slice() });
     }
   }
   return _out;
 }
 
+/** Whether a given clue at `at` valued `v` holds of the whole board `g`. */
+export function clueHolds_given(g: ArrayLike<number>, _sp: GridSpace, at: number, v: number): boolean {
+  return ((g[at] || -1) === v);
+}
+
+/** Whether a bar clue at `at` valued `v` holds of the whole board `g`. */
+export function clueHolds_bar(g: ArrayLike<number>, sp: GridSpace, at: number, v: number): boolean {
+  return ((v === 1) === (Math.abs(((g[sp.edgeEnds[2 * at]] || -1) - (g[sp.edgeEnds[2 * at + 1]] || -1))) === 1));
+}
+
+/** The clues the whole board `g` deals: each kind at each element where
+ * one of its values holds, the first in its values' order; the
+ * partition the deal grew round it; and the sizes the params give. */
+export function deriveClues(g: ArrayLike<number>, sp: GridSpace, _grown: object = {}, _sizes: object = {}): Dealt {
+  const given_at: number[] = [];
+  const given_v: number[] = [];
+  const _a1 = sp.cells;
+  for (let _i2 = 0; _i2 < _a1.length; _i2++) {
+    const v_at = _a1[_i2];
+    const _t3 = sp.w;
+    for (let v_v = 1; v_v <= _t3; v_v++) {
+      if (given_at.at(-1) !== v_at && clueHolds_given(g, sp, v_at, v_v)) { given_at.push(v_at); given_v.push(v_v); }
+    }
+  }
+  const bar_at: number[] = [];
+  const bar_v: number[] = [];
+  const _a4 = sp.edges;
+  for (let _i5 = 0; _i5 < _a4.length; _i5++) {
+    const v_at = _a4[_i5];
+    for (let v_v = 0; v_v <= 1; v_v++) {
+      if (bar_at.at(-1) !== v_at && clueHolds_bar(g, sp, v_at, v_v)) { bar_at.push(v_at); bar_v.push(v_v); }
+    }
+  }
+  return { given: clueList(given_at, given_v, sp.cells.length), bar: clueList(bar_at, bar_v, sp.edges.length) };
+}
+
+/** The values each cell may hold: the board's domain, the same at every cell. */
+export function domainOf(sp: GridSpace, _cl: Dealt, _c: number): number {
+  return rangeMask(1, sp.w);
+}
+
+/** How the player fills the board: the engine's `FillPlay`. */
+export const play = {"numbers":{},"gaps":{"bar":"bar"},"done":{"bar":"bar"},"hintNotes":"implicit","dealt":"given","notes":true} as const;
+
+/** The clue kinds at lines, drawn past each line's end. */
+export const lineClues = [] as const;
+
+/** The preset menu's sizes, smallest first; the first is the default. */
+export const boards = [{"w":5,"h":5},{"w":7,"h":7}] as const;
+
+/** The preset menu beside its grid: the default board, the tiers a board
+ * stops at, and the variant boards. */
+export const menu = {"defaultTier":1,"tiers":[{"w":5,"h":5,"first":0,"last":3},{"w":7,"h":7,"first":2,"last":4}],"variants":[]} as const;
+
+/** What the sizes alone cannot say of a board, and of a board of a tier. */
+export const bounds = {"all":{},"tiers":[{"tier":2,"longer":{"min":5}},{"tier":3,"longer":{"min":5}},{"tier":4,"longer":{"min":5}}]} as const;
+
+/** What each mark of the hint means here (`Game.hint.marks`). */
+export const hintMarks = {"ring":"the cell the step fills in with a number.","strike":"the pencil marks the step crosses out.","outline":"what the step reasons from: the two cells either side of a bar, or of no bar at all (the one whose marks are struck, and \"its neighbor\"), the cells that already account for the numbers being crossed out, the number just placed, or \"the middle cell\" a step weighs and the cells it reads.","stripes":"the row or column the sentence names: \"in this row\". Or the several it names together, such as \"these 2 columns\", where one number fits only the outlined cells."} as const;
+
+/** How the engine deals the board and writes its game ID. */
+export const deal = {"square":true,"sample":{"latin":true},"hide":"given","unusedLetters":{"a":"size"},"id":[{"records":"given","sides":"bar","both":true}],"universes":{"given":"cells","bar":"edges"},"tierLetters":"tekxr","sizes":{"w":{"min":3,"max":31}},"least":{"given":1,"bar":0}} as const;
+
+/** Each clue kind's largest value at an element. */
+export const clueMax = {
+  given(sp: GridSpace, _at: number): number {
+    return Number(sp.w);
+  },
+  bar(_sp: GridSpace, _at: number): number {
+    return Number(1);
+  },
+};
+
 /** The statements a violation names, so a game that draws one its own
  * way names it by a name the description has. */
-export type RuleName = "domain" | "shape.0" | "clue.bar";
+export type RuleName = "domain" | "shape.0" | "clue.given" | "clue.bar";
 
 export interface AdjacentBinding {
   L: number;

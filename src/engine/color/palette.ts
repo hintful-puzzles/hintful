@@ -42,7 +42,6 @@ import { divide, mix, scale, token } from "./color-token.ts";
 import {
   BLUE,
   BLUE_WASH,
-  GRAY,
   GRAY_BOLD,
   GREEN,
   HINT_REFERENCE_COLORS,
@@ -72,13 +71,9 @@ export const INK: Color = [0, 0, 0];
  * frame. The counterpart to {@link INK}, and likewise not {@link WHITE}. */
 export const PAPER: Color = [1, 1, 1];
 
-/** A mid-gray line, for a mark that should recede rather than carry the
- * drawing. The line between two cells of a surface is {@link surfaceGrid}. */
-export const GRID_MID: Color = GRAY;
-
 /** A grid line dark enough to survive a board made mostly of *dark cells* —
- * Pattern, Pearl's white pearls, Spokes' hub outline, Crossing's walls.
- * {@link GRID_MID} would be swallowed by the cells it separates. */
+ * Pattern, Pearl's white pearls, Spokes' hub outline, Crossing's walls. A
+ * mid-gray line would be swallowed by the cells it separates. */
 export const GRID_DARK: Color = GRAY_BOLD;
 
 /**
@@ -396,7 +391,7 @@ export const REGION_DONE: Color = TWO_WASH[0];
  * where the cells are, and never the drawing.
  *
  * Darker than both surfaces in both schemes, so one line closes a plain cell
- * and a lifted one alike. {@link GRID_MID} cannot be it: in the dark scheme it
+ * and a lifted one alike. A fixed mid-gray cannot be it: in the dark scheme it
  * sits on the lifted cell's own lightness, and the line beside a given
  * vanishes.
  */

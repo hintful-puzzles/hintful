@@ -22,8 +22,9 @@ Adjacent, Group, Mathrax, Salad; Undead and Magnets, sent here by
 `born-plain-cell-family` for their candidate notes; Map, whose notes are
 over colors. Needs: candidate notes on the board, which the ladder reads
 as facts; mark-all; the keypad. The Latin solver is already shared, and
-`engine/edge-clue-latin/` already carries Unequal and Adjacent, which is
-where this group starts. This is stage 4 of
+the group started from Unequal and Adjacent, whose shared
+`engine/edge-clue-latin/` `born-candidate-note-family` folded into the
+fill board. This is stage 4 of
 `archive/2026-11-21-architectural-review-blue-sky/design.md` § "The route".
 
 **Regions and partitions.** Palisade, Filling, Separate, Galaxies, Rect,
@@ -65,7 +66,7 @@ against how ready the engine is:
    and judged the same way; then `a-game-is-tested-by-its-data`, so that
    every group's flips move their tests into one format.
 2. Latin squares and candidate notes: the most games, a shared solver, and
-   a start in `edge-clue-latin`.
+   a start in Unequal and Adjacent.
 3. Regions and partitions, then lines and loops: both need answers that
    are not a value a cell, and the first settles that for the second.
 4. Moving pieces.

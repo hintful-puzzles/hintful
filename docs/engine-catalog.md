@@ -101,7 +101,6 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `note-taking-cell.ts` — the shared highlight-and-type mechanic |
 | – `code-rows.ts` — the code-breaking mechanic |
 | – `wires.ts` — the Net/Netslide wire model |
-| – `edge-clue-latin/` — the board Unequal and Adjacent share |
 | – `fill/` — the board of a fill game, laid out from its description |
 | – `edge-hint.ts` — a hint on an edge between squares |
 | `generate/` — random partitions, tilings and placements |
@@ -1128,17 +1127,6 @@ the source along the wires, is the position to hand the win flash. **Only
 the bits `0x0F` are wires; each game owns the high bits**, and the header's
 "0x10 trap" says how they collide. Exemplar: `net/state.ts`.
 
-### `edge-clue-latin/` — the board Unequal and Adjacent share
-
-A Latin square whose clues sit in the gaps between neighboring cells is
-`edge-clue-latin/`: the board and its desc, the moves, the input with its
-spent-clue drag, the cell drawing, the solver's driver and the generator
-(its order deals the boards). The game declares its clue as a `ClueKind` (what it
-says, whether every true one is dealt, whether both ends flag it, its
-compiled ladder and rules, its drawing and its text glyph) and writes its own `Game`,
-its reasons and its hint's sentences. Exemplar: `adjacent/`. A born game
-does all of this from its description on the fill board (`fill/`, Unequal).
-
 ### `fill/` — the board of a fill game, laid out from its description
 
 The whole of a game born from its description, which writes no TypeScript.
@@ -1330,7 +1318,7 @@ hook, `cubeOut` and the family's generator shapes are in
 `latin.compiled.ts`, compiled from `latin.description.yaml` by
 `npm run describe` and never edited by hand; `latinLadder` pairs each with
 its reason, and runs a described game's own on its clues
-([`descriptions.md`](./descriptions.md); exemplar `adjacent/solver.ts`).
+([`descriptions.md`](./descriptions.md); exemplar `towers/solver.ts`).
 `describe-runtime.ts` is what compiled code reads, and the modules under
 `describe-runtime/` hold it: the marks' interface, the numbered grid
 (`describedSpace`, `latinSpace`), kept by shape, and a game's `ClueList`s

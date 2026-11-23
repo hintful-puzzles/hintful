@@ -56,8 +56,8 @@ function topValue<C>(module: FillModule<C>, sp: GridSpace): number {
 /** `ui` as a board of numbers keeps it, which `newUi` gives it: the
  * note-taking cell's fields, and where the board keeps notes its mode and
  * preferences, as every game with notes starts them, the hint's reading the
- * one `play` declares. */
-export function typedUi(ui: FillUi, play: FillPlay): FillUi {
+ * one `play` declares; and no drag of buttons. */
+export function typedUi({ drag: _drag, ...ui }: FillUi, play: FillPlay): FillUi {
   ui.cursorFromKeyboard ??= false;
   if (play.notes === true) {
     ui.pencilMode ??= false;

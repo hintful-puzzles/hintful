@@ -205,10 +205,12 @@ research tools all read through it; the app never does.
 - **A fill game born from its description declares the rest of a game**
   (Clusters, Kakurasu, Mosaic, Norinori, Range, Star Battle, Tents, Unruly): `catalog:` its entry, `play.boards` its menu
   (the first the default unless `default:` names another, dealt at the first
-  tier its menu offers it, `boardTiers:` a board that stops short of a tier,
-  `variants:` the boards after the grid),
-  `play.hintMarks` its legend, `id:` its game ID's grammar and
-  `tierLetters:` its params' tier letters, so upstream's IDs still load.
+  tier its menu offers it unless `defaultTier:` names another,
+  `boardTiers:` a board that stops short of a tier, `variants:` the boards
+  after the grid), `play.hintMarks` its legend, `id:` its game ID's grammar,
+  `tierLetters:` its params' tier letters and `unusedLetters:` the bare
+  letters older IDs write after the size or the tier (Adjacent's `a`), read
+  and never written, so upstream's IDs still load.
   A hand-written game's saves may break when it is moved onto a
   description: the owner approved that for the whole initiative
   (2026-11-22), so a later change states the break and does not ask.
@@ -247,17 +249,25 @@ research tools all read through it; the app never does.
   and the description's own, which strike, tried before the library's
   strikes since a player reads a clue before a set: a firing a leg a cell,
   each worded by the look of its `says`, of the fact its first note is where
-  it words each fact (`fact:`), and recorded under the technique's id; a
+  it words each fact (`fact:`), its `{ring}` the leg's cell and its
+  `{struck}` what the leg strikes, and recorded under the technique's id; a
   board of numbers without notes is refused a rung that strikes, since it
   has nowhere to strike. A
   clue at an edge (`at: edge`) is dealt over the edges; one whose value is
   one of its ends (`ends(at)`, a sign's greater end) is written only by
   `id:`'s `records`, a record a cell of a cell kind's number (0 for none)
   and a letter `URDL` a side whose clue it is the value of, comma-closed
-  (upstream Unequal's). `play.gaps` names each edge kind's painter
-  (`engine/render/pieces/edge.ts`): the board then has a half-tile gap
+  (upstream Unequal's). A `complete` kind valued `range(0, 1)` at every edge
+  (Adjacent's bar) is written by the same record from both ends of each
+  edge whose clue is 1, every other edge's 0; a complete kind is dealt
+  whole, and a hide of it is refused. `play.gaps` names each edge kind's
+  painter (`engine/render/pieces/edge.ts`), which says whether it draws a
+  clue valued an end (`chevron`) or a number (`bar`, nothing where it is 0
+  but its outline where that breaks), and the compiler holds the kind to it:
+  the board then has a half-tile gap
   between its cells, each edge's clue drawn in its gap, red where it breaks,
-  and printed there in the text. `play.done` names the kinds the player may
+  and printed there in the text. A press marks done only a clue its painter
+  draws on a board where it holds. `play.done` names the kinds the player may
   mark done, each with what one is called (`engine/fill/done.ts`): the board
   keeps a flag a clue, by kind and index, so the mark is one capability
   wherever a clue sits, and the game's `doneClues` writes the help's

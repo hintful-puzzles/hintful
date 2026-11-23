@@ -178,6 +178,7 @@ export function playOf(
     boards,
     hintMarks,
     default: byDefault,
+    defaultTier,
     boardTiers,
     variants,
     modifiers,
@@ -237,6 +238,11 @@ export function playOf(
       throw new CompileError(`play gaps: ${k} is no clue kind at an edge`);
     if (!(painter in EDGE_PAINTERS))
       throw new CompileError(`play gaps: no edge painter ${painter}`);
+    const of = EDGE_PAINTERS[painter as keyof typeof EDGE_PAINTERS].of;
+    if ((of === "end") !== isElement(env, k))
+      throw new CompileError(
+        `play gaps: ${painter} draws a clue valued ${of === "end" ? "one of its ends" : "a number"}, and ${k} is not`,
+      );
   }
   // A clue is marked done by a press where it is drawn, and the engine finds
   // a press on a clue in a gap alone; the press goes to the board of numbers'
@@ -315,7 +321,7 @@ export function playOf(
           "/** The preset menu's sizes, smallest first; the first is the default. */",
           `export const boards = ${JSON.stringify(boards.map(sizeOf(json)))} as const;`,
         ]),
-    ...menuOf(json, { boards, byDefault, boardTiers, variants }),
+    ...menuOf(json, { boards, byDefault, defaultTier, boardTiers, variants }),
     ...boundsOf(json, bounds),
     ...(modifiers === undefined
       ? []
@@ -426,10 +432,17 @@ const sizeOf =
  */
 function menuOf(
   json: DescriptionJson,
-  p: Pick<PlayJson, "boards" | "boardTiers" | "variants"> & { byDefault?: string },
+  p: Pick<PlayJson, "boards" | "boardTiers" | "variants" | "defaultTier"> & {
+    byDefault?: string;
+  },
 ): string[] {
-  const { boards, byDefault, boardTiers, variants } = p;
-  if (byDefault === undefined && boardTiers === undefined && variants === undefined)
+  const { boards, byDefault, defaultTier, boardTiers, variants } = p;
+  if (
+    byDefault === undefined &&
+    defaultTier === undefined &&
+    boardTiers === undefined &&
+    variants === undefined
+  )
     return [];
   const tiers = json.tiers ?? [];
   const tierOf = (name: string, where: string): number => {
@@ -442,8 +455,21 @@ function menuOf(
       throw new CompileError(`play ${where}: ${b} is not in boards`);
     return sizeOf(json)(b);
   };
+  // The default board is offered at its tier.
+  const first = boards?.[0];
+  const offered = boardTiers?.[byDefault ?? first ?? ""] ?? [tiers[0], tiers.at(-1)];
+  const dealtAt = defaultTier === undefined ? null : tierOf(defaultTier, "defaultTier");
+  if (
+    dealtAt !== null &&
+    (dealtAt < tierOf(offered[0] ?? "", "defaultTier") ||
+      dealtAt > tierOf(offered[1] ?? "", "defaultTier"))
+  )
+    throw new CompileError(
+      `play defaultTier: the menu does not offer the default board at ${defaultTier}`,
+    );
   const menu = {
     ...(byDefault === undefined ? {} : { default: board(byDefault, "default") }),
+    ...present("defaultTier", dealtAt),
     tiers: Object.entries(boardTiers ?? {}).map(([b, [first, last]]) => ({
       ...board(b, "boardTiers"),
       first: tierOf(first, "boardTiers"),
@@ -563,6 +589,14 @@ function markerKind(d: Description, kind: string): boolean {
   return d.clueKinds.get(kind)?.at === "cell" && valuesOf(d, kind)?.join() === "0,0";
 }
 
+/** Whether a kind is valued 0 or 1 at every element (Adjacent's bar), so a
+ * record writes where it is 1 alone. */
+function flagKind(d: Description, kind: string): boolean {
+  return (
+    d.clueKinds.get(kind)?.complete === true && valuesOf(d, kind)?.join() === "0,1"
+  );
+}
+
 /** Whether a clue kind's value is one of the board's elements (a sign's
  * greater end), not a number. */
 const isElement = (env: Env, kind: string): boolean =>
@@ -586,9 +620,13 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
         throw new CompileError(
           `id: records of ${kind}, which is not a cell's number from 1 up`,
         );
-      if (d.clueKinds.get(seg.sides)?.at !== "edge" || !isElement(env, seg.sides))
+      const sides = d.clueKinds.get(seg.sides);
+      if (
+        sides?.at !== "edge" ||
+        !(isElement(env, seg.sides) || flagKind(d, seg.sides))
+      )
         throw new CompileError(
-          `id: sides of ${seg.sides}, which is not an edge's clue valued one of its ends`,
+          `id: sides of ${seg.sides}, which is not an edge's clue valued one of its ends, nor 0 or 1 at every edge`,
         );
       continue;
     }
@@ -757,8 +795,12 @@ export function dealOf(
   if (hideJson !== undefined && hide === undefined)
     throw new CompileError("deal hide: a clue kind, or a list of them");
   const hides = hide !== undefined;
-  for (const k of typeof hide === "string" ? [hide] : (hide ?? []))
-    if (!d.clueKinds.has(k)) throw new CompileError(`deal hide: no clue kind ${k}`);
+  for (const k of typeof hide === "string" ? [hide] : (hide ?? [])) {
+    const c = d.clueKinds.get(k);
+    if (c === undefined) throw new CompileError(`deal hide: no clue kind ${k}`);
+    if (c.complete)
+      throw new CompileError(`deal hide: ${k} is complete, so none of it is hidden`);
+  }
   const thorough = thoroughOf(json);
   if (thorough !== null) {
     if (!hides)
@@ -884,6 +926,18 @@ export function dealOf(
     [...Object.values(options).map((o) => o.letter), "d"].includes(tierFlag.letter)
   )
     throw new CompileError(`tierFlag: the letter ${tierFlag.letter} is taken`);
+  const unusedLetters = json.unusedLetters ?? null;
+  const taken = [
+    ...settings.map((s) => s.letter),
+    ...Object.values(options).map((o) => o.letter),
+    ...(thorough === null ? [] : [thorough.letter]),
+    ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
+    ...(tierFlag === null ? [] : [tierFlag.letter]),
+    "d",
+  ];
+  for (const letter of Object.keys(unusedLetters ?? {}))
+    if (taken.includes(letter))
+      throw new CompileError(`unusedLetters: the letter ${letter} is taken`);
   const tierAliases = tierAliasesOf(json, tiers, tierLetters);
   const { grid } = json.space;
   const deal = {
@@ -895,6 +949,7 @@ export function dealOf(
     ...(hides ? { hide } : {}),
     ...(stripFrom === undefined ? {} : { stripFrom }),
     ...present("tierFlag", tierFlag),
+    ...present("unusedLetters", unusedLetters),
     ...present("tierAliases", tierAliases),
     ...(typeof unpair === "string" ? { unpair } : {}),
     ...present("latin", latin),
@@ -911,7 +966,10 @@ export function dealOf(
             ...(grow.closed === undefined ? {} : { closed: grow.closed }),
           },
         }),
-    id,
+    // A record's sides of a kind valued 0 or 1 are written from both ends.
+    id: id.map((seg) =>
+      "records" in seg && flagKind(d, seg.sides) ? { ...seg, both: true } : seg,
+    ),
     universes,
     ...(partitions.length === 0 ? {} : { partitions }),
     tierLetters,

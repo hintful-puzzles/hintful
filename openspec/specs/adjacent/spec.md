@@ -2,10 +2,11 @@
 
 ## Purpose
 Adjacent, the Latin-square puzzle whose bars mark exactly the neighbors one
-apart, upstream's Adjacent mode of Unequal. It plays on the edge-clue Latin
-square it shares with Unequal (`unequal`), whose spec holds the board,
-controls and look the two share. This spec holds what is Adjacent's own: the
-bar, its params, its deal, its ladder and its hint's words.
+apart, upstream's Adjacent mode of Unequal. It is born from its description,
+and plays on the fill board's board of numbers (`described-fill-game`),
+whose spec holds what every born game shares. This spec holds what is
+Adjacent's own: the bar, its params, its deal, its ladder, its look and its
+hint's words.
 
 ## Requirements
 
