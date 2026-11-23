@@ -1,0 +1,9 @@
+ok  climbing   dotHas                         3  sound    (want sound   )     9 queries    0.1s
+ok  climbing   dotHas (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/climbing/climbing.description.yaml#dotHas: recorded sound, proved whole on all 1 boards
+ok  climbing   lastRoom                       3  sound    (want sound   )     9 queries    0.1s
+ok  climbing   lastRoom (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/climbing/climbing.description.yaml#lastRoom: recorded sound, proved whole on all 1 boards
+ok  climbing   alone                          3  sound    (want sound   )     9 queries    0.1s
+ok  climbing   alone (planted)                3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/climbing/climbing.description.yaml#alone: recorded sound, proved whole on all 1 boards

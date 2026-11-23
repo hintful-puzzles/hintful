@@ -1,0 +1,97 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: one of two pieces on every square, each touching at
+# least two of its own, and a dot on a square touching exactly one, for the
+# fill engine's tests of a sample mended until no rule breaks, draws that
+# climb toward a board of the tier, and dots alike side by side taken off, on
+# a description that names no game.
+game: climbing
+produces: shading
+sizes:
+  w: { min: 2, max: 12 }
+  h: { min: 2, max: 12 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # 1 where c holds a dot, 0 where it does not.
+  dot(c): "count(k in {c} where clue(dot, k) != none)"
+  # The squares beside c of its own piece.
+  same(c): "count(m in adj4(c) where value(m) = value(c))"
+  # The empty squares beside c.
+  open(c): "{m in adj4(c) where not known(m)}"
+  # The squares beside c that hold d or may yet.
+  room(c, d): "count(m in adj4(c) where not known(m) or value(m) = d)"
+clues:
+  # A dot: its piece, and exactly one square beside it of the same.
+  dot: { at: cell, value: "range(1, 2)", means: "value(at) = v and count(m in adj4(at) where value(m) = v) = 1" }
+shape:
+  - "forall c in cells where clue(dot, c) = none: count(m in adj4(c) where value(m) = value(c)) >= 2"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: put a block in it, key: "1", glyph: " 1 ", paint: block }
+    2: { does: put a disc in it, key: "2", glyph: " 2 ", paint: disc }
+  primary: 1
+  secondary: 2
+  dealt: dot
+  boards: [5x5]
+  hintMarks:
+    ring: the square the step fills.
+    outline: the tile the step reasons from.
+deal:
+  answer: >-
+    a piece on each square at random, a square breaking a rule turned to the
+    other until none is left; after a board the deal refused, the squares the
+    ladder decided on it are kept and the rest drawn
+  dot: on every square beside exactly one of its own, then two alike side by side both taken off
+  tier: >-
+    one of the tiers, the board finished at it and not at the tier below; one
+    the tier below finishes has a square turned, and is drawn again
+  sample:
+    scatter: { value: 1, share: 0.5, each: true }
+    rest: 2
+    mend: true
+    climb: true
+  unpair: dot
+# Each square's dot, a block's uppercase.
+id:
+  - dots: dot
+    cases: [2, 1]
+tiers: [Easy, Unreasonable]
+names:
+  dotHas: "a dot that has its one"
+  lastRoom: "a tile needing every open square beside it"
+  alone: "a square that could not touch two of a piece"
+techniques:
+  - id: dotHas
+    tier: Easy
+    for: >-
+      k in cells where clue(dot, k) != none
+      and count(m in adj4(k) where value(m) = clue(dot, k)) >= 1,
+      O = open(k) where |O| > 0
+    conclude: "forall x in O: place(x, 3 - clue(dot, k))"
+    says:
+      marks: { outline: "{k}" }
+      look: "{outline: this dot} already touches its one of its piece"
+      move: "{ring: its open square | its open squares} must hold the other piece"
+  - id: lastRoom
+    tier: Easy
+    for: >-
+      c in cells where known(c),
+      O = open(c) where |O| > 0 and 2 - dot(c) - same(c) = |O|
+    conclude: "forall x in O: place(x, value(c))"
+    says:
+      marks: { outline: "{c}" }
+      look: "{outline: this tile} needs every open square beside it"
+      move: "{ring: its open square | its open squares} must hold its piece"
+  - id: alone
+    tier: Easy
+    for: "x in cells where not known(x) and clue(dot, x) = none, d in domain where room(x, d) < 2"
+    conclude: "place(x, 3 - d)"
+    says:
+      marks: { outline: "{x}" }
+      look: "{ring: this square} could never touch two of the one piece"
+      move: "it must hold the other"

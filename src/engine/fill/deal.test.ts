@@ -6,18 +6,21 @@
  * On `fleet`, a piece at a time as a tally says, a value no deal gives and a
  * flag that hides more; on `walling`, walls laid first at an option's share
  * and symmetry, each left where its number is hidden; on `mirroring`, a hide
- * symmetric under a half turn, one less thorough, and a kind no deal deals.
- * Upstream's game ID
+ * symmetric under a half turn, one less thorough, and a kind no deal deals;
+ * on `climbing`, draws mended until no rule breaks and climbing toward the
+ * tier, with dots alike side by side taken off. Upstream's game ID
  * grammar is each game's own cases' (`tents.cases.yaml`'s `ids` and
  * `params`).
  */
 
 import { describe, expect, it } from "vitest";
+import * as climbing from "../../generated/engine/testing/fixtures/climbing/climbing.compiled.ts";
 import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
+import { newDealCensus, takingCensus } from "../contract/deal-census.ts";
 import { descValue } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
 import { clueList } from "../solve/describe-runtime.ts";
@@ -328,5 +331,73 @@ describe("a hide that keeps its clues symmetric, and may go less far", () => {
     );
     expect(Array.from(read.given.at)).toEqual([4]);
     expect(Array.from(read.given.v)).toEqual([2]);
+  });
+});
+
+describe("draws mended and climbing toward the tier, alike dots unpaired", () => {
+  type Deal = typeof climbing.deal;
+  const seeds = Array.from({ length: 8 }, (_, i) => `climb-${i}`);
+  const sample = climbing.deal.sample as Readonly<Record<string, unknown>>;
+  /** The deal with `sample` and the rest changed as given. */
+  const changed = (s: Readonly<Record<string, unknown>>, rest = {}): Deal =>
+    ({ ...climbing.deal, sample: { ...sample, ...s }, ...rest }) as unknown as Deal;
+  /** The middle of the tries every retry guard took to deal a board of `w`
+   * at `diff` from each seed, under `deal`: a climb caught where it cannot get
+   * out tries a hundred times before it starts over, which a total would
+   * read. */
+  const triesMid = (deal: Deal, w: number, diff: number): number => {
+    const each = seeds.map((seed) => {
+      const census = newDealCensus();
+      takingCensus(census, () =>
+        dealFill(climbing, deal, { w, h: w, diff }, randomNew(seed)),
+      );
+      return [...census.tries.values()].reduce((s, n) => s + n, 0);
+    });
+    return each.sort((a, b) => a - b)[seeds.length / 2];
+  };
+  /** The dots alike side by side on boards of `w` dealt under `deal`, and
+   * each board checked to finish on its answer at the lowest tier. */
+  const pairs = (deal: Deal, w: number): number => {
+    const sp = spaceOf(climbing, { w, h: w });
+    let n = 0;
+    for (const seed of seeds) {
+      const { desc, aux } = dealFill(
+        climbing,
+        deal,
+        { w, h: w, diff: 0 },
+        randomNew(seed),
+      );
+      const { dot } = descValue(
+        decodeDesc<climbing.Dealt>(climbing.deal, sp, climbing.clueMax, desc),
+      );
+      const solved = solveBoard(climbing, newBoard(climbing, w, w, { dot }), 0);
+      expect(Array.from(solved.values, (v) => v.toString(36)).join("")).toBe(aux);
+      for (const [i, c] of dot.at.entries())
+        for (const o of sp.adj4[c])
+          if (o > c && dot.byAt[o] >= 0 && dot.v[dot.byAt[o]] === dot.v[i]) n++;
+    }
+    return n;
+  };
+
+  it("mends a draw until no rule breaks, in place of drawing again", () => {
+    // 3, and 47 unmended, 2026-11-23.
+    expect(triesMid(climbing.deal, 6, 0) * 4).toBeLessThan(
+      triesMid(changed({ mend: undefined }), 6, 0),
+    );
+  });
+
+  it("keeps what the ladder decided on a draw it refused", () => {
+    // 3, and 22 with every draw sampled afresh, 2026-11-23.
+    expect(triesMid(climbing.deal, 6, 0)).toBeLessThan(8);
+  });
+
+  it("turns a cell of a board the tier below finishes", () => {
+    // 24, and 202 with no cell turned, 2026-11-23.
+    expect(triesMid(climbing.deal, 5, 1)).toBeLessThan(100);
+  });
+
+  it("takes off two dots alike side by side, and finishes without them", () => {
+    expect(pairs(climbing.deal, 6)).toBe(0);
+    expect(pairs(changed({}, { unpair: undefined }), 6)).toBeGreaterThan(0);
   });
 });

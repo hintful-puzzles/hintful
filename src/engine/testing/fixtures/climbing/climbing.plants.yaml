@@ -1,0 +1,18 @@
+# A defect planted in each of the fixture's techniques, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A dot with none of its piece beside it read as having its one.
+  dotHas:
+    for: >-
+      k in cells where clue(dot, k) != none
+      and count(m in adj4(k) where value(m) = clue(dot, k)) >= 0,
+      O = open(k) where |O| > 0
+  # A tile needing all but one of its open squares read as needing them all.
+  lastRoom:
+    for: >-
+      c in cells where known(c),
+      O = open(c) where |O| > 0 and 2 - dot(c) - same(c) + 1 >= |O|
+  # A square with room for two of a piece read as having too little.
+  alone:
+    for: "x in cells where not known(x) and clue(dot, x) = none, d in domain where room(x, d) < 3"

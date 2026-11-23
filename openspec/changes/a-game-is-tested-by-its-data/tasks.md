@@ -168,13 +168,23 @@
                   board finishes without, and one that is not leaves some.
                   Seen to fail with the half-turn units, the thorough
                   setting (each way) and the never kind planted off.
-            - [ ] Next: the 12 left in `NO_FIXTURE_YET`, grouped by what
+            - [x] `climbing`: `deal.sample.mend`, `deal.sample.climb` and
+                  `deal.unpair`, on two pieces each touching two of its own
+                  and dots on those touching one (`deal.test.ts`). Each
+                  step's worth is the tries it saves, so each test reads the
+                  middle of eight seeds' tries (a stuck climb tries a hundred
+                  times before it starts over): mended against unmended in
+                  the test, the keep and the turn against a bound with the
+                  planted figures beside it. Unpaired boards show no alike
+                  dots side by side, and the same deal without `unpair`
+                  shows some. Seen to fail with the mend, the keep, the turn
+                  and the unpair each planted off.
+            - [ ] Next: the 9 left in `NO_FIXTURE_YET`, grouped by what
                   one board can show: the deal's (`grow`, `latin`, `oneIn`,
-                  `stripFrom`, `unpair`, and `sample`'s `climb`,
-                  `dominoes`, `mend`, `picture`), and `produces: links`,
-                  `space.grid.hexagon`, `space.regions`. A Clusters-like
-                  climb fixture would take `climb`, `mend` and `unpair`. `stripFrom` changes only which draw a
-                  strip starts from, so its test needs a way to see that.
+                  `stripFrom`, and `sample`'s `dominoes`, `picture`), and
+                  `produces: links`, `space.grid.hexagon`, `space.regions`.
+                  `stripFrom` changes only which draw a strip starts from,
+                  so its test needs a way to see that.
 
 ## 4. The born games
 
