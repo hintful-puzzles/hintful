@@ -408,6 +408,71 @@ cursor over the grid's edge.
 - **WHEN** the player presses outside the grid with the preference off
 - **THEN** it is on, and `interpretMove` returns `UI_UPDATE`
 
+### Requirement: A born game's params may give a tally of pieces
+
+`play.tally` SHALL name a clue at the board of two fields, a length and its
+count, that the params give: a size by its letter after the grid's and the
+counts after a comma at the end, one of the longest and one more of each
+shorter by default. Params SHALL be refused where the size is not smaller
+than a side, no piece is counted, or the pieces cannot be laid.
+
+#### Scenario: Boats' fleet
+
+- **WHEN** `6x6f3dhS,3,2,1` is decoded and encoded without the tier
+- **THEN** it is `6x6f3,3,2,1`, and `4x4f3de,9,9,9` is refused as not fitting
+
+### Requirement: A born game's sample may be the tally's pieces
+
+`sample: pieces` SHALL lay the tally's pieces as straight runs of a value, the
+longest first, each at a random place in a random stretch of a row or column
+holding no piece, none touching another even at a corner. A tally SHALL be
+drawn beneath the board, a piece struck through once that many are whole,
+and red where more are.
+
+#### Scenario: A dealt fleet is whole
+
+- **WHEN** a Boats board is dealt and solved
+- **THEN** its boats of each length are as many as the fleet counts
+
+### Requirement: A born game's hide may be the player's setting
+
+`deal.hideFlag` SHALL be a setting written after the tier by its letter,
+under which the deal hides its `kind` in one random order with `deal.hide`'s,
+and refuses a board that hides none of it. `deal.withhold` SHALL name values
+a deal never derives.
+
+#### Scenario: Remove numbers
+
+- **WHEN** a Boats board is dealt with Remove numbers on
+- **THEN** at least one row's or column's number is hidden, and no given
+  square is a segment of unknown shape
+
+### Requirement: A born game's ID may close and hide numbers and name values by letters
+
+`numbers` SHALL write `hidden`'s character for a clue not shown and, where
+`closed`, a comma after each. A `glyphs` segment SHALL write a cell kind's
+values by letters, runs of empty cells `a` to `z` between them and the last
+run dropped.
+
+#### Scenario: An upstream Boats ID
+
+- **WHEN** `6x6f3deS,3,2,1:2,2,1,1,0,4,1,-,3,1,-,1,WaWWgTLqWaW` is opened
+- **THEN** its desc is written back the same
+
+### Requirement: A born game's piece may run as one hull
+
+A painter that `runs` SHALL be told the sides a piece joins along its line: a
+given one's from the answer, any other's from the squares round it, the
+edge, a decided other value and, once the tally's pieces are all placed, an
+open square shutting it; and told where its way is still open. `play.shape`
+SHALL draw a cell kind as its cell's piece, never as a number.
+
+#### Scenario: A boat between water and a segment
+
+- **WHEN** a placed segment has water left, above and below and a segment on
+  its right
+- **THEN** it is drawn as its boat's left end
+
 ## MODIFIED Requirements
 
 ### Requirement: A fill game is born from its description

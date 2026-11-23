@@ -1,1160 +1,344 @@
 /**
- * Boats — behavioral tests (tier 1) plus render scenarios (tier 2.5).
- *
- * This file covers what lies downstream of `newDesc`: input mapping,
- * `executeMove`'s shape resolution and completion check, the mistake overlay,
- * and the frame the player actually sees (docs/testing.md § "What a new game
- * ships").
+ * Boats, born from its description: what only this game's statements
+ * decide. The engine's own tests read fill games for the board, the input,
+ * the deal and the hint (`engine/fill/*.test.ts`), and the cross-game guards
+ * reach it as a registered game. What is left here is upstream's IDs and
+ * params, the fleet the deal lays and the shapes it gives, the fleet beneath
+ * the board, a wrong square outlined by Check & Save, and each rung's
+ * pinned board.
  */
 
 import { describe, expect, it } from "vitest";
-import {
-  DESC_OUT_OF_RANGE,
-  DESC_TOO_LONG,
-  DESC_TOO_SHORT,
-  descBadCharacter,
-  validateDesc,
-} from "../../engine/contract/desc-error.ts";
-import { UI_UPDATE } from "../../engine/contract/game.ts";
-import { RetryLimitExceeded } from "../../engine/contract/retry-limit.ts";
-import { paramsError, UnreadableParams } from "../../engine/game-id/params.ts";
-import {
-  BACKSPACE,
-  CURSOR_DOWN,
-  CURSOR_RIGHT,
-  CURSOR_SELECT,
-  CURSOR_SELECT2,
-  LEFT_BUTTON,
-  LEFT_DRAG,
-  LEFT_RELEASE,
-  MOD_CTRL,
-  RIGHT_BUTTON,
-  RIGHT_DRAG,
-  RIGHT_RELEASE,
-} from "../../engine/input/pointer.ts";
+import { COL_ERROR } from "../../engine/color/roles.ts";
+import { DESC_OUT_OF_RANGE } from "../../engine/contract/desc-error.ts";
+import { listOf, spaceOf } from "../../engine/fill/board.ts";
+import { encodeDesc } from "../../engine/fill/game-id.ts";
+import { wholePieces } from "../../engine/fill/tally-display.ts";
 import { Midend } from "../../engine/midend/midend.ts";
-import { randomNew, randomUpto } from "../../engine/random/index.ts";
-import {
-  describeAbsentTiers,
-  describeDealtTiers,
-} from "../../engine/testing/absent-tiers.ts";
-import { preferredDrawState } from "../../engine/testing/preferred-draw-state.ts";
-import { leafPresets } from "../../engine/testing/presets.ts";
-import { RecordingDrawing } from "../../engine/testing/recording-drawing.ts";
+import { randomNew } from "../../engine/random/index.ts";
+import { describeHintPins } from "../../engine/testing/hint-positions.ts";
 import { renderScenario } from "../../engine/testing/render-scenario.ts";
-import { fleetFits, newBoatsDesc } from "./generator.ts";
-import { boatsGame } from "./index.ts";
+import * as boats from "../../generated/games/boats/boats.compiled.ts";
+import { game } from "../../generated/games/boats/boats.game.ts";
 
-const refusal = (p: BoatsParams, full: boolean) => paramsError(boatsGame, p, full);
+const SHIP = 1;
+const WATER = 2;
 
-/** Every line of the menu, in order. */
-const PRESETS = leafPresets(boatsGame).map((l) => l.params);
-/** The menu's `i`th line, with a fleet of its own to change. */
-const presetParams = (i: number): BoatsParams => ({
-  ...PRESETS[i],
-  fleetData: [...PRESETS[i].fleetData],
-});
+/** Boards upstream's generator and the hand-written port dealt. */
+const UPSTREAM = [
+  "7x9f4dh,4,3,2,1:5,3,1,3,3,1,4,3,3,2,2,0,2,2,4,2,jCzyW",
+  "6x6f3deS,3,2,1:2,2,1,1,0,4,1,-,3,1,-,1,WaWWgTLqWaW",
+  "10x10f4dtS,4,3,2,1:1,1,5,-,2,4,2,2,-,1,1,1,3,1,0,5,0,5,1,3,bWeWpTcRyCvW",
+  "10x10f4dhS,4,3,2,1:2,4,3,0,2,1,0,3,2,3,1,3,1,5,0,-,3,-,-,0,nWtRcRzaBuR",
+];
 
-import { COL_ERROR, COL_FLASH, COL_FLASH_LEAD } from "../../engine/color/roles.ts";
-import { type Flash, NO_FLASH } from "../../engine/render/win-wave.ts";
-import { expectWinFlashTravels, winFlashRun } from "../../engine/testing/win-flash.ts";
-import {
-  type BoatsDrawState,
-  COL_COLLISION_TEXT,
-  COL_GIVEN,
-  COL_SHIP,
-  COL_WATER,
-  computeSize,
-  fleetLayout,
-  fleetRows,
-  PREFERRED_TILE_SIZE,
-} from "./render.ts";
-import {
-  brokenMarks,
-  FE_FLEET,
-  findMistakes,
-  solveBoats,
-  solveToGrid,
-} from "./solver.ts";
-import {
-  type BoatsMove,
-  type BoatsParams,
-  type BoatsState,
-  type BoatsUi,
-  boardOf,
-  DIFF_EASY,
-  DIFF_HARD,
-  DIFF_NORMAL,
-  DIFF_TRICKY,
-  decodeFleet,
-  decodeParams,
-  defaultFleet,
-  EMPTY,
-  encodeDesc,
-  encodeFleet,
-  encodeParams,
-  isShip,
-  newState,
-  newUi,
-  SHIP_LEFT,
-  SHIP_RIGHT,
-  SHIP_SINGLE,
-  SHIP_VAGUE,
-  textFormat,
-  WATER,
-} from "./state.ts";
-import { adjustShips, checkFleet, countShips } from "./validate.ts";
+/** A board from its game ID. */
+const loaded = (id: string) => {
+  const [params, desc] = id.split(":");
+  return game.newState(game.decodeParams(params), desc);
+};
 
-const params = (over: Partial<BoatsParams> = {}): BoatsParams => ({
-  w: 6,
-  h: 6,
-  fleet: 3,
-  fleetData: defaultFleet(3),
-  diff: DIFF_EASY,
-  strip: false,
-  ...over,
-});
+/** A board's clues of `kind`. */
+const list = (b: ReturnType<typeof loaded>, kind: "n" | "seg") => listOf(b.dealt, kind);
 
-/** Reach into a driven Midend for its live state. */
-function stateOf(
-  me: Midend<BoatsParams, BoatsState, BoatsMove, BoatsUi, BoatsDrawState>,
-): BoatsState {
-  return (me as unknown as { state: BoatsState }).state;
-}
+/** What a pasted ID opens as: its params, or the refusal. */
+const opened = (id: string) => {
+  const me = new Midend(game);
+  return me.newGameFromId(id) ?? me.getParams();
+};
 
-/** Generate a board deterministically, for the tests that need a real one. */
-function generated(p: BoatsParams, seed: string): BoatsState {
-  const { desc } = newBoatsDesc(p, randomNew(seed));
-  return newState(p, desc);
-}
+/** The board's answer. */
+const answer = (b: ReturnType<typeof loaded>) => {
+  const solved = game.solve(b, b);
+  if (!solved.ok) throw new Error(solved.error);
+  return game.executeMove(b, solved.move);
+};
 
-// --- params ----------------------------------------------------------------
+/** The hand-written port's moves on `id`, each a rectangle whose empty
+ * squares it fills with a boat (`B`) or water (`W`), as the fill board's
+ * edits, made in turn. */
+const fills = (id: string, json: string) => {
+  let b = loaded(id);
+  const moves = JSON.parse(json) as {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+    to: "B" | "W";
+  }[];
+  return moves.map(({ x0, y0, x1, y1, to }) => {
+    const set: number[] = [];
+    for (let y = y0; y <= y1; y++)
+      for (let x = x0; x <= x1; x++)
+        if (b.values[y * b.w + x] === 0)
+          set.push(y * b.w + x, to === "B" ? SHIP : WATER);
+    const edit = { set };
+    b = game.executeMove(b, edit);
+    return edit;
+  });
+};
 
-describe("boats params", () => {
-  it("omits the difficulty and strip flag from a non-full encoding", () => {
-    const p = params({ diff: DIFF_HARD, strip: true });
-    expect(encodeParams(p, false)).toBe("6x6f3,3,2,1");
-    expect(encodeParams(p, true)).toBe("6x6f3dhS,3,2,1");
+describe("boats", () => {
+  it("reads upstream's IDs and writes the desc back", () => {
+    for (const id of UPSTREAM) {
+      expect(opened(id), id).toBe(id.split(":")[0]);
+      const b = loaded(id);
+      expect(encodeDesc(boats.deal, spaceOf(boats, b), b.dealt), id).toBe(
+        id.split(":")[1],
+      );
+    }
+    // A hidden number is none, and a given square is its shape: the rows'
+    // numbers come after the columns' in the ID, and its second row's is
+    // hidden.
+    const b = loaded(UPSTREAM[1]);
+    expect(Array.from(list(b, "n").at).slice(0, 2)).toEqual([0, 2]);
+    expect(Array.from(list(b, "n").v).slice(0, 2)).toEqual([1, 3]);
+    expect(Array.from(list(b, "seg").at).slice(0, 2)).toEqual([0, 2]);
+    expect(Array.from(list(b, "seg").v).slice(0, 2)).toEqual([2, 2]);
   });
 
-  it("decodes a square form with no explicit height", () => {
-    const p = decodeParams("7f2,2,1");
-    expect([p.w, p.h, p.fleet]).toEqual([7, 7, 2]);
-  });
-
-  it("refuses a character in the fleet that is not a size or a comma", () => {
-    expect(() => decodeParams("6x6f3de,3,x,1")).toThrow(UnreadableParams);
-    expect(() => decodeParams("6x6f3de3,2,1")).toThrow(UnreadableParams);
-    expect(decodeParams("6x6f3de,3,2,1").fleetData).toEqual([3, 2, 1]);
-  });
-
-  it("names the field a refusal is about", () => {
-    expect(refusal(params({ w: 100 }), true)).toBe("Width must be at most 99.");
-    expect(refusal(params({ h: 100 }), true)).toBe("Height must be at most 99.");
-    expect(refusal(params({ fleet: 0, fleetData: [] }), true)).toBe(
-      "Fleet size must be at least 1.",
+  it("writes its params as upstream did, the fleet at the end", () => {
+    for (const s of ["7x9f4dh,4,3,2,1", "6x6f3deS,3,2,1", "5x5f2dt,0,2"]) {
+      const p = game.decodeParams(s);
+      expect(game.encodeParams(p, true)).toBe(s);
+    }
+    // Without a fleet size, upstream's four; the tier and the flag are the
+    // full ID's alone.
+    expect(game.encodeParams(game.decodeParams("8x8"), true)).toBe("8x8f4de,4,3,2,1");
+    expect(game.encodeParams(game.decodeParams("8x8f3dtS,1,1,1"), false)).toBe(
+      "8x8f3,1,1,1",
     );
-    expect(refusal(params({ w: 10, h: 10, fleet: 10 }), true)).toBe(
-      "Fleet size must be at most 9.",
-    );
-    expect(refusal(params({ w: 2, h: 2, fleet: 3 }), true)).toBe(
+  });
+
+  it("refuses a fleet the board cannot take, with upstream's words", () => {
+    const refused = (s: string) => game.validateParams?.(game.decodeParams(s), true);
+    expect(refused("4x4f5de")).toBe(
       "Fleet size must be smaller than the width and height.",
     );
-    expect(refusal(params({ fleet: 3, fleetData: [0, 0, 0] }), true)).toBe(
-      "Fleet must contain at least 1 boat.",
-    );
+    expect(refused("4x4f3de,0,0,0")).toBe("The fleet must contain at least 1 piece.");
+    expect(refused("4x4f3de,9,9,9")).toBe("The fleet does not fit into the grid.");
+    expect(refused("3x3f1dn,1")).toMatch(/Normal/);
+    expect(refused("3x3f1de,1")).toBeNull();
   });
 
-  it("rejects a fleet that cannot physically fit, in either orientation", () => {
-    // Measured against the C: the default 3,2,1 pyramid needs a 5x5.
-    expect(refusal(params({ w: 5, h: 4 }), true)).toBe(
-      "The fleet does not fit into the grid.",
-    );
-    expect(refusal(params({ w: 4, h: 5 }), true)).toBe(
-      "The fleet does not fit into the grid.",
-    );
-    expect(refusal(params({ w: 5, h: 5 }), true)).toBeNull();
+  it("refuses a desc that is not one", () => {
+    expect(opened("3x3f1de,1:0,1,0,0,1,0,")).toBe("3x3f1de,1");
+    expect(opened("3x3f1de,1:0,1,0,0,1,0,dS")).toBe("3x3f1de,1");
+    expect(opened("3x3f1de,1:0,1,0,0,1,0,dX")).toMatch(/\.$/);
+    expect(opened("3x3f1de,1:0,1,0,0,1,0,dSz")).toMatch(/\.$/);
+    expect(opened("3x3f1de,1:0,1,0,0,1,4,")).toBe(DESC_OUT_OF_RANGE);
+    expect(opened("3x3f1de,1:0,1,0,0,1,0")).toMatch(/\.$/);
   });
 
-  it("encodes and decodes a custom fleet, padding a short list with zeroes", () => {
-    expect(encodeFleet([3, 2, 1], 3)).toBe("3,2,1");
-    expect(decodeFleet(",3,2", 3)).toEqual([3, 2, 0]);
-    expect(decodeFleet("2,2,2", 3)).toEqual([2, 2, 2]);
-    expect(defaultFleet(4)).toEqual([4, 3, 2, 1]);
-  });
-
-  it("uses the default fleet when the game ID names none", () => {
-    expect(decodeParams("8x8f4").fleetData).toEqual([4, 3, 2, 1]);
-  });
-});
-
-// --- desc codec ------------------------------------------------------------
-
-describe("boats desc codec", () => {
-  it("round-trips a generated description", () => {
-    const p = params();
-    const state = generated(p, "boats-codec-1");
-    expect(encodeDesc(p.w, p.h, state.borderClues, state.gridClues)).toBe(
-      newBoatsDesc(p, randomNew("boats-codec-1")).desc,
-    );
-  });
-
-  it("drops the trailing run of clue-less squares, as upstream does", () => {
-    // Upstream's encoder only emits a run when it meets a clue or hits the
-    // 26-square cap, so whatever is left at the end is simply dropped — and the
-    // decoder is fine with it, because those squares are empty anyway.
-    const border = new Int32Array(6).fill(1);
-    // 3x3 with one clue: the two squares after it are never flushed.
-    const clues = new Int8Array(9);
-    clues[6] = WATER;
-    expect(encodeDesc(3, 3, border, clues)).toBe("1,1,1,1,1,1,fW");
-    // An all-empty grid therefore encodes as no grid part at all, as upstream's
-    // C writes it (its 4x4 Easy board's desc ends at its last comma).
-    expect(encodeDesc(3, 3, border, new Int8Array(9))).toBe("1,1,1,1,1,1,");
-  });
-
-  it("splits a run longer than 26 squares", () => {
-    const border = new Int32Array(20).fill(0);
-    const clues = new Int8Array(100);
-    clues[29] = WATER;
-    const desc = encodeDesc(10, 10, border, clues);
-    expect(desc).toContain("zcW"); // 26 + 3 empties, then the clue
-  });
-
-  it("accepts a short description but rejects an overlong grid", () => {
-    const p = params();
-    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,1,")).toBeNull();
-    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,1,zz")).toBe(
-      DESC_TOO_LONG,
-    );
-    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_TOO_SHORT);
-    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,1,1,")).toBe(
-      DESC_TOO_LONG,
-    );
-    expect(validateDesc(boatsGame, p, "1,1,1,1,1,1,1,1,1,1,1,1,Q")).toBe(
-      descBadCharacter("Q"),
-    );
-  });
-
-  it("reads exactly what the encoder writes", () => {
-    const v = (desc: string) => validateDesc(boatsGame, params(), desc);
-    const border = "1,1,1,1,1,1,1,1,1,1,1,1,";
-    expect(v(`${border}ziW`)).toBeNull(); // 26 + 9 empty squares, then a clue
-    expect(v(`${border}ziWS`)).toBe(DESC_TOO_LONG);
-    expect(v(`${border}zk`)).toBe(DESC_TOO_LONG);
-    expect(v(`${border}cW;`)).toBe(descBadCharacter(";"));
-    expect(v("1;1,1,1,1,1,1,1,1,1,1,1,")).toBe(descBadCharacter(";"));
-    expect(v("1,1,1,1,1,1,1,1,1,1,1,1")).toBe(DESC_TOO_SHORT);
-    expect(v("1,1,1,1,1,1,1,1,1,1,1 1,")).toBe(descBadCharacter(" "));
-    expect(v("1,a1,1,1,1,1,1,1,1,1,1,1,")).toBe(descBadCharacter("a"));
-    // A 6-square line cannot hold 7 ship squares.
-    expect(v("7,1,1,1,1,1,1,1,1,1,1,1,")).toBe(DESC_OUT_OF_RANGE);
-    expect(v("1,1,1,1,1,1,1,1,1,1,1,-,")).toBeNull();
-    expect(v("1,1,1,1,1,1,1,1,1,1,1,-1,")).toBe(descBadCharacter("1"));
-  });
-
-  it("decodes hidden border numbers", () => {
-    const p = params({ strip: true });
-    const state = newState(p, "1,-,1,1,1,1,1,1,1,1,1,1,");
-    expect(state.borderClues[1]).toBe(-1);
-    expect(state.borderClues[0]).toBe(1);
-  });
-
-  it("seeds the playable grid from the given clues", () => {
-    const p = params();
-    // A given single at the top-left, then water.
-    const state = newState(p, "1,1,1,1,1,1,1,1,1,1,1,1,SW");
-    expect(state.gridClues[0]).toBe(SHIP_SINGLE);
-    expect(isShip(state.grid[0])).toBe(true);
-    expect(state.grid[1]).toBe(WATER);
-  });
-});
-
-// --- solver ----------------------------------------------------------------
-
-describe("boats solver", () => {
-  it("solves every preset's generated board at exactly its difficulty", () => {
-    for (let i = 0; i < PRESETS.length; i++) {
-      const p = presetParams(i);
-      const state = generated(p, `boats-preset-${i}`);
-      const result = solveBoats(boardOf(state), p.diff);
-      expect(result, `preset ${i}`).toEqual({ kind: "solved", diff: p.diff });
-    }
-  });
-
-  it("needs each tier for a board generated at that tier", () => {
-    for (const diff of [DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD]) {
-      const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4), diff });
-      const state = generated(p, `boats-tier-${diff}`);
-      // Solvable at its own tier...
-      expect(solveBoats(boardOf(state), diff)).toEqual({ kind: "solved", diff });
-      // ...and, above Easy, not at the tier below it.
-      if (diff > DIFF_EASY)
-        expect(solveBoats(boardOf(state), diff - 1).kind).toBe("stuck");
-    }
-  });
-
-  it("reports a contradictory board as invalid", () => {
-    // Row 0 says one ship; two given singles sit in it.
-    const p = params({ w: 4, h: 4, fleet: 2, fleetData: [2, 1] });
-    const state = newState(p, "1,0,1,0,1,0,0,0,SaS");
-    expect(solveBoats(boardOf(state), DIFF_HARD).kind).toBe("invalid");
-  });
-
-  it("restores hidden border numbers it filled in while solving", () => {
-    const p = params({ diff: DIFF_TRICKY, strip: true });
-    const state = generated(p, "boats-restore-1");
-    const board = boardOf(state);
-    const before = Int32Array.from(board.borderClues);
-    solveBoats(board, DIFF_TRICKY);
-    expect(Array.from(board.borderClues)).toEqual(Array.from(before));
-    expect(before.some((c) => c === -1)).toBe(true);
-  });
-
-  it("solves to a grid whose fleet inventory matches the params", () => {
-    const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });
-    const state = generated(p, "boats-inventory-1");
-    const solved = solveToGrid(state);
-    expect(solved.ok).toBe(true);
-    if (!solved.ok) return;
-
-    const board = boardOf(state);
-    board.grid.set(solved.grid);
-    adjustShips(board);
-    const counts = new Int32Array(p.fleet);
-    checkFleet(board, counts);
-    expect(Array.from(counts)).toEqual(p.fleetData);
-
-    // ...and the row/column numbers are met exactly.
-    const ships = new Int32Array(p.w + p.h);
-    countShips(board, undefined, ships);
-    for (let i = 0; i < p.w + p.h; i++) expect(ships[i]).toBe(state.borderClues[i]);
-  });
-});
-
-// --- generator -------------------------------------------------------------
-
-describe("boats generator", () => {
-  // Normal with every number shown is the tier found least often, and the one
-  // a thousand-try count used to hand over as Easy.
-  describeDealtTiers(boatsGame, [
-    "5x5f2dn,2,1",
-    "7x7f3dn,3,2,1",
-    "6x6f3dhS,3,2,1",
-    "6x6f1dt,4",
-  ]);
-
-  describeAbsentTiers(boatsGame, ["3x3f1dn,1", "6x6f1dh,1"]);
-
-  // Two single boats on a 3x3 have nothing to deduce past Easy either, and no
-  // line through fleets says which do: the generator runs out, and the midend
-  // says so.
-  it("gives up where a fleet has no board at the tier, and deals no other", () => {
-    const p = boatsGame.decodeParams("3x3f1dn,2");
-    expect(paramsError(boatsGame, p, true)).toBeNull();
-    expect(() => newBoatsDesc(p, randomNew("one-boat"))).toThrow(RetryLimitExceeded);
-  });
-
-  it("is deterministic for a seed", () => {
-    const p = params();
-    const a = newBoatsDesc(p, randomNew("boats-determinism")).desc;
-    const b = newBoatsDesc(p, randomNew("boats-determinism")).desc;
-    expect(a).toBe(b);
-  });
-
-  it("produces a description its own validator accepts", () => {
-    for (let i = 0; i < PRESETS.length; i++) {
-      const p = presetParams(i);
-      const { desc } = newBoatsDesc(p, randomNew(`boats-valid-${i}`));
-      expect(validateDesc(boatsGame, p, desc), desc).toBeNull();
-    }
-  });
-
-  it("hides at least two border numbers when asked to remove numbers", () => {
-    const p = params({ diff: DIFF_TRICKY, strip: true });
-    const state = generated(p, "boats-strip-1");
-    const hidden = Array.from(state.borderClues).filter((c) => c === -1).length;
-    // One hidden number is derivable from the fleet total, so upstream refuses
-    // to ship a board with only one.
-    expect(hidden).toBeGreaterThanOrEqual(2);
-  });
-
-  it("places a fleet that fits and refuses one that does not", () => {
-    expect(fleetFits(params({ w: 5, h: 5 }))).toBe(true);
-    expect(fleetFits(params({ w: 5, h: 4 }))).toBe(false);
-  });
-});
-
-// --- input and moves -------------------------------------------------------
-
-/** Drive `interpretMove` with the game's own ui, as the midend would. */
-function press(
-  state: BoatsState,
-  ui: ReturnType<typeof newUi>,
-  x: number,
-  y: number,
-  button: number,
-) {
-  const ts = PREFERRED_TILE_SIZE;
-  return boatsGame.interpretMove(
-    state,
-    ui,
-    { tileSize: ts } as never,
-    { x: x * ts + ts / 2, y: y * ts + ts / 2 },
-    button,
-  );
-}
-
-/** A board with no given clues at all, so every square is editable. */
-function blankState(): BoatsState {
-  const p = params();
-  return newState(p, "1,1,1,1,1,1,1,1,1,1,1,1,");
-}
-
-describe("boats input", () => {
-  it("cycles a square empty → boat → water → empty on left-click", () => {
-    let state = blankState();
-    const ui = newUi();
-
-    for (const expected of [SHIP_VAGUE, WATER, EMPTY]) {
-      expect(press(state, ui, 2, 2, LEFT_BUTTON)).toBe(UI_UPDATE);
-      const move = press(state, ui, 2, 2, LEFT_RELEASE);
-      expect(move).not.toBe(UI_UPDATE);
-      state = boatsGame.executeMove(state, move as BoatsMove);
-      if (expected === SHIP_VAGUE) expect(isShip(state.grid[2 * 6 + 2])).toBe(true);
-      else expect(state.grid[2 * 6 + 2]).toBe(expected);
-    }
-  });
-
-  it("toggles water on right-click", () => {
-    let state = blankState();
-    const ui = newUi();
-    press(state, ui, 1, 1, RIGHT_BUTTON);
-    state = boatsGame.executeMove(
-      state,
-      press(state, ui, 1, 1, RIGHT_RELEASE) as BoatsMove,
-    );
-    expect(state.grid[1 * 6 + 1]).toBe(WATER);
-  });
-
-  it("fills a whole run along one row on a drag", () => {
-    let state = blankState();
-    const ui = newUi();
-    press(state, ui, 1, 3, RIGHT_BUTTON);
-    press(state, ui, 3, 3, RIGHT_DRAG);
-    const move = press(state, ui, 4, 3, RIGHT_RELEASE) as BoatsMove;
-    expect(move).toMatchObject({ kind: "fill", x0: 1, x1: 4, y0: 3, y1: 3, to: "W" });
-
-    state = boatsGame.executeMove(state, move);
-    for (let x = 1; x <= 4; x++) expect(state.grid[3 * 6 + x]).toBe(WATER);
-    expect(state.grid[3 * 6 + 0]).toBe(EMPTY);
-    expect(state.grid[3 * 6 + 5]).toBe(EMPTY);
-  });
-
-  it("ends the drag on the release, so a stray drag event cannot re-arm it", () => {
-    // Before `GridDrag`, liveness was `dragTo !== ""` and the release left
-    // `dragTo` set — so a drag event arriving after a release re-entered the
-    // branch, set `dragOk` back to true, and the *next* release filled a line
-    // the player never dragged. Nothing exercised it; this does.
-    const state = blankState();
-    const ui = newUi();
-    press(state, ui, 1, 1, LEFT_BUTTON);
-    press(state, ui, 3, 1, LEFT_DRAG);
-    press(state, ui, 3, 1, LEFT_RELEASE);
-    expect(ui.drag.live).toBe(false);
-
-    // A drag with no press behind it changes nothing, and the release after it
-    // commits nothing.
-    expect(press(state, ui, 4, 1, LEFT_DRAG)).toBe(null);
-    expect(press(state, ui, 4, 1, LEFT_RELEASE)).toBe(null);
-    expect(ui.dragOk).toBe(false);
-  });
-
-  it("commits nothing when the release lands off the grid", () => {
-    // `dragOk` is "the pointer is over a valid cell right now", so a drag that
-    // wanders off the board and is released there abandons the fill.
-    const state = blankState();
-    const ui = newUi();
-    press(state, ui, 1, 1, LEFT_BUTTON);
-    press(state, ui, 3, 1, LEFT_DRAG);
-    boatsGame.interpretMove(
-      state,
-      ui,
-      { tileSize: PREFERRED_TILE_SIZE } as never,
-      { x: -40, y: -40 },
-      LEFT_DRAG,
-    );
-    expect(ui.dragOk).toBe(false);
-    const move = boatsGame.interpretMove(
-      state,
-      ui,
-      { tileSize: PREFERRED_TILE_SIZE } as never,
-      { x: -40, y: -40 },
-      LEFT_RELEASE,
-    );
-    expect(move).toBe(UI_UPDATE);
-    expect(ui.drag.live).toBe(false);
-  });
-
-  it("constrains a diagonal drag to the axis it moved furthest along", () => {
-    const state = blankState();
-    const ui = newUi();
-    press(state, ui, 1, 1, RIGHT_BUTTON);
-    // Three columns right, one row down: the row wins.
-    press(state, ui, 4, 2, LEFT_DRAG);
-    expect([ui.drag.ex, ui.drag.ey]).toEqual([4, 1]);
-  });
-
-  it("widens the click target on the far edges so a whole line is easy to fill", () => {
-    const state = blankState();
-    const ui = newUi();
-    const ts = PREFERRED_TILE_SIZE;
-    // A press in the number column maps back onto the last board column.
-    boatsGame.interpretMove(
-      state,
-      ui,
-      { tileSize: ts } as never,
-      { x: 6 * ts + 2, y: 2 * ts + 2 },
-      RIGHT_BUTTON,
-    );
-    expect(ui.drag.sx).toBe(5);
-  });
-
-  it("rejects a no-op move rather than pushing a history entry", () => {
-    const state = blankState();
-    const ui = newUi();
-    // Clearing an already-empty line changes nothing.
-    ui.dragFrom = "-";
-    ui.dragTo = "-";
-    ui.dragOk = true;
-    Object.assign(ui.drag, { live: true, sx: 0, sy: 0, ex: 1, ey: 0 });
-    expect(press(state, ui, 1, 0, LEFT_RELEASE)).toBe(UI_UPDATE);
-    // So does erasing an empty square from the keyboard.
-    ui.cursor.visible = true;
-    expect(press(state, ui, 0, 0, BACKSPACE)).toBeNull();
-  });
-
-  it("places with the keyboard cursor and fills a line with Ctrl+arrow", () => {
-    let state = blankState();
-    const ui = newUi();
-
-    expect(press(state, ui, 0, 0, CURSOR_RIGHT)).toBe(UI_UPDATE);
-    expect([ui.cursor.x, ui.cursor.y, ui.cursor.visible]).toEqual([1, 0, true]);
-
-    const place = press(state, ui, 0, 0, CURSOR_SELECT) as BoatsMove;
-    state = boatsGame.executeMove(state, place);
-    expect(isShip(state.grid[1])).toBe(true);
-
-    expect(press(state, ui, 0, 0, CURSOR_DOWN)).toBe(UI_UPDATE);
-    const fill = press(state, ui, 0, 0, CURSOR_DOWN | MOD_CTRL) as BoatsMove;
-    expect(fill).toMatchObject({ kind: "fill", to: "B" });
-  });
-
-  it("places water with the secondary select key", () => {
-    let state = blankState();
-    const ui = newUi();
-    press(state, ui, 0, 0, CURSOR_RIGHT);
-    const move = press(state, ui, 0, 0, CURSOR_SELECT2) as BoatsMove;
-    state = boatsGame.executeMove(state, move);
-    expect(state.grid[1]).toBe(WATER);
-  });
-
-  it("never edits a given clue square", () => {
-    const p = params();
-    const state = newState(p, "1,1,1,1,1,1,1,1,1,1,1,1,S");
-    const ui = newUi();
-    press(state, ui, 0, 0, RIGHT_BUTTON);
-    expect(press(state, ui, 0, 0, LEFT_RELEASE)).toBe(UI_UPDATE);
-  });
-});
-
-describe("boats moves", () => {
-  it("leaves a segment vague until its neighbors decide the shape", () => {
-    const p = params();
-    let state = newState(p, "1,1,1,1,1,1,1,1,1,1,1,1,");
-    const apply = (m: BoatsMove) => {
-      state = boatsGame.executeMove(state, m);
-    };
-
-    // Two adjacent boat squares say nothing yet: the boat might extend either
-    // way, so both stay unresolved.
-    apply({ kind: "fill", x0: 1, y0: 1, x1: 2, y1: 1, from: "-", to: "B" });
-    expect(state.grid[1 * 6 + 1]).toBe(SHIP_VAGUE);
-    expect(state.grid[1 * 6 + 2]).toBe(SHIP_VAGUE);
-
-    // Cap both ends with water and they resolve to a left/right pair.
-    apply({ kind: "fill", x0: 0, y0: 1, x1: 0, y1: 1, from: "-", to: "W" });
-    apply({ kind: "fill", x0: 3, y0: 1, x1: 3, y1: 1, from: "-", to: "W" });
-    expect(state.grid[1 * 6 + 1]).toBe(SHIP_LEFT);
-    expect(state.grid[1 * 6 + 2]).toBe(SHIP_RIGHT);
-  });
-
-  it("executeMove is pure", () => {
-    const state = blankState();
-    const before = Array.from(state.grid);
-    boatsGame.executeMove(state, {
-      kind: "fill",
-      x0: 0,
-      y0: 0,
-      x1: 5,
-      y1: 0,
-      from: "-",
-      to: "W",
-    });
-    expect(Array.from(state.grid)).toEqual(before);
-  });
-
-  it("is won once every boat is placed, with no need to fill in the water", () => {
-    // Upstream's win test is "every row/column count is met, the fleet
-    // inventory is exact, no boats touch, and every given clue agrees" — it
-    // never asks for water. `adjustShips` closes the gap: once the placed
-    // ships equal the fleet's total, every undecided neighbor counts as
-    // water, so the last boat resolves the shapes and the board is complete.
-    const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });
-    const state = generated(p, "boats-win-without-water");
-    const solved = solveToGrid(state);
-    expect(solved.ok).toBe(true);
-    if (!solved.ok) return;
-
-    // Place only the ships; leave every water square untouched.
-    let played = state;
-    for (let y = 0; y < p.h; y++)
-      for (let x = 0; x < p.w; x++) {
-        const i = y * p.w + x;
-        if (!isShip(solved.grid[i]) || state.gridClues[i] !== EMPTY) continue;
-        played = boatsGame.executeMove(played, {
-          kind: "fill",
-          x0: x,
-          y0: y,
-          x1: x,
-          y1: y,
-          from: "-",
-          to: "B",
+  it("deals each tier, its fleet whole and each given square its shape", () => {
+    for (const id of ["6x6f3de", "6x6f3dnS", "8x8f4dt", "10x10f4dh", "7x9f4deS"]) {
+      const p = game.decodeParams(id);
+      const full = game.encodeParams(p, true);
+      for (const seed of ["a", "b"]) {
+        const { desc } = game.newDesc(p, randomNew(`boats-${id}-${seed}`));
+        expect(opened(`${full}:${desc}`), `${id}:${desc}`).toBe(full);
+        const board = loaded(`${full}:${desc}`);
+        const done = answer(board);
+        expect(game.status(done), `${id}:${desc}`).toBe("solved");
+        const { w, h } = board;
+        const counts = (board.dealt.fleet as unknown as { boats: number[] }).boats;
+        expect(wholePieces(done.values, w, h, SHIP, counts.length)).toEqual(counts);
+        // A given square is never one of unknown shape, and is the shape
+        // the answer gives it.
+        const ship = (x: number, y: number) =>
+          x >= 0 && y >= 0 && x < w && y < h && done.values[y * w + x] === SHIP;
+        const seg = list(board, "seg");
+        seg.at.forEach((c, k) => {
+          const [x, y] = [c % w, Math.floor(c / w)];
+          const v = seg.v[k];
+          const [up, right, down, left] = [
+            ship(x, y - 1),
+            ship(x + 1, y),
+            ship(x, y + 1),
+            ship(x - 1, y),
+          ];
+          const shape =
+            done.values[c] === WATER
+              ? 2
+              : !(up || right || down || left)
+                ? 9
+                : (up && down) || (left && right)
+                  ? 6
+                  : down
+                    ? 4
+                    : up
+                      ? 5
+                      : right
+                        ? 7
+                        : 8;
+          expect(v, `${id}:${desc} at ${c}`).toBe(shape);
         });
-      }
-
-    expect(boatsGame.status(played)).toBe("solved");
-    // ...and there really are undecided squares left on the board.
-    expect(Array.from(played.grid).some((c) => c === EMPTY)).toBe(true);
-  });
-
-  it("completes when the fleet is found", () => {
-    const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });
-    const state = generated(p, "boats-complete-1");
-    const solved = solveToGrid(state);
-    expect(solved.ok).toBe(true);
-    if (!solved.ok) return;
-
-    const done = boatsGame.executeMove(state, {
-      kind: "solve",
-      grid: Array.from(solved.grid),
-    });
-    expect(boatsGame.status(state)).toBe("ongoing");
-    expect(boatsGame.status(done)).toBe("solved");
-  });
-});
-
-// --- Solve, through a real midend ------------------------------------------
-
-describe("boats solve", () => {
-  it("completes the game through the midend", () => {
-    const p = presetParams(0);
-    const { desc } = newBoatsDesc(p, randomNew("boats-midend-solve"));
-    const midend = new Midend(boatsGame);
-    expect(midend.newGameFromId(`${encodeParams(p, true)}:${desc}`)).toBeNull();
-
-    expect(midend.solve()).toBeNull();
-    // Solve must actually finish the game, not merely fill some squares in
-    // (docs/solver-and-generator.md § "Solve and the generator's aux").
-    expect(boatsGame.status(stateOf(midend))).toBe("solved");
-  });
-
-  it("round-trips a played game through a save", () => {
-    const p = presetParams(0);
-    const { desc } = newBoatsDesc(p, randomNew("boats-save-1"));
-    const midend = new Midend(boatsGame);
-    midend.newGameFromId(`${encodeParams(p, true)}:${desc}`);
-    midend.playMoves([
-      { kind: "fill", x0: 0, y0: 0, x1: 0, y1: 5, from: "-", to: "W" },
-    ]);
-
-    const saved = midend.saveGame();
-    const restored = new Midend(boatsGame);
-    expect(restored.loadGame(saved)).toBeNull();
-    expect(restored.formatAsText()).toBe(midend.formatAsText());
-  });
-
-  it("refuses to solve a puzzle its deduction cannot finish", () => {
-    // Every number zero and no clues: consistent only with an empty sea, which
-    // the fleet contradicts.
-    const p = params();
-    const state = newState(p, "0,0,0,0,0,0,0,0,0,0,0,0,");
-    expect(boatsGame.solve(state, state)?.ok).toBe(false);
-  });
-});
-
-// --- mistakes --------------------------------------------------------------
-
-describe("boats live marks", () => {
-  it("marks a run longer than the fleet's longest with its ends still open", () => {
-    const p = params();
-    const s0 = newState(p, newBoatsDesc(p, randomNew("long run")).desc);
-    // The first row whose first four squares are open.
-    const y = [...Array(p.h).keys()].find((r) =>
-      [0, 1, 2, 3].every((x) => s0.gridClues[r * p.w + x] === EMPTY),
-    );
-    if (y === undefined) throw new Error("no open row");
-    const lay = (n: number): BoatsState => {
-      const s = { ...s0, grid: Int8Array.from(s0.grid) };
-      for (let x = 0; x < n; x++) s.grid[y * p.w + x] = SHIP_VAGUE;
-      return s;
-    };
-    const fleetMarked = (s: BoatsState) =>
-      [...brokenMarks(s).cells.keys()].filter(
-        (i) => brokenMarks(s).cells[i] & FE_FLEET,
-      );
-    expect(fleetMarked(lay(3))).toEqual([]);
-    expect(fleetMarked(lay(4))).toEqual([0, 1, 2, 3].map((x) => y * p.w + x));
-  });
-});
-
-describe("boats findMistakes", () => {
-  it("reports a square on every board the live flags mark", () => {
-    // The live flags fall on numbers and given squares too, which are never
-    // reported, so the claim is about the board and not about each flag.
-    const liveFlagged = (s: BoatsState): boolean => {
-      const { slots, cells } = brokenMarks(s);
-      return slots.includes(1) || cells.some((f) => f !== 0);
-    };
-    const fill = (s: BoatsState, i: number, to: "B" | "W"): BoatsState => {
-      const [x, y] = [i % s.params.w, Math.floor(i / s.params.w)];
-      return boatsGame.executeMove(s, {
-        kind: "fill",
-        x0: x,
-        y0: y,
-        x1: x,
-        y1: y,
-        from: "*",
-        to,
-      });
-    };
-    // A board is built that agrees with the answer wherever it is filled, which
-    // no flag may mark, and then one square is filled against the answer: a
-    // boat or water, since a flag can rest on either alone.
-    let flagged = 0;
-    const kinds = new Set<string>();
-    for (let preset = 0; preset < PRESETS.length; preset++) {
-      const p = presetParams(preset);
-      const rng = randomNew(`boats-live-${preset}`);
-      const start = generated(p, `boats-live-board-${preset}`);
-      const solved = solveToGrid(start);
-      if (!solved.ok) throw new Error("a dealt board has an answer");
-      const open: number[] = [];
-      for (let i = 0; i < p.w * p.h; i++)
-        if (start.gridClues[i] === EMPTY) open.push(i);
-      for (let trial = 0; trial < 60; trial++) {
-        let state = start;
-        for (const i of open)
-          if (randomUpto(rng, 4) > 0)
-            state = fill(state, i, isShip(solved.grid[i]) ? "B" : "W");
-        expect(liveFlagged(state), `${preset}/${trial} agrees`).toBe(false);
-
-        const wrong = open[randomUpto(rng, open.length)];
-        const to = isShip(solved.grid[wrong]) ? "W" : "B";
-        state = fill(state, wrong, to);
-        if (!liveFlagged(state)) continue;
-        flagged++;
-        kinds.add(to);
-        expect(findMistakes(state).length, `${preset}/${trial}`).toBeGreaterThan(0);
+        // Remove numbers hides some; without it every number shows.
+        const hidden = w + h - list(board, "n").at.length;
+        if (p.hides === true) expect(hidden, `${id}:${desc}`).toBeGreaterThan(0);
+        else expect(hidden, `${id}:${desc}`).toBe(0);
       }
     }
-    expect(flagged).toBeGreaterThan(100);
-    expect([...kinds].sort()).toEqual(["B", "W"]);
   });
 
-  it("flags a square the unique solution contradicts, and only that square", () => {
-    const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });
-    const state = generated(p, "boats-mistake-1");
-    const solved = solveToGrid(state);
-    expect(solved.ok).toBe(true);
-    if (!solved.ok) return;
-
-    // Find a square the solution has as water and put a boat on it.
-    let target = -1;
-    for (let i = 0; i < p.w * p.h; i++)
-      if (solved.grid[i] === WATER && state.gridClues[i] === EMPTY) {
-        target = i;
-        break;
-      }
-    expect(target).toBeGreaterThanOrEqual(0);
-
-    const x = target % p.w;
-    const y = Math.floor(target / p.w);
-    const wrong = boatsGame.executeMove(state, {
-      kind: "fill",
-      x0: x,
-      y0: y,
-      x1: x,
-      y1: y,
-      from: "-",
-      to: "B",
-    });
-
-    const mistakes = findMistakes(wrong);
-    expect(mistakes).toContainEqual({ x, y });
+  it("counts a boat found only once it is shut in by water", () => {
+    const b = loaded("4x4f2de,1,1:1,0,0,2,0,0,1,2,");
+    const n = (set: number[]) =>
+      wholePieces(game.executeMove(b, { set }).values, 4, 4, SHIP, 2);
+    // A boat of two along the bottom row's left, then shut in.
+    expect(n([12, SHIP, 13, SHIP])).toEqual([0, 0]);
+    expect(n([12, SHIP, 13, SHIP, 8, WATER, 9, WATER, 14, WATER])).toEqual([0, 1]);
+    // A run longer than the fleet's longest is no boat it counts.
+    expect(
+      n([12, SHIP, 13, SHIP, 14, SHIP, 8, WATER, 9, WATER, 10, WATER, 15, WATER]),
+    ).toEqual([0, 0]);
   });
 
-  it("reports nothing on an untouched board", () => {
-    const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });
-    expect(findMistakes(generated(p, "boats-mistake-2"))).toEqual([]);
+  it("writes its text, the numbers past each line", () => {
+    const b = answer(loaded(UPSTREAM[1]));
+    const text = game.textFormat?.(b) ?? "";
+    expect(text.split("\n")[1]).toBe("| ~ | # | ~ | ~ | ~ | ~ | 1 |");
   });
 
-  it("reports nothing when the board is not uniquely deducible", () => {
-    const p = params();
-    const state = newState(p, "0,0,0,0,0,0,0,0,0,0,0,0,");
-    expect(findMistakes(state)).toEqual([]);
+  it("outlines a square Check & Save finds wrong, which breaks no rule yet", () => {
+    const id = UPSTREAM[1];
+    const fresh = loaded(id);
+    const values = answer(fresh).values;
+    const count = (r: ReturnType<typeof renderScenario>) =>
+      r.recording.ops.filter((o) => "color" in o && o.color === COL_ERROR).length;
+    for (let c = 0; c < values.length; c++) {
+      if (fresh.fixed[c]) continue;
+      const moves = [{ set: [c, values[c] === SHIP ? WATER : SHIP] }];
+      if (count(renderScenario({ game, id, moves })) > 0) continue;
+      const shown = renderScenario({ game, id, moves, showMistakes: true });
+      expect(shown.mistakeCount).toBe(1);
+      expect(count(shown)).toBeGreaterThan(0);
+      return;
+    }
+    throw new Error("no wrong square that breaks no rule");
   });
 });
 
-// --- rendering (tier 2.5) --------------------------------------------------
-
-describe("boats rendering", () => {
-  const preset0 = () => {
-    const p = presetParams(0);
-    const { desc } = newBoatsDesc(p, randomNew("boats-render-1"));
-    return { p, id: `${encodeParams(p, true)}:${desc}` };
-  };
-
-  it("draws an opening frame with water, numbers and the fleet list", () => {
-    const { id } = preset0();
-    const result = renderScenario({ game: boatsGame, id });
-
-    // A given clue is told by its surface: water blue, or the lifted cell
-    // under a segment.
-    expect(
-      result.recording.ops.some(
-        (o) => o.op === "rect" && (o.color === COL_WATER || o.color === COL_GIVEN),
+describeHintPins({
+  game,
+  params: [
+    "6x6f3de",
+    "6x6f3dnS",
+    "8x8f4dn",
+    "8x8f4dtS",
+    "10x10f4dt",
+    "10x10f4dtS",
+    "10x10f4dhS",
+  ].map((s) => game.decodeParams(s)),
+  unreached: {
+    near:
+      "a segment's diagonal squares are its water as it is placed (touch, on " +
+      "place), and every step that places one says so, so no square is left " +
+      "for near: none in 1,115 positions walked on 60 boards, nor after any " +
+      "one answer segment the player placed on two boards.",
+  },
+  pins: {
+    given: UPSTREAM[1],
+    /** Held on 1145 of 1344 positions walked. */
+    lineShips: "6x6f3de,3,2,1:4,0,4,0,2,0,2,1,3,1,2,1,dWcWsWcWaW",
+    /** Held on 332 of 1344 positions walked. */
+    total: {
+      id: "6x6f3dnS,3,2,1:-,2,1,-,3,-,-,-,-,4,-,-,gBbBlWkW",
+      moves:
+        '[{"set":[1,1,13,2,6,2,8,2]},{"set":[4,1,16,2,9,2,11,2]},{"set":[19,2,25,2,31,2]},{"set":[18,1,20,1,21,1,22,1,26,2,27,2,28,2,29,2]},{"set":[32,2]},{"set":[34,2]},{"set":[24,2]}]',
+    },
+    /** Held on 226 of 1344 positions walked. */
+    center: {
+      id: "8x8f4dn,4,3,2,1:2,2,3,4,2,1,5,1,1,5,0,6,0,2,1,5,jLnWzfC",
+      moves: [{ set: [11, 1, 9, 2, 2, 2, 4, 2, 18, 2, 20, 2] }],
+    },
+    /** Held on 262 of 1344 positions walked. */
+    extend: {
+      id: "6x6f3dnS,3,2,1:-,0,-,-,-,-,-,-,2,-,2,-,SdSbLlWdWaWWcW",
+      moves:
+        '[{"set":[6,2]},{"set":[11,2,4,2]},{"set":[9,1,2,2,14,2,16,2]},{"set":[12,1,17,1,19,2,22,2]},{"set":[25,2,31,2]},{"set":[24,1,27,1,20,2,32,2,34,2]}]',
+    },
+    lineWater: "6x6f3deS,3,2,1:0,4,0,3,1,2,-,1,0,3,-,3,uW",
+    /** Held on 301 of 1344 positions walked. */
+    isolated: {
+      id: "6x6f3dnS,3,2,1:-,-,-,4,-,-,-,-,-,-,-,-,bLcTeBjSfSbS",
+      moves:
+        '[{"set":[3,1,8,2,10,2]},{"set":[0,2]},{"set":[18,2]},{"set":[17,2,29,2,22,2]},{"set":[24,2,31,2]},{"set":[27,2,34,2,32,2]},{"set":[15,1,21,1,14,2,20,2]}]',
+    },
+    /** Held on 374 of 1344 positions walked. */
+    grow: {
+      id: "6x6f3dnS,3,2,1:-,-,-,-,-,3,-,2,-,-,-,-,kWcScTcSjL",
+      moves:
+        '[{"set":[9,2,21,2]},{"set":[25,1,13,2,18,2,30,2,32,2]},{"set":[17,2]},{"set":[35,1,33,2]},{"set":[6,1,7,1,0,2,1,2,2,2]},{"set":[5,1]}]',
+    },
+    /** Held on 376 of 1344 positions walked. */
+    onlyFit: {
+      id: "8x8f4dn,4,3,2,1:3,0,4,2,4,0,5,2,1,5,1,4,0,5,2,2,zaLz",
+      moves:
+        '[{"set":[28,1,26,2,19,2,21,2,35,2,37,2]},{"set":[32,2,33,2,38,2,39,2]},{"set":[1,2,9,2,17,2,25,2,41,2,49,2,57,2]},{"set":[5,2,13,2,29,2,45,2,53,2,61,2]}]',
+    },
+    /** Kept by hand: the scan's boards reach none. */
+    centerRoom: {
+      id: "8x8f4dnS,4,3,2,1:4,2,0,4,2,3,3,2,-,-,4,-,0,-,2,3,sTzhCeW",
+      moves: fills(
+        "8x8f4dnS,4,3,2,1:4,2,0,4,2,3,3,2,-,-,4,-,0,-,2,3,sTzhCeW",
+        '[{"x0":3,"y0":3,"x1":3,"y1":3,"to":"B"},{"x0":3,"y0":1,"x1":3,"y1":1,"to":"W"},{"x0":4,"y0":1,"x1":4,"y1":1,"to":"W"},{"x0":4,"y0":3,"x1":4,"y1":3,"to":"W"},{"x0":2,"y0":3,"x1":2,"y1":3,"to":"W"},{"x0":2,"y0":1,"x1":2,"y1":1,"to":"W"},{"x0":4,"y0":2,"x1":4,"y1":2,"to":"W"},{"x0":4,"y0":4,"x1":4,"y1":4,"to":"W"},{"x0":2,"y0":2,"x1":2,"y1":4,"to":"W"},{"x0":7,"y0":5,"x1":7,"y1":5,"to":"W"},{"x0":7,"y0":7,"x1":7,"y1":7,"to":"W"},{"x0":5,"y0":7,"x1":5,"y1":7,"to":"W"},{"x0":5,"y0":5,"x1":5,"y1":5,"to":"W"},{"x0":0,"y0":4,"x1":7,"y1":4,"to":"W"},{"x0":2,"y0":0,"x1":2,"y1":7,"to":"W"}]',
       ),
-    ).toBe(true);
-    // The row/column numbers are drawn as text.
-    expect(result.recording.ops.some((o) => o.op === "text")).toBe(true);
-    // The fleet display draws its boats as hulls.
-    expect(
-      result.recording.ops.some((o) => o.op === "polygon" && o.fill === COL_SHIP),
-    ).toBe(true);
-
-    expect(result.recording.ops).toMatchSnapshot();
-  });
-
-  it("previews a drag without committing a move", () => {
-    const { id } = preset0();
-    const midend = new Midend(boatsGame);
-    midend.newGameFromId(id);
-    const before = midend.saveGame();
-
-    const ts = PREFERRED_TILE_SIZE;
-    midend.processInput(ts / 2, ts / 2, RIGHT_BUTTON);
-    midend.processInput(ts / 2, 3 * ts + ts / 2, LEFT_DRAG);
-
-    // The drag is UI-only until release: no history entry, same save.
-    expect(midend.saveGame()).toEqual(before);
-  });
-
-  it("draws the collision diamond between two boats that touch diagonally", () => {
-    // A clue-less board, so every square is the player's to fill. It has many
-    // answers and so does not load through the midend: drawn directly.
-    const p = params();
-    const moves: BoatsMove[] = [
-      { kind: "fill", x0: 1, y0: 1, x1: 1, y1: 1, from: "-", to: "B" },
-      { kind: "fill", x0: 2, y0: 2, x1: 2, y1: 2, from: "-", to: "B" },
-    ];
-    const state = moves.reduce(
-      (s, m) => boatsGame.executeMove(s, m),
-      newState(p, "1,1,1,1,1,1,1,1,1,1,1,1,"),
-    );
-    const rec = new RecordingDrawing(boatsGame.colors([1, 1, 1]));
-    boatsGame.redraw(rec, preferredDrawState(boatsGame, state), {
-      prev: null,
-      state,
-      dir: 1,
-      ui: boatsGame.newUi(state),
-      animTime: 0,
-      flash: NO_FLASH,
-    });
-
-    // The diamond is a polygon filled COL_ERROR outlined COL_INK,
-    // with the exclamation mark in COL_COLLISION_TEXT on top.
-    expect(rec.ops.some((o) => o.op === "polygon" && o.fill === COL_ERROR)).toBe(true);
-    expect(rec.ops.some((o) => o.op === "rect" && o.color === COL_COLLISION_TEXT)).toBe(
-      true,
-    );
-  });
-
-  it("lights the water in a sweep from the bottom left, and each boat whole, during the win flash", () => {
-    const p = presetParams(0);
-    const { desc } = newBoatsDesc(p, randomNew("boats-flash-1"));
-    const state = newState(p, desc);
-    const solved = solveToGrid(state);
-    expect(solved.ok).toBe(true);
-    if (!solved.ok) return;
-
-    const moves: BoatsMove[] = [];
-    for (let y = 0; y < p.h; y++)
-      for (let x = 0; x < p.w; x++) {
-        const i = y * p.w + x;
-        if (state.gridClues[i] !== EMPTY) continue;
-        moves.push({
-          kind: "fill",
-          x0: x,
-          y0: y,
-          x1: x,
-          y1: y,
-          from: "*",
-          to: isShip(solved.grid[i]) ? "B" : "W",
-        });
-      }
-
-    const won = moves.reduce((s, m) => boatsGame.executeMove(s, m), state);
-    expect(boatsGame.status(won)).toBe("solved");
-
-    // The water squares filled in the flash's color, as their origins, and
-    // the boats drawn. Lit is either tone of the flash.
-    const tones = new Set<number>();
-    const isLit = (color: number): boolean => {
-      if (color !== COL_FLASH && color !== COL_FLASH_LEAD) return false;
-      tones.add(color);
-      return true;
-    };
-    const palette = boatsGame.colors([1, 1, 1]);
-    const paint = (flash: Flash) => {
-      const rec = new RecordingDrawing(palette);
-      const ds = preferredDrawState(boatsGame, won);
-      boatsGame.redraw(rec, ds, {
-        prev: null,
-        state: won,
-        dir: 1,
-        ui: boatsGame.newUi(won),
-        animTime: 0,
-        flash,
-      });
-      return rec.ops;
-    };
-    // A lit element by its square's origin: a water square's lit surface, or
-    // a board hull's lit part, which is drawn under its square's clip.
-    const lit = (ops: ReturnType<typeof paint>): string[] => {
-      const out: string[] = [];
-      let square: { x: number; y: number } | null = null;
-      for (const o of ops) {
-        if (o.op === "clip") square = o;
-        else if (o.op === "unclip") square = null;
-        else if (o.op === "rect" && isLit(o.color)) out.push(`${o.x},${o.y}`);
-        else if (o.op === "polygon" && square !== null && isLit(o.fill))
-          out.push(`${square.x},${square.y}`);
-      }
-      return out;
-    };
-    const hulls = (ops: ReturnType<typeof paint>): number =>
-      ops.filter((o) => o.op === "polygon").length;
-    const settled = paint(NO_FLASH);
-    expect(lit(settled)).toEqual([]);
-    const run = winFlashRun(paint, (ops) => {
-      // Every boat is drawn on every frame.
-      expect(hulls(ops)).toBe(hulls(settled));
-      return lit(ops);
-    });
-    // A water square's place in the sweep is its x less its y, and a boat
-    // square's is its boat's middle's: the boat lights whole.
-    const ts = preferredDrawState(boatsGame, won).tileSize;
-    const keys = [...new Set(run.frames.flat())].map((c) => c.split(",").map(Number));
-    const left = Math.min(...keys.map(([x]) => x));
-    const top = Math.min(...keys.map(([, y]) => y));
-    const squareOf = (c: string): number => {
-      const [px, py] = c.split(",").map(Number);
-      return Math.round((py - top) / ts) * p.w + Math.round((px - left) / ts);
-    };
-    const boatOf = new Map<number, number[]>();
-    solved.grid.forEach((c, i) => {
-      if (!isShip(c) || boatOf.has(i)) return;
-      const boat = [i];
-      for (let k = 0; k < boat.length; k++) {
-        const j = boat[k];
-        const x = j % p.w;
-        for (const n of [
-          x > 0 ? j - 1 : -1,
-          x < p.w - 1 ? j + 1 : -1,
-          j - p.w,
-          j + p.w,
-        ])
-          if (n >= 0 && n < p.w * p.h && isShip(solved.grid[n]) && !boat.includes(n))
-            boat.push(n);
-      }
-      for (const j of boat) boatOf.set(j, boat);
-    });
-    const step = (i: number): number => (i % p.w) - Math.floor(i / p.w);
-    expectWinFlashTravels(run, p.w * p.h, (c) => {
-      const boat = boatOf.get(squareOf(c));
-      return boat
-        ? boat.reduce((s, i) => s + step(i), 0) / boat.length
-        : step(squareOf(c));
-    });
-    for (const frame of run.frames)
-      for (const c of frame)
-        for (const j of boatOf.get(squareOf(c)) ?? [])
-          expect(frame.map(squareOf), "a boat lights whole").toContain(j);
-    expect(tones).toEqual(new Set([COL_FLASH, COL_FLASH_LEAD]));
-  });
-  it("highlights a mistake on a board that was already drawn", () => {
-    // The paint-twice test (docs/rendering.md § "Prove the overlay
-    // repaints"): a cold frame proves nothing, because every cell misses the
-    // cache on frame 1 anyway.
-    const p = params({ w: 8, h: 8, fleet: 4, fleetData: defaultFleet(4) });
-    const { desc } = newBoatsDesc(p, randomNew("boats-render-mistake"));
-    const state = newState(p, desc);
-    const solved = solveToGrid(state);
-    expect(solved.ok).toBe(true);
-    if (!solved.ok) return;
-
-    let target = -1;
-    for (let i = 0; i < p.w * p.h; i++)
-      if (solved.grid[i] === WATER && state.gridClues[i] === EMPTY) {
-        target = i;
-        break;
-      }
-    const x = target % p.w;
-    const y = Math.floor(target / p.w);
-
-    const result = renderScenario({
-      game: boatsGame,
-      id: `${encodeParams(p, true)}:${desc}`,
-      moves: [{ kind: "fill", x0: x, y0: y, x1: x, y1: y, from: "-", to: "B" }],
-      showMistakes: true,
-    });
-
-    expect(result.mistakeCount).toBeGreaterThan(0);
-    expect(
-      result.recording.ops.some((o) => o.op === "line" && o.color === COL_ERROR),
-    ).toBe(true);
-  });
-});
-
-// --- text format -----------------------------------------------------------
-
-describe("boats textFormat", () => {
-  it("renders a board up to 10x10 and declines a larger one", () => {
-    const p = presetParams(0);
-    const state = generated(p, "boats-text-1");
-    const text = textFormat(state);
-    expect(typeof text).toBe("string");
-    expect(text?.split("\n")).toHaveLength(p.h + 1);
-
-    const big = params({ w: 10, h: 12, fleet: 5, fleetData: defaultFleet(5) });
-    expect(textFormat(generated(big, "boats-text-2"))).toBeNull();
-  });
-});
-
-// --- fleet display layout --------------------------------------------------
-
-describe("boats fleet display layout", () => {
-  /** No boat may be drawn past the right edge of the canvas — the guarantee
-   * behind upstream's `TODO ui: Certain custom fleets don't fit in the UI`. */
-  const fitsOnItsRow = (p: BoatsParams): boolean =>
-    fleetInkRight(p) <= computeSize(p, PREFERRED_TILE_SIZE).w;
-
-  /** The right edge of the furthest boat the fleet display paints. The board
-   * is empty, so every shape in the boat color is the fleet's. */
-  function fleetInkRight(p: BoatsParams): number {
-    const state = newState(p, "0,".repeat(p.w + p.h));
-    const rec = new RecordingDrawing(boatsGame.colors([1, 1, 1]));
-    boatsGame.redraw(rec, preferredDrawState(boatsGame, state), {
-      prev: null,
-      state,
-      dir: 1,
-      ui: boatsGame.newUi(state),
-      animTime: 0,
-      flash: NO_FLASH,
-    });
-    let right = 0;
-    for (const op of rec.ops) {
-      if (op.op === "circle" && op.fill === COL_SHIP)
-        right = Math.max(right, op.cx + op.r);
-      if (op.op === "polygon" && op.fill === COL_SHIP)
-        right = Math.max(right, ...op.points.map(([x]) => x));
-    }
-    expect(right, "the fleet display drew nothing").toBeGreaterThan(0);
-    return right;
-  }
-
-  it("keeps every shipped preset's fleet inside the canvas", () => {
-    for (let i = 0; i < PRESETS.length; i++) {
-      const p = presetParams(i);
-      expect(fitsOnItsRow(p), encodeParams(p, true)).toBe(true);
-    }
-  });
-
-  it("keeps a fleet inside the canvas where the row's last boat ends past the board", () => {
-    // Three singles and two doubles reach 6.25 tiles on a 5-wide board, whose
-    // canvas is the board and its column of numbers: 6 tiles.
-    const p = params({ w: 5, h: 5, fleet: 2, fleetData: [3, 2] });
-    expect(fitsOnItsRow(p)).toBe(true);
-    expect(fleetRows(p)).toBe(2);
-  });
-
-  it("widens the canvas for a boat longer than the board is wide", () => {
-    // One boat has no break to take, so the canvas grows to hold it.
-    const p = params({ w: 2, h: 9, fleet: 9, fleetData: [0, 0, 0, 0, 0, 0, 0, 0, 1] });
-    expect(refusal(p, true)).toBeNull();
-    expect(fitsOnItsRow(p)).toBe(true);
-    expect(computeSize(p, 32).w).toBeGreaterThan(3 * 32);
-  });
-
-  it("wraps a batch wider than a whole row rather than overflowing it", () => {
-    // Nine size-1 boats are 9.0 tile units wide; a 5-wide board's rows hold 7.
-    const p = params({ w: 5, h: 5, fleet: 3, fleetData: [9, 0, 0] });
-    expect(fitsOnItsRow(p)).toBe(true);
-    expect(fleetRows(p)).toBe(2);
-    // …and the taller display is reflected in the canvas the midend asks for.
-    const one = computeSize(params({ w: 5, h: 5, fleet: 3, fleetData: [3, 0, 0] }), 32);
-    expect(computeSize(p, 32).h).toBeGreaterThan(one.h);
-  });
-
-  it("lays out exactly as upstream wherever upstream fitted", () => {
-    // Upstream's algorithm verbatim: break only between whole batches, and let
-    // an over-wide batch run off the edge. Wherever every boat it placed ends
-    // inside this build's canvas (the board and its column of numbers, with no
-    // border), its layout is the contract, so the repair must reproduce it.
-    const upstream = (p: BoatsParams): { fx: number; row: number; width: number }[] => {
-      const out: { fx: number; row: number; width: number }[] = [];
-      let fx = 0.5;
-      let row = 0;
-      for (let size = 0; size < p.fleet; size++) {
-        const width = (size + 1) * 0.75 + 0.25;
-        if (fx + p.fleetData[size] * width > p.w + 2 && fx !== 0.5) {
-          fx = 0.5;
-          row++;
-        }
-        for (let copy = 0; copy < p.fleetData[size]; copy++) {
-          out.push({ fx, row, width });
-          fx += width;
-        }
-      }
-      return out;
-    };
-
-    const cases = [
-      ...PRESETS.map((_, i) => presetParams(i)),
-      params({ w: 8, h: 8, fleet: 3, fleetData: [4, 2, 1] }),
-      params({ w: 6, h: 6, fleet: 4, fleetData: [3, 2, 1, 1] }),
-      params({ w: 12, h: 12, fleet: 5, fleetData: [5, 4, 3, 2, 1] }),
-    ];
-    let compared = 0;
-    for (const p of cases) {
-      const want = upstream(p);
-      if (!want.every((s) => s.fx - 0.5 + s.width - 0.25 <= p.w + 1)) continue;
-      compared++;
-      const got = [...fleetLayout(p)].map(({ fx, row, width }) => ({ fx, row, width }));
-      expect(got, encodeParams(p, true)).toEqual(want);
-    }
-    // The skip guard must not be silently eating the whole table.
-    expect(compared).toBeGreaterThan(5);
-  });
+    },
+    /** Held on 341 of 1344 positions walked. */
+    tooLong: {
+      id: "6x6f3dnS,3,2,1:-,-,-,-,-,-,-,3,-,-,2,-,aSpBgTaW",
+      moves:
+        '[{"set":[2,2,7,2,0,2]},{"set":[12,1,24,2]},{"set":[32,1,20,2,27,2]},{"set":[9,1,10,1,11,1,3,2,4,2,5,2,14,2,15,2,16,2,17,2]},{"set":[29,1,22,2,34,2]}]',
+    },
+    /** Held on 74 of 1344 positions walked. */
+    shortRun: {
+      id: "6x6f3dnS,3,2,1:-,-,-,-,2,-,-,-,-,1,-,4,fTaTbSpWdW",
+      moves:
+        '[{"set":[12,1,0,2,7,2,19,2]},{"set":[14,1,2,2,9,2,21,2]},{"set":[5,2,17,2,10,2]},{"set":[22,1,34,1,27,2,29,2]},{"set":[18,2,20,2,23,2]}]',
+    },
+    /** Kept by hand: the scan's boards reach none. */
+    "hidden.satisfied": {
+      id: "10x10f4dtS,4,3,2,1:1,0,1,2,1,4,1,3,4,3,2,0,1,0,3,1,-,3,2,-,zzzgTdShR",
+      moves: fills(
+        "10x10f4dtS,4,3,2,1:1,0,1,2,1,4,1,3,4,3,2,0,1,0,3,1,-,3,2,-,zzzgTdShR",
+        '[{"x0":5,"y0":9,"x1":5,"y1":9,"to":"B"},{"x0":5,"y0":7,"x1":5,"y1":7,"to":"W"},{"x0":0,"y0":8,"x1":0,"y1":8,"to":"W"},{"x0":1,"y0":9,"x1":1,"y1":9,"to":"W"},{"x0":8,"y0":9,"x1":8,"y1":9,"to":"B"},{"x0":6,"y0":7,"x1":6,"y1":7,"to":"W"},{"x0":6,"y0":9,"x1":6,"y1":9,"to":"W"},{"x0":4,"y0":9,"x1":4,"y1":9,"to":"W"},{"x0":4,"y0":7,"x1":4,"y1":7,"to":"W"},{"x0":1,"y0":8,"x1":1,"y1":8,"to":"W"},{"x0":4,"y0":8,"x1":6,"y1":8,"to":"W"},{"x0":9,"y0":8,"x1":9,"y1":8,"to":"W"},{"x0":7,"y0":8,"x1":7,"y1":8,"to":"W"},{"x0":8,"y0":8,"x1":8,"y1":8,"to":"W"},{"x0":0,"y0":1,"x1":9,"y1":1,"to":"W"},{"x0":0,"y0":3,"x1":9,"y1":3,"to":"W"},{"x0":0,"y0":0,"x1":0,"y1":7,"to":"W"},{"x0":1,"y0":0,"x1":1,"y1":7,"to":"W"},{"x0":2,"y0":7,"x1":2,"y1":7,"to":"W"},{"x0":8,"y0":6,"x1":8,"y1":6,"to":"W"},{"x0":4,"y0":6,"x1":5,"y1":6,"to":"B"},{"x0":5,"y0":5,"x1":5,"y1":5,"to":"W"},{"x0":3,"y0":7,"x1":3,"y1":7,"to":"W"},{"x0":3,"y0":5,"x1":3,"y1":5,"to":"W"},{"x0":4,"y0":5,"x1":6,"y1":5,"to":"W"},{"x0":7,"y0":7,"x1":9,"y1":7,"to":"B"},{"x0":6,"y0":6,"x1":6,"y1":6,"to":"W"},{"x0":7,"y0":6,"x1":9,"y1":6,"to":"W"},{"x0":4,"y0":0,"x1":4,"y1":4,"to":"W"},{"x0":2,"y0":6,"x1":3,"y1":6,"to":"B"},{"x0":2,"y0":5,"x1":2,"y1":5,"to":"W"},{"x0":2,"y0":0,"x1":2,"y1":9,"to":"W"},{"x0":3,"y0":8,"x1":3,"y1":8,"to":"B"},{"x0":3,"y0":0,"x1":3,"y1":9,"to":"W"}]',
+      ),
+    },
+    /** Held on 17 of 1344 positions walked. */
+    "hidden.forced":
+      "10x10f4dhS,4,3,2,1:-,-,-,4,1,-,-,-,3,-,0,-,3,-,-,1,4,-,2,0,oSbWbBkCfSeLnWsR",
+    /** Held on 352 of 1344 positions walked. */
+    onlyRuns: {
+      id: "10x10f4dt,4,3,2,1:2,2,3,0,3,4,0,3,2,1,1,2,1,5,1,2,1,4,2,1,lBkTfLzwW",
+      moves:
+        '[{"set":[2,1,11,2]},{"set":[34,1,14,2,25,2,43,2,45,2]},{"set":[32,1,30,2,41,2]},{"set":[0,2,4,2,5,2,6,2,7,2,8,2,9,2]},{"set":[26,2,27,2,28,2,29,2]},{"set":[52,2,62,2,72,2,82,2,92,2]},{"set":[53,2,63,2,73,2,83,2,93,2]},{"set":[16,2,36,2,46,2,56,2,66,2,76,2,86,2,96,2]}]',
+    },
+    /** Held on 380 of 1344 positions walked. */
+    shared: {
+      id: "10x10f4dt,4,3,2,1:2,1,4,1,3,1,0,3,3,2,1,2,3,2,4,2,1,1,2,2,dTznRdWzaBcW",
+      moves:
+        '[{"set":[14,1,3,2,5,2,23,2,25,2]},{"set":[44,1,46,2,33,2,35,2,53,2,55,2]},{"set":[68,1,88,2,57,2,59,2,77,2,79,2]},{"set":[0,2,1,2,2,2,6,2,7,2,8,2,9,2]},{"set":[60,2,61,2,62,2,63,2,64,2,65,2,66,2]},{"set":[70,2,71,2,72,2,73,2,74,2,75,2,76,2]},{"set":[24,2,84,2,94,2]},{"set":[85,2,95,2]},{"set":[16,2,26,2,86,2,96,2]}]',
+    },
+    /** Held on 191 of 1344 positions walked. */
+    lastWater: {
+      id: "10x10f4dhS,4,3,2,1:3,-,-,3,-,2,-,-,-,-,-,5,-,-,-,-,-,-,2,1,kLeRnSmRdRfTfWdWdWpS",
+      moves:
+        '[{"set":[12,1,10,2,1,2,3,2]},{"set":[16,1,18,2,5,2,7,2,25,2,27,2]},{"set":[33,2,31,2]},{"set":[45,1,34,2,36,2,54,2,56,2]},{"set":[50,1,52,2,61,2]},{"set":[68,1,48,2,59,2,77,2,79,2]},{"set":[82,2,93,2,91,2]},{"set":[90,2,94,2,95,2,96,2,97,2,98,2,99,2]},{"set":[30,1,80,1,71,2]},{"set":[64,2]}]',
+    },
+    /** Held on 34 of 1344 positions walked. */
+    lastShip: {
+      id: "10x10f4dhS,4,3,2,1:3,-,-,3,-,2,-,-,-,-,-,5,-,-,-,-,-,-,2,1,kLeRnSmRdRfTfWdWdWpS",
+      moves:
+        '[{"set":[12,1,10,2,1,2,3,2]},{"set":[16,1,18,2,5,2,7,2,25,2,27,2]},{"set":[33,2,31,2]},{"set":[45,1,34,2,36,2,54,2,56,2]},{"set":[50,1,52,2,61,2]},{"set":[68,1,48,2,59,2,77,2,79,2]},{"set":[82,2,93,2,91,2]},{"set":[90,2,94,2,95,2,96,2,97,2,98,2,99,2]},{"set":[30,1,80,1,71,2]},{"set":[64,2]},{"set":[63,1,72,2,74,2]}]',
+    },
+    /** A middle segment's trial: a 7x9 Hard board five steps in. */
+    centerTrial: {
+      id: UPSTREAM[0],
+      moves: fills(
+        UPSTREAM[0],
+        '[{"x0":4,"y0":0,"x1":4,"y1":0,"to":"W"},{"x0":4,"y0":2,"x1":4,"y1":2,"to":"W"},{"x0":2,"y0":2,"x1":2,"y1":2,"to":"W"},{"x0":2,"y0":0,"x1":2,"y1":0,"to":"W"},{"x0":0,"y0":4,"x1":6,"y1":4,"to":"W"}]',
+      ),
+    },
+  },
 });

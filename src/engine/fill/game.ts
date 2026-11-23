@@ -47,6 +47,8 @@ import {
   type FillParams,
   fillParams,
   sizesOf,
+  tallyClue,
+  tallyDefault,
   variationsOf,
   withThorough,
 } from "./game-id.ts";
@@ -100,13 +102,16 @@ type Size = { readonly w: number; readonly h: number };
 type Board = Size & {
   readonly sizes?: Readonly<Record<string, number>>;
   readonly options?: Readonly<Record<string, number>>;
+  /** The tally's size, its counts the size's default. */
+  readonly tally?: number;
 };
 
 /** Whether params `p` are those of the board `b`. */
 const isBoard = (p: FillParams, b: Board): boolean =>
   p.w === b.w &&
   p.h === b.h &&
-  Object.entries(b.sizes ?? {}).every(([n, v]) => p.sizes?.[n] === v);
+  Object.entries(b.sizes ?? {}).every(([n, v]) => p.sizes?.[n] === v) &&
+  (b.tally === undefined || p.tally?.length === b.tally);
 
 export type FillGame<C> = Game<
   FillParams,
@@ -127,11 +132,15 @@ export function fillGame<C extends Clues<C> & object>(
   const byDefault = module.menu?.default ?? boards[0];
   // A board gives each size beyond the grid's, its least where it names none,
   // and each option, its default where it names none.
-  const sized = ({ w, h, sizes, options }: Board, diff = 0): FillParams =>
+  const sized = ({ w, h, sizes, options, tally }: Board, diff = 0): FillParams =>
     withThorough(deal, {
       w,
       h,
       diff,
+      ...(deal.tally === undefined
+        ? {}
+        : { tally: tallyDefault(tally ?? deal.tally.size.default) }),
+      ...(deal.hideFlag === undefined ? {} : { hides: false }),
       ...(deal.settings === undefined
         ? {}
         : {
@@ -225,7 +234,15 @@ export function fillGame<C extends Clues<C> & object>(
     const sizes = sizesOf(p);
     const grown = module.growBy?.(sp, sizes) ?? null;
     const clues = descValue(decodeDesc<C>(deal, sp, module.clueMax, desc, grown));
-    return newBoard<C>(module, size.w, size.h, { ...clues, ...sizes }, variationsOf(p));
+    const tally =
+      deal.tally === undefined ? {} : { [deal.tally.kind]: tallyClue(deal.tally, p) };
+    return newBoard<C>(
+      module,
+      size.w,
+      size.h,
+      { ...clues, ...sizes, ...tally },
+      variationsOf(p),
+    );
   };
   // The renderer previews the input's drag, and the input reads the board
   // where the renderer puts it: each is read only once both are built.

@@ -802,7 +802,8 @@ on the way to the leg's value, or the first press drops the plan
 `verbClicks` hands the same judge each button's click and takes the one that
 completes the step, then one that shrinks it, so a press only on the way is
 never the gesture's. Guard: walk a real journey and assert each leg's verdict
-is `"completed"` (`boats-hint.test.ts`, "completes a journey leg by leg").
+is `"completed"` (`sixteen.test.ts`; a fill game's in `fill/hint.test.ts`,
+"finishes the board when each step's move is made").
 
 ### A move must not reach past the squares the step claimed
 
@@ -820,8 +821,9 @@ one of the step's targets.**
   changed is in that step's targets. Compare decidedness, not raw cell
   values, since a move may rewrite a placed value into a resolved form.
 
-Exemplar: "never asks for a square the step did not claim" in
-`boats-hint.test.ts`.
+Exemplar: a fill game's hint, whose move sets only the squares its step
+rings (`fill/hint.test.ts`, "clicks the squares its move sets, each with
+the button that makes it").
 
 ### Read what a firing did from a before/after comparison
 

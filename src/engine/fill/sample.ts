@@ -26,7 +26,97 @@ export type Sample =
   | ScatterSample
   | DominoSample
   | LinesSample
-  | PictureSample;
+  | PictureSample
+  | PiecesSample;
+
+/** The tally's pieces (`FillTally`), each a straight run of `value` as long
+ * as its length, none touching another even at a corner; the rest `rest`. */
+export interface PiecesSample {
+  readonly pieces: { readonly value: number; readonly rest: number };
+}
+
+/**
+ * The tally's pieces laid as upstream's boats.c `boats_generate_fleet` lays
+ * a fleet, or `null` where one finds no room: the longest first, each in a
+ * stretch of a row or column that holds no piece and no `rest`, at a random
+ * place along it, `rest` then laid on its corners and past its ends, and on
+ * its sides where it is one cell long. `counts[k]` is the number of pieces
+ * `k + 1` long. Without `rs`, each is laid in the first stretch at its start,
+ * which finds room wherever a random laying would.
+ */
+export function samplePieces(
+  sample: PiecesSample,
+  w: number,
+  h: number,
+  counts: readonly number[],
+  rs: RandomState | null,
+): Uint8Array | null {
+  const { value, rest } = sample.pieces;
+  const g = new Uint8Array(w * h);
+  const lay = (x: number, y: number, v: number) => {
+    if (x >= 0 && y >= 0 && x < w && y < h && g[y * w + x] === 0) g[y * w + x] = v;
+  };
+  /** Each stretch along a row, then along a column, of cells not `rest`,
+   * that holds no piece. */
+  const stretches = (): { x: number; y: number; len: number; across: boolean }[] => {
+    const out: { x: number; y: number; len: number; across: boolean }[] = [];
+    for (const across of [true, false]) {
+      const [lines, along] = across ? [h, w] : [w, h];
+      for (let l = 0; l < lines; l++) {
+        let start = -1;
+        let held = false;
+        for (let i = 0; i <= along; i++) {
+          const v = i === along ? rest : g[across ? l * w + i : i * w + l];
+          if (v !== rest) {
+            if (start < 0) start = i;
+            if (v === value) held = true;
+            continue;
+          }
+          if (start >= 0 && !held)
+            out.push(
+              across
+                ? { x: start, y: l, len: i - start, across }
+                : { x: l, y: start, len: i - start, across },
+            );
+          start = -1;
+          held = false;
+        }
+      }
+    }
+    return out;
+  };
+  for (let size = counts.length; size >= 1; size--)
+    for (let j = 0; j < counts[size - 1]; j++) {
+      const order = stretches().filter((s) => s.len >= size);
+      if (order.length === 0) return null;
+      if (rs !== null) shuffle(order, rs);
+      const s = order[0];
+      const at = rs === null ? 0 : randomUpto(rs, s.len - size + 1);
+      const [dx, dy] = s.across ? [1, 0] : [0, 1];
+      const x0 = s.x + dx * at;
+      const y0 = s.y + dy * at;
+      for (let k = 0; k < size; k++) {
+        const x = x0 + dx * k;
+        const y = y0 + dy * k;
+        g[y * w + x] = value;
+        for (const [cx, cy] of [
+          [-1, -1],
+          [1, -1],
+          [-1, 1],
+          [1, 1],
+        ])
+          lay(x + cx, y + cy, rest);
+      }
+      lay(x0 - dx, y0 - dy, rest);
+      lay(x0 + dx * size, y0 + dy * size, rest);
+      if (size === 1) {
+        lay(x0 + dy, y0 + dx, rest);
+        lay(x0 - dy, y0 - dx, rest);
+      }
+    }
+  for (let i = 0; i < g.length; i++) if (g[i] === 0) g[i] = rest;
+  return g;
+}
 
 /** A picture: smoothed noise, `value` at and above its median, `rest` below. */
 export interface PictureSample {

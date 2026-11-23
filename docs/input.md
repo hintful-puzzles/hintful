@@ -277,7 +277,7 @@ button means:
 - **A meaning the drag keeps: continue the drag on the button class.** Test
   `isMouseDrag` and `isMouseRelease`, not `LEFT_DRAG`, so a promoted press
   starts and finishes its own right-button drag. Exemplar:
-  [`boats/index.ts`](../src/games/boats/index.ts).
+  [`galaxies/index.ts`](../src/games/galaxies/index.ts).
 - **Best: put the gesture on the left button too**, so a touch player never
   triggers the promotion. The left button then has two meanings
   (§ "A button with two meanings resolves on the release"). Exemplar:
@@ -678,7 +678,7 @@ a fill game's `stroke: sweep` ([`fill/play.ts`](../src/engine/fill/play.ts)).
 
 The drag fills one row or column, and the press decides a `from → to` pair:
 every square of the line dragged out that reads `from` becomes `to`.
-Exemplar: `boats/index.ts`.
+Exemplar: a fill game's `stroke: line` ([`fill/play.ts`](../src/engine/fill/play.ts)).
 
 - **Choose the axis at each drag event, not at the press.** Whichever
   coordinate has moved less snaps back to the anchor, so a drag can change

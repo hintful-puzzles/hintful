@@ -58,7 +58,14 @@ import {
   MarkOutlines,
 } from "../render/hint-mark.ts";
 import { liveErrors } from "../render/live-errors.ts";
-import { joinToward } from "../render/piece.ts";
+import {
+  JOIN_DOWN,
+  JOIN_LEFT,
+  JOIN_RIGHT,
+  JOIN_UP,
+  JOINED_OPEN,
+  joinToward,
+} from "../render/piece.ts";
 import { PAINTERS, type Painter, type PainterName } from "../render/pieces/index.ts";
 import {
   drawWalledSquare,
@@ -77,19 +84,20 @@ import {
   listAt,
   type Partition,
 } from "../solve/describe-runtime.ts";
-import { type FillMistake, rulesOf } from "./answer.ts";
-import {
-  type Clues,
-  type FillBoard,
-  type FillModule,
-  listOf,
-  spaceOf,
-} from "./board.ts";
+import { answerOf, type FillMistake, rulesOf } from "./answer.ts";
+import { type Clues, type FillBoard, listOf, spaceOf } from "./board.ts";
 import type { Edit } from "./edit.ts";
-import type { FillDeal } from "./game-id.ts";
+import { tallyOf } from "./game-id.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import type { FillPlay, FillUi } from "./play.ts";
-import type { NumberedModule } from "./search.ts";
+import type { SearchedFillModule } from "./search.ts";
+import {
+  drawTally,
+  tallyAcross,
+  tallyHeight,
+  tallyPlaced,
+  wholePieces,
+} from "./tally-display.ts";
 
 /** The fills a dealt partition's parts take: the region palette's first four,
  * as Star Battle's. */
@@ -122,13 +130,19 @@ export interface FillDrawState {
   /** Per line, its list's error, hatch, cursor and font. */
   readonly lists: TileCache;
   readonly marks: HintMarks;
+  /** What the tally beneath the board shows found, `null` before it is
+   * drawn. */
+  readonly tally: { shown: string | null };
 }
 
 export interface FillRender<C> {
   readonly preferredTileSize: number;
   /** How far in from the canvas's top and left the board's first cell lies. */
   origin(tileSize: number, board: { w: number; h: number }): number;
-  computeSize(size: { w: number; h: number }, tileSize: number): Size;
+  computeSize(
+    size: { w: number; h: number; tally?: readonly number[] },
+    tileSize: number,
+  ): Size;
   colors(background: Color): Color[];
   newDrawState(board: FillBoard<C>, tileSize: number): FillDrawState;
   redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void;
@@ -236,6 +250,9 @@ const WASH_HIDES = 1 << 13;
 /** The cell's piece hides its number (`play.hides`) and the preference shows
  * it: it is drawn smaller, the piece staying what the cell holds. */
 const NUMBER_UNDER = 1 << 14;
+/** The cell's running piece runs on, which way the board does not yet say
+ * (`JOINED_OPEN`). */
+const SHAPE_OPEN = 1 << 15;
 
 /** The step to each of a cell's four sides, up, right, down, left. */
 const DIRS: readonly (readonly [number, number])[] = [
@@ -314,13 +331,11 @@ export function fillSlots(play: FillPlay): {
 }
 
 export function fillRender<C extends Clues<C>>(
-  module: FillModule<C> &
-    NumberedModule & {
-      readonly deal?: FillDeal;
-      /** The rules over a dealt partition's parts, which break at the cells
-       * they count however those lie. */
-      readonly partRules?: readonly string[];
-    },
+  module: SearchedFillModule<C> & {
+    /** The rules over a dealt partition's parts, which break at the cells
+     * they count however those lie. */
+    readonly partRules?: readonly string[];
+  },
   look: FillLook<C>,
   previewed: (board: FillBoard<C>, ui: FillUi) => FillBoard<C>,
 ): FillRender<C> {
@@ -381,20 +396,83 @@ export function fillRender<C extends Clues<C>>(
   };
 
   /** Each cell's join, the side its other half is on: a joining piece and
-   * one beside it alike, each beside no other. A run of three stays apart. */
+   * one beside it alike, each beside no other. A run of three stays apart.
+   * A piece that runs (`Painter.runs`) joins its line as {@link runJoins}
+   * reads it. */
   const joinsOf = (b: FillBoard<C>): Uint8Array => {
     const out = new Uint8Array(b.values.length);
     const joins = (v: number) => byValue.get(v)?.painter.joins === true;
-    if (![...byValue.keys()].some(joins)) return out;
+    const runs = (v: number) => byValue.get(v)?.painter.runs === true;
+    const keys = [...byValue.keys()];
+    if (!keys.some(joins) && !keys.some(runs)) return out;
     const sp = spaceOf(module, b);
     const alike = (c: number) => sp.adj4[c].filter((d) => b.values[d] === b.values[c]);
+    const answer =
+      keys.some(runs) && b.fixed.some((f) => f) ? answerOf(module, b) : null;
+    // Once the tally's pieces are all placed, an open square holds none.
+    const full =
+      tallied !== null &&
+      tallyPlaced(b.values, tallied.value, tallyCounts(b, tallied.kind, tallied.count));
     for (const c of sp.cells) {
+      if (runs(b.values[c])) {
+        out[c] = runJoins(b, answer, c, full);
+        continue;
+      }
       if (!joins(b.values[c])) continue;
       const mine = alike(c);
       if (mine.length === 1 && alike(mine[0]).length === 1)
         out[c] = joinToward(b.w, c, mine[0]);
     }
     return out;
+  };
+
+  /**
+   * A running piece's sides, as `joined` (`Painter.runs`): those it runs on
+   * to, or `JOINED_OPEN` where the board does not yet say which way it runs.
+   * A cell the puzzle gave runs as the answer does, so its shape is the one
+   * it was given. Any other is whole where every side is shut (the edge, a
+   * decided other value, or an open square where `openShut`), runs on through
+   * where it is alike on both sides of a line, and ends where it is shut on
+   * one side and alike on the other.
+   */
+  const runJoins = (
+    b: FillBoard<C>,
+    answer: Uint8Array | null,
+    c: number,
+    openShut: boolean,
+  ): number => {
+    const { w, h } = b;
+    const [x, y] = [c % w, Math.floor(c / w)];
+    const v = b.values[c];
+    const at = (d: number): number | null => {
+      const [dx, dy] = DIRS[d];
+      const [nx, ny] = [x + dx, y + dy];
+      return nx < 0 || ny < 0 || nx >= w || ny >= h ? null : ny * w + nx;
+    };
+    const sides = [JOIN_UP, JOIN_RIGHT, JOIN_DOWN, JOIN_LEFT];
+    if (b.fixed[c] && answer !== null)
+      return sides.reduce((j, side, d) => {
+        const n = at(d);
+        return n !== null && answer[n] === answer[c] ? j | side : j;
+      }, 0);
+    const alike = sides.map((_, d) => {
+      const n = at(d);
+      return n !== null && b.values[n] === v;
+    });
+    const shut = sides.map((_, d) => {
+      const n = at(d);
+      return n === null || (b.values[n] !== v && (b.values[n] !== 0 || openShut));
+    });
+    if (shut.every((s) => s)) return 0;
+    for (const [a, z] of [
+      [0, 2],
+      [1, 3],
+    ]) {
+      if (alike[a] && alike[z]) return sides[a] | sides[z];
+      if (shut[a] && alike[z]) return sides[z];
+      if (shut[z] && alike[a]) return sides[a];
+    }
+    return JOINED_OPEN;
   };
 
   /** Each cell's wash bits: `WASHED` on a cell the board washes that was not
@@ -684,8 +762,10 @@ export function fillRender<C extends Clues<C>>(
       (word & ERR_AT) !== 0,
       anim?.frac ?? 1,
       occupied,
-      (lineWord >> JOIN_SHIFT) & 0xf,
+      ((lineWord >> JOIN_SHIFT) & 0xf) | (lineWord & SHAPE_OPEN ? JOINED_OPEN : 0),
     );
+    if (word & FIXED && piece?.painter.given !== undefined)
+      piece.painter.given(dr, tile, piece.slot);
     // A broken piece's badge takes the middle, where the dot would be.
     if (
       play.dotted === true &&
@@ -1007,6 +1087,57 @@ export function fillRender<C extends Clues<C>>(
     }
   }
 
+  /** The board's tally of pieces (`deal.tally`), drawn beneath it as the
+   * piece whose painter runs; `null` where it deals none. */
+  const tallied = ((): {
+    kind: keyof C;
+    count: string;
+    value: number;
+    piece: { painter: Painter; slot: readonly number[] };
+  } | null => {
+    const t = module.deal?.tally;
+    if (t === undefined) return null;
+    const run = [...byValue.entries()].find(([, p]) => p.painter.runs === true);
+    if (run === undefined) throw new Error("play: a tally, and no piece that runs");
+    return { kind: t.kind as keyof C, count: t.count, value: run[0], piece: run[1] };
+  })();
+  /** The counts of a board's tally, the pieces of each length. */
+  const tallyCounts = (
+    b: FillBoard<C>,
+    kind: keyof C,
+    count: string,
+  ): readonly number[] =>
+    (b.dealt[kind] as unknown as Readonly<Record<string, readonly number[]>>)[count];
+
+  /** The tally beneath the board, where the game has one and what it shows
+   * found has moved. */
+  function drawTallyOf(dr: GameDrawing, ds: FillDrawState, b: FillBoard<C>): void {
+    const t = tallied;
+    if (t === null) return;
+    const counts = tallyCounts(b, t.kind, t.count);
+    const full = tallyPlaced(b.values, t.value, counts);
+    const found = wholePieces(b.values, b.w, b.h, t.value, counts.length, full);
+    const key = found.join(",");
+    if (ds.tally.shown === key) return;
+    ds.tally.shown = key;
+    const ts = ds.tileSize;
+    drawTally(
+      dr,
+      ts,
+      { x: coord(0, ts), y: coord(b.h, ts) + ts, w: b.w },
+      counts,
+      found,
+      t.piece.painter,
+      {
+        piece: t.piece.slot,
+        found: COL_LABEL,
+        strike: COL_INK,
+        over: COL_ERROR,
+        background: COL_BACKGROUND,
+      },
+    );
+  }
+
   function redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void {
     const { state, prev, animTime, ui, flash, hint, mistakes } = frame;
     const ts = ds.tileSize;
@@ -1181,7 +1312,11 @@ export function fillRender<C extends Clues<C>>(
         k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
         const hk = hintWord[i] | outlines.packed(x, y);
         let lk =
-          lineWord[i] | (states.get(i) ?? 0) | (joins[i] << JOIN_SHIFT) | washes[i];
+          lineWord[i] |
+          (states.get(i) ?? 0) |
+          ((joins[i] & 0xf) << JOIN_SHIFT) |
+          (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
+          washes[i];
         const n = shownNumber(state, i, shown.values[i], ui.hiddenShown);
         if (n >= 0 && shown.values[i] === play.hides?.value) lk |= NUMBER_UNDER;
         const part =
@@ -1197,6 +1332,7 @@ export function fillRender<C extends Clues<C>>(
     // After every tile, and every frame: `HintMarks.paint` always draws.
     ds.marks.paint(dr, unlinked, area, markStyle);
     for (const l of askedLinks) drawLinkRing(dr, ts, w, l, whole(l));
+    drawTallyOf(dr, ds, shown);
 
     if (lineLists.length > 0)
       drawLists(dr, ds, state, { stripedLine, lineErrors, cx, cy });
@@ -1236,12 +1372,23 @@ export function fillRender<C extends Clues<C>>(
     preferredTileSize: PREFERRED_TILE_SIZE,
     origin: (ts, b) => startAt(ts, depthOf(b)),
     // A hexagon's rows reach half a tile past its width.
-    computeSize: ({ w, h }, size) => {
+    computeSize: (p, size) => {
+      const { w, h } = p;
       const ts = tileOf(size);
       const from = startAt(ts, depthOf({ w, h }));
+      const tally = module.deal?.tally;
+      // The tally beneath the board, its pieces as long as they are.
+      const counts = tally === undefined ? null : tallyOf(tally, p);
       return {
-        w: from + end(ts) + ts * w + (hexagon ? ts >> 1 : 0),
-        h: from + end(ts) + ts * h,
+        w: Math.max(
+          from + end(ts) + ts * w + (hexagon ? ts >> 1 : 0),
+          counts === null ? 0 : from + Math.ceil(tallyAcross(counts, w) * ts),
+        ),
+        h:
+          from +
+          end(ts) +
+          ts * h +
+          (counts === null ? 0 : Math.ceil(tallyHeight(counts, w) * ts)),
       };
     },
     colors,
@@ -1252,6 +1399,7 @@ export function fillRender<C extends Clues<C>>(
       clues: new TileCache(b.w + b.h),
       lists: new TileCache(b.w + b.h),
       marks: new HintMarks(),
+      tally: { shown: null },
     }),
     redraw,
     numbersLeft,

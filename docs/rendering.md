@@ -878,7 +878,9 @@ names the one it applies.
   is on goes in the tile key, and the tile is clipped to its cell, or the
   later half's edge paints over its partner's half of the divider. A domino
   has a divider in the board's own color; a boat has round ends and none, as
-  it is one hull. A joined piece covers the line or wall between its cells:
+  it is one hull. In a fill game a painter that `runs` (`hull`) is told its
+  joins by the engine, its way still open (`JOINED_OPEN`) drawn as a small
+  square, so a game writes no join rule of its own. A joined piece covers the line or wall between its cells:
   a wall through it reads as two pieces, and the wall still shows beside it.
   Two rounded pieces with a bar between them read as a lump, not a tile.
 - **Two states where neither is the important one are `TWO`, and the game

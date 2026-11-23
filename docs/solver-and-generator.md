@@ -1521,8 +1521,8 @@ which says this rule once: `skeleton/edges/index.ts`.
 collision) are a strict subset of what the re-solve knows: a locally legal
 piece on a square the solution assigns otherwise breaks no rule yet, and a
 live-only hook would let Check & Save bless it. Render them so both read.
-Exemplar: [`boats/render.ts`](../src/games/boats/render.ts), which recolors a
-wrong ship and insets an outline so a wrong water square shows.
+Exemplar: every fill game ([`fill/render.ts`](../src/engine/fill/render.ts)),
+which draws the rules' breaks live and the answer's mistakes on Check.
 
 ### Self-validating games run their rule checker
 

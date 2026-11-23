@@ -597,7 +597,7 @@ Three treatments for an expensive test, in order of how little they lose:
 1. **Run a deterministic search once.** A loop that scans seeds until a board
    shows a technique finds the same board every time, so write the board
    down. For a hint's rung that is `describeHintPins`, as in
-   [`boats-hint.test.ts`](../src/games/boats/boats-hint.test.ts).
+   [`boats.test.ts`](../src/games/boats/boats.test.ts).
 2. **Turn a seed count down** with `seedBudget(gate, full)`
    ([`slow.ts`](../src/engine/testing/slow.ts)), only for a property whose
    violation would be systematic, and say at the call site how many

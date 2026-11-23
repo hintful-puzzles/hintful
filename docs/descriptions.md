@@ -329,7 +329,19 @@ research tools all read through it; the app never does.
   smaller, flipped by a press in the half tile round the grid; `play.wrap`
   carries the cursor over the edge; the `ring` painter circles a kept
   number. A numbered cell's text is its number inside its value's glyph
-  where the glyph's middle is blank (`[3]`).
+  where the glyph's middle is blank (`[3]`). `play.tally` names a clue at
+  the board of a length and its count that the params give (Boats' fleet,
+  `f3` and `,3,2,1`); it is skipped as a derived kind, and drawn beneath
+  the board (`engine/fill/tally-display.ts`). `deal.sample: pieces` lays
+  its pieces as straight runs of a value, none touching. `deal.hideFlag`
+  is a setting after the tier under which `deal.hide` hides its `kind`
+  too, and a board hiding none of it is drawn again; `deal.withhold` names
+  values a kind is never derived as (Boats' shapeless segment). `numbers`'
+  `hidden` writes a clue not shown and `closed` a comma after each; a
+  `glyphs` segment writes a kind's values by letters with runs of empty
+  cells between. `play.shape` draws a kind as its cell's piece, never a
+  number: a painter that `runs` is told the sides it joins along its line,
+  a given cell's from the answer.
   The compiler writes `<id>.game.ts`, `fillGame` of the module, and
   `<id>.catalog.ts`.
 - **The compiler reads a description with every variation applied.** One

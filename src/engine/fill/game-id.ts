@@ -15,12 +15,16 @@ import {
 } from "../contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
-import { isDigit } from "../game-id/decimal.ts";
+import { isDigit, parseLeadingInt } from "../game-id/decimal.ts";
 import { c2n, n2c } from "../game-id/desc-alphabet.ts";
 import { type DescReader, readDesc } from "../game-id/desc-reader.ts";
 import { readDotRuns, writeDotRuns } from "../game-id/dot-runs.ts";
 import { modifierItem } from "../game-id/modifier.ts";
-import { dimensionParamConfig, parseConfigInt } from "../game-id/params.ts";
+import {
+  dimensionParamConfig,
+  parseConfigInt,
+  unreadParams,
+} from "../game-id/params.ts";
 import {
   choice,
   dims,
@@ -47,7 +51,7 @@ import {
 } from "../solve/describe-runtime.ts";
 import type { Clues } from "./board.ts";
 import type { FillGrow, GrowSizes } from "./grow.ts";
-import type { Sample } from "./sample.ts";
+import { type Sample, samplePieces } from "./sample.ts";
 
 /** A segment of the desc: where a one-valued clue kind sits, as upstream's
  * run code; a dealt partition as the walls between its parts
@@ -82,7 +86,19 @@ export type IdSegment =
        * place of one of the segment's own (Bricks' unknown number, `7`). */
       readonly also?: Readonly<Record<string, string>>;
     }
-  | { readonly numbers: string; readonly before?: string; readonly order?: "columns" };
+  | {
+      readonly numbers: string;
+      readonly before?: string;
+      readonly order?: "columns";
+      /** What an element without a clue is written as, where not nothing. */
+      readonly hidden?: string;
+      /** Whether a comma follows every element, the last too, rather than
+       * standing between two. */
+      readonly closed?: true;
+    }
+  /** A cell kind written a letter a clue, each letter one of its values,
+   * between runs of empty cells `a` to `z`, the last run left off. */
+  | { readonly glyphs: string; readonly values: Readonly<Record<string, number>> };
 
 /** A deal setting the player may turn off (`deal.thorough`): on, the hide
  * tries every clue; off, as many as the board's shorter side. A menu board
@@ -173,6 +189,11 @@ export interface FillDeal {
    * half turn are hidden together. */
   readonly symmetric?: "halfTurn";
   readonly thorough?: FillThorough;
+  /** The board kind the params give as a count of pieces of each length. */
+  readonly tally?: FillTally;
+  /** The setting under which the deal hides a kind beside `hide`'s, off by
+   * default. */
+  readonly hideFlag?: FillHideFlag;
   /** How it grows a dealt partition round the answer. */
   readonly grow?: FillGrow;
   readonly id: readonly IdSegment[];
@@ -189,6 +210,44 @@ export interface FillDeal {
       { readonly min: number; readonly max?: number; readonly step?: number }
     >
   >;
+}
+
+/**
+ * A board kind of two fields that the params give (`play.tally`): for each
+ * length from 1 to the size, the count of pieces of it (Boats' fleet). The
+ * size is written by its letter (`f3`), and the counts after a comma at the
+ * params' end (`,3,2,1`); absent, a size of `size.default` and a count of
+ * each length one more than the next's, from one of the longest.
+ */
+export interface FillTally {
+  readonly kind: string;
+  /** The kind's fields: each length, and the count of pieces of it. */
+  readonly index: string;
+  readonly count: string;
+  readonly size: {
+    readonly letter: string;
+    readonly kw: string;
+    readonly name: string;
+    readonly doc: string;
+    readonly min: number;
+    readonly max: number;
+    readonly default: number;
+  };
+  readonly counts: { readonly kw: string; readonly name: string; readonly doc: string };
+  /** The tier a tally of one piece is dealt at alone, by its index. */
+  readonly single?: number;
+}
+
+/** A setting the player may turn on, under which the deal hides `kind`
+ * too (`deal.hideFlag`), written after the tier by its letter. */
+export interface FillHideFlag {
+  readonly kind: string;
+  readonly letter: string;
+  readonly kw: string;
+  readonly name: string;
+  readonly doc: string;
+  /** What a board's name says where it is on. */
+  readonly words: string;
 }
 
 /** A variation the player may switch on (`play.modifiers`). */
@@ -219,7 +278,168 @@ export interface FillParams {
   /** The deal's options, by name, in a game whose deal has any
    * (`FillDeal.options`); absent in any other. */
   options?: Readonly<Record<string, number>>;
+  /** The tally's count of each length from 1, in a game whose params give
+   * one (`FillDeal.tally`); absent in any other. */
+  tally?: readonly number[];
+  /** Whether the deal hides, in a game whose deal has the setting
+   * (`FillDeal.hideFlag`); absent in any other. */
+  hides?: boolean;
 }
+
+/** Each length's count of a tally of `size`, where the params name none:
+ * one of the longest, and one more of each shorter. */
+export const tallyDefault = (size: number): number[] =>
+  Array.from({ length: size }, (_, i) => size - i);
+
+/** The tally `p` gives, its default where `p` names none. */
+export const tallyOf = (
+  t: FillTally,
+  p: Pick<FillParams, "tally">,
+): readonly number[] => p.tally ?? tallyDefault(t.size.default);
+
+/** The board clue the tally of `p` is: each length and its count. */
+export const tallyClue = (
+  t: FillTally,
+  p: FillParams,
+): Readonly<Record<string, number | readonly number[]>> => {
+  const counts = tallyOf(t, p);
+  return {
+    n: counts.length,
+    [t.index]: counts.map((_, i) => i + 1),
+    [t.count]: counts,
+  };
+};
+
+/** The count of the tally's pieces of each length on a board of `p`. */
+export const piecesOf = (deal: FillDeal, p: FillParams): readonly number[] => {
+  if (deal.tally === undefined) throw new Error("deal: pieces, and no tally");
+  return tallyOf(deal.tally, p);
+};
+
+/** The clues the params give a board of `p`: its sizes beyond the grid's,
+ * and its tally. */
+export const givenOf = (
+  deal: FillDeal,
+  p: FillParams,
+): Readonly<
+  Record<string, number | Readonly<Record<string, number | readonly number[]>>>
+> =>
+  deal.tally === undefined
+    ? sizesOf(p)
+    : { ...sizesOf(p), [deal.tally.kind]: tallyClue(deal.tally, p) };
+
+/** Counts read from `s` for a tally of `size`: numbers apart by anything
+ * else, 0 for each the text runs out before (upstream boats.c). */
+function readCounts(s: string, size: number): number[] {
+  const nums = [...s.matchAll(/\d+/g)].map((m) => Number(m[0]));
+  return Array.from({ length: size }, (_, i) => nums[i] ?? 0);
+}
+
+/** The Custom dialog's two fields of a tally: its size, and its counts,
+ * blank where they are the size's default. */
+function tallyItems(t: FillTally): ParamConfigItem<FillParams>[] {
+  const counts = (p: FillParams): string => {
+    const c = tallyOf(t, p);
+    const def = tallyDefault(c.length);
+    return c.every((n, i) => n === def[i]) ? "" : c.join(",");
+  };
+  return [
+    {
+      kw: t.size.kw,
+      name: t.size.name,
+      type: "string",
+      doc: t.size.doc,
+      bounds: { min: t.size.min, max: t.size.max },
+      label: { slot: "tail", words: (p) => `size ${tallyOf(t, p).length}` },
+      get: (p) => String(tallyOf(t, p).length),
+      // A new size takes its default counts, as upstream's dialog does.
+      set: (p, v) => {
+        p.tally = tallyDefault(parseConfigInt(v));
+      },
+    },
+    {
+      kw: t.counts.kw,
+      name: t.counts.name,
+      type: "string",
+      doc: t.counts.doc,
+      label: {
+        slot: "tail",
+        words: (p) => (counts(p) === "" ? null : `${t.kind} ${counts(p)}`),
+      },
+      get: counts,
+      set: (p, v) => {
+        const size = tallyOf(t, p).length;
+        p.tally = v === "" ? tallyDefault(size) : readCounts(v, size);
+      },
+    },
+  ];
+}
+
+/** The tally's size by its letter, after the grid's, where it is not the
+ * default; absent, the default size. */
+function tallySizeSegment(t: FillTally): ParamsSegment<FillParams> {
+  return {
+    encode: (p) => `${t.size.letter}${tallyOf(t, p).length}`,
+    decode: (s, i, p) => {
+      if (s[i] !== t.size.letter) {
+        p.tally = tallyDefault(t.size.default);
+        return i;
+      }
+      const parsed = parseLeadingInt(s, i + 1);
+      p.tally = tallyDefault(parsed.value);
+      return parsed.next;
+    },
+  };
+}
+
+/** The tally's counts after a comma, last in the params and always
+ * written; absent, the size's default. */
+function tallyCountsSegment(t: FillTally): ParamsSegment<FillParams> {
+  return {
+    encode: (p) => `,${tallyOf(t, p).join(",")}`,
+    decode: (s, i, p) => {
+      if (s[i] !== ",") return i;
+      for (let j = i; j < s.length; j++)
+        if (s[j] !== "," && !isDigit(s[j])) unreadParams(s, j);
+      p.tally = readCounts(s.slice(i), tallyOf(t, p).length);
+      return s.length;
+    },
+  };
+}
+
+/** Why a tally cannot be dealt on a board of `p`, or `null`. */
+function tallyRefusal(
+  t: FillTally,
+  tiers: readonly string[],
+  p: FillParams,
+  full: boolean,
+): string | null {
+  const counts = tallyOf(t, p);
+  const size = counts.length;
+  const name = t.size.name;
+  if (size < t.size.min || size > t.size.max)
+    return `${name} must be between ${t.size.min} and ${t.size.max}.`;
+  if (size > p.w && size > p.h)
+    return `${name} must be smaller than the width and height.`;
+  const pieces = counts.reduce((a, b) => a + b, 0);
+  if (pieces === 0) return `The ${t.kind} must contain at least 1 piece.`;
+  if (full && pieces === 1 && t.single !== undefined && p.diff !== t.single)
+    return noSuchTier(`puzzle with one piece in its ${t.kind}`, tiers[p.diff]);
+  return null;
+}
+
+/** The hide flag's Custom field. */
+const hideFlagItem = (f: FillHideFlag): ParamConfigItem<FillParams> => ({
+  kw: f.kw,
+  name: f.name,
+  type: "boolean",
+  doc: f.doc,
+  label: { slot: "tail", words: (p) => (p.hides === true ? f.words : null) },
+  get: (p) => p.hides === true,
+  set: (p, v) => {
+    p.hides = v;
+  },
+});
 
 /** Option `name`'s value on a board of `p`, its default where `p` names
  * none. */
@@ -416,8 +636,10 @@ export function fillParams(
         },
       }),
     ),
+    ...(deal.tally === undefined ? [] : tallyItems(deal.tally)),
     ...options.map(([name, o]) => optionItem(deal, name, o, usual)),
     difficultyItem(tiers, "diff"),
+    ...(deal.hideFlag === undefined ? [] : [hideFlagItem(deal.hideFlag)]),
     ...named.map(([variation, m]) =>
       modifierItem<FillParams>({
         kw: m.kw,
@@ -474,6 +696,7 @@ export function fillParams(
           },
         }),
       ),
+      ...(deal.tally === undefined ? [] : [tallySizeSegment(deal.tally)]),
       // An option only the deal reads, which only a full ID carries: absent,
       // it is the option's default.
       ...options.map(([name, o]) =>
@@ -522,8 +745,29 @@ export function fillParams(
       ...(deal.tierFlag === undefined ? [] : [tierFlagSegment(deal.tierFlag)]),
       ...(deal.tierAliases === undefined ? [] : [tierAliasSegment(deal.tierAliases)]),
       choice(paramConfig, "d", "difficulty", deal.tierLetters, { full: true }),
+      ...(deal.hideFlag === undefined
+        ? []
+        : [flag(paramConfig, deal.hideFlag.letter, deal.hideFlag.kw, { full: true })]),
+      ...(deal.tally === undefined ? [] : [tallyCountsSegment(deal.tally)]),
     ]),
     validateParams(p, full) {
+      // Returned as the call, so the refusal scan reads its sentences.
+      if (deal.tally !== undefined && tallyRefusal(deal.tally, tiers, p, full) !== null)
+        return tallyRefusal(deal.tally, tiers, p, full);
+      // The pieces fit where they can be laid on the board, taken upright.
+      const { sample } = deal;
+      if (
+        sample !== null &&
+        "pieces" in sample &&
+        samplePieces(
+          sample,
+          Math.min(p.w, p.h),
+          Math.max(p.w, p.h),
+          piecesOf(deal, p),
+          null,
+        ) === null
+      )
+        return `The ${deal.tally?.kind ?? "pieces"} does not fit into the grid.`;
       for (const s of settings) {
         const ruleset = s.rulesets[rulesetOf(s, p)];
         if (ruleset === undefined) return "There is no such game mode.";
@@ -820,11 +1064,30 @@ export function encodeDesc<C extends Clues<C>>(
       for (const c of sp.cells) out += n2c(list.valueAt[c]);
       continue;
     }
+    if ("glyphs" in seg) {
+      const list = listOf(seg.glyphs);
+      const letter = new Map(Object.entries(seg.values).map(([l, v]) => [v, l]));
+      // A run is written when a clue ends it or it reaches 26, so one at the
+      // end is left off (upstream boats.c).
+      let run = 0;
+      for (const c of sp.cells) {
+        const v = list.valueAt[c];
+        if (v < 0) run++;
+        if (run > 0 && (run === 26 || v >= 0)) {
+          out += String.fromCharCode(96 + run);
+          run = 0;
+        }
+        if (v >= 0) out += letter.get(v) ?? "";
+      }
+      continue;
+    }
     const list = listOf(seg.numbers);
     elements(sp, universeOf(deal, seg.numbers), seg.order).forEach((e, i) => {
-      out += i === 0 ? (seg.before ?? "") : ",";
+      if (i === 0) out += seg.before ?? "";
+      else if (seg.closed !== true) out += ",";
       const v = list.valueAt[e];
-      if (v >= 0) out += String(v);
+      out += v >= 0 ? String(v) : (seg.hidden ?? "");
+      if (seg.closed === true) out += ",";
     });
   }
   return out;
@@ -855,6 +1118,30 @@ function readRunCells(r: DescReader, n: number): ClueList {
     at.map(() => 0),
     n,
   );
+}
+
+/** A `glyphs` segment: a run letter skips 1 to 26 empty cells of `n`, and
+ * each of `values`' letters is a clue on the next. */
+function readGlyphs(
+  r: DescReader,
+  n: number,
+  values: Readonly<Record<string, number>>,
+): ClueList {
+  const at: number[] = [];
+  const v: number[] = [];
+  let cell = 0;
+  while (r.peekIs((ch) => (ch >= "a" && ch <= "z") || Object.hasOwn(values, ch))) {
+    const ch = r.char();
+    if (ch >= "a" && ch <= "z") {
+      cell += ch.charCodeAt(0) - 96;
+      if (cell > n) r.fail(DESC_TOO_LONG);
+      continue;
+    }
+    if (cell >= n) r.fail(DESC_TOO_LONG);
+    at.push(cell++);
+    v.push(values[ch]);
+  }
+  return clueList(at, v, n);
 }
 
 /** A `lists` segment: every element's list, an empty one written as
@@ -1021,6 +1308,10 @@ export function decodeDesc<C extends Clues<C>>(
         out[seg.lists as keyof C] = readLists(r, deal, sp, clueMax, seg);
         continue;
       }
+      if ("glyphs" in seg) {
+        out[seg.glyphs as keyof C] = readGlyphs(r, sp.cells.length, seg.values);
+        continue;
+      }
       if ("cells" in seg) {
         const kind = seg.cells as keyof C;
         const least = deal.least?.[seg.cells] ?? 0;
@@ -1039,11 +1330,16 @@ export function decodeDesc<C extends Clues<C>>(
       elements(sp, universe, seg.order).forEach((e, i) => {
         if (i === 0) {
           if (seg.before !== undefined) r.expect(seg.before);
-        } else r.expect(",");
-        // An absent clue is written as nothing.
-        if (!r.peekIs(isDigit)) return;
+        } else if (seg.closed !== true) r.expect(",");
+        // An absent clue is written as `hidden`, or as nothing.
+        if (seg.hidden !== undefined && r.accept(seg.hidden)) {
+          if (seg.closed === true) r.expect(",");
+          return;
+        }
+        if (seg.hidden === undefined && !r.peekIs(isDigit)) return;
         at.push(e);
         v.push(r.int(0, maxOf(clueMax, kind, sp, e)));
+        if (seg.closed === true) r.expect(",");
       });
       // The elements in the space's order, as a list is held.
       const byAt = at.map((e, k) => [e, v[k]] as const).sort((a, b) => a[0] - b[0]);

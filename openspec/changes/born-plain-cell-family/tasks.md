@@ -162,7 +162,30 @@ order.
       badges on repeated clear numbers, where a square beside a shaded one
       was read as clear; Solve fills the answer rather than solving the
       current board; saves of the hand-written game are not read.
-- [ ] 2.9 Boats born.
+- [x] 2.9 Boats born. Done 2026-11-23, 2,949 hand-written lines gone.
+      Added, each the engine's: `play.tally`, a clue at the board of a
+      length and a count the params give (`f3`, `,3,2,1`), with its Custom
+      fields, its default and its refusals (`FieldClue`); `sample: pieces`,
+      the tally's pieces laid longest first in shuffled stretches
+      (upstream's `boats_generate_fleet`); `deal.hideFlag`, a setting after
+      the tier that hides its kind in one order with `deal.hide`'s and
+      refuses a board hiding none; `deal.withhold`, a value never derived;
+      `numbers`' `hidden` and `closed`; a `glyphs` segment of letters;
+      `play.shape`, a kind drawn as its cell's piece; a painter that `runs`,
+      told the sides it joins and where its way is open, an open square
+      shut once the tally is all placed; a painter's `given`; the `sea` and
+      `hull` painters; the tally beneath the board, struck as found and red
+      past its count (`tally-display.ts`). Deals measured 2026-11-23 over 8
+      each, on a loaded machine: 10x10 Easy median 18 ms, max 36 ms;
+      Normal 40, 113; Tricky 29, 70; Hard 132, 590; Hard with numbers
+      removed 219, 1,023. Differences a player sees: a missing tier reads
+      as Easy, where it read as Normal; a right click goes round the other
+      way, where it made water; a left drag acts on the square it began
+      on, and a right drag, or Shift or Ctrl with an arrow, waters a line;
+      a lone hidden number is not put back; a square's shape is given and
+      hidden while the tier holds, where segments were added then removed;
+      the text format writes `#` and `~`; the win flash sweeps each square
+      at its own place; saves of the hand-written game are not read.
 
 ## 3. Finish
 

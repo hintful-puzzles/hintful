@@ -28,11 +28,18 @@ import {
 import type { FillPlay } from "./play.ts";
 
 /** A board's clues by kind, a list kind's as lists (Pattern's runs), its
- * dealt partitions by name, and the sizes its params give beyond the grid's
- * (Star Battle's `stars`): a compiled module's `Dealt`. */
+ * dealt partitions by name, the sizes its params give beyond the grid's
+ * (Star Battle's `stars`), and a clue at the board with fields, its `n`
+ * entries a field (Boats' fleet): a compiled module's `Dealt`. */
 export type Clues<C> = {
-  readonly [K in keyof C]: ClueList | ListClues | Partition | number;
+  readonly [K in keyof C]: ClueList | ListClues | Partition | number | FieldClue;
 };
+
+/** A clue at the board with fields: `n` entries, each field a list of them. */
+export interface FieldClue {
+  readonly n: number;
+  readonly [field: string]: number | readonly number[];
+}
 
 /** The clues of kind `kind`, which the caller knows is a clue kind and not a
  * partition. */

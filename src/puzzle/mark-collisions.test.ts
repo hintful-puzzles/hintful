@@ -18,13 +18,13 @@ import { COL_INK, fillSlots } from "../engine/fill/render.ts";
 import type { DrawOp } from "../engine/testing/recording-drawing.ts";
 import { FIRST_SHARE, ofThisShare } from "../engine/testing/sweep-share.ts";
 import * as ballsort from "../games/ballsort/render.ts";
-import * as boats from "../games/boats/render.ts";
 import * as dominosa from "../games/dominosa/render.ts";
 import * as galaxies from "../games/galaxies/render.ts";
 import * as path from "../games/path/render.ts";
 import * as salad from "../games/salad/render.ts";
 import * as untangle from "../games/untangle/render.ts";
 import * as wordtrail from "../games/wordtrail/render.ts";
+import * as boats from "../generated/games/boats/boats.compiled.ts";
 import * as mosaic from "../generated/games/mosaic/mosaic.compiled.ts";
 import * as sticks from "../generated/games/sticks/sticks.compiled.ts";
 import { puzzleIds } from "./catalog.ts";
@@ -72,8 +72,8 @@ const DECLARED: Record<string, Declared[]> = {
   ],
   boats: [
     {
-      among: [boats.COL_COUNT],
-      against: [boats.COL_INK],
+      among: [COL_INK],
+      against: [fillSlots(boats.play).painted.get("sea")?.slot[1] ?? -1],
       why: "a count beside the grid and the waves of a square the puzzle gave as water: a digit outside the grid, a tilde inside it",
     },
   ],

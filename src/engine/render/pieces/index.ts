@@ -2,6 +2,7 @@
 
 import { across, down } from "./bar.ts";
 import { ground, tent, tree } from "./camp.ts";
+import { hull, sea } from "./fleet.ts";
 import { bulb, wall } from "./lamp.ts";
 import type { Painter } from "./painter.ts";
 import { block, disc } from "./pair.ts";
@@ -18,7 +19,9 @@ export const PAINTERS = {
   domino,
   down,
   ground,
+  hull,
   ring,
+  sea,
   shade,
   star,
   tent,

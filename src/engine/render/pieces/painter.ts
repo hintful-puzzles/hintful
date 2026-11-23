@@ -32,6 +32,13 @@ export interface Painter {
   /** Whether two of the piece side by side, each beside no other, are drawn
    * as one: {@link paint} is told the side its other half is on. */
   readonly joins?: boolean;
+  /** Whether the piece runs straight through alike pieces in a line, as one
+   * hull: {@link paint} is told the sides it runs on to, or `JOINED_OPEN`
+   * where the board does not yet say which way it runs. */
+  readonly runs?: boolean;
+  /** What a cell the puzzle gave holding the piece draws over it, to tell
+   * it from one the player placed (Boats' waves on given water). */
+  given?(dr: GameDrawing, tile: Rect, slot: readonly number[]): void;
   /**
    * Draw the piece in `tile`, the cell's whole box, the color at index `i`
    * of {@link colors} in slot `slot[i]`. `error` where a rule breaks at the

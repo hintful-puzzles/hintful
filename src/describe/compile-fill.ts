@@ -29,6 +29,7 @@ import {
   type OptionJson,
   optionsOf,
   type PlayJson,
+  type SampleJson,
   type SizeBoundsJson,
   sampleOf,
   segmentKinds,
@@ -330,6 +331,7 @@ const sizeOf =
     h: number;
     sizes?: Record<string, number>;
     options?: Record<string, number>;
+    tally?: number;
   } => {
     const m = /^(\d+)x(\d+)((?:[a-z]\d+)*)$/.exec(b);
     if (m === null) throw new CompileError(`play boards: ${b} is not WxH`);
@@ -337,7 +339,12 @@ const sizeOf =
       Object.keys(json.play?.sizes ?? {}).map((n) => [n, json.sizes[n]?.min ?? 0]),
     );
     const options: Record<string, number> = {};
+    let tally: number | null = null;
     for (const [, letter, n] of m[3].matchAll(/([a-z])(\d+)/g)) {
+      if (letter === json.play?.tally?.size.letter) {
+        tally = Number(n);
+        continue;
+      }
       const named = Object.entries(json.play?.sizes ?? {}).find(
         ([, s]) => s.letter === letter,
       );
@@ -356,6 +363,7 @@ const sizeOf =
       h: Number(m[2]),
       ...(Object.keys(sizes).length === 0 ? {} : { sizes }),
       ...(Object.keys(options).length === 0 ? {} : { options }),
+      ...present("tally", tally),
     };
   };
 
@@ -631,6 +639,16 @@ function tierAliasesOf(
   );
 }
 
+/** The value a sample lays, 0 where it builds the answer. */
+function sampledValue(sample: SampleJson | null): number {
+  if (sample === null || "build" in sample) return 0;
+  if ("dominoes" in sample) return sample.dominoes.value;
+  if ("lines" in sample) return sample.lines.value;
+  if ("picture" in sample) return sample.picture.value;
+  if ("pieces" in sample) return sample.pieces.value;
+  return sample.scatter.value;
+}
+
 /** `{ [key]: value }` to spread into a module's object, or nothing where
  * `value` is absent, so the module holds no `null` field. */
 function present<K extends string, V>(key: K, value: V | null): Partial<Record<K, V>> {
@@ -650,7 +668,9 @@ export function dealOf(
     json.id ?? kinds.map((k, i) => ({ numbers: k, ...(i > 0 ? { before: "," } : {}) }));
   const isMarker = (kind: string): boolean => markerKind(d, kind);
   const hexagon = hexagonOf(json, isMarker);
-  checkNamed(id, [...kinds, ...partitions], hexagon?.outside ?? null);
+  // The tally is the params', which the ID does not write.
+  const written = kinds.filter((k) => k !== json.play?.tally?.kind);
+  checkNamed(id, [...written, ...partitions], hexagon?.outside ?? null);
   checkSegments(id, d, env);
   const hideJson = json.deal?.["hide"];
   // One kind, or several hidden in one random order.
@@ -690,15 +710,19 @@ export function dealOf(
     json.tierLetters ?? tiers.map((t) => t[0]?.toLowerCase() ?? "").join("");
   if (tierLetters.length !== tiers.length || new Set(tierLetters).size !== tiers.length)
     throw new CompileError(`tierLetters: ${tierLetters} is not one letter a tier`);
+  // A clue a fill game deals sits at a cell or a line; the tally, the
+  // params' clue at the board, is none it deals.
   const universes = Object.fromEntries(
-    [...d.clueKinds].map(([k, c]) => {
-      const u = UNIVERSE[c.at];
-      if (u === undefined)
-        throw new CompileError(
-          `clue ${k}: a fill game's clue sits at a cell or a line`,
-        );
-      return [k, u];
-    }),
+    [...d.clueKinds]
+      .filter(([k]) => k !== json.play?.tally?.kind)
+      .map(([k, c]) => {
+        const u = UNIVERSE[c.at];
+        if (u === undefined)
+          throw new CompileError(
+            `clue ${k}: a fill game's clue sits at a cell or a line`,
+          );
+        return [k, u];
+      }),
   );
   const sample = sampleOf(json);
   const grow = growOf(json);
@@ -809,6 +833,8 @@ export function dealOf(
     ...present("tierAliases", tierAliases),
     ...(typeof unpair === "string" ? { unpair } : {}),
     ...present("latin", latin),
+    ...present("tally", tallyOf(json, tiers)),
+    ...present("hideFlag", hideFlagOf(json, d, hides)),
     ...(symmetric === undefined ? {} : { symmetric }),
     ...present("thorough", thorough),
     ...(grow === null
@@ -816,16 +842,7 @@ export function dealOf(
       : {
           grow: {
             partition: grow.partition,
-            value:
-              sample === null || "build" in sample
-                ? 0
-                : "dominoes" in sample
-                  ? sample.dominoes.value
-                  : "lines" in sample
-                    ? sample.lines.value
-                    : "picture" in sample
-                      ? sample.picture.value
-                      : sample.scatter.value,
+            value: sampledValue(sample),
             ...(grow.closed === undefined ? {} : { closed: grow.closed }),
           },
         }),
@@ -839,6 +856,7 @@ export function dealOf(
   // Each kind's smallest value, which the ID refuses below.
   const least: Record<string, number> = {};
   for (const [kind, c] of d.clueKinds) {
+    if (kind === json.play?.tally?.kind) continue;
     const sorts = env.clues.get(kind) as ClueKind;
     const range = c.value === null ? null : measured(c.value);
     if (
@@ -1081,7 +1099,8 @@ function labelsOf(labels: PlayJson["labels"], env: Env): string[] {
 /**
  * `numbers`, the clue kinds a fill game writes as a number on their cell:
  * each at a cell, of more than one value, and not the kind the board is
- * dealt holding (`play.dealt`, drawn as its value); and `clueCells`, the
+ * dealt holding (`play.dealt`, drawn as its value) or the kind that gives a
+ * cell's piece its shape (`play.shape`, drawn as the piece); and `clueCells`, the
  * cells each one's meaning reads, the sets its `means` ranges over with `at`
  * its cell. The engine draws a number's cells as its block, judges it done
  * where they are all decided, and searches the cells of the number with
@@ -1099,8 +1118,15 @@ export function numbersOf(
     const [lo, hi] = value?.k === "call" ? value.args : [];
     return lo?.k === "num" && hi?.k === "num" && lo.v === hi.v;
   };
+  const shape = json.play.shape;
+  if (shape !== undefined && d.clueKinds.get(shape)?.at !== "cell")
+    throw new CompileError(`play shape: ${shape} is no clue kind at a cell`);
   const numbers = [...d.clueKinds].filter(
-    ([kind, c]) => c.at === "cell" && kind !== json.play?.dealt && !oneValued(c.value),
+    ([kind, c]) =>
+      c.at === "cell" &&
+      kind !== json.play?.dealt &&
+      kind !== shape &&
+      !oneValued(c.value),
   );
   if (numbers.length === 0) return [];
   const plain = json.play.plain ?? [];
@@ -1263,6 +1289,89 @@ function neverOf(json: DescriptionJson, d: Description): string[] {
   return kinds as string[];
 }
 
+/** `deal.withhold`'s values of `kind`: values a deal never derives, which
+ * only an ID writes (Boats' segment of a shape not given). */
+function withheldOf(json: DescriptionJson, d: Description, kind: string): number[] {
+  const w = json.deal?.["withhold"];
+  if (w === undefined) return [];
+  if (typeof w !== "object" || Array.isArray(w))
+    throw new CompileError("deal withhold: { kind: [values] }");
+  const byKind = w as Record<string, unknown>;
+  for (const k of Object.keys(byKind))
+    if (d.clueKinds.get(k)?.at !== "cell")
+      throw new CompileError(`deal withhold: ${k} is no clue kind at a cell`);
+  const values = byKind[kind];
+  if (values === undefined) return [];
+  if (!Array.isArray(values) || !values.every((n) => Number.isInteger(n)))
+    throw new CompileError(`deal withhold: ${kind}'s values are a list of numbers`);
+  return values as number[];
+}
+
+type TallyJson = NonNullable<PlayJson["tally"]>;
+
+/** The module's tally (`engine/fill/game-id.ts`'s `FillTally`). */
+interface Tally {
+  kind: string;
+  index: string;
+  count: string;
+  size: TallyJson["size"] & { min: number };
+  counts: TallyJson["counts"];
+  single?: number;
+}
+
+/** The module's hide flag (`engine/fill/game-id.ts`'s `FillHideFlag`). */
+interface HideFlag {
+  kind: string;
+  letter: string;
+  kw: string;
+  name: string;
+  doc: string;
+  words: string;
+}
+
+/** `play.tally`: a board kind of two fields, each length and its count, the
+ * params give; `null` where there is none. */
+function tallyOf(json: DescriptionJson, tiers: readonly string[]): Tally | null {
+  const t = json.play?.tally;
+  if (t === undefined) return null;
+  const kind = json.clues?.[t.kind];
+  const fields = Object.keys(kind?.fields ?? {});
+  if (kind?.at !== "board" || fields.length !== 2)
+    throw new CompileError(
+      `play tally: ${t.kind} is no board clue of two fields, a length and its count`,
+    );
+  const single = t.single === undefined ? -1 : tiers.indexOf(t.single);
+  if (t.single !== undefined && single < 0)
+    throw new CompileError(`play tally: single names no tier ${t.single}`);
+  return {
+    kind: t.kind,
+    index: fields[0],
+    count: fields[1],
+    size: { ...t.size, min: 1 },
+    counts: t.counts,
+    ...(single < 0 ? {} : { single }),
+  };
+}
+
+/** `deal.hideFlag`: the setting under which the deal hides a clue kind
+ * beside `deal.hide`'s, whose hide it joins; `null` where there is none. */
+function hideFlagOf(
+  json: DescriptionJson,
+  d: Description,
+  hides: boolean,
+): HideFlag | null {
+  const f = json.deal?.["hideFlag"];
+  if (f === undefined) return null;
+  if (!hides)
+    throw new CompileError("deal hideFlag: a setting of the hide, and no hide");
+  const { kind, letter, kw, name, doc, words } = f as Record<string, unknown>;
+  if (![kind, letter, kw, name, doc, words].every((s) => typeof s === "string"))
+    throw new CompileError("deal hideFlag: { kind, letter, kw, name, doc, words }");
+  if (!d.clueKinds.has(kind as string))
+    throw new CompileError(`deal hideFlag: no clue kind ${String(kind)}`);
+  return { kind, letter, kw, name, doc, words } as HideFlag;
+}
+
 /** `deal.latin`: a kind on every cell the deal numbers as a Latin square
  * and renumbers under `under` (`engine/fill/latin-numbers.ts`), never derived
  * from the answer; `null` where it deals none. */
@@ -1369,7 +1478,13 @@ export function derivedClues(
   const outside = json.space.grid?.hexagon?.outside;
   const latinKind = latinOf(json, d)?.kind;
   const never = [...neverOf(json, d), ...(latinKind === undefined ? [] : [latinKind])];
+  const tally = json.play?.tally?.kind;
   for (const [kind, c] of d.clueKinds) {
+    // The tally is the params', as a size is.
+    if (kind === tally) {
+      dealt.push(`${kind}: sizes.${kind}`);
+      continue;
+    }
     // A hexagon's corners hold its outside kind, and no other cell does.
     if (kind === outside) {
       derive.emit(
@@ -1467,8 +1582,10 @@ export function derivedClues(
           outside !== undefined && universe === "cells"
             ? `inHexagon(sp.w, sp.h, ${a} % sp.w, Math.floor(${a} / sp.w)) && `
             : "";
+        // A value only an ID writes is never derived.
+        const withheld = withheldOf(json, d, kind).map((n) => ` && ${v} !== ${n}`);
         derive.emit(
-          `if (${within}${at}.at(-1) !== ${a} && clueHolds_${kind}(g, sp, ${a}, ${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
+          `if (${within}${at}.at(-1) !== ${a}${withheld.join("")} && clueHolds_${kind}(g, sp, ${a}, ${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
         );
       },
     );
@@ -1508,9 +1625,18 @@ export function derivedClues(
       grown === undefined
         ? "_grown: object = {}"
         : param("grown", "Readonly<Record<string, Partition>>", body),
-      sizes.length === 0
+      sizes.length === 0 && tally === undefined
         ? "_sizes: object = {}"
-        : `sizes: Readonly<Record<${sizes.map((n) => JSON.stringify(n)).join(" | ")}, number>>`,
+        : `sizes: ${[
+            ...(sizes.length === 0
+              ? []
+              : [
+                  `Readonly<Record<${sizes.map((n) => JSON.stringify(n)).join(" | ")}, number>>`,
+                ]),
+            ...(tally === undefined
+              ? []
+              : [`{ readonly ${tally}: Dealt["${tally}"] }`]),
+          ].join(" & ")}`,
       ...(onceKinds.length === 0 ? [] : ["pick: (n: number) => number = () => 0"]),
     ].join(", ")}): Dealt {`,
     ...body,

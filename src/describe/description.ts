@@ -168,9 +168,27 @@ export interface PlayJson {
   hides?: { value: number; pref: { kw: string; name: string } };
   /** Whether the cursor carries over the grid's edge. */
   wrap?: true;
+  /** A board kind of two fields the params give: a count of pieces of each
+   * length (`engine/fill/game-id.ts`, `FillTally`). */
+  tally?: {
+    kind: string;
+    size: {
+      letter: string;
+      kw: string;
+      name: string;
+      doc: string;
+      max: number;
+      default: number;
+    };
+    counts: { kw: string; name: string; doc: string };
+    single?: string;
+  };
   click?: "toggle" | "cycle";
   /** The clue kind at a cell that the cell is dealt holding. */
   dealt?: string;
+  /** The clue kind at a cell that gives the cell's piece and its shape,
+   * drawn as the piece and never as a number. */
+  shape?: string;
   /** The default board, `WxH`, where it is not the first. */
   default?: string;
   /** The first and last tier a board is offered at, by its `WxH`. */
@@ -256,7 +274,14 @@ export type IdSegmentJson =
       after?: Record<string, string>;
       also?: Record<string, string>;
     }
-  | { numbers: string; before?: string; order?: "columns" };
+  | {
+      numbers: string;
+      before?: string;
+      order?: "columns";
+      hidden?: string;
+      closed?: true;
+    }
+  | { glyphs: string; values: Record<string, number> };
 
 /** The board as a rectangle, or as a hexagon `w` wide and `h` high, stored
  * sheared (`engine/fill/hexagon.ts`), its store's corners holding the clue
@@ -279,14 +304,16 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
           ? [seg.lists]
           : "cells" in seg
             ? [seg.cells]
-            : "digits" in seg
-              ? [
-                  seg.digits,
-                  ...Object.values(seg.letters ?? {}),
-                  ...Object.values(seg.after ?? {}),
-                  ...Object.values(seg.also ?? {}),
-                ]
-              : [seg.numbers];
+            : "glyphs" in seg
+              ? [seg.glyphs]
+              : "digits" in seg
+                ? [
+                    seg.digits,
+                    ...Object.values(seg.letters ?? {}),
+                    ...Object.values(seg.after ?? {}),
+                    ...Object.values(seg.also ?? {}),
+                  ]
+                : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
@@ -302,6 +329,7 @@ type DealJson = Record<
   | GrowJson
   | Record<string, OptionJson>
   | Record<string, string>
+  | Record<string, number[]>
 >;
 
 /** The settings the params give that only the deal reads (`deal.options`),
@@ -393,6 +421,7 @@ export type SampleJson =
   | { build: true | { value: number }; first?: FirstJson }
   | { dominoes: { value: number }; rest: number }
   | { picture: { value: number; rest: number } }
+  | { pieces: { value: number; rest: number } }
   | {
       lines: { value: number; count: number | string; apart: "adj4" | "adj8" };
       rest: number;

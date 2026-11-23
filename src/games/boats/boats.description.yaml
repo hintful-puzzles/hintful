@@ -1,6 +1,14 @@
 # yaml-language-server: $schema=../../describe/description.schema.json
 
 game: boats
+catalog:
+  name: Boats
+  aliases: [Battleships]
+  description: Boat-placing puzzle
+  objective: Find the fleet in the grid.
+  collection: unreleased
+  family: objects
+  similar: Battleships Solitaire, Bimaru, Marinespiel
 help:
   rules: |-
     You're given a grid, and a list of boats which must be located inside that grid. Boats can be rotated. Two boats cannot be horizontally, vertically or diagonally adjacent.
@@ -13,7 +21,7 @@ help:
 
     Unknown boat segments are represented by a small rectangle, and will automatically change into the correct shape when the surrounding squares are filled in.
 
-    Drag along a row or column to fill every square it passes over the way the first one changed. A drag that turns its first square to water does so to every square it passes that is not given, whatever each one held. Hold Ctrl while moving the cursor to place boat segments on the empty squares it passes over, Shift to place water, or both to empty them.
+    Right-click and drag along a row or column to mark many squares at once as water. Hold Shift while moving the cursor to mark the empty squares it passes over as water, or Ctrl to turn boat segments it passes over into water as well.
   sections:
     - heading: The list of boats
       body: |-
@@ -45,8 +53,10 @@ space:
   grid: { w: "w", h: "h" }
   units: []
 answer:
-  # 1 is a boat segment, 2 water.
-  value: { sort: cell, domain: "range(1, 2)" }
+  # 1 is a boat segment, 2 water; a given square holds what it was given.
+  value:
+    sort: cell
+    domain: "{d in range(1, 2) where clue(seg, c) < 2 or (d = 2) = (clue(seg, c) = 2)}"
 define:
   # Whether square x, which may be off the board, holds a boat segment, or
   # water, where the board's edge counts as water.
@@ -230,11 +240,78 @@ clues:
       boats: { value: "range(0, |cells|)" }
     means: "count(c in cells where head(c) and |boat(c)| = length(k)) = boats(k)"
 freedom: { kind: fill }
+play:
+  values:
+    1: { does: place a boat segment, key: B, glyph: " # ", paint: hull }
+    2: { does: mark it as water, key: W, glyph: " ~ ", paint: sea }
+  primary: 1
+  secondary: 2
+  # The answer is the boats alone: an open square is water. The water round
+  # a placed segment is decided as it is placed (touch), and no step places
+  # it.
+  blank: 2
+  # A click goes round empty, boat and water (upstream's).
+  click: cycle
+  # A given segment is drawn as its piece, in the shape it was given.
+  shape: seg
+  stroke: line
+  # The fleet: its longest boat's length after the grid's, each length's
+  # count at the end.
+  tally:
+    kind: fleet
+    size:
+      letter: f
+      kw: fleet
+      name: Fleet size
+      doc: The length of the longest boat.
+      max: 9
+      default: 4
+    counts:
+      kw: fleet-data
+      name: Fleet configuration
+      doc: How many boats of each length, the shortest first.
+    # A fleet of one boat has only Easy boards.
+    single: Easy
+  boards: [6x6f3, 7x9, 10x10]
+  default: 10x10
+  hintMarks:
+    ring: >-
+      the squares the step decides: a boat segment, or water.
+    outline: >-
+      what it reasons from: a given segment, or the boat segments a rule
+      counts.
+    stripes: >-
+      the row or column the sentence calls "this row" or "this column", and
+      its number.
 deal:
   answer: the fleet, largest boat first, each in a stretch of the board that can take it, at random
   n: every number, or as many hidden as the board stays at its tier where asked
-  seg: added at random until Easy is not stuck, then as many removed as the board stays at its tier
+  seg: each square's shape, as many hidden as the board stays at its tier
   tier: one of the tiers
+  sample:
+    pieces: { value: 1, rest: 2 }
+  # A segment of unknown shape is what the player places: the deal gives a
+  # shape.
+  withhold: { seg: [3] }
+  hide: seg
+  hideFlag:
+    kind: n
+    letter: S
+    kw: strip-clues
+    name: Remove numbers
+    doc: Hide some of the row and column numbers.
+    words: with some numbers removed
+# Upstream's game ID: each column's number and then each row's, a comma
+# after each and "-" where it is hidden; then the given squares, a letter a
+# shape and a run of empty squares a letter from a to z.
+id:
+  - numbers: n
+    order: columns
+    hidden: "-"
+    closed: true
+  - glyphs: seg
+    values: { W: 2, V: 3, T: 4, B: 5, C: 6, L: 7, R: 8, S: 9 }
+tierLetters: enth
 tiers: [Easy, Normal, Tricky, Hard]
 # A line's count, by its number shown: the group a count kind reads.
 kindWords:

@@ -79,7 +79,7 @@ bump:maxballs  full=w8h8m5M6"
 `;
 
 exports[`encoded params are byte-stable > boats 1`] = `
-"default  full=10x10f4dn,4,3,2,1  brief=10x10f4,4,3,2,1
+"default  full=10x10f4de,4,3,2,1  brief=10x10f4,4,3,2,1
 preset:6x6 Easy, size 3  full=6x6f3de,3,2,1  brief=6x6f3,3,2,1
 preset:6x6 Normal, size 3  full=6x6f3dn,3,2,1  brief=6x6f3,3,2,1
 preset:6x6 Tricky, size 3  full=6x6f3dt,3,2,1  brief=6x6f3,3,2,1
@@ -88,12 +88,12 @@ preset:7x9 Easy, size 4  full=7x9f4de,4,3,2,1  brief=7x9f4,4,3,2,1
 preset:7x9 Normal, size 4  full=7x9f4dn,4,3,2,1  brief=7x9f4,4,3,2,1
 preset:7x9 Tricky, size 4  full=7x9f4dt,4,3,2,1  brief=7x9f4,4,3,2,1
 preset:7x9 Hard, size 4  full=7x9f4dh,4,3,2,1  brief=7x9f4,4,3,2,1
-preset:10x10 Easy, size 4  full=10x10f4de,4,3,2,1  brief=10x10f4,4,3,2,1
+preset:10x10 Normal, size 4  full=10x10f4dn,4,3,2,1  brief=10x10f4,4,3,2,1
 preset:10x10 Tricky, size 4  full=10x10f4dt,4,3,2,1  brief=10x10f4,4,3,2,1
 preset:10x10 Hard, size 4  full=10x10f4dh,4,3,2,1  brief=10x10f4,4,3,2,1
-bump:w  full=11x10f4dn,4,3,2,1  brief=11x10f4,4,3,2,1
-bump:h  full=10x11f4dn,4,3,2,1  brief=10x11f4,4,3,2,1
-flip:strip  full=10x10f4dnS,4,3,2,1  brief=10x10f4,4,3,2,1"
+bump:w  full=11x10f4de,4,3,2,1  brief=11x10f4,4,3,2,1
+bump:h  full=10x11f4de,4,3,2,1  brief=10x11f4,4,3,2,1
+flip:hides  full=10x10f4deS,4,3,2,1  brief=10x10f4,4,3,2,1"
 `;
 
 exports[`encoded params are byte-stable > bricks 1`] = `

@@ -900,9 +900,49 @@
               "const": true,
               "description": "An arrow at the grid's edge carries the cursor to the other edge (upstream's Singles)."
             },
+            "tally": {
+              "type": "object",
+              "description": "A board clue of two fields, a length and the count of pieces of it, that the params give: the size by its letter after the grid's (`f3`), the counts after a comma at the end (`,3,2,1`), one of the longest and one more of each shorter by default (upstream's Boats fleet).",
+              "required": ["kind", "size", "counts"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": { "type": "string" },
+                "size": {
+                  "type": "object",
+                  "required": ["letter", "kw", "name", "doc", "max", "default"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "letter": { "type": "string" },
+                    "kw": { "type": "string" },
+                    "name": { "type": "string" },
+                    "doc": { "type": "string" },
+                    "max": { "type": "integer" },
+                    "default": { "type": "integer" }
+                  }
+                },
+                "counts": {
+                  "type": "object",
+                  "required": ["kw", "name", "doc"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kw": { "type": "string" },
+                    "name": { "type": "string" },
+                    "doc": { "type": "string" }
+                  }
+                },
+                "single": {
+                  "type": "string",
+                  "description": "The one tier a tally of one piece is dealt at."
+                }
+              }
+            },
             "click": {
               "enum": ["toggle", "cycle"],
               "description": "What a click does: `toggle` (the default) sets the button's value or empties a cell holding it; `cycle` goes round empty, the button's value and the other button's, the right button the other way round."
+            },
+            "shape": {
+              "type": "string",
+              "description": "The clue kind at a cell that gives the cell's piece and its shape (Boats' given segments): its domain fixes the cell, which is drawn as its piece, shaped as in the answer, and never as a number."
             },
             "dealt": {
               "type": "string",
@@ -1173,7 +1213,30 @@
                 "properties": {
                   "numbers": { "type": "string" },
                   "before": { "type": "string" },
-                  "order": { "enum": ["columns"] }
+                  "order": { "enum": ["columns"] },
+                  "hidden": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "What an element without a clue is written as, where not nothing (Boats' `-`)."
+                  },
+                  "closed": {
+                    "const": true,
+                    "description": "A comma after every element, the last too, rather than between two (Boats')."
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": ["glyphs", "values"],
+                "additionalProperties": false,
+                "description": "A clue kind at cells, each clue a capital letter standing for one of its values, between runs of 1 to 26 cells without one written `a`-`z`; a last run is left off (upstream's Boats).",
+                "properties": {
+                  "glyphs": { "type": "string" },
+                  "values": {
+                    "type": "object",
+                    "propertyNames": { "pattern": "^[A-Z]$" },
+                    "additionalProperties": { "type": "integer" }
+                  }
                 }
               }
             ]
@@ -1204,6 +1267,29 @@
           "additionalProperties": { "type": "string" },
           "description": "What the generator chooses, in words; `sample` where the deal samples an answer and derives the clues from each kind's `means`, and `hide` where it then hides a kind's clues.",
           "properties": {
+            "withhold": {
+              "type": "object",
+              "description": "By clue kind at cells, values no deal derives, which only a game ID writes: a value that holds wherever a more telling one does (Boats' segment of unknown shape).",
+              "additionalProperties": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "minItems": 1
+              }
+            },
+            "hideFlag": {
+              "type": "object",
+              "required": ["kind", "letter", "kw", "name", "doc", "words"],
+              "additionalProperties": false,
+              "description": "A setting the player may turn on, written after the tier by its letter in a full ID, under which the deal hides `kind` too, in one random order with `hide`'s (Boats' `S`, Remove numbers).",
+              "properties": {
+                "kind": { "type": "string" },
+                "letter": { "type": "string", "pattern": "^[A-Z]$" },
+                "kw": { "type": "string" },
+                "name": { "type": "string" },
+                "doc": { "type": "string" },
+                "words": { "type": "string" }
+              }
+            },
             "never": {
               "oneOf": [
                 { "type": "string" },
@@ -1405,6 +1491,23 @@
                   "additionalProperties": false,
                   "properties": {
                     "picture": {
+                      "type": "object",
+                      "required": ["value", "rest"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "value": { "type": "integer", "minimum": 1 },
+                        "rest": { "type": "integer", "minimum": 1 }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer as `play.tally`'s pieces (upstream's boats.c `boats_generate_fleet`): each a straight run of `value` as long as its length, the longest first, at a random place in a random stretch of a row or column holding no piece, none touching another even at a corner; `rest` on every other cell.",
+                  "required": ["pieces"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "pieces": {
                       "type": "object",
                       "required": ["value", "rest"],
                       "additionalProperties": false,

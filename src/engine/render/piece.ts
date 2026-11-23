@@ -115,6 +115,9 @@ export const JOIN_UP = 1;
 export const JOIN_RIGHT = 2;
 export const JOIN_DOWN = 4;
 export const JOIN_LEFT = 8;
+/** Beside the four sides: a running piece runs on, and the board does not
+ * yet say which way (`Painter.runs`). */
+export const JOINED_OPEN = 16;
 
 /** The side of `a` that faces `b`, a square beside it on a board `w` wide. */
 export function joinToward(w: number, a: number, b: number): number {

@@ -38,8 +38,10 @@ import {
   encodeDesc,
   type FillDeal,
   type FillParams,
+  givenOf,
   optionOf,
   partitionOf,
+  piecesOf,
   sizesOf,
   variationsOf,
 } from "./game-id.ts";
@@ -54,6 +56,7 @@ import {
   sampleDominoes,
   sampleLines,
   samplePicture,
+  samplePieces,
 } from "./sample.ts";
 import {
   type SearchedFillModule,
@@ -80,14 +83,15 @@ interface Reads {
 }
 
 /** A fill module whose deal samples its answer: its clues derived from it,
- * beside the partitions grown round it and the sizes the params give; and
- * where it grows a partition, what the parts hold on a board. */
+ * beside the partitions grown round it and the clues the params give
+ * (`givenOf`); and where it grows a partition, what the parts hold on a
+ * board. */
 export type DealtFillModule<C> = SearchedFillModule<C> & {
   deriveClues(
     g: ArrayLike<number>,
     sp: GridSpace,
     grown: Grown,
-    sizes: Readonly<Record<string, number>>,
+    given: ReturnType<typeof givenOf>,
     /** A random one of `n`, which a kind dealt one in each group is put at
      * (`deal.oneIn`). */
     pick?: (n: number) => number,
@@ -130,19 +134,20 @@ export function dealFill<C extends Clues<C>>(
   const sp = spaceOf(module, boardSizeOf(module, p));
   const variations = variationsOf(p);
   const sizes = sizesOf(p);
+  const given = givenOf(deal, p);
   const board = (clues: C): FillBoard<C> =>
     newBoard(module, sp.w, sp.h, clues, variations);
   const finishes = (clues: C, cap: number): boolean =>
     solveBoard(module, board(clues), cap).verdict === "solved";
   const thorough = p.thorough ?? true;
-  const kinds = hiddenKinds(deal);
+  const kinds = hiddenKinds(deal, p);
   const kind = (kinds.length === 0 ? undefined : kinds[0]) as keyof C | undefined;
   if (kinds.length > 1 && deal.symmetric !== undefined)
     throw new Error("deal: a symmetric hide is of one kind");
   /** The clues with only `shown` of the hidden kinds, by their index in one
    * numbering of them all (`offsetsOf`). */
   const keeping = (clues: C, shown: readonly number[]): C =>
-    keepingAll(clues, deal, sp, shown);
+    keepingAll(clues, deal, kinds, sp, shown);
   /** Every hidden clue's index in that numbering. */
   const allShown = (clues: C): number[] => {
     const offsets = offsetsOf(clues, kinds);
@@ -157,7 +162,7 @@ export function dealFill<C extends Clues<C>>(
     if (module.growBy === undefined)
       throw new Error("deal: a grown partition with no growBy");
     const withParts = (parts: Int32Array): C =>
-      module.deriveClues(g, sp, { [grow.partition]: partitionOf(parts) }, sizes);
+      module.deriveClues(g, sp, { [grow.partition]: partitionOf(parts) }, given);
     const parts = growPartition(
       { ...grow, ...module.growBy(sp, sizes) },
       sp,
@@ -215,19 +220,21 @@ export function dealFill<C extends Clues<C>>(
             ? sampleLines(sample, sp, sizes, rs)
             : "picture" in sample
               ? samplePicture(sample, sp, rs)
-              : sampleAnswer(
-                  sample,
-                  sp,
-                  rs,
-                  sample.first === undefined
-                    ? null
-                    : firstLaid(sample.first, deal, p, rs, layouts++),
-                );
+              : "pieces" in sample
+                ? samplePieces(sample, sp.w, sp.h, piecesOf(deal, p), rs)
+                : sampleAnswer(
+                    sample,
+                    sp,
+                    rs,
+                    sample.first === undefined
+                      ? null
+                      : firstLaid(sample.first, deal, p, rs, layouts++),
+                  );
     if (g === null) return null;
     const grown = grownRound(g, tier);
     if (grown === null) return null;
     const derived = numbered(
-      module.deriveClues(g, sp, grown, sizes, (n) => randomUpto(rs, n)),
+      module.deriveClues(g, sp, grown, given, (n) => randomUpto(rs, n)),
       g,
     );
     if (!module.isAnswer(g, sp, derived, variations)) return null;
@@ -384,6 +391,10 @@ export function dealFill<C extends Clues<C>>(
     const clues = hideUpTo(drawn.clues, p.diff);
     if (clues === null || !finishes(clues, p.diff)) continue;
     if (p.diff > 0 && finishes(clues, p.diff - 1)) continue;
+    // A board the hide flag asked to hide a kind hides one of it (upstream
+    // boats.c refused a stripped board that showed every number).
+    if (deal.hideFlag !== undefined && p.hides === true && !hidesAny(clues, deal, sp))
+      continue;
     return { desc: encodeDesc(deal, sp, clues), aux: encodeAnswer(drawn.g) };
   }
 }
@@ -419,7 +430,7 @@ function climbFill<C extends Clues<C>>(
   if (deal.grow !== undefined) throw new Error("deal: a climb grows no partition");
   const sp = spaceOf(module, boardSizeOf(module, p));
   const variations = variationsOf(p);
-  const sizes = sizesOf(p);
+  const given = givenOf(deal, p);
   const board = (clues: C): FillBoard<C> =>
     newBoard(module, sp.w, sp.h, clues, variations);
   const { value, share } = sample.scatter;
@@ -435,8 +446,8 @@ function climbFill<C extends Clues<C>>(
     const g = sampleAnswer(sample, sp, rs, whole ? null : position) as Uint8Array;
     const clues =
       sample.mend === true
-        ? mended(module, g, sp, sizes, variations, other)
-        : module.deriveClues(g, sp, {}, sizes, (n) => randomUpto(rs, n));
+        ? mended(module, g, sp, given, variations, other)
+        : module.deriveClues(g, sp, {}, given, (n) => randomUpto(rs, n));
     if (clues === null || !module.isAnswer(g, sp, clues, variations)) {
       position.fill(0);
       return null;
@@ -503,12 +514,12 @@ function mended<C>(
   module: DealtFillModule<C>,
   g: Uint8Array,
   sp: GridSpace,
-  sizes: Readonly<Record<string, number>>,
+  given: ReturnType<typeof givenOf>,
   variations: readonly string[],
   other: (v: number) => number,
 ): C | null {
   for (let turned = 0; turned <= sp.cells.length; turned++) {
-    const clues = module.deriveClues(g, sp, {}, sizes);
+    const clues = module.deriveClues(g, sp, {}, given);
     let first = Number.POSITIVE_INFINITY;
     for (const v of module.violations(g, sp, clues, variations))
       for (const c of v.at) first = Math.min(first, c);
@@ -545,13 +556,33 @@ function unpaired<C extends Clues<C>>(clues: C, kind: keyof C, sp: GridSpace): C
 /** The indices of a list's clues. */
 const shownOf = (list: ClueList): number[] => Array.from(list.at.keys());
 
-/** The kinds the deal hides (`deal.hide`), in one random order together. */
-const hiddenKinds = (deal: FillDeal): readonly string[] =>
-  deal.hide === undefined
-    ? []
-    : typeof deal.hide === "string"
-      ? [deal.hide]
-      : deal.hide;
+/** The kinds the deal hides on a board of `p` (`deal.hide`), in one random
+ * order together: the hide flag's too where `p` has it on. */
+const hiddenKinds = (deal: FillDeal, p: FillParams): readonly string[] => {
+  const kinds =
+    deal.hide === undefined
+      ? []
+      : typeof deal.hide === "string"
+        ? [deal.hide]
+        : deal.hide;
+  return deal.hideFlag !== undefined && p.hides === true
+    ? [...kinds, deal.hideFlag.kind]
+    : kinds;
+};
+
+/** Whether `clues` hide one of the hide flag's kind: fewer than its
+ * universe. */
+function hidesAny<C extends Clues<C>>(
+  clues: C,
+  deal: FillDeal,
+  sp: GridSpace,
+): boolean {
+  const kind = deal.hideFlag?.kind;
+  if (kind === undefined) return false;
+  return (
+    (clues[kind as keyof C] as ClueList).at.length < sp[deal.universes[kind]].length
+  );
+}
 
 /** Where each hidden kind's clues start in one numbering of them all, the
  * kinds in turn, and after the last where they end. */
@@ -567,10 +598,10 @@ function offsetsOf<C extends Clues<C>>(clues: C, kinds: readonly string[]): numb
 function keepingAll<C extends Clues<C>>(
   clues: C,
   deal: FillDeal,
+  kinds: readonly string[],
   sp: GridSpace,
   shown: readonly number[],
 ): C {
-  const kinds = hiddenKinds(deal);
   const offsets = offsetsOf(clues, kinds);
   let kept = clues;
   for (const [n, k] of kinds.entries()) {
@@ -726,7 +757,7 @@ function buildAnswer<C extends Clues<C>>(
     first === undefined
       ? new Uint8Array(sp.cells.length)
       : firstLaid(first, deal, p, rs, draw);
-  const derived = module.deriveClues(start, sp, {}, sizesOf(p));
+  const derived = module.deriveClues(start, sp, {}, givenOf(deal, p));
   // A Latin kind is a Latin square's on the cells built round, so the ladder
   // reads numbers none of which repeats (upstream singles.c's new_game_desc).
   const { latin } = deal;
@@ -744,7 +775,7 @@ function buildAnswer<C extends Clues<C>>(
   const blank =
     first === undefined || deal.hide === undefined
       ? numbered
-      : keepingAll(numbered, deal, sp, []);
+      : keepingAll(numbered, deal, hiddenKinds(deal, p), sp, []);
   const board = newBoard(module, sp.w, sp.h, blank, variationsOf(p));
   // One set of marks the whole build, the ladder run again after each
   // placement: a fresh solve each time cost a 12x16 Light Up deal seconds.
