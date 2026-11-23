@@ -13,7 +13,7 @@
  */
 
 import type { Game, HintStep } from "../contract/game.ts";
-import { CELL, type Narration } from "../contract/hint-words.ts";
+import { CELL, type Narration, type Sentence } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import {
   type CandidateHighlights,
@@ -22,6 +22,7 @@ import {
   type CandidatePrefsUi,
   candidateHint,
   keepCandidateHintTrack,
+  type Mark,
   refreshCandidateHintStep,
   valuesOf,
 } from "../hint/candidate-hint.ts";
@@ -42,8 +43,9 @@ import {
 } from "../hint/hint-text.ts";
 import type { GenericLatinReason } from "../hint/latin-hint.ts";
 import { byCell, latinStrikeRungs } from "../hint/latin-notes.ts";
-import { type Clauses, statedParts } from "../hint/stated.ts";
+import { type Clauses, statedParts, statedSentence } from "../hint/stated.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
+import { PLACE } from "../solve/describe-runtime.ts";
 import {
   type Firing as LadderFiring,
   type Said,
@@ -73,7 +75,10 @@ export interface CandidateFillModule<C> extends LadderedFillModule<C> {
   /** What a player calls each rung, which Check & save names a move by. */
   readonly NAMES?: Readonly<Record<string, string>>;
   readonly WORDS?: { readonly cell?: string };
-  /** The words each of the description's own techniques states. */
+  /** Every kind of step the description's own techniques say: an id, or
+   * `id.arm` where an arm splits its steps. */
+  readonly SAYS_KINDS?: readonly string[];
+  /** The words each of the description's own techniques states, by kind. */
   readonly STATED?: Readonly<
     Record<
       string,
@@ -82,11 +87,20 @@ export interface CandidateFillModule<C> extends LadderedFillModule<C> {
   >;
 }
 
-/** Why a technique of the description's own struck: its id, and the look
- * of what it states. */
+/** A firing's strikes a leg a value, from every cell it strikes it in. */
+function byValue(marks: readonly Mark[]): Mark[][] {
+  const out = new Map<number, Mark[]>();
+  for (const m of marks) out.set(m.n, [...(out.get(m.n) ?? []), m]);
+  return [...out.values()];
+}
+
+/** Why a technique of the description's own struck or placed: its rung, the
+ * technique's id or the arm that held, and what it states: a strike's look,
+ * or a placement's sentence, a journey's later leg saying its `again`. */
 interface OwnReason {
   readonly kind: string;
-  readonly premise: Narration;
+  readonly premise?: Narration;
+  readonly say?: (later: boolean) => Sentence;
 }
 
 /** Why a step of the walk is forced: the library's reasons, or the
@@ -97,11 +111,14 @@ type Reason = GenericLatinReason | OwnReason;
  * marks, which wording held where it has several, and what each fact has of
  * its own where it words each. */
 interface StatedSays {
+  /** The arm that held, where the technique's steps are split by one. */
+  readonly arm?: string;
   readonly terms: Readonly<Record<string, unknown>>;
   readonly marks?: Readonly<Record<string, readonly number[]>>;
   readonly wording?: number;
   readonly facts?: readonly {
-    readonly wording: number;
+    /** Which of the fact's wordings held, where it has several. */
+    readonly wording?: number;
     readonly terms: Readonly<Record<string, unknown>>;
   }[];
 }
@@ -138,10 +155,23 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     throw new Error(
       `a board's notes are walked on rows and columns, not ${module.units.join(", ")}`,
     );
-  // The description's own techniques, beside the library's: each strikes,
-  // worded by what it states (`ownLegs`).
+  // The description's own techniques, beside the library's, each worded by
+  // what it states (`ownLegs`). A step's rung is the arm that held where
+  // arms split it, each named for one of its rungs, else its one rung (Keen's
+  // `cageEasy` is a `cage`), else its id: what the names say a step by.
   const own = module.ladder.filter((e) => !e.id.startsWith("latin.")).map((e) => e.id);
-  const ownSet = new Set(own);
+  const kindsOf = (id: string): string[] => {
+    const arms = (module.SAYS_KINDS ?? [])
+      .filter((k) => k.startsWith(`${id}.`))
+      .map((k) => k.slice(id.length + 1));
+    return arms.length > 0 ? arms : [module.techniques[id]?.rung ?? id];
+  };
+  const ownKinds = [...new Set(own.flatMap(kindsOf))];
+  // Check & save names a move by its rung.
+  for (const kind of ownKinds)
+    if (module.NAMES !== undefined && !Object.hasOwn(module.NAMES, kind))
+      throw new Error(`a step of ${kind}, which the description names nothing`);
+  const ownSet = new Set(ownKinds);
   const isOwn = (r: Reason): r is OwnReason => ownSet.has(r.kind);
   const vocab: LatinVocab = {
     noun: "number",
@@ -150,12 +180,14 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   };
 
   /**
-   * A firing of the description's own technique `id` as legs, a cell each,
-   * as the walk strikes notes a cell at a time: each worded by the look of
-   * what the technique states, of the fact its first note is where it words
-   * each fact, else of its step. The walk says what the leg strikes; a look
-   * may name the leg's cell (`{ring}`) and the values it strikes
-   * (`{struck}`).
+   * A firing of the description's own technique `id` as legs, as the walk
+   * makes moves: a placement each, the later legs of the journey saying
+   * their `again`; or the strikes a cell each, or a value each where the
+   * technique says so (`byValue`, Towers' heights). Each is worded by what
+   * the technique states, of the fact its first move is where it words each
+   * fact, else of its step: a strike by its look, the walk saying what the
+   * leg strikes. A look may name the leg's cells (`{ring}`) and the values it
+   * strikes (`{struck}`).
    */
   function ownLegs(
     id: string,
@@ -164,12 +196,12 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     h: number,
   ): Firing<FillMove, CandidateFillHint, Reason> {
     const { says } = f.reasons[0] as Said<unknown, StatedSays>;
-    const stated = module.STATED?.[id];
+    const kind = says.arm ?? module.techniques[id]?.rung ?? id;
+    const stated = module.STATED?.[says.arm === undefined ? id : `${id}.${says.arm}`];
     const at = (c: number): Point => ({ x: c % w, y: Math.floor(c / w) });
     const marks = Object.fromEntries(
       Object.entries(says.marks ?? {}).map(([role, els]) => [role, els.map(at)]),
     );
-    const strikes = strikesOf(f, w);
     // A slot lies a step beyond its line's end, off the cells.
     const termAt = Object.fromEntries(
       (module.techniques[id]?.slotTerms ?? []).map((name) => [
@@ -177,28 +209,60 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         (s: number) => slotPoint(w, h, s),
       ]),
     );
-    return byCell(strikes).map((strike) => {
-      const fact = says.facts?.[strikes.indexOf(strike[0])];
+    /** The clauses fact `k` is worded by, and what they are rendered
+     * against with the leg's cells `ring`. */
+    const wordsOf = (k: number, ring: readonly Point[]) => {
+      const fact = says.facts?.[k];
       const clauses =
         fact === undefined
           ? stated?.step?.[says.wording ?? 0]
-          : stated?.fact?.[fact.wording];
-      const look =
-        clauses === undefined
-          ? undefined
-          : statedParts(clauses, {
-              kind: CELL,
-              at,
-              termAt,
-              ring: [{ x: strike[0].x, y: strike[0].y }],
-              marks,
-              terms: { ...says.terms, ...fact?.terms },
-              value: numeral,
-              noun: vocab.cell,
-              struck: valuesOf(strike),
-            }).look;
-      if (look === undefined) throw new Error(`${id} states no look to strike by`);
-      return { strike, reason: { kind: id, premise: look } };
+          : stated?.fact?.[fact.wording ?? 0];
+      if (clauses === undefined) throw new Error(`${kind} states no words`);
+      return {
+        clauses,
+        context: {
+          kind: CELL,
+          at,
+          termAt,
+          ring: ring.map(({ x, y }) => ({ x, y })),
+          marks,
+          terms: { ...says.terms, ...fact?.terms },
+          value: numeral,
+          noun: vocab.cell,
+        },
+      };
+    };
+    const placed = new Set<number>();
+    const places: Firing<FillMove, CandidateFillHint, Reason>[number][] = [];
+    for (let k = 0; k < f.facts.length; k += 3) {
+      if (f.facts[k] !== PLACE) continue;
+      // A row's fact and a column's may both place one cell.
+      const c = f.facts[k + 1];
+      if (placed.has(c)) continue;
+      placed.add(c);
+      const place = { ...at(c), n: f.facts[k + 2] };
+      const { clauses, context } = wordsOf(k / 3, [place]);
+      places.push({
+        place,
+        reason: {
+          kind,
+          say: (later) => statedSentence(clauses, { ...context, later }),
+        },
+      });
+    }
+    if (places.length > 0) {
+      for (let k = 0; k < f.facts.length; k += 3)
+        if (f.facts[k] !== PLACE) throw new Error(`${kind} both places and strikes`);
+      return places;
+    }
+    const strikes = strikesOf(f, w);
+    const legs =
+      module.techniques[id]?.byValue === true ? byValue(strikes) : byCell(strikes);
+    return legs.map((strike) => {
+      const { clauses, context } = wordsOf(strikes.indexOf(strike[0]), strike);
+      const { look } = statedParts(clauses, { ...context, struck: valuesOf(strike) });
+      if (look === undefined) throw new Error(`${kind} states no look to strike by`);
+      return { strike, reason: { kind, premise: look } };
     });
   }
 
@@ -237,21 +301,28 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       reading,
       ...(judging === undefined ? {} : { judging }),
       label: "fill candidate plan",
-      placeWords: (m, reason) => {
-        if (isOwn(reason))
+      placeWords: (m, reason, continues) => {
+        if (!isOwn(reason)) return { words: narrateLatinReason(reason, m, w, vocab) };
+        if (reason.say === undefined)
           throw new Error(`${reason.kind} strikes, and places nothing`);
-        return { words: narrateLatinReason(reason, m, w, vocab) };
+        return { words: reason.say(continues) };
       },
-      strikeWords: (marks, reason) =>
-        isOwn(reason)
-          ? { premise: reason.premise }
-          : latinPremise(reason, marks, vocab),
-      // The description's own strikes first: it states them for its clues,
-      // which a player reads before a set or a wing.
+      strikeWords: (marks, reason) => {
+        if (!isOwn(reason)) return latinPremise(reason, marks, vocab);
+        if (reason.premise === undefined)
+          throw new Error(`${reason.kind} places, and strikes nothing`);
+        return { premise: reason.premise };
+      },
+      // The description's own techniques first: it states them for its
+      // clues, which a player reads before a set or a wing. One that places
+      // reading no notes is offered before they are set up.
       rungs: [
         ...own.map((id) =>
-          techniqueRung<FillMove, CandidateFillHint, Reason>(on, id, (f) =>
-            ownLegs(id, f, w, board.h),
+          techniqueRung<FillMove, CandidateFillHint, Reason>(
+            on,
+            id,
+            (f) => ownLegs(id, f, w, board.h),
+            { leads: module.techniques[id]?.leads === true },
           ),
         ),
         ...latinStrikeRungs<FillMove, CandidateFillHint, Reason, CellMarks>(
@@ -291,6 +362,6 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         board.w,
         FILL_CANDIDATE_MOVES,
       ),
-    rungs: [...CANDIDATE_FILL_RUNGS, ...own],
+    rungs: [...CANDIDATE_FILL_RUNGS, ...ownKinds],
   };
 }

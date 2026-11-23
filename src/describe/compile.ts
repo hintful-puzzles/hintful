@@ -53,6 +53,7 @@ import {
   type LibraryJson,
   loadDescription,
   narrowsAnswer,
+  noteMarkOf,
   parseTechnique,
   relationMarkOf,
   stepsOf,
@@ -356,7 +357,12 @@ export function compileGame(
     cellDomain(d.domain, env, d.json.sizes),
   );
   const own = d.techniques.filter((t) => !t.id.includes("."));
-  const compiled = own.map((t) => ({ id: t.id, ...compileTechnique(t, env) }));
+  const compiled = own.map((t) => ({
+    id: t.id,
+    byValue: t.says?.byValue === true,
+    rung: t.rungs.length === 1 && t.rungs[0] !== t.id ? t.rungs[0] : null,
+    ...compileTechnique(t, env),
+  }));
   const code = compiled.map((c) => c.code);
   const check = Out.own("isAnswer", () => answerCheck(json, d, env));
   const broken = Out.own("violations", () => violationsOf(json, d, env));
@@ -528,8 +534,10 @@ export function compileGame(
     "/** Each of the description's own techniques, by id, and whether it reads",
     " * what the board deals: the engine runs each on the board's clues where it",
     " * does (`describedLadder`). A fill game's names the bindings of a firing",
-    " * that name a clue it reads: a cell's, or a clue's index by its kind; and",
-    " * the terms its firings say that name slots, which it marks off the grid. */",
+    " * that name a clue it reads: a cell's, or a clue's index by its kind; the",
+    " * terms its firings say that name slots, which it marks off the grid;",
+    " * whether it leads, placing with no notes read; whether its steps strike a",
+    " * value each; and its one rung, where that is not its id. */",
     "export const techniques = {",
     ...compiled.map(
       (c) =>
@@ -539,7 +547,7 @@ export function compileGame(
           json.play === undefined || c.slotTerms.length === 0
             ? ""
             : `, slotTerms: ${JSON.stringify(c.slotTerms)}`
-        } },`,
+        }${json.play === undefined || noteMarkOf(json) === null ? "" : walkOf(c)} },`,
     ),
     "} as const;",
     "",
@@ -642,6 +650,15 @@ export function compileGame(
 /** The type of {@link tierIndices}' record: its names fixed and its indices
  * `number`, since a literal `0` would type a parameter defaulted to the
  * easiest tier as accepting no other. */
+/** What the walk of a board's notes reads of a technique, past its entry's
+ * own: whether it leads, whether its steps strike a value each, and its one
+ * rung where that is not its id. */
+function walkOf(c: { leads: boolean; byValue: boolean; rung: string | null }): string {
+  return `${c.leads ? ", leads: true" : ""}${c.byValue ? ", byValue: true" : ""}${
+    c.rung === null ? "" : `, rung: ${JSON.stringify(c.rung)}`
+  }`;
+}
+
 function indexType(names: readonly string[]): string {
   return `{ ${names.map((n) => `readonly ${n.toLowerCase()}: number`).join("; ")} }`;
 }

@@ -122,12 +122,21 @@ export type LadderedFillModule<C> = FillModule<C> &
     readonly placing: readonly { readonly id: string; readonly variation?: string }[];
     readonly striking: readonly { readonly id: string; readonly variation?: string }[];
     /** Each of the description's own techniques: whether it reads the
-     * clues, and the terms its firings say that name slots, which its
-     * words mark in the margin beyond a line's end. */
+     * clues; the terms its firings say that name slots, which its words mark
+     * in the margin beyond a line's end; whether it places reading no notes,
+     * so the walk offers it before they are set up; whether its steps
+     * strike a value each, from every square it strikes it in; and the one
+     * rung its steps are recorded under, where that is not its id. */
     readonly techniques: Readonly<
       Record<
         string,
-        { readonly dealt: boolean; readonly slotTerms?: readonly string[] }
+        {
+          readonly dealt: boolean;
+          readonly slotTerms?: readonly string[];
+          readonly leads?: boolean;
+          readonly byValue?: boolean;
+          readonly rung?: string;
+        }
       >
     >;
   };

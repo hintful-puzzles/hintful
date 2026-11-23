@@ -247,11 +247,19 @@ research tools all read through it; the app never does.
   default"), `populate` where it says nothing. The walk runs on rows and
   columns, and its rungs are the Latin library's (`use: latin.*`, which the
   fill ladder resolves as every Latin game's does), worded by the library,
-  and the description's own, which strike, tried before the library's
-  strikes since a player reads a clue before a set: a firing a leg a cell,
-  each worded by the look of its `says`, of the fact its first note is where
-  it words each fact (`fact:`), its `{ring}` the leg's cell and its
-  `{struck}` what the leg strikes, and recorded under the technique's id; a
+  and the description's own, tried before the library's strikes since a
+  player reads a clue before a set. A strike's firing is a leg a cell, or a
+  leg a value from all its cells where `says` has `shown: value` (Towers'
+  heights), each worded by the look of its `says`, of the fact its first
+  note is where it words each fact (`fact:`), its `{ring}` the leg's cells
+  and its `{struck}` what the leg strikes. A placing firing is a journey, a
+  leg a cell, worded by `fact:` with its `move`, a later leg saying its
+  `again`; one that places, strikes nothing and reads no `cand`, which the
+  compiler finds, leads: it is offered before the notes are set up. A step
+  is recorded under the arm that held where `arms` split it, each named for
+  one of the technique's `rung:`s (`bounds`' `near`), else under its one
+  rung, else its id; the compiler refuses an arm no rung names, and the walk
+  a step `names:` does not name, since Check & save names a move by it. A
   board of numbers without notes is refused a rung that strikes, since it
   has nowhere to strike. A
   clue at an edge (`at: edge`) is dealt over the edges; one whose value is

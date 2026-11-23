@@ -98,11 +98,6 @@ hint:
         - {type: pencilStrike, marks: [{x: 0, y: 3, n: 1}]}
         - {type: pencilStrike, marks: [{x: 3, y: 0, n: 1}]}
         - {type: pencilStrike, marks: [{x: 3, y: 2, n: 1}, {x: 3, y: 2, n: 2}]}
-    # Held on 305 of 4905 positions walked.
-    cageEasy:
-      id: "4de:aa_3a_a_c_a__b,m6m8a7a8s1m6"
-      moves:
-        - {type: pencilAll}
     # Held on 3723 of 4905 positions walked.
     cage:
       id: "6dn:aab__b__a__a_3a_a_a__b__a_aa_a_a_7a_,d2d3s1d3a6s4s1s1d3m24a5m15s3a6m30m30a5"

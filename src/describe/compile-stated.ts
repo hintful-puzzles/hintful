@@ -281,6 +281,7 @@ function checkStep(step: Step): void {
   const says: Says = {
     each: false,
     legs: false,
+    byValue: false,
     witness: false,
     reads: false,
     fact: null,

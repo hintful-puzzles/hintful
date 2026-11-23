@@ -958,6 +958,53 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/id: digits of given after ,, written only where given has a clue/);
   });
 
+  it("refuses a walk's step under a rung its technique does not give", () => {
+    const source = "src/engine/testing/fixtures/flanking/flanking.description.yaml";
+    const flanking = sources.get(source);
+    if (flanking === undefined || !isFormal(flanking)) throw new Error("no flanking");
+    type Json = {
+      techniques: {
+        id?: string;
+        rung?: string | string[];
+        says?: Record<string, unknown>;
+      }[];
+      marks: Record<string, unknown>;
+      play: Record<string, unknown>;
+    };
+    const compileFlanking = (edit: (j: Json) => void) => {
+      const j = structuredClone(flanking) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    const flank = (j: Json) => {
+      const t = j.techniques.find((x) => x.id === "flank");
+      if (t === undefined) throw new Error("no flank");
+      return t;
+    };
+    expect(compileFlanking(() => {})).toContain("byValue: true");
+    expect(() =>
+      compileFlanking((j) => {
+        flank(j).rung = ["flankTight", "flankNear"];
+      }),
+    ).toThrow(
+      /flank: a step of arm flank is no rung of the technique's \(flankTight, flankNear\)/,
+    );
+    expect(() =>
+      compileFlanking((j) => {
+        const says = flank(j).says ?? {};
+        const { flank: arm } = says["arms"] as Record<string, Record<string, unknown>>;
+        delete says["arms"];
+        Object.assign(says, { look: arm["look"] });
+      }),
+    ).toThrow(/flank: its steps are recorded under one rung, and it has 2/);
+  });
+
   it("refuses a bar where its board cannot draw, write or deal it", () => {
     const source = "src/games/adjacent/adjacent.description.yaml";
     const adjacent = sources.get(source);

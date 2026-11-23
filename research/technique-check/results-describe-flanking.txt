@@ -1,3 +1,6 @@
+ok  flanking   rest                           3  sound    (want sound   )     1 queries    0.0s
+ok  flanking   rest (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at eset
+ok  src/engine/testing/fixtures/flanking/flanking.description.yaml#rest: recorded sound, proved whole on all 1 boards
 ok  flanking   flank                          3  sound    (want sound   )    12 queries    0.1s
 ok  flanking   flank (planted)                3  unsound  (want unsound )     1 queries    0.0s   at clue flank 0
 ok  src/engine/testing/fixtures/flanking/flanking.description.yaml#flank: recorded sound, proved whole on all 1 boards

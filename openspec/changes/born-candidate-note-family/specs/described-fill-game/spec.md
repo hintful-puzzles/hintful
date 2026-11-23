@@ -82,6 +82,21 @@ write no hint code.
 - **THEN** the step strikes that value's note from the cell, and the cell
   keeps its other notes
 
+#### Scenario: A technique that places without reading notes leads
+
+- **WHEN** a technique of the description's own places, strikes nothing and
+  reads no note, and a board with no notes supports it
+- **THEN** the hint's first step is its placement, before the notes are set
+  up, under either reading; and a firing placing several cells is one
+  journey, its later legs saying how they add to the first
+
+#### Scenario: A step named by the arm that held
+
+- **WHEN** a technique's steps are split by arms named for its rungs, and
+  its steps say `shown: value`
+- **THEN** each step strikes one value, and is recorded under the rung its
+  arm names, which Check & save names a move by
+
 ### Requirement: A born game's values may be a number line
 
 A born game MAY declare its values a number line, and the board SHALL then

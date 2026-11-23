@@ -246,12 +246,22 @@ commit. In design.md § "Decisions" 7's order.
         its kind's least value (it read from 0). The compiler refuses a
         `before` segment holding another kind. A fixture is not in the
         app, so the browser look is 2.5c's, on Towers.
-  - [ ] 2.5b The walk's own placements: a technique of the description's
+  - [x] 2.5b The walk's own placements: a technique of the description's
         own that places (Towers' `facing`), one tried before the walk sets
         up its notes where it reads none (`fullLine`, `tallestNearest`), a
         firing whose legs are a value each (`byHeight`), a rung chosen by a
         term (`bounds`' `near`), and a journey's later legs worded by
         `again`; on `flanking`.
+        Done: leading is derived (places, strikes nothing, reads no
+        `cand`), not declared; a value a leg is `says: shown: value`; a
+        rung chosen by a term is an arm named for one of the technique's
+        rungs, so at the flip `bounds` becomes arms `lineFull` (when
+        `near`) and `lowerBound`, and `fullLine`/`tallestNearest` become
+        placing techniques with `fact:` words. A step with one rung other
+        than its id is now recorded under that rung: Keen's `cageEasy`
+        steps had been named by an id `names:` lacks, so Check & save could
+        not name them; they are `cage` steps now, and the walk refuses a
+        rung `names:` does not cover.
   - [ ] 2.5c The flip: the hide of givens then clues, the clues from a
         tier up; the tower painter (3D, drawing past its tile, its hit
         test, the 2D/3D preference); Towers' tests to `towers.cases.yaml`,

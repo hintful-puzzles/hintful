@@ -6,5 +6,11 @@ techniques:
   # A note made into the sum by a partner one too large.
   flank:
     conclude: >-
-      forall d in cand(c) where not (exists e in cand(o): e != d and d + e = v + 1):
+      forall c in {nth(L, 0), nth(L, 1)}, o = the(q in {nth(L, 0), nth(L, 1)} where q != c),
+      d in cand(c) where not (exists e in cand(o): e != d and d + e = v + 1):
       strike(c, d)
+  # The rest one too large.
+  rest:
+    conclude: >-
+      forall k in P, L = sight(at(k)), near = value(nth(L, 0)):
+      place(nth(L, 1), v(k) - near + 1)

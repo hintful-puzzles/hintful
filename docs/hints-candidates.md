@@ -714,7 +714,8 @@ within that:
   cell, the shaded region constant across the journey, and a list of values
   within a leg is fine. A firing whose premise names one digit across cells
   is one multi-cell step. Exemplars: a height a leg in
-  [`towers/index.ts`](../src/games/towers/index.ts), a cell a leg in
+  [`towers/index.ts`](../src/games/towers/index.ts), a cell a leg (or a value
+  a leg, where its description says `shown: value`) in
   [`engine/fill/candidates.ts`](../src/engine/fill/candidates.ts), which
   walks a born game's own techniques, Keen's cages among them; guards
   `towers-hint.test.ts` "a strike step never mixes heights",

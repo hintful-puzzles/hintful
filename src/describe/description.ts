@@ -701,9 +701,10 @@ export interface StatedTechnique {
 export interface StatedSays extends Worded {
   /** `each`: a step for every square the firing decides, each its own argument
    * (Light Up's discounts); `legs`, the same with the later squares continuing
-   * the first (Sticks: a number's one reason over several squares); absent, one
-   * step for the firing. */
-  shown?: "each" | "legs";
+   * the first (Sticks: a number's one reason over several squares); `value`,
+   * on a board of notes, a step for every value the firing strikes, from all
+   * its squares (Towers' heights); absent, one step for the firing. */
+  shown?: "each" | "legs" | "value";
   /** Report what held in the technique's `where`s and `premise` with the
    * firing (`Witness`). */
   witness?: boolean;
@@ -1169,6 +1170,9 @@ export interface Says {
   /** Whether the steps after the first are the same insight continued (the
    * squares' steps are then `each`'s). */
   legs: boolean;
+  /** Whether a step is made for each value the firing strikes, on a board of
+   * notes. */
+  byValue: boolean;
   /** Whether a firing carries what held in its `where`s and `premise`. */
   witness: boolean;
   /** Whether a firing carries the elements its `where`s and `premise` read. */
@@ -1478,11 +1482,21 @@ function parseSays(stated: StatedSays, at: (part: string, src: string) => Expr):
           ),
           words: wordingsOf(stated.fact, "says fact", at),
         };
+  const byValue = stated.shown === "value";
   if (stated.arms === undefined)
-    return { each, legs, witness, reads, fact, variants: [variant(null, null, {})] };
+    return {
+      each,
+      legs,
+      byValue,
+      witness,
+      reads,
+      fact,
+      variants: [variant(null, null, {})],
+    };
   return {
     each,
     legs,
+    byValue,
     witness,
     reads,
     fact,

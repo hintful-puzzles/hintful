@@ -56,23 +56,58 @@ names:
   regionsFull: "every other number already placed"
   hiddenSingle: "the only square left for a number"
   flank: "a sum beside the grid"
+  flankTight: "a sum only one pair makes"
+  rest: "the rest of a sum"
 techniques:
   - { use: latin.placed, tier: Easy, rung: dup }
+  # Every sum whose nearest square is known and the next is not: the next
+  # holds the rest of the sum. It reads no notes, so a walk of notes offers
+  # it before they are set up, and its later squares continue the first.
+  - id: rest
+    tier: Easy
+    for: >-
+      P = {k in clues(flank) where known(nth(sight(at(k)), 0))
+      and not known(nth(sight(at(k)), 1))}
+      where |P| > 0
+    conclude: >-
+      forall k in P, L = sight(at(k)), near = value(nth(L, 0)):
+      place(nth(L, 1), v(k) - near)
+    says:
+      terms: {}
+      marks: {}
+      fact:
+        terms: { s: "at(k)", v: "v(k)", near: near, n: "v(k) - near" }
+        look: "{outline s: Clue {v}} already has {near} in the {noun} nearest it"
+        follows: "the next {noun} holds the rest of the sum"
+        move: "{ring} must be {n}"
+        again: "{outline s: clue {v}} less the {near} nearest it"
   - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
   - { use: latin.single, tier: Easy, rung: single }
   # Sum by sum, each of the two squares nearest it in turn: a note no note
-  # of the other square makes the sum with is struck.
+  # of the other square makes the sum with is struck. Said a number at a
+  # time, from both squares; a sum of the two smallest or the two largest
+  # numbers is made by one pair alone.
   - id: flank
     tier: Normal
-    for: >-
-      k in clues(flank), s = at(k), v = v(k), L = sight(s),
-      c in {nth(L, 0), nth(L, 1)}, o = the(q in {nth(L, 0), nth(L, 1)} where q != c)
+    rung: [flankTight, flank]
+    for: "k in clues(flank), s = at(k), v = v(k), L = sight(s)"
     conclude: >-
-      forall d in cand(c) where not (exists e in cand(o): e != d and d + e = v):
+      forall c in {nth(L, 0), nth(L, 1)}, o = the(q in {nth(L, 0), nth(L, 1)} where q != c),
+      d in cand(c) where not (exists e in cand(o): e != d and d + e = v):
       strike(c, d)
     says:
+      shown: value
       terms: { s: s, v: v, L: L }
       marks: {}
-      look: >-
-        No two numbers that sum to {v} for {outline s: this clue} put
-        {struckOr} in {ring: this {noun}} of {stripes L: its line}
+      arms:
+        flankTight:
+          when: "v = 3 or v = 2 * w - 1"
+          look: >-
+            Only one pair of numbers sums to {v} for {outline s: this clue},
+            and it holds no {struck}, so none can stand in {ring: these {nouns}}
+            of {stripes L: its line}
+        flank:
+          when: "true"
+          look: >-
+            No two numbers that sum to {v} for {outline s: this clue} put
+            {struckOr} in {ring: these {nouns}} of {stripes L: its line}

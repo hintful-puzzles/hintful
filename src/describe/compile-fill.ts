@@ -216,6 +216,28 @@ export function playOf(
       throw new CompileError(`play askBefore: ${id} is read at a glance`);
   // Notes are typed, a key a value, so only a board of numbers keeps them.
   const notes = noteMarkOf(json) !== null;
+  // The walk of notes names a step by the arm that held, each a rung the
+  // description gives the technique, or by its one rung.
+  if (notes)
+    for (const t of d.techniques) {
+      if (t.id.includes(".") || t.says === null) continue;
+      const arms = t.says.variants.flatMap((v) => (v.name === null ? [] : [v.name]));
+      if (arms.length === 0 && t.rungs.length > 1)
+        throw new CompileError(
+          `${t.id}: its steps are recorded under one rung, and it has ${t.rungs.length}: arms named for them choose`,
+        );
+      for (const arm of arms)
+        if (t.rungs.length > 0 && !t.rungs.includes(arm))
+          throw new CompileError(
+            `${t.id}: a step of arm ${arm} is no rung of the technique's (${t.rungs.join(", ")})`,
+          );
+    }
+  if (!notes)
+    for (const t of d.techniques)
+      if (t.says?.byValue === true)
+        throw new CompileError(
+          `${t.id}: says shown value, and the board keeps no notes`,
+        );
   if (notes && p.numbers === undefined)
     throw new CompileError(
       "marks: candidate notes are a board of numbers', and play has no `numbers`",

@@ -167,8 +167,8 @@
           "additionalProperties": false,
           "properties": {
             "shown": {
-              "enum": ["each", "legs"],
-              "description": "`each`: a step for every square the firing decides, each its own argument (its evidence is the outline less that square alone). `legs`: the same, the steps after the first continuing it. Absent, one step for the firing."
+              "enum": ["each", "legs", "value"],
+              "description": "`each`: a step for every square the firing decides, each its own argument (its evidence is the outline less that square alone). `legs`: the same, the steps after the first continuing it. `value`: on a board of notes, a step for every value the firing strikes, from all the squares it strikes it in (Towers' heights). Absent, one step for the firing."
             },
             "witness": {
               "type": "boolean",

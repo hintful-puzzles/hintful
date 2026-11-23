@@ -137,9 +137,13 @@ const NO_OVERLAY_TEST = [
 
 describe("a game that finds mistakes has a test that paints them", () => {
   it("reads a real population and real test sources", () => {
-    // Three vacuity numbers, because there are three derivations and any of
-    // them could silently match nothing and report health.
-    expect(testSources.size).toBeGreaterThanOrEqual(50);
+    // Three vacuity checks, because there are three derivations and any of
+    // them could silently match nothing and report health. A born game's
+    // tests are its cases file, so every other game's test files are read.
+    const unread = capabilitySets()
+      .map((c) => c.id)
+      .filter((id) => !BORN.has(id) && !testSources.has(id));
+    expect(unread).toEqual([]);
     expect(
       capabilitySets().filter((c) => c.members.includes("findMistakes")).length,
     ).toBeGreaterThanOrEqual(35);

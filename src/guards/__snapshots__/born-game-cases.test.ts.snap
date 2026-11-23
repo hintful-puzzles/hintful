@@ -75,7 +75,6 @@ exports[`kakurasu: pinned hint positions > says, at each pin 1`] = `
 exports[`keen: pinned hint positions > says, at each pin 1`] = `
 {
   "cage": "No way to make this cage have a ratio of 2 puts 5 in this cell, so the 5 must go.",
-  "cageEasy": "No way to make this cage multiply to 6 puts 4 in this cell, so the 4 must go.",
   "cageLine": "This cage must sum to 16, and every way to fill it places a 6 in its column, so the 6 must go.",
   "clean": "Now clear the easy ones: cross out any number already standing in its cell's row or column.",
   "dup": "The 3 just placed can't repeat in its row and column, so the 3 must go from the other cells.",

@@ -29,7 +29,7 @@ import {
   type Val,
 } from "./compile-sorts.ts";
 import { checkStated, wordingIndex } from "./compile-stated.ts";
-import { freeNames, readsMarks } from "./compile-terms.ts";
+import { freeNames, mentions, readsMarks } from "./compile-terms.ts";
 import type { SaidTerm, SuppliedKind, Technique } from "./description.ts";
 import { type Binder, children, type Expr } from "./expr.ts";
 import { footprintOf } from "./footprint.ts";
@@ -499,6 +499,9 @@ export interface CompiledTechnique {
   readonly clues: boolean;
   /** The terms its firings say that name slots. */
   readonly slotTerms: readonly string[];
+  /** Whether it places, strikes nothing and reads no candidate: a walk of
+   * notes offers it before the notes are set up. */
+  readonly leads: boolean;
   readonly reads: {
     readonly cells: readonly string[];
     readonly clues: Readonly<Record<string, string>>;
@@ -1147,10 +1150,21 @@ function techniqueFunction(t: Technique, fnName: string, env: Env): CompiledTech
       const of = s.k === "set" ? s.of : s;
       if (of.k === "elem" && of.e === "slot") slotTerms.add(name);
     }
+  const readsCandidates =
+    t.binders.some((b) => b.kind === "fill") ||
+    [
+      ...t.binders.flatMap((b) => (b.kind === "fill" ? [] : [b.of, b.where])),
+      t.premise,
+      t.conclude,
+    ].some((x) => x !== null && mentions(x, "cand", env.defs, new Set()));
   return {
     code: lines.join("\n"),
     clues: readsClues.yes,
     slotTerms: [...slotTerms],
+    leads:
+      places(t.conclude, env) &&
+      !concludes(t.conclude, "strike", env) &&
+      !readsCandidates,
     reads: {
       cells: sorts.filter((s) => named(s) === "cell").map((s) => s.name),
       clues: Object.fromEntries(
