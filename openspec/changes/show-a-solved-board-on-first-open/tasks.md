@@ -1,46 +1,63 @@
-## 1. Choose the approach
+## 1. Design
 
-The owner leans toward solving the board already dealt behind the card and
-dealing another on Play; the approach is this session's to choose. Weigh
-it against these, read from the code on 2026-11-23:
+Read from the code on 2026-11-23:
 
-- The card is a modal over the board, light-dismissed; on a phone it sits
-  at the bottom with the board above, and on a wide screen it covers the
-  board's middle. A solved board behind it is half hidden on a wide
-  screen, so the card may need to move aside, or hold the picture itself.
+- The card is a light-dismissed modal over the board
+  (`src/components/first-open-card.ts`, shown by `showFirstOpenCard` in
+  `src/screens/puzzle-screen.ts` after the first deal). The example view
+  takes the board's place instead, so the card need not hold a picture.
 - The card also opens over a shared link's board and a remembered one
   (`app-shell` § "A game shows its first-open card once, whoever opens
-  it"). Solving the board behind the card would spend that board; the
-  lean fits only a board freshly dealt for this open.
+  it"): the example is its own board, and the player's comes back.
 - The screen remembers the current board as it changes
-  (`handlePuzzleGameStateChange`), so a solved board must not be what is
-  remembered; and "Show solution" marks the game solved with help, flashes
-  and stops the timer, none of which is the player's.
-- A picture drawn apart from the live board (a second midend drawing a
-  solved copy into the card, as the engine's SVG drawing in
-  `src/engine/testing/svg-drawing.ts` already does for tests) avoids all
-  three, at the cost of a second drawing path.
-- Every game has a `solve`, but a solved board teaches less in some kinds:
-  a moving-pieces game's solved position (Slide, Sokoban), or a hidden
-  information game's (Mines, Guess). Show those too, as consistency, unless
-  the app shows one is misleading; say which in the choice.
+  (`handlePuzzleGameStateChange`); "Show solution" marks a game solved
+  with help, flashes and stops the timer. None of that is the example's.
+- The owner's first lean was to solve the board dealt behind the card and
+  deal another on Play. That fits a board dealt for this visit only; the
+  session may still use it there.
 
-- [ ] 1.1 Choose, try it in the app on a phone width and a wide screen,
-      and record the choice and why in a design.md for this change.
-      Where the choice is a close call a player would see differently,
-      bring both to the owner with screenshots; otherwise go on.
+- [ ] 1.1 How the example board is made and shown, and returned from:
+      a second midend in the view's place, or the live one with the
+      player's board set aside. Where the example comes from: dealt at
+      the opened size and solved, or a fixed board the description names
+      (needed if a callout's target must be guaranteed, such as a Guess
+      game that took several questions). Record the choice and why in a
+      design.md for this change.
+- [ ] 1.2 The callouts' form in the description: under `help:`, each a
+      sentence and the part it names, in the description's own terms (a
+      clue kind, a value, a given, a unit), which the engine resolves to
+      one instance on the example board and marks with the hint marks
+      (`ring`, `outline`, `stripes`). A game whose parts the description
+      does not name (a hand-written game's art) names them by the marks'
+      targets its hint already uses. Record the form, and which
+      capability's spec owns it.
+- [ ] 1.3 The example view's layout at a phone width and a wide screen,
+      how callouts are listed and picked by touch, mouse and keyboard,
+      and what a screen reader hears. Where a choice is a close call a
+      player would see differently, bring the options to the owner with
+      screenshots; otherwise go on.
 
 ## 2. Build
 
-- [ ] 2.1 The card shows a solved board, by the choice in 1.1. Verified
-      by a component or screen test that opens a game for the first time
-      and finds a solved board shown, and the board in front of the player
-      after Play unsolved, with no win, status or timer from the solve,
-      failing first against HEAD.
-- [ ] 2.2 A shared link's board and a remembered one survive the card:
-      a test for each, after the spec's scenarios.
-- [ ] 2.3 In the app (`playwright-cli`, Chrome): three games of different
-      kinds (a fill game, a lines game, a moving-pieces game), first open
-      at a phone width and a wide one, light and dark mode, by mouse,
-      touch and keyboard (Play has the focus; Escape closes). The help
-      page's words on the first open, if any, match.
+- [ ] 2.1 The card's three buttons, Play focused. Test first against
+      HEAD.
+- [ ] 2.2 The example view: shown in the board's place, solved, counted
+      for nothing, and left by Play to the right board. Tests after the
+      spec's scenarios, the shared link and the reopening included.
+- [ ] 2.3 Callouts: the description's form, its compiler check (a
+      callout naming a part the game does not have is refused), the
+      engine's resolution to an instance, the marks, and the help page
+      showing the same words.
+- [ ] 2.4 Callouts written for every game, in batches of a kind at a
+      time; a cross-game guard that every game has at least one, reading
+      its population from the descriptions. Mines and Guess first, as the
+      owner named them.
+
+## 3. In the app
+
+- [ ] 3.1 `playwright-cli`, Chrome: a fill game, a lines game, a
+      moving-pieces game, Mines and Guess: first open, the example, each
+      callout picked, Play, at a phone width and a wide one, light and
+      dark mode, by mouse, touch and keyboard; a shared link's board
+      survives. For each kind, judge whether its example teaches what is
+      expected, and record it here.
