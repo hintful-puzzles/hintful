@@ -71,7 +71,9 @@
       or a few, the cases of 1.1 kept as data or named by the guard that
       holds them. `npm run test:hint-sweeps` before the last commit.
       Moved: Kakurasu, Unruly, Mosaic, Norinori, Range, Clusters, Star
-      Battle, Light Up, Tents. A position draws under `preferences`,
+      Battle, Light Up, Tents, Boats (its tally case is
+      `engine/fill/tally-display.test.ts`'s, on plain values, which 3.1's
+      tally fixture may take). A position draws under `preferences`,
       `draws` names a collection color (`yellow-wash`) for a surface with
       no role, and `brings` is what its last move's placement rules out. `wordings` renders a technique's stated step from terms on
       the compiled module (`BornGame.compiled`), the pieces named as the

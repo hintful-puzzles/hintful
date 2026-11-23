@@ -206,8 +206,8 @@ shaded ones, which the rules rule out.
 
 - Pattern's exhaustive absence (§ 4), pending `tiers.absent.exhaustive`.
 - Boats' "counts a boat found only once it is shut in by water": a
-  tally-display question (`wholePieces`), the tally capability's, tested on
-  a fixture.
+  tally-display question (`wholePieces`), the tally capability's. It needs
+  no game: `engine/fill/tally-display.test.ts` holds it on plain values.
 
 ## The new guards
 

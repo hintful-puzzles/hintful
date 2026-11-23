@@ -20,7 +20,6 @@ const only = (globalThis as { process?: { env?: Record<string, string | undefine
  * shrinks**: a game born from now on ships a cases file.
  */
 const NOT_YET_DATA: Readonly<Record<string, string>> = {
-  boats: "boats.test.ts",
   bricks: "bricks.test.ts",
   pattern: "pattern.test.ts",
   singles: "singles.test.ts",

@@ -1,5 +1,29 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`boats: pinned hint positions > says, at each pin 1`] = `
+{
+  "center": "This middle segment has the board's edge above or below, so its boat must fill the squares beside it, with its water.",
+  "centerRoom": "This row has no room for a boat running across through this middle segment, so the square to its right must be water.",
+  "centerTrial": "If the boat through this middle segment ran across, the striped row couldn't reach its 3, so the squares either side of it must be water.",
+  "extend": "Every 1-boat is placed and this segment is shut in on three sides, so its boat must use the ringed fourth.",
+  "given": "This segment is a boat's top end, so its boat must continue into the square below it, with its water.",
+  "grow": "Every 2-boat is already placed, so this unfinished boat can't stop at 2: it must continue into this square.",
+  "hidden.forced": "This row's hidden number can only be 2, so it needs one more: its one free square must hold a boat segment, with its water.",
+  "hidden.satisfied": "This row's hidden number can only be 4, and it has that many boat squares, so its other square must be water.",
+  "isolated": "Every 1-boat is already placed, and water or the board's edge surrounds this square, so it must be water.",
+  "lastShip": "If this square held a boat segment, there would be more 1-boats (outlined) than the fleet has, so it must be water.",
+  "lastWater": "If this square were water, there would be more 1-boats (outlined) than the fleet has, so it must hold a boat segment, with its water.",
+  "lineShips": "This column needs 4 boat squares and has only 4 free squares, so each ringed square must be one, with its water.",
+  "lineWater": "This row takes no boat squares, so each ringed square must be water.",
+  "onlyFit": "Only the outlined run can hold the 4-boat, so every ringed square is covered wherever it sits, with its water.",
+  "onlyRuns": "Only the outlined run can hold the 4-boat, so every ringed square is covered wherever it sits, with its water.",
+  "shared": "This row has 1 water left, so an outlined square must be a boat, which fills its column if central: the ringed sides are water.",
+  "shortRun": "Filling this run would make a boat of 2, but every 2-boat is already placed, so its free square must be water.",
+  "tooLong": "Filling this square joins the outlined segment into a boat of 2; the largest still missing is 1, so it must be water.",
+  "total": "Every square of water the puzzle has room for is already marked, so every free square (ringed) must hold a boat segment.",
+}
+`;
+
 exports[`clusters: pinned hint positions > says, at each pin 1`] = `
 {
   "countFull.more": "The outlined block must touch two more blocks, and the outlined dotted block allows at most one block beside it, so this square, beside only the block, must hold a block.",
