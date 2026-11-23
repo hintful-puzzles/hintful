@@ -188,10 +188,23 @@ export function doneInput<C extends Clues<C>, D extends { readonly tileSize: num
       const step = stepOf(raw);
       if (step === null) return null;
       const { x, y } = ui.cursor;
-      // On a board of clues at parts, any arrow marks the cursor's own
-      // part's: its box is not read, so any tile size serves.
-      const clue = partClue?.(KEY_TILE, b, y * b.w + x) ?? null;
-      if (clue !== null) return marked(clue.kind, clue.k);
+      // On a board of clues at parts, the clue of the next part that way,
+      // across its wall, as a sign is the one between the cursor and its
+      // neighbor: the key decides which. Its box is not read, so any tile
+      // size serves.
+      const own = partClue?.(KEY_TILE, b, y * b.w + x) ?? null;
+      if (partClue !== null && own !== null) {
+        for (
+          let [px, py] = [x + step[1], y + step[2]];
+          ;
+          px += step[1], py += step[2]
+        ) {
+          if (px < 0 || py < 0 || px >= b.w || py >= b.h) return null;
+          const clue = partClue(KEY_TILE, b, py * b.w + px);
+          if (clue !== null && (clue.kind !== own.kind || clue.k !== own.k))
+            return marked(clue.kind, clue.k);
+        }
+      }
       // On a board of clues at slots, the clue at that end of the cursor's
       // line.
       if (slotKinds.length > 0) {

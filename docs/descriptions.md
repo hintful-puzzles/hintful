@@ -284,7 +284,8 @@ research tools all read through it; the app never does.
   clue's drawn text (the renderer's `partClueBox`, a press elsewhere in its
   square selecting it), or in a slot's margin square, on a board of numbers,
   and the compiler refuses any other kind; Shift or Ctrl with an arrow marks
-  the gap's clue that way, on a board of parts the cursor's own part's, and
+  the gap's clue that way, on a board of parts the next part's that way
+  (the key decides which, `modifier-arrow.test.ts`), and
   on a board of slots the clue at that end of the cursor's line. A clue at a
   slot (`at: slot`, beyond either end of a line, Towers') is dealt over the
   slots and drawn in a margin a tile and an eighth wide round the grid, at

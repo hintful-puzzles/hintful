@@ -22,6 +22,8 @@ import type { Color } from "../contract/types.ts";
 import {
   CURSOR_DOWN,
   CURSOR_LEFT,
+  CURSOR_RIGHT,
+  CURSOR_UP,
   LEFT_BUTTON,
   MOD_CTRL,
   MOD_SHFT,
@@ -223,19 +225,48 @@ describe("a part's clue marked done", () => {
     );
   });
 
-  it("is marked by Shift or Ctrl with any arrow, the clue of the cursor's own cage", () => {
-    const ui = game.newUi(b);
-    // The last square of the third cage, a sum of three, the second sum.
-    const c = b.dealt.cage.cells[2][2];
-    const [x, y] = [c % 4, Math.floor(c / 4)];
+  it("is marked by Shift or Ctrl with an arrow, the clue of the next cage that way", () => {
+    const { cells } = b.dealt.cage;
+    const partOf = (cell: number) => cells.findIndex((cs) => cs.includes(cell));
+    /** The part a done move's clue is at. */
+    const partMarked = (m: unknown): number => {
+      const { kind, k } = m as { kind: keyof typeof b.dealt; k: number };
+      return (b.dealt[kind] as { at: ArrayLike<number> }).at[k];
+    };
     const top = recorded(b)[0];
-    const inC = { x: top.x + x * TS + TS / 2, y: top.y + y * TS + TS / 2 };
-    expect(game.interpretMove(b, ui, ds, inC, LEFT_BUTTON)).toBe(UI_UPDATE);
-    expect(ui.cursor).toMatchObject({ x, y });
-    const third = { type: "done", kind: "sum", k: 1 };
-    for (const key of [CURSOR_DOWN | MOD_SHFT, CURSOR_LEFT | MOD_CTRL])
-      expect(game.interpretMove(b, ui, ds, { x: 0, y: 0 }, key)).toEqual(third);
-    expect(ui.cursor).toMatchObject({ x, y });
+    let checked = 0;
+    for (let c = 0; c < 16; c++) {
+      const [x, y] = [c % 4, Math.floor(c / 4)];
+      const ui = game.newUi(b);
+      const inC = { x: top.x + x * TS + TS / 2, y: top.y + y * TS + TS / 2 };
+      expect(game.interpretMove(b, ui, ds, inC, LEFT_BUTTON)).toBe(UI_UPDATE);
+      for (const [key, dx, dy] of [
+        [CURSOR_UP | MOD_SHFT, 0, -1],
+        [CURSOR_DOWN | MOD_CTRL, 0, 1],
+        [CURSOR_LEFT | MOD_SHFT, -1, 0],
+        [CURSOR_RIGHT | MOD_CTRL, 1, 0],
+      ] as const) {
+        // The first square that way in another cage, if any.
+        let next = -1;
+        for (
+          let [px, py] = [x + dx, y + dy];
+          px >= 0 && py >= 0 && px < 4 && py < 4;
+          px += dx, py += dy
+        )
+          if (partOf(py * 4 + px) !== partOf(c)) {
+            next = partOf(py * 4 + px);
+            break;
+          }
+        const got = game.interpretMove(b, ui, ds, { x: 0, y: 0 }, key);
+        if (next < 0) expect([null, UI_UPDATE], `${c} ${key}`).toContain(got);
+        else {
+          expect(partMarked(got), `${c} ${key}`).toBe(next);
+          checked++;
+        }
+        expect(ui.cursor).toMatchObject({ x, y });
+      }
+    }
+    expect(checked).toBeGreaterThan(16);
   });
 });
 

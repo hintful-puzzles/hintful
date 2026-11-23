@@ -1,4 +1,4 @@
-4x4 Easy #0: 37 steps, solved, e0fe1be102a0caf3 [cageEasy:8 dup:12 hiddenSingle:5 populate:1 single:11]
+4x4 Easy #0: 37 steps, solved, e0fe1be102a0caf3 [cage:8 dup:12 hiddenSingle:5 populate:1 single:11]
 6x6 Normal #0: 104 steps, solved, f3a40e7ecc172f1e [cage:38 dup:29 hiddenSingle:17 populate:1 single:19]
 6x6 Tricky #0: 121 steps, solved, 91cdeede7a555844 [cage:37 cageLine:19 dup:28 hiddenSingle:12 populate:1 single:24]
 6x6 Hard #0: 125 steps, solved, 2250cef07de2ceb4 [cage:36 cageLine:16 dup:27 hiddenSingle:7 populate:1 set:9 single:29]

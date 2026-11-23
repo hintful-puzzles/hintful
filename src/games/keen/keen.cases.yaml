@@ -216,10 +216,14 @@ input:
       - {key: right}
       - {key: "3", holds: {values.1: 3}}
       - {key: "0", holds: {values.1: 0}}
-  # Shift with an arrow marks the clue of the cursor's cage done, and again
-  # undone.
+  # Shift with an arrow marks done the clue of the next cage that way, and
+  # again undone: from the quotient cage's second square, the difference
+  # cage to its right and the product cage below; none to its left but its
+  # own, which stays unmarked.
   - id: "4de:aa_a_aa_ba_5a,d2s1a9m4d2m6s2"
     events:
       - {key: right}
-      - {key: "shift+left", holds: {done.quotient: [1, 0]}}
-      - {key: "shift+right", holds: {done.quotient: [0, 0]}}
+      - {key: "shift+right", holds: {done.difference: [1, 0]}}
+      - {key: "shift+down", holds: {done.product: [1, 0]}}
+      - {key: "shift+left", holds: {done.quotient: [0, 0]}}
+      - {key: "shift+right", holds: {done.difference: [0, 0]}}

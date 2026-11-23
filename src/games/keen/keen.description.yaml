@@ -35,7 +35,8 @@ help:
     You can also use the arrow keys to move the selected square around.
     Press Enter to toggle between entering numbers and entering pencil
     marks, and Backspace or Space to clear a square. Shift or Ctrl with an
-    arrow key marks the clue of the selected square's cage as done.
+    arrow key marks as done the clue of the next cage that way from the
+    selected square.
 
     {{mark-all}} Once every empty square has marks, the press crosses out
     of each the numbers already placed in its row and column.

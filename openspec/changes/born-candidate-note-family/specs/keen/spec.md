@@ -189,14 +189,16 @@ digit and a row's digits stay level.
 A press on a cage's clue text, with a little slack, SHALL mark the clue done
 (drawn gray) and a second press unmark it; a press elsewhere in the square
 SHALL select it as before. Shift or Ctrl with an arrow key SHALL mark the
-clue of the cage the cursor is in. A clue marked done that breaks SHALL be
+clue of the next cage that way from the cursor, so the key decides which,
+as it does a sign's in Unequal. A clue marked done that breaks SHALL be
 drawn red over the gray.
 
 #### Scenario: Shift and an arrow
 
-- **WHEN** the cursor is on a cell of a cage and Shift with an arrow is
-  pressed twice
-- **THEN** the cage's clue is marked done, and then unmarked
+- **WHEN** the cursor is on a cell of a cage, another cage lies to its
+  right, and Shift with the right arrow is pressed twice
+- **THEN** that other cage's clue is marked done, and then unmarked, and
+  the cursor's own cage's clue is unchanged
 
 ### Requirement: Description: Keen's text format prints each cage's clue
 
