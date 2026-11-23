@@ -162,6 +162,7 @@ export {
   valuesOf,
 } from "./describe-runtime/sets.ts";
 export {
+  blocks,
   describedSpace,
   type EdgeGeometry,
   type GridSpace,

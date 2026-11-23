@@ -892,11 +892,12 @@ describe("what the fill board reads of a description", () => {
     // The walk's singles are its own, known by the kind they were placed as.
     expect(code).toContain('kind: "one.cell"');
     expect(code).toContain('kind: "one.place"');
-    expect(() =>
+    // The walk reads any unit beside the areas.
+    expect(
       compileZoning((j) => {
         j.space.units = ["rows"];
       }),
-    ).toThrow(/walk of the notes reads rows and columns, not rows/);
+    ).toContain('export const units: readonly string[] = ["rows"];');
     // Its areas' rule dropped, no part holds a value once.
     expect(() =>
       compileZoning((j) => {
@@ -918,6 +919,66 @@ describe("what the fill board reads of a description", () => {
         j.steps["cull"].terms["n"] = "flag";
       }),
     ).toThrow(/steps cull: term n is a number/);
+  });
+
+  it("builds a board's blocks and a variation's units, and words the walk over them", () => {
+    const source = "src/engine/testing/fixtures/boxing/boxing.description.yaml";
+    const boxing = sources.get(source);
+    if (boxing === undefined || !isFormal(boxing)) throw new Error("no boxing");
+    type Json = {
+      space: { regions: Record<string, string> };
+      steps: Record<string, { terms: Record<string, string> }>;
+    };
+    const compileBoxing = (over: (j: Json) => void) => {
+      const j = structuredClone(boxing) as unknown as Json;
+      over(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    const code = compileBoxing(() => {});
+    expect(code).toContain(
+      'export const boxes = {"name":"box","blocks":[2,2]} as const;',
+    );
+    expect(code).toContain('export const unitVariations = {"diagonals":"X"} as const;');
+    // A block's sides are a number or a size the params give.
+    expect(
+      compileBoxing((j) => {
+        j.space.regions["box"] = "blocks(w, 2)";
+      }),
+    ).toContain('"blocks":["w",2]');
+    for (const how of ["rows(2)", "blocks(2)", "blocks(2, k)"])
+      expect(() =>
+        compileBoxing((j) => {
+          j.space.regions["box"] = how;
+        }),
+      ).toThrow(/box: a partition by formula is blocks\(a, b\)/);
+    expect(() =>
+      compileBoxing((j) => {
+        j.space.regions["lane"] = "blocks(2, 2)";
+      }),
+    ).toThrow(/lane: a partition by formula is one among the units/);
+    // The blocks reach past a row and a column, so the walk's steps are the
+    // description's, a modifier a flag by its name.
+    expect(() =>
+      compileBoxing((j) => {
+        delete j.steps["clean"];
+      }),
+    ).toThrow(/steps: clean is unworded/);
+    expect(() =>
+      compileBoxing((j) => {
+        j.steps["cull"].terms["Y"] = "flag";
+      }),
+    ).toThrow(/steps cull: the walk supplies no term Y \(n, X\)/);
+    expect(() =>
+      compileBoxing((j) => {
+        j.steps["cull"].terms["X"] = "number";
+      }),
+    ).toThrow(/steps cull: term X is a flag/);
   });
 
   it("refuses a rung that strikes on a board of numbers without notes", () => {

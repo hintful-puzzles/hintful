@@ -26,7 +26,7 @@ import {
   type FillBoard,
   type FillModule,
   newBoard,
-  spaceOf,
+  paramSpaceOf,
 } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { type FillPlay, type FillUi, fillInput, newFillUi } from "./play.ts";
@@ -75,7 +75,7 @@ describe("a fill game's input", () => {
   // line counts play no part.
   const GIVEN = { 1: SHADED, 11: CROSSED };
   function dealt(): FillBoard<playing.Dealt> {
-    const sp = spaceOf(playing, { w: W, h: W });
+    const sp = paramSpaceOf(playing, { w: W, h: W });
     const { count } = playing.deriveClues(new Uint8Array(W * W).fill(CROSSED), sp);
     const given = clueList(
       Object.keys(GIVEN).map(Number),
@@ -331,7 +331,7 @@ describe("a fill game's link", () => {
       linking,
       W,
       W,
-      linking.deriveClues(g, spaceOf(linking, { w: W, h: W })),
+      linking.deriveClues(g, paramSpaceOf(linking, { w: W, h: W })),
     );
   }
   const play_ = (

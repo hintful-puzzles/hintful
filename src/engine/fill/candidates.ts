@@ -7,16 +7,17 @@
  * its rungs are the ladder's techniques run on those notes, and its steps
  * set and strike notes as the player does.
  *
- * Its regions are the space's rows and columns, each holding every value
- * once, as on every Latin board, and the parts of each dealt partition the
- * rules hold distinct (`distinctParts`), a part holding every value its
- * cells' domains hold where they hold as many as it has cells (a `zoning`
- * area of N squares holds 1 to N). Its singles are the walk's own, so the
+ * Its regions are the space's units, its rows and columns, its diagonals and
+ * the blocks of the partition among them, and the parts of each dealt
+ * partition the rules hold distinct (`distinctParts`), a region holding every
+ * value its cells' domains hold where they hold as many as it has cells (a
+ * `zoning` area of N squares holds 1 to N). Its singles are the walk's own, so the
  * techniques placed as `one.cell` and `one.place` are none of its rungs. The
  * library's strikes are worded by the library (`hint-text.ts`'s Latin words),
  * a firing one leg over the cells with notes written and a leg each over
- * those without (`byWrittenCell`); where a placed value rules itself out of more than
- * its row and column, the description words how far (`WALK_STEPS`).
+ * those without (`byWrittenCell`); where a placed value rules itself out of
+ * more than its row and column, the description words how far
+ * (`WALK_STEPS`).
  */
 
 import type { Game, HintStep } from "../contract/game.ts";
@@ -57,7 +58,6 @@ import {
 import {
   type CellRegion,
   type GenericLatinReason,
-  rowColRegions,
   singleReasonOf,
 } from "../hint/latin-hint.ts";
 import {
@@ -111,7 +111,12 @@ const FILL_CANDIDATE_MOVES: CandidateMoveAdapter<FillMove> = {
 export interface CandidateFillModule<C> extends LadderedFillModule<C> {
   /** What a player calls each rung, which Check & save names a move by. */
   readonly NAMES?: Readonly<Record<string, string>>;
-  readonly WORDS?: { readonly cell?: string; readonly value?: string };
+  readonly WORDS?: {
+    readonly cell?: string;
+    readonly value?: string;
+    /** How a wing's ends share a unit with the cell it strikes. */
+    readonly alongside?: string;
+  };
   /** Every kind of step the description's own techniques say: an id, or
    * `id.arm` where an arm splits its steps. */
   readonly SAYS_KINDS?: readonly string[];
@@ -127,6 +132,8 @@ export interface CandidateFillModule<C> extends LadderedFillModule<C> {
   readonly STEPS?: StepTable<Readonly<Record<string, UntypedStep>>>;
   /** The dealt partitions whose parts hold no value twice. */
   readonly distinctParts?: readonly string[];
+  /** The variations the player switches on, by name. */
+  readonly modifiers?: Readonly<Record<string, unknown>>;
 }
 
 /** A step of the description's whose terms and marks are not known here. */
@@ -135,13 +142,23 @@ interface UntypedStep extends StepType {
   readonly marks: never;
 }
 
-/** A region the walk reads a value's places in: a row or a column, or a part
- * of a partition, named by the partition's name. */
+/** A region the walk reads a value's places in: a row or a column, or a
+ * diagonal, a block or a part, named `diagonal` or by its partition's name. */
 type FillRegion = CellRegion &
   (
     | { readonly line: "row" | "col"; readonly index: number }
     | { readonly line?: undefined; readonly name: string; readonly cells: number[] }
   );
+
+/** The units that are lines: rows, columns and diagonals. Any other unit is
+ * the one partition among a space's units. */
+const LINE_UNITS: ReadonlySet<string> = new Set(["rows", "cols", "lines", "diagonals"]);
+
+/** Whether a placed value on a board of `units` rules itself out of its row
+ * and column alone, which the walk says in its own words; elsewhere the
+ * description words how far (`WALK_STEPS`). */
+const rowsAndCols = (units: readonly string[]): boolean =>
+  units.length > 0 && units.every((u) => u === "rows" || u === "cols" || u === "lines");
 
 /** The kinds of rule whose firings are the walk's own singles. */
 const WALKS: ReadonlySet<string> = new Set(["one.cell", "one.place"]);
@@ -230,8 +247,13 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     Object.keys(WALK_STEPS).every((id) => Object.hasOwn(steps, id))
       ? steps
       : null;
-  if (walkSteps === null && module.units.length === 0)
-    throw new Error("a board of notes in parts words the walk's steps (`WALK_STEPS`)");
+  if (
+    walkSteps === null &&
+    (!rowsAndCols(module.units) || (module.distinctParts?.length ?? 0) > 0)
+  )
+    throw new Error(
+      "a board of notes in more than rows and columns words the walk's steps (`WALK_STEPS`)",
+    );
   const kindsOf = (id: string): string[] => {
     const arms = (module.SAYS_KINDS ?? [])
       .filter((k) => k.startsWith(`${id}.`))
@@ -258,6 +280,9 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     noun: module.WORDS?.value ?? "number",
     value: numeral,
     cell: module.WORDS?.cell ?? "square",
+    ...(module.WORDS?.alongside === undefined
+      ? {}
+      : { beside: module.WORDS.alongside }),
   };
 
   /**
@@ -475,24 +500,38 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
     return out;
   }
 
-  /** Each cell's regions, in the order a hidden single is named by: its row
-   * and column, then its part of each partition the rules hold distinct. */
+  /** Each cell's regions, in the order a hidden single is named by: its
+   * units in the description's order, then its part of each partition the
+   * rules hold distinct. A region holds every value where its cells' domains
+   * hold as many as it has cells. */
   function regionsOf(board: FillBoard<C>, sp: GridSpace): FillRegion[][] {
-    const { w } = board;
-    const parts = (module.distinctParts ?? []).map((name) => {
-      const p = board.dealt[name as keyof C] as Partition;
-      return p.cells.map((cells): FillRegion => {
-        let held = 0;
-        for (const c of cells) held |= module.domainOf(sp, board.dealt, c);
-        return {
+    const holdsEvery = (cells: readonly number[]): boolean => {
+      let held = 0;
+      for (const c of cells) held |= module.domainOf(sp, board.dealt, c);
+      return popcount(held) === cells.length;
+    };
+    const box = module.units.find((u) => !LINE_UNITS.has(u)) ?? "";
+    const units = sp.units.map((L): FillRegion => {
+      const cells = [...sp.lineCells[L]];
+      const every = holdsEvery(cells);
+      if (L < sp.h) return { line: "row", index: L, cells, holdsEvery: every };
+      if (L < sp.h + sp.w)
+        return { line: "col", index: L - sp.h, cells, holdsEvery: every };
+      const name = sp.diagonals.includes(L) ? "diagonal" : box;
+      return { name, cells, holdsEvery: every };
+    });
+    const unitAt = new Map(sp.units.map((L, k) => [L, units[k]]));
+    const parts = (module.distinctParts ?? []).map((name) =>
+      (board.dealt[name as keyof C] as Partition).cells.map(
+        (cells): FillRegion => ({
           name,
           cells: [...cells],
-          holdsEvery: popcount(held) === cells.length,
-        };
-      });
-    });
-    return Array.from({ length: board.w * board.h }, (_, c) => [
-      ...(module.units.length === 0 ? [] : rowColRegions(c % w, Math.floor(c / w), w)),
+          holdsEvery: holdsEvery(cells),
+        }),
+      ),
+    );
+    return sp.cells.map((c) => [
+      ...sp.unitsOf[c].map((L) => unitAt.get(L) as FillRegion),
       ...(module.distinctParts ?? []).map(
         (name, k) => parts[k][(board.dealt[name as keyof C] as Partition).of[c]],
       ),
@@ -516,9 +555,13 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         typeof dealt[k] === "number" ? [[k, dealt[k]]] : [],
       ),
     );
+    // Each variation the player switches on, a flag by its name.
+    const flags = Object.fromEntries(
+      Object.keys(module.modifiers ?? {}).map((v) => [v, board.variations.includes(v)]),
+    );
     const said = (ring: readonly Point[], terms: object) => ({
       ring,
-      terms: { ...sizes, ...terms },
+      terms: { ...sizes, ...flags, ...terms },
     });
     const sentence = (id: WalkStep, ring: readonly Point[], terms: object): Sentence =>
       voice.sentence(id, said(ring, terms));

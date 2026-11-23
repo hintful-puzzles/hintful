@@ -25,11 +25,25 @@ Each capability is built first on a fixture description of its own, as
 the predecessor's were, in a commit before the flip.
 
 - [ ] 2.1 Solo born (design.md § "The gap list", Solo):
-  - [ ] 2.1a The walk of the notes over any unit: blocks and diagonals,
+  - [x] 2.1a The walk of the notes over any unit: blocks and diagonals,
         and a partition a rule holds distinct beside them
-        (`checkWalkSteps`, `engine/fill/candidates.ts`).
+        (`checkWalkSteps`, `engine/fill/candidates.ts`). Built on the
+        `boxing` fixture: the walk reads `sp.units` in the description's
+        order; `blocks(a, b)` compiles to `boxes`, cut by `spaceOf` from the
+        board's sizes; a unit a modifier adds is `unitVariations`, so
+        `spaceOf` takes the board's variations (`paramSpaceOf` before a
+        deal); a modifier is a flag term of the walk's steps by its name;
+        the wing's `alongside` reaches the walk. Left for 2.1c: Solo's box
+        under Jigsaw is a ruleset's dealt partition among the units, which
+        the compiler has no `Dealt` field for and `spaceOf` does not read.
   - [ ] 2.1b Grading on a second scale: a board dealt at the asked tier
-        on each (`scales:`).
+        on each (`scales:`). Read 2026-11-23 for this: the player never
+        asks Solo's killer tier; every board carries `kdiff` Region, which
+        the ID does not write (`games/solo/index.ts`'s `plainBoard`), and
+        the generator merges cages until the grade is exactly the asked
+        tier on both scales (`generator.ts`, the loop after
+        `genKillerCages`). The ladder runtime already caps and grades by
+        scale (`ladder-runtime.ts`); the fill engine passes only `TIERS`.
   - [ ] 2.1c A partition divided into equal parts (jigsaw blocks); the
         diagonals drawn; a second partition drawn inset inside the first.
   - [ ] 2.1d The symmetry option of seven, written as upstream's suffixes;

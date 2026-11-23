@@ -54,7 +54,7 @@ describe("a hexagon's deal", () => {
   // so a board read back from one cannot show it.
   it("derives the outside kind on the corners alone, and no other clue there", () => {
     const store = { w: 7, h: 5 };
-    const sp = spaceOf(shearing, store);
+    const sp = spaceOf(shearing, { ...store, dealt: {}, variations: [] });
     const g = new Uint8Array(store.w * store.h).fill(CLEAR);
     const { corner, number } = shearing.deriveClues(g, sp);
     expect([...corner.at]).toEqual(outside(store));

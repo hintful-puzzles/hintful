@@ -479,9 +479,36 @@ function spaceOf(
       ),
       sizes: new Map(),
     };
-  const m = BLOCKS.exec(unit[1]);
-  if (m === null) throw new Error(`${unit[0]}: only blocks(a, b) is checked`);
+  const { names, fits } = blockFits(d, unit[1], order);
+  if (fits.length === 0) throw new Error(`no board of order ${order}`);
+  const [a, b] = fits[0];
+  return {
+    sp: describedSpace(space.units, order, order, blocks(a, b)),
+    sizes: new Map(
+      (
+        [
+          [names[0], a],
+          [names[1], b],
+        ] as const
+      ).filter(([name]) => !/^\d+$/.test(name)),
+    ),
+  };
+}
+
+/**
+ * The blocks `blocks(a, b)` cuts a board of `order` into, each side's width
+ * and height, the squarest first; none where no sizes the rules allow tile
+ * it. Each side is a number or a size the params give.
+ */
+function blockFits(
+  d: Description,
+  how: string,
+  order: number,
+): { names: readonly [string, string]; fits: (readonly [number, number])[] } {
+  const m = BLOCKS.exec(how);
+  if (m === null) throw new Error(`${how}: only blocks(a, b) is checked`);
   const range = (name: string): number[] => {
+    if (/^\d+$/.test(name)) return [Number(name)];
     const s = d.json.sizes[name];
     if (s === undefined) throw new Error(`blocks: no size ${name}`);
     const { min } = s;
@@ -489,18 +516,12 @@ function spaceOf(
     const max = Math.min(s.max ?? order, order);
     return Array.from({ length: max - min + 1 }, (_, i) => min + i);
   };
-  const fits = range(m[1])
-    .flatMap((a) => range(m[2]).map((b) => [a, b] as const))
-    .filter(([a, b]) => a * b === order)
-    .sort((x, y) => Math.min(...y) - Math.min(...x));
-  if (fits.length === 0) throw new Error(`no board of order ${order}`);
-  const [a, b] = fits[0];
   return {
-    sp: describedSpace(space.units, order, order, blocks(a, b)),
-    sizes: new Map([
-      [m[1], a],
-      [m[2], b],
-    ]),
+    names: [m[1], m[2]],
+    fits: range(m[1])
+      .flatMap((a) => range(m[2]).map((b) => [a, b] as const))
+      .filter(([a, b]) => a * b === order)
+      .sort((x, y) => Math.min(...y) - Math.min(...x)),
   };
 }
 
@@ -3230,6 +3251,15 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
     return (TILINGS[order] ?? []).flatMap(([type], i) =>
       tiling === true || type === "square" ? [new Map([[TILING_SIZE, i]])] : [],
     );
+  // A board in blocks no allowed sizes tile (a 3x3 in blocks(2, 2)) is no
+  // board.
+  const unit = unitRegion(d);
+  if (
+    unit !== null &&
+    BLOCKS.test(unit[1]) &&
+    blockFits(d, unit[1], order).fits.length === 0
+  )
+    return [];
   const { grid } = d.json.space;
   const fixed = new Set([
     "order",

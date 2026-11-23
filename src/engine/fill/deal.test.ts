@@ -36,7 +36,7 @@ import { descValue } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
 import { clueList } from "../solve/describe-runtime.ts";
 import { partners } from "../testing/symmetry-partners.ts";
-import { newBoard, solveBoard, spaceOf } from "./board.ts";
+import { newBoard, paramSpaceOf, solveBoard } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, encodeDesc, givenOf, partitionOf } from "./game-id.ts";
 import { latinNumbers } from "./latin-numbers.ts";
@@ -57,7 +57,7 @@ const read = (w: number, h: number, desc: string) =>
   descValue(
     decodeDesc<linking.Dealt>(
       linking.deal,
-      spaceOf(linking, { w, h }),
+      paramSpaceOf(linking, { w, h }),
       linking.clueMax,
       desc,
     ),
@@ -65,7 +65,7 @@ const read = (w: number, h: number, desc: string) =>
 
 describe("a fill game's deal", () => {
   it("samples pieces none touching, each with a partner of its own beside it", () => {
-    const sp = spaceOf(linking, { w: 8, h: 8 });
+    const sp = paramSpaceOf(linking, { w: 8, h: 8 });
     // A draw may find no room, or leave a line bare: the first that holds.
     const answer = ["sample-a", "sample-b", "sample-c", "sample-d"]
       .map((seed) => sampleAnswer(linking.deal.sample, sp, randomNew(seed)))
@@ -82,7 +82,7 @@ describe("a fill game's deal", () => {
   it("draws again an answer that leaves a line bare, with `noBareLine`", () => {
     // On 4x4 a fifth is three pieces, and their partners leave a line bare
     // often.
-    const sp = spaceOf(linking, { w: 4, h: 4 });
+    const sp = paramSpaceOf(linking, { w: 4, h: 4 });
     const bare = (g: Uint8Array) =>
       sp.lines.some((L) => sp.lineCells[L].every((c) => g[c] === EMPTY));
     const { noBareLine: _, ...loose } = linking.deal.sample;
@@ -119,7 +119,7 @@ describe("a fill game's deal", () => {
 
 describe("an answer laid a line at a time", () => {
   it("puts the size's count in every row and column, none side by side", () => {
-    const sp = spaceOf(sizing, { w: 6, h: 6 });
+    const sp = paramSpaceOf(sizing, { w: 6, h: 6 });
     for (const n of [1, 2]) {
       // A draw may find no way on: the first that holds.
       const answer = ["lines-a", "lines-b", "lines-c", "lines-d"]
@@ -142,7 +142,7 @@ describe("an answer laid a line at a time", () => {
         p,
         randomNew(`sized-${diff}`),
       );
-      const sp = spaceOf(sizing, { w: 5, h: 5 });
+      const sp = paramSpaceOf(sizing, { w: 5, h: 5 });
       const clues = descValue(
         decodeDesc<sizing.Dealt>(sizing.deal, sp, sizing.clueMax, desc),
       );
@@ -180,7 +180,7 @@ describe("an answer laid a piece at a time", () => {
   };
 
   it("lays the tally's pieces, straight, none touching even at a corner", () => {
-    const sp = spaceOf(fleet, { w: 6, h: 6 });
+    const sp = paramSpaceOf(fleet, { w: 6, h: 6 });
     for (const seed of ["pieces-a", "pieces-b", "pieces-c"]) {
       const g = samplePieces(fleet.deal.sample, 6, 6, [2, 1, 1], randomNew(seed));
       if (g === null) throw new Error(`no room on ${seed}`);
@@ -192,7 +192,7 @@ describe("an answer laid a piece at a time", () => {
   });
 
   it("never deals the value only an ID writes, though it holds on every piece", () => {
-    const sp = spaceOf(fleet, { w: 6, h: 6 });
+    const sp = paramSpaceOf(fleet, { w: 6, h: 6 });
     const g = samplePieces(fleet.deal.sample, 6, 6, [2, 1, 1], null);
     if (g === null) throw new Error("no room");
     const { seg } = fleet.deriveClues(
@@ -210,7 +210,7 @@ describe("an answer laid a piece at a time", () => {
     const read = descValue(
       decodeDesc<fleet.Dealt>(
         fleet.deal,
-        spaceOf(fleet, { w: 2, h: 2 }),
+        paramSpaceOf(fleet, { w: 2, h: 2 }),
         fleet.clueMax,
         "1,0,1,0,Vc",
       ),
@@ -219,7 +219,7 @@ describe("an answer laid a piece at a time", () => {
   });
 
   it("hides the flag's kind too where the flag is on, and only there", () => {
-    const sp = spaceOf(fleet, { w: 5, h: 5 });
+    const sp = paramSpaceOf(fleet, { w: 5, h: 5 });
     const shown = (hides: boolean, seed: string): number => {
       const p = { w: 5, h: 5, diff: 0, tally: [2, 1], hides };
       const { desc, aux } = dealFill(fleet, fleet.deal, p, randomNew(seed));
@@ -241,7 +241,7 @@ describe("an answer laid a piece at a time", () => {
 
 describe("walls laid first, at the share and the symmetry the options give", () => {
   const W = 6;
-  const sp = spaceOf(walling, { w: W, h: W });
+  const sp = paramSpaceOf(walling, { w: W, h: W });
   /** A board dealt with `options`, its clues as read back and its answer. */
   const dealt = (options: Record<string, number>, seed: string) => {
     const p = { w: W, h: W, diff: 0, options };
@@ -288,7 +288,7 @@ describe("a hide that keeps its clues symmetric, and may go less far", () => {
   /** A board of `w` dealt from `seed`, its clues read back from its ID and
    * checked to finish on its answer. */
   const dealt = (w: number, thorough: boolean, seed: string) => {
-    const sp = spaceOf(mirroring, { w, h: w });
+    const sp = paramSpaceOf(mirroring, { w, h: w });
     const p = { w, h: w, diff: 0, thorough };
     const { desc, aux } = dealFill(mirroring, mirroring.deal, p, randomNew(seed));
     const clues = descValue(
@@ -340,7 +340,7 @@ describe("a hide that keeps its clues symmetric, and may go less far", () => {
   it("never deals a kind only a game ID carries, and reads one from an ID", () => {
     for (const seed of seeds)
       expect(dealt(5, true, seed).clues.given.at).toHaveLength(0);
-    const sp = spaceOf(mirroring, { w: 3, h: 3 });
+    const sp = paramSpaceOf(mirroring, { w: 3, h: 3 });
     const { number } = mirroring.deriveClues(new Uint8Array(9).fill(2), sp);
     const given = clueList([4], [2], 9);
     const desc = encodeDesc(mirroring.deal, sp, { number, given });
@@ -376,7 +376,7 @@ describe("draws mended and climbing toward the tier, alike dots unpaired", () =>
   /** The dots alike side by side on boards of `w` dealt under `deal`, and
    * each board checked to finish on its answer at the lowest tier. */
   const pairs = (deal: Deal, w: number): number => {
-    const sp = spaceOf(climbing, { w, h: w });
+    const sp = paramSpaceOf(climbing, { w, h: w });
     let n = 0;
     for (const seed of seeds) {
       const { desc, aux } = dealFill(
@@ -422,7 +422,7 @@ describe("draws mended and climbing toward the tier, alike dots unpaired", () =>
 
 describe("a partition grown round dominoes, some closed as regions of their own", () => {
   const W = 6;
-  const sp = spaceOf(growing, { w: W, h: W });
+  const sp = paramSpaceOf(growing, { w: W, h: W });
   const seeds = Array.from({ length: 8 }, (_, i) => `grow-${i}`);
   /** The board dealt at `diff` from `seed`, read back from its ID and checked
    * to finish on its answer at its tier and not below. */
@@ -487,7 +487,7 @@ describe("a partition grown round dominoes, some closed as regions of their own"
   it("reads a region from the walls an ID writes, and holds the rules to it", () => {
     // Two regions, the left two columns and the rest, on a 4x2 board.
     const parts = partitionOf([0, 0, 1, 1, 0, 0, 1, 1]);
-    const small = spaceOf(growing, { w: 4, h: 2 });
+    const small = paramSpaceOf(growing, { w: 4, h: 2 });
     const desc = encodeDesc(growing.deal, small, { region: parts });
     const read = descValue(
       decodeDesc<growing.Dealt>(growing.deal, small, growing.clueMax, desc),
@@ -507,7 +507,7 @@ describe("an answer sampled as a picture", () => {
   /** The pictures drawn on a board of `w` by `h` from 200 seeds, and how
    * many draws came to none. */
   const drawn = (w: number, h: number) => {
-    const sp = spaceOf(picturing, { w, h });
+    const sp = paramSpaceOf(picturing, { w, h });
     const out: Uint8Array[] = [];
     let none = 0;
     for (let i = 0; i < 200; i++) {
@@ -598,7 +598,7 @@ describe("numbers dealt as a Latin square's, a shaded square's repeating one", (
       [5, 5],
       [4, 6],
     ]) {
-      const sp = spaceOf(numbering, { w, h });
+      const sp = paramSpaceOf(numbering, { w, h });
       const nums = latinNumbers(
         new Uint8Array(w * h).fill(2),
         sp,
@@ -616,7 +616,7 @@ describe("numbers dealt as a Latin square's, a shaded square's repeating one", (
 
   it("deals no number twice among the clear squares of a line, and each shaded one again", () => {
     const w = 7;
-    const sp = spaceOf(numbering, { w, h: w });
+    const sp = paramSpaceOf(numbering, { w, h: w });
     let shaded = 0;
     let inBoth = 0;
     for (let i = 0; i < 8; i++) {
@@ -658,7 +658,7 @@ describe("numbers dealt as a Latin square's, a shaded square's repeating one", (
 describe("a number dealt on each line, and a search tier stripped from every clue", () => {
   const ACROSS = 1;
   const w = 5;
-  const sp = spaceOf(stretching, { w, h: w });
+  const sp = paramSpaceOf(stretching, { w, h: w });
   /** The line through `c` of answer `g`, in cell order: its run along the
    * row where it holds a line across, along the column where one down. */
   const lineOf = (g: ArrayLike<number>, c: number): number[] => {

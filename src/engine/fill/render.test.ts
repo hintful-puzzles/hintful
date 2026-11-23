@@ -21,7 +21,7 @@ import { clueList } from "../solve/describe-runtime.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.ts";
 import type { FillMistake } from "./answer.ts";
-import { type FillBoard, newBoard, spaceOf, washedValues } from "./board.ts";
+import { type FillBoard, newBoard, paramSpaceOf, washedValues } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
 import { fillInput, newFillUi } from "./play.ts";
@@ -44,7 +44,7 @@ function dealt(): FillBoard<linking.Dealt> {
     linking,
     W,
     W,
-    linking.deriveClues(g, spaceOf(linking, { w: W, h: W })),
+    linking.deriveClues(g, paramSpaceOf(linking, { w: W, h: W })),
   );
 }
 
@@ -132,7 +132,7 @@ describe("a fill game drawn by layers", () => {
 
 describe("a fill game's labels", () => {
   it("draws fixed labels before each line, in a margin the board makes room for", () => {
-    const sp = spaceOf(playing, { w: W, h: W });
+    const sp = paramSpaceOf(playing, { w: W, h: W });
     const { count } = playing.deriveClues(new Uint8Array(W * W).fill(2), sp);
     const state = newBoard(playing, W, W, {
       given: clueList([], [], sp.cells.length),
@@ -200,7 +200,7 @@ describe("each painter a description may name", () => {
   // it, given where the description gives it.
   const N = 3;
   const MIDDLE = 4;
-  const sp = spaceOf(painting, { w: N, h: N });
+  const sp = paramSpaceOf(painting, { w: N, h: N });
   const clues = painting.deriveClues(new Uint8Array(N * N).fill(2), sp);
   const look: FillLook<painting.Dealt> = {
     play: painting.play,
@@ -266,7 +266,7 @@ describe("a wash, and a number drawn plain", () => {
   const MIDDLE = 4;
   const SHADED = 1;
   const CROSSED = 2;
-  const sp = spaceOf(washing, { w: N, h: N });
+  const sp = paramSpaceOf(washing, { w: N, h: N });
   const clues: washing.Dealt = { number: clueList([MIDDLE], [1], N * N) };
   const input = fillInput<washing.Dealt, { tileSize: number }>(
     washing,

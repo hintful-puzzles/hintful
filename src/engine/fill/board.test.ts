@@ -18,7 +18,7 @@ import {
   solve,
   status,
 } from "./answer.ts";
-import { newBoard, solveBoard, spaceOf } from "./board.ts";
+import { newBoard, paramSpaceOf, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { applyEdit } from "./edit.ts";
 import { decodeDesc } from "./game-id.ts";
@@ -41,7 +41,7 @@ const loaded = (w: number, h: number, desc: string) =>
     w,
     h,
     descValue(
-      decodeDesc(linking.deal, spaceOf(linking, { w, h }), linking.clueMax, desc),
+      decodeDesc(linking.deal, paramSpaceOf(linking, { w, h }), linking.clueMax, desc),
     ),
   );
 

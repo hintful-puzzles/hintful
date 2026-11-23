@@ -328,6 +328,31 @@ export function describedSpace(
   return sp;
 }
 
+const blockings = new Map<string, readonly (readonly number[])[]>();
+
+/**
+ * `blocks(bw, bh)`, a description's partition of a square board `bw·bh`
+ * cells wide into blocks `bw` wide and `bh` tall: each block's cells in
+ * reading order, the blocks in reading order. One list a shape, since
+ * {@link describedSpace} keeps a space for the life of its parts.
+ */
+export function blocks(bw: number, bh: number): readonly (readonly number[])[] {
+  const key = `${bw}x${bh}`;
+  const kept = blockings.get(key);
+  if (kept !== undefined) return kept;
+  const n = bw * bh;
+  const out: number[][] = [];
+  for (let by = 0; by < bw; by++)
+    for (let bx = 0; bx < bh; bx++) {
+      const part: number[] = [];
+      for (let y = by * bh; y < (by + 1) * bh; y++)
+        for (let x = bx * bw; x < (bx + 1) * bw; x++) part.push(y * n + x);
+      out.push(part);
+    }
+  blockings.set(key, out);
+  return out;
+}
+
 /** Which neighbors an edge joins: those side by side, or on a king's space
  * those corner to corner too (a compiled module's `edgeGeometry`). */
 export type EdgeGeometry = "square" | "king";

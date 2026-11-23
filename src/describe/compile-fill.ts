@@ -206,28 +206,30 @@ function distinctPartsOf(json: DescriptionJson, env: Env): string[] {
 }
 
 /**
- * Holds a board of notes to the regions its walk reads: its rows and
- * columns, or the parts of partitions its rules hold distinct. Where a placed
- * value rules itself out of more than a row and a column, the description
- * words the walk's steps that say how far (`WALK_STEPS`), each over the terms
- * the walk supplies and the board's sizes.
+ * Holds a board of notes to the regions its walk reads: its units (rows,
+ * columns, diagonals and the partition among them) and the parts of
+ * partitions its rules hold distinct. Where a placed value rules itself out
+ * of more than a row and a column, the description words the walk's steps
+ * that say how far (`WALK_STEPS`), each over the terms the walk supplies and
+ * the board's sizes.
  */
 function checkWalkSteps(
   json: DescriptionJson,
   d: Description,
   distinctParts: readonly string[],
 ): void {
-  const units = [...json.space.units].sort().join();
-  if (units !== "" && units !== "cols,rows")
-    throw new CompileError(
-      `marks: the walk of the notes reads rows and columns, not ${json.space.units.join(", ")}`,
-    );
-  if (units === "cols,rows") return;
-  if (distinctParts.length === 0)
+  // Every variation's units, as the compiled module lists them.
+  const { units } = d.json.space;
+  if (units.length === 0 && distinctParts.length === 0)
     throw new CompileError(
       "marks: the walk of the notes reads no unit, and no partition a rule holds distinct",
     );
+  const lines = units.every((u) => u === "rows" || u === "cols" || u === "lines");
+  if (units.length > 0 && lines && distinctParts.length === 0) return;
   const sizes = Object.keys(json.sizes ?? {}).filter((s) => s !== "w" && s !== "h");
+  // A variation the player switches on is a flag by its name: Solo's X adds
+  // the diagonals to how far a placed value reaches.
+  const flags = Object.keys(json.play?.modifiers ?? {});
   for (const [id, supplied] of Object.entries(WALK_STEPS)) {
     const step = d.steps.find((s) => s.id === id);
     if (step === undefined)
@@ -241,10 +243,12 @@ function checkWalkSteps(
         ? (supplied as Readonly<Record<string, string>>)[t.name]
         : sizes.includes(t.name)
           ? "number"
-          : null;
+          : flags.includes(t.name)
+            ? "flag"
+            : null;
       if (kind === null)
         throw new CompileError(
-          `steps ${id}: the walk supplies no term ${t.name} (${[...Object.keys(supplied), ...sizes].join(", ")})`,
+          `steps ${id}: the walk supplies no term ${t.name} (${[...Object.keys(supplied), ...sizes, ...flags].join(", ")})`,
         );
       if (t.kind !== kind)
         throw new CompileError(`steps ${id}: term ${t.name} is a ${kind}`);

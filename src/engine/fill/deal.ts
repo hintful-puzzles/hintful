@@ -27,13 +27,12 @@ import {
 } from "../solve/ladder-runtime.ts";
 import { encodeAnswer } from "./answer.ts";
 import {
-  boardSizeOf,
   type Clues,
   type FillBoard,
   marksOf,
   newBoard,
+  paramSpaceOf,
   solveBoard,
-  spaceOf,
 } from "./board.ts";
 import { dividePartition } from "./divide.ts";
 import { firstKindEach } from "./first-kind.ts";
@@ -158,7 +157,7 @@ export function dealFill<C extends Clues<C>>(
   if (sample === null) throw new Error("deal: the description samples no answer");
   if ("scatter" in sample && sample.climb === true)
     return climbFill(module, deal, sample, p, rs);
-  const sp = spaceOf(module, boardSizeOf(module, p));
+  const sp = paramSpaceOf(module, p);
   const variations = variationsOf(p);
   const sizes = sizesOf(p);
   const given = givenOf(deal, p);
@@ -684,7 +683,7 @@ function climbFill<C extends Clues<C>>(
   rs: RandomState,
 ): { desc: string; aux: string } {
   if (deal.grow !== undefined) throw new Error("deal: a climb grows no partition");
-  const sp = spaceOf(module, boardSizeOf(module, p));
+  const sp = paramSpaceOf(module, p);
   const variations = variationsOf(p);
   const given = givenOf(deal, p);
   const board = (clues: C): FillBoard<C> =>

@@ -13,7 +13,7 @@ import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.comp
 import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
-import { spaceOf } from "./board.ts";
+import { paramSpaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import { type FillParams, tallyClue, withThorough } from "./game-id.ts";
 
@@ -66,7 +66,7 @@ describe("a size the params give beyond the grid's", () => {
     const two = Uint8Array.from({ length: 16 }, (_, c) =>
       ((c % 4) + Math.floor(c / 4)) % 2 === 0 ? SHADED : CROSSED,
     );
-    const sp = spaceOf(sizing, { w: 4, h: 4 });
+    const sp = paramSpaceOf(sizing, { w: 4, h: 4 });
     const clues = (n: number) => sizing.deriveClues(two, sp, {}, { n });
     expect(sizing.isAnswer(two, sp, clues(2))).toBe(true);
     expect(sizing.isAnswer(two, sp, clues(1))).toBe(false);
@@ -136,7 +136,7 @@ describe("a tally of pieces the params give", () => {
     });
     // A piece of two along the top of a 3x3.
     const g = Uint8Array.from("##.......", (ch) => (ch === "#" ? 1 : 2));
-    const sp = spaceOf(fleet, { w: 3, h: 3 });
+    const sp = paramSpaceOf(fleet, { w: 3, h: 3 });
     const holds = (boats: number[]) =>
       fleet.isAnswer(
         g,

@@ -252,19 +252,25 @@ research tools all read through it; the app never does.
   walk, with the four note preferences; `play.hintNotes` states the reading
   a fresh game starts on (`docs/hints-candidates.md` § "Choosing the
   default"), `populate` where it says nothing. The walk reads a value's
-  places in the rows and columns, where they are the units, and in each part
-  of a dealt partition a rule holds distinct (`forall r in P:
-  distinct(value(c) over c in cells(r))`, compiled to `distinctParts`); a
-  part holds every value its cells' domains hold where those are as many as
-  its cells, and a cell's notes are its own domain (`zoning`'s areas). Any
-  other units the compiler refuses. A placed value rules itself out of its
+  places in each unit of the board's space, in the description's order (its
+  rows, columns, diagonals and the blocks of the partition among its units,
+  a single named by the first it is read in), and in each part of a dealt
+  partition a rule holds distinct (`forall r in P: distinct(value(c) over c
+  in cells(r))`, compiled to `distinctParts`); a region holds every value
+  its cells' domains hold where those are as many as its cells, and a
+  cell's notes are its own domain (`zoning`'s areas). A unit a modifier
+  adds is a unit only of a board it is on (`unitVariations`, Solo's X), and
+  a partition among the units stated as `blocks(a, b)`, each side a number
+  or a size the params give, is cut by the engine (`boxes`, `board.ts`'s
+  `spaceOf`); any other formula is refused. A placed value rules itself out of its
   units and of what the techniques run on placing strike (`peer.placed`):
   the one reach auto-pencil, Mark-all's clean and the walk read
   (`notes.ts`'s `reachOf`). Where that is more than a row and a column, the
   description words the walk's `clean`, `note`, `cull` and `regionsFull` as
-  `steps`, over the terms the walk supplies them and the board's sizes
-  (`engine/fill/walk-steps.ts`, a ruleset's words chosen by a `when` on its
-  size). The walk's singles are its own, so a technique placed as `one.cell`
+  `steps`, over the terms the walk supplies them, the board's sizes and a
+  flag a modifier, by its name (`engine/fill/walk-steps.ts`, a ruleset's
+  words chosen by a `when` on its size, the diagonals by `when: X`;
+  `boxing`). The walk's singles are its own, so a technique placed as `one.cell`
   or `one.place` is none of its rungs (the compiled `techniques` say the
   kind each was placed as). Its rungs are the Latin library's (`use: latin.*`, which the
   fill ladder resolves as every Latin game's does), worded by the library,
@@ -569,7 +575,9 @@ description author acts on:
 
 - **A partition is named in `regions`**, and named as a function gives the
   part holding a cell (`cage(c)`). The one partition listed among the
-  `units` is the space's boxes, dealt or not (Solo's `box`). A partition and
+  `units` is the space's boxes, dealt or not (Solo's `box`); not dealt, it
+  is `blocks(a, b)`, blocks `a` wide and `b` tall, the one partition stated
+  by a formula. A partition and
   a clue kind may not share a name, since both are fields of `Dealt`.
 - **`cell(x, y)` must be on the grid**: the compiled code does not check.
 - **A hexagonal board stored sheared needs no geometry of its own**: its

@@ -9,6 +9,7 @@
 import type { DifficultyVerdict } from "../contract/difficulty.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
 import {
+  blocks,
   type ClueList,
   describedSpace,
   type GridSpace,
@@ -50,7 +51,18 @@ export const listOf = <C>(dealt: C, kind: keyof C): ClueList => dealt[kind] as C
 /** What a fill game's compiled module offers the engine, over its clues
  * `C`. */
 export interface FillModule<C> {
+  /** The units no value repeats in, those of every variation. */
   readonly units: readonly string[];
+  /** The unit each variation adds, by the unit's name: a board has it only
+   * where the variation is on (Solo's X, the diagonals). */
+  readonly unitVariations?: Readonly<Record<string, string>>;
+  /** The partition among the units, where it is fixed by the sizes: its name,
+   * and its blocks' width and height, each a number or a size the params
+   * give (`blocks(r, c)`). */
+  readonly boxes?: {
+    readonly name: string;
+    readonly blocks: readonly [number | string, number | string];
+  };
   readonly tiers: readonly string[];
   /** How the board is played: where `dealt` names a clue kind at a cell,
    * the cell is dealt holding it. */
@@ -170,13 +182,66 @@ export interface FillBoard<C> {
   readonly done: Readonly<Record<string, Uint8Array>>;
 }
 
-/** The space a board of `module`'s is read on. */
-export function spaceOf<C>(
-  module: FillModule<C>,
-  b: { w: number; h: number },
-): GridSpace {
-  return describedSpace(module.units, b.w, b.h);
+/** What a board's space is built from: its stored size, its clues, among
+ * them the sizes its params give beyond the grid's, and its variations. */
+export interface SpaceOf {
+  readonly w: number;
+  readonly h: number;
+  readonly dealt: unknown;
+  readonly variations: readonly string[];
 }
+
+/** Each module's units by the variations on, kept, since a space is found
+ * again by its units' identity first. */
+const unitsKept = new WeakMap<object, Map<string, readonly string[]>>();
+
+/** The space a board of `module`'s is read on: the units its variations
+ * have, its boxes cut as its sizes say. */
+export function spaceOf<C>(module: FillModule<C>, b: SpaceOf): GridSpace {
+  const by = module.unitVariations;
+  let units = module.units;
+  if (by !== undefined) {
+    let kept = unitsKept.get(module);
+    if (kept === undefined) {
+      kept = new Map();
+      unitsKept.set(module, kept);
+    }
+    const key = b.variations.join();
+    const known = kept.get(key);
+    if (known === undefined) {
+      units = module.units.filter(
+        (u) => by[u] === undefined || b.variations.includes(by[u]),
+      );
+      kept.set(key, units);
+    } else units = known;
+  }
+  if (module.boxes === undefined) return describedSpace(units, b.w, b.h);
+  const sizes = b.dealt as Readonly<Record<string, unknown>>;
+  const [bw, bh] = module.boxes.blocks.map((a) => {
+    const v = typeof a === "number" ? a : sizes[a];
+    if (typeof v !== "number") throw new Error(`boxes: no size ${a} on the board`);
+    return v;
+  });
+  if (bw * bh !== b.w || b.w !== b.h)
+    throw new Error(`boxes: blocks ${bw} by ${bh} do not tile a ${b.w}x${b.h} board`);
+  return describedSpace(units, b.w, b.h, blocks(bw, bh));
+}
+
+/** The space a board of the params `p` is read on, before it is dealt. */
+export const paramSpaceOf = <C>(
+  module: FillModule<C>,
+  p: {
+    w: number;
+    h: number;
+    sizes?: Readonly<Record<string, number>>;
+    variations?: readonly string[];
+  },
+): GridSpace =>
+  spaceOf(module, {
+    ...boardSizeOf(module, p),
+    dealt: p.sizes ?? {},
+    variations: p.variations ?? [],
+  });
 
 /** The bits `mask` holds one of, as that value, or 0 where it holds more or
  * none. */

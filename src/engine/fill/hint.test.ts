@@ -15,7 +15,7 @@ import { click, drag } from "../input/hint-gesture.ts";
 import { techniqueTries } from "../solve/deduction-fixpoint.ts";
 import { clueList } from "../solve/describe-runtime.ts";
 import { status } from "./answer.ts";
-import { type FillBoard, newBoard, spaceOf } from "./board.ts";
+import { type FillBoard, newBoard, paramSpaceOf } from "./board.ts";
 import { applyEdit, type Edit, editOf } from "./edit.ts";
 import { fillGame } from "./game.ts";
 import { type FillHint, fillHint } from "./hint.ts";
@@ -36,7 +36,7 @@ const GIVEN = 12;
 
 function dealt(): FillBoard<playing.Dealt> {
   const g = Uint8Array.from(ANSWER.join(""), (ch) => (ch === "#" ? SHADED : CROSSED));
-  const { count } = playing.deriveClues(g, spaceOf(playing, { w: W, h: W }));
+  const { count } = playing.deriveClues(g, paramSpaceOf(playing, { w: W, h: W }));
   return newBoard(playing, W, W, { given: clueList([GIVEN], [CROSSED], W * W), count });
 }
 
@@ -141,7 +141,7 @@ describe("a fill game's hint that asks for a link", () => {
       linking,
       W,
       W,
-      linking.deriveClues(g, spaceOf(linking, { w: W, h: W })),
+      linking.deriveClues(g, paramSpaceOf(linking, { w: W, h: W })),
     );
   }
 

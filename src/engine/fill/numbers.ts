@@ -43,11 +43,11 @@ import {
 import { pressedRaised } from "../render/raised.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import {
-  boardSizeOf,
   type Clues,
   type FillBoard,
   type FillModule,
   type LadderedFillModule,
+  paramSpaceOf,
   spaceOf,
 } from "./board.ts";
 import { type DoneInput, type DoneMove, doneInput, type PartClueAt } from "./done.ts";
@@ -260,7 +260,7 @@ export function numberInput<
         : { type: "set", x, y, n, pencil, autoElim: fillUi.autoPencil ?? false };
     },
     requestKeys(p, board) {
-      const sp = spaceOf(module, boardSizeOf(module, p));
+      const sp = paramSpaceOf(module, p);
       const top = keypadTop(module, sp, p.sizes ?? {});
       // A board from another ID may hold a part larger than any the deal
       // divides (upstream Seismic's areas of six): its keypad reaches it.

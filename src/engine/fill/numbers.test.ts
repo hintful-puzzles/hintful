@@ -13,7 +13,7 @@ import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
-import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { type FillBoard, paramSpaceOf, solveBoard, spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import { encodeDesc } from "./game-id.ts";
 import { isCandidateMove } from "./notes.ts";
@@ -50,7 +50,7 @@ const isLatin = (g: ArrayLike<number>, w: number): boolean => {
 describe("a board of numbers' deal", () => {
   it("samples a Latin square", () => {
     for (const w of [3, 4, 6]) {
-      const sp = spaceOf(squaring, { w, h: w });
+      const sp = paramSpaceOf(squaring, { w, h: w });
       for (let i = 0; i < 5; i++)
         expect(isLatin(sampleLatin(sp, randomNew(`latin-${w}-${i}`)), w)).toBe(true);
     }

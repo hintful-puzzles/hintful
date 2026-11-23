@@ -39,6 +39,7 @@ import {
   type Clues,
   type FillBoard,
   newBoard,
+  paramSpaceOf,
   solveBoard,
   spaceOf,
 } from "./board.ts";
@@ -336,7 +337,7 @@ export function fillGame<C extends Clues<C> & object>(
   // grid's.
   const newState = (p: FillParams, desc: string): FillBoard<C> => {
     const size = boardSizeOf(module, p);
-    const sp = spaceOf(module, size);
+    const sp = paramSpaceOf(module, p);
     const sizes = sizesOf(p);
     const grown = module.growBy?.(sp, sizes) ?? null;
     const clues = descValue(decodeDesc<C>(deal, sp, module.clueMax, desc, grown));

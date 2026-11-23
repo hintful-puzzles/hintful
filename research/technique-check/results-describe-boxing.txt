@@ -1,0 +1,1 @@
+ok  boxing     areaCull                       current: recorded src/engine/testing/fixtures/boxing/boxing.description.yaml#areaCull 9692fb50e3a5058a

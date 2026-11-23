@@ -26,7 +26,13 @@ import { NO_FLASH } from "../render/win-wave.ts";
 import { clueList } from "../solve/describe-runtime.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
-import { type FillBoard, newBoard, solveBoard, spaceOf } from "./board.ts";
+import {
+  type FillBoard,
+  newBoard,
+  paramSpaceOf,
+  solveBoard,
+  spaceOf,
+} from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
@@ -64,7 +70,7 @@ const read = (desc: string) =>
   descValue(
     decodeDesc<pairing.Dealt>(
       pairing.deal,
-      spaceOf(pairing, { w: W, h: W }),
+      paramSpaceOf(pairing, { w: W, h: W }),
       pairing.clueMax,
       desc,
     ),
@@ -197,7 +203,7 @@ describe("a placement's animation", () => {
       linking,
       4,
       4,
-      linking.deriveClues(g, spaceOf(linking, { w: 4, h: 4 })),
+      linking.deriveClues(g, paramSpaceOf(linking, { w: 4, h: 4 })),
     );
     const c = b.values.indexOf(0);
     const piece = applyEdit(linking, b, { set: [c, 1] });

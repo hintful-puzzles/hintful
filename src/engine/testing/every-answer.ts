@@ -78,9 +78,10 @@ export function everyAnswer(
   if (values.length === 0 || grids > MOST_GRIDS)
     throw new Error(`${cell}: ${grids} grids of [${values}] are too many to try`);
 
-  const sp = spaceOf(module, p);
   const given = givenOf(deal, p);
   const variations = variationsOf(p);
+  // Every grid of the params' own size: a board of buttons, never a store.
+  const sp = spaceOf(module, { w: p.w, h: p.h, dealt: given, variations });
   const g = new Uint8Array(p.w * p.h);
   let answers = 0;
   let unfinished = 0;

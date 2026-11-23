@@ -4,7 +4,9 @@
  * row and column (`zoning`'s areas and neighbors): each by its id in the
  * description's `steps`, with the terms the walk supplies it and their kinds.
  * Each may also read any size the board's params give beyond the grid's, as a
- * number (a ruleset's `mode`). The compiler holds a description to them.
+ * number (a ruleset's `mode`), and each modifier, as a flag by its name, on
+ * where the board has it on (`boxing`'s X, whose diagonals a placed value
+ * reaches). The compiler holds a description to them.
  */
 export const WALK_STEPS = {
   /** The opening clean, after "cross out": what a placed value rules out. */
