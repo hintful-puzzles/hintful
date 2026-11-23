@@ -55,6 +55,7 @@ import {
   type ScatterSample,
   sampleAnswer,
   sampleDominoes,
+  sampleLatin,
   sampleLines,
   samplePicture,
   samplePieces,
@@ -252,14 +253,16 @@ export function dealFill<C extends Clues<C>>(
               ? samplePicture(sample, sp, rs)
               : "pieces" in sample
                 ? samplePieces(sample, sp.w, sp.h, piecesOf(deal, p), rs)
-                : sampleAnswer(
-                    sample,
-                    sp,
-                    rs,
-                    sample.first === undefined
-                      ? null
-                      : firstLaid(sample.first, deal, p, rs, layouts++),
-                  );
+                : "latin" in sample
+                  ? sampleLatin(sp, rs)
+                  : sampleAnswer(
+                      sample,
+                      sp,
+                      rs,
+                      sample.first === undefined
+                        ? null
+                        : firstLaid(sample.first, deal, p, rs, layouts++),
+                    );
     if (g === null) return drawRejected("fill: the sample drew no answer");
     const grown = grownRound(g, tier);
     if (grown === null) return null;

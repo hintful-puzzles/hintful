@@ -65,9 +65,22 @@ const paired = (paint: string): boolean =>
 const axisOf = (paint: string): "row" | "column" | null =>
   paint in PAINTERS ? (PAINTERS[paint as keyof typeof PAINTERS].axis ?? null) : null;
 
+/** A board played with the two buttons, each placing a value. */
+type ButtonPlay = FillPlay &
+  Required<Pick<FillPlay, "values" | "primary" | "secondary">>;
+
+/** `play` as a board of buttons: the schema gives one all three fields,
+ * and a board of numbers (`FillPlay.numbers`) none. */
+function buttonsOf(play: FillPlay): ButtonPlay {
+  const { values, primary, secondary } = play;
+  if (values === undefined || primary === undefined || secondary === undefined)
+    throw new Error("play: a board of numbers has no buttons");
+  return { ...play, values, primary, secondary };
+}
+
 /** The values that are lines through their cell, by the line they run
  * along, or `null` where the values are not both lines. */
-function axesOf(play: FillPlay): { row: number; column: number } | null {
+function axesOf(play: ButtonPlay): { row: number; column: number } | null {
   const by = new Map(
     Object.entries(play.values).map(([v, { paint }]) => [axisOf(paint), Number(v)]),
   );
@@ -106,14 +119,18 @@ export interface PlayValue {
 
 /** A fill game's `play:`, as its compiled module exports it. */
 export interface FillPlay {
+  /** Where the values are the answer's domain, each drawn as its numeral and
+   * typed into a selected cell (`numbers.ts`): such a board has no `values`
+   * and no buttons. */
+  readonly numbers?: Readonly<Record<string, never>>;
   /** The values the player places, by the description's value. */
-  readonly values: Readonly<Record<number, PlayValue>>;
+  readonly values?: Readonly<Record<number, PlayValue>>;
   /** The values only the deal places, a fixed cell's. */
   readonly given?: Readonly<Record<number, Pick<PlayValue, "glyph" | "paint">>>;
   /** The left button's value. */
-  readonly primary: number;
+  readonly primary?: number;
   /** The right button's, which rules a cell out. */
-  readonly secondary: number;
+  readonly secondary?: number;
   /** What a click does: `toggle`, the default, sets the button's value or
    * empties a cell holding it; `cycle` goes round empty, the button's value
    * and the other button's. */
@@ -179,6 +196,12 @@ export interface FillUi {
   /** The hiding preference (`FillPlay.hides`): whether a number shows on the
    * piece that hides it. */
   hiddenShown: boolean;
+  /** On a board of numbers alone (`numbers.ts`, `typedUi`), the note-taking
+   * cell's: whether typing writes a note, and whether the keyboard moved the
+   * highlight. A board of buttons has neither, since the app reads a `Ui`
+   * with a pencil mode as one that takes notes. */
+  pencilMode?: boolean;
+  cursorFromKeyboard?: boolean;
 }
 
 export function newFillUi(): FillUi {
@@ -234,9 +257,10 @@ export interface FillInput<C, D> {
  */
 export function fillInput<C extends Clues<C>, D extends Tiled>(
   module: FillModule<C>,
-  play: FillPlay,
+  buttons: FillPlay,
   origin: (tileSize: number, board: FillBoard<C>) => number,
 ): FillInput<C, D> {
+  const play = buttonsOf(buttons);
   const { primary, secondary } = play;
   const axes = axesOf(play);
   if (axes !== null && play.straight !== true)

@@ -17,9 +17,9 @@ answer:
 define:
   open(L): "{c in cells(L) where not known(c)}"
   need(L): "clue(count, L) - count(c in cells(L) where value(c) = 1)"
+# A square dealt holding its value.
+given: [value]
 clues:
-  # A square dealt holding its value.
-  given: { at: cell, value: "range(1, 2)", means: "value(at) = v" }
   count:
     at: line
     value: "range(0, |cells(at)|)"
@@ -34,7 +34,6 @@ play:
   secondary: 2
   blank: 2
   straight: true
-  dealt: given
   erase: B
   wrap: true
   sweepWith: secondary

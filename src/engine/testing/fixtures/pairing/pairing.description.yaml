@@ -23,9 +23,8 @@ shape:
     forall L in lines, i in range(0, |cells(L)| - 3):
     not (value(sq(L, i)) = value(sq(L, i + 1)) and value(sq(L, i + 1)) = value(sq(L, i + 2)))
   - "forall L in lines, d in domain: 2 * count(c in cells(L) where value(c) = d) = |cells(L)|"
-clues:
-  # A piece the board is dealt holding.
-  given: { at: cell, value: "range(1, 2)", means: "value(at) = v" }
+# A piece the board is dealt holding.
+given: [value]
 freedom: { kind: fill }
 play:
   values:
@@ -34,7 +33,6 @@ play:
   primary: 1
   secondary: 2
   click: cycle
-  dealt: given
   boards: [4x4, 6x6]
   default: 6x6
   boardTiers: { 4x4: [Easy, Easy] }

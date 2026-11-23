@@ -22,9 +22,8 @@ define:
 shape:
   - "forall L in lines: count(c in cells(L) where value(c) = 1) = n"
   - "forall c in cells, x in adj4(c): not (value(c) = 1 and value(x) = 1)"
-clues:
-  # A square the board is dealt holding.
-  given: { at: cell, value: "range(1, 2)", means: "value(at) = v" }
+# A square the board is dealt holding.
+given: [value]
 freedom: { kind: fill }
 play:
   values:
@@ -33,7 +32,6 @@ play:
   primary: 1
   secondary: 2
   blank: 2
-  dealt: given
   sizes:
     n:
       letter: n

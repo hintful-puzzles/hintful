@@ -31,7 +31,9 @@ import {
   ERROR_TEXT,
   GRID_DARK,
   givenSurface,
+  highlightWash,
   INK,
+  playerEntryColor,
   surfaceGrid,
 } from "../color/palette.ts";
 import {
@@ -89,6 +91,7 @@ import { type Clues, type FillBoard, listOf, spaceOf } from "./board.ts";
 import type { Edit } from "./edit.ts";
 import { tallyOf } from "./game-id.ts";
 import { type FillLink, LINK } from "./marks.ts";
+import { numeral } from "./numbers.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import type { SearchedFillModule } from "./search.ts";
 import {
@@ -308,7 +311,7 @@ export function fillSlots(play: FillPlay): {
   const slotOf = new Map<Color, number>();
   let next = FIRST_PAINTER_SLOT;
   for (const [v, { paint }] of [
-    ...Object.entries(play.values),
+    ...Object.entries(play.values ?? {}),
     ...Object.entries(play.given ?? {}),
   ]) {
     if (!(paint in PAINTERS)) throw new Error(`play: no painter ${paint}`);
@@ -526,6 +529,11 @@ export function fillRender<C extends Clues<C>>(
   /** A washed cell's surface (`play.wash`), after the dots' where the board
    * has them. */
   const COL_WASH = play.dotted === true ? COL_DOT + 2 : COL_DOT;
+  /** On a board of numbers (`play.numbers`), the selected cell's wash and a
+   * number the player typed, after the wash's slot where the board has one. */
+  const typed = play.numbers !== undefined;
+  const COL_HIGHLIGHT = play.wash !== undefined ? COL_WASH + 1 : COL_WASH;
+  const COL_ENTRY = COL_HIGHLIGHT + 1;
 
   /** The tiles before a board's lines its lists take, upstream pattern.c's
    * `TLBORDER`: a line of `d` holds at most about `d / 2` runs, which stack
@@ -606,6 +614,10 @@ export function fillRender<C extends Clues<C>>(
     // The wash step, not plain yellow: a washed cell is a large fill under the
     // pieces and must read as the board, lit, not as an object on it.
     if (play.wash !== undefined) out[COL_WASH] = YELLOW_WASH;
+    if (typed) {
+      out[COL_HIGHLIGHT] = highlightWash(bg);
+      out[COL_ENTRY] = playerEntryColor(bg);
+    }
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
         out[slot[i]] = c;
@@ -715,15 +727,20 @@ export function fillRender<C extends Clues<C>>(
     const tile = { x: tx, y: ty, w: ts, h: ts };
     const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
     const piece = v === 0 || lineWord & WASH_HIDES ? undefined : byValue.get(v);
+    // A board of numbers shows its selection as the note-taking cell's wash,
+    // where a board of buttons draws the cursor's corners.
+    const selected = typed && (word & CURSOR) !== 0;
     const ground = tone
       ? winSlot(tone)
-      : piece !== undefined && piece.painter.surface !== null
-        ? piece.slot[piece.painter.surface]
-        : word & FIXED
-          ? COL_GIVEN
-          : lineWord & WASHED
-            ? COL_WASH
-            : (part?.fill ?? COL_CELL);
+      : selected
+        ? COL_HIGHLIGHT
+        : piece !== undefined && piece.painter.surface !== null
+          ? piece.slot[piece.painter.surface]
+          : word & FIXED
+            ? COL_GIVEN
+            : lineWord & WASHED
+              ? COL_WASH
+              : (part?.fill ?? COL_CELL);
     // Under the content, so the piece stays whole.
     const lay = (surface: Rect) => {
       dr.drawRect(surface, ground);
@@ -767,6 +784,13 @@ export function fillRender<C extends Clues<C>>(
         occupied,
         ((lineWord >> JOIN_SHIFT) & 0xf) | (lineWord & SHAPE_OPEN ? JOINED_OPEN : 0),
       );
+    // A board of numbers draws each value as its numeral: a given in ink, the
+    // player's in the entry color, red where a rule breaks at the cell.
+    if (typed && v !== 0) {
+      const { origin, options } = numberText(ts, tx, ty);
+      const ink = word & FIXED ? COL_INK : word & ERR_AT ? COL_ERROR : COL_ENTRY;
+      dr.drawText(origin, options, ink, numeral(v));
+    }
     // A broken piece's badge takes the middle, where the dot would be.
     if (
       play.dotted === true &&
@@ -867,7 +891,7 @@ export function fillRender<C extends Clues<C>>(
       const span = ts - 2 * inset;
       drawThickRectOutline(dr, tx + inset, ty + inset, span, span, thick, COL_ERROR);
     }
-    if (word & CURSOR)
+    if (word & CURSOR && !typed)
       drawRectCorners(
         dr,
         tx + Math.floor(ts / 2),

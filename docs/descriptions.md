@@ -224,7 +224,14 @@ research tools all read through it; the app never does.
   clue kind meaning `value(at) = v` that the cell is dealt holding (Unruly's
   givens, which `id:` writes as `dots`); one whose meaning goes on after an
   `and` (Clusters' dot, which also counts its like neighbors) is drawn with a
-  dot on its piece. `play.click: cycle` goes round
+  dot on its piece. `given: [value]` states that kind: `given`, at a cell,
+  over the answer's domain, first among the kinds so a hide takes it first,
+  and `play.dealt` unless the file names its own. `play.numbers` in place
+  of `values` and the buttons makes the values the answer's domain, a line
+  of numbers the board draws as numerals and the player types into a
+  selected cell (`engine/fill/numbers.ts`), the keypad a key a value; its
+  domain must be the board's, the same at every cell. `deal.sample: {
+  latin: true }` draws a Latin square. `play.click: cycle` goes round
   empty and both buttons' values. The right button rules out unless its
   value's painter is one of a pair of alike pieces (Unruly's disc), which
   is a placement and not a ruling out. `deal.sample` draws the answer: `build`, a random

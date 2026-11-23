@@ -135,14 +135,21 @@ export function playOf(
 ): string[] {
   const p = json.play;
   if (p === undefined) return [];
+  // The schema gives a board of buttons all three, and one of numbers none.
+  const values = p.values ?? {};
   for (const [button, v] of [
     ["primary", p.primary],
     ["secondary", p.secondary],
   ] as const)
-    if (p.values[v] === undefined)
+    if (v !== undefined && values[v] === undefined)
       throw new CompileError(
         `play: the ${button} value ${v} is not one the player places`,
       );
+  if (p.numbers !== undefined && json.answer.value.sort !== "cell")
+    throw new CompileError("play numbers: the answer's value is not at a cell");
+  // The keypad is the domain, which the params alone must give.
+  if (p.numbers !== undefined && env.cellDomain)
+    throw new CompileError("play numbers: the domain differs from cell to cell");
   if (p.links !== undefined && p.links !== env.cellMark?.name)
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,
@@ -177,7 +184,7 @@ export function playOf(
     wash,
     ...rest
   } = p;
-  if (rest.hides !== undefined && p.values[rest.hides.value] === undefined)
+  if (rest.hides !== undefined && values[rest.hides.value] === undefined)
     throw new CompileError(
       `play hides: ${rest.hides.value} is not a value the player places`,
     );
@@ -481,12 +488,13 @@ function boardDomainOf(
     out,
   );
   if (!isMask(v.sort)) throw new CompileError("the domain is not a set of values");
+  // A domain a size states reads the space (`range(1, w)`).
+  const body = [...out.text(), `  return ${v.code};`];
   return [
     "",
     "/** The values each cell may hold: the board's domain, the same at every cell. */",
-    "export function domainOf(_sp: GridSpace, _cl: Dealt, _c: number): number {",
-    ...out.text(),
-    `  return ${v.code};`,
+    `export function domainOf(${param("sp", "GridSpace", body)}, _cl: Dealt, _c: number): number {`,
+    ...body,
     "}",
   ];
 }
@@ -635,9 +643,10 @@ function tierAliasesOf(
   );
 }
 
-/** The value a sample lays, 0 where it builds the answer. */
+/** The value a sample lays, 0 where it lays no one value: it builds the
+ * answer, or draws a Latin square. */
 function sampledValue(sample: SampleJson | null): number {
-  if (sample === null || "build" in sample) return 0;
+  if (sample === null || "build" in sample || "latin" in sample) return 0;
   if ("dominoes" in sample) return sample.dominoes.value;
   if ("lines" in sample) return sample.lines.value;
   if ("picture" in sample) return sample.picture.value;
@@ -725,7 +734,7 @@ export function dealOf(
   if (grow !== null) {
     if (!env.regions.has(grow.partition))
       throw new CompileError(`deal grow: ${grow.partition} is no dealt partition`);
-    if (sample === null || "build" in sample)
+    if (sampledValue(sample) === 0)
       throw new CompileError("deal grow: a partition is grown round a sampled value");
     if (grow.closed !== undefined && grow.closed.oneIn.length !== tiers.length)
       throw new CompileError("deal grow: closed oneIn is not one number a tier");
@@ -1372,7 +1381,7 @@ function latinOf(
   const { kind, under } = latin as { kind?: unknown; under?: unknown };
   if (typeof kind !== "string" || d.clueKinds.get(kind)?.at !== "cell")
     throw new CompileError(`deal latin: ${String(kind)} is no clue kind at a cell`);
-  if (typeof under !== "number" || json.play?.values[String(under)] === undefined)
+  if (typeof under !== "number" || json.play?.values?.[String(under)] === undefined)
     throw new CompileError(
       `deal latin: under ${String(under)}, which is no value played`,
     );

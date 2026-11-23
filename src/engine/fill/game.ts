@@ -7,7 +7,7 @@
  */
 
 import { descValue } from "../contract/desc-error.ts";
-import type { Game, GamePref, PresetBoards } from "../contract/game.ts";
+import type { Game, GamePref, HintStep, PresetBoards } from "../contract/game.ts";
 import type { MarkRole } from "../contract/hint-words.ts";
 import { HEXAGON, SQUARE_GRID } from "../contract/sections.ts";
 import type { Point } from "../contract/types.ts";
@@ -53,6 +53,7 @@ import {
   withThorough,
 } from "./game-id.ts";
 import { type FillHint, type FillHintModule, fillHint, linkedCell } from "./hint.ts";
+import { type NumberInput, numberInput, numeral, typedUi } from "./numbers.ts";
 import {
   type FillInput,
   type FillPlay,
@@ -214,12 +215,18 @@ export function fillGame<C extends Clues<C> & object>(
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
     numbers: numbered as readonly (keyof C)[],
-    glyphs: Object.fromEntries(
-      Object.entries({ ...play.given, ...play.values }).map(([v, { glyph }]) => [
-        Number(v),
-        glyph,
-      ]),
-    ),
+    glyphs:
+      play.numbers === undefined
+        ? Object.fromEntries(
+            Object.entries({ ...play.given, ...play.values }).map(([v, { glyph }]) => [
+              Number(v),
+              glyph,
+            ]),
+          )
+        : // Every value a cell's domain mask can hold.
+          Object.fromEntries(
+            Array.from({ length: 31 }, (_, i) => [i + 1, ` ${numeral(i + 1)} `]),
+          ),
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(deal.partitions === undefined
@@ -254,13 +261,29 @@ export function fillGame<C extends Clues<C> & object>(
       ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
       ...(module.labels === undefined ? {} : { labels: module.labels }),
     },
-    (b, ui) => input.previewed(b, ui),
+    (b, ui) => buttons?.previewed(b, ui) ?? b,
   );
-  const input: FillInput<C, FillDrawState> = fillInput(module, play, render.origin);
+  // A board of numbers is typed into; one of buttons is clicked and dragged.
+  const typed =
+    play.numbers === undefined
+      ? null
+      : numberInput<C, FillDrawState>(module, render.origin);
+  const buttons: FillInput<C, FillDrawState> | null =
+    typed === null ? fillInput(module, play, render.origin) : null;
+  const inputs =
+    buttons !== null
+      ? { targetVerbs: buttons.targetVerbs, interpretMove: buttons.interpretMove }
+      : {
+          interpretMove: (typed as NumberInput<C, FillDrawState>).interpretMove,
+          requestKeys: (p: FillParams) =>
+            (typed as NumberInput<C, FillDrawState>).requestKeys(
+              boardSizeOf(module, p),
+            ),
+        };
   const { hint, rulesOut } = fillHint(module);
   // The values whose piece grows when placed.
   const growing = new Set(
-    Object.entries(play.values)
+    Object.entries(play.values ?? {})
       .filter(
         ([, { paint }]) => paint in PAINTERS && PAINTERS[paint as PainterName].grows,
       )
@@ -284,7 +307,7 @@ export function fillGame<C extends Clues<C> & object>(
     newDesc: (p, rs) => dealFill(module, deal, p, rs),
     newState,
     newUi: (b) => {
-      const ui = newFillUi();
+      const ui = typed === null ? newFillUi() : typedUi(newFillUi());
       // A hexagon's store has no cell at its top left; the cursor starts on
       // the first that is the board's.
       if (module.hexagon !== undefined)
@@ -295,8 +318,7 @@ export function fillGame<C extends Clues<C> & object>(
       return ui;
     },
 
-    targetVerbs: input.targetVerbs,
-    interpretMove: input.interpretMove,
+    ...inputs,
     executeMove: (b, m) => applyEdit(module, b, editOf(m, `${id}: executeMove`)),
     status: (b) => status(module, reading, b),
 
@@ -332,44 +354,17 @@ export function fillGame<C extends Clues<C> & object>(
     hint: {
       ...hint,
       marks: { roles: module.hintMarks },
-      // A square is clicked with the button whose verb the step keeps, and a
-      // link is dragged from its square to its clue, which places the
-      // square's value too.
-      gesture: (b, ui, ds, move, step) => {
-        const { geometry } = input.targetVerbs;
-        const at = (c: number) =>
-          geometry.pointAt(b, ds, { x: c % b.w, y: Math.floor(c / b.w) }, ui);
-        const marks = move.mark ?? [];
-        const linked = new Set(marks.filter((_, i) => i % 2 === 0));
-        const set = move.set ?? [];
-        // The squares the secondary value rules out go first: a placement
-        // may bring that value onto them (`rulesOut`), and a click after
-        // would take it off again.
-        const clicks: Point[] = [];
-        for (const ruling of [true, false])
-          for (let i = 0; i < set.length; i += 2)
-            if (!linked.has(set[i]) && (set[i + 1] === play.secondary) === ruling)
-              clicks.push({ x: set[i] % b.w, y: Math.floor(set[i] / b.w) });
-        const drags: PointerAction[] = [];
-        if (play.links !== undefined)
-          for (let i = 0; i < marks.length; i += 2)
-            drags.push(drag(at(marks[i]), at(linkedCell(b, play.links, marks[i + 1]))));
-        return [
-          ...verbClicks(
-            input.targetVerbs,
-            {
-              executeMove: (s, m) => applyEdit(module, s, m),
-              keepTrack: hint.keepTrack,
-            },
-            b,
-            ui,
-            ds,
-            step,
-            clicks,
-          ),
-          ...drags,
-        ];
-      },
+      gesture: (b, ui, ds, move, step) =>
+        typed !== null
+          ? typed.gesture(b, ui, ds, move)
+          : buttonGesture(
+              buttons as FillInput<C, FillDrawState>,
+              b,
+              ui,
+              ds,
+              move,
+              step,
+            ),
     },
 
     colors: render.colors,
@@ -392,4 +387,50 @@ export function fillGame<C extends Clues<C> & object>(
         : 0;
     },
   };
+
+  /** The hint's gesture on a board of buttons: a square is clicked with the
+   * button whose verb the step keeps, and a link is dragged from its square
+   * to its clue, which places the square's value too. */
+  function buttonGesture(
+    input: FillInput<C, FillDrawState>,
+    b: FillBoard<C>,
+    ui: FillUi,
+    ds: FillDrawState,
+    move: Edit,
+    step: HintStep<Edit, FillHint, string>,
+  ): PointerAction[] {
+    const { geometry } = input.targetVerbs;
+    const at = (c: number) =>
+      geometry.pointAt(b, ds, { x: c % b.w, y: Math.floor(c / b.w) }, ui);
+    const marks = move.mark ?? [];
+    const linked = new Set(marks.filter((_, i) => i % 2 === 0));
+    const set = move.set ?? [];
+    // The squares the secondary value rules out go first: a placement
+    // may bring that value onto them (`rulesOut`), and a click after
+    // would take it off again.
+    const clicks: Point[] = [];
+    for (const ruling of [true, false])
+      for (let i = 0; i < set.length; i += 2)
+        if (!linked.has(set[i]) && (set[i + 1] === play.secondary) === ruling)
+          clicks.push({ x: set[i] % b.w, y: Math.floor(set[i] / b.w) });
+    const drags: PointerAction[] = [];
+    if (play.links !== undefined)
+      for (let i = 0; i < marks.length; i += 2)
+        drags.push(drag(at(marks[i]), at(linkedCell(b, play.links, marks[i + 1]))));
+    return [
+      ...verbClicks(
+        input.targetVerbs,
+        {
+          executeMove: (s, m) => applyEdit(module, s, m),
+          keepTrack: hint.keepTrack,
+        },
+        b,
+        ui,
+        ds,
+        step,
+        clicks,
+      ),
+      ...drags,
+    ];
+  }
 }

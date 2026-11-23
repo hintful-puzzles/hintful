@@ -148,13 +148,16 @@ export interface DescriptionJson {
 /** A fill game's `play:`: the engine's `FillPlay` (`engine/fill/play.ts`),
  * with its link named by the cell mark it draws. */
 export interface PlayJson {
-  values: Record<
+  /** Where the values are the answer's domain, typed into a selected cell:
+   * then there are no `values` and no buttons. */
+  numbers?: Record<string, never>;
+  values?: Record<
     string,
     { does: string; key: string | string[]; glyph: string; paint: string }
   >;
   given?: Record<string, { glyph: string; paint: string }>;
-  primary: number;
-  secondary: number;
+  primary?: number;
+  secondary?: number;
   blank?: number;
   erase?: string;
   /** Whether a drag keeps to one row or column. */
@@ -417,11 +420,12 @@ export interface ThoroughJson {
  * and `rest` on every other cell. With `noBareLine`, an answer with a row or
  * column all `rest` is drawn again; with `mend`, a cell a rule breaks at takes
  * the other value until none does; with `climb`, a draw after a refused one
- * keeps what the ladder decided on it. */
+ * keeps what the ladder decided on it; or a Latin square (`latin`). */
 export type SampleJson =
   | { build: true | { value: number }; first?: FirstJson }
   | { dominoes: { value: number }; rest: number }
   | { picture: { value: number; rest: number } }
+  | { latin: true }
   | { pieces: { value: number; rest: number } }
   | {
       lines: { value: number; count: number | string; apart: "adj4" | "adj8" };

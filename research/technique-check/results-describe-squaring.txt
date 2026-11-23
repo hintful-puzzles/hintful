@@ -1,0 +1,6 @@
+ok  squaring   placed                         3  sound    (want sound   )     9 queries    0.0s
+ok  squaring   placed (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/squaring/squaring.description.yaml#placed: recorded sound, proved whole on all 1 boards
+ok  squaring   single                         3  sound    (want sound   )     9 queries    0.0s
+ok  squaring   single (planted)               3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/squaring/squaring.description.yaml#single: recorded sound, proved whole on all 1 boards

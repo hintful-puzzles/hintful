@@ -28,13 +28,30 @@ writes its spec deltas; and runs `npm run test:hint-sweeps` before its
 commit. In design.md § "Decisions" 7's order.
 
 - [ ] 2.1 The notes layer on the fill board, before any game flips, tested
-      on a fixture description of its own (a small Latin square with
-      notes): notes on `FillBoard` and the note edits (§ 1), the candidate
-      walk built from the compiled module (§ 2), `play.numbers` with its
-      keypad and note grid (§ 3), `given:` compiled as a kind (§ 6), a
-      Latin-square answer sample, the Latin library on the fill ladder, the
-      note half of the mistake check, and the four prefs with the reading's
-      default declared. Its own commit; no game moves in it.
+      on a fixture description of its own, `squaring` (a small Latin square
+      with givens, and then notes). No game moves in it. Three commits, each
+      whole on its own:
+  - [x] 2.1a A board of numbers: `play.numbers` with its select-then-type
+        input (`engine/fill/numbers.ts`, the note-taking cell's highlight),
+        its keypad, its numerals and the selected cell's wash (§ 3);
+        `given: [value]` compiled as the `given` kind (§ 6, in `load.ts`'s
+        `withGivens`); `deal.sample: { latin: true }`. Pairing, Playing,
+        Sizing and Unruly now say `given: [value]` (their modules
+        unchanged but Playing's `play` key order); Mirroring and Pattern
+        keep their own, which sit last among their kinds. A compiler bug
+        fixed on the way: a domain a size states named `sp` `_sp`.
+        `squaring` states its own two techniques: the fill walk cannot word
+        a library firing (`use: latin.*`, whose words are the library's), so
+        the Latin library on the ladder goes with the candidate walk, 2.1c.
+        The right button and the Marks key do nothing until 2.1b.
+  - [ ] 2.1b Notes on `FillBoard` and the note edits (§ 1): the note grid
+        drawn in an open cell, the right press and the Marks key, pencil
+        and sticky pencil, auto-pencil on a placement, Mark-all, and the
+        note half of the mistake check.
+  - [ ] 2.1c The candidate walk built from the compiled module (§ 2), the
+        Latin library on the fill ladder (`ladderOf` passes
+        `LATIN_LIBRARY`), and the four prefs with the reading's default
+        declared; `squaring` then places `latin.*`.
 - [ ] 2.2 Unequal born: clues at edges, a gapped grid, the chevron painter,
       done marks on a clue, the cell-records segment, `order` renamed `w`,
       the alphabet past 9, the deal hiding from every clue (§ 5).

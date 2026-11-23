@@ -789,9 +789,30 @@
         "play": {
           "type": "object",
           "description": "How the player fills the board, for a fill game the engine plays (`engine/fill/play.ts`): each value they place, the two buttons' values, the drag, and the link drawn as the one cell mark.",
-          "required": ["values", "primary", "secondary"],
+          "oneOf": [
+            {
+              "required": ["values", "primary", "secondary"],
+              "not": { "required": ["numbers"] }
+            },
+            {
+              "required": ["numbers"],
+              "not": {
+                "anyOf": [
+                  { "required": ["values"] },
+                  { "required": ["primary"] },
+                  { "required": ["secondary"] }
+                ]
+              }
+            }
+          ],
           "additionalProperties": false,
           "properties": {
+            "numbers": {
+              "type": "object",
+              "description": "The values are the answer's domain, a line of numbers: each drawn as its numeral, typed into a selected square by its key (`engine/fill/numbers.ts`). A board played so has no `values` and no buttons.",
+              "additionalProperties": false,
+              "properties": {}
+            },
             "values": {
               "type": "object",
               "description": "The values the player places, by the description's value: what its verb does (\"place a tent\"), the letter that places it, its three-character glyph in the text format, and the painter that draws it.",
@@ -1495,6 +1516,15 @@
                         "rest": { "type": "integer", "minimum": 1 }
                       }
                     }
+                  }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer as a Latin square of the board's side (upstream's latin.c `latin_generate`): each value once in every row and column, the values the answer's domain from 1.",
+                  "required": ["latin"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "latin": { "const": true }
                   }
                 },
                 {

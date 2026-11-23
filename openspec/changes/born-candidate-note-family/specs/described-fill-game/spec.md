@@ -60,3 +60,42 @@ its ID SHALL write it, and its hint SHALL mark it there.
 - **WHEN** a born game deals a clue kind at an edge
 - **THEN** the board draws it in the gap between the edge's two cells, and
   a broken one is drawn as broken
+
+### Requirement: A born game's givens are its description's `given:`
+
+A born game whose description says `given: [value]` SHALL deal a clue kind
+`given` at a cell, any value of the answer's domain, meaning the cell holds
+it: first among its kinds, so a hide takes givens first, and dealt holding
+its value, fixed. A description that states the kind or `play.dealt` itself
+SHALL keep its own.
+
+#### Scenario: A given is fixed
+
+- **WHEN** a born game with `given: [value]` deals a board
+- **THEN** each cell its ID gives holds that value and no input changes it
+
+### Requirement: A born game's sample may be a Latin square
+
+`deal.sample: { latin: true }` SHALL draw a Latin square on the square
+board, its values 1 to the board's side, as upstream's `latin_generate`
+draws one.
+
+#### Scenario: Every line holds each value once
+
+- **WHEN** a born game whose sample is a Latin square deals a 6×6 board
+- **THEN** its answer holds each of 1 to 6 once in every row and column
+
+### Requirement: A born game's values may be typed into a selected cell
+
+A born game whose values are a number line (`play.numbers`) SHALL be played
+by selecting a cell with a press or the arrow keys, as every game whose
+player types numbers is, and typing a value's key into it, Backspace
+emptying it; a given SHALL not be selected. Each value SHALL be drawn as its
+numeral, a given's in ink and the player's in the entry color, and the
+selected cell washed.
+
+#### Scenario: A number typed into a selected cell
+
+- **WHEN** a player presses an open cell of such a board and types 3
+- **THEN** the cell holds 3, drawn in the entry color, and a press on a
+  given selects nothing

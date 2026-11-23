@@ -43,7 +43,7 @@ export function loadDescriptionFile(text: string, path: string): DescriptionFile
   valid(data, path);
   // A placement's words are whole only once laid over its kind's, so the
   // expanded file is checked again.
-  const placed = withKinds(data as DescriptionFile, path);
+  const placed = withKinds(withGivens(data as DescriptionFile, path), path);
   if (placed !== data) valid(JSON.parse(JSON.stringify(placed), unplanted), path);
   return withPhrases(withBreaks(placed, path), path);
 }
@@ -211,6 +211,40 @@ function withKinds(data: DescriptionFile, path: string): DescriptionFile {
     if (e instanceof KindError) throw new DescriptionError(e.message);
     throw e;
   }
+}
+
+/** The clue kind `given: [value]` names in a game the engine plays: a cell
+ * dealt holding its value. */
+const GIVEN = "given";
+
+/**
+ * `data` with `given: [value]` stated as what it means where the engine plays
+ * the board (`play:`): a clue kind `given` at a cell, any value of the
+ * answer's domain, meaning the cell holds it, first among the kinds so the
+ * hide takes givens first, and the kind `play.dealt` deals holding it. A
+ * description that states either itself keeps its own.
+ */
+function withGivens(data: DescriptionFile, path: string): DescriptionFile {
+  if (!("play" in data) || data.play === undefined) return data;
+  if (!("given" in data) || !data.given?.includes("value")) return data;
+  if (data.answer.value.sort !== "cell")
+    throw new DescriptionError(`${path}: given: the answer's value is not at a cell`);
+  const clues = data.clues ?? {};
+  return {
+    ...data,
+    clues:
+      GIVEN in clues
+        ? clues
+        : {
+            [GIVEN]: {
+              at: "cell",
+              value: data.answer.value.domain,
+              means: "value(at) = v",
+            },
+            ...clues,
+          },
+    play: { ...data.play, dealt: data.play.dealt ?? GIVEN },
+  } as DescriptionFile;
 }
 
 /** The keys whose strings are clauses. */

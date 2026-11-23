@@ -103,11 +103,12 @@ export function washedValues<C>(
   module: FillModule<C>,
   board: FillBoard<C>,
 ): Uint8Array {
-  const { washed, play } = module;
-  if (washed === undefined || play === undefined) return board.values;
+  const { washed } = module;
+  const secondary = module.play?.secondary;
+  if (washed === undefined || secondary === undefined) return board.values;
   const sp = spaceOf(module, board);
   return Uint8Array.from(board.values, (v, c) =>
-    v === 0 && washed(board.values, sp, board.dealt, c) ? play.secondary : v,
+    v === 0 && washed(board.values, sp, board.dealt, c) ? secondary : v,
   );
 }
 

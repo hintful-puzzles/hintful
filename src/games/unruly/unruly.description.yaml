@@ -84,12 +84,8 @@ shape:
     forall L in lines, i in range(0, |cells(L)| - 3):
     not (value(sq(L, i)) = value(sq(L, i + 1)) and value(sq(L, i + 1)) = value(sq(L, i + 2)))
   - "forall L in lines, d in domain: 2 * count(c in cells(L) where value(c) = d) = |cells(L)|"
-clues:
-  # A piece the board is dealt holding.
-  given:
-    at: cell
-    value: "range(1, 2)"
-    means: "value(at) = v"
+# A piece the board is dealt holding.
+given: [value]
 freedom: { kind: fill }
 play:
   values:
@@ -99,7 +95,6 @@ play:
   secondary: 2
   # A click goes round empty, the button's piece and the other one.
   click: cycle
-  dealt: given
   # Upstream's 6x6 and 8x8, and its 10x10 and 14x14 made upright boards of
   # about their area.
   boards: [6x6, 8x8, 8x12, 12x16]

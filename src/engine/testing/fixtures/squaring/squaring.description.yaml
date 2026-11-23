@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a Latin square, some of its squares given, for the
+# fill engine's tests of a value drawn as its number and typed into a
+# selected square (`play.numbers`), givens compiled from `given:`, an answer
+# sampled as a Latin square, and the Latin library on the fill ladder, on a
+# description that names no game.
+game: squaring
+produces: latin
+sizes:
+  w: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "w" }
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+given: [value]
+shape:
+  - "latin(value, lines)"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  boards: [4x4, 5x5]
+  hintMarks:
+    ring: the square the step decides.
+    outline: the squares the step reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: a Latin square
+  given: every square's number, then each hidden while the board still finishes
+  tier: the one tier
+  sample: { latin: true }
+  hide: given
+id:
+  - digits: given
+    apart: _
+tiers: [Easy]
+names:
+  placed: "a placed number's row and column"
+  single: "the only number left in a square"
+# A board loads only where deduction solves it, so it has the two steps that
+# solve the boards its tests load.
+techniques:
+  - id: placed
+    on: place
+    tier: Easy
+    for: "c in cells where known(c), d = value(c), u in units_of(c)"
+    conclude: "forall p in cells(u) where p != c: strike(p, d)"
+  - id: single
+    tier: Easy
+    for: "c in cells where not known(c) and |cand(c)| < 2"
+    conclude: "|cand(c)| = 1 and place(c, first(cand(c)))"
+    says:
+      terms: { d: "first(cand(c))" }
+      marks: { stripes: "cells(row(c)) + cells(col(c))" }
+      look: "{ring: this square}'s row and column hold every number but {d}"
+      move: "it must be {d}"

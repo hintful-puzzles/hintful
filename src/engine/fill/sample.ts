@@ -14,7 +14,7 @@
 import { shuffle } from "../board/shuffle.ts";
 import { type RandomState, randomBits, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
-import { matching } from "../solve/latin.ts";
+import { latinGenerate, matching } from "../solve/latin.ts";
 
 type Near = "adj4" | "adj8";
 
@@ -27,7 +27,20 @@ export type Sample =
   | DominoSample
   | LinesSample
   | PictureSample
-  | PiecesSample;
+  | PiecesSample
+  | LatinSample;
+
+/** A Latin square on the board, its values `1` to its side. */
+export interface LatinSample {
+  readonly latin: true;
+}
+
+/** A Latin square on the square board `sp`, as upstream's latin.c
+ * `latin_generate` draws one. */
+export function sampleLatin(sp: GridSpace, rs: RandomState): Uint8Array {
+  if (sp.w !== sp.h) throw new Error("sample latin: the board is not square");
+  return Uint8Array.from(latinGenerate(sp.w, rs));
+}
 
 /** The tally's pieces (`FillTally`), each a straight run of `value` as long
  * as its length, none touching another even at a corner; the rest `rest`. */
