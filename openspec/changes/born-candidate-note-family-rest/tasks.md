@@ -71,7 +71,19 @@ the predecessor's were, in a commit before the flip.
         rather than upstream's khaki solid lines; the X diagonals in the
         grid's color.
   - [ ] 2.1d The symmetry option of seven, written as upstream's suffixes;
-        the `{c}x{r}` and `{n}j` sizes.
+        the `{c}x{r}` and `{n}j` sizes. Read 2026-11-23 for this: Solo's
+        symmetry is eight choices (`SYMM_*` in `games/solo/state.ts`, the
+        default 2-way rotation unwritten, the rest `a`, `r4`, `m2`, `md2`,
+        `m4`, `md4`, `m8`), where `deal.symmetric` and a `first` sample's
+        option know five (`symmetric-blacks.ts`); `params-codec.ts`'s own
+        header names a field written as several-letter strings (Solo's
+        symmetry) as one it does not express, so this is a new segment
+        kind. The fill codec writes options before the modifiers' flags,
+        and upstream writes `x`, `k`, then the symmetry, then `d`; and
+        Solo's decoder reads its flags in any order. The jigsaw is `r = 1`
+        (`{n}j`, `c` the order), the Jigsaw ruleset, whose `box` the deal
+        divides (`equal: w`, built in 2.1c) where every other board's is
+        `blocks(r, c)`.
   - [ ] 2.1e The flip: its words as `says`, its tests to `cases.yaml`.
 - [ ] 2.2 ABCD born: the number size, letters, the walk with no region, a
       clue per value derived, written and drawn in a margin, corner
