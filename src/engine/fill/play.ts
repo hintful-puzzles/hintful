@@ -142,8 +142,10 @@ export interface FillPlay {
    * (`done.ts`): a press on such a clue grays it, and another restores it. */
   readonly done?: Readonly<Record<string, string>>;
   /** The sign drawn after the number of each clue kind at a dealt
-   * partition's part, by kind: the clue is drawn at its part's first cell. */
-  readonly signs?: Readonly<Record<string, string>>;
+   * partition's part or at a corner, by kind: a part's clue is drawn at its
+   * part's first cell, and a corner's on a disc there. A list is a word a
+   * value, and a kind of one value is its sign alone (`signedText`). */
+  readonly signs?: Readonly<Record<string, string | readonly string[]>>;
   /** The values the player places, by the description's value. */
   readonly values?: Readonly<Record<number, PlayValue>>;
   /** The values only the deal places, a fixed cell's. */

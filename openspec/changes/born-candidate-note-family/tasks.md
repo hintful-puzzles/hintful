@@ -330,7 +330,45 @@ commit. In design.md § "Decisions" 7's order.
         (approved).
 - [ ] 2.6 Mathrax born: clues at corners, a kind precedence switched by
       option letters, a hide of givens before clues, the board word the
-      hint reads stated in the description.
+      hint reads stated in the description. In four commits, read at
+      `8d7f5200b` (2026-11-23):
+  - [x] 2.6a Clues at corners (`at: corner`), tested on a fixture of its
+        own, `cornering` (a Latin square with, at some corners, the sum or
+        difference both diagonal pairs make, or the same pairs): derived
+        over `sp.corners`; written by a `codes` segment (upstream Mathrax's:
+        a kind's code and its number, or a code that is a kind and a value
+        whole, `S0`, between runs `a`-`z`, the last written, the longest
+        code read first); drawn on a disc a third of a tile across where
+        the four squares meet, by `play.signs` (now a list too, a word a
+        value, and a kind of one value its sign alone), after the hint's
+        marks, red where it breaks; printed after the text format's wall
+        line. `digits` writes a kind a size bounds to at most 9 (Mathrax's
+        givens, to `w`). Decided: no done marks on a corner's clue, which
+        neither upstream nor the hand-written Mathrax has and no arrow
+        names (a square has four corners); the compiler refuses them. A
+        broken clue's whole disc is red, where the hand-written one reddens
+        the quarter at each square it breaks at: a difference the flip
+        lists.
+  - [ ] 2.6b One clue a corner, the first kind in a precedence the answer
+        makes there (upstream's cascade, `deal.firstKind`), and the kinds
+        switched on by letters after the tier, every kind where none is
+        written (`ASMDEO`), with a check box each in Custom, the board's
+        name saying which ("only addition/…" or "no …", the shorter) and
+        a refusal where none is on; on `cornering`, given a parity kind
+        that meets a sum (codes `E` and `O`). Mathrax's equality is a kind
+        of its own (`equal`, written `S0`), so each letter is one kind and
+        the precedence is upstream's order.
+  - [ ] 2.6c A hide of some kinds first and the rest in one random order
+        (`deal.hideFirst`, upstream mathrax.c's givens, then its clues),
+        replacing `hideInTurn: true`, which Towers and `flanking` state as
+        `hideFirst: [given]`.
+  - [ ] 2.6d The flip: `o` renamed `w`, `entr` the tier letters, the
+        supplied `placed` and `v` stated (`known` and `value` across the
+        corner), every clue number said `{numeral …}`, the menu (5 to 9 at
+        Easy, 7 to 9 at Normal alone), Size 3's tiers bounded, Mathrax's
+        tests to `mathrax.cases.yaml`, its TypeScript deleted, the
+        `game-lines` ceiling lowered, its spec deltas and the run in the
+        app.
 - [ ] 2.7 Seismic born: a partition grown to drawn sizes before the answer,
       the answer searched under it, `T` a ruleset by a bare letter, its
       reach from the compiled `cull` (`notes.ts`'s `reachOf`), and the

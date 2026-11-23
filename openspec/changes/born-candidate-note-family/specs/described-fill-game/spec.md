@@ -239,6 +239,23 @@ its ID SHALL write it, and its hint SHALL mark it there.
 - **THEN** the ID is read and written back byte for byte, and the comma and
   the givens are written only where a square is given
 
+#### Scenario: A clue where four cells meet
+
+- **WHEN** a born game deals a clue kind at corners
+- **THEN** the board draws each clue on a disc where the corner's four cells
+  meet, its number and its sign (a word a value where the sign is a list,
+  the sign alone for a kind of one value), over the hint's marks on those
+  cells, red where it breaks, and prints each after the wall line of the
+  text format its corner lies on
+
+#### Scenario: Clues at corners in a game ID
+
+- **WHEN** a born game's ID writes a code a corner, a kind's code and its
+  number or a code that is a kind and a value whole, between runs of corners
+  without one (upstream Mathrax's)
+- **THEN** the ID is read with the longest code that matches first, and
+  written back byte for byte
+
 ### Requirement: A born game's clue at every edge may be 0 or 1
 
 A born game's complete clue kind valued 0 or 1 at every edge (a bar) SHALL

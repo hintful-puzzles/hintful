@@ -301,7 +301,16 @@ research tools all read through it; the app never does.
   round the text's grid, and `id:`'s `numbers` writes it with `between: "/"`;
   `digits`' `before` is written, with its segment, only where its kind has a
   clue (Towers' givens after `,`), and holds no other kind (`flanking` is the
-  fixture). A hide keeps whole, until the asked tier's
+  fixture). A clue at a corner (`at: corner`, where four squares meet,
+  Mathrax's) is dealt over the corners, drawn on a disc there by its
+  `play.signs` (a word a value where the sign is a list, the sign alone for
+  a kind of one value, `engine/fill/corners.ts`) over the hint's marks, red
+  where it breaks, printed after the text's wall line it lies on, and
+  written by `id:`'s `codes`, a kind's code and its number or a code that
+  is a kind and a value whole, between runs of corners without one, the
+  longest code read first (`cornering` is the fixture). `digits` writes a
+  kind bounded by a size of at most 9 (Mathrax's givens, to `w`) a digit
+  each. A hide keeps whole, until the asked tier's
   pass, a kind the lowest tier reads none of (signs over a Latin square's
   singles), so the tier that reads it hides from it.
   `deal.sample: { latin: true }`

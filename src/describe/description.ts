@@ -232,8 +232,9 @@ export interface PlayJson {
   askBefore?: string[];
   labels?: { start?: string };
   /** The sign drawn after the number of each clue kind at a dealt
-   * partition's part, by kind. */
-  signs?: Record<string, string>;
+   * partition's part or at a corner, by kind; a kind of one value is drawn
+   * as its sign alone, and a list gives a word a value from the least. */
+  signs?: Record<string, string | string[]>;
   /** The preset menu's sizes, `WxH`; the first is the default. */
   boards?: string[];
   /** What each mark of the hint means here (`Game.hint.marks`). */
@@ -308,7 +309,15 @@ export type IdSegmentJson =
   | { glyphs: string; values: Record<string, number> }
   | { records: string; sides: string }
   | { blocks: string }
-  | { parts: string; before?: string; letters: Record<string, string> };
+  | { parts: string; before?: string; letters: Record<string, string> }
+  | { codes: Record<string, string>; before?: string };
+
+/** What a `codes` segment's code stands for: a kind whose number follows the
+ * code, or a kind and one of its values, the code whole. */
+export const codeOf = (said: string): { kind: string; value: number | null } => {
+  const [kind, value] = said.split(" ");
+  return { kind, value: value === undefined ? null : Number(value) };
+};
 
 /** The board as a rectangle, or as a hexagon `w` wide and `h` high, stored
  * sheared (`engine/fill/hexagon.ts`), its store's corners holding the clue
@@ -339,14 +348,20 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
                   ? [seg.blocks]
                   : "parts" in seg
                     ? Object.values(seg.letters)
-                    : "digits" in seg
+                    : "codes" in seg
                       ? [
-                          seg.digits,
-                          ...Object.values(seg.letters ?? {}),
-                          ...Object.values(seg.after ?? {}),
-                          ...Object.values(seg.also ?? {}),
+                          ...new Set(
+                            Object.values(seg.codes).map((c) => codeOf(c).kind),
+                          ),
                         ]
-                      : [seg.numbers];
+                      : "digits" in seg
+                        ? [
+                            seg.digits,
+                            ...Object.values(seg.letters ?? {}),
+                            ...Object.values(seg.after ?? {}),
+                            ...Object.values(seg.also ?? {}),
+                          ]
+                        : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`

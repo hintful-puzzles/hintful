@@ -23,6 +23,7 @@ import {
 import { concludes } from "./compile-technique.ts";
 import { freeNames } from "./compile-terms.ts";
 import {
+  codeOf,
   type Description,
   type DescriptionJson,
   divideOf,
@@ -39,6 +40,7 @@ import {
   type PlayJson,
   type SampleJson,
   type SizeBoundsJson,
+  type SizeRange,
   sampleOf,
   segmentKinds,
   thoroughOf,
@@ -128,6 +130,36 @@ const isValueAt = (e: Expr): boolean =>
 /** Whether `e` is `value(at) = v`, alone or as the first of a conjunction. */
 const fixesItsValue = (e: Expr): boolean =>
   isValueAt(e) || (e.k === "bin" && e.op === "and" && fixesItsValue(e.a));
+
+/**
+ * Refuses `play.signs` that leave a clue undrawn or name one not drawn with
+ * a sign. A clue at a part is drawn at its first cell with its sign, on a
+ * board of numbers, whose cells hold no number of their own; one at a corner
+ * on a disc where its cells meet. A list is a word a value, from the least,
+ * of a range the sizes do not move.
+ */
+function checkSigns(p: PlayJson, d: Description, env: Env): void {
+  const signed = (at: string): boolean => env.regions.has(at) || at === "corner";
+  for (const [k, c] of d.clueKinds)
+    if (signed(c.at) && p.signs?.[k] === undefined)
+      throw new CompileError(
+        `clue ${k}: a clue at a ${c.at === "corner" ? "corner" : "part"}, and no sign in play signs`,
+      );
+  for (const [k, sign] of Object.entries(p.signs ?? {})) {
+    if (!signed(d.clueKinds.get(k)?.at ?? ""))
+      throw new CompileError(`play signs: ${k} is no clue kind at a part or a corner`);
+    if (p.numbers === undefined)
+      throw new CompileError(
+        "play signs: a clue drawn with a sign on a board of buttons",
+      );
+    if (typeof sign === "string") continue;
+    const [lo, hi] = valuesOf(d, k) ?? [0, -1];
+    if (sign.length !== hi - lo + 1)
+      throw new CompileError(
+        `play signs: ${k}'s words, a value each, and its values are not ${sign.length} fixed numbers`,
+      );
+  }
+}
 
 /**
  * `play`, the engine's `FillPlay`, from the description's `play:`: its link
@@ -258,17 +290,7 @@ export function playOf(
     throw new CompileError(
       "play hintNotes: the hint reads notes, and `marks` declares none",
     );
-  // A clue at a part is drawn at its first cell with its sign, on a board of
-  // numbers, whose cells hold no number of their own.
-  for (const [k, c] of d.clueKinds)
-    if (env.regions.has(c.at) && p.signs?.[k] === undefined)
-      throw new CompileError(`clue ${k}: a clue at a part, and no sign in play signs`);
-  for (const k of Object.keys(p.signs ?? {})) {
-    if (!env.regions.has(d.clueKinds.get(k)?.at ?? ""))
-      throw new CompileError(`play signs: ${k} is no clue kind at a part`);
-    if (p.numbers === undefined)
-      throw new CompileError("play signs: a clue at a part on a board of buttons");
-  }
+  checkSigns(p, d, env);
   // A clue at an edge is drawn in the gap between its cells, and only there.
   for (const [k, c] of d.clueKinds)
     if (c.at === "edge" && p.gaps?.[k] === undefined)
@@ -291,11 +313,8 @@ export function playOf(
   // press goes to the board of numbers' input, which takes no press off its
   // squares of its own.
   for (const k of Object.keys(p.done ?? {})) {
-    if (
-      p.gaps?.[k] === undefined &&
-      p.signs?.[k] === undefined &&
-      d.clueKinds.get(k)?.at !== "slot"
-    )
+    const at = d.clueKinds.get(k)?.at ?? "";
+    if (p.gaps?.[k] === undefined && !env.regions.has(at) && at !== "slot")
       throw new CompileError(
         `play done: ${k} is no clue kind drawn in a gap, at a slot or at a part, the places a press marks a clue done`,
       );
@@ -678,8 +697,62 @@ function flagKind(d: Description, kind: string): boolean {
 const isElement = (env: Env, kind: string): boolean =>
   env.clues.get(kind)?.v.k === "elem";
 
+/** Refuses a `codes` segment whose kinds sit at different places, or at a
+ * part, whose code a clue could be written by two ways, or that leaves a
+ * value of a kind no code writes. */
+function checkCodes(codes: Readonly<Record<string, string>>, d: Description, env: Env) {
+  const said = Object.entries(codes).map(([code, s]) => ({ code, ...codeOf(s) }));
+  const ats = new Set(said.map((s) => d.clueKinds.get(s.kind)?.at));
+  const [at] = ats;
+  if (at === undefined || ats.size > 1 || env.regions.has(at) || at === "board")
+    throw new CompileError(
+      "id: codes of kinds that are not all clues at one place of the space",
+    );
+  for (const { code, kind, value } of said) {
+    if (isElement(env, kind))
+      throw new CompileError(
+        `id: the code ${code} of ${kind}, which is valued an element`,
+      );
+    const vs = valuesOf(d, kind);
+    if (value !== null && vs !== null && (value < vs[0] || value > vs[1]))
+      throw new CompileError(
+        `id: the code ${code}, ${kind} ${value}, which it cannot be`,
+      );
+  }
+  // A kind is written by its number after its code, or wholly by the codes
+  // of each of its values.
+  const kinds = new Set(said.map((s) => s.kind));
+  for (const kind of kinds) {
+    const numbered = said.filter((s) => s.kind === kind && s.value === null).length;
+    const whole = said.filter((s) => s.kind === kind && s.value !== null);
+    const vs = valuesOf(d, kind);
+    if (numbered > 1)
+      throw new CompileError(`id: ${kind} has ${numbered} codes its number follows`);
+    if (new Set(whole.map((s) => s.value)).size !== whole.length)
+      throw new CompileError(`id: two codes of one value of ${kind}`);
+    if (numbered === 0 && (vs === null || whole.length !== vs[1] - vs[0] + 1))
+      throw new CompileError(`id: a value of ${kind} that no code writes`);
+  }
+}
+
+/** The least of a `range(lo, hi)` whose `lo` is a number; `-1` otherwise. */
+const lowBound = (value: Expr | null): number =>
+  value?.k === "call" && value.args[0]?.k === "num" ? value.args[0].v : -1;
+
+/** The most of a `range(lo, hi)` whose `hi` is a size, at the size's most;
+ * `Infinity` where it is anything else or the size has no most. */
+const sizeBound = (value: Expr | null, sizes: Readonly<Record<string, SizeRange>>) => {
+  const hi = value?.k === "call" ? value.args[1] : undefined;
+  return hi?.k === "name" ? (sizes[hi.name]?.max ?? Infinity) : Infinity;
+};
+
 /** Refuses an `id:` segment that cannot write the kind it names. */
-function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): void {
+function checkSegments(
+  id: readonly IdSegmentJson[],
+  d: Description,
+  env: Env,
+  sizes: Readonly<Record<string, SizeRange>>,
+): void {
   for (const [i, seg] of id.entries()) {
     const [kind, ...more] = segmentKinds(seg);
     if ("walls" in seg || "blocks" in seg) {
@@ -708,6 +781,10 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
       );
       if (blocks < 0 || blocks > i)
         throw new CompileError(`id: parts of ${seg.parts} before the partition itself`);
+      continue;
+    }
+    if ("codes" in seg) {
+      checkCodes(seg.codes, d, env);
       continue;
     }
     const c = d.clueKinds.get(kind);
@@ -789,12 +866,14 @@ function checkSegments(id: readonly IdSegmentJson[], d: Description, env: Env): 
       );
     if ("dots" in seg && i !== id.length - 1)
       throw new CompileError(`id: dots of ${kind} end the desc, and come last`);
-    // A digit is a clue's value, so every value is one; with a mark between
-    // two side by side, a clue is a whole number of any size.
+    // A digit is a clue's value, so every value is one, the most a size
+    // bounds it by too (Mathrax's givens, to `w`); with a mark between two
+    // side by side, a clue is a whole number of any size.
+    const top = values?.[1] ?? sizeBound(c.value, sizes);
     if (
       "digits" in seg &&
       seg.apart === undefined &&
-      (c.at !== "cell" || values === null || values[0] < 0 || values[1] > 9)
+      (c.at !== "cell" || (values?.[0] ?? lowBound(c.value)) < 0 || top > 9)
     )
       throw new CompileError(
         `id: digits of ${kind}, which is not a cell's clue of the values 0 to 9`,
@@ -892,7 +971,7 @@ export function dealOf(
   // The tally is the params', which the ID does not write.
   const written = kinds.filter((k) => k !== json.play?.tally?.kind);
   checkNamed(id, [...written, ...partitions], hexagon?.outside ?? null);
-  checkSegments(id, d, env);
+  checkSegments(id, d, env, json.sizes);
   const { hide, hideInTurn, hideFrom, hideWhole } = hideOf(json, d);
   const hides = hide !== null;
   const thorough = thoroughOf(json);
@@ -922,8 +1001,8 @@ export function dealOf(
   if (tierLetters.length !== tiers.length || new Set(tierLetters).size !== tiers.length)
     throw new CompileError(`tierLetters: ${tierLetters} is not one letter a tier`);
   // A clue a fill game deals sits at a cell, a line, a slot beyond a line's
-  // end, an edge or a dealt partition's part; the tally, the params' clue at the board, is none it
-  // deals.
+  // end, an edge, a corner or a dealt partition's part; the tally, the
+  // params' clue at the board, is none it deals.
   const universes = Object.fromEntries(
     [...d.clueKinds]
       .filter(([k]) => k !== json.play?.tally?.kind)
@@ -931,7 +1010,7 @@ export function dealOf(
         const u = env.regions.has(c.at) ? "parts" : UNIVERSE[c.at];
         if (u === undefined)
           throw new CompileError(
-            `clue ${k}: a fill game's clue sits at a cell, a line, a slot, an edge or a part`,
+            `clue ${k}: a fill game's clue sits at a cell, a line, a slot, an edge, a corner or a part`,
           );
         return [k, u];
       }),
@@ -1717,6 +1796,7 @@ const UNIVERSE: Readonly<Partial<Record<string, string>>> = {
   line: "lines",
   edge: "edges",
   slot: "slots",
+  corner: "corners",
 };
 
 /** The clue kinds `deal.never` names: dealt by no deal, carried only by an
@@ -1988,7 +2068,7 @@ export function derivedClues(
     }
     if (c.value === null || sorts.per || sorts.list || universe === undefined)
       throw new CompileError(
-        `clue ${kind}: a sampled deal derives a clue of one value at a cell, a line, a slot, an edge or a part`,
+        `clue ${kind}: a sampled deal derives a clue of one value at a cell, a line, a slot, an edge, a corner or a part`,
       );
     const readsClues = { yes: false };
     const scratch: string[] = [];

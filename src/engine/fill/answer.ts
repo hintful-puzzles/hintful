@@ -31,6 +31,7 @@ import {
   spaceOf,
   washedValues,
 } from "./board.ts";
+import { cornerClueAt, signedText } from "./corners.ts";
 import type { Edit } from "./edit.ts";
 import type { FillMove } from "./notes.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
@@ -71,7 +72,18 @@ export interface AnswerReading<C> {
    * of its part's first cell as its number and its sign (`play.signs`). */
   readonly partClues?: {
     readonly kinds: readonly (keyof C & string)[];
-    readonly signs: Readonly<Record<string, string>>;
+    readonly signs: Readonly<Record<string, string | readonly string[]>>;
+  };
+  /** The clue kinds at corners, each printed after the wall line its corner
+   * lies on as its text (`signedText`), `.` at a corner without one, with
+   * each kind's least and most value. */
+  readonly cornerClues?: {
+    readonly kinds: readonly (keyof C & string)[];
+    readonly signs: Readonly<Record<string, string | readonly string[]>>;
+    readonly range: (
+      kind: keyof C & string,
+      b: FillBoard<C>,
+    ) => readonly [number, number];
   };
 }
 
@@ -280,7 +292,11 @@ export function textFormat<C extends Clues<C>>(
   const grid = withSlotClues(
     reading,
     board,
-    withPartClues(reading, board, gridFormat(reading, board)),
+    withCornerClues(
+      reading,
+      board,
+      withPartClues(reading, board, gridFormat(reading, board)),
+    ),
   );
   const kinds = reading.lineLists ?? [];
   if (kinds.length === 0) return grid;
@@ -345,6 +361,36 @@ function withSlotClues<C extends Clues<C>>(
   return `${[across(0), ...lines, across(w)].join("\n")}\n`;
 }
 
+/** `grid` with each wall line inside it followed by the clues at the corners
+ * on that line, left to right, `.` at one without a clue: a clue such as
+ * `12+` is wider than the `+` it stands for. */
+function withCornerClues<C extends Clues<C>>(
+  reading: AnswerReading<C>,
+  board: FillBoard<C>,
+  grid: string,
+): string {
+  const { cornerClues } = reading;
+  if (cornerClues === undefined) return grid;
+  const { w, h } = board;
+  const text = (k: number): string => {
+    const at = cornerClueAt(cornerClues.kinds, board, k);
+    if (at === null) return ".";
+    const [least, most] = cornerClues.range(at.kind, board);
+    return signedText(cornerClues.signs[at.kind] ?? null, at.v, least, most);
+  };
+  // The grid's lines alternate a wall and a row of cells; the corners lie on
+  // the walls between two rows.
+  return grid
+    .split("\n")
+    .map((line, i) => {
+      const y = i / 2 - 1;
+      if (i % 2 === 1 || y < 0 || y >= h - 1) return line;
+      const row = Array.from({ length: w - 1 }, (_, x) => text(y * (w - 1) + x));
+      return `${line} ${row.join(" ")}`;
+    })
+    .join("\n");
+}
+
 /** `grid` with each row's part clues after it: those whose part's first
  * cell is in the row, in the order of those cells. */
 function withPartClues<C extends Clues<C>>(
@@ -360,7 +406,10 @@ function withPartClues<C extends Clues<C>>(
   for (const kind of partClues.kinds) {
     const list = listOf(dealt, kind);
     list.at.forEach((r, k) => {
-      byFirst.set(cells[r][0], `${list.v[k]}${partClues.signs[kind] ?? ""}`);
+      byFirst.set(
+        cells[r][0],
+        signedText(partClues.signs[kind] ?? null, list.v[k], 0, Infinity),
+      );
     });
   }
   // The grid's lines alternate a wall and a row of cells.

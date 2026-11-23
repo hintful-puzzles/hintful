@@ -1120,8 +1120,17 @@
             },
             "signs": {
               "type": "object",
-              "description": "The sign drawn after the number of each clue kind at a dealt partition's part, by kind (Keen's `+` and `×`): the clue is drawn at the part's first square, its number and its sign, above the notes.",
-              "additionalProperties": { "type": "string", "minLength": 1 }
+              "description": "The sign drawn after the number of each clue kind at a dealt partition's part or at a corner, by kind (Keen's `+` and `×`): a part's clue is drawn at the part's first square, its number and its sign, above the notes, and a corner's on a disc where its four squares meet. A kind of one value is drawn as its sign alone (Mathrax's `=`), and a list is a word a value, from the kind's least (Mathrax's parity, `[E, O]`).",
+              "additionalProperties": {
+                "oneOf": [
+                  { "type": "string", "minLength": 1 },
+                  {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": { "type": "string", "minLength": 1 }
+                  }
+                ]
+              }
             },
             "labels": {
               "type": "object",
@@ -1330,6 +1339,24 @@
                     "minProperties": 1,
                     "additionalProperties": { "type": "string" }
                   }
+                }
+              },
+              {
+                "type": "object",
+                "required": ["codes"],
+                "additionalProperties": false,
+                "description": "A clue an element of its kinds' one place, in the space's order, between runs of 1 to 26 elements without one written `a`-`z`, a last run written too (upstream Mathrax's): each clue its code, by `codes`, a kind's name followed by the clue's number, or a kind and one of its values (`parity 0`) standing whole. The longest code that matches is read. With `before`, it follows that mark.",
+                "properties": {
+                  "codes": {
+                    "type": "object",
+                    "propertyNames": { "pattern": "^[A-Z][A-Z0-9]*$" },
+                    "minProperties": 1,
+                    "additionalProperties": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z]+( [0-9]+)?$"
+                    }
+                  },
+                  "before": { "type": "string", "minLength": 1, "maxLength": 1 }
                 }
               }
             ]

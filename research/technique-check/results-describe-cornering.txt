@@ -1,0 +1,5 @@
+--  cornering  no board of order 3 holds a difference clue, so no reading of one is checked there
+--  cornering  no board of order 3 holds a same clue, so no reading of one is checked there
+ok  cornering  pair                           3  sound    (want sound   )     9 queries    0.1s
+ok  cornering  pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/cornering/cornering.description.yaml#pair: recorded sound, proved whole on all 1 boards

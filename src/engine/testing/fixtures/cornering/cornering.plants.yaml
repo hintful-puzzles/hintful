@@ -1,0 +1,10 @@
+# A defect planted in each of the techniques the description states, keyed by
+# its id: the statement with a condition loosened, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A diagonal pair read as never equal, though its squares share no line.
+  pair:
+    conclude: >-
+      forall d in cand(c) where not (exists e in cand(o) where e != d: makes(k, d, e)):
+      strike(c, d)

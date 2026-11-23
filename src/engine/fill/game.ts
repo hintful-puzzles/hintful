@@ -43,6 +43,7 @@ import {
   spaceOf,
 } from "./board.ts";
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
+import { cornerKindsOf, cornerRange } from "./corners.ts";
 import { type DealtFillModule, dealFill } from "./deal.ts";
 import type { Edit } from "./edit.ts";
 import {
@@ -283,6 +284,7 @@ export function fillGame<C extends Clues<C> & object>(
   const numbered = module.numbers ?? [];
   const gapKinds = gapKindsOf<C>(play);
   const partKinds = partKindsOf(deal) as (keyof C & string)[];
+  const cornerKinds = cornerKindsOf(deal) as (keyof C & string)[];
   const reading: AnswerReading<C> = {
     blank: play.blank ?? null,
     numbers: numbered as readonly (keyof C)[],
@@ -307,6 +309,16 @@ export function fillGame<C extends Clues<C> & object>(
     ...(partKinds.length === 0
       ? {}
       : { partClues: { kinds: partKinds, signs: play.signs ?? {} } }),
+    ...(cornerKinds.length === 0
+      ? {}
+      : {
+          cornerClues: {
+            kinds: cornerKinds,
+            signs: play.signs ?? {},
+            range: (kind: keyof C & string, b: FillBoard<C>) =>
+              cornerRange(deal, module.clueMax, kind, spaceOf(module, b), b.dealt),
+          },
+        }),
     ...(gapKinds.length === 0
       ? {}
       : {

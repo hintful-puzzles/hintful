@@ -125,7 +125,13 @@ export type IdSegment =
       readonly parts: string;
       readonly before?: string;
       readonly letters: Readonly<Record<string, string>>;
-    };
+    }
+  /** A clue an element of its kinds' one place, in the space's order,
+   * between runs of 1 to 26 elements without one, `a` to `z`, the last run
+   * written too (upstream Mathrax's): its code, by `codes`, a kind followed
+   * by the clue's number, or a kind and one of its values (`parity 0`)
+   * standing whole. The longest code that matches is read. */
+  | { readonly codes: Readonly<Record<string, string>>; readonly before?: string };
 
 /** A record's side letters, up, right, down and left (upstream unequal.c's
  * `adjthan` order). */
@@ -199,7 +205,7 @@ export interface FillOption {
 }
 
 /** The elements of the space a clue kind sits at. */
-export type Universe = "cells" | "lines" | "edges" | "slots";
+export type Universe = "cells" | "lines" | "edges" | "slots" | "corners";
 
 /** The elements a clue kind sits at: the space's, or the parts of the deal's
  * one partition. */
@@ -1063,7 +1069,7 @@ function elements(
 ): readonly number[] {
   const { w, h } = sp;
   if (order !== "columns") return sp[universe];
-  if (universe === "edges" || universe === "slots")
+  if (universe === "edges" || universe === "slots" || universe === "corners")
     throw new Error(`id: a kind at ${universe} is written in their order`);
   if (universe === "lines") return [...sp.lines.slice(h), ...sp.lines.slice(0, h)];
   const out: number[] = [];
@@ -1256,6 +1262,39 @@ export function encodeDesc<C extends Clues<C>>(
       }
       continue;
     }
+    if ("codes" in seg) {
+      out += seg.before ?? "";
+      const codes = codesOf(seg.codes);
+      const kinds = [...new Set(codes.map((c) => c.kind))];
+      // A run is written when a clue ends it, at the end, or before a 27th.
+      let run = 0;
+      const flush = (): void => {
+        if (run > 0) out += String.fromCharCode(96 + run);
+        run = 0;
+      };
+      for (const e of sp[universeOf(deal, kinds[0])]) {
+        const here = kinds.flatMap((kind) => {
+          const v = listOf(kind).valueAt[e];
+          return v >= 0 ? [{ kind, v }] : [];
+        });
+        if (here.length > 1)
+          throw new Error(`id: element ${e} holds ${here.length} clues`);
+        if (here.length === 0) {
+          if (run === 26) flush();
+          run++;
+          continue;
+        }
+        flush();
+        const [{ kind, v }] = here;
+        const whole = codes.find((c) => c.kind === kind && c.value === v);
+        const numbered = codes.find((c) => c.kind === kind && c.value === null);
+        if (whole === undefined && numbered === undefined)
+          throw new Error(`id: no code writes ${kind} ${v}`);
+        out += whole?.code ?? `${numbered?.code}${v}`;
+      }
+      flush();
+      continue;
+    }
     if ("glyphs" in seg) {
       const list = listOf(seg.glyphs);
       const letter = new Map(Object.entries(seg.values).map(([l, v]) => [v, l]));
@@ -1334,6 +1373,59 @@ function readGlyphs(
     v.push(values[ch]);
   }
   return clueList(at, v, n);
+}
+
+/** A `codes` segment's codes, each with the kind it stands for and, where
+ * it stands whole, the value: the longest first, as they are read. */
+function codesOf(
+  codes: Readonly<Record<string, string>>,
+): { readonly code: string; readonly kind: string; readonly value: number | null }[] {
+  return Object.entries(codes)
+    .map(([code, said]) => {
+      const [kind, value] = said.split(" ");
+      return { code, kind, value: value === undefined ? null : Number(value) };
+    })
+    .sort((a, b) => b.code.length - a.code.length);
+}
+
+/** A `codes` segment: a run letter skips 1 to 26 elements, and a code is a
+ * clue on the next, its number after it where the code stands for a kind
+ * alone; the elements end with the segment. */
+function readCodes<C extends Clues<C>>(
+  r: DescReader,
+  deal: FillDeal,
+  sp: GridSpace,
+  clueMax: ClueMax<C>,
+  seg: { readonly codes: Readonly<Record<string, string>>; readonly before?: string },
+): Map<string, ClueList> {
+  if (seg.before !== undefined) r.expect(seg.before);
+  const codes = codesOf(seg.codes);
+  const read = new Map(
+    codes.map((c) => [c.kind, { at: [] as number[], v: [] as number[] }]),
+  );
+  const elements = sp[universeOf(deal, codes[0].kind)];
+  const n = elements.length;
+  for (let pos = 0; pos < n; ) {
+    if (r.peekIs((ch) => ch >= "a" && ch <= "z")) {
+      pos += r.char().charCodeAt(0) - 96;
+      if (pos > n) r.fail(DESC_TOO_LONG);
+      continue;
+    }
+    const code = codes.find((c) => r.accept(c.code));
+    if (code === undefined) {
+      // Refused: a character no code begins with, or the end of the desc.
+      r.char(() => false);
+      continue;
+    }
+    const e = elements[pos++];
+    const least = deal.least?.[code.kind] ?? 0;
+    const got = read.get(code.kind) as { at: number[]; v: number[] };
+    got.at.push(e);
+    got.v.push(code.value ?? r.int(least, maxOf(clueMax, code.kind as keyof C, sp, e)));
+  }
+  return new Map(
+    [...read].map(([kind, { at, v }]) => [kind, clueList(at, v, n)] as const),
+  );
 }
 
 /** A `lists` segment: every element's list, an empty one written as
@@ -1613,6 +1705,11 @@ export function decodeDesc<C extends Clues<C>>(
       }
       if ("glyphs" in seg) {
         out[seg.glyphs as keyof C] = readGlyphs(r, sp.cells.length, seg.values);
+        continue;
+      }
+      if ("codes" in seg) {
+        for (const [kind, list] of readCodes(r, deal, sp, clueMax, seg))
+          out[kind as keyof C] = list;
         continue;
       }
       if ("cells" in seg) {

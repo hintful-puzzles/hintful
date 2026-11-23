@@ -117,8 +117,15 @@ import {
 } from "../solve/describe-runtime.ts";
 import { answerOf, type FillMistake, rulesOf } from "./answer.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "./board.ts";
+import {
+  cornerCell,
+  cornerClueAt,
+  cornerKindsOf,
+  cornerRange,
+  signedText,
+} from "./corners.ts";
 import { isDone } from "./done.ts";
-import { partKindsOf, tallyOf } from "./game-id.ts";
+import { type ClueMax, partKindsOf, tallyOf } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import type { FillMove } from "./notes.ts";
@@ -176,6 +183,9 @@ export interface FillDrawState {
   /** Per slot, its clue's error, done mark, hatch and outline, where the
    * board has clues at slots. */
   readonly slots: TileCache;
+  /** Per corner, its clue and its error, where the board has clues at
+   * corners. */
+  readonly corners: TileCache;
   readonly marks: HintMarks;
   /** What the tally beneath the board shows found, `null` before it is
    * drawn. */
@@ -436,6 +446,9 @@ export function fillRender<C extends Clues<C>>(
     /** The rules over a dealt partition's parts, which break at the cells
      * they count however those lie. */
     readonly partRules?: readonly string[];
+    /** Each clue kind's most value at an element, which a corner's clue of
+     * one value is drawn as its sign alone by. */
+    readonly clueMax?: ClueMax<C>;
   },
   look: FillLook<C>,
   previewed: (board: FillBoard<C>, ui: FillUi) => FillBoard<C>,
@@ -469,6 +482,9 @@ export function fillRender<C extends Clues<C>>(
    * first cell as its number and its sign. */
   const partKinds = partKindsOf(module.deal) as (keyof C & string)[];
   const labeled = partKinds.length > 0;
+  /** The kinds at corners, each drawn on a disc where its four cells meet. */
+  const cornerKinds = cornerKindsOf(module.deal) as (keyof C & string)[];
+  const cornered = cornerKinds.length > 0;
 
   /** Each part's clue by its first cell: its kind, its index in the kind's
    * list, and its text. */
@@ -484,7 +500,7 @@ export function fillRender<C extends Clues<C>>(
         out.set(cells[r][0], {
           kind,
           k,
-          text: `${list.v[k]}${play.signs?.[kind] ?? ""}`,
+          text: signedText(play.signs?.[kind] ?? null, list.v[k], 0, Infinity),
         });
       });
     }
@@ -1428,6 +1444,7 @@ export function fillRender<C extends Clues<C>>(
     const lineErrors = new Set<number>();
     const gapErrors = new Set<number>();
     const slotErrors = new Set<number>();
+    const cornerErrors = new Set<number>();
     // A broken number is drawn as a badge (`numberStates`), not on the piece;
     // a part's clue red at its part's first cell.
     for (const [kind, broken] of errors.clues)
@@ -1436,13 +1453,58 @@ export function fillRender<C extends Clues<C>>(
         if (lineClues.includes(kind as keyof C) || lineLists.includes(kind as keyof C))
           lineErrors.add(at);
         else if (slotClues.includes(kind as keyof C)) slotErrors.add(at);
+        else if (cornerKinds.includes(kind as keyof C & string)) cornerErrors.add(at);
         else if (play.gaps?.[kind] !== undefined) gapErrors.add(at);
         else if (partKinds.includes(kind as keyof C & string))
           lineWord[(state.dealt[walled as keyof C] as Partition).cells[at][0]] |=
             LABEL_BROKEN;
         else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
       }
-    return { word, lineWord, lineErrors, gapErrors, slotErrors };
+    return { word, lineWord, lineErrors, gapErrors, slotErrors, cornerErrors };
+  }
+
+  /**
+   * Each corner's clue, on a disc a third of a tile across where its four
+   * cells meet, its rim and text red where it breaks. A disc lies over its
+   * four tiles and the hint's marks on them, so it is drawn after both:
+   * where its own look moved, where a tile under it repainted, or where a
+   * mark, drawn every frame, lies on a cell under it.
+   */
+  function drawCorners(
+    dr: GameDrawing,
+    ds: FillDrawState,
+    b: FillBoard<C>,
+    broken: ReadonlySet<number>,
+    tiles: readonly (TileWords | null)[],
+  ): void {
+    if (!cornered) return;
+    const ts = ds.tileSize;
+    const { w } = b;
+    const sp = spaceOf(module, b);
+    const r = Math.floor(ts / 3);
+    for (const k of sp.corners) {
+      const clue = cornerClueAt(cornerKinds, b, k);
+      const err = broken.has(k);
+      const key =
+        clue === null
+          ? 0
+          : 1 | (err ? 2 : 0) | (cornerKinds.indexOf(clue.kind) << 2) | (clue.v << 8);
+      const under = sp.cornerCells[k].map((c) => tiles[c]);
+      const touched = under.some((t) => t !== null && (t.changed || t.hk !== 0));
+      if (!ds.corners.changed(k, key) && !touched) continue;
+      if (clue === null) continue;
+      const { x, y } = cornerCell(w, k);
+      const at = { x: coord(x + 1, ts), y: coord(y + 1, ts) };
+      const ink = err ? COL_ERROR : COL_INK;
+      dr.drawCircle(at, r, COL_GIVEN, ink);
+      const { deal, clueMax } = module;
+      if (deal === undefined || clueMax === undefined)
+        throw new Error("render: a clue at a corner on a board dealt by no deal");
+      const [least, most] = cornerRange(deal, clueMax, clue.kind, sp, b.dealt);
+      const text = signedText(play.signs?.[clue.kind] ?? null, clue.v, least, most);
+      dr.drawText(at, glyphFont(r), ink, text);
+      dr.drawUpdate({ x: at.x - r, y: at.y - r, w: 2 * r + 1, h: 2 * r + 1 });
+    }
   }
 
   /**
@@ -2033,10 +2095,8 @@ export function fillRender<C extends Clues<C>>(
     if (ds.tiles.firstFrame()) drawFrame(dr, ds, state);
 
     // The live errors, on the board as the drag would leave it.
-    const { word, lineWord, lineErrors, gapErrors, slotErrors } = errorWords(
-      state,
-      shown,
-    );
+    const { word, lineWord, lineErrors, gapErrors, slotErrors, cornerErrors } =
+      errorWords(state, shown);
 
     addMistakesAndLinks(word, shown, mistakes ?? []);
 
@@ -2145,6 +2205,7 @@ export function fillRender<C extends Clues<C>>(
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
     ds.marks.paint(dr, unlinked, area, markStyle);
+    drawCorners(dr, ds, state, cornerErrors, tiles);
     for (const l of askedLinks) drawLinkRing(dr, ts, w, l, whole(l));
     drawTallyOf(dr, ds, shown);
 
@@ -2205,6 +2266,7 @@ export function fillRender<C extends Clues<C>>(
         lists: new TileCache(b.w + b.h),
         gaps: new TileCache(gapped ? spaceOf(module, b).edges.length : 0),
         slots: new TileCache(slotted ? spaceOf(module, b).slots.length : 0),
+        corners: new TileCache(cornered ? spaceOf(module, b).corners.length : 0),
         marks: new HintMarks(),
         tally: { shown: null },
         pencilModeShown: null,
