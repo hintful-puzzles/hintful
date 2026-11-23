@@ -54,17 +54,22 @@ the predecessor's were, in a commit before the flip.
         deals; and with the answer searched under the cages, each reads
         only a cage with a total (`where clue(total, r) != none`,
         docs/descriptions.md § "The file").
-  - [ ] 2.1c A partition divided into equal parts (jigsaw blocks); the
+  - [x] 2.1c A partition divided into equal parts (jigsaw blocks); the
         diagonals drawn; a second partition drawn inset inside the first.
-        Dealt: the partition among the units may be dealt, a `Dealt`
-        field `spaceOf` reads (optional where a ruleset deals what blocks
-        cut otherwise, Solo's Jigsaw); `deal.divide`'s `equal` tiles by
+        The partition among the units may be dealt, a `Dealt` field
+        `spaceOf` reads (optional where a ruleset deals what blocks cut
+        otherwise, Solo's Jigsaw); `deal.divide`'s `equal` tiles by
         `divvyRectangle`; `divide` may list several, divided in turn; the
         `blocks` ID segment takes `before`; the soundness checker builds a
-        dealt box as blocks (`fitting` fixture). Left: the drawing. The
-        fill render walls `deal.partitions[0]` alone, and draws neither a
-        `blocks(a, b)` box (`boxing`'s blocks are undrawn) nor the
-        diagonals; a second partition, inset, takes the part labels.
+        dealt box as blocks. Drawn: the partition among the units is the
+        walled one, blocks or dealt (so `boxing`'s blocks are drawn, its
+        areas inset); a dealt partition beside it is dashed and inset
+        (`drawInsetWalls`), its parts holding the part clues; diagonals
+        units are stroked corner to corner (`fitting` fixture). For the
+        flip, a player sees: Standard and Jigsaw blocks tinted with the
+        region fills as Keen's cages are; cage outlines dashed in ink
+        rather than upstream's khaki solid lines; the X diagonals in the
+        grid's color.
   - [ ] 2.1d The symmetry option of seven, written as upstream's suffixes;
         the `{c}x{r}` and `{n}j` sizes.
   - [ ] 2.1e The flip: its words as `says`, its tests to `cases.yaml`.

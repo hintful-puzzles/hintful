@@ -8,8 +8,14 @@
 import { describe, expect, it } from "vitest";
 import * as fitting from "../../generated/engine/testing/fixtures/fitting/fitting.compiled.ts";
 import { DESC_MALFORMED, validateDesc } from "../contract/desc-error.ts";
+import type { DrawTextOptions } from "../contract/types.ts";
 import { randomNew } from "../random/index.ts";
+import { insetOf } from "../render/region-walls.ts";
+import { textBox } from "../render/ring.ts";
+import { NO_FLASH } from "../render/win-wave.ts";
 import type { Partition } from "../solve/describe-runtime.ts";
+import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
+import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import { encodeDesc } from "./game-id.ts";
@@ -119,6 +125,131 @@ describe("a partition among the units divided into equal parts", () => {
     // The same cages and clues on blocks of eight, four and four.
     const rest = desc.slice(desc.indexOf(","));
     expect(validateDesc(game, p, `${unequal4()}${rest}`)).toBe(DESC_MALFORMED);
+  });
+});
+
+describe("the blocks drawn as walls, the cages inset, the diagonals stroked", () => {
+  const TS = 64;
+  const draw = (b: Board, ts = TS): readonly DrawOp[] => {
+    const dr = new RecordingDrawing(game.colors(DEFAULT_BACKGROUND));
+    game.redraw(dr, game.newDrawState(b, ts), {
+      state: b,
+      prev: null,
+      dir: 1,
+      ui: game.newUi(b),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
+    return dr.ops;
+  };
+  /** The board's top left, where the first cell's tile starts, and a
+   * tile's side: the cells' clips. */
+  const tilesOf = (ops: readonly DrawOp[]) => {
+    const clips = ops.filter(
+      (o): o is Extract<DrawOp, { op: "clip" }> => o.op === "clip",
+    );
+    return {
+      x: Math.min(...clips.map((c) => c.x)),
+      y: Math.min(...clips.map((c) => c.y)),
+      ts: clips[0].w,
+    };
+  };
+  /** The one-pixel dashes of the inset outlines, in the walls' ink. */
+  const dashesOf = (ops: readonly DrawOp[], ink: string, ts: number) =>
+    ops.filter(
+      (o): o is Extract<DrawOp, { op: "rect" }> =>
+        o.op === "rect" &&
+        o.rgb === ink &&
+        (o.w === 1 || o.h === 1) &&
+        o.w + o.h < ts / 4,
+    );
+  /** The ink a cage's clue is written in, which the walls are drawn in. */
+  const inkOf = (ops: readonly DrawOp[]): string => {
+    const texts = ops.filter(
+      (o): o is Extract<DrawOp, { op: "text" }> => o.op === "text",
+    );
+    const label = texts.find((t) => t.text.endsWith("+"));
+    if (label === undefined) throw new Error("no cage clue drawn");
+    return label.rgb;
+  };
+
+  it("writes each cage's sum once at its first square, with dashes inside every cage's top edge and none touching a sum", () => {
+    const b = dealt(5, "draw");
+    let sizes = 0;
+    for (const size of [20, 32, 48, 64, 96, 128]) {
+      const ops = draw(b, size);
+      const sums = ops.filter(
+        (o): o is Extract<DrawOp, { op: "text" }> =>
+          o.op === "text" && o.text.endsWith("+"),
+      );
+      expect(sums.length).toBe(b.dealt.cage.cells.length);
+      const { x: ox, y: oy, ts } = tilesOf(ops);
+      const firsts = new Set(b.dealt.cage.cells.map((cs) => cs[0]));
+      for (const s of sums) {
+        const c = Math.floor((s.y - oy) / ts) * 5 + Math.floor((s.x - ox) / ts);
+        expect(firsts.has(c)).toBe(true);
+      }
+      const dashes = dashesOf(ops, inkOf(ops), ts);
+      const t = insetOf(ts);
+      for (const c of b.dealt.cage.of.keys()) {
+        const [x, y] = [c % 5, Math.floor(c / 5)];
+        if (y > 0 && b.dealt.cage.of[c - 5] === b.dealt.cage.of[c]) continue;
+        const at = oy + y * ts + t;
+        expect(
+          dashes.some(
+            (d) =>
+              d.y === at && d.h === 1 && d.x >= ox + x * ts && d.x < ox + (x + 1) * ts,
+          ),
+        ).toBe(true);
+      }
+      for (const s of sums) {
+        // The ink, and a pixel round it.
+        const ink = textBox(
+          { x: s.x, y: s.y },
+          s as unknown as DrawTextOptions,
+          s.text,
+        );
+        const box = { x: ink.x - 1, y: ink.y - 1, w: ink.w + 2, h: ink.h + 2 };
+        for (const d of dashes)
+          expect(
+            d.x < box.x + box.w &&
+              d.x + d.w > box.x &&
+              d.y < box.y + box.h &&
+              d.y + d.h > box.y,
+          ).toBe(false);
+      }
+      sizes++;
+    }
+    expect(sizes).toBe(6);
+  });
+
+  it("walls the blocks, not the cages", () => {
+    const b = dealt(5, "walls");
+    const { walls } = game.newDrawState(b, TS).parts ?? { walls: null };
+    if (walls === null) throw new Error("no walls");
+    const { box } = b.dealt;
+    // A cell's right wall stands where the block changes, and not where
+    // only the cage does.
+    const pairs = [...Array(25).keys()].filter((c) => c % 5 !== 4);
+    for (const c of pairs)
+      expect((walls[c] & 8) !== 0).toBe(box.of[c] !== box.of[c + 1]);
+    expect(pairs.length).toBe(20);
+    const { cage } = b.dealt;
+    expect(
+      pairs.some((c) => cage.of[c] !== cage.of[c + 1] && box.of[c] === box.of[c + 1]),
+    ).toBe(true);
+  });
+
+  it("strokes the two diagonals corner to corner on a board with X, and none without", () => {
+    const diagonalStrokes = (b: Board) =>
+      draw(b).filter(
+        (o) =>
+          o.op === "line" &&
+          Math.abs(o.x2 - o.x1) === TS &&
+          Math.abs(o.y2 - o.y1) === TS,
+      ).length;
+    expect(diagonalStrokes(dealt(5, "x", true))).toBe(10);
+    expect(diagonalStrokes(dealt(5, "x"))).toBe(0);
   });
 });
 

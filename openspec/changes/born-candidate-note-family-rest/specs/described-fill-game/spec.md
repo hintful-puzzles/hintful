@@ -86,6 +86,13 @@ SHALL be searched under them all.
 - **THEN** five connected blocks of five tile it, every row, column and
   block holds 1 to 5 once, and no cage repeats a number
 
+#### Scenario: Blocks walled, cages inset, diagonals stroked
+
+- **WHEN** such a board is drawn, with the diagonals' modifier on
+- **THEN** its blocks are drawn as walls, its cages as dashed outlines
+  inset inside the squares with each cage's sum at its first square clear
+  of the dashes, and each diagonal as a line corner to corner
+
 #### Scenario: Blocks of unequal size are refused
 
 - **WHEN** a desc of such a game writes a 4×4 board's blocks as one of

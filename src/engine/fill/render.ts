@@ -99,6 +99,7 @@ import {
 import { PAINTERS, type Painter, type PainterName } from "../render/pieces/index.ts";
 import { clearOfRises, drawSides, RECEIVED_FROM, topFace } from "../render/raised.ts";
 import {
+  drawInsetWalls,
   drawWalledSquare,
   regionWalls,
   walledBoxes,
@@ -166,8 +167,16 @@ export type FillFrame<C> = Frame<FillBoard<C>, FillUi, FillMove, unknown, FillMi
 export interface FillDrawState {
   readonly tileSize: number;
   /** Each cell's walls (`regionWalls`) and the slot of the fill under it,
-   * where the board deals a partition; `null` where it deals none. */
-  readonly parts: { readonly walls: Uint8Array; readonly fills: Uint8Array } | null;
+   * where the board has a partition drawn; `null` where it has none. Beside
+   * them, the walls of a partition drawn inset, where it has one, and the
+   * diagonals through each cell, bit 0 the main one's and bit 1 the
+   * other's. */
+  readonly parts: {
+    readonly walls: Uint8Array;
+    readonly fills: Uint8Array;
+    readonly inset: Uint8Array | null;
+    readonly diagonal: Uint8Array;
+  } | null;
   /** Per cell, what it shows and the hint's marks on it. */
   readonly tiles: TileCache;
   /** The notes the hint's step strikes, a lane the tiles' key has no room
@@ -352,6 +361,16 @@ type RaisedAt = {
   readonly noteWord: number;
 };
 
+/** A cell's walls and fill, its inset partition's walls (`-1` where the
+ * board has none) and the diagonals through it: what a board never
+ * changes, so no tile's key holds it. */
+type CellPart = {
+  readonly walls: number;
+  readonly fill: number;
+  readonly inset: number;
+  readonly diagonal: number;
+};
+
 /** What a cell's tile is drawn from this frame, and whether it changed. */
 type TileWords = {
   readonly k: number;
@@ -359,7 +378,7 @@ type TileWords = {
   readonly lk: number;
   readonly nk: number;
   readonly n: number;
-  readonly part: { readonly walls: number; readonly fill: number } | null;
+  readonly part: CellPart | null;
   readonly label: string | null;
   readonly anim: { readonly from: number; readonly frac: number } | null;
   readonly changed: boolean;
@@ -458,8 +477,21 @@ export function fillRender<C extends Clues<C>>(
   const slotClues = look.slotClues ?? [];
   const slotted = slotClues.length > 0;
   const labelStart = labels?.start;
-  // The dealt partition drawn as walls and fills: one, as no game deals two.
-  const walled = module.deal?.partitions?.[0] as (keyof C & string) | undefined;
+  // The partition drawn as walls and fills: the one among the units where
+  // the board has one (a Sudoku's blocks), else the first it deals.
+  const boxes = module.boxes;
+  const walled = (boxes?.name ?? module.deal?.partitions?.[0]) as
+    | (keyof C & string)
+    | undefined;
+  // A dealt partition beside those blocks is drawn inset inside its walls
+  // (Solo's Killer cages), and its parts hold the board's part clues.
+  const inset = (
+    boxes === undefined
+      ? undefined
+      : module.deal?.partitions?.find((r) => r !== boxes.name)
+  ) as (keyof C & string) | undefined;
+  /** The partition whose parts the part clues sit at. */
+  const labeledBy = inset ?? walled;
   const partRules: readonly string[] = module.partRules ?? [];
   const rules = rulesOf(module);
   const numbers = (module.numbers ?? []) as readonly (keyof C & string)[];
@@ -492,8 +524,8 @@ export function fillRender<C extends Clues<C>>(
     b: FillBoard<C>,
   ): Map<number, { kind: keyof C & string; k: number; text: string }> => {
     const out = new Map<number, { kind: keyof C & string; k: number; text: string }>();
-    if (walled === undefined) return out;
-    const { cells } = b.dealt[walled] as Partition;
+    if (labeledBy === undefined) return out;
+    const { cells } = b.dealt[labeledBy] as Partition;
     for (const kind of partKinds) {
       const list = listOf(b.dealt, kind);
       list.at.forEach((r, k) => {
@@ -528,15 +560,36 @@ export function fillRender<C extends Clues<C>>(
     return out;
   }
 
-  /** Each cell's walls and the slot of its part's fill, where the board
-   * deals a partition. */
+  /** Each cell's part of the walled partition: a dealt one's, or the
+   * block its space puts it in. */
+  const walledOf = (b: FillBoard<C>): ArrayLike<number> => {
+    const dealt = (b.dealt as Readonly<Record<string, unknown>>)[walled as string];
+    if (dealt !== undefined) return (dealt as Partition).of;
+    const sp = spaceOf(module, b);
+    return Int32Array.from(sp.cells, (c) => sp.boxes.indexOf(sp.boxOf[c]));
+  };
+
+  /** Each cell's walls and the slot of its part's fill, where the board has
+   * a partition drawn; and where it has them, its inset partition's walls
+   * and the diagonals through it. */
   const partsOf = (b: FillBoard<C>): FillDrawState["parts"] => {
     if (walled === undefined) return null;
-    const { of } = b.dealt[walled] as Partition;
+    const of = walledOf(b);
     const fills = regionFills(of, b.w, REGION_SURFACES.length);
+    const sp = spaceOf(module, b);
+    const diagonal = new Uint8Array(b.w * b.h);
+    sp.diagonals.forEach((L, k) => {
+      if (!sp.units.includes(L)) return;
+      for (const c of sp.lineCells[L]) diagonal[c] |= 1 << k;
+    });
     return {
       walls: regionWalls(b.w, b.h, of),
       fills: Uint8Array.from(of, (r) => COL_REGION + fills[r]),
+      inset:
+        inset === undefined
+          ? null
+          : regionWalls(b.w, b.h, (b.dealt[inset] as Partition).of),
+      diagonal,
     };
   };
 
@@ -972,7 +1025,7 @@ export function fillRender<C extends Clues<C>>(
     // The number on the cell, `-1` where it has none.
     n: number,
     // The cell's walls and fill, where the board deals a partition.
-    part: { readonly walls: number; readonly fill: number } | null,
+    part: CellPart | null,
     // The notes a hint's step strikes from the cell, bit `v` a value's.
     struck: number,
     // The clue of the part this is the first cell of, as written; `null`
@@ -1017,7 +1070,7 @@ export function fillRender<C extends Clues<C>>(
       const [l, t] = [ruled(x, boardW, 0), ruled(y, h, 0)];
       const [r, b] = [ruled(x, boardW, 4), ruled(y, h, 4)];
       lay({ x: tx + 1 + l, y: ty + 1 + t, w: ts - 1 - l - r, h: ts - 1 - t - b });
-    } else
+    } else {
       drawWalledSquare(
         dr,
         ts,
@@ -1026,6 +1079,15 @@ export function fillRender<C extends Clues<C>>(
         { grid: COL_GRID, wall: COL_WALL },
         lay,
       );
+      // The diagonals a board has as units, corner to corner under the
+      // content (upstream solo.c's X).
+      if (part.diagonal & 1)
+        dr.drawLine({ x: tx, y: ty }, { x: tx + ts, y: ty + ts }, COL_GRID, 1);
+      if (part.diagonal & 2)
+        dr.drawLine({ x: tx + ts, y: ty }, { x: tx, y: ty + ts }, COL_GRID, 1);
+      // A part's clue sits inside the inset outline, clear of its dashes.
+      if (part.inset >= 0) drawInsetWalls(dr, ts, tile, part.inset, COL_WALL);
+    }
     // A piece taken away shrinks into its cell; one placed grows alone, since
     // two pieces in one cell read as neither.
     const shrinking = anim !== null && v === 0 ? byValue.get(anim.from) : undefined;
@@ -1456,7 +1518,7 @@ export function fillRender<C extends Clues<C>>(
         else if (cornerKinds.includes(kind as keyof C & string)) cornerErrors.add(at);
         else if (play.gaps?.[kind] !== undefined) gapErrors.add(at);
         else if (partKinds.includes(kind as keyof C & string))
-          lineWord[(state.dealt[walled as keyof C] as Partition).cells[at][0]] |=
+          lineWord[(state.dealt[labeledBy as keyof C] as Partition).cells[at][0]] |=
             LABEL_BROKEN;
         else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
       }
@@ -2015,7 +2077,14 @@ export function fillRender<C extends Clues<C>>(
         const n = shownNumber(state, i, shown.values[i], ui.hiddenShown);
         if (n >= 0 && shown.values[i] === play.hides?.value) lk |= NUMBER_UNDER;
         const part =
-          parts === null ? null : { walls: parts.walls[i], fill: parts.fills[i] };
+          parts === null
+            ? null
+            : {
+                walls: parts.walls[i],
+                fill: parts.fills[i],
+                inset: parts.inset?.[i] ?? -1,
+                diagonal: parts.diagonal[i],
+              };
         if (threeD) lk |= THREE_D | (shown.values[i] !== 0 ? RAISED : 0);
         const nk = noteKey(shown, i, (k & CURSOR) !== 0, ui);
         // A growing piece is no key's: its tile is drawn every frame.
@@ -2275,8 +2344,8 @@ export function fillRender<C extends Clues<C>>(
     redraw,
     numbersLeft,
     partClueBox(ts, b, c) {
-      if (!labeled || walled === undefined) return null;
-      const { of, cells } = b.dealt[walled] as Partition;
+      if (!labeled || labeledBy === undefined) return null;
+      const { of, cells } = b.dealt[labeledBy] as Partition;
       const first = cells[of[c]][0];
       const label = labelsOf(b).get(first);
       if (label === undefined) return null;

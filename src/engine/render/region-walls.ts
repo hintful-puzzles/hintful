@@ -112,3 +112,84 @@ export function drawWalledSquare(
     if (walls & (1 << (CORNER_SHIFT + k))) dr.drawRect(corner, colors.wall);
   });
 }
+
+/** How far inside a square the outline of a second partition runs. */
+export const insetOf = (ts: number): number => Math.max(3, Math.round(ts / 9));
+
+/**
+ * The outline of a second partition's part, dashed and inset inside each
+ * square by `insetOf` (upstream solo.c's Killer cages within its blocks):
+ * a side of the square facing another part, by `regionWalls`' bits, runs
+ * inset, and one facing its own part runs on to the square's edge to meet
+ * its neighbor's; a corner where only the diagonal neighbor is another
+ * part turns inside it. The dashes keep step with the board, so a line
+ * reads as one across squares.
+ */
+export function drawInsetWalls(
+  dr: GameDrawing,
+  ts: number,
+  box: Rect,
+  walls: number,
+  color: number,
+): void {
+  const t = insetOf(ts);
+  const [a, c] = [box.x, box.y];
+  const [b, d] = [a + ts, c + ts];
+  const along = (x0: number, x1: number, y: number) =>
+    dashes(dr, x0, x1, y, true, ts, color);
+  const down = (y0: number, y1: number, x: number) =>
+    dashes(dr, y0, y1, x, false, ts, color);
+  const [top, left, bottom, right] = [
+    walls & TOP,
+    walls & LEFT,
+    walls & BOTTOM,
+    walls & RIGHT,
+  ];
+  const [x0, x1] = [left ? a + t : a, right ? b - t : b];
+  const [y0, y1] = [top ? c + t : c, bottom ? d - t : d];
+  if (top) along(x0, x1, c + t);
+  if (bottom) along(x0, x1, d - t);
+  if (left) down(y0, y1, a + t);
+  if (right) down(y0, y1, b - t);
+  const corner = (k: number) => (walls & (1 << (CORNER_SHIFT + k))) !== 0;
+  if (corner(0)) {
+    along(a, a + t, c + t);
+    down(c, c + t, a + t);
+  }
+  if (corner(1)) {
+    along(b - t, b, c + t);
+    down(c, c + t, b - t);
+  }
+  if (corner(2)) {
+    along(a, a + t, d - t);
+    down(d - t, d, a + t);
+  }
+  if (corner(3)) {
+    along(b - t, b, d - t);
+    down(d - t, d, b - t);
+  }
+}
+
+/** The dashes of a line from `from` to `to` at `at` across the board, or
+ * down it, each a tenth of a square and as far apart, counted from the
+ * board's origin so neighbors' dashes line up. */
+function dashes(
+  dr: GameDrawing,
+  from: number,
+  to: number,
+  at: number,
+  across: boolean,
+  ts: number,
+  color: number,
+): void {
+  const dash = Math.max(2, Math.round(ts / 10));
+  for (let s = Math.floor(from / (2 * dash)) * 2 * dash; s < to; s += 2 * dash) {
+    const lo = Math.max(s, from);
+    const hi = Math.min(s + dash, to);
+    if (hi <= lo) continue;
+    dr.drawRect(
+      across ? { x: lo, y: at, w: hi - lo, h: 1 } : { x: at, y: lo, w: 1, h: hi - lo },
+      color,
+    );
+  }
+}

@@ -374,7 +374,10 @@ research tools all read through it; the app never does.
   a climb's search tier hides nothing (`engine/fill/deal.ts`, `climbFill`).
   A region the space deals (`regions:
   { r: dealt }`) is a partition: `id:`'s `walls` writes it as upstream's
-  wall runs, the board draws it as walls and fills, a rule over its parts
+  wall runs, the board draws it as walls and fills (the partition among the
+  units first, where there is one, and a dealt one beside it dashed and
+  inset, holding the part clues: Solo's Killer cages in its blocks; the
+  diagonals a board has as units stroked corner to corner), a rule over its parts
   breaks on the squares it counts, never as a run, and `deal.grow` grows it
   round the answer (`engine/fill/grow.ts`): parts of `holds` cells of the
   answer's value, some closed whole by `closed.oneIn` a tier (none without
