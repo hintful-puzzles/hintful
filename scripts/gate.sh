@@ -368,6 +368,11 @@ step node scripts/checks/engine-catalog.mjs
 # a vitest file from reading that root at all.
 step node scripts/checks/change-citations.mjs
 
+# A file a guide cites as an exemplar still exists: a game born from its
+# description deletes all its TypeScript at once, and twenty-odd citations
+# stood dead after the fill games' flips. Here for the same reasons. ~0s.
+step node scripts/checks/guide-paths.mjs
+
 # --- 1b-iii-a. The brief every session loads stays short. ~0s. ---
 #
 # `AGENTS.md` is read into every session, and a long one is followed less well
