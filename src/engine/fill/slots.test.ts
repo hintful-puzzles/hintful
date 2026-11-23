@@ -114,7 +114,7 @@ describe("a clue at a slot in the desc", () => {
     }
   });
 
-  it("hides the squares first and then the sums, where they go in turn", () => {
+  it("hides the squares first and then the sums, where the squares go first", () => {
     /** The squares and sums a Normal deal of `deal` leaves, over some seeds. */
     const left = (deal: FillDeal) => {
       let given = 0;
@@ -128,10 +128,10 @@ describe("a clue at a slot in the desc", () => {
       }
       return { given, flank };
     };
-    const { hideInTurn: _, ...together } = flanking.deal;
+    const { hideFirst: _, ...together } = flanking.deal;
     const inTurn = left(flanking.deal);
     const mixed = left(together);
-    // Measured 2026-11-23: 1 square and 41 sums left in turn, 30 and 16 not.
+    // Measured 2026-11-23: 1 square and 41 sums left squares first, 30 and 16 not.
     expect(inTurn.given).toBeLessThan(mixed.given);
     expect(inTurn.flank).toBeGreaterThan(mixed.flank);
   });

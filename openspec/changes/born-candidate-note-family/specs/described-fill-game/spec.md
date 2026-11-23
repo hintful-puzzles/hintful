@@ -30,9 +30,9 @@ directory SHALL hold no TypeScript but its tests.
 
 `deal.hide` MAY name several kinds, whose clues SHALL be hidden in one random
 order across them, each kept hidden while the ladder finishes the board.
-With `deal.hideInTurn`, they SHALL instead be hidden in `hide`'s order at
-each tier, every clue of one kind tried before any of the next, each kind's
-in a random order. `deal.stripFrom: everyClue` SHALL start every draw of a search tier from
+With `deal.hideFirst`, every clue of the kinds it names SHALL instead be
+tried at each tier before any clue of the rest, each side in a random
+order. `deal.stripFrom: everyClue` SHALL start every draw of a search tier from
 every clue, not from a board hidden at the lowest tier that finishes it.
 
 #### Scenario: Sticks hides lengths and block numbers together
@@ -42,8 +42,8 @@ every clue, not from a board hidden at the lowest tier that finishes it.
 
 #### Scenario: Squares go before sums
 
-- **WHEN** a `flanking` board is dealt at Normal, its givens hidden in turn
-  before its sums
+- **WHEN** a `flanking` board is dealt at Normal, its givens hidden
+  first (`hideFirst: [given]`)
 - **THEN** it shows fewer givens and more sums than the same deal in one
   random order
 

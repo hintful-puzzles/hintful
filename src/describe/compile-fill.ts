@@ -972,7 +972,7 @@ export function dealOf(
   const written = kinds.filter((k) => k !== json.play?.tally?.kind);
   checkNamed(id, [...written, ...partitions], hexagon?.outside ?? null);
   checkSegments(id, d, env, json.sizes);
-  const { hide, hideInTurn, hideFrom, hideWhole } = hideOf(json, d);
+  const { hide, hideFirst, hideFrom, hideWhole } = hideOf(json, d);
   const hides = hide !== null;
   const thorough = thoroughOf(json);
   if (thorough !== null) {
@@ -1133,7 +1133,7 @@ export function dealOf(
     ...(Object.keys(options).length === 0 ? {} : { options }),
     sample,
     ...(hides ? { hide } : {}),
-    ...(hideInTurn ? { hideInTurn } : {}),
+    ...present("hideFirst", hideFirst),
     ...present("hideFrom", hideFrom),
     ...present("hideWhole", hideWhole),
     ...(stripFrom === undefined ? {} : { stripFrom }),
@@ -1365,14 +1365,14 @@ function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
  * order (`engine/generate/symmetric-blacks.ts`). */
 const SYMMETRIES = 5;
 
-/** `deal.hide`, one kind or several, whether they go in turn
- * (`hideInTurn`), and the tier each is first hidden at (`hideFrom`). */
+/** `deal.hide`, one kind or several, those tried before the rest
+ * (`hideFirst`), and the tier each is first hidden at (`hideFrom`). */
 function hideOf(
   json: DescriptionJson,
   d: Description,
 ): {
   hide: string | readonly string[] | null;
-  hideInTurn: boolean;
+  hideFirst: readonly string[] | null;
   hideFrom: Record<string, number> | null;
   hideWhole: Record<string, { below: number; bounds: SizeBoundsJson }> | null;
 } {
@@ -1392,12 +1392,23 @@ function hideOf(
     if (c.complete)
       throw new CompileError(`deal hide: ${k} is complete, so none of it is hidden`);
   }
-  const hideInTurn = json.deal?.["hideInTurn"];
-  if (hideInTurn !== undefined && (hideInTurn !== true || kinds.length < 2))
-    throw new CompileError("deal hideInTurn: true, where the deal hides several kinds");
+  const first = json.deal?.["hideFirst"];
+  const hideFirst =
+    Array.isArray(first) && first.every((k) => typeof k === "string")
+      ? (first as string[])
+      : null;
+  if (first !== undefined) {
+    if (hideFirst === null || hideFirst.length === 0)
+      throw new CompileError("deal hideFirst: a list of the kinds deal hide names");
+    for (const k of hideFirst)
+      if (!kinds.includes(k))
+        throw new CompileError(`deal hideFirst: ${k} is not hidden`);
+    if (hideFirst.length >= kinds.length)
+      throw new CompileError("deal hideFirst: every hidden kind, and none after them");
+  }
   return {
     hide,
-    hideInTurn: hideInTurn === true,
+    hideFirst,
     hideFrom: hideFromOf(json, kinds),
     hideWhole: hideWholeOf(json, kinds),
   };

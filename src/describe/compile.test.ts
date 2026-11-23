@@ -956,6 +956,15 @@ describe("what the fill board reads of a description", () => {
         j.id[1] = { ...j.id[1], letters: { B: "mark" } };
       }),
     ).toThrow(/id: digits of given after ,, written only where given has a clue/);
+    expect(compileFlanking(() => {})).toContain('"hideFirst":["given"]');
+    const hiding = (first: string[]) => () =>
+      compileFlanking((j) => {
+        (j as unknown as { deal: Record<string, unknown> }).deal["hideFirst"] = first;
+      });
+    expect(hiding(["sees"])).toThrow(/deal hideFirst: sees is not hidden/);
+    expect(hiding(["given", "flank"])).toThrow(
+      /deal hideFirst: every hidden kind, and none after them/,
+    );
   });
 
   it("refuses a walk's step under a rung its technique does not give", () => {

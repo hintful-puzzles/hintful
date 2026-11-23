@@ -335,17 +335,18 @@ export function dealFill<C extends Clues<C>>(
     }
     return out;
   };
-  /** `units`, shuffled, in the order the deal hides them: where it hides in
-   * turn (`deal.hideInTurn`), every unit of `hide`'s first kind before any
-   * of the next, each kind's in a random order. */
+  /** `units`, shuffled, in the order the deal hides them: every unit of the
+   * kinds `deal.hideFirst` names before any of the rest, each side in a
+   * random order. */
   const hideOrder = (clues: C, units: number[][]): number[][] => {
     shuffle(units, rs);
-    if (deal.hideInTurn !== true) return units;
+    const { hideFirst } = deal;
+    if (hideFirst === undefined) return units;
     const offsets = offsetsOf(clues, kinds);
-    const kindOf = (u: readonly number[]): number =>
-      offsets.findLastIndex((o) => o <= u[0]);
-    // A stable sort keeps each kind's units in their random order.
-    return units.sort((a, b) => kindOf(a) - kindOf(b));
+    const later = (u: readonly number[]): number =>
+      hideFirst.includes(kinds[offsets.findLastIndex((o) => o <= u[0])]) ? 0 : 1;
+    // A stable sort keeps each side's units in their random order.
+    return units.sort((a, b) => later(a) - later(b));
   };
   /**
    * The shortest run from the start of `units` whose clues alone of the

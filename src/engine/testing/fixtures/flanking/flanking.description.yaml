@@ -46,7 +46,7 @@ deal:
   tier: one of the tiers
   sample: { latin: true }
   hide: [given, flank]
-  hideInTurn: true
+  hideFirst: [given]
   hideFrom: { flank: Normal }
 id:
   - { numbers: flank, between: "/" }

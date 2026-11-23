@@ -358,10 +358,11 @@ commit. In design.md § "Decisions" 7's order.
         that meets a sum (codes `E` and `O`). Mathrax's equality is a kind
         of its own (`equal`, written `S0`), so each letter is one kind and
         the precedence is upstream's order.
-  - [ ] 2.6c A hide of some kinds first and the rest in one random order
+  - [x] 2.6c A hide of some kinds first and the rest in one random order
         (`deal.hideFirst`, upstream mathrax.c's givens, then its clues),
         replacing `hideInTurn: true`, which Towers and `flanking` state as
-        `hideFirst: [given]`.
+        `hideFirst: [given]`. With two kinds the two orders are the same
+        sort over the same shuffle, so no deal of Towers' moved.
   - [ ] 2.6d The flip: `o` renamed `w`, `entr` the tier letters, the
         supplied `placed` and `v` stated (`known` and `value` across the
         corner), every clue number said `{numeral …}`, the menu (5 to 9 at

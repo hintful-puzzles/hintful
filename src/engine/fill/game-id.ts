@@ -246,9 +246,9 @@ export interface FillDeal {
   /** The clue kind the deal hides while the board still finishes, or the
    * kinds it hides in one random order. */
   readonly hide?: string | readonly string[];
-  /** Whether the kinds of `hide` go in turn, in its order: every clue of one
-   * that may go before any of the next. */
-  readonly hideInTurn?: true;
+  /** The kinds of `hide` whose clues are each tried before any of the rest
+   * (upstream's givens before its clues). */
+  readonly hideFirst?: readonly string[];
   /** A kind of `hide` kept whole on a board below a tier, by the tier's
    * index. */
   readonly hideFrom?: Readonly<Record<string, number>>;

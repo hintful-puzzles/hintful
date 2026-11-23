@@ -406,8 +406,8 @@ research tools all read through it; the app never does.
   its own clues (Sticks' length reads `room`) once on a random cell of each
   group, as the only clue of its kind, so no second copy of the meaning is
   written. `deal.hide` may list kinds, hidden in one random order across
-  them, or with `hideInTurn: true` in its order, every clue of one tried
-  before any of the next (Towers' givens, then its clues);
+  them, or with `hideFirst: [kind]` every clue of those kinds tried
+  before any of the rest (Towers' givens, then its clues);
   `hideFrom: { kind: Tier }` keeps a kind whole on a board below that tier
   (`flanking` is the fixture); `hideWhole: { kind: { below: Tier, longer:
   { max: 5 } } }` hides every clue of a kind on a board below that tier and

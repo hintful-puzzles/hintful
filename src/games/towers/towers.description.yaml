@@ -155,7 +155,7 @@ deal:
   tier: one of the tiers
   sample: { latin: true }
   hide: [given, sees]
-  hideInTurn: true
+  hideFirst: [given]
   hideFrom: { sees: Normal }
   hideWhole: { given: { below: Normal, longer: { max: 5 } } }
 # Upstream's: the clues a slot at a time between slashes, top, bottom, left
