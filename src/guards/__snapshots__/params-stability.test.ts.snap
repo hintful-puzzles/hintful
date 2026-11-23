@@ -379,7 +379,8 @@ preset:6x6 Unreasonable  full=6dr  brief=6
 preset:7x7 Normal  full=7dn  brief=7
 preset:8x8 Normal  full=8dn  brief=8
 preset:9x9 Normal  full=9dn  brief=9
-bump:options  full=5de  brief=5"
+bump:w  full=6de  brief=6
+bump:h  full=5de  brief=5"
 `;
 
 exports[`encoded params are byte-stable > mines 1`] = `

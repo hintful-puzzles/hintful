@@ -1,0 +1,15 @@
+--  mathrax    no board of order 3 holds a difference clue, so no reading of one is checked there
+--  mathrax    no board of order 3 holds a equal clue, so no reading of one is checked there
+--  mathrax    no board of order 3 holds a product clue, so no reading of one is checked there
+--  mathrax    no board of order 3 holds a quotient clue, so no reading of one is checked there
+--  mathrax    no board of order 3 holds a parity clue, so no reading of one is checked there
+--  mathrax    no board of order 4 holds a quotient clue, so no reading of one is checked there
+ok  mathrax    clueEasy                       3  sound    (want sound   )     9 queries    0.8s
+ok  mathrax    clueEasy (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/games/mathrax/mathrax.description.yaml#clueEasy: recorded sound, proved whole on all 1 boards
+ok  mathrax    clue                           3  sound    (want sound   )     9 queries    0.8s
+ok  mathrax    clue (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/games/mathrax/mathrax.description.yaml#clue: recorded sound, proved whole on all 1 boards
+ok  mathrax    clueTricky                     3  sound    (want sound   )     9 queries    0.9s
+ok  mathrax    clueTricky (planted)           3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/games/mathrax/mathrax.description.yaml#clueTricky: recorded sound, proved whole on all 1 boards

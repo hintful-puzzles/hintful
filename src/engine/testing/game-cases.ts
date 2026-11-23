@@ -41,8 +41,9 @@
  *   what holds once it is sent: `values`, `holds`, `cursor`, `returns` and
  *   `preferences`. An entry with no event says what holds as it stands.
  * - `wordings`: a technique's stated wording rendered from `terms`, on cells
- *   numbered on a grid `width` wide (`ring`, and `marks` by role), and what
- *   it `says`: for a wording no walk reaches.
+ *   numbered on a grid `width` wide (`ring`, and `marks` by role), the
+ *   values it crosses out (`struck`), and what it `says`, in the
+ *   description's nouns: for a wording no walk reaches.
  *
  * A message expected is written whole, as `/a pattern/`, or as the name of a
  * refusal constant (`DESC_NOT_UNIQUE`). An expectation the engine wrote,
@@ -199,6 +200,8 @@ export interface WordingCase extends At {
   /** The cells each other role marks, by role. */
   readonly marks: Readonly<Record<string, readonly number[]>>;
   readonly terms: Readonly<Record<string, number | boolean>>;
+  /** The values the step crosses out, which `{struck}` and `{struckOr}` say. */
+  readonly struck: readonly number[];
   readonly says: Said;
 }
 
@@ -653,6 +656,7 @@ export function parseGameCases(text: string, path: string): GameCases {
         "ring",
         "marks",
         "terms",
+        "struck",
         "says",
       ]);
       const marks: Record<string, number[]> = {};
@@ -675,6 +679,7 @@ export function parseGameCases(text: string, path: string): GameCases {
         ring: cellList(e.get("ring"), `${where}.ring`),
         marks,
         terms,
+        struck: opt(e.get("struck"), (n) => cellList(n, `${where}.struck`)) ?? [],
         says: said(says, `${where}.says`),
       };
     },
@@ -785,6 +790,8 @@ function checkWording(
     return [`no wording ${c.wording} of ${c.technique} is stated`];
   const at = (i: number): Point => ({ x: i % c.width, y: Math.floor(i / c.width) });
   const pieces = pairPieces((compiled as Pick<FillHintModule<object>, "play">).play);
+  // As the walk words a step (`fill/candidates.ts`): the description's nouns.
+  const words = (compiled as { WORDS?: { cell?: string; value?: string } }).WORDS;
   const { text } = statedSentence(clauses, {
     kind: CELL,
     at,
@@ -794,6 +801,9 @@ function checkWording(
     ),
     terms: c.terms,
     value: String,
+    struck: c.struck,
+    ...(words?.cell === undefined ? {} : { noun: words.cell }),
+    ...(words?.value === undefined ? {} : { valueNoun: words.value }),
     ...(pieces === null ? {} : { piece: (v: number) => pieces[v] }),
   });
   return saysAs(c.says, text) ? [] : [`says "${text}", not ${shown(c.says)}`];

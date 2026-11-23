@@ -10,7 +10,6 @@
  */
 import { describe, expect, it } from "vitest";
 import { mapGame } from "../../games/map/index.ts";
-import { mathraxGame } from "../../games/mathrax/index.ts";
 import { pathGame } from "../../games/path/index.ts";
 import { pathWalk } from "../../games/path/solver.ts";
 import {
@@ -30,6 +29,7 @@ import {
 } from "../../games/tracks/state.ts";
 import { NAMES } from "../../generated/games/lightup/lightup.compiled.ts";
 import { game as lightupGame } from "../../generated/games/lightup/lightup.game.ts";
+import { game as mathraxGame } from "../../generated/games/mathrax/mathrax.game.ts";
 import { NAMES as UNRULY_NAMES } from "../../generated/games/unruly/unruly.compiled.ts";
 import { game as unrulyGame } from "../../generated/games/unruly/unruly.game.ts";
 import { D, dirX, dirY, L, R, U } from "../board/square-edges.ts";

@@ -47,6 +47,13 @@ every clue, not from a board hidden at the lowest tier that finishes it.
 - **THEN** it shows fewer givens and more sums than the same deal in one
   random order
 
+#### Scenario: Squares go first at the lowest tier too
+
+- **WHEN** a `flanking` board is dealt at Easy hiding its sums too, its
+  givens hidden first
+- **THEN** it shows fewer givens than sums, where the givens alone would
+  finish it
+
 ## ADDED Requirements
 
 ### Requirement: A born game's values may be drawn raised

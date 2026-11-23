@@ -30,14 +30,7 @@ import { inSweep } from "../engine/testing/slow.ts";
  * empty history of such moves by reaching none: a game here that stops making
  * the move comes off the list, and the list is never left empty.
  */
-const MAKES_AN_UNCHANGED_MOVE = [
-  "abcd",
-  "galaxies",
-  "group",
-  "loopy",
-  "mathrax",
-  "untangle",
-];
+const MAKES_AN_UNCHANGED_MOVE = ["abcd", "galaxies", "group", "loopy", "untangle"];
 
 /**
  * Games that answer "nothing happened" to an input that changed the frame,

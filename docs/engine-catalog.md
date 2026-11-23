@@ -1018,7 +1018,7 @@ Reach for it when your game has a pencil mode. It is the "pencil mode is
 on" glyph, the same in every game and in the same
 place: the canvas's top-right corner. The position is the engine's; a game
 picks its three palette indices (`PencilIndicatorStyle`) and finds the
-room. Exemplar: `mathrax/render.ts`.
+room. Exemplar: `group/render.ts`.
 
 - **Reserve `Math.max(yourMargin, pencilIndicatorReach(ts))`.** The reach
   is the glyph plus both insets, and the glyph is clamped between 20 and 48
@@ -1107,7 +1107,7 @@ from either side; a later leg's sentence is `edgeContinuation` in
 Reach for it in every game that carries `ui.pencilMode` and
 `ui.cursorFromKeyboard`: the player types values and pencils candidates. The
 game keeps its coordinates, its symbols and its
-own `Move`. Exemplar: `mathrax/index.ts`.
+own `Move`. Exemplar: `group/index.ts`.
 
 - **Input**: `pressNoteTakingCell`, `tapNoteTakingCell` and
   `dragEnteredNoteTakingCell` resolve a press, a release and a drag;
@@ -1332,11 +1332,11 @@ family: pass `rs` for a random matching in generation and leave it out for a
 deterministic existence check (`tents/`). A repeated symbol, the `seed`
 hook, `cubeOut` and the family's generator shapes are in
 [`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
-`mathrax/solver.ts`. Its singles, sets, fish and wing are
+`solo/solver.ts`. Its singles, sets, fish and wing are
 `latin.compiled.ts`, compiled from `latin.description.yaml` by
 `npm run describe` and never edited by hand; `latinLadder` pairs each with
 its reason, and runs a described game's own on its clues
-([`descriptions.md`](./descriptions.md); exemplar `mathrax/solver.ts`).
+([`descriptions.md`](./descriptions.md); exemplar `solo/solver.ts`).
 `describe-runtime.ts` is what compiled code reads, and the modules under
 `describe-runtime/` hold it: the marks' interface, the numbered grid
 (`describedSpace`, `latinSpace`), kept by shape, and a game's `ClueList`s
@@ -1683,7 +1683,7 @@ a strike names), `evidenceOf` (what a step's words outline and stripe),
 `populateThenClean`, and `keepCandidateHintTrack` and
 `refreshCandidateHintStep`. A board scan reads
 `grid.length`, so a board need not be square; `w` is only the row stride.
-Exemplars: `mathrax/index.ts`, and `engine/fill/candidates.ts` for every
+Exemplars: `group/index.ts`, and `engine/fill/candidates.ts` for every
 born game that keeps notes.
 
 - **`NoteEncoding.all(i)` must agree with the game's own fill-all move.**

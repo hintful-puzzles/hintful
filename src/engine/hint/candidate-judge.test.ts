@@ -162,4 +162,22 @@ describe("candidateJudge", () => {
     });
     expect(game.hint.judgeMove?.(s, struck)?.followed).toBe(true);
   });
+
+  it("names directly a note a value placed in its row rules out", () => {
+    // Notes in every cell, then a value placed beside them: the walk from
+    // here strikes every note it rules out in one clean step first.
+    const i = open(fresh());
+    const s = placed(penciled(fresh()), i);
+    const row = Math.floor(i / s.w);
+    const j = [...s.values.keys()].find(
+      (k) => k !== i && Math.floor(k / s.w) === row && s.values[k] === 0,
+    );
+    if (j === undefined) throw new Error("the first open cell's row has no other");
+    const struck = with_(s, (_values, pencil) => {
+      pencil[j] &= ~(1 << answer[i]);
+    });
+    const v = game.hint.judgeMove?.(s, struck);
+    expect(v?.words.text).toMatch(DIRECT);
+    expect(v?.words.text).toContain(nameOf("dup"));
+  });
 });

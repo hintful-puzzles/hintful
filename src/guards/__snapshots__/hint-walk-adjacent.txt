@@ -1,4 +1,4 @@
-5x5 Easy #0: 18 steps, solved, fe4e66b8e0cb4e08 [hiddenSingle:3 regionsFull:15]
+5x5 Easy #0: 18 steps, solved, 34369d8e978d2cd4 [hiddenSingle:4 regionsFull:14]
 5x5 Normal #0: 37 steps, solved, 2113d2a1b40ab489 [adjacent:15 dup:6 hiddenSingle:2 regionsFull:7 single:7]
 5x5 Tricky #0: 55 steps, solved, 78b7a7cb39c5e887 [adjacent:12 adjacentSet:11 dup:9 hiddenSingle:3 note:1 regionsFull:6 set:2 single:11]
 5x5 Hard #0: 62 steps, solved, c3c94fa79b04e37f [adjacent:6 adjacentSet:21 dup:10 hiddenSingle:4 note:1 regionsFull:6 single:13 wing:1]

@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { entryMistakes, gridCell } from "../../src/engine/hint/entry-mistakes.ts";
 import { brokenRules, searchAnswers } from "./answer-check.ts";
-import { type Binding, mathraxBinding, saladBinding, soloBinding } from "./bindings.ts";
+import { type Binding, saladBinding, soloBinding } from "./bindings.ts";
 import {
   deal,
   label,
@@ -190,10 +190,7 @@ describe("the answer check from the description", () => {
     ];
     const all: string[] = [];
     const only = onlyGames();
-    const games = [soloBinding, mathraxBinding, saladBinding] as Binding<
-      unknown,
-      unknown
-    >[];
+    const games = [soloBinding, saladBinding] as Binding<unknown, unknown>[];
     for (const b of games.filter(
       (g) => only === null || only.includes(g.description.game),
     )) {
@@ -238,12 +235,6 @@ describe("the answer check from the description", () => {
   // Each clue's meaning planted wrong, as a description could drift from its
   // game: the comparison must see each one.
   const planted: [string, Binding<unknown, unknown>, string, string][] = [
-    [
-      "Mathrax, E read as O",
-      mathraxBinding as Binding<unknown, unknown>,
-      "parity",
-      "forall c in cells(at): value(c) mod 2 != v",
-    ],
     [
       "Salad, a border letter read as anywhere in its line",
       saladBinding as Binding<unknown, unknown>,

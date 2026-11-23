@@ -147,7 +147,7 @@ registered games whose `hint` is written (`hasHint`), derived by
 
 Exemplars: Palisade (grouped multi-leg deductions),
 [`src/games/range/`](../src/games/range/) (a compiled ladder walked a firing
-at a time, `hint.plan` and `hint.keepTrack`, and the highlight), [`src/games/mathrax/`](../src/games/mathrax/)
+at a time, `hint.plan` and `hint.keepTrack`, and the highlight), [`src/games/group/`](../src/games/group/)
 (candidate elimination), and [`src/games/inertia/`](../src/games/inertia/)
 (no deduction: verified claims, a stable marked subgoal, a recompute-stable
 plan).
@@ -891,7 +891,8 @@ On the candidate walk the game writes no stamp
   before it reads a single with no notes on such a plan.
 - **A candidate game's pin scan gives `ui` a rule that splits its boards
   between the two readings**, since `populate` is spoken only under one and
-  `note` only under the other (`mathrax-hint.test.ts`).
+  `note` only under the other (`group-hint.test.ts`). A born game's cases
+  list the one its reading never speaks in `hint.unreached`.
 
 ### Every step is a gesture
 
@@ -1032,7 +1033,7 @@ Rules for any recorder:
   pass, under a routine that loops over every clue, puts several firings in
   one step. Make each clue or line routine return as soon as it fires on the
   recording path, and assert that every struck mark of a step lies within the
-  step's narrated area (`mathrax-hint.test.ts`).
+  step's narrated area.
 - **A solver that queues ops and cascades** attaches the reason to the queued
   op and records each op where it changes a flag, the cascade building its
   own reason at the apply site.

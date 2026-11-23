@@ -18,7 +18,7 @@ this: the fill board does each step from the compiled module
 
 What a hand-written game with notes does beyond the skeleton, in order. The file that does
 each of these the shared way is
-[`mathrax/index.ts`](../src/games/mathrax/index.ts).
+[`group/index.ts`](../src/games/group/index.ts).
 
 1. Take the cell's highlight, entry and pencil mode from
    `note-taking-cell.ts` (`pressNoteTakingCell`, `toggleNoteTakingMode`):
@@ -90,7 +90,7 @@ Write `buildSteps` as one call to `runCandidatePlan`
 row/column preset"). The walk owns the loop and builds every step; the game
 supplies what carries its meaning, each a field of `CandidatePlan`, whose
 docs say what each decides and, for an optional hook, the game-shaped fact
-that needs it. Exemplar: [`mathrax/index.ts`](../src/games/mathrax/index.ts)'s
+that needs it. Exemplar: [`group/index.ts`](../src/games/group/index.ts)'s
 `buildSteps`. Requirements: "A shared candidate-elimination hint plan", "The
 walk owns the ladder", "The walk builds every step from the game's words",
 "The game keeps what carries its meaning".
@@ -243,7 +243,7 @@ calls `runLatinCandidatePlan`
 its rungs and its words. It is `runCandidatePlan` with
 the answers a row and a column force filled in; its doc lists each and why
 it is not a parameter. Exemplar:
-[`mathrax/index.ts`](../src/games/mathrax/index.ts)'s `buildSteps`.
+[`group/index.ts`](../src/games/group/index.ts)'s `buildSteps`.
 Requirements: "A row/column Latin square answers no question its regions
 already settle", "The fields the row/column preset supplies", "A game
 reasoning over other regions cannot take the preset".
@@ -548,7 +548,8 @@ does this; a game supplies the moves it is written in.
 - **The clean is a setup step**, several cells and several values. Exempt it,
   by its rung `clean` (and the fill by `populate`), from a per-firing test
   that a strike's marks share one cell or one value, or that every step uses
-  the necessity voice.
+  the necessity voice. Check & save's judge calls a strike it makes by
+  `dup`'s name, the deduction it makes in bulk (`candidate-judge.ts`).
 - **A placement's cull continues its journey**: a strike step after the
   placement ("a 5 now sits in this row and column, so strike it from these
   notes"), or silent under auto-pencil ("A placement's cull continues its
@@ -832,9 +833,9 @@ the player and nothing about ordering is added to the walk. Exemplar:
 Where one solver routine intersects a cell's candidates with several clues
 and commits what survives, split it per clue before narrating. A step saying
 "the 7+ clue means…" while crossing out a value another clue ruled out is
-false and checkable. Exemplar:
-[`mathrax/solver.ts`](../src/games/mathrax/solver.ts) with
-`mathrax-hint.test.ts`.
+false and checkable. Exemplar: the clue techniques of
+[`mathrax.description.yaml`](../src/games/mathrax/mathrax.description.yaml),
+bound a clue and a cell a firing (`c in cells, …, k in corners(c)`).
 
 - **Make a firing one clue acting on one cell**: attribute each elimination
   to the first incident clue that excludes it and say that clue. Leave the

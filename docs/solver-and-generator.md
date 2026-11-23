@@ -1323,7 +1323,7 @@ the boards a seed deals move").
   and `if (!solve(`. A solver with a multi-valued verdict makes bare
   truthiness a bug: where a code for "ambiguous" is truthy, a strip runs
   straight past uniqueness. Compare against the verdict wanted. Exemplar:
-  [`mathrax/generator.ts`](../src/games/mathrax/generator.ts).
+  `finishes` in [`engine/fill/deal.ts`](../src/engine/fill/deal.ts).
 - **The dirty scratch.** When a generator hands its solver a reused board,
   ask what state that board is in on entry; a gate that re-solves on what the
   last candidate left behind judges garbage. Exemplar:

@@ -376,13 +376,40 @@ commit. In design.md § "Decisions" 7's order.
         replacing `hideInTurn: true`, which Towers and `flanking` state as
         `hideFirst: [given]`. With two kinds the two orders are the same
         sort over the same shuffle, so no deal of Towers' moved.
-  - [ ] 2.6d The flip: `o` renamed `w`, `entr` the tier letters, the
+  - [x] 2.6d The flip: `o` renamed `w`, `entr` the tier letters, the
         supplied `placed` and `v` stated (`known` and `value` across the
         corner), every clue number said `{numeral …}`, the menu (5 to 9 at
         Easy, 7 to 9 at Normal alone), Size 3's tiers bounded, Mathrax's
         tests to `mathrax.cases.yaml`, its TypeScript deleted, the
         `game-lines` ceiling lowered, its spec deltas and the run in the
-        app.
+        app. Equality is a kind of its own (`equal`, a range of 0), so a
+        difference is 1 up. Two capabilities came with it:
+        - The deal's thorough hide keeps the shortest run from the **end**
+          of its order, not the start: under `hideFirst` the start is the
+          givens alone, and a Mathrax Easy deal kept 8 givens and no clue.
+          Now 5de keeps 2.0 givens and 4.8 clues (the port 2.3 and 4.6),
+          6de 2.1 and 8.3 (2.1 and 8.0); above Easy nothing moved. Every
+          born game's Easy walk fingerprint moved with it (new boards,
+          each solved). Guarded in `fill/slots.test.ts`, seen to fail with
+          the run kept from the start. This is what 2.6b's `cornering`
+          note tried: there it moved nothing, since that Easy reads no sum.
+        - A cases file's wording takes `struck`, and is read with the
+          module's nouns, as the walk reads it.
+        - Check & save's judge calls the clean step's strike by `dup`'s
+          name. Mathrax's new default deal showed it: a fresh walk from
+          the player's notes takes the clean first, which had no name, so
+          a strike of a placed number's row read "a few steps on" in every
+          candidate game. Guarded in `candidate-judge.test.ts`, seen to fail
+          with the name planted away.
+        What a player sees differ: a broken clue's whole ring red; a wing
+        hint (98 of 2442 positions walked; the port's never fired); an ID
+        with no answer or several refused (upstream's `4dr:p,i` among
+        them); old saves break. The 25 upstream generator descs tried all
+        load and write back byte for byte. Measured on 44 boards against the port
+        (2026-11-23): walk instructions +25.3% (cycles within noise),
+        deal +7.8%, steps 2528 / 2522, unsolved 8 / 8. Run in Chrome: a
+        5x5 Easy deal, typing, notes, a broken clue in red, a hint walked
+        to the solve, a 6x6 Normal upstream board in dark.
 - [ ] 2.7 Seismic born: a partition grown to drawn sizes before the answer,
       the answer searched under it, `T` a ruleset by a bare letter, its
       reach from the compiled `cull` (`notes.ts`'s `reachOf`), and the

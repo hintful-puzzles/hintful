@@ -1,0 +1,184 @@
+# Mathrax's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every rung its hint
+# takes, upstream's IDs read and written back, its params and the kinds they
+# switch, and the corner clues printed, broken and worded.
+
+hint:
+  params:
+    - {w: 5, h: 5, diff: 0, kinds: [sum, difference, product, quotient, equal, parity]}
+    - {w: 5, h: 5, diff: 1, kinds: [sum, difference, product, quotient, equal, parity]}
+    - {w: 6, h: 6, diff: 2, kinds: [sum, difference, product, quotient, equal, parity]}
+    - {w: 5, h: 5, diff: 3, kinds: [sum, difference, product, quotient, equal, parity]}
+    - {w: 6, h: 6, diff: 1, kinds: [product, quotient, equal, parity]}
+  unreached:
+    populate: >-
+      spoken under the reading that pencils every candidate in first, and Mathrax's hint starts on the one that does not (play.hintNotes)
+  pins:
+    # Held on 227 of 2442 positions walked.
+    clean:
+      id: "5dn:r3f,cA5bA6eM4A7b"
+      moves:
+        - {type: pencilAdd, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 2}, {x: 2, y: 3, n: 4}, {x: 2, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 4, n: 2}, {x: 1, y: 4, n: 3}, {x: 1, y: 4, n: 5}]}
+        - {type: set, x: 0, y: 3, n: 2, pencil: false, autoElim: false}
+    # Held on 1016 of 2442 positions walked.
+    note: "5dn:u3a4a,aS2eS1cA6aS2aS1"
+    # Held on 1619 of 2442 positions walked.
+    dup: "5dn:u3a4a,aS2eS1cA6aS2aS1"
+    # Held on 1770 of 2442 positions walked.
+    single:
+      id: "5dn:u3a4a,aS2eS1cA6aS2aS1"
+      moves:
+        - {type: pencilAdd, marks: [{x: 2, y: 4, n: 1}, {x: 2, y: 4, n: 2}, {x: 2, y: 4, n: 5}]}
+        - {type: set, x: 1, y: 3, n: 4, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 2, y: 4, n: 1}, {x: 2, y: 4, n: 5}]}
+    # Held on 1986 of 2442 positions walked.
+    regionsFull: "5de:b31a3a4a2d41b2f,p"
+    # Held on 1733 of 2442 positions walked.
+    hiddenSingle: "6dnMDEO:5b4c4g2m41c6a,bD2kD2eS0bS0a"
+    # Held on 658 of 2442 positions walked.
+    set:
+      id: "5dr:y,cA7S1S0dS0A5d"
+      moves:
+        - {type: pencilAdd, marks: [{x: 4, y: 1, n: 1}, {x: 4, y: 1, n: 2}, {x: 4, y: 1, n: 3}, {x: 4, y: 1, n: 4}, {x: 4, y: 1, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 3}, {x: 3, y: 0, n: 4}, {x: 3, y: 0, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 1, n: 1}, {x: 3, y: 1, n: 2}, {x: 3, y: 1, n: 3}, {x: 3, y: 1, n: 4}, {x: 3, y: 1, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 0, n: 2}, {x: 4, y: 0, n: 3}, {x: 4, y: 0, n: 4}, {x: 4, y: 0, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 1, n: 1}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 3, n: 1}, {x: 4, y: 3, n: 2}, {x: 4, y: 3, n: 3}, {x: 4, y: 3, n: 4}, {x: 4, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 2, n: 1}, {x: 3, y: 2, n: 2}, {x: 3, y: 2, n: 3}, {x: 3, y: 2, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 3, n: 1}, {x: 3, y: 3, n: 2}, {x: 3, y: 3, n: 3}, {x: 3, y: 3, n: 4}, {x: 3, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 2, n: 1}, {x: 4, y: 2, n: 2}, {x: 4, y: 2, n: 3}, {x: 4, y: 2, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 3, n: 1}, {x: 2, y: 3, n: 2}, {x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 2, n: 1}, {x: 2, y: 2, n: 2}, {x: 2, y: 2, n: 3}, {x: 2, y: 2, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 1, n: 1}, {x: 1, y: 1, n: 2}, {x: 1, y: 1, n: 3}, {x: 1, y: 1, n: 4}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 2, n: 1}, {x: 0, y: 2, n: 2}, {x: 0, y: 2, n: 3}, {x: 0, y: 2, n: 4}, {x: 0, y: 2, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 3, n: 1}, {x: 0, y: 3, n: 2}, {x: 0, y: 3, n: 3}, {x: 0, y: 3, n: 4}, {x: 0, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 2, n: 1}, {x: 1, y: 2, n: 2}, {x: 1, y: 2, n: 3}, {x: 1, y: 2, n: 4}, {x: 1, y: 2, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 3, n: 1}, {x: 1, y: 3, n: 2}, {x: 1, y: 3, n: 3}, {x: 1, y: 3, n: 4}, {x: 1, y: 3, n: 5}]}
+    # Held on 98 of 2442 positions walked.
+    wing: "6dt:zj,S1S0cM12D2D3fS1cS3S0bS2b"
+    # Held on 1870 of 2442 positions walked.
+    clue: "5dn:p3h,aS2bS1A7bS0eS3a"
+
+tiers:
+  # A 3x3 at Normal and Unreasonable (play.bounds).
+  absent: [3dn, 3dr]
+
+ids:
+  # A board the hand-written port dealt, read and written back.
+  - {id: "5dn:b2a5k2h,S0S1bA5hA6b", writesBack: true}
+  # A given past the board, one too many, a character neither part holds,
+  # and the grid cut short.
+  - {id: "3de:12345678,d", refused: DESC_OUT_OF_RANGE}
+  - {id: "3de:1231231231,c", refused: '/"1" where it can.t have one/'}
+  - {id: "3de:12?,d", refused: '/"\?"/'}
+  - {id: "3de:12,d", refused: '/"," where it can.t have one/'}
+  # A run past either part, a clue too many, and anything after the clues.
+  - {id: "3de:j,d", refused: DESC_TOO_LONG}
+  - {id: "3de:i,e", refused: DESC_TOO_LONG}
+  - {id: "3de:i,dA2", refused: DESC_TOO_LONG}
+  - {id: "3de:i,d!", refused: DESC_TOO_LONG}
+  # A clue part cut short, or none at all.
+  - {id: "3de:i,A2", refused: DESC_TOO_SHORT}
+  - {id: "3de:i", refused: DESC_TOO_SHORT}
+  - {id: "3de:", refused: DESC_TOO_SHORT}
+  # An arithmetic clue without its number, and a parity clue with one.
+  - {id: "3de:i,Ac", refused: '/"c"/'}
+  - {id: "3de:i,E5c", refused: '/"5"/'}
+  # A number no two of the board's numbers make: a sum of 7, a difference
+  # of 3, a product of 10 and a ratio of 1 at 3x3.
+  - {id: "3de:i,A7c", refused: DESC_OUT_OF_RANGE}
+  - {id: "3de:i,S3c", refused: DESC_OUT_OF_RANGE}
+  - {id: "3de:i,M10c", refused: DESC_OUT_OF_RANGE}
+  - {id: "3de:i,D1c", refused: DESC_OUT_OF_RANGE}
+  # An empty board, and upstream's Unreasonable 4x4, have several answers.
+  - {id: "3de:i,d", refused: DESC_NOT_UNIQUE}
+  - {id: "4dr:p,i", refused: DESC_NOT_UNIQUE}
+  # Every number at its largest reads, and has no answer.
+  - {id: "3de:i,A6S2M9D3", refused: DESC_CONTRADICTORY}
+  # A run past the alphabet reads whole: refused for its answers, not its
+  # spelling.
+  - {id: "6de:zj,y", refused: DESC_NOT_UNIQUE}
+  # The digit spelling's own example in the spec, which reads and writes back.
+  - {id: "5de:e4p3a5,A6iA5bS1b", writesBack: true}
+
+params:
+  # Upstream's: the size, the tier, then the kinds on, every kind where none
+  # is written, read only in the order A S M D E O.
+  - {read: "5de", full: "5de", brief: "5"}
+  - {read: "5", full: "5de"}
+  - {read: "7dtAM", full: "7dtAM", brief: "7"}
+  - {read: "6dnASMDEO", full: "6dn"}
+  - {read: "6dnSD", full: "6dnSD"}
+  - {read: "6dnDS", refused: '/"S"/'}
+  - {read: "6dnOA", refused: '/"A"/'}
+  - {read: "7dt", label: "7x7 Tricky"}
+  - {read: "7dtA", label: "7x7 Tricky, only addition"}
+  - {read: "7dtASMDE", label: "7x7 Tricky, no even-odd"}
+  - {read: "2de", refused: "Grid size must be at least 3."}
+  - {read: "10de", refused: "Grid size must be at most 9."}
+  - {read: "3de", refused: false}
+  - {read: "3dt", refused: false}
+  - {read: "3dn", refused: "No 3x3 puzzle is Normal."}
+  - {read: "3dr", refused: "No 3x3 puzzle is Unreasonable."}
+
+positions:
+  # Each row of corner clues printed after the wall line it sits on.
+  - id: "5de:u2c,cS1aS0bS0S3bS3aS2a"
+    text: |
+      +---+---+---+---+---+
+      | . | . | . | . | . |
+      +---+---+---+---+---+ . . . 1−
+      | . | . | . | . | . |
+      +---+---+---+---+---+ . = . .
+      | . | . | . | . | . |
+      +---+---+---+---+---+ = 3− . .
+      | . | . | . | . | . |
+      +---+---+---+---+---+ 3− . 2− .
+      | . | 2 | . | . | . |
+      +---+---+---+---+---+
+  # The board solved.
+  - id: "5de:u2c,cS1aS0bS0S3bS3aS2a"
+    solve: true
+    status: solved
+  # A second 2 beside the given breaks its row.
+  - id: "5de:u2c,cS1aS0bS0S3bS3aS2a"
+    moves: [{set: [22, 2]}]
+    breaks: [shape.0]
+  # A 1 and a 4 diagonally across the 1− clue at the top right break it.
+  - id: "5de:u2c,cS1aS0bS0S3bS3aS2a"
+    moves: [{set: [3, 1]}, {set: [9, 4]}]
+    breaks: [clue.difference]
+
+input:
+  # A number typed into the cell the cursor is on, and cleared by 0, as by
+  # Backspace; a number past the size does nothing.
+  - id: "5de:u2c,cS1aS0bS0S3bS3aS2a"
+    events:
+      - {key: right}
+      - {key: "3", holds: {values.1: 3}}
+      - {key: "6", holds: {values.1: 3}}
+      - {key: "0", holds: {values.1: 0}}
+
+wordings:
+  # A ÷ clue read against a number written across it, and against the
+  # numbers still open there.
+  - technique: clue
+    wording: 6
+    width: 4
+    ring: [5]
+    marks: {outline: [5, 10]}
+    terms: {at: 5, quotient: 3, placed: true, v: 2}
+    says: "The 3÷ clue means this cell and the 2 across it divide to give 3."
+  - technique: clue
+    wording: 6
+    width: 4
+    ring: [5]
+    marks: {outline: [5, 10]}
+    terms: {at: 5, quotient: 3, placed: false, v: 0}
+    struck: [1, 4]
+    says: "Nothing open across the 3÷ clue divides with 1 or 4 to give 3."

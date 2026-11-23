@@ -367,8 +367,7 @@ outline it draws, and check the two against each other.** `HintMarks` with
 cell may paint, so a game that traces its cell outline a pixel outside its
 clip rect leaves the band's outer row in nobody's tile. The symptom is marks
 that accumulate as the hint walks and clear on a reload. No recorded single
-frame shows it, so run the app. Exemplar:
-[`mathrax/render.ts`](../src/games/mathrax/render.ts).
+frame shows it, so run the app.
 
 ## Drag previews and blitters
 

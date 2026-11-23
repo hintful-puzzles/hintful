@@ -1,2 +1,2 @@
-6x7 Easy #0: 33 steps, solved, 80ce609ca2206f9a [overcount:3 strandSupport:4 three:3 undercount:18 unsupported:5]
+6x7 Easy #0: 33 steps, solved, fb819e7f60f36fef [overcount:2 strandSupport:5 three:3 undercount:17 unsupported:6]
 6x7 Unreasonable #0: 33 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., f5b1d59f45923d67 [overcount:1 strandSupport:2 three:5 undercount:16 unsupported:9]

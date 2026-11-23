@@ -136,6 +136,23 @@ describe("a clue at a slot in the desc", () => {
     expect(inTurn.flank).toBeGreaterThan(mixed.flank);
   });
 
+  it("hides the squares first at the lowest tier too, where it reads no sum while they all show", () => {
+    // Easy hiding sums as well: the squares alone finish the board, so a
+    // shortest run kept from the start of the order, where the squares are,
+    // leaves squares and no sum.
+    const { hideFrom: _, ...atEasy } = flanking.deal;
+    let given = 0;
+    let flank = 0;
+    for (const seed of ["a", "b", "c", "d", "e", "f"]) {
+      const p = params(5);
+      const b = game.newState(p, dealFill(flanking, atEasy, p, randomNew(seed)).desc);
+      given += b.dealt.given.at.length;
+      flank += b.dealt.flank.at.length;
+    }
+    expect(flank).toBeGreaterThan(0);
+    expect(given).toBeLessThan(flank);
+  });
+
   it("hides the squares whole below a tier on a small board, and keeps some elsewhere", () => {
     // Below the tier after Normal, which the fixture has none of: its Easy
     // finishes no board without a square, its `rest` reading one.

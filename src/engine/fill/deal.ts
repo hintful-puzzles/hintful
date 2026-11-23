@@ -354,22 +354,40 @@ export function dealFill<C extends Clues<C>>(
     return units.sort((a, b) => later(a) - later(b));
   };
   /**
-   * The shortest run from the start of `units` whose clues alone of the
+   * The shortest run from the end of `units` whose clues alone of the
    * hidden kinds tier `t` finishes the board with, found by halving: the
    * whole of them finishes it. A thorough hide tries each of the run after
    * it, as it would each of the whole: a board of 100 clues of which 15
    * stay is some 7 solves and 15, not 100 (Boats' 10x10, 2026-11-23).
+   *
+   * The end, since a hide in order drops the units it tries first: kept from
+   * the start, `deal.hideFirst`'s givens alone stayed, and a Mathrax Easy
+   * board showed no clue.
    */
   const shortestRun = (clues: C, units: readonly number[][], t: number): number[] => {
     let lo = 0;
     let hi = units.length;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
-      if (finishes(keeping(clues, units.slice(0, mid).flat().sort(byIndex)), t))
+      if (
+        finishes(
+          keeping(
+            clues,
+            units
+              .slice(units.length - mid)
+              .flat()
+              .sort(byIndex),
+          ),
+          t,
+        )
+      )
         hi = mid;
       else lo = mid + 1;
     }
-    return units.slice(0, hi).flat().sort(byIndex);
+    return units
+      .slice(units.length - hi)
+      .flat()
+      .sort(byIndex);
   };
   /**
    * The clues with each of `kind`'s that may go hidden: at the lowest tier,

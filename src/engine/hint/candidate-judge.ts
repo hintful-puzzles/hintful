@@ -43,8 +43,13 @@ export function candidateJudge<State, Move, H, Rung extends string>(
 ): MoveVerdict | null {
   const prefs = planPrefs(ui);
   const byRung = names as Readonly<Record<string, string>>;
-  const name = (rung: string): string | null =>
-    SETUP.has(rung) || !Object.hasOwn(byRung, rung) ? null : byRung[rung];
+  // The clean step strikes, across the board at once, what a placed value
+  // rules out: `dup`'s deduction, so a strike it makes is called by `dup`'s
+  // name, where a fresh walk from the player's notes takes it first.
+  const name = (rung: string): string | null => {
+    const as = rung === "clean" ? "dup" : rung;
+    return SETUP.has(as) || !Object.hasOwn(byRung, as) ? null : byRung[as];
+  };
   const shown = (state: State): CellMarks => {
     let read: CellMarks | null = null;
     buildSteps(state, {

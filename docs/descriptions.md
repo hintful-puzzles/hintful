@@ -53,7 +53,7 @@ itself is § "The file". A game whose techniques are stated:
    reads now (§ "Checking a technique sound").
 4. **Builds its ladder on the board's clues** with
    `describedLadder(module, dealt)`, or `latinLadder` where it places the
-   Latin library ([`mathrax/solver.ts`](../src/games/mathrax/solver.ts)).
+   Latin library ([`solo/solver.ts`](../src/games/solo/solver.ts)).
    The engine runs every technique on `dealt` where the module's
    `techniques` says it reads it, on placing and on striking too; a module
    none of whose techniques reads the clues takes `null`. The game names a
@@ -364,9 +364,9 @@ research tools all read through it; the app never does.
   `domino` painter draws two alike pieces touching only each other as one.
   `deal.hide` then takes a kind's clues off
   at the lowest tier, and then at the asked tier: first every clue no
-  firing's bindings read, then the shortest run of a random order the board
-  still finishes with, then each other in a random order while it still
-  finishes at that tier. A draw the lowest tier does not finish with every
+  firing's bindings read, then all but the shortest run from the end of a
+  random order the board still finishes with, then each other in a random
+  order while it still finishes at that tier. A draw the lowest tier does not finish with every
   clue is thrown away, since hiding at a higher tier costs more than drawing
   again, until a long run of them (a narrow board Easy seldom finishes):
   then one is hidden from at the lowest tier that finishes it. `deal.thorough` is the
