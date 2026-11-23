@@ -48,6 +48,14 @@ other game could use in principle, is what this replaces.
   key, is adoptable when `docs/descriptions.md` can say what it does
   without naming the game that first used it, and its code reads only the
   engine's vocabulary (the next bullet).
+- **A game's tests are data too (owner, 2026-11-23).** A game's directory
+  holds only what the engine's tests read: example IDs and params,
+  positions with the outcome expected, hint pins and planted defects. Every
+  assertion is the engine's, as a test of a capability on a small
+  description of its own, which is also the check that it is adoptable, or
+  as a cross-game guard that reads its games from what they declare. When
+  a game's test data needs branching or a loop, an engine check is
+  missing.
 
 - **Code is addressed to a concept, never to a game.** The test of a
   capability is that it reads only the engine's vocabulary: the board's

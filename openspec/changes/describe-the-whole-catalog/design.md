@@ -58,7 +58,8 @@ The owner had no preference (2026-11-23). This one weighs games moved
 against how ready the engine is:
 
 1. `measure-cost-by-instructions`, small, so that every group is measured
-   and judged the same way.
+   and judged the same way; then `a-game-is-tested-by-its-data`, so that
+   every group's flips move their tests into one format.
 2. Latin squares and candidate notes: the most games, a shared solver, and
    a start in `edge-clue-latin`.
 3. Regions and partitions, then lines and loops: both need answers that
@@ -91,6 +92,10 @@ As `born-plain-cell-family` did, with what the review of 2026-11-23 added:
   costs, and, for a group whose games stand alone (Cube, Twiddle,
   Untangle), to give them family. A group that already moves many games
   may skip it and says so.
+- **A flip moves the game's tests to data** (`docs/doctrine.md`, the
+  owner's decision of 2026-11-23), in the format
+  `a-game-is-tested-by-its-data` builds; a capability the group adds is
+  tested on a description of its own.
 - **No game stays hand-written.** A game that does not fit the group's
   shape gets the capability it needs, or moves to a later group that
   builds it.
