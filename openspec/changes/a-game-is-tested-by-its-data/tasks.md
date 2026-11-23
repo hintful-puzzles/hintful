@@ -135,18 +135,25 @@
                   (`fill/game-id.test.ts`, and `deal.test.ts`'s lines). Seen
                   to fail with a ruleset's `least`, the board's bounds, a
                   tier's bounds and the sampler's spacing each planted off.
-            - [ ] Next: the 25 left in `NO_FIXTURE_YET`, grouped by what
+            - [x] `washing`: `play.wash` and `play.plain`, on unshaded
+                  numbers counting the shaded squares beside them
+                  (`render.test.ts`): the wash drawn, the preference's
+                  crosses, a washed square read as crossed by the rules,
+                  and a plain number never faint nor a clue left. Seen to
+                  fail with the wash's bits, the preference, the rules'
+                  reading and (in the compiler, for the fixture alone)
+                  `plain` each planted off.
+            - [ ] Next: the 23 left in `NO_FIXTURE_YET`, grouped by what
                   one board can show: the deal's (`grow`, `hideFlag`,
                   `latin`, `leaves`, `never`, `oneIn`, `options`,
                   `stripFrom`, `symmetric`, `thorough`, `unpair`,
                   `withhold`, and `sample`'s `climb`, `dominoes`, `first`,
-                  `mend`, `picture`, `pieces`), play's (`plain`, `shape`,
-                  `tally`, `wash`), and `produces: links`,
-                  `space.grid.hexagon`, `space.regions`. A fleet-like
-                  fixture (`shape`, `tally`, `pieces`, `withhold`,
-                  `hideFlag`) and a lit one (`plain`, `wash`, `first`,
-                  `leaves`, `stripFrom`, `symmetric`, `options`) would each
-                  take several.
+                  `mend`, `picture`, `pieces`), play's (`shape`, `tally`),
+                  and `produces: links`, `space.grid.hexagon`,
+                  `space.regions`. A fleet-like fixture (`shape`, `tally`,
+                  `pieces`, `withhold`, `hideFlag`) and one of walls
+                  (`first`, `leaves`, `stripFrom`, `symmetric`, `options`)
+                  would each take several.
 
 ## 4. The born games
 

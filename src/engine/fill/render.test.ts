@@ -2,7 +2,7 @@
  * A fill game drawn by layers, on boards built by hand: what each layer puts
  * on the canvas, read from a recording. The painters and the labels are drawn
  * on fixtures, and a link, and the clues and errors a board's rules give, on
- * the `linking` one.
+ * the `linking` one. A wash and a number drawn plain are `washing`'s.
  */
 
 import { describe, expect, it } from "vitest";
@@ -10,6 +10,8 @@ import * as joining from "../../generated/engine/testing/fixtures/joining/joinin
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as painting from "../../generated/engine/testing/fixtures/painting/painting.compiled.ts";
 import * as playing from "../../generated/engine/testing/fixtures/playing/playing.compiled.ts";
+import * as washing from "../../generated/engine/testing/fixtures/washing/washing.compiled.ts";
+import { YELLOW_WASH } from "../color/colors.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import { PAINTERS } from "../render/pieces/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
@@ -17,7 +19,7 @@ import { clueList } from "../solve/describe-runtime.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.ts";
 import type { FillMistake } from "./answer.ts";
-import { type FillBoard, newBoard, spaceOf } from "./board.ts";
+import { type FillBoard, newBoard, spaceOf, washedValues } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
 import { fillGame } from "./game.ts";
 import { fillInput, newFillUi } from "./play.ts";
@@ -251,5 +253,89 @@ describe("each painter a description may name", () => {
     const telling = placed.filter((p) => PAINTERS[p.paint].given !== undefined);
     expect(telling.length).toBeGreaterThan(0);
     for (const p of telling) expect(frame(p.v, true)).not.toBe(frame(p.v, false));
+  });
+});
+
+describe("a wash, and a number drawn plain", () => {
+  // A 3x3 board with a 1 in the middle, counting the shaded squares beside it.
+  const N = 3;
+  const CORNER = 0;
+  const TOP = 1;
+  const MIDDLE = 4;
+  const SHADED = 1;
+  const CROSSED = 2;
+  const sp = spaceOf(washing, { w: N, h: N });
+  const clues: washing.Dealt = { number: clueList([MIDDLE], [1], N * N) };
+  const input = fillInput<washing.Dealt, { tileSize: number }>(
+    washing,
+    washing.play,
+    () => 1,
+  );
+  const render = fillRender(
+    washing,
+    { play: washing.play, lineClues: washing.lineClues },
+    input.previewed,
+  );
+  const palette = render.colors(DEFAULT_BACKGROUND);
+  const frame = (values: Record<number, number>, washedMarks = true) => {
+    const board = newBoard(washing, N, N, clues);
+    for (const [c, v] of Object.entries(values)) board.values[Number(c)] = v;
+    const dr = new RecordingDrawing(palette);
+    render.redraw(dr, render.newDrawState(board, TS), {
+      state: board,
+      prev: null,
+      dir: 1,
+      ui: { ...newFillUi(), washedMarks },
+      animTime: 0,
+      flash: NO_FLASH,
+    });
+    return dr.ops;
+  };
+  const washedTiles = (ops: readonly DrawOp[]) =>
+    ops.filter((o) => o.op === "rect" && palette[o.color] === YELLOW_WASH).length;
+
+  it("washes each open square beside a shaded one, and no other", () => {
+    expect(washedTiles(frame({}))).toBe(0);
+    // The top row's two corners, and the middle.
+    expect(washedTiles(frame({ [TOP]: SHADED }))).toBe(3);
+  });
+
+  it("draws a washed square's cross only where the preference says", () => {
+    const shown = (washedMarks: boolean) =>
+      JSON.stringify(frame({ [TOP]: SHADED, [CORNER]: CROSSED }, washedMarks)) !==
+      JSON.stringify(frame({ [TOP]: SHADED }, washedMarks));
+    expect(shown(true)).toBe(true);
+    expect(shown(false)).toBe(false);
+  });
+
+  it("reads an open washed square as crossed to the rules", () => {
+    // The answer, with the top row's corners, which the shaded square washes,
+    // left open.
+    const board = newBoard(washing, N, N, clues);
+    board.values.set([
+      0,
+      SHADED,
+      0,
+      CROSSED,
+      CROSSED,
+      CROSSED,
+      CROSSED,
+      CROSSED,
+      CROSSED,
+    ]);
+    expect(washing.isAnswer(washedValues(washing, board), sp, clues)).toBe(true);
+    expect(washing.isAnswer(board.values, sp, clues)).toBe(false);
+  });
+
+  it("never draws a plain number faint, and counts none as a clue left", () => {
+    const ink = (ops: readonly DrawOp[]) =>
+      ops.flatMap((o) => (o.op === "text" && o.text === "1" ? [o.color] : []));
+    const open = ink(frame({}));
+    expect(open).toHaveLength(1);
+    // Every square beside the 1 decided, and agreeing with it.
+    expect(ink(frame({ [TOP]: SHADED, 3: CROSSED, 5: CROSSED, 7: CROSSED }))).toEqual(
+      open,
+    );
+    expect(fillGame("washing", washing).statusbarText).toBeUndefined();
   });
 });

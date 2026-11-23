@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a board of shaded squares, none side by side, and
+# numbers on unshaded squares counting the shaded squares beside them, for
+# the fill renderer's tests of a wash over the squares a shaded one rules out
+# and of a number drawn plain, on a description that names no game.
+game: washing
+produces: shading
+sizes:
+  w: { min: 2 }
+  h: { min: 2 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  shaded(k): "count(p in adj4(k) where value(p) = 1)"
+  beside(c): "exists x in adj4(c): value(x) = 1"
+shape:
+  - "forall c in cells, x in adj4(c): not (value(c) = 1 and value(x) = 1)"
+clues:
+  # An unshaded square counting the shaded squares beside it.
+  number:
+    at: cell
+    value: "range(0, 4)"
+    means: "value(at) = 2 and count(p in adj4(at) where value(p) = 1) = v"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  blank: 2
+  # A number is drawn plain: never faint, and not counted as a clue left.
+  plain: [number]
+  # A square beside a shaded one is washed: it can hold none.
+  wash:
+    when: "beside(c)"
+    pref: { kw: show-washed-marks, name: Draw crosses on washed squares }
+  boards: [4x4]
+  hintMarks:
+    ring: the squares the step decides.
+    outline: the shaded square or number the step reasons from.
+deal:
+  answer: shaded squares at random, none side by side
+  number: some unshaded squares' counts
+  tier: the one tier
+  sample:
+    scatter: { value: 1, share: 0.25, apart: adj4 }
+    rest: 2
+tiers: [Easy]
+names:
+  beside: "no two shaded squares side by side"
+  met: "a number with all its shaded squares"
+techniques:
+  - id: beside
+    tier: Easy
+    for: "c in cells where value(c) = 1, x in adj4(c) where not known(x)"
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{c}" }
+      look: "no two shaded squares sit side by side"
+      move: "{ring: this square}, beside {outline: the outlined one}, must be crossed out"
+  - id: met
+    tier: Easy
+    for: >-
+      k in cells where clue(number, k) >= 0 and shaded(k) = clue(number, k),
+      x in adj4(k) where not known(x)
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{k}" }
+      look: "{outline: this number} already has all its shaded squares"
+      move: "{ring: this square} must be crossed out"
