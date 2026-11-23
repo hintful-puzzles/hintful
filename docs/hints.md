@@ -465,7 +465,7 @@ State the premise that discriminates this move from the others. Where two
 candidate moves both satisfy the stated premise, the sentence describes the
 wrong reason, even when the move is right: find the premise that separates
 them. Guard it by asserting the discriminating phrase present and the false
-one absent (`singles.test.ts`, the four matching numbers at a corner).
+one absent (`singles.cases.yaml`, the four matching numbers at a corner).
 
 Where one technique can be forced several ways, carry which. An "only one
 candidate is left" rung has candidates that died of unrelated causes (the

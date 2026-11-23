@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CURSOR_RIGHT, MOD_CTRL, MOD_NUM_KEYPAD, MOD_SHFT } from "../input/pointer.ts";
 import { fakeGame } from "./fake-game.ts";
 import { checkId, checkParams, checkPosition, parseGameCases } from "./game-cases.ts";
 
@@ -41,6 +42,29 @@ describe("a cases file, read", () => {
       read("positions:\n  - id: t3:g3-1\n    draws: {rect yellow-wash: 1}\n")
         .positions[0].draws,
     ).toEqual({ "rect yellow-wash": { exactly: 1 } });
+  });
+
+  it("reads an input event's key by name, and refuses one it cannot send", () => {
+    const [c] = read(
+      "values:\n  shaded: 1\ninput:\n  - id: a\n    events:\n      - {key: ctrl+right}\n      - {key: shift+pad 7}\n      - {key: '1'}\n      - {click: [2, 0], button: right, values: [shaded]}\n      - {press: margin}\n",
+    ).input;
+    expect(c.events.map((e) => e.event)).toEqual([
+      { key: "ctrl+right", button: MOD_CTRL | CURSOR_RIGHT },
+      { key: "shift+pad 7", button: MOD_SHFT | MOD_NUM_KEYPAD | 0x37 },
+      { key: "1", button: 0x31 },
+      { pointer: "click", right: true, at: [2, 0] },
+      { pointer: "press", right: false, at: "margin" },
+    ]);
+    expect(c.events[3].values).toEqual([1]);
+    expect(() =>
+      read("input:\n  - id: a\n    events:\n      - {key: alt+up}\n"),
+    ).toThrow(`${PATH}:4: input[0].events[0].key: no key "alt+up"`);
+    expect(() =>
+      read("input:\n  - id: a\n    events:\n      - {key: up, press: [0, 0]}\n"),
+    ).toThrow(`${PATH}:4: input[0].events[0] sends key and press at once`);
+    expect(() =>
+      read("input:\n  - id: a\n    events:\n      - {press: [0]}\n"),
+    ).toThrow(`${PATH}:4: input[0].events[0].press is not a cell, [x, y]`);
   });
 
   it("reads a value's name as its number in moves and in what a board holds", () => {

@@ -20,9 +20,8 @@
       and line. Verified by a reader test that fails first on a planted
       wrong expectation.
       (`game-cases.ts`, its test on the fake game; `born-game-cases.test.ts`
-      runs it; `npm run hint-scan` writes a cases file's pins. The
-      `input` section of design.md is still to add, with the first game
-      that needs it: Bricks, Singles, Sticks.)
+      runs it; `npm run hint-scan` writes a cases file's pins. `input`,
+      `input-cases.ts`, came with Singles.)
 - [ ] 2.2 The cross-game guards for each kind in 1.1 that has none,
       each reading its population from what the games declare. See each
       fail on a planted defect before trusting it (`docs/method.md`
@@ -82,10 +81,9 @@
       tally fixture may take). A position draws under `preferences`,
       `draws` names a collection color (`yellow-wash`) for a surface with
       no role, and `brings` is what its last move's placement rules out.
-      Left: Singles (the `input`
-      section, for its wrapping cursor; its hidden shaded number is a
-      position's `preferences`), Sticks and Bricks (`input` for keys,
-      drags and the hexagon's shear). `wordings` renders a technique's stated step from terms on
+      Singles (`input` for its wrapping cursor and the margin press; its
+      rungs on boards too small to load are its pins'). Left: Sticks and
+      Bricks (`input` for keys, drags and the hexagon's shear). `wordings` renders a technique's stated step from terms on
       the compiled module (`BornGame.compiled`), the pieces named as the
       hint names them (`pairPieces`); `draws` takes `any` for a piece in
       the game's own colors. A position's

@@ -34,6 +34,11 @@
  *   `circled` (the text inside each circle the hint draws), the frame drawn
  *   under the `preferences` given, and with the hint shown where it says
  *   `showHint`.
+ * - `input`: a game ID, `moves` played on it, the `cursor` it starts on,
+ *   and `events` sent in turn (`input-cases.ts`), each a `key` by name or a
+ *   `press`, `drag`, `release` or `click` at a cell or the `margin`, and
+ *   what holds once it is sent: `values`, `cursor`, `returns` and
+ *   `preferences`. An entry with no event says what holds as it stands.
  * - `wordings`: a technique's stated wording rendered from `terms`, on cells
  *   numbered on a grid `width` wide (`ring`, and `marks` by role), and what
  *   it `says`: for a wording no walk reaches.
@@ -73,6 +78,14 @@ import { describeAbsentTiers, describeDealtTiers } from "./absent-tiers.ts";
 import type { AnyGame } from "./enrollment.ts";
 import { everyAnswer } from "./every-answer.ts";
 import { describeHintPins, type HintKind } from "./hint-positions.ts";
+import {
+  checkInput,
+  type InputCase,
+  type InputEvent,
+  type InputStep,
+  keyButton,
+  POINTER,
+} from "./input-cases.ts";
 import type { DrawOp } from "./recording-drawing.ts";
 import { renderScenario } from "./render-scenario.ts";
 
@@ -208,6 +221,7 @@ export interface GameCases {
   readonly ids: readonly IdCase[];
   readonly params: readonly ParamsCase[];
   readonly positions: readonly PositionCase[];
+  readonly input: readonly InputCase[];
   readonly wordings: readonly WordingCase[];
 }
 
@@ -255,6 +269,7 @@ const SECTIONS = [
   "ids",
   "params",
   "positions",
+  "input",
   "wordings",
 ] as const;
 
@@ -451,7 +466,9 @@ export function parseGameCases(text: string, path: string): GameCases {
         continue;
       }
       const p = entries(node, `hint.pins.${kind}`, ["id", "moves"]);
-      const moves = items(p.get("moves"), `hint.pins.${kind}.moves`).map((m) => js(m));
+      const moves = items(p.get("moves"), `hint.pins.${kind}.moves`).map((m) =>
+        named(js(m), m),
+      );
       pins[kind] = { id: str(p.get("id"), `hint.pins.${kind}.id`), moves };
     }
     hint = {
@@ -661,7 +678,96 @@ export function parseGameCases(text: string, path: string): GameCases {
     },
   );
 
-  return { path, values, hint, tiers, ids, params, positions, wordings };
+  const cell = (node: unknown, where: string): [number, number] => {
+    const v = js(node);
+    if (!Array.isArray(v) || v.length !== 2 || !v.every(Number.isInteger))
+      return fail(node, `${where} is not a cell, [x, y]`);
+    return [v[0], v[1]];
+  };
+  const pointerKinds = Object.keys(POINTER) as (keyof typeof POINTER)[];
+  const input = items(top.get("input"), "input").map((node, i): InputCase => {
+    const where = `input[${i}]`;
+    const e = entries(node, where, ["id", "moves", "cursor", "events"]);
+    const events = items(e.get("events"), `${where}.events`).map((n, k): InputStep => {
+      const at = `${where}.events[${k}]`;
+      const s = entries(n, at, [
+        "key",
+        ...pointerKinds,
+        "button",
+        "values",
+        "cursor",
+        "returns",
+        "preferences",
+      ]);
+      const kinds = ["key", ...pointerKinds].filter((kind) => s.has(kind));
+      if (kinds.length > 1)
+        return fail(n, `${at} sends ${kinds.join(" and ")} at once`);
+      let event: InputEvent | null = null;
+      if (s.has("key")) {
+        const key = str(s.get("key"), `${at}.key`);
+        const button = keyButton(key);
+        if (button === null) return fail(s.get("key"), `${at}.key: no key "${key}"`);
+        event = { key, button };
+      } else if (kinds.length === 1) {
+        const kind = kinds[0] as keyof typeof POINTER;
+        const node = s.get(kind);
+        const button = opt(s.get("button"), (b) => str(b, `${at}.button`)) ?? "left";
+        if (button !== "left" && button !== "right")
+          return fail(s.get("button"), `${at}.button is not left or right`);
+        event = {
+          pointer: kind,
+          right: button === "right",
+          at: js(node) === "margin" ? "margin" : cell(node, `${at}.${kind}`),
+        };
+      }
+      const returns = opt(s.get("returns"), (r) => str(r, `${at}.returns`));
+      if (
+        returns !== null &&
+        returns !== "move" &&
+        returns !== "ui" &&
+        returns !== "none"
+      )
+        return fail(s.get("returns"), `${at}.returns is not move, ui or none`);
+      const preferences: Record<string, string | boolean | number> = {};
+      for (const [kw, p] of entries(s.get("preferences"), `${at}.preferences`, null)) {
+        const v = js(p);
+        if (typeof v !== "string" && typeof v !== "boolean" && typeof v !== "number")
+          return fail(
+            p,
+            `${at}.preferences.${kw} is not a word, number, or true or false`,
+          );
+        preferences[kw] = v;
+      }
+      const values = s.get("values");
+      const values_ = values === undefined ? undefined : named(js(values), values);
+      if (values_ !== undefined && !isNumbers(values_))
+        return fail(values, `${at}.values is not a list of values`);
+      return {
+        line: lineOf(n),
+        event,
+        ...(values_ === undefined ? {} : { values: values_ as number[] }),
+        ...(s.has("cursor")
+          ? {
+              cursor:
+                js(s.get("cursor")) === null
+                  ? null
+                  : cell(s.get("cursor"), `${at}.cursor`),
+            }
+          : {}),
+        ...(returns === null ? {} : { returns }),
+        ...(Object.keys(preferences).length === 0 ? {} : { preferences }),
+      };
+    });
+    return {
+      line: lineOf(node),
+      id: str(e.get("id"), `${where}.id`),
+      moves: items(e.get("moves"), `${where}.moves`).map((m) => named(js(m), m)),
+      cursor: opt(e.get("cursor"), (n) => cell(n, `${where}.cursor`)),
+      events,
+    };
+  });
+
+  return { path, values, hint, tiers, ids, params, positions, input, wordings };
 }
 
 /** What of a wording case the compiled module's words do not say. */
@@ -1050,6 +1156,7 @@ export function describeGameCases(
   );
   each("params", cases.params, (c) => c.read, checkParams);
   each("positions", cases.positions, (c) => c.id, checkPosition);
+  each("input", cases.input, (c) => c.id, checkInput);
   each(
     "wordings",
     cases.wordings,

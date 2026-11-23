@@ -51,8 +51,15 @@ naming the file and the line.
   `text`, `statusbar`, `mistakes` (the count Check & Save finds), the hint's
   first `step` or `steps` (rung, the cells and values set, a `says`
   pattern), and `draws`, a count of the ops of one shape and color.
-- `input`: an ID, a cursor, and events (a key by name, a press at a cell),
-  each with the cursor, the values, or the preference it leaves.
+- `input`: an ID, moves, the cell the cursor starts on (shown, as a key
+  leaves it), and events in turn: a `key` by name (`right`, `ctrl+right`,
+  `pad 7`, `1`), or a `press`, `drag`, `release` or `click` aimed at a
+  cell through the game's target geometry, or at the `margin` off the
+  grid. Each says what holds once it is sent: `values`, `cursor`,
+  `returns` (a `move`, `ui` or `none`) and `preferences`; an entry with no
+  event says what holds as it stands. The events go to `interpretMove`,
+  not through the midend, so a press lands where the game's geometry says
+  and a case reads what the game made of each event.
 - `wordings`: a technique's stated wording rendered from terms, and the
   sentence expected, for a wording no walk reaches.
 
