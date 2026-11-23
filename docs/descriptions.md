@@ -377,8 +377,13 @@ research tools all read through it; the app never does.
   tried in a random order, a draw out of budget divided again (`zoning` is
   the fixture). A domain that is a part's numbers, `range(1,
   |cells(P(c))|)`, is a board of numbers' only domain that differs by cell:
-  the keypad runs to the largest size drawn, and a square takes no number
-  past its own part's size. A clue kind `at:`
+  the keypad runs to the largest size drawn, or past it to the board in
+  play's largest part (a game ID from elsewhere, upstream's areas of six
+  where Seismic draws five), and a square takes no number past its own
+  part's size. A part past 31 squares, more values than a cell's mask
+  holds, is refused in a game ID. A square whose domain leaves one value is
+  placed at the deal (`FillBoard.fixed`), so a part of one shows its 1 and
+  no technique need say so. A clue kind `at:`
   such a region is a clue a part: derived where its `means` solves for `v`
   (`v = E`, one value, not each tried), `deal.oneKind` keeps one of its
   kinds a part, in turn and well before `poor` (`engine/fill/one-kind.ts`),

@@ -384,6 +384,64 @@ one, and Map last: a space whose cells are a partition's parts is a
 capability of its own, which the regions group may build first, and the
 successor says which.
 
+## The figures (3.1)
+
+Taken 2026-11-23 against `153e4cf43`, the change's baseline
+(`docs/descriptions.md` § "Judging a family moved onto its description").
+
+**1. Lines.** Each flip's hand-written TypeScript removed under
+`src/games/<g>/`, tests excluded, against what `src/engine/` and
+`src/describe/` gained net from the flip before it, tests and
+`engine/testing/` excluded (`git diff --numstat`):
+
+| Game | Removed | Engine net | Description |
+| --- | --- | --- | --- |
+| Unequal | 611 | +1,607 | 189 |
+| Adjacent | 535 | −1,581 | 194 |
+| Keen | 1,958 | +774 | 291 |
+| Towers | 2,103 | +795 | 310 |
+| Mathrax | 2,066 | +460 | 295 |
+| Seismic | 2,138 | +414 | 198 |
+| Family | 9,411 | +2,469 | 1,477 |
+
+Unequal adds more than it removes: it built the notes layer, the candidate
+walk from a description and the board of numbers, which every later game
+of the family stands on. Adjacent's flip deleted `engine/edge-clue-latin/`
+(§ 4). Across the family, 3.8 lines go for each one the engine gains.
+
+**2. Capabilities** are listed with their concepts in each flip's task.
+
+**4 and 5. Cost and steps**, `npm run compare-cost` (five rounds, four
+boards a menu board of at most 100 squares; baseline / working tree):
+
+| Game | Walk instructions | Deal instructions | Steps |
+| --- | --- | --- | --- |
+| Unequal | 8.02 / 8.63 G, +7.5% | 14.81 / 15.16 G, +2.4% | 2348 / 2367 |
+| Adjacent | 11.62 / 12.11 G, +4.2% | 13.45 / 85.25 G, +534% | 2001 / 2001 |
+| Keen | 15.68 / 17.89 G, +14.1% | 16.89 / 12.35 G, −26.8% | 3854 / 3854 |
+| Towers | 10.45 / 11.68 G, +11.7% | 13.88 / 17.81 G, +28.3% | 2627 / 2659 |
+| Mathrax | 9.21 / 11.66 G, +26.6% | 9.47 / 10.61 G, +12.0% | 2528 / 2522 |
+| Seismic | 9.33 / 7.56 G, −19.0% | 50.57 / 13.53 G, −73.3% | 3319 / 3174 |
+
+Each spread is under 1% but Keen's walk (±0.06 G). No walk comes near
+100 ms on a menu board. The deals, a preset at a time (six seeds, the
+least of two runs each, under vitest, which runs about 1.7 times the
+bundle's time), put four presets over the bar where the baseline was not:
+
+- Adjacent 5x5 Hard: 117 to 906 ms, median about 420, against 14 to 263,
+  median about 110. Every seed is past the bar.
+- Unequal 5x5 Tricky (tail 184 against 45), Unequal 7x7 Hard (233 against
+  86) and Towers 5x5 Hard (172 against 65), each in its slowest seed.
+
+Seismic's slow tails are gone (7x9 Tectonic Hard 37 ms against 1,387;
+6x8 Tectonic Hard 82 against 1,948). Keen and Mathrax are as they were.
+Unequal takes 19 more steps and Towers 32 more, which criterion 5 needs
+explained or fixed, and Seismic 145 fewer, which it needs explained.
+Tasks 3.1a and 3.1b hold what is open.
+
+**6. A new game** is skipped: this family moves six games, and the next
+group's first born game measures the kind.
+
 ## Open Questions
 
 - **Group's header drag, dividers and diagonal multifill** (for the

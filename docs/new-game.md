@@ -241,6 +241,12 @@ toward its tier, Light Up a value that washes cells,
 Sticks lines along an axis, Bricks a hexagon, Pattern a list clue to a
 line, Singles a Latin square's numbers, Boats a tally of pieces the
 params give, and Star Battle a size the params give beyond the grid's.
+A board of numbers the player notes candidates on is born too, its hint
+the candidate walk: Unequal (clues between squares), Adjacent (records
+flagged from both cells), Keen (a clue a dealt part), Towers (clues
+beyond each end of a line, values drawn raised), Mathrax (clues at
+corners) and Seismic (parts dealt to drawn sizes before the answer, a
+ruleset a bare letter).
 Its directory holds
 `<game>.description.yaml`, `<game>.plants.yaml` and `<game>.cases.yaml`,
 and no test code ([`testing.md`](./testing.md) § "What a new game ships").

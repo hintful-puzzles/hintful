@@ -14,7 +14,10 @@ shares are in [`hints.md`](./hints.md), and how a step is drawn is in
 
 A game born from its description whose board keeps notes writes none of
 this: the fill board does each step from the compiled module
-(`engine/fill/candidates.ts`, `docs/descriptions.md`).
+(`engine/fill/candidates.ts`, `docs/descriptions.md`). Its rungs are the
+walk's own, the Latin library's strikes its ladder places (each by the
+rung its reason names, a fish a `set`), and its own techniques', so a
+rung no firing of the game's could reach is never declared.
 
 What a hand-written game with notes does beyond the skeleton, in order. The file that does
 each of these the shared way is
