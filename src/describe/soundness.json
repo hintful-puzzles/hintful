@@ -33,6 +33,8 @@
   "src/engine/testing/fixtures/painting/painting.description.yaml#lineFull": "7fd7d5785c27b50a",
   "src/engine/testing/fixtures/pairing/pairing.description.yaml#quota": "ec7ba33c2483b4d4",
   "src/engine/testing/fixtures/pairing/pairing.description.yaml#threes": "b68339878f2d833d",
+  "src/engine/testing/fixtures/picturing/picturing.description.yaml#lineFull": "b60a39de15f7dedc",
+  "src/engine/testing/fixtures/picturing/picturing.description.yaml#lineMet": "e26375325f8f8f10",
   "src/engine/testing/fixtures/playing/playing.description.yaml#lineFull": "4080d828ef475260",
   "src/engine/testing/fixtures/playing/playing.description.yaml#lineMet": "5e32d78440b4840c",
   "src/engine/testing/fixtures/sizing/sizing.description.yaml#beside": "6e7c45701a7f011a",

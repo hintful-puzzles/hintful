@@ -10,7 +10,8 @@
  * on `climbing`, draws mended until no rule breaks and climbing toward the
  * tier, with dots alike side by side taken off; on `growing`, regions read
  * from walls and grown round dominoes sampled densely, some closed as
- * regions of their own. Upstream's game ID
+ * regions of their own; on `picturing`, an answer sampled as a picture.
+ * Upstream's game ID
  * grammar is each game's own cases' (`tents.cases.yaml`'s `ids` and
  * `params`).
  */
@@ -21,6 +22,7 @@ import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.comp
 import * as growing from "../../generated/engine/testing/fixtures/growing/growing.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
 import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
+import * as picturing from "../../generated/engine/testing/fixtures/picturing/picturing.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { newDealCensus, takingCensus } from "../contract/deal-census.ts";
@@ -31,7 +33,13 @@ import { partners } from "../testing/symmetry-partners.ts";
 import { newBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, encodeDesc, givenOf, partitionOf } from "./game-id.ts";
-import { sampleAnswer, sampleDominoes, sampleLines, samplePieces } from "./sample.ts";
+import {
+  sampleAnswer,
+  sampleDominoes,
+  sampleLines,
+  samplePicture,
+  samplePieces,
+} from "./sample.ts";
 
 const PIECE = 1;
 const SHADED = 1;
@@ -485,5 +493,84 @@ describe("a partition grown round dominoes, some closed as regions of their own"
     expect(growing.isAnswer(g("11211212"), small, read)).toBe(false);
     expect(growing.isAnswer(g("12212121"), small, read)).toBe(false);
     expect(growing.isAnswer(g("12121212"), small, read)).toBe(true);
+  });
+});
+
+describe("an answer sampled as a picture", () => {
+  /** The pictures drawn on a board of `w` by `h` from 200 seeds, and how
+   * many draws came to none. */
+  const drawn = (w: number, h: number) => {
+    const sp = spaceOf(picturing, { w, h });
+    const out: Uint8Array[] = [];
+    let none = 0;
+    for (let i = 0; i < 200; i++) {
+      const g = samplePicture(picturing.deal.sample, sp, randomNew(`pic-${i}`));
+      if (g === null) none++;
+      else out.push(g);
+    }
+    return { sp, pictures: out, none };
+  };
+  /** The share of the pairs of squares side by side, down the columns or
+   * along the rows, that hold the same value. */
+  const alike = (w: number, h: number, down: boolean): number => {
+    const { sp, pictures } = drawn(w, h);
+    let same = 0;
+    let all = 0;
+    for (const g of pictures)
+      for (const c of sp.cells) {
+        const d = down ? c + w : c % w < w - 1 ? c + 1 : -1;
+        if (d < 0 || d >= sp.cells.length) continue;
+        all++;
+        if (g[c] === g[d]) same++;
+      }
+    return same / all;
+  };
+
+  it("shades half the squares, cut at the median", () => {
+    for (const [w, h] of [
+      [10, 10],
+      [7, 5],
+    ]) {
+      const n = w * h;
+      for (const g of drawn(w, h).pictures)
+        expect([Math.floor(n / 2), Math.ceil(n / 2)]).toContain(
+          g.filter((v) => v === SHADED).length,
+        );
+    }
+  });
+
+  it("draws none where a row or column over two squares is all one value", () => {
+    const { sp, pictures, none } = drawn(7, 5);
+    expect(none).toBeGreaterThan(0);
+    const mixed = (cells: readonly number[], g: Uint8Array) =>
+      cells.some((c) => g[c] !== g[cells[0]]);
+    for (const g of pictures) {
+      for (let y = 0; y < sp.h; y++)
+        expect(
+          mixed(
+            sp.cells.filter((c) => Math.floor(c / sp.w) === y),
+            g,
+          ),
+        ).toBe(true);
+      for (let x = 0; x < sp.w; x++)
+        expect(
+          mixed(
+            sp.cells.filter((c) => c % sp.w === x),
+            g,
+          ),
+        ).toBe(true);
+    }
+  });
+
+  it("smooths the noise, so squares side by side are more often alike", () => {
+    // 0.72 down and across, 2026-11-23; unsmoothed noise is alike half the time.
+    expect(alike(10, 10, true)).toBeGreaterThan(0.6);
+    expect(alike(10, 10, false)).toBeGreaterThan(0.6);
+  });
+
+  it("smooths a side of two only along its length", () => {
+    // 0.68 down the columns and 0.44 across them, 2026-11-23.
+    expect(alike(2, 8, true)).toBeGreaterThan(0.6);
+    expect(alike(2, 8, false)).toBeLessThan(0.55);
   });
 });

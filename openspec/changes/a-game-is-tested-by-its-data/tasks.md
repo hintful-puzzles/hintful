@@ -192,8 +192,15 @@
                   off. "None closed without `closed`" is not tested: on these
                   techniques no board deals without one, and `smallest`
                   refuses a two-square region anyway.
-            - [ ] Next: the 6 left in `NO_FIXTURE_YET`: the deal's
-                  (`latin`, `oneIn`, `stripFrom`, `sample.picture`), and
+            - [x] `picturing`: `deal.sample.picture`, on a count on every
+                  line (`deal.test.ts`): half the squares shaded, no row or
+                  column over two all one value, squares side by side
+                  alike more often than not, and a side of two smoothed
+                  only along its length. Seen to fail with the smoothing,
+                  the median, the line check and the side of two each
+                  planted off.
+            - [ ] Next: the 5 left in `NO_FIXTURE_YET`: the deal's
+                  (`latin`, `oneIn`, `stripFrom`), and
                   `produces: links`, `space.grid.hexagon`. `deal.oneIn` is
                   Sticks' one number on each line, not the grown
                   partition's `closed.oneIn`. `stripFrom` changes only which
