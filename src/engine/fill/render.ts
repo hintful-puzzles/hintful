@@ -33,6 +33,8 @@ import {
   givenSurface,
   highlightWash,
   INK,
+  PENCIL_BODY,
+  pencilColor,
   playerEntryColor,
   surfaceGrid,
 } from "../color/palette.ts";
@@ -48,6 +50,14 @@ import type { Frame, GameDrawing } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
 import type { Color, Rect, Size } from "../contract/types.ts";
 import { regionFills } from "../generate/region-fill.ts";
+import {
+  drawCellBackground,
+  HIGHLIGHT_ENTRY,
+  HIGHLIGHT_NONE,
+  HIGHLIGHT_NOTES,
+  type NoteSlot,
+  noteGrid,
+} from "../mechanics/note-taking-cell.ts";
 import { drawRectCorners, drawThickRectOutline, glyphFont } from "../render/draw.ts";
 import { hatchPeriod } from "../render/hatch.ts";
 import {
@@ -58,8 +68,15 @@ import {
   type MarkBand,
   type MarkCell,
   MarkOutlines,
+  ringTextBox,
 } from "../render/hint-mark.ts";
 import { liveErrors } from "../render/live-errors.ts";
+import {
+  type PencilIndicatorStyle,
+  pencilIndicatorBox,
+  pencilIndicatorReach,
+  repaintPencilIndicator,
+} from "../render/pencil-indicator.ts";
 import {
   JOIN_DOWN,
   JOIN_LEFT,
@@ -75,7 +92,7 @@ import {
   walledBoxes,
   wallHalf,
 } from "../render/region-walls.ts";
-import { NOTHING_TO_CLEAR, textBox } from "../render/ring.ts";
+import { NOTHING_TO_CLEAR, type RingClear, textBox } from "../render/ring.ts";
 import { TileCache } from "../render/tile-cache.ts";
 import { sweepStep, type WinTone, winSlot } from "../render/win-wave.ts";
 import {
@@ -88,9 +105,9 @@ import {
 } from "../solve/describe-runtime.ts";
 import { answerOf, type FillMistake, rulesOf } from "./answer.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "./board.ts";
-import type { Edit } from "./edit.ts";
 import { tallyOf } from "./game-id.ts";
 import { type FillLink, LINK } from "./marks.ts";
+import type { FillMove } from "./notes.ts";
 import { numeral } from "./numbers.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import type { SearchedFillModule } from "./search.ts";
@@ -119,7 +136,7 @@ export interface FillLook<C> {
   readonly labels?: { readonly start?: (i: number) => string };
 }
 
-export type FillFrame<C> = Frame<FillBoard<C>, FillUi, Edit, unknown, FillMistake>;
+export type FillFrame<C> = Frame<FillBoard<C>, FillUi, FillMove, unknown, FillMistake>;
 
 export interface FillDrawState {
   readonly tileSize: number;
@@ -136,6 +153,9 @@ export interface FillDrawState {
   /** What the tally beneath the board shows found, `null` before it is
    * drawn. */
   readonly tally: { shown: string | null };
+  /** Whether the pencil-mode indicator shows, on a board that keeps notes:
+   * `null` before it is drawn. */
+  pencilModeShown: boolean | null;
 }
 
 export interface FillRender<C> {
@@ -216,6 +236,17 @@ const TONE_SHIFT = 21;
 const LINK_SHIFT = 23;
 /** The links from this cell found to be mistakes. */
 const BAD_LINK_SHIFT = 27;
+
+// --- the note word: a cell's notes, bit `v` a value's ----------------------
+/** The selection on the cell takes notes: bit 0, which no value's note is. */
+const NOTES_MODE = 1;
+
+/** The values a note word holds, least first. */
+const notesIn = (noteWord: number): number[] => {
+  const out: number[] = [];
+  for (let v = 1; v < 32; v++) if (noteWord & (1 << v)) out.push(v);
+  return out;
+};
 
 // --- the hint's word -------------------------------------------------------
 // The ring and outline sides (`MarkOutlines.packed`) in the low byte.
@@ -534,6 +565,16 @@ export function fillRender<C extends Clues<C>>(
   const typed = play.numbers !== undefined;
   const COL_HIGHLIGHT = play.wash !== undefined ? COL_WASH + 1 : COL_WASH;
   const COL_ENTRY = COL_HIGHLIGHT + 1;
+  /** On a board that keeps notes (`play.notes`), the notes and the pencil-mode
+   * indicator's body. */
+  const notes = play.notes === true;
+  const COL_PENCIL = COL_ENTRY + 1;
+  const COL_PENCIL_BODY = COL_ENTRY + 2;
+  const PENCIL_STYLE: PencilIndicatorStyle = {
+    background: COL_BACKGROUND,
+    body: COL_PENCIL_BODY,
+    ink: COL_GRID,
+  };
 
   /** The tiles before a board's lines its lists take, upstream pattern.c's
    * `TLBORDER`: a line of `d` holds at most about `d / 2` runs, which stack
@@ -558,9 +599,14 @@ export function fillRender<C extends Clues<C>>(
     return listOf(state.dealt, at.kind).v[at.k];
   };
   // Where a press off the grid shows the hidden numbers, the board keeps
-  // half a tile round it to press (upstream singles.c's BORDER).
+  // half a tile round it to press (upstream singles.c's BORDER); where it
+  // keeps notes, the pencil-mode indicator's room at its top right.
   const rim = (ts: number): number =>
-    play.hides === undefined ? 1 : Math.floor(ts / 2);
+    notes
+      ? Math.max(Math.floor(ts / 2), pencilIndicatorReach(ts))
+      : play.hides === undefined
+        ? 1
+        : Math.floor(ts / 2);
   const startAt = (ts: number, d: number): number =>
     labelStart !== undefined ? ts : d > 0 ? d * ts + Math.floor(ts / 4) : rim(ts);
   const start = (ts: number): number => startAt(ts, depth);
@@ -617,6 +663,10 @@ export function fillRender<C extends Clues<C>>(
     if (typed) {
       out[COL_HIGHLIGHT] = highlightWash(bg);
       out[COL_ENTRY] = playerEntryColor(bg);
+      if (notes) {
+        out[COL_PENCIL] = pencilColor(bg);
+        out[COL_PENCIL_BODY] = PENCIL_BODY;
+      }
     }
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
@@ -713,6 +763,9 @@ export function fillRender<C extends Clues<C>>(
     word: number,
     hintWord: number,
     lineWord: number,
+    // On a board that keeps notes, the cell's notes, bit `v` a value's, and
+    // `NOTES_MODE` where the selection takes notes.
+    noteWord: number,
     // The number on the cell, `-1` where it has none.
     n: number,
     // The cell's walls and fill, where the board deals a partition.
@@ -727,23 +780,26 @@ export function fillRender<C extends Clues<C>>(
     const tile = { x: tx, y: ty, w: ts, h: ts };
     const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
     const piece = v === 0 || lineWord & WASH_HIDES ? undefined : byValue.get(v);
-    // A board of numbers shows its selection as the note-taking cell's wash,
-    // where a board of buttons draws the cursor's corners.
-    const selected = typed && (word & CURSOR) !== 0;
+    // A board of numbers shows its selection as the note-taking cell's
+    // highlight, where a board of buttons draws the cursor's corners.
+    const highlight =
+      tone || !typed || (word & CURSOR) === 0
+        ? HIGHLIGHT_NONE
+        : noteWord & NOTES_MODE
+          ? HIGHLIGHT_NOTES
+          : HIGHLIGHT_ENTRY;
     const ground = tone
       ? winSlot(tone)
-      : selected
-        ? COL_HIGHLIGHT
-        : piece !== undefined && piece.painter.surface !== null
-          ? piece.slot[piece.painter.surface]
-          : word & FIXED
-            ? COL_GIVEN
-            : lineWord & WASHED
-              ? COL_WASH
-              : (part?.fill ?? COL_CELL);
+      : piece !== undefined && piece.painter.surface !== null
+        ? piece.slot[piece.painter.surface]
+        : word & FIXED
+          ? COL_GIVEN
+          : lineWord & WASHED
+            ? COL_WASH
+            : (part?.fill ?? COL_CELL);
     // Under the content, so the piece stays whole.
     const lay = (surface: Rect) => {
-      dr.drawRect(surface, ground);
+      drawCellBackground(dr, surface, highlight, COL_HIGHLIGHT, ground);
       if (hintWord & HINT_LINE) dr.drawHatch(surface, hatchPeriod(ts));
     };
 
@@ -790,6 +846,15 @@ export function fillRender<C extends Clues<C>>(
       const { origin, options } = numberText(ts, tx, ty);
       const ink = word & FIXED ? COL_INK : word & ERR_AT ? COL_ERROR : COL_ENTRY;
       dr.drawText(origin, options, ink, numeral(v));
+    }
+    // An open cell's notes, in a grid within it.
+    if (v === 0) {
+      const shown = notesIn(noteWord);
+      noteSlots(ts, [x, y, h], part?.walls ?? null, shown.length).forEach(
+        ({ origin, options }, j) => {
+          dr.drawText(origin, options, COL_PENCIL, numeral(shown[j]));
+        },
+      );
     }
     // A broken piece's badge takes the middle, where the dot would be.
     if (
@@ -924,6 +989,36 @@ export function fillRender<C extends Clues<C>>(
       inner: Math.max(2, ts >> 4),
     };
   };
+
+  /** The canvas a board `w` by `h` takes at tile size `ts`, with the tally of
+   * `counts` beneath it where it has one, its pieces as long as they are. */
+  const canvasOf = (
+    { w, h }: { readonly w: number; readonly h: number },
+    counts: readonly number[] | null,
+    ts: number,
+  ): Size => {
+    const from = startAt(ts, depthOf({ w, h }));
+    return {
+      w: Math.max(
+        from + end(ts) + ts * w + (hexagon ? ts >> 1 : 0),
+        counts === null ? 0 : from + Math.ceil(tallyAcross(counts, w) * ts),
+      ),
+      h:
+        from +
+        end(ts) +
+        ts * h +
+        (counts === null ? 0 : Math.ceil(tallyHeight(counts, w) * ts)),
+    };
+  };
+
+  /** Where `count` notes go in cell `(x, y)`, in order: the box a hint's
+   * ring goes round, so it encloses them all. */
+  const noteSlots = (
+    ts: number,
+    at: readonly [number, number, number],
+    walls: number | null,
+    count: number,
+  ): NoteSlot[] => noteGrid(ringTextBox(markBand(ts, at, walls)), count);
 
   /**
    * The ring round the link a step asks for, with the link inside it. Where
@@ -1163,6 +1258,88 @@ export function fillRender<C extends Clues<C>>(
     );
   }
 
+  /** The text cell `(x, y)` shows, for a hint's ring to keep inside it: on a
+   * board of numbers its numeral, or its notes; else the number written on
+   * it. */
+  function cellText(
+    b: FillBoard<C>,
+    ds: FillDrawState,
+    x: number,
+    y: number,
+  ): RingClear {
+    const { w, h } = b;
+    if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
+    const ts = ds.tileSize;
+    const at = y * w + x;
+    const text = numberText(ts, cellX(x, y, h, ts), coord(y, ts));
+    const enclosing = (enclose: RingClear["enclose"]): RingClear => ({
+      enclose,
+      avoid: [],
+    });
+    const v = b.values[at];
+    if (typed && v !== 0)
+      return enclosing([textBox(text.origin, text.options, numeral(v))]);
+    const noted = notesIn(b.pencil?.[at] ?? 0);
+    if (noted.length > 0)
+      return enclosing(
+        noteSlots(ts, [x, y, h], ds.parts?.walls[at] ?? null, noted.length).map(
+          ({ origin, options }, j) => textBox(origin, options, numeral(noted[j])),
+        ),
+      );
+    const n = numberAt(b, at);
+    if (n === null) return NOTHING_TO_CLEAR;
+    return enclosing([
+      textBox(text.origin, text.options, String(listOf(b.dealt, n.kind).v[n.k])),
+    ]);
+  }
+
+  /** Into the tile words `word`, the cells Check & Save found wrong, and the
+   * links as drawn on `shown`, both halves, those it found wrong in error. */
+  function addMistakesAndLinks(
+    word: Int32Array,
+    shown: FillBoard<C>,
+    mistakes: readonly FillMistake[],
+  ): void {
+    const { w, h } = shown;
+    const badLinks = new Set<number>();
+    for (const m of mistakes)
+      if (m.kind === "mark") badLinks.add(m.cell);
+      else word[m.cell] |= MISTAKE;
+    for (let c = 0; c < w * h; c++) {
+      const t = linkTo(shown, c);
+      const d = t < 0 ? -1 : dirTo(w, c, t);
+      if (d < 0) continue;
+      const bad = badLinks.has(c) ? 1 : 0;
+      word[c] |= (1 << (LINK_SHIFT + d)) | (bad << (BAD_LINK_SHIFT + d));
+      const back = (d + 2) % 4;
+      word[t] |= (1 << (LINK_SHIFT + back)) | (bad << (BAD_LINK_SHIFT + back));
+    }
+  }
+
+  /** Cell `i`'s note word: its notes, and `NOTES_MODE` where the selection,
+   * on it (`selected`), takes notes. */
+  const noteKey = (b: FillBoard<C>, i: number, selected: boolean, ui: FillUi): number =>
+    (b.pencil?.[i] ?? 0) | (selected && ui.pencilMode === true ? NOTES_MODE : 0);
+
+  /** The pencil-mode indicator, at the canvas's top right. */
+  function drawPencilMode(
+    dr: GameDrawing,
+    ds: FillDrawState,
+    b: FillBoard<C>,
+    ui: FillUi,
+  ): void {
+    const ts = ds.tileSize;
+    const counts =
+      tallied === null ? null : tallyCounts(b, tallied.kind, tallied.count);
+    repaintPencilIndicator(
+      dr,
+      ds,
+      ui.pencilMode === true,
+      pencilIndicatorBox(canvasOf(b, counts, ts), ts),
+      PENCIL_STYLE,
+    );
+  }
+
   function redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void {
     const { state, prev, animTime, ui, flash, hint, mistakes } = frame;
     const ts = ds.tileSize;
@@ -1217,20 +1394,7 @@ export function fillRender<C extends Clues<C>>(
     // The live errors, on the board as the drag would leave it.
     const { word, lineWord, lineErrors } = errorWords(state, shown);
 
-    // The links as drawn, both halves, and those Check & Save found wrong.
-    const badLinks = new Set<number>();
-    for (const m of mistakes ?? [])
-      if (m.kind === "value") word[m.cell] |= MISTAKE;
-      else badLinks.add(m.cell);
-    for (let c = 0; c < w * h; c++) {
-      const t = linkTo(shown, c);
-      const d = t < 0 ? -1 : dirTo(w, c, t);
-      if (d < 0) continue;
-      const bad = badLinks.has(c) ? 1 : 0;
-      word[c] |= (1 << (LINK_SHIFT + d)) | (bad << (BAD_LINK_SHIFT + d));
-      const back = (d + 2) % 4;
-      word[t] |= (1 << (LINK_SHIFT + back)) | (bad << (BAD_LINK_SHIFT + back));
-    }
+    addMistakesAndLinks(word, shown, mistakes ?? []);
 
     // The hint: a ring round each cell it decides, a link's two cells one pill
     // with the link inside, an outline round the cells it reasons from, the
@@ -1281,22 +1445,7 @@ export function fillRender<C extends Clues<C>>(
       band: (x, y) => markBand(ts, [x, y, h], ds.parts?.walls[y * w + x] ?? null),
       // A ring keeps its cell's number inside it and its neighbors' outside;
       // the line clues lie past any ring's reach.
-      text: (x, y) => {
-        if (x < 0 || y < 0 || x >= w || y >= h) return NOTHING_TO_CLEAR;
-        const n = numberAt(state, y * w + x);
-        if (n === null) return NOTHING_TO_CLEAR;
-        const text = numberText(ts, cellX(x, y, h, ts), coord(y, ts));
-        return {
-          enclose: [
-            textBox(
-              text.origin,
-              text.options,
-              String(listOf(state.dealt, n.kind).v[n.k]),
-            ),
-          ],
-          avoid: [],
-        };
-      },
+      text: (x, y) => cellText(state, ds, x, y),
       words: marks,
       evidenceColor: COL_HINT_OUTLINE,
       ...sides,
@@ -1346,13 +1495,19 @@ export function fillRender<C extends Clues<C>>(
         if (n >= 0 && shown.values[i] === play.hides?.value) lk |= NUMBER_UNDER;
         const part =
           parts === null ? null : { walls: parts.walls[i], fill: parts.fills[i] };
+        const nk = noteKey(shown, i, (k & CURSOR) !== 0, ui);
         // A growing piece is no key's: its tile is drawn every frame.
         if (before !== null && before[i] !== shown.values[i]) {
           ds.tiles.forget(i);
-          drawTile(dr, ts, [x, y, h], k, hk, lk, n, part, { from: before[i], frac });
-        } else if (ds.tiles.changed(i, k, hk, lk))
-          drawTile(dr, ts, [x, y, h], k, hk, lk, n, part);
+          drawTile(dr, ts, [x, y, h], k, hk, lk, nk, n, part, {
+            from: before[i],
+            frac,
+          });
+        } else if (ds.tiles.changed(i, k, hk, lk, nk))
+          drawTile(dr, ts, [x, y, h], k, hk, lk, nk, n, part);
       }
+
+    if (notes) drawPencilMode(dr, ds, state, ui);
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
     ds.marks.paint(dr, unlinked, area, markStyle);
@@ -1398,33 +1553,19 @@ export function fillRender<C extends Clues<C>>(
     origin: (ts, b) => startAt(ts, depthOf(b)),
     // A hexagon's rows reach half a tile past its width.
     computeSize: (p, size) => {
-      const { w, h } = p;
-      const ts = tileOf(size);
-      const from = startAt(ts, depthOf({ w, h }));
       const tally = module.deal?.tally;
-      // The tally beneath the board, its pieces as long as they are.
-      const counts = tally === undefined ? null : tallyOf(tally, p);
-      return {
-        w: Math.max(
-          from + end(ts) + ts * w + (hexagon ? ts >> 1 : 0),
-          counts === null ? 0 : from + Math.ceil(tallyAcross(counts, w) * ts),
-        ),
-        h:
-          from +
-          end(ts) +
-          ts * h +
-          (counts === null ? 0 : Math.ceil(tallyHeight(counts, w) * ts)),
-      };
+      return canvasOf(p, tally === undefined ? null : tallyOf(tally, p), tileOf(size));
     },
     colors,
     newDrawState: (b, tileSize) => ({
       tileSize: tileOf(tileSize),
       parts: partsOf(b),
-      tiles: new TileCache(b.w * b.h, { words: 3 }),
+      tiles: new TileCache(b.w * b.h, { words: 4 }),
       clues: new TileCache(b.w + b.h),
       lists: new TileCache(b.w + b.h),
       marks: new HintMarks(),
       tally: { shown: null },
+      pencilModeShown: null,
     }),
     redraw,
     numbersLeft,

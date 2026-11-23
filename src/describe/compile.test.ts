@@ -841,6 +841,25 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/`while` is the one cell mark's/);
   });
 
+  it("refuses candidate notes on a board of buttons, and notes of another domain", () => {
+    type Json = {
+      answer: { value: { domain: string } };
+      marks: Record<string, unknown>;
+    };
+    expect(() =>
+      compileTents((j: Json) => {
+        j.marks["cand"] = { sort: "cell", notation: `set of ${j.answer.value.domain}` };
+        return j;
+      }),
+    ).toThrow(/candidate notes are a board of numbers'/);
+    expect(() =>
+      compileTents((j: Json) => {
+        j.marks["cand"] = { sort: "cell", notation: "set of range(1, 9)" };
+        return j;
+      }),
+    ).toThrow(/a set of the answer's domain/);
+  });
+
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
     expect(() =>
       compileTents((j: { play: { secondary: number } }) => {

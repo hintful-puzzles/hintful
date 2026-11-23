@@ -2,12 +2,16 @@
  * How a fill board of numbers is played (`play.numbers`): its values are the
  * answer's domain, each typed into a selected cell by its key, the selection
  * being the note-taking cell's highlight (`mechanics/note-taking-cell.ts`),
- * as every game whose player types numbers into cells has it. Every move is
- * an `Edit`, as on a board of buttons (`play.ts`).
+ * as every game whose player types numbers into cells has it. Where the
+ * board keeps notes (`play.notes`), a right press selects a cell for notes,
+ * the Marks key switches typing to notes, and a value typed may strike
+ * itself from the notes it rules out (auto-pencil). A typed entry and a note
+ * are the note-taking cell's moves (`notes.ts`).
  */
 
 import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
 import type { KeyLabel, Point } from "../contract/types.ts";
+import { type CandidateMove, candidateGesture } from "../hint/candidate-hint.ts";
 import type { PointerAction } from "../input/hint-gesture.ts";
 import { digitKeyCode, digitKeys } from "../input/key-labels.ts";
 import {
@@ -17,6 +21,7 @@ import {
   isEraseKey,
   LEFT_BUTTON,
   moveCursor,
+  RIGHT_BUTTON,
   stripModifiers,
 } from "../input/pointer.ts";
 import { squareGrid } from "../input/target-verb.ts";
@@ -26,10 +31,11 @@ import {
   noteEntryGesture,
   pressNoteTakingCell,
   releaseHighlightAfterEntry,
+  toggleNoteTakingMode,
 } from "../mechanics/note-taking-cell.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
-import type { Edit } from "./edit.ts";
+import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
 import type { FillUi } from "./play.ts";
 
 /** The largest value a board of numbers on the space `sp` holds: the top of
@@ -40,12 +46,38 @@ function topValue<C>(module: FillModule<C>, sp: GridSpace): number {
   return 31 - Math.clz32(mask);
 }
 
-/** `ui` as a board of numbers keeps it: with the note-taking cell's fields,
- * which `newUi` gives it. */
-export function typedUi(ui: FillUi): FillUi & NoteTakingUi {
-  ui.pencilMode ??= false;
+/** `ui` as a board of numbers keeps it, which `newUi` gives it: the
+ * note-taking cell's fields, and where the board keeps notes (`notes`) its
+ * mode and preferences, as every game with notes starts them. */
+export function typedUi(ui: FillUi, notes: boolean): FillUi {
   ui.cursorFromKeyboard ??= false;
-  return ui as FillUi & NoteTakingUi;
+  if (notes) {
+    ui.pencilMode ??= false;
+    ui.pencilSticky ??= true;
+    ui.pencilKeepHighlight ??= true;
+    ui.autoPencil ??= false;
+  }
+  return ui;
+}
+
+/** The note-taking cell's view of `ui`. A board without notes is never in
+ * pencil mode and keeps no such field (`FillUi.pencilMode`), so its view
+ * reads the mode as off and drops a write to it. */
+function noteTaking(ui: FillUi): NoteTakingUi {
+  if (ui.pencilMode !== undefined) return ui as FillUi & NoteTakingUi;
+  return {
+    cursor: ui.cursor,
+    get pencilMode() {
+      return false;
+    },
+    set pencilMode(_on) {},
+    get cursorFromKeyboard() {
+      return ui.cursorFromKeyboard ?? false;
+    },
+    set cursorFromKeyboard(on) {
+      ui.cursorFromKeyboard = on;
+    },
+  };
 }
 
 /** The glyph value `v` is drawn and typed as: a digit, and past nine a
@@ -53,7 +85,7 @@ export function typedUi(ui: FillUi): FillUi & NoteTakingUi {
 export const numeral = (v: number): string => String.fromCharCode(digitKeyCode(v));
 
 /** A board of numbers' input: `interpretMove`, the keypad, and the taps and
- * keys that make an edit, which a hint's gesture shows. */
+ * keys that make a move, which a hint's gesture shows. */
 export interface NumberInput<C, D> {
   interpretMove(
     board: FillBoard<C>,
@@ -61,10 +93,10 @@ export interface NumberInput<C, D> {
     ds: D,
     p: Point,
     button: number,
-  ): Edit | UiUpdate | null;
+  ): CandidateMove | UiUpdate | null;
   /** A key a value, then the clear key, for a board of size `size`. */
   requestKeys(size: { w: number; h: number }): KeyLabel[];
-  gesture(board: FillBoard<C>, ui: FillUi, ds: D, edit: Edit): PointerAction[];
+  gesture(board: FillBoard<C>, ui: FillUi, ds: D, move: FillMove): PointerAction[];
 }
 
 export function numberInput<C, D extends { readonly tileSize: number }>(
@@ -72,36 +104,69 @@ export function numberInput<C, D extends { readonly tileSize: number }>(
   origin: (tileSize: number, board: FillBoard<C>) => number,
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin });
+  const notes = module.play?.notes === true;
   return {
     interpretMove(b, fillUi, ds, p, raw) {
-      const ui = typedUi(fillUi);
+      const ui = noteTaking(fillUi);
       const button = stripModifiers(raw);
       const at = geometry.pointerTarget(b, ds, p, ui);
-      // A press selects a cell the player may type into; a given is no such
-      // cell, and is not left highlighted.
-      if (button === LEFT_BUTTON && at !== null) {
-        const open = b.fixed[at.y * b.w + at.x] === 0;
-        pressNoteTakingCell(ui, button, at.x, at.y, { canEnter: open, canMark: false });
+      // A press selects a cell the player may type into, or with the right
+      // button one that may take notes: an open one, empty for notes. A given
+      // is neither, and is not left highlighted.
+      if (
+        at !== null &&
+        (button === LEFT_BUTTON || (notes && button === RIGHT_BUTTON))
+      ) {
+        const c = at.y * b.w + at.x;
+        const open = b.fixed[c] === 0;
+        pressNoteTakingCell(ui, button, at.x, at.y, {
+          canEnter: open,
+          canMark: notes && open && b.values[c] === 0,
+        });
         return UI_UPDATE;
       }
       if (isCursorMove(button)) {
         ui.cursorFromKeyboard = true;
         return moveCursor(ui.cursor, button, b.w, b.h) ? UI_UPDATE : null;
       }
+      if (notes) {
+        const toggled = toggleNoteTakingMode(ui, button);
+        if (toggled !== null) return toggled;
+      }
       if (!ui.cursor.visible) return null;
       const n = button === CURSOR_SELECT2 || isEraseKey(button) ? 0 : digitOf(button);
       if (n === null || n > topValue(module, spaceOf(module, b))) return null;
-      const c = ui.cursor.y * b.w + ui.cursor.x;
+      const { x, y } = ui.cursor;
+      const c = y * b.w + x;
       if (b.fixed[c]) return null;
-      if (b.values[c] === n) return noOpEntryResult(ui);
+      // A note goes on an empty cell alone.
+      if (ui.pencilMode && b.values[c] !== 0) return null;
+      const noted = b.pencil?.[c] ?? 0;
+      if ((!ui.pencilMode || n === 0) && b.values[c] === n && noted === 0)
+        return noOpEntryResult(ui);
+      const pencil = ui.pencilMode && n > 0;
       releaseHighlightAfterEntry(ui);
-      return { set: [c, n] };
+      return pencil
+        ? { type: "set", x, y, n, pencil }
+        : { type: "set", x, y, n, pencil, autoElim: fillUi.autoPencil ?? false };
     },
     requestKeys(size) {
       return digitKeys(topValue(module, spaceOf(module, size)));
     },
-    gesture(b, ui, ds, edit) {
-      const set = edit.set ?? [];
+    gesture(b, fillUi, ds, move) {
+      const ui = noteTaking(fillUi);
+      const pointAt = (x: number, y: number) =>
+        geometry.pointAt(b, ds, { x, y }, fillUi);
+      if (isCandidateMove(move))
+        return candidateGesture(
+          move,
+          ui,
+          pointAt,
+          digitKeyCode,
+          undefined,
+          markAll(module, b),
+        );
+      const set = move.set ?? [];
       const entries = [];
       for (let i = 0; i < set.length; i += 2) {
         const c = set[i];
@@ -112,11 +177,7 @@ export function numberInput<C, D extends { readonly tileSize: number }>(
           pencil: false,
         });
       }
-      return noteEntryGesture(
-        typedUi(ui),
-        (x, y) => geometry.pointAt(b, ds, { x, y }, ui),
-        entries,
-      );
+      return noteEntryGesture(ui, pointAt, entries);
     },
   };
 }

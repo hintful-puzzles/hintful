@@ -111,9 +111,10 @@ export type NoteMove =
   | { type: "pencilStrike" | "pencilAdd"; marks: readonly Mark[] };
 
 /**
- * Apply a {@link NoteMove} in place to a square board of order `w` whose empty
- * cells are `0` and whose notes are the default encoding (`valueBit`,
- * `valuesOneTo`). A game whose notes or emptiness differ keeps its own arms.
+ * Apply a {@link NoteMove} in place to a board of row stride `w` whose empty
+ * cells are `0` and whose note for value `n` is bit `n`: a fill-all writes
+ * {@link fillAllNotes}, every value `1..w` unless `enc` says otherwise. A game
+ * whose notes or emptiness differ keeps its own arms.
  *
  * `pencilAll` is **additive**: it fills only the empty cells with no notes yet
  * and never resets a narrowed one (`adaptiveMarkAll` states why).
@@ -123,11 +124,12 @@ export function applyNoteMove(
   grid: ArrayLike<number>,
   pencil: { [i: number]: number },
   w: number,
+  enc?: Pick<NoteEncoding, "values" | "all">,
 ): void {
   switch (move.type) {
     case "pencilAll": {
-      const all = valuesOneTo(w);
-      for (let i = 0; i < w * w; i++) if (!grid[i] && pencil[i] === 0) pencil[i] = all;
+      for (let i = 0; i < grid.length; i++)
+        if (!grid[i] && pencil[i] === 0) pencil[i] = fillAllNotes(i, w, enc);
       return;
     }
     case "pencilStrike":

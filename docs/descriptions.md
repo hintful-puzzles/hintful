@@ -230,8 +230,14 @@ research tools all read through it; the app never does.
   of `values` and the buttons makes the values the answer's domain, a line
   of numbers the board draws as numerals and the player types into a
   selected cell (`engine/fill/numbers.ts`), the keypad a key a value; its
-  domain must be the board's, the same at every cell. `deal.sample: {
-  latin: true }` draws a Latin square. `play.click: cycle` goes round
+  domain must be the board's, the same at every cell. A mark on the cells
+  whose notation is `set of` the answer's domain, with no `of` or `means`
+  (`cand: { sort: cell, notation: "set of range(1, w)" }`), is the player's
+  candidate notes: a board of numbers alone keeps them (`play.notes`,
+  `engine/fill/notes.ts`), as the shared note-taking cell's moves, so its
+  right press, Marks key, Mark-all, auto-pencil and the mistake check's
+  note half are every note-taking game's. `deal.sample: { latin: true }`
+  draws a Latin square. `play.click: cycle` goes round
   empty and both buttons' values. The right button rules out unless its
   value's painter is one of a pair of alike pieces (Unruly's disc), which
   is a placement and not a ruling out. `deal.sample` draws the answer: `build`, a random

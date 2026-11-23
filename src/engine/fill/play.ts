@@ -123,6 +123,9 @@ export interface FillPlay {
    * typed into a selected cell (`numbers.ts`): such a board has no `values`
    * and no buttons. */
   readonly numbers?: Readonly<Record<string, never>>;
+  /** Whether a board of numbers keeps the player's candidate notes, a set of
+   * values an open cell (`notes.ts`): the description's mark of them. */
+  readonly notes?: true;
   /** The values the player places, by the description's value. */
   readonly values?: Readonly<Record<number, PlayValue>>;
   /** The values only the deal places, a fixed cell's. */
@@ -196,12 +199,16 @@ export interface FillUi {
   /** The hiding preference (`FillPlay.hides`): whether a number shows on the
    * piece that hides it. */
   hiddenShown: boolean;
-  /** On a board of numbers alone (`numbers.ts`, `typedUi`), the note-taking
-   * cell's: whether typing writes a note, and whether the keyboard moved the
-   * highlight. A board of buttons has neither, since the app reads a `Ui`
-   * with a pencil mode as one that takes notes. */
-  pencilMode?: boolean;
+  /** On a board of numbers (`numbers.ts`, `typedUi`), whether the keyboard
+   * moved the note-taking cell's highlight. */
   cursorFromKeyboard?: boolean;
+  /** On a board of numbers that keeps notes alone, the note-taking cell's
+   * mode and preferences, and auto-pencil. Any other board has none, since
+   * the app reads a `Ui` with a pencil mode as one that takes notes. */
+  pencilMode?: boolean;
+  pencilSticky?: boolean;
+  pencilKeepHighlight?: boolean;
+  autoPencil?: boolean;
 }
 
 export function newFillUi(): FillUi {

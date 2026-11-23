@@ -37,7 +37,7 @@ import {
   spaceOf,
 } from "./board.ts";
 import { type DealtFillModule, dealFill } from "./deal.ts";
-import { applyEdit, type Edit, editOf } from "./edit.ts";
+import type { Edit } from "./edit.ts";
 import {
   type ClueMax,
   decodeDesc,
@@ -53,6 +53,13 @@ import {
   withThorough,
 } from "./game-id.ts";
 import { type FillHint, type FillHintModule, fillHint, linkedCell } from "./hint.ts";
+import {
+  applyMove,
+  type FillMove,
+  fillMoveOf,
+  isCandidateMove,
+  markAll,
+} from "./notes.ts";
 import { type NumberInput, numberInput, numeral, typedUi } from "./numbers.ts";
 import {
   type FillInput,
@@ -117,7 +124,7 @@ const isBoard = (p: FillParams, b: Board): boolean =>
 export type FillGame<C> = Game<
   FillParams,
   FillBoard<C>,
-  Edit,
+  FillMove,
   FillUi,
   FillDrawState,
   FillMistake,
@@ -280,6 +287,7 @@ export function fillGame<C extends Clues<C> & object>(
               boardSizeOf(module, p),
             ),
         };
+  const notes = play.notes === true;
   const { hint, rulesOut } = fillHint(module);
   // The values whose piece grows when placed.
   const growing = new Set(
@@ -307,7 +315,7 @@ export function fillGame<C extends Clues<C> & object>(
     newDesc: (p, rs) => dealFill(module, deal, p, rs),
     newState,
     newUi: (b) => {
-      const ui = typed === null ? newFillUi() : typedUi(newFillUi());
+      const ui = typed === null ? newFillUi() : typedUi(newFillUi(), notes);
       // A hexagon's store has no cell at its top left; the cursor starts on
       // the first that is the board's.
       if (module.hexagon !== undefined)
@@ -319,7 +327,24 @@ export function fillGame<C extends Clues<C> & object>(
     },
 
     ...inputs,
-    executeMove: (b, m) => applyEdit(module, b, editOf(m, `${id}: executeMove`)),
+    executeMove: (b, m) => applyMove(module, b, fillMoveOf(m, `${id}: executeMove`)),
+    ...(!notes
+      ? {}
+      : {
+          markAll: (b: FillBoard<C>) => markAll(module, b),
+          // A cell selected for notes takes none once a value is on it,
+          // unless the keyboard holds the highlight there.
+          changedState: (ui: FillUi, _old: FillBoard<C> | null, b: FillBoard<C>) => {
+            const { cursor } = ui;
+            if (
+              cursor.visible &&
+              ui.pencilMode === true &&
+              ui.cursorFromKeyboard !== true &&
+              b.values[cursor.y * b.w + cursor.x] !== 0
+            )
+              cursor.visible = false;
+          },
+        }),
     status: (b) => status(module, reading, b),
 
     solve: (orig, curr, aux) => solve(module, orig, curr, aux),
@@ -354,17 +379,20 @@ export function fillGame<C extends Clues<C> & object>(
     hint: {
       ...hint,
       marks: { roles: module.hintMarks },
-      gesture: (b, ui, ds, move, step) =>
-        typed !== null
-          ? typed.gesture(b, ui, ds, move)
-          : buttonGesture(
-              buttons as FillInput<C, FillDrawState>,
-              b,
-              ui,
-              ds,
-              move,
-              step,
-            ),
+      gesture: (b, ui, ds, move, step) => {
+        if (typed !== null) return typed.gesture(b, ui, ds, move);
+        // A board of buttons makes edits alone.
+        if (isCandidateMove(move))
+          throw new Error(`${id}: no gesture for ${JSON.stringify(move)}`);
+        return buttonGesture(
+          buttons as FillInput<C, FillDrawState>,
+          b,
+          ui,
+          ds,
+          move,
+          step,
+        );
+      },
     },
 
     colors: render.colors,
@@ -397,7 +425,7 @@ export function fillGame<C extends Clues<C> & object>(
     ui: FillUi,
     ds: FillDrawState,
     move: Edit,
-    step: HintStep<Edit, FillHint, string>,
+    step: HintStep<FillMove, FillHint, string>,
   ): PointerAction[] {
     const { geometry } = input.targetVerbs;
     const at = (c: number) =>
@@ -421,7 +449,7 @@ export function fillGame<C extends Clues<C> & object>(
       ...verbClicks(
         input.targetVerbs,
         {
-          executeMove: (s, m) => applyEdit(module, s, m),
+          executeMove: (s, m) => applyMove(module, s, m),
           keepTrack: hint.keepTrack,
         },
         b,

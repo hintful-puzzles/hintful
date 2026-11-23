@@ -1025,6 +1025,31 @@ export function cellMarkOf(
   return { name, kind, means: m.means as string };
 }
 
+/**
+ * The player's candidate notes, where the description keeps them: a mark on
+ * the answer's elements that is a set of its domain and says nothing of the
+ * answer itself (no `of`, no `means`), read only by the player and the hint.
+ * Its name, or `null`.
+ */
+export function noteMarkOf(json: DescriptionJson): string | null {
+  const read = Object.entries(json.marks ?? {}).filter(
+    ([, m]) =>
+      m.sort === json.answer.value.sort &&
+      m.of === undefined &&
+      m.means === undefined &&
+      m.notation.startsWith("set of "),
+  );
+  if (read.length > 1)
+    throw new Error(`${json.game}: one mark of candidate notes, not ${read.length}`);
+  if (read.length === 0) return null;
+  const [name, m] = read[0];
+  if (m.notation !== `set of ${json.answer.value.domain}`)
+    throw new Error(
+      `${name}: candidate notes are a set of the answer's domain, ${json.answer.value.domain}`,
+    );
+  return name;
+}
+
 /** A planning game's description: a position and its moves. */
 export function isPlanning(file: DescriptionFile): file is PlanningJson {
   return "position" in file;

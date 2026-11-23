@@ -2,9 +2,9 @@
 
 # A fixture, not a game: a Latin square, some of its squares given, for the
 # fill engine's tests of a value drawn as its number and typed into a
-# selected square (`play.numbers`), givens compiled from `given:`, an answer
-# sampled as a Latin square, and the Latin library on the fill ladder, on a
-# description that names no game.
+# selected square (`play.numbers`), the player's candidate notes (`marks:`),
+# givens compiled from `given:`, an answer sampled as a Latin square, and the
+# Latin library on the fill ladder, on a description that names no game.
 game: squaring
 produces: latin
 sizes:
@@ -15,6 +15,8 @@ space:
 answer:
   value: { sort: cell, domain: "range(1, w)" }
 given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
 shape:
   - "latin(value, lines)"
 freedom: { kind: fill }

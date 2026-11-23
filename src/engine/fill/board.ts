@@ -136,6 +136,10 @@ export interface FillBoard<C> {
   readonly fixed: Uint8Array;
   /** The element each cell's mark names, `-1` where it has none. */
   readonly mark: Int32Array;
+  /** Each open cell's candidate notes, bit `v` for value `v`, where the board
+   * keeps them (`play.notes`, `notes.ts`); `null` where it keeps none. The
+   * ladder never reads them. */
+  readonly pencil: Int32Array | null;
 }
 
 /** The space a board of `module`'s is read on. */
@@ -186,15 +190,17 @@ export function newBoard<C>(
     values,
     fixed,
     mark: new Int32Array(w * h).fill(-1),
+    pencil: module.play?.notes === true ? new Int32Array(w * h) : null,
   };
 }
 
-/** The board as dealt: its fixed cells alone, and no marks. */
+/** The board as dealt: its fixed cells alone, and no marks or notes. */
 export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
   return {
     ...board,
     values: Uint8Array.from(board.values, (v, c) => (board.fixed[c] ? v : 0)),
     mark: new Int32Array(board.mark.length).fill(-1),
+    pencil: board.pencil === null ? null : new Int32Array(board.pencil.length),
   };
 }
 

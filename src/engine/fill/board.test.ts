@@ -22,6 +22,7 @@ import { newBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { applyEdit } from "./edit.ts";
 import { decodeDesc } from "./game-id.ts";
+import { applyMove } from "./notes.ts";
 
 const PIECE = 1;
 const EMPTY = 2;
@@ -137,7 +138,7 @@ describe("the fill board", () => {
     const played = applyEdit(linking, board, { set: [wrong, PIECE, right, PIECE] });
     expect(findMistakes(linking, played)).toEqual([{ cell: wrong, kind: "value" }]);
     const [clear] = clearMistakes(played, findMistakes(linking, played));
-    const cleared = applyEdit(linking, played, clear);
+    const cleared = applyMove(linking, played, clear);
     expect(cleared.values[wrong]).toBe(0);
     expect(findMistakes(linking, cleared)).toEqual([]);
     // Revealing a cell at a time reaches the answer, each a cell made right.

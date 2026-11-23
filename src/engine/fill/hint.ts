@@ -38,8 +38,8 @@ import {
   marksOf,
   solveBoard,
 } from "./board.ts";
-import { applyEdit, type Edit } from "./edit.ts";
 import { type FillLink, LINK } from "./marks.ts";
+import { applyMove, type FillMove } from "./notes.ts";
 import type { FillPlay } from "./play.ts";
 
 /** A square a step decides, and the value it asks; or, as a `mark`, the
@@ -75,7 +75,7 @@ export interface FillHintModule<C> extends LadderedFillModule<C> {
 /** A fill game's `Game.hint`, but for its legend of marks, its gesture, and
  * what a placement rules out where the description says. */
 export interface FillHintHooks<C>
-  extends FiringHintParts<FillBoard<C>, Edit, FillHint, string> {
+  extends FiringHintParts<FillBoard<C>, FillMove, FillHint, string> {
   readonly rungs: readonly string[];
 }
 
@@ -108,7 +108,7 @@ export function pairPieces(
 
 export function fillHint<C extends object>(
   module: FillHintModule<C>,
-): { hint: FillHintHooks<C>; rulesOut?: RulesOut<FillBoard<C>, Edit> } {
+): { hint: FillHintHooks<C>; rulesOut?: RulesOut<FillBoard<C>, FillMove> } {
   const links = module.play?.links;
   const pieces = pairPieces(module.play);
   // A board's tier is its deal's, which no move changes: every board of one
@@ -127,7 +127,7 @@ export function fillHint<C extends object>(
 
   const described = describedFiringHint<
     FillBoard<C>,
-    Edit,
+    FillMove,
     FillTarget,
     Record<string, never>,
     string
@@ -187,8 +187,9 @@ export function fillHint<C extends object>(
     width: (b) => b.w,
     size: (b) => b.values.length,
     valueAt: (b, c) => b.values[c],
-    execute: (b, m) => applyEdit(module, b, m),
-    // Every move is an edit, and one the step does not ask for is judged off.
+    execute: (b, m) => applyMove(module, b, m),
+    // Every move may be part of a step: one that sets no value the step asks
+    // for, a note's, is judged off by what it changed.
     foreign: () => false,
     target: (at, n) => ({ ...at, value: n }),
     want: (t) => t.value,

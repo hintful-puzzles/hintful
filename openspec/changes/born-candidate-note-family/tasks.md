@@ -44,14 +44,22 @@ commit. In design.md § "Decisions" 7's order.
         a library firing (`use: latin.*`, whose words are the library's), so
         the Latin library on the ladder goes with the candidate walk, 2.1c.
         The right button and the Marks key do nothing until 2.1b.
-  - [ ] 2.1b Notes on `FillBoard` and the note edits (§ 1): the note grid
+  - [x] 2.1b Notes on `FillBoard` and the note edits (§ 1): the note grid
         drawn in an open cell, the right press and the Marks key, pencil
         and sticky pencil, auto-pencil on a placement, Mark-all, and the
-        note half of the mistake check.
+        note half of the mistake check. Built as `engine/fill/notes.ts`
+        (`FillMove`, `applyMove`, `markAll`), `board.pencil`, the notes-mode
+        corner and the pencil-mode indicator; `applyNoteMove` takes a
+        `NoteEncoding` for a fill-all that is not `1..w`. `squaring` keeps
+        `cand`. The Ui's note fields start as every note game's (sticky on,
+        keep-highlight on, auto-pencil off); their prefs are 2.1c's.
   - [ ] 2.1c The candidate walk built from the compiled module (§ 2), the
         Latin library on the fill ladder (`ladderOf` passes
         `LATIN_LIBRARY`), and the four prefs with the reading's default
-        declared; `squaring` then places `latin.*`.
+        declared; `squaring` then places `latin.*`. The walk's reach
+        replaces `notes.ts`'s `reachOf` (the units' peers) for auto-pencil
+        and Mark-all's clean (design.md § "Decisions" 1). A step's struck
+        notes are drawn struck in the cell (`render.ts`'s note grid).
 - [ ] 2.2 Unequal born: clues at edges, a gapped grid, the chevron painter,
       done marks on a clue, the cell-records segment, `order` renamed `w`,
       the alphabet past 9, the deal hiding from every clue (§ 5).

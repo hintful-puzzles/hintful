@@ -33,6 +33,7 @@ import { game as lightupGame } from "../../generated/games/lightup/lightup.game.
 import { NAMES as UNRULY_NAMES } from "../../generated/games/unruly/unruly.compiled.ts";
 import { game as unrulyGame } from "../../generated/games/unruly/unruly.game.ts";
 import { D, dirX, dirY, L, R, U } from "../board/square-edges.ts";
+import { editOf } from "../fill/edit.ts";
 import type { FillParams } from "../fill/game-id.ts";
 import { randomNew } from "../random/index.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
@@ -192,7 +193,7 @@ describe("judgeMove", () => {
     if (!res?.ok) throw new Error("no hint");
     const marked = lightupGame.executeMove(state, res.steps[0].move);
     // Each square the step set, emptied again.
-    const set = res.steps[0].move.set ?? [];
+    const set = editOf(res.steps[0].move, "a Light Up step").set ?? [];
     const unmarked = lightupGame.executeMove(marked, {
       set: set.map((x, k) => (k % 2 === 0 ? x : 0)),
     });

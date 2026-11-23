@@ -26,6 +26,7 @@ import {
   type GrowJson,
   growOf,
   type IdSegmentJson,
+  noteMarkOf,
   type OptionJson,
   optionsOf,
   type PlayJson,
@@ -205,8 +206,15 @@ export function playOf(
   for (const id of askBefore ?? [])
     if (glance?.includes(id))
       throw new CompileError(`play askBefore: ${id} is read at a glance`);
+  // Notes are typed, a key a value, so only a board of numbers keeps them.
+  const notes = noteMarkOf(json) !== null;
+  if (notes && p.numbers === undefined)
+    throw new CompileError(
+      "marks: candidate notes are a board of numbers', and play has no `numbers`",
+    );
   const plainPlay = {
     ...rest,
+    ...(notes ? { notes } : {}),
     ...(dotted ? { dotted } : {}),
     ...(wash === undefined
       ? {}

@@ -11,6 +11,7 @@ import { PUZZLE_NOT_REASONABLE } from "../contract/hint-refusal.ts";
 import type { RulesOf } from "../contract/rules.ts";
 import { NO_SOLUTION } from "../contract/solve-failure.ts";
 import type { GameStatus } from "../contract/types.ts";
+import { entryMistake } from "../hint/entry-mistakes.ts";
 import { type Answer, answerCache, solveFromAnswer } from "../solve/answer-search.ts";
 import {
   clueAt,
@@ -31,13 +32,14 @@ import {
   washedValues,
 } from "./board.ts";
 import type { Edit } from "./edit.ts";
+import type { FillMove } from "./notes.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
 
-/** A cell the player's board holds against the answer: its value, or the
- * mark on it. */
+/** A cell the player's board holds against the answer: its value, the mark
+ * on it, or its notes, which leave the answer out. */
 export interface FillMistake {
   readonly cell: number;
-  readonly kind: "value" | "mark";
+  readonly kind: "value" | "mark" | "note";
 }
 
 /** What the answer is judged with that the compiled module does not say. */
@@ -175,7 +177,7 @@ export function findMistakes<C>(
     if (board.values[c] !== 0 && board.values[c] !== answer[c])
       out.push({ cell: c, kind: "value" });
   const { marksHold } = module;
-  if (marksHold === undefined) return out;
+  if (marksHold === undefined) return [...out, ...noteMistakes(board, answer)];
   const sp = spaceOf(module, board);
   const kept = new Int32Array(board.mark.length).fill(-1);
   for (let c = 0; c < kept.length; c++) {
@@ -186,21 +188,43 @@ export function findMistakes<C>(
       out.push({ cell: c, kind: "mark" });
     }
   }
+  return [...out, ...noteMistakes(board, answer)];
+}
+
+/** Each open cell whose notes leave out its answer: a note set the hint would
+ * reason from falsely (`entryMistake`). */
+function noteMistakes<C>(board: FillBoard<C>, answer: Uint8Array): FillMistake[] {
+  const notes = board.pencil;
+  if (notes === null) return [];
+  const read = { answer, entry: board.values, notes };
+  const out: FillMistake[] = [];
+  for (let c = 0; c < answer.length; c++)
+    if (!board.fixed[c] && entryMistake(read, c) === "note")
+      out.push({ cell: c, kind: "note" });
   return out;
 }
 
-/** One edit: each mistaken mark cleared, and each mistaken cell emptied. */
+/** One edit, each mistaken mark cleared and each mistaken cell emptied, then
+ * each cell whose notes leave out its answer cleared of them. */
 export function clearMistakes<C>(
-  _board: FillBoard<C>,
+  board: FillBoard<C>,
   mistakes: readonly FillMistake[],
-): readonly Edit[] {
-  if (mistakes.length === 0) return [];
+): readonly FillMove[] {
   const set: number[] = [];
   const mark: number[] = [];
+  const notes: FillMove[] = [];
   for (const m of mistakes)
     if (m.kind === "value") set.push(m.cell, 0);
-    else mark.push(m.cell, -1);
-  return [{ set, mark }];
+    else if (m.kind === "mark") mark.push(m.cell, -1);
+    else
+      notes.push({
+        type: "set",
+        x: m.cell % board.w,
+        y: Math.floor(m.cell / board.w),
+        n: 0,
+        pencil: true,
+      });
+  return [...(set.length + mark.length > 0 ? [{ set, mark }] : []), ...notes];
 }
 
 /** The first cell in reading order whose value is not the solved board's,

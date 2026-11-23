@@ -1690,7 +1690,9 @@ Exemplar: `keen/index.ts`.
   cell. See [`hints-candidates.md`](./hints-candidates.md) § "Two readings
   of an unmarked cell".
 - **A Latin game's `executeMove` routes the three note moves to
-  `applyNoteMove`** and does not restate the bit arithmetic.
+  `applyNoteMove`** and does not restate the bit arithmetic. A board whose
+  fill-all is not every value `1..w` passes the `NoteEncoding` that says
+  what it is (the fill board's, each cell's domain).
   `CandidateMoveAdapter.add` builds `pencilAdd`, the mirror of
   `pencilStrike`.
 

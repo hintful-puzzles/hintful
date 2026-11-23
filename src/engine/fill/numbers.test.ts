@@ -8,12 +8,13 @@
 import { describe, expect, it } from "vitest";
 import * as squaring from "../../generated/engine/testing/fixtures/squaring/squaring.compiled.ts";
 import { UI_UPDATE } from "../contract/game.ts";
-import { BACKSPACE, LEFT_BUTTON, RIGHT_BUTTON } from "../input/pointer.ts";
+import { BACKSPACE, LEFT_BUTTON } from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { editOf } from "./edit.ts";
 import { fillGame } from "./game.ts";
 import { encodeDesc } from "./game-id.ts";
 import { numberInput } from "./numbers.ts";
@@ -76,7 +77,7 @@ describe("a board of numbers' deal", () => {
     expect(isLatin(solved.values, 4)).toBe(true);
     const plan = game.hint.plan(b, undefined, game.newUi(b));
     if (!("steps" in plan)) throw new Error(`no plan: ${JSON.stringify(plan)}`);
-    const [c, v] = plan.steps[0].move.set ?? [];
+    const [c, v] = editOf(plan.steps[0].move, "a squaring step").set ?? [];
     expect(v).toBe(solved.values[c]);
   });
 });
@@ -91,10 +92,19 @@ describe("a board of numbers' input", () => {
   const open = [...board.fixed].indexOf(0);
   const given = [...board.fixed].indexOf(1);
   const select = (c: number): FillUi => {
-    const ui = newFillUi();
+    const ui = game.newUi(board);
     expect(input.interpretMove(board, ui, ds, at(c), LEFT_BUTTON)).toBe(UI_UPDATE);
     return ui;
   };
+  /** A typed value at cell `c`, as the note-taking cell's move. */
+  const typed = (c: number, n: number) => ({
+    type: "set",
+    x: c % 4,
+    y: Math.floor(c / 4),
+    n,
+    pencil: false,
+    autoElim: false,
+  });
 
   it("selects an open cell with a press, and types a number into it", () => {
     const ui = select(open);
@@ -103,9 +113,9 @@ describe("a board of numbers' input", () => {
       open % 4,
       Math.floor(open / 4),
     ]);
-    expect(input.interpretMove(board, ui, ds, at(open), KEY(3))).toEqual({
-      set: [open, 3],
-    });
+    expect(input.interpretMove(board, ui, ds, at(open), KEY(3))).toEqual(
+      typed(open, 3),
+    );
     // A mouse selection is put away by the entry.
     expect(ui.cursor.visible).toBe(false);
   });
@@ -113,23 +123,17 @@ describe("a board of numbers' input", () => {
   it("empties a cell with Backspace", () => {
     const filled = { ...board, values: board.values.slice() };
     filled.values[open] = 2;
-    const ui = newFillUi();
+    const ui = game.newUi(filled);
     input.interpretMove(filled, ui, ds, at(open), LEFT_BUTTON);
-    expect(input.interpretMove(filled, ui, ds, at(open), BACKSPACE)).toEqual({
-      set: [open, 0],
-    });
+    expect(input.interpretMove(filled, ui, ds, at(open), BACKSPACE)).toEqual(
+      typed(open, 0),
+    );
   });
 
   it("leaves a given unselected, and refuses a number past the board's", () => {
     expect(select(given).cursor.visible).toBe(false);
     const ui = select(open);
     expect(input.interpretMove(board, ui, ds, at(open), KEY(5))).toBeNull();
-  });
-
-  it("takes no right press while the board keeps no notes", () => {
-    expect(
-      input.interpretMove(board, newFillUi(), ds, at(open), RIGHT_BUTTON),
-    ).toBeNull();
   });
 
   it("offers a key a value and the clear key", () => {

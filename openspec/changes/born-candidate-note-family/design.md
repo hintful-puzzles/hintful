@@ -274,8 +274,14 @@ recorded in the route's design.md.
 
 ### 1. Notes are a mask a cell on the fill board
 
-`FillBoard` gains `notes`, a bit a value a cell, where the description's
-`marks:` declares `cand`; a board without it has none and plays as before.
+`FillBoard` gains `pencil`, a bit a value a cell, where the description's
+`marks:` declares the candidates (a cell mark that is `set of` the answer's
+domain, with no `of` or `means`, compiled to `play.notes`); a board without
+it has `null` and plays as before. The field is named `pencil` because every
+note-taking board names it so, and `takesNotes` (`input/key-labels.ts`),
+which offers the Marks key, reads a board by that name. Only a board of
+numbers keeps notes: they are typed, a key a value, and the compiler refuses
+them on a board of buttons.
 The edits gain the note moves, the ones `applyNoteMove` applies today, so
 the shared Mark-all, auto-pencil and keep-track read the born board as they
 read a hand-written one. The ladder that grades and solves reads the values
@@ -292,10 +298,13 @@ with no adapter, and `applyNoteMove`, `adaptiveMarkAllMove` over the space's
 units, `entryMistakes` (a `note` kind beside `FillMistake`'s), keep-track,
 the judge and `candidateGesture` serve it unchanged. Typed entries become
 `CandidateMove`s; Solve, Clear and Reveal stay `Edit`s, and a value an edit
-places clears its cell's notes. The `Ui`'s pencil fields are on a board of
-numbers alone (`numbers.ts`'s `typedUi`), since the app and
+places clears its cell's notes. The `Ui`'s pencil fields are on a board
+that keeps notes alone (`numbers.ts`'s `typedUi`), since the app and
 `pencil-mode-key.test.ts` read a `Ui` with a pencil mode as one that takes
-notes.
+notes. What a placement rules out (auto-pencil, Mark-all's clean) is the
+cells sharing a unit with it (`GridSpace.peers`) as built at 2.1b; the
+candidate walk's reach (§ 2) replaces it at 2.1c, so the partitions a rule
+holds distinct and a stated `cull` strike too.
 
 ### 2. A born game with notes hints through the candidate walk
 

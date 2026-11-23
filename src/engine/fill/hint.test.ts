@@ -16,10 +16,11 @@ import { techniqueTries } from "../solve/deduction-fixpoint.ts";
 import { clueList } from "../solve/describe-runtime.ts";
 import { status } from "./answer.ts";
 import { type FillBoard, newBoard, spaceOf } from "./board.ts";
-import { applyEdit, type Edit } from "./edit.ts";
+import { applyEdit, type Edit, editOf } from "./edit.ts";
 import { fillGame } from "./game.ts";
 import { type FillHint, fillHint } from "./hint.ts";
 import { LINK } from "./marks.ts";
+import { applyMove, type FillMove } from "./notes.ts";
 
 const TS = 32;
 
@@ -67,7 +68,7 @@ describe("a fill game's hint", () => {
     let made = 0;
     while (status(playing, reading, board) !== "solved") {
       const [step] = plan(board);
-      board = applyEdit(playing, board, step.move);
+      board = applyMove(playing, board, step.move);
       made++;
       expect(made).toBeLessThan(40);
     }
@@ -81,7 +82,7 @@ describe("a fill game's hint", () => {
     const before = techniqueTries.count;
     let made = 0;
     for (; status(playing, reading, board) !== "solved" && made < 40; made++)
-      board = applyEdit(playing, board, plan(board)[0].move);
+      board = applyMove(playing, board, plan(board)[0].move);
     expect({ made, tried: techniqueTries.count - before }).toEqual({
       made: 7,
       tried: 50,
@@ -119,7 +120,7 @@ describe("a fill game's hint", () => {
   it("names the technique that makes a move Check & save judges", () => {
     const board = dealt();
     const [step] = plan(board);
-    const verdict = hint.judgeMove(board, applyEdit(playing, board, step.move));
+    const verdict = hint.judgeMove(board, applyMove(playing, board, step.move));
     expect(verdict).not.toBeNull();
   });
 });
@@ -130,7 +131,9 @@ describe("a fill game's hint that asks for a link", () => {
   const PIECES = ["PA..", "...P", "...A", "AP.."];
   const linkingGame = fillGame("linking", linking);
   const PIECE = 1;
-  type Step = HintStep<Edit, FillHint>;
+  type Step = HintStep<FillMove, FillHint>;
+  /** A step's move, which on a board of buttons is an edit. */
+  const edit = (step: Step): Edit => editOf(step.move, "a fill hint's step");
 
   function linkingBoard(): FillBoard<linking.Dealt> {
     const g = Uint8Array.from(PIECES.join(""), (ch) => "_P.A".indexOf(ch));
@@ -150,15 +153,15 @@ describe("a fill game's hint that asks for a link", () => {
       const got = linkingGame.hint?.plan(board);
       if (!got?.ok) throw new Error("no hint");
       const [step] = got.steps;
-      if (step.move.mark !== undefined) return { board, step };
-      board = applyEdit(linking, board, step.move);
+      if (edit(step).mark !== undefined) return { board, step };
+      board = applyMove(linking, board, step.move);
     }
     throw new Error("no step asked for a link");
   }
 
   it("places an anchor's piece and rings the link it asks for, in the words", () => {
     const { board, step } = firstLink();
-    const mark = step.move.mark ?? [];
+    const mark = edit(step).mark ?? [];
     expect(mark).toHaveLength(2);
     const [cell, q] = mark;
     const anchor = board.dealt.anchor.at[q];
@@ -166,7 +169,7 @@ describe("a fill game's hint that asks for a link", () => {
     expect(step.explanation).toMatch(/the link\.$/);
     // Its move sets the piece where the square is open, and the gesture is
     // the link's drag, which places it.
-    if (board.values[cell] === 0) expect(step.move.set).toEqual([cell, PIECE]);
+    if (board.values[cell] === 0) expect(edit(step).set).toEqual([cell, PIECE]);
     const ds = linkingGame.newDrawState(board, TS);
     const ui = linkingGame.newUi(board);
     const at = (c: number) =>
@@ -183,7 +186,7 @@ describe("a fill game's hint that asks for a link", () => {
 
   it("follows the piece placed alone, then completes on the link", () => {
     const { board, step } = firstLink();
-    const [cell, q] = step.move.mark ?? [];
+    const [cell, q] = edit(step).mark ?? [];
     if (board.values[cell] !== 0) throw new Error("the first link's piece is placed");
     const hint = linkingGame.hint;
     if (hint === undefined) throw new Error("no hint");
@@ -207,7 +210,7 @@ describe("a fill game's hint that asks for a link", () => {
       const got = linkingGame.hint?.plan(board);
       if (!got?.ok) break;
       rungs.push(got.steps[0].rung);
-      board = applyEdit(linking, board, got.steps[0].move);
+      board = applyMove(linking, board, got.steps[0].move);
     }
     return { rungs, board };
   }

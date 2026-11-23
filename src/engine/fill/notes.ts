@@ -1,0 +1,166 @@
+/**
+ * The candidate notes of a board of numbers (`play.notes`): a set of values
+ * an open cell, bit `v` for value `v`, written by the shared canonical
+ * {@link CandidateMove}s (`engine/hint/candidate-hint.ts`), so Mark-all,
+ * auto-pencil, the mistake check's note half and the candidate hint's
+ * bookkeeping read a born board as they read a hand-written one
+ * (`docs/hints-candidates.md` § "Persist, populate, and the moves").
+ */
+
+import {
+  adaptiveMarkAll,
+  anyEmptyLacksNotes,
+  type CandidateMove,
+  type Mark,
+  type NoteEncoding,
+  obviousCandidateMarks,
+  applyNoteMove as writeNotes,
+} from "../hint/candidate-hint.ts";
+import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import { applyEdit, type Edit, editOf } from "./edit.ts";
+
+/** A fill game's move: an edit, or on a board of numbers a typed entry or a
+ * note move. Solve, Clear and Reveal stay edits. */
+export type FillMove = Edit | CandidateMove;
+
+/** Whether `move` is one of the note-taking cell's, not an edit. */
+export const isCandidateMove = (move: FillMove): move is CandidateMove =>
+  "type" in move;
+
+/** Whether `marks` is a list of notes, as a save holds it. */
+const areMarks = (marks: unknown): boolean =>
+  Array.isArray(marks) &&
+  marks.every(
+    (k) =>
+      typeof k === "object" &&
+      k !== null &&
+      ["x", "y", "n"].every((f) => Number.isInteger((k as Record<string, unknown>)[f])),
+  );
+
+/** Whether `move` has a note-taking cell's move's shape, as a save holds it. */
+function isCandidate(move: unknown): move is CandidateMove {
+  if (typeof move !== "object" || move === null || !("type" in move)) return false;
+  const m = move as {
+    readonly type: unknown;
+    readonly x?: unknown;
+    readonly y?: unknown;
+    readonly n?: unknown;
+    readonly pencil?: unknown;
+    readonly autoElim?: unknown;
+    readonly marks?: unknown;
+  };
+  switch (m.type) {
+    case "set":
+      return (
+        [m.x, m.y, m.n].every((f) => Number.isInteger(f)) &&
+        typeof m.pencil === "boolean" &&
+        (m.autoElim === undefined || typeof m.autoElim === "boolean")
+      );
+    case "pencilAll":
+      return true;
+    case "pencilStrike":
+    case "pencilAdd":
+      return areMarks(m.marks);
+    default:
+      return false;
+  }
+}
+
+/** `move` as a fill game's move, or refused as `context`'s: a move from a
+ * save is read back as whatever it was written as. */
+export function fillMoveOf(move: unknown, context: string): FillMove {
+  return isCandidate(move) ? move : editOf(move, context);
+}
+
+/** The board after `move`. */
+export const applyMove = <C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+  move: FillMove,
+): FillBoard<C> =>
+  isCandidateMove(move)
+    ? applyNoteMove(module, board, move)
+    : applyEdit(module, board, move);
+
+/** What a fill-all writes on a board of `module`'s: each open cell's domain,
+ * its values' bits. */
+function encodingOf<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+): Required<Pick<NoteEncoding, "values" | "all">> {
+  const sp = spaceOf(module, board);
+  let top = 0;
+  for (const c of sp.cells) top |= module.domainOf(sp, board.dealt, c);
+  return {
+    values: 31 - Math.clz32(top),
+    all: (c) => module.domainOf(sp, board.dealt, c),
+  };
+}
+
+/** The cells a value placed at `c` rules out of their notes: those sharing a
+ * unit with it, which no value repeats in. */
+const reachOf = <C>(module: FillModule<C>, board: FillBoard<C>) => {
+  const { peers } = spaceOf(module, board);
+  return (c: number): readonly number[] => peers[c];
+};
+
+/**
+ * The board after the note-taking cell's move `move`: a note toggled on an
+ * open cell, a value typed (its cell's notes cleared and, with `autoElim`,
+ * the value struck from the notes it rules out), or a note move. A move the
+ * engine builds never touches a fixed cell or a board without notes, so one
+ * that does throws.
+ */
+function applyNoteMove<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+  move: CandidateMove,
+): FillBoard<C> {
+  const notes = board.pencil;
+  if (move.type === "set") {
+    const c = move.y * board.w + move.x;
+    if (!move.pencil || move.n === 0) {
+      // A placement is an edit, which clears its cell's notes; an empty
+      // value clears them too.
+      const placed = applyEdit(module, board, { set: [c, move.n] });
+      if (placed.pencil === null) return placed;
+      const pencil = placed.pencil.slice();
+      pencil[c] = 0;
+      if (move.autoElim === true && move.n > 0)
+        for (const p of reachOf(module, board)(c)) pencil[p] &= ~(1 << move.n);
+      return { ...placed, pencil };
+    }
+    if (notes === null) throw new Error("note: the board keeps no notes");
+    if (board.fixed[c] || board.values[c] !== 0)
+      throw new Error(`note: cell ${c} is not open`);
+    const pencil = notes.slice();
+    pencil[c] ^= 1 << move.n;
+    return { ...board, pencil };
+  }
+  if (notes === null) throw new Error("note: the board keeps no notes");
+  const pencil = notes.slice();
+  writeNotes(move, board.values, pencil, board.w, encodingOf(module, board));
+  return { ...board, pencil };
+}
+
+/** Mark-all: every open cell's candidates where one has no notes yet, and
+ * otherwise each note a placed value rules out (`adaptiveMarkAll`). `null`
+ * where there is nothing to do, or the board keeps no notes. */
+export function markAll<C>(
+  module: FillModule<C>,
+  board: FillBoard<C>,
+): CandidateMove | null {
+  const notes = board.pencil;
+  if (notes === null) return null;
+  return adaptiveMarkAll<CandidateMove, Mark>(
+    anyEmptyLacksNotes(board.values, notes),
+    () =>
+      obviousCandidateMarks(
+        board.values,
+        notes,
+        board.w,
+        reachOf(module, board),
+        encodingOf(module, board),
+      ),
+  );
+}

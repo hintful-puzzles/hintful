@@ -1,6 +1,8 @@
 /**
- * The one move of a fill game: values set on cells and marks set on cells,
- * in flat lists so a save holds it as it is. Solve is an edit too.
+ * A fill game's edit: values set on cells and marks set on cells, in flat
+ * lists so a save holds it as it is. Every move of a board of buttons is one,
+ * and Solve, Clear and Reveal are on every board; a board of numbers types
+ * and takes notes by the note-taking cell's moves too (`notes.ts`).
  */
 
 import { rejectMove } from "../contract/assert-never.ts";
@@ -57,10 +59,13 @@ export function applyEdit<C>(
     return c;
   };
   const set = edit.set ?? [];
+  // A value placed on a cell takes the place of its notes.
+  const pencil = board.pencil?.slice() ?? null;
   for (let i = 0; i < set.length; i += 2) {
     const c = cellOf(set[i]);
     if (board.fixed[c]) throw new Error(`edit: cell ${c} is fixed`);
     values[c] = set[i + 1];
+    if (pencil !== null && values[c] !== 0) pencil[c] = 0;
   }
   const marks = edit.mark ?? [];
   for (let i = 0; i < marks.length; i += 2) mark[cellOf(marks[i])] = marks[i + 1];
@@ -70,5 +75,5 @@ export function applyEdit<C>(
     for (let c = 0; c < n; c++)
       if (mark[c] >= 0 && !markWhile(values, sp, board.dealt, c)) mark[c] = -1;
   }
-  return { ...board, values, mark };
+  return { ...board, values, mark, pencil };
 }
