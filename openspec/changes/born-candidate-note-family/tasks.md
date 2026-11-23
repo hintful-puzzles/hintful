@@ -80,7 +80,18 @@ commit. In design.md § "Decisions" 7's order.
         none of whole until the asked tier's pass, or a Normal board's
         signs all went at Easy and no Normal board was dealt.
   - [ ] 2.2b Done marks on an edge clue (a press in its gap, or an arrow
-        with Shift or Ctrl), drawn gray.
+        with Shift or Ctrl), drawn gray. Built as the shared capability
+        "done marks on any clue" (design.md § "Shared": Adjacent, Towers,
+        Keen, Undead and Magnets follow), so its board state is keyed by a
+        clue kind and its clue's index, not by edges. The hand-written
+        ones to read: `engine/edge-clue-latin/play.ts`'s `spentDrag` (a
+        press in a gap, a drag on through the gaps), Magnets'
+        `dragMarkVerbs`, and Towers' and Undead's `clueDrag`; all are a
+        `Game.doneClues` (`engine/input/target-verb.ts`), which writes
+        the help's controls line. A flipped Unequal may drop the old
+        `spent` move from saves (docs/descriptions.md: approved for the
+        initiative, 2026-11-22). The `ordering` fixture is where it is
+        tested, as for 2.2a.
   - [ ] 2.2c The flip: `order` renamed `w`, the alphabet past 9, the
         deal hiding from every clue, Unequal's tests to `cases.yaml`, its
         TypeScript deleted, the `game-lines` ceiling lowered and its spec
