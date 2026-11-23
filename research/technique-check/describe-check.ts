@@ -426,15 +426,18 @@ function unitRegion(d?: Description): [string, string] | null {
 }
 
 /**
- * Why no board of `d` can be built, or `null`. Boxes a board deals (Solo's
- * Jigsaw) are not built: as fixed boards, every 4x4 jigsaw up to symmetry
- * would multiply Solo's 44-minute check twentyfold.
+ * Why no board of `d`, a variation of `file`, is built, or `null`. Boxes a
+ * board deals are built as one tiling, the blocks a `blocks(a, b)` of the
+ * order would cut: every 4x4 jigsaw up to symmetry would multiply Solo's
+ * 44-minute check twentyfold. A ruleset that deals what every other board
+ * cuts by a formula (Solo's Jigsaw) is not built, since those blocks are
+ * the other boards' already.
  */
-export function unbuilt(d: Description): string | null {
+export function unbuilt(d: Description, file: DescriptionJson): string | null {
   const unit = unitRegion(d);
-  return unit === null || BLOCKS.test(unit[1])
-    ? null
-    : `its ${unit[0]} partition is ${unit[1]}, and only blocks(a, b) is built`;
+  if (unit === null || BLOCKS.test(unit[1])) return null;
+  if (unit[1] === "dealt" && file.space.regions?.[unit[0]] === "dealt") return null;
+  return `its ${unit[0]} partition is ${unit[1]}, and every other board's blocks stand in for it`;
 }
 
 /**
@@ -498,13 +501,23 @@ function spaceOf(
 /**
  * The blocks `blocks(a, b)` cuts a board of `order` into, each side's width
  * and height, the squarest first; none where no sizes the rules allow tile
- * it. Each side is a number or a size the params give.
+ * it. Each side is a number or a size the params give. A dealt partition
+ * stands as the blocks of two sides of at least 2, as `unbuilt` says.
  */
 function blockFits(
   d: Description,
   how: string,
   order: number,
 ): { names: readonly [string, string]; fits: (readonly [number, number])[] } {
+  // The names are numbers, so no size is read off a dealt board's blocks.
+  if (how === "dealt")
+    return {
+      names: ["0", "0"],
+      fits: Array.from({ length: order }, (_, i) => i + 1)
+        .filter((a) => a >= 2 && order % a === 0 && order / a >= 2)
+        .map((a) => [a, order / a] as const)
+        .sort((x, y) => Math.min(...y) - Math.min(...x)),
+    };
   const m = BLOCKS.exec(how);
   if (m === null) throw new Error(`${how}: only blocks(a, b) is checked`);
   const range = (name: string): number[] => {
@@ -3251,12 +3264,12 @@ export function sizings(d: Description, order: number): Map<string, number>[] {
     return (TILINGS[order] ?? []).flatMap(([type], i) =>
       tiling === true || type === "square" ? [new Map([[TILING_SIZE, i]])] : [],
     );
-  // A board in blocks no allowed sizes tile (a 3x3 in blocks(2, 2)) is no
-  // board.
+  // A board in blocks no allowed sizes tile (a 3x3 in blocks(2, 2)), or
+  // dealt blocks no two sides of 2 or more stand in for, is no board.
   const unit = unitRegion(d);
   if (
     unit !== null &&
-    BLOCKS.test(unit[1]) &&
+    (BLOCKS.test(unit[1]) || unit[1] === "dealt") &&
     blockFits(d, unit[1], order).fits.length === 0
   )
     return [];
@@ -3510,7 +3523,7 @@ export function worldsOf(
       const on = [...ruleset, ...always, ...toggled.filter((_, i) => mask & (1 << i))];
       const where = [file.game, ...on.map((n) => `+${n}`)].join(" ");
       const d = loadDescription(withVariations(file, on), libraries);
-      const why = unbuilt(d);
+      const why = unbuilt(d, file);
       if (why === null) return [{ where, d }];
       note(`--  ${where}: not checked, since ${why}`);
       return [];

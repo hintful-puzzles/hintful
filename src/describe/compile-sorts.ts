@@ -388,6 +388,9 @@ export interface Env {
   /** The partition among the units, whose parts are the space's boxes: its
    * name, or `null` where there is none. */
   boxes: string | null;
+  /** Whether the board deals that partition (Solo's jigsaw blocks), rather
+   * than a formula cutting it. */
+  boxesDealt: boolean;
   /** Whether the space has its diagonals. */
   diagonals: boolean;
   /** Whether the answer's domain is a cell's (it reads `c`), so `domain`

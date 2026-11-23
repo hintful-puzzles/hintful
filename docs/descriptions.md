@@ -262,7 +262,10 @@ research tools all read through it; the app never does.
   adds is a unit only of a board it is on (`unitVariations`, Solo's X), and
   a partition among the units stated as `blocks(a, b)`, each side a number
   or a size the params give, is cut by the engine (`boxes`, `board.ts`'s
-  `spaceOf`); any other formula is refused. A placed value rules itself out of its
+  `spaceOf`); any other formula is refused. Dealt, it is read off the
+  board's clues, as under a ruleset that deals what every other board cuts
+  (Solo's Jigsaw, `Dealt`'s optional field), and `deal.divide`'s `equal`
+  divides it (`fitting`). A placed value rules itself out of its
   units and of what the techniques run on placing strike (`peer.placed`):
   the one reach auto-pencil, Mark-all's clean and the walk read
   (`notes.ts`'s `reachOf`). Where that is more than a row and a column, the
@@ -380,10 +383,13 @@ research tools all read through it; the app never does.
   each be a formula of the sizes (Star Battle's `2 * stars`). `deal.divide`
   instead divides it at random, blind to the answer
   (`engine/fill/divide.ts`): dominoes at `pairs` odds, then each square
-  left alone into a neighboring part under `most` cells; or with `sizes`, a
+  left alone into a neighboring part under `most` cells; with `sizes`, a
   part at a time grown to a size drawn from a list, one list a ruleset
-  where `by` names the setting. `sample: { search: true }` then searches the
-  answer under that partition, from the blank board, a square's values
+  where `by` names the setting; or with `equal`, tiled by parts of one size
+  (a number, a size, or `w`), which a desc's parts must keep. A list
+  divides several in turn (`fitting`'s blocks, then its cages).
+  `sample: { search: true }` then searches the
+  answer under those partitions, from the blank board, a square's values
   tried in a random order, a draw out of budget divided again (`zoning` is
   the fixture). A clue at a part is the answer's, so the blank board shows
   none, and a conclusion that is false is a contradiction: a technique
@@ -2084,8 +2090,11 @@ the check. What a small board cannot cover:
   its angles is read as an edge's mark is, and a relation over the edges as
   two unknowns a pair, alike and opposite, true of the answer and closed as
   the runtime's classes are.
-- **Boxes a board deals are not built**, so Solo's Jigsaw world is named in
-  the results as unchecked.
+- **Boxes a board deals are built as one tiling**, the blocks of two sides
+  of 2 or more, an order no such blocks tile skipped: a net, since every
+  jigsaw would cost twentyfold. A ruleset that deals what every other board
+  cuts by a formula (Solo's Jigsaw) is named in the results as unchecked,
+  its stand-in being those boards already.
 - **A world or a kind a small board cannot hold is checked on nothing**,
   whatever the verdict, and the results say so (`--` lines). Such a reading
   (Mathrax's quotient, Star Battle at two and three stars) rests on the

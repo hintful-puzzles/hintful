@@ -75,7 +75,7 @@ function keypadTop<C>(
   sp: GridSpace,
   sizes: Readonly<Record<string, number>>,
 ): number {
-  const divide = module.deal?.divide;
+  const divide = module.deal?.divide?.find((d) => "sizes" in d);
   if (divide === undefined || !("sizes" in divide))
     // The compiler refuses any other domain that differs from cell to cell.
     return topValue(module, sp, {} as C);

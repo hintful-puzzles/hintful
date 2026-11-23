@@ -311,7 +311,7 @@ export type IdSegmentJson =
     }
   | { glyphs: string; values: Record<string, number> }
   | { records: string; sides: string }
-  | { blocks: string }
+  | { blocks: string; before?: string }
   | { parts: string; before?: string; letters: Record<string, string> }
   | { codes: Record<string, string>; before?: string };
 
@@ -425,21 +425,25 @@ export function thoroughOf(json: DescriptionJson): ThoroughJson | null {
   return typeof t === "object" ? (t as ThoroughJson) : null;
 }
 
-/** The partition the deal divides at random into small parts
- * (`deal.divide`), or `null` where it divides none. */
-export function divideOf(json: DescriptionJson): DivideJson | null {
+/** The partitions the deal divides at random (`deal.divide`), one or a
+ * list, in the order it divides them: none where it divides none. */
+export function dividesOf(json: DescriptionJson): readonly DivideJson[] {
   const g = json.deal?.["divide"];
-  return typeof g === "object" ? (g as unknown as DivideJson) : null;
+  if (Array.isArray(g)) return g as unknown as DivideJson[];
+  return typeof g === "object" ? [g as unknown as DivideJson] : [];
 }
 
 /** A dealt partition divided at random, before and apart from the answer:
  * each cell joined at odds `pairs` to a neighbor still alone, and each left
- * alone then to a neighboring part under `most` cells (upstream keen.c); or
- * one part at a time grown to a size drawn from one of `sizes`, the first or,
- * with `by`, the one a value of that size from its least. */
+ * alone then to a neighboring part under `most` cells (upstream keen.c); one
+ * part at a time grown to a size drawn from one of `sizes`, the first or,
+ * with `by`, the one a value of that size from its least; or tiled by parts
+ * of `equal` cells (upstream divvy.c), a number, a size the params give, or
+ * `w`, the board's width. */
 export type DivideJson =
   | { partition: string; pairs: number; most: number }
-  | { partition: string; sizes: number[][]; by?: string };
+  | { partition: string; sizes: number[][]; by?: string }
+  | { partition: string; equal: number | string };
 
 /** The kinds dealt one a part (`deal.oneKind`), or `null`. */
 export function oneKindOf(json: DescriptionJson): OneKindJson | null {

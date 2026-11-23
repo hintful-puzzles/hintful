@@ -483,6 +483,7 @@ export function compilePlanning(
     clues: new Map(),
     regions: new Set(),
     boxes: null,
+    boxesDealt: false,
     diagonals: false,
     cellDomain: false,
     edgeMark: null,

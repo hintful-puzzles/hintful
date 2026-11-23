@@ -115,6 +115,7 @@ export function compileLibrary(
     clues: new Map(),
     regions: new Set(),
     boxes: null,
+    boxesDealt: false,
     diagonals: false,
     cellDomain: false,
     sizes: { names: new Set(), read: new Set() },
@@ -309,6 +310,7 @@ export function compileGame(
     clues,
     regions,
     boxes,
+    boxesDealt: boxes !== null && space.regions?.[boxes] === "dealt",
     diagonals: space.diagonals === true,
     // A size the grid is not measured in: `order`, `w` and `h` are the
     // space's own.
@@ -383,15 +385,23 @@ export function compileGame(
   code.push(...[...kept.values()].map((k) => k.code));
   const scales = Object.entries(d.json.scales ?? {});
   const sizes = [...env.sizes.read].sort();
+  // A partition among the units the board deals is dealt as any other is.
+  const dealtParts = [...regions, ...(env.boxesDealt && boxes !== null ? [boxes] : [])];
   const clueLines =
-    clues.size + regions.size + relations.length + sizes.length === 0
+    clues.size + dealtParts.length + relations.length + sizes.length === 0
       ? []
       : [
           "/** What the board deals: its partitions by name, its relations, a set of",
           " * cells for each cell, its clues by kind, and the sizes a technique or the",
           " * rules read that the grid does not give. */",
           "export interface Dealt {",
-          ...[...regions].map((r) => `  ${r}: Partition;`),
+          // A partition a ruleset deals in place of a formula's (Solo's
+          // jigsaw blocks) is dealt only on a board of that ruleset.
+          ...dealtParts.map((r) =>
+            r === boxes && json.space.regions?.[r] !== "dealt"
+              ? `  ${r}?: Partition;`
+              : `  ${r}: Partition;`,
+          ),
           ...relations.map((r) => `  readonly ${r}: readonly (readonly number[])[];`),
           ...[...clues].map(
             ([k, c]) =>
@@ -419,7 +429,9 @@ export function compileGame(
     ];
     return `  { ${fields.join(", ")} },`;
   };
-  const boxBlocks = blocksOf(d.json, boxes);
+  // Read before any variation: a ruleset that deals the partition (Solo's
+  // Jigsaw) leaves the formula every other board cuts it by.
+  const boxBlocks = blocksOf(json, boxes);
   // A unit a variation adds is a unit only of a board it is on.
   const unitVariations = Object.fromEntries(
     Object.entries(json.variations ?? {}).flatMap(([name, v]) =>
@@ -439,14 +451,20 @@ export function compileGame(
           `export const unitVariations = ${JSON.stringify(unitVariations)} as const;`,
           "",
         ]),
-    ...(boxBlocks === null
+    ...(boxes === null
       ? []
-      : [
-          "/** The partition among the units, cut into blocks this wide and tall,",
-          " * each a number or a size the params give. */",
-          `export const boxes = ${JSON.stringify({ name: boxes, blocks: boxBlocks })} as const;`,
-          "",
-        ]),
+      : boxBlocks === null
+        ? [
+            "/** The partition among the units, which every board deals. */",
+            `export const boxes = ${JSON.stringify({ name: boxes })} as const;`,
+            "",
+          ]
+        : [
+            "/** The partition among the units, cut into blocks this wide and tall,",
+            " * each a number or a size the params give, where the board deals none. */",
+            `export const boxes = ${JSON.stringify({ name: boxes, blocks: boxBlocks })} as const;`,
+            "",
+          ]),
     ...(space.grid?.hexagon === undefined
       ? []
       : [
@@ -672,7 +690,7 @@ export function compileGame(
           ),
         ),
       ].sort(),
-      regions.size > 0,
+      dealtParts.length > 0,
       runtime,
       body,
     ),

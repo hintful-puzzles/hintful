@@ -56,6 +56,15 @@ the predecessor's were, in a commit before the flip.
         docs/descriptions.md § "The file").
   - [ ] 2.1c A partition divided into equal parts (jigsaw blocks); the
         diagonals drawn; a second partition drawn inset inside the first.
+        Dealt: the partition among the units may be dealt, a `Dealt`
+        field `spaceOf` reads (optional where a ruleset deals what blocks
+        cut otherwise, Solo's Jigsaw); `deal.divide`'s `equal` tiles by
+        `divvyRectangle`; `divide` may list several, divided in turn; the
+        `blocks` ID segment takes `before`; the soundness checker builds a
+        dealt box as blocks (`fitting` fixture). Left: the drawing. The
+        fill render walls `deal.partitions[0]` alone, and draws neither a
+        `blocks(a, b)` box (`boxing`'s blocks are undrawn) nor the
+        diagonals; a second partition, inset, takes the part labels.
   - [ ] 2.1d The symmetry option of seven, written as upstream's suffixes;
         the `{c}x{r}` and `{n}j` sizes.
   - [ ] 2.1e The flip: its words as `says`, its tests to `cases.yaml`.

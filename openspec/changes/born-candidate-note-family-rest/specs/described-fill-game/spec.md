@@ -69,3 +69,25 @@ the tiers alone.
 - **WHEN** a hint is asked on such a board
 - **THEN** the walk may take a technique of the other scale up to its top,
   and hints the board to the end
+
+### Requirement: A born game's blocks may be dealt in equal parts
+
+A born game's partition among its units MAY be dealt, the board's space
+then taking its blocks from the board's clues. `deal.divide` with `equal`
+SHALL tile the board with connected parts of that many cells, and a desc
+whose parts of that partition are not all of that size SHALL be refused.
+`deal.divide` MAY list several partitions, divided in turn, and the answer
+SHALL be searched under them all.
+
+#### Scenario: Jigsaw blocks and cages
+
+- **WHEN** a born game whose blocks are divided into parts of the board's
+  width and whose cages are divided after them deals a 5×5 board
+- **THEN** five connected blocks of five tile it, every row, column and
+  block holds 1 to 5 once, and no cage repeats a number
+
+#### Scenario: Blocks of unequal size are refused
+
+- **WHEN** a desc of such a game writes a 4×4 board's blocks as one of
+  eight cells and two of four
+- **THEN** the desc is refused as malformed

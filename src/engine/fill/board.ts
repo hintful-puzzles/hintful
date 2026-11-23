@@ -57,12 +57,13 @@ export interface FillModule<C> {
   /** The unit each variation adds, by the unit's name: a board has it only
    * where the variation is on (Solo's X, the diagonals). */
   readonly unitVariations?: Readonly<Record<string, string>>;
-  /** The partition among the units, where it is fixed by the sizes: its name,
-   * and its blocks' width and height, each a number or a size the params
-   * give (`blocks(r, c)`). */
+  /** The partition among the units: its name, and where the sizes fix it,
+   * its blocks' width and height, each a number or a size the params give
+   * (`blocks(r, c)`). A board that deals it reads it off its clues, which a
+   * board with blocks does under a ruleset that deals it (Solo's Jigsaw). */
   readonly boxes?: {
     readonly name: string;
-    readonly blocks: readonly [number | string, number | string];
+    readonly blocks?: readonly [number | string, number | string];
   };
   readonly tiers: readonly string[];
   /** How the board is played: where `dealt` names a clue kind at a cell,
@@ -219,9 +220,14 @@ export function spaceOf<C>(module: FillModule<C>, b: SpaceOf): GridSpace {
       kept.set(key, units);
     } else units = known;
   }
-  if (module.boxes === undefined) return describedSpace(units, b.w, b.h);
+  const { boxes } = module;
+  if (boxes === undefined) return describedSpace(units, b.w, b.h);
   const sizes = b.dealt as Readonly<Record<string, unknown>>;
-  const [bw, bh] = module.boxes.blocks.map((a) => {
+  const dealt = sizes[boxes.name] as Partition | undefined;
+  if (dealt !== undefined) return describedSpace(units, b.w, b.h, dealt.cells);
+  // Before the deal divides it, a board has no boxes yet.
+  if (boxes.blocks === undefined) return describedSpace(units, b.w, b.h);
+  const [bw, bh] = boxes.blocks.map((a) => {
     const v = typeof a === "number" ? a : sizes[a];
     if (typeof v !== "number") throw new Error(`boxes: no size ${a} on the board`);
     return v;

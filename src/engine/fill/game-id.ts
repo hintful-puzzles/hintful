@@ -121,8 +121,8 @@ export type IdSegment =
    * written from both its ends (upstream's Adjacent), every other edge's 0. */
   | { readonly records: string; readonly sides: string; readonly both?: true }
   /** A dealt partition as upstream's block structure
-   * (`engine/game-id/block-structure.ts`). */
-  | { readonly blocks: string }
+   * (`engine/game-id/block-structure.ts`), after `before` where given. */
+  | { readonly blocks: string; readonly before?: string }
   /** A clue a part of partition `parts`, in the order of the parts' first
    * cells: its kind's letter (`letters`, by letter), then its number. */
   | {
@@ -297,9 +297,9 @@ export interface FillDeal {
   readonly hideFlag?: FillHideFlag;
   /** How it grows a dealt partition round the answer. */
   readonly grow?: FillGrow;
-  /** How it divides a dealt partition into small parts, apart from the
-   * answer (`divide.ts`). */
-  readonly divide?: FillDivide;
+  /** How it divides each dealt partition it divides, apart from the answer
+   * and in this order (`divide.ts`). */
+  readonly divide?: readonly FillDivide[];
   /** The kinds at the divided partition's parts dealt one a part. */
   readonly oneKind?: { readonly kinds: readonly string[]; readonly partition: string };
   /** The setting under which `oneKind` deals some of its kinds alone. */
@@ -367,15 +367,18 @@ export interface FillHideFlag {
 /** A dealt partition divided at random apart from the answer
  * (`deal.divide`): into small parts, each cell joined at odds `pairs` to a
  * neighbor alone, then each left alone to a neighboring part under `most`
- * cells; or a part at a time grown to a size drawn from one of `sizes`, the
- * first, or with `by` the one at the setting's value less its least. */
+ * cells; a part at a time grown to a size drawn from one of `sizes`, the
+ * first, or with `by` the one at the setting's value less its least; or the
+ * board tiled by parts of `equal` cells, a number, a size the params give, or
+ * `w`, the board's width. */
 export type FillDivide =
   | { readonly partition: string; readonly pairs: number; readonly most: number }
   | {
       readonly partition: string;
       readonly sizes: readonly (readonly number[])[];
       readonly by?: { readonly size: string; readonly min: number };
-    };
+    }
+  | { readonly partition: string; readonly equal: number | string };
 
 /** A setting the player may turn on, under which the deal deals `kinds`
  * alone of `deal.oneKind`'s (`deal.onlyFlag`), written after the tier by its
@@ -1235,6 +1238,7 @@ export function encodeDesc<C extends Clues<C>>(
     }
     if ("blocks" in seg) {
       const { of } = dealt[seg.blocks as keyof C] as Partition;
+      out += seg.before ?? "";
       out += encodeBlockStructure(sp.w, sp.h, (a, b) => of[a] === of[b]);
       continue;
     }
@@ -1728,6 +1732,24 @@ function readRecords<C extends Clues<C>>(
   ];
 }
 
+/** Whether `parts`, read as the partition `name`, are as the deal divides
+ * it: where it divides it into equal parts, every part as large as the
+ * rest, and as large as the division says where the board's width says it
+ * (a desc names no size). A partition divided otherwise, or not, holds. */
+function equalParts(
+  deal: FillDeal,
+  name: string,
+  sp: GridSpace,
+  parts: Partition,
+): boolean {
+  const divide = deal.divide?.find((d) => d.partition === name);
+  if (divide === undefined || !("equal" in divide)) return true;
+  const { equal } = divide;
+  const k =
+    typeof equal === "number" ? equal : equal === "w" ? sp.w : parts.cells[0].length;
+  return parts.cells.every((cs) => cs.length === k);
+}
+
 /** The clues `desc` deals, each number read within its kind's largest value
  * at its element. */
 export function decodeDesc<C extends Clues<C>>(
@@ -1757,22 +1779,25 @@ export function decodeDesc<C extends Clues<C>>(
         if (count !== null && parts.cells.length !== count) r.fail(DESC_MALFORMED);
         // A part the deal divides to drawn sizes holds a number for each of
         // its cells (Seismic's areas), and a cell holds at most 31.
-        const divided = deal.divide;
+        const divided = deal.divide?.find((d) => d.partition === seg.walls);
         if (
           divided !== undefined &&
           "sizes" in divided &&
-          divided.partition === seg.walls &&
           parts.cells.some((cs) => cs.length > MOST_VALUE)
         )
           r.fail(DESC_OUT_OF_RANGE);
+        if (!equalParts(deal, seg.walls, sp, parts)) r.fail(DESC_MALFORMED);
         out[seg.walls as keyof C] = parts;
         continue;
       }
       if ("blocks" in seg) {
+        if (seg.before !== undefined) r.expect(seg.before);
         const n = sp.cells.length;
         const joined = new Dsf(n);
         readBlockStructure(r, joined, sp.w, sp.h);
-        out[seg.blocks as keyof C] = partitionOf(regionNumbers(joined, n));
+        const parts = partitionOf(regionNumbers(joined, n));
+        if (!equalParts(deal, seg.blocks, sp, parts)) r.fail(DESC_MALFORMED);
+        out[seg.blocks as keyof C] = parts;
         continue;
       }
       if ("parts" in seg) {

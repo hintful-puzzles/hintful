@@ -34,6 +34,7 @@ import {
   newBoard,
   paramSpaceOf,
   solveBoard,
+  spaceOf,
 } from "./board.ts";
 import { dividePartition } from "./divide.ts";
 import { firstKindEach } from "./first-kind.ts";
@@ -210,15 +211,16 @@ export function dealFill<C extends Clues<C>>(
   const spent = { moves: 0 };
   /** The partition grown round `g` for tier `tier`, by its name, where the
    * deal grows one; `null` where this draw grew none. */
-  /** The partition divided apart from the answer, by its name, where the
-   * deal divides one; `null` where this draw left a cell alone. */
+  /** The partitions divided apart from the answer, by name, where the deal
+   * divides any; `null` where this draw left a cell alone. */
   const divided = (): Grown | null => {
-    const { divide } = deal;
-    if (divide === undefined) return {};
-    const parts = dividePartition(divide, sp, sizes, rs);
-    return parts === null
-      ? drawRejected("fill: the division left a cell alone")
-      : { [divide.partition]: partitionOf(parts) };
+    const out: Record<string, Partition> = {};
+    for (const divide of deal.divide ?? []) {
+      const parts = dividePartition(divide, sp, sizes, rs);
+      if (parts === null) return drawRejected("fill: the division left a cell alone");
+      out[divide.partition] = partitionOf(parts);
+    }
+    return out;
   };
   const grownRound = (g: Uint8Array, tier: number): Grown | null => {
     const { grow, divide } = deal;
@@ -346,15 +348,22 @@ export function dealFill<C extends Clues<C>>(
     grown: Grown,
     tier: number,
   ): { g: Uint8Array; clues: C } | null => {
+    // The board's units, where it deals the partition among them.
+    const on = spaceOf(module, {
+      w: sp.w,
+      h: sp.h,
+      dealt: { ...sizes, ...grown },
+      variations,
+    });
     const derived = oneKindEach(
       module,
       deal,
-      sp,
+      on,
       firstKindEach(
         deal,
         p,
         numbered(
-          module.deriveClues(g, sp, grown, given, (n) => randomUpto(rs, n)),
+          module.deriveClues(g, on, grown, given, (n) => randomUpto(rs, n)),
           g,
         ),
       ),
@@ -363,7 +372,7 @@ export function dealFill<C extends Clues<C>>(
       rs,
     );
     if (derived === null) return drawRejected("fill: a part suits none of the kinds");
-    if (!module.isAnswer(g, sp, derived, variations))
+    if (!module.isAnswer(g, on, derived, variations))
       return "build" in sample
         ? climbBuild("fill: the answer built breaks a rule")
         : drawRejected("fill: the answer drawn breaks a rule");

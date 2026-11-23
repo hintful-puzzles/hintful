@@ -12,11 +12,14 @@
  *   two cells, so the pairs are laid first and most parts stay pairs.
  * - A part at a time, each grown to a size drawn from a list
  *   (`growToSize`): Seismic's areas, dealt before any number is.
+ * - Into parts of one size that tile the board (`divvyRectangle`, upstream
+ *   divvy.c): Solo's jigsaw blocks.
  */
 
 import { Dsf } from "../board/dsf.ts";
 import { shuffle } from "../board/shuffle.ts";
 import { growToSize } from "../generate/divide.ts";
+import { divvyRectangle } from "../generate/divvy.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import type { FillDivide } from "./game-id.ts";
@@ -35,6 +38,13 @@ export function dividePartition(
   rs: RandomState,
 ): Int32Array | null {
   const n = sp.cells.length;
+  if ("equal" in divide) {
+    if (n !== sp.w * sp.h) throw new Error("divide: a board with holes tiled");
+    return numbered(
+      divvyRectangle(sp.w, sp.h, equalSize(divide, sp, sizes), rs),
+      sp.cells,
+    );
+  }
   if ("sizes" in divide) {
     // Grown over the whole grid: a board of every cell.
     if (n !== sp.w * sp.h) throw new Error("divide: sizes grown on a board with holes");
@@ -78,6 +88,20 @@ export function dividePartition(
     dsf.merge(c, o);
   }
   return numbered(dsf, sp.cells);
+}
+
+/** The cells of each part a division into equal parts deals on the board
+ * `sp` of the sizes `sizes`: a number, `w` the board's width, or a size. */
+function equalSize(
+  divide: { readonly equal: number | string },
+  sp: { readonly w: number },
+  sizes: Readonly<Record<string, number>>,
+): number {
+  const { equal } = divide;
+  if (typeof equal === "number") return equal;
+  const k = equal === "w" ? sp.w : sizes[equal];
+  if (k === undefined) throw new Error(`divide: no size ${equal} on the board`);
+  return k;
 }
 
 /** Each of `cells`' part in `dsf`, numbered in the order of the parts'

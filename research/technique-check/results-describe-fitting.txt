@@ -1,0 +1,4 @@
+ok  fitting    cageCull                       4  sound    (want sound   )    16 queries    0.2s
+ok  fitting    cageCull (planted)             4  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  fitting +X cageCull                       4  sound    (want sound   )    16 queries    0.2s
+ok  src/engine/testing/fixtures/fitting/fitting.description.yaml#cageCull: recorded sound, proved whole on all 2 boards

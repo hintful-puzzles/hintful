@@ -1,0 +1,136 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a Latin square whose blocks are dealt, connected
+# blocks of as many squares as the board is wide that tile it, each holding
+# every number once as a row does; small cages dealt beside them, each
+# showing its sum and holding no number twice; and a rule the player switches
+# on that adds the two diagonals. For the fill engine's tests of a partition
+# among the units the deal divides into equal parts (Solo's jigsaw blocks),
+# of two partitions divided in turn and the answer searched under both, and
+# of their drawing (Solo's Killer cages inset inside its blocks, X's
+# diagonals), on a description that names no game.
+game: fitting
+produces: latin
+sizes:
+  w: { min: 4, max: 6 }
+space:
+  grid: { w: "w", h: "w" }
+  regions: { box: dealt, cage: dealt }
+  units: [box, rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
+shape:
+  - "latin(value, units)"
+  - "forall r in cage: distinct(value(c) over c in cells(r))"
+clues:
+  sum:
+    at: cage
+    complete: true
+    value: "range(1, |cells(at)| * w)"
+    means: "sum(c in cells(at) of value(c)) = v"
+variations:
+  # The diagonals are units, after the rest.
+  X:
+    add:
+      space: { diagonals: true, units: [diagonals] }
+freedom: { kind: fill }
+play:
+  numbers: {}
+  signs: { sum: "+" }
+  boards: [4x4, 5x5, 6x6]
+  variants: [{ board: 5x5, with: [X], tier: Easy }]
+  modifiers:
+    X:
+      letter: x
+      kw: diagonals
+      name: Diagonals
+      words: X
+      rule: each of the two diagonals holds every number once too.
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the row, column, block, diagonal or cage the step is about.
+deal:
+  blocks: the partition, connected blocks as large as a row that tile the board
+  cage: the squares in dominoes and then small cages, at random
+  answer: searched under the blocks and the cages
+  sum: a cage's sum
+  given: every square's number, then each hidden while the board still finishes
+  tier: one of the tiers
+  divide:
+    - { partition: box, equal: w }
+    - { partition: cage, pairs: 0.75, most: 3 }
+  sample: { search: true }
+  hide: given
+id:
+  - blocks: box
+  - { blocks: cage, before: "," }
+  - parts: cage
+    before: ","
+    letters: { a: sum }
+  - { digits: given, before: "," }
+tiers: [Easy]
+names:
+  dup: "a placed number's row, column, block and cage"
+  single: "the only number left in a square"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only square left for a number"
+  set: "numbers already accounted for"
+# The walk's words for how far a placed number reaches: its row, column,
+# block and cage, and with X on its diagonals.
+steps:
+  clean:
+    ring: cell
+    terms: { X: flag }
+    wordings:
+      - when: X
+        move: "any number already in its square's row, column, block, diagonal or cage"
+      - move: "any number already in its square's row, column, block or cage"
+  note:
+    ring: cell
+    terms: { X: flag, vs: values, unruled: flag }
+    wordings:
+      - when: unruled
+        look: "No number stands in {ring}'s row, column, block or cage yet"
+        move: "pencil in every one"
+      - when: X
+        look: >-
+          Only {vs} {vs: isn't | aren't} already in {ring}'s row, column, block,
+          diagonal or cage
+        move: "pencil {vs: it | them} in"
+      - look: "Only {vs} {vs: isn't | aren't} already in {ring}'s row, column, block or cage"
+        move: "pencil {vs: it | them} in"
+  cull:
+    ring: cell
+    terms: { X: flag, n: number }
+    wordings:
+      - when: X
+        move: "row, column, block, diagonal or cage"
+      - move: "row, column, block or cage"
+  regionsFull:
+    ring: cell
+    terms: { X: flag, n: number }
+    wordings:
+      - when: X
+        look: >-
+          Every other number is already in {ring}'s row, column, block,
+          diagonal or cage
+        move: "it can only be {n}"
+      - look: "Every other number is already in {ring}'s row, column, block or cage"
+        move: "it can only be {n}"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  # A placed number leaves the rest of its cage.
+  - kind: peer.placed
+    as: cageCull
+    tier: Easy
+    rung: dup
+    with:
+      peer: "p in cells where p != c and cage(p) = cage(c)"
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  - { use: latin.set, tier: Easy, rung: set }
