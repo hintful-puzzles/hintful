@@ -1,0 +1,9 @@
+ok  stretching twoClues                       3  sound    (want sound   )     9 queries    0.2s
+ok  stretching twoClues (planted)             3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/stretching/stretching.description.yaml#twoClues: recorded sound, proved whole on all 1 boards
+ok  stretching tooLong                        3  sound    (want sound   )     9 queries    0.2s
+ok  stretching tooLong (planted)              3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/stretching/stretching.description.yaml#tooLong: recorded sound, proved whole on all 1 boards
+ok  stretching unreachable                    3  sound    (want sound   )     9 queries    0.4s
+ok  stretching unreachable (planted)          3  unsound  (want unsound )     1 queries    0.0s   at cell 0
+ok  src/engine/testing/fixtures/stretching/stretching.description.yaml#unreachable: recorded sound, proved whole on all 1 boards

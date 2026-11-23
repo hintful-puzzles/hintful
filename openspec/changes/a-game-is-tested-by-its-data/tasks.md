@@ -207,13 +207,20 @@
                   a clear one's again, in both its lines where it can be.
                   Seen to fail with the generator not Latin, the renumbering
                   and its preference for both lines each planted off.
-            - [ ] Next: the 4 left in `NO_FIXTURE_YET`: the deal's
-                  (`oneIn`, `stripFrom`), and
-                  `produces: links`, `space.grid.hexagon`. `deal.oneIn` is
-                  Sticks' one number on each line, not the grown
-                  partition's `closed.oneIn`. `stripFrom` changes only which
-                  draw a strip starts from, so its test needs a way to see
-                  that.
+            - [x] `stretching`: `deal.oneIn`, `deal.stripFrom` and
+                  `produces: links`, on a line across or down through every
+                  square and a number on each line (`deal.test.ts`): each
+                  line of a sampled answer gets one number, its length, at
+                  the square the draw picks; a search tier's deal throws no
+                  draw away for the lowest tier stopping short of every
+                  clue, and the same deal without `stripFrom` throws away
+                  105 to 1784 (the census's `rejected`, which is how a strip's
+                  start is seen). Seen to fail with `stripFrom` ignored, the
+                  pick taken as a line's first square and a line's squares
+                  left uncovered (each its own group), the last two in the
+                  compiler.
+            - [ ] Next: `space.grid.hexagon`, the one left in
+                  `NO_FIXTURE_YET`.
 
 ## 4. The born games
 

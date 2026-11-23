@@ -1,0 +1,20 @@
+# A defect planted in each of the fixture's techniques, which the soundness
+# checks under research/technique-check must find unsound.
+
+techniques:
+  # A line's own number read as a second.
+  twoClues:
+    conclude: >-
+      forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
+      where (with place(c, a): count(j in stick(k) where numbered(j)) >= 1):
+      place(c, 3 - a)
+  # A line reaching its number's length read as too long.
+  tooLong:
+    conclude: >-
+      forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
+      where (with place(c, a): |stick(k)| >= v): place(c, 3 - a)
+  # A line left just room enough read as left too little.
+  unreachable:
+    conclude: >-
+      forall c in cells(row(k)) + cells(col(k)) where blank(c), a in cand(c)
+      where (with place(c, a): known(k) and reach(k) <= v): place(c, 3 - a)

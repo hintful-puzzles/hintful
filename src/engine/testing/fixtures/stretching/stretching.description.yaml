@@ -1,0 +1,145 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a line across or up and down through every square,
+# and a number on each line giving its length, for the fill engine's tests of
+# a clue dealt one in each group at a random member (`deal.oneIn`) and a
+# search tier's board stripped from every clue (`deal.stripFrom`), on a
+# description that names no game and produces links.
+game: stretching
+produces: links
+sizes:
+  w: { min: 2, max: 12 }
+  h: { min: 2, max: 12 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  # 1 a line across, 2 a line up and down.
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  # The line through c across, or up and down: the squares of its row or
+  # column round c holding a line the same way, none where c's line runs the
+  # other way.
+  horiz(c): "stretch(row(c), c, {x in cells(row(c)) where value(x) = 1})"
+  vert(c): "stretch(col(c), c, {x in cells(col(c)) where value(x) = 2})"
+  # The line through c.
+  stick(c): "horiz(c) + vert(c)"
+  numbered(x): "clue(length, x) >= 0"
+  # The numbered squares on the line a square is part of.
+  joined(k): "{j in stick(k) where numbered(j)}"
+  blank(c): "not known(c)"
+  # Whether square x of line L could still hold numbered square k's line
+  # running along L, the way d: it holds no line the other way, and with
+  # that line its line would carry no number but k's.
+  free(x, k, L, d): >-
+    (not known(x) or value(x) = d)
+    and (forall y in stretch(L, x, {z in cells(L) where value(z) = d or z = x}):
+    y = k or not numbered(y))
+  # The most squares numbered square k's line can still reach, the way its
+  # line runs.
+  reach(k): >-
+    |stretch(row(k), k, {x in cells(row(k)) where free(x, k, row(k), 1)})|
+    + |stretch(col(k), k, {x in cells(col(k)) where free(x, k, col(k), 2)})|
+  # Whether square x holds a line the way d along line L that joins no
+  # number but k's; `room(k)` is the run of such squares through k.
+  alone(x, k, L, d): >-
+    value(x) = d and (forall y in stretch(L, x, {z in cells(L) where value(z) = d or z = x}):
+    y = k or not numbered(y))
+  room(k): >-
+    |stretch(row(k), k, {x in cells(row(k)) where alone(x, k, row(k), 1)})|
+    + |stretch(col(k), k, {x in cells(col(k)) where alone(x, k, col(k), 2)})|
+shape:
+  # A line carries one number at most.
+  - "forall c in cells: count(k in stick(c) where numbered(k)) <= 1"
+clues:
+  # A number on a line: its length.
+  length:
+    at: cell
+    value: "range(1, max(L in {row(at), col(at)} of |cells(L)|))"
+    means: "|horiz(at)| + |vert(at)| = v and room(at) >= v"
+freedom: { kind: fill }
+play:
+  values:
+    2: { does: place a vertical line in it, key: "1", glyph: " | ", paint: down }
+    1: { does: place a horizontal line in it, key: "2", glyph: " - ", paint: across }
+  primary: 2
+  secondary: 1
+  # A number on a line sees along it as far as its line runs.
+  plain: [length]
+  boards: [5x5]
+  hintMarks:
+    ring: the square the step decides, with the line it must hold.
+    outline: the number the step is about, and the line it would break.
+deal:
+  answer: a line a square, at random
+  length: a number on each line, at a random square of it, or as many hidden as the board stays at its tier
+  tier: one of the tiers
+  sample:
+    scatter: { value: 1, share: 0.5, each: true }
+    rest: 2
+  oneIn: { length: "stick(at)" }
+  hide: length
+  stripFrom: everyClue
+id:
+  - digits: length
+    apart: _
+tiers: [Easy, Unreasonable]
+# Every step tries a line one way in a square (`hor`: across) and finds it
+# breaks a rule, so the line runs the other way.
+kindWords:
+  flipTerms: { hor: "a = 2", own: "numbered(c)" }
+  flipCell: "{here}"
+  flipped: "{if hor: horizontal | vertical}"
+phrases:
+  tried: "a {if hor: vertical | horizontal} line"
+  here: "{ring: {if own: this {each} | this square}}"
+names:
+  twoClues: "a line joining two numbers"
+  tooLong: "a line too long for its number"
+  unreachable: "a number with no room to reach"
+techniques:
+  - kind: fit.flip
+    as: twoClues
+    tier: Easy
+    with:
+      group: "k in cells where numbered(k)"
+      holds: "count(j in stick(k) where numbered(j)) <= 1"
+      scope: "cells(row(k)) + cells(col(k))"
+    says:
+      terms: { clue: k }
+      marks: { reads: "{k}" }
+      fact:
+        marks: { outline: "with place(c, a): stick(k)" }
+        look: "{tried} on {here} would put {outline clue: this number} on a line with another"
+        again: "{tried} would join {outline clue: this number} to another"
+  - kind: fit.flip
+    as: tooLong
+    tier: Easy
+    with:
+      group: "k in cells, v = clue(length, k) where v >= 0"
+      holds: "|stick(k)| <= v"
+      scope: "cells(row(k)) + cells(col(k))"
+    says:
+      terms: { clue: k, value: v }
+      marks: { reads: "{k}" }
+      fact:
+        terms:
+          size: "with place(c, a): |stick(k)|"
+        marks: { outline: "with place(c, a): stick(k)" }
+        look: "{tried} on {here} would run {outline clue: the {value}}'s line to {size} squares"
+        again: "{tried} would run {outline clue: the {value}}'s line to {size} squares"
+  - kind: fit.flip
+    as: unreachable
+    tier: Easy
+    with:
+      group: "k in cells, v = clue(length, k) where v >= 0"
+      holds: "not known(k) or reach(k) >= v"
+      scope: "cells(row(k)) + cells(col(k))"
+    says:
+      terms: { clue: k, value: v }
+      marks: { reads: "{k}" }
+      fact:
+        terms:
+          max: "with place(c, a): reach(k)"
+        look: "{tried} on {here} would leave {outline clue: the {value}} {max: 1 square | {max} squares}"
+        again: "{tried} would leave {outline clue: the {value}} only {max: 1 square | {max} squares}"

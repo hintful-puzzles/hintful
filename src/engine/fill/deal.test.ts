@@ -12,7 +12,9 @@
  * from walls and grown round dominoes sampled densely, some closed as
  * regions of their own; on `picturing`, an answer sampled as a picture; on
  * `numbering`, numbers dealt as a Latin square's, a shaded square's
- * renumbered to repeat a clear one.
+ * renumbered to repeat a clear one; on `stretching`, a number dealt on each
+ * line at a random square of it, and a search tier's board stripped from
+ * every clue.
  * Upstream's game ID
  * grammar is each game's own cases' (`tents.cases.yaml`'s `ids` and
  * `params`).
@@ -27,6 +29,7 @@ import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mi
 import * as numbering from "../../generated/engine/testing/fixtures/numbering/numbering.compiled.ts";
 import * as picturing from "../../generated/engine/testing/fixtures/picturing/picturing.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
+import * as stretching from "../../generated/engine/testing/fixtures/stretching/stretching.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { newDealCensus, takingCensus } from "../contract/deal-census.ts";
 import { descValue } from "../contract/desc-error.ts";
@@ -649,5 +652,67 @@ describe("numbers dealt as a Latin square's, a shaded square's repeating one", (
     // A number single in both lines is taken where there is one: 110 of 114
     // shaded squares repeat one in both, 2026-11-23.
     expect(inBoth / shaded).toBeGreaterThan(0.9);
+  });
+});
+
+describe("a number dealt on each line, and a search tier stripped from every clue", () => {
+  const ACROSS = 1;
+  const w = 5;
+  const sp = spaceOf(stretching, { w, h: w });
+  /** The line through `c` of answer `g`, in cell order: its run along the
+   * row where it holds a line across, along the column where one down. */
+  const lineOf = (g: ArrayLike<number>, c: number): number[] => {
+    const step = g[c] === ACROSS ? 1 : w;
+    const within = (d: number) =>
+      d >= 0 && d < w * w && (step === w || Math.floor(d / w) === Math.floor(c / w));
+    let first = c;
+    while (within(first - step) && g[first - step] === g[c]) first -= step;
+    const line: number[] = [];
+    for (let d = first; within(d) && g[d] === g[c]; d += step) line.push(d);
+    return line;
+  };
+
+  it("deals one number on each line, valued its length, at the square picked", () => {
+    let long = 0;
+    for (let i = 0; i < 8; i++) {
+      const g = sampleAnswer(stretching.deal.sample, sp, randomNew(`one-${i}`));
+      if (g === null) throw new Error("no answer sampled");
+      const lines = [
+        ...new Map(sp.cells.map((c) => [lineOf(g, c)[0], lineOf(g, c)])).values(),
+      ];
+      long += lines.filter((l) => l.length > 1).length;
+      // The first square of each line and the last: a number at a random one
+      // is at the one the draw picks.
+      for (const pick of [() => 0, (n: number) => n - 1]) {
+        const { length } = stretching.deriveClues(g, sp, {}, {}, pick);
+        expect(length.at.length).toBe(lines.length);
+        for (const line of lines) {
+          expect(line.filter((c) => length.valueAt[c] >= 0)).toEqual([
+            line[pick(line.length)],
+          ]);
+          expect(length.valueAt[line[pick(line.length)]]).toBe(line.length);
+        }
+      }
+    }
+    // Only a line of more than one square tells its first from its last.
+    expect(long).toBeGreaterThan(20);
+  });
+
+  it("strips a search tier's board from every clue, none thrown away by the lowest tier", () => {
+    type Deal = typeof stretching.deal;
+    const shortOfEvery = "fill: the lowest tier stops short of every clue";
+    const thrown = (deal: Deal) =>
+      Array.from({ length: 8 }, (_, i) => {
+        const census = newDealCensus();
+        takingCensus(census, () =>
+          dealFill(stretching, deal, { w, h: w, diff: 1 }, randomNew(`strip-${i}`)),
+        );
+        return census.rejected.get(shortOfEvery) ?? 0;
+      });
+    expect(thrown(stretching.deal)).toEqual(Array(8).fill(0));
+    // The same deal hiding at the lowest tier first throws away the boards
+    // that tier does not finish: 105 to 1784 a deal, 2026-11-23.
+    const lowestFirst = { ...stretching.deal, stripFrom: undefined } as unknown as Deal;
+    expect(Math.min(...thrown(lowestFirst))).toBeGreaterThan(0);
   });
 });
