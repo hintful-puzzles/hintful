@@ -1,0 +1,7 @@
+# A defect planted in the fixture's technique, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A line read as needing every open square when it needs all but one.
+  lineFull:
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) + 1 >= |O|"

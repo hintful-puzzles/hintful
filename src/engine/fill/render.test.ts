@@ -6,8 +6,10 @@
 
 import { describe, expect, it } from "vitest";
 import * as joining from "../../generated/engine/testing/fixtures/joining/joining.compiled.ts";
+import * as painting from "../../generated/engine/testing/fixtures/painting/painting.compiled.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { COL_ERROR } from "../color/roles.ts";
+import { PAINTERS } from "../render/pieces/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.ts";
@@ -147,5 +149,68 @@ describe("a piece that joins", () => {
     };
     expect(meet([{ set: [0, 1, 1, 1] }])).toBe(true);
     expect(meet([{ set: [0, 1, 2, 1] }])).toBe(false);
+  });
+});
+
+describe("each painter a description may name", () => {
+  // One value of the fixture for each painter, a cell of a 3x3 board holding
+  // it, given where the description gives it.
+  const N = 3;
+  const MIDDLE = 4;
+  const sp = spaceOf(painting, { w: N, h: N });
+  const clues = painting.deriveClues(new Uint8Array(N * N).fill(2), sp);
+  const look: FillLook<painting.Dealt> = {
+    play: painting.play,
+    lineClues: painting.lineClues,
+  };
+  const input = fillInput<painting.Dealt, { tileSize: number }>(
+    painting,
+    painting.play,
+    () => 1,
+  );
+  const frame = (v: number, given: boolean): string => {
+    const board = newBoard(painting, N, N, clues);
+    board.values[MIDDLE] = v;
+    board.fixed[MIDDLE] = given ? 1 : 0;
+    const render = fillRender(painting, look, input.previewed);
+    const dr = new RecordingDrawing(render.colors(DEFAULT_BACKGROUND));
+    render.redraw(dr, render.newDrawState(board, TS), {
+      state: board,
+      prev: null,
+      dir: 1,
+      ui: newFillUi(),
+      animTime: 0,
+      flash: NO_FLASH,
+    });
+    return JSON.stringify(dr.ops);
+  };
+  const placed = Object.entries(painting.play.values).map(([v, { paint }]) => ({
+    v: Number(v),
+    paint,
+    given: false,
+  }));
+  const givens = Object.entries(painting.play.given).map(([v, { paint }]) => ({
+    v: Number(v),
+    paint,
+    given: true,
+  }));
+
+  it("names every painter, with joining's, each once", () => {
+    const named = [
+      ...[...placed, ...givens].map((p) => p.paint),
+      ...Object.values(joining.play.values).map((p) => p.paint),
+    ];
+    expect(named.sort()).toEqual(Object.keys(PAINTERS).sort());
+  });
+
+  it("draws each unlike the others and unlike an open cell", () => {
+    const frames = [...placed, ...givens].map((p) => frame(p.v, p.given));
+    expect(new Set([frame(0, false), ...frames]).size).toBe(frames.length + 1);
+  });
+
+  it("draws a piece the deal gave unlike one placed, where its painter says how", () => {
+    const telling = placed.filter((p) => PAINTERS[p.paint].given !== undefined);
+    expect(telling.length).toBeGreaterThan(0);
+    for (const p of telling) expect(frame(p.v, true)).not.toBe(frame(p.v, false));
   });
 });

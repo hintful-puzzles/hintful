@@ -1,0 +1,3 @@
+ok  painting   lineFull                       3  sound    (want sound   )     6 queries    0.0s
+ok  painting   lineFull (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/painting/painting.description.yaml#lineFull: recorded sound, proved whole on all 1 boards

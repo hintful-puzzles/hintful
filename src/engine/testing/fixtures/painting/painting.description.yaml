@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a board with a value for each painter a description
+# may name, for the fill renderer's tests to draw every painter on a
+# description that names no game. `joining` holds the painter that joins.
+game: painting
+produces: shading
+sizes:
+  w: { min: 2 }
+  h: { min: 2 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 15)" }
+define:
+  open(L): "{c in cells(L) where not known(c)}"
+  need(L): "clue(count, L) - count(c in cells(L) where value(c) = 1)"
+clues:
+  count:
+    at: line
+    value: "range(0, |cells(at)|)"
+    complete: true
+    means: "count(c in cells(at) where value(c) = 1) = v"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: clear it, key: C, glyph: " x ", paint: clear }
+    3: { does: put a block in it, key: B, glyph: " 1 ", paint: block }
+    4: { does: put a disc in it, key: D, glyph: " 0 ", paint: disc }
+    5: { does: put a bulb in it, key: L, glyph: " L ", paint: bulb }
+    6: { does: ring it, key: R, glyph: "( )", paint: ring }
+    7: { does: put a star in it, key: A, glyph: " * ", paint: star }
+    8: { does: put a tent in it, key: T, glyph: "//\\", paint: tent }
+    9: { does: grass it, key: G, glyph: "   ", paint: ground }
+    10: { does: put a hull in it, key: H, glyph: " # ", paint: hull }
+    11: { does: flood it, key: W, glyph: " ~ ", paint: sea }
+    12: { does: run a line across it, key: E, glyph: " - ", paint: across }
+    13: { does: run a line down it, key: V, glyph: " | ", paint: down }
+  given:
+    14: { glyph: " T ", paint: tree }
+    15: { glyph: "###", paint: wall }
+  primary: 1
+  secondary: 2
+  straight: true
+  boards: [4x4]
+  hintMarks:
+    ring: the squares the step decides.
+    stripes: the line the step is about.
+deal:
+  answer: a fifth of the squares shaded, at random
+  count: every row's and column's count
+  tier: the one tier
+  sample:
+    scatter: { value: 1, share: 0.2 }
+    rest: 2
+tiers: [Easy]
+names:
+  lineFull: "a line needing every open square"
+# The one step its statement needs; its tests draw boards they build, and
+# load none.
+techniques:
+  - id: lineFull
+    tier: Easy
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) = |O|"
+    conclude: "forall c in O: place(c, 1)"
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}} still needs every open square"
+      move: "{ring: its open square | its open squares} must be {shaded}"

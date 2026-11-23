@@ -93,6 +93,14 @@
             Tents in `fill/board`, `deal`, `hint`, `pair`, `play`,
             `render`; Unruly in `pair`, Kakurasu in `hint`). A fixture may
             name several capabilities; group by what one board can show.
+            - [x] `painting`: a value for each painter (`play.values`,
+                  `play.given`), each drawn unlike the others and an open
+                  cell, and a given one unlike a placed one where the painter
+                  says how (`render.test.ts`). With `joining`'s, every
+                  painter in `PAINTERS`. Seen to fail with two painters made
+                  one and with the `given` hook planted off. A test that a
+                  painter draws its error was dropped: the mistake outline
+                  made it pass on a painter planted to ignore it.
 
 ## 4. The born games
 
