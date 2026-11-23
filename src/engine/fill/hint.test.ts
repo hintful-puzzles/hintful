@@ -1,5 +1,5 @@
 /**
- * A fill game's hint, on Kakurasu's compiled module and a board dealt from a
+ * A fill game's hint, on the `playing` fixture and a board dealt from a
  * hand-drawn answer: its steps are worded by the description, made by edits,
  * followed by the player square by square, and they finish the board. A hint
  * that asks for a link, on the `linking` fixture.
@@ -7,12 +7,13 @@
 
 import { describe, expect, it } from "vitest";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
-import * as kakurasu from "../../generated/games/kakurasu/kakurasu.compiled.ts";
+import * as playing from "../../generated/engine/testing/fixtures/playing/playing.compiled.ts";
 import type { HintStep } from "../contract/game.ts";
 import { CELL, stepMarks } from "../contract/hint-words.ts";
 import type { Point } from "../contract/types.ts";
 import { click, drag } from "../input/hint-gesture.ts";
 import { techniqueTries } from "../solve/deduction-fixpoint.ts";
+import { clueList } from "../solve/describe-runtime.ts";
 import { status } from "./answer.ts";
 import { type FillBoard, newBoard, spaceOf } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
@@ -25,24 +26,23 @@ const TS = 32;
 const SHADED = 1;
 const CROSSED = 2;
 
-/** Shaded (#) and crossed (.) squares. Rows 4, 9, 1, 4; columns 4, 2, 3, 6. */
-const ANSWER = ["#.#.", ".###", "#...", "...#"];
+/** Shaded (#) and crossed (.) squares, which the line counts alone decide:
+ * rows 4, 1, 1, 0; columns 3, 1, 1, 1. The last row's first square is
+ * given, so a step on that row rings fewer squares than it stripes. */
+const ANSWER = ["####", "#...", "#...", "...."];
 const W = 4;
+const GIVEN = 12;
 
-function dealt(): FillBoard<kakurasu.Dealt> {
+function dealt(): FillBoard<playing.Dealt> {
   const g = Uint8Array.from(ANSWER.join(""), (ch) => (ch === "#" ? SHADED : CROSSED));
-  return newBoard(
-    kakurasu,
-    W,
-    W,
-    kakurasu.deriveClues(g, spaceOf(kakurasu, { w: W, h: W })),
-  );
+  const { count } = playing.deriveClues(g, spaceOf(playing, { w: W, h: W }));
+  return newBoard(playing, W, W, { given: clueList([GIVEN], [CROSSED], W * W), count });
 }
 
-const { hint } = fillHint(kakurasu);
-const reading = { blank: CROSSED, glyphs: {}, lineClues: kakurasu.lineClues };
+const { hint } = fillHint(playing);
+const reading = { blank: CROSSED, glyphs: {}, lineClues: playing.lineClues };
 
-function plan(board: FillBoard<kakurasu.Dealt>) {
+function plan(board: FillBoard<playing.Dealt>) {
   const got = hint.plan(board);
   if (!got.ok) throw new Error(`no hint: ${got.error}`);
   return got.steps;
@@ -51,23 +51,23 @@ function plan(board: FillBoard<kakurasu.Dealt>) {
 describe("a fill game's hint", () => {
   it("words its first step from the description, and rings and stripes what it says", () => {
     const [step] = plan(dealt());
-    // The third row's number is 1, so its squares worth 2, 3 and 4 are clear.
-    expect(step.rung).toBe("tooMuch");
+    // The last row's number is 0, so its open squares are clear.
+    expect(step.rung).toBe("lineMet");
     expect(step.explanation).toBe(
-      "This row still needs only 1, and the ringed squares are each worth more, so they must be clear.",
+      "This row's shaded squares already make its number, so its open squares must be clear.",
     );
     const marks = stepMarks(step);
-    expect(marks.of("stripes", CELL)).toEqual([0, 1, 2, 3].map((x) => ({ x, y: 2 })));
-    expect(marks.of("ring", CELL)).toEqual([1, 2, 3].map((x) => ({ x, y: 2 })));
+    expect(marks.of("stripes", CELL)).toEqual([0, 1, 2, 3].map((x) => ({ x, y: 3 })));
+    expect(marks.of("ring", CELL)).toEqual([1, 2, 3].map((x) => ({ x, y: 3 })));
     expect(step.highlights?.targets.every((t) => t.value === CROSSED)).toBe(true);
   });
 
   it("finishes the board when each step's move is made", () => {
     let board = dealt();
     let made = 0;
-    while (status(kakurasu, reading, board) !== "solved") {
+    while (status(playing, reading, board) !== "solved") {
       const [step] = plan(board);
-      board = applyEdit(kakurasu, board, step.move);
+      board = applyEdit(playing, board, step.move);
       made++;
       expect(made).toBeLessThan(40);
     }
@@ -80,11 +80,11 @@ describe("a fill game's hint", () => {
     let board = dealt();
     const before = techniqueTries.count;
     let made = 0;
-    for (; status(kakurasu, reading, board) !== "solved" && made < 40; made++)
-      board = applyEdit(kakurasu, board, plan(board)[0].move);
+    for (; status(playing, reading, board) !== "solved" && made < 40; made++)
+      board = applyEdit(playing, board, plan(board)[0].move);
     expect({ made, tried: techniqueTries.count - before }).toEqual({
-      made: 10,
-      tried: 113,
+      made: 7,
+      tried: 50,
     });
   });
 
@@ -96,7 +96,7 @@ describe("a fill game's hint", () => {
     const one = { set: [first.y * W + first.x, first.value] };
     expect(hint.keepTrack(one, step, board)).toBe("onTrack");
     expect(step.highlights?.targets).toEqual(rest);
-    const after = applyEdit(kakurasu, board, one);
+    const after = applyEdit(playing, board, one);
     expect(hint.refreshStep(step, after)?.highlights?.targets).toEqual(rest);
     // The wrong value on a square it asks for takes the player off it.
     const wrong = { set: [rest[0].y * W + rest[0].x, 3 - rest[0].value] };
@@ -104,7 +104,7 @@ describe("a fill game's hint", () => {
   });
 
   it("clicks the squares its move sets, each with the button that makes it", () => {
-    const game = fillGame("kakurasu", kakurasu);
+    const game = fillGame("playing", playing);
     const board = dealt();
     const [step] = plan(board);
     const ds = game.newDrawState(board, TS);
@@ -119,7 +119,7 @@ describe("a fill game's hint", () => {
   it("names the technique that makes a move Check & save judges", () => {
     const board = dealt();
     const [step] = plan(board);
-    const verdict = hint.judgeMove(board, applyEdit(kakurasu, board, step.move));
+    const verdict = hint.judgeMove(board, applyEdit(playing, board, step.move));
     expect(verdict).not.toBeNull();
   });
 });

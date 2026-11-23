@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a board of two alike pieces, no three in a row and
+# each line half of each, for the fill engine's tests of a click that cycles,
+# a rule the player switches on, the menu's boards and a deal that builds its
+# answer and hides its givens, on a description that names no game.
+game: pairing
+produces: shading
+sizes:
+  w: { min: 4, step: 2 }
+  h: { min: 4, step: 2 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  flip(d): "3 - d"
+  sq(L, i): "nth(cells(L), i)"
+  window(L, i): "{sq(L, i), sq(L, i + 1), sq(L, i + 2)}"
+shape:
+  - >-
+    forall L in lines, i in range(0, |cells(L)| - 3):
+    not (value(sq(L, i)) = value(sq(L, i + 1)) and value(sq(L, i + 1)) = value(sq(L, i + 2)))
+  - "forall L in lines, d in domain: 2 * count(c in cells(L) where value(c) = d) = |cells(L)|"
+clues:
+  # A piece the board is dealt holding.
+  given: { at: cell, value: "range(1, 2)", means: "value(at) = v" }
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: put a block in it, key: "1", glyph: " 1 ", paint: block }
+    2: { does: put a disc in it, key: ["0", "2"], glyph: " 0 ", paint: disc }
+  primary: 1
+  secondary: 2
+  click: cycle
+  dealt: given
+  boards: [4x4, 6x6]
+  default: 6x6
+  boardTiers: { 4x4: [Easy, Easy] }
+  variants: [{ board: 6x6, with: [unique], tier: Normal }]
+  modifiers:
+    unique:
+      letter: u
+      kw: unique-rows-and-columns
+      name: Unique rows and columns
+      words: unique
+      rule: no two rows may be the same, and no two columns.
+  hintMarks:
+    ring: the square to fill.
+    outline: the squares the step reasons from.
+    stripes: the line the step is about.
+deal:
+  answer: built a square at a time, then every square the ladder decides
+  given: every square's piece, then each hidden while the board still finishes
+  tier: one of the tiers, the board finished at it and not at the tier below
+  sample: { build: true }
+  hide: given
+# Upstream Unruly's ID grammar: the givens as dot runs, a block's letter
+# uppercase.
+id:
+  - dots: given
+    cases: [2, 1]
+variations:
+  # A rule and no step: a board with it on still finishes by the others, and
+  # the rule shows as a live error.
+  unique:
+    add:
+      shape:
+        - >-
+          forall A in lines, B in lines where B != A and (A in rows) = (B in rows):
+          exists i in range(0, |cells(A)| - 1): value(sq(A, i)) != value(sq(B, i))
+tiers: [Easy, Normal]
+names:
+  threes: "avoiding three in a row"
+  quota: "a full quota"
+# A board loads only where deduction solves it, and a deal finishes at a tier
+# and not below, so each tier has one step.
+techniques:
+  - id: threes
+    tier: Easy
+    for: >-
+      L in lines, i in range(0, |cells(L)| - 3), W = window(L, i),
+      x in W where not known(x),
+      d in domain where (forall c in W where c != x: value(c) = d)
+    conclude: "place(x, flip(d))"
+    says:
+      terms: { held: d, fill: flip(d) }
+      marks: { outline: "{c in W where c != x}" }
+      look: "{outline: the outlined cells} already hold {piece held}s"
+      follows: "{ring: this cell} would make three in a row"
+      move: "it must hold a {piece fill}"
+  - id: quota
+    tier: Normal
+    for: >-
+      L in lines, d in domain
+      where 2 * count(c in cells(L) where value(c) = d) = |cells(L)|,
+      x in cells(L) where not known(x)
+    conclude: "place(x, flip(d))"
+    says:
+      terms: { full: d, fill: flip(d) }
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this line} already holds all its {piece full}s"
+      move: "{ring: this cell} must hold a {piece fill}"

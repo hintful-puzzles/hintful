@@ -1,0 +1,10 @@
+--  pairing: no board of order 3 has an answer, so nothing is checked there
+--  pairing +unique: no board of order 3 has an answer, so nothing is checked there
+ok  pairing    threes                         4  sound    (want sound   )     8 queries    0.0s
+ok  pairing    threes (planted)               4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  pairing +unique threes                         4  sound    (want sound   )     8 queries    0.0s
+ok  src/engine/testing/fixtures/pairing/pairing.description.yaml#threes: recorded sound, proved whole on all 2 boards
+ok  pairing    quota                          4  sound    (want sound   )     8 queries    0.1s
+ok  pairing    quota (planted)                4  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  pairing +unique quota                          4  sound    (want sound   )     8 queries    0.1s
+ok  src/engine/testing/fixtures/pairing/pairing.description.yaml#quota: recorded sound, proved whole on all 2 boards

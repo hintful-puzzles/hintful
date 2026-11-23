@@ -1,20 +1,20 @@
 /**
- * A fill game of two alike pieces, on Unruly's compiled module: the click
- * cycle and digit keys, the givens dealt as fixed cells and written as
- * upstream's dot runs, a modifier in the params, the answer built by the
- * ladder and its givens hidden, and the pieces and line-shaped live errors
- * the board draws. A piece drawn whole, which does not grow, is the `linking`
- * fixture's.
+ * A fill game of two alike pieces, on the `pairing` fixture: the click cycle
+ * and digit keys, the givens dealt as fixed cells and written as upstream's
+ * dot runs, a modifier in the params, the menu's boards, the answer built by
+ * the ladder and its givens hidden, and the pieces and line-shaped live
+ * errors the board draws. A piece drawn whole, which does not grow, is the
+ * `linking` fixture's.
  */
 
 import { describe, expect, it } from "vitest";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
-import * as unruly from "../../generated/games/unruly/unruly.compiled.ts";
-import { game as unrulyGame } from "../../generated/games/unruly/unruly.game.ts";
+import * as pairing from "../../generated/engine/testing/fixtures/pairing/pairing.compiled.ts";
 import { givenSurface } from "../color/palette.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import { descValue } from "../contract/desc-error.ts";
 import { UI_UPDATE } from "../contract/game.ts";
+import { presetGrid } from "../game-id/preset-grid.ts";
 import {
   LEFT_BUTTON,
   LEFT_RELEASE,
@@ -38,13 +38,13 @@ const BLOCK = 1;
 const DISC = 2;
 const W = 6;
 const TS = 32;
-type Board = FillBoard<unruly.Dealt>;
+type Board = FillBoard<pairing.Dealt>;
 
 /** A 6x6 board with a given at each of `givens`' cells. */
 function board(givens: Record<number, number> = {}, variations: string[] = []): Board {
   const at = Object.keys(givens).map(Number);
   return newBoard(
-    unruly,
+    pairing,
     W,
     W,
     {
@@ -58,12 +58,14 @@ function board(givens: Record<number, number> = {}, variations: string[] = []): 
   );
 }
 
+const game = fillGame("pairing", pairing);
+
 const read = (desc: string) =>
   descValue(
-    decodeDesc<unruly.Dealt>(
-      unruly.deal,
-      spaceOf(unruly, { w: W, h: W }),
-      unruly.clueMax,
+    decodeDesc<pairing.Dealt>(
+      pairing.deal,
+      spaceOf(pairing, { w: W, h: W }),
+      pairing.clueMax,
       desc,
     ),
   );
@@ -71,7 +73,7 @@ const read = (desc: string) =>
 describe("a fill game of two alike pieces", () => {
   it("cycles a cell round empty and both pieces, the right button the other way", () => {
     const ds = { tileSize: TS };
-    const input = fillInput<unruly.Dealt, typeof ds>(unruly, unruly.play, () => 0);
+    const input = fillInput<pairing.Dealt, typeof ds>(pairing, pairing.play, () => 0);
     const ui = newFillUi();
     const center = { x: TS / 2, y: TS / 2 };
     const clicks = (b: Board, button: number, release: number): number[] => {
@@ -80,7 +82,7 @@ describe("a fill game of two alike pieces", () => {
         // A sweep's press makes the edit, and its release ends the stroke.
         for (const at of [button, release]) {
           const got = input.interpretMove(b, ui, ds, center, at);
-          if (got !== null && got !== UI_UPDATE) b = applyEdit(unruly, b, got);
+          if (got !== null && got !== UI_UPDATE) b = applyEdit(pairing, b, got);
         }
         seen.push(b.values[0]);
       }
@@ -98,7 +100,7 @@ describe("a fill game of two alike pieces", () => {
 
   it("places a piece by each of its digit keys", () => {
     const ds = { tileSize: TS };
-    const input = fillInput<unruly.Dealt, typeof ds>(unruly, unruly.play, () => 0);
+    const input = fillInput<pairing.Dealt, typeof ds>(pairing, pairing.play, () => 0);
     const ui = newFillUi();
     ui.cursor.visible = true;
     const press = (key: string): number => {
@@ -117,37 +119,45 @@ describe("a fill game of two alike pieces", () => {
   it("reads upstream's dot runs as fixed givens and writes them back", () => {
     const desc = "aBdIAEbceaca";
     const dealt = read(desc);
-    const b = newBoard(unruly, W, W, dealt);
+    const b = newBoard(pairing, W, W, dealt);
     expect([b.values[0], b.values[2], b.fixed[0], b.fixed[1]]).toEqual([
       DISC,
       BLOCK,
       1,
       0,
     ]);
-    expect(encodeDesc(unruly.deal, spaceOf(unruly, b), dealt)).toBe(desc);
+    expect(encodeDesc(pairing.deal, spaceOf(pairing, b), dealt)).toBe(desc);
   });
 
   it("writes a modifier by its letter, and no variation where none is on", () => {
     const defaults = (): FillParams => ({ w: 8, h: 8, diff: 0 });
     const { encodeParams, decodeParams } = fillParams(
-      unruly.deal,
-      unruly.tiers,
+      pairing.deal,
+      pairing.tiers,
       defaults,
-      unruly.modifiers,
+      pairing.modifiers,
     );
     const unique = { w: 8, h: 8, diff: 1, variations: ["unique"] };
-    expect(encodeParams(unique, true)).toBe("8x8ude");
-    expect(decodeParams("8x8ude")).toEqual(unique);
-    expect(decodeParams("8x8de")).toEqual({ w: 8, h: 8, diff: 1 });
+    expect(encodeParams(unique, true)).toBe("8x8udn");
+    expect(decodeParams("8x8udn")).toEqual(unique);
+    expect(decodeParams("8x8dn")).toEqual({ w: 8, h: 8, diff: 1 });
+  });
+
+  it("starts on its default board, and offers each board at its tiers, then the variant", () => {
+    expect(game.defaultParams()).toEqual({ w: 6, h: 6, diff: 0 });
+    const lines = (presetGrid(game.paramConfig, game.menu).submenu ?? []).map((m) =>
+      m.params === undefined ? "" : game.encodeParams(m.params, true),
+    );
+    expect(lines).toEqual(["4x4de", "6x6de", "6x6dn", "6x6udn"]);
   });
 
   it("deals a built answer with every given hidden that the tier can spare", () => {
     const p = { w: W, h: W, diff: 1 };
-    const { desc, aux } = dealFill(unruly, unruly.deal, p, randomNew("pair-deal"));
+    const { desc, aux } = dealFill(pairing, pairing.deal, p, randomNew("pair-deal"));
     const dealt = read(desc);
-    const b = newBoard(unruly, W, W, dealt);
-    expect(solveBoard(unruly, b, 1).verdict).toBe("solved");
-    expect(solveBoard(unruly, b, 0).verdict).not.toBe("solved");
+    const b = newBoard(pairing, W, W, dealt);
+    expect(solveBoard(pairing, b, 1).verdict).toBe("solved");
+    expect(solveBoard(pairing, b, 0).verdict).not.toBe("solved");
     // Each given is the answer's, and none could go and leave the board
     // finished at its tier.
     const at = Array.from(dealt.given.at);
@@ -162,7 +172,7 @@ describe("a fill game of two alike pieces", () => {
           W * W,
         ),
       };
-      expect(solveBoard(unruly, newBoard(unruly, W, W, fewer), 1).verdict).not.toBe(
+      expect(solveBoard(pairing, newBoard(pairing, W, W, fewer), 1).verdict).not.toBe(
         "solved",
       );
     });
@@ -172,11 +182,11 @@ describe("a fill game of two alike pieces", () => {
 describe("a placement's animation", () => {
   it("runs where one cell takes or loses a piece that grows", () => {
     const b = board();
-    const one = applyEdit(unruly, b, { set: [0, DISC] });
-    const two = applyEdit(unruly, b, { set: [0, DISC, 1, BLOCK] });
-    expect(unrulyGame.animLength?.(b, one, 1, newFillUi())).toBe(PLACE_ANIM_TIME);
-    expect(unrulyGame.animLength?.(one, b, -1, newFillUi())).toBe(PLACE_ANIM_TIME);
-    expect(unrulyGame.animLength?.(b, two, 1, newFillUi())).toBe(0);
+    const one = applyEdit(pairing, b, { set: [0, DISC] });
+    const two = applyEdit(pairing, b, { set: [0, DISC, 1, BLOCK] });
+    expect(game.animLength?.(b, one, 1, newFillUi())).toBe(PLACE_ANIM_TIME);
+    expect(game.animLength?.(one, b, -1, newFillUi())).toBe(PLACE_ANIM_TIME);
+    expect(game.animLength?.(b, two, 1, newFillUi())).toBe(0);
   });
 
   it("does not run for a piece drawn whole", () => {
@@ -198,15 +208,15 @@ describe("a placement's animation", () => {
 describe("a fill game of two alike pieces, drawn", () => {
   const render = () => {
     const ds = { tileSize: TS };
-    const input = fillInput<unruly.Dealt, typeof ds>(unruly, unruly.play, () => 1);
-    return fillRender(unruly, { play: unruly.play, lineClues: [] }, input.previewed);
+    const input = fillInput<pairing.Dealt, typeof ds>(pairing, pairing.play, () => 1);
+    return fillRender(pairing, { play: pairing.play, lineClues: [] }, input.previewed);
   };
   function draw(
     b: Board,
     edits: readonly Edit[],
     anim: { prev: Board; animTime: number } | null = null,
   ): { ops: readonly DrawOp[]; colors: number[][] } {
-    for (const e of edits) b = applyEdit(unruly, b, e);
+    for (const e of edits) b = applyEdit(pairing, b, e);
     const r = render();
     const colors = r.colors(DEFAULT_BACKGROUND);
     const dr = new RecordingDrawing(colors);

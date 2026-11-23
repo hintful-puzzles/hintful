@@ -13,9 +13,24 @@ import {
   variationWord,
 } from "../describe/description.ts";
 import { loadDescriptionFile } from "../describe/load.ts";
+import type { ParamConfigItem } from "../engine/contract/game.ts";
+import { type BornModule, fillGame } from "../engine/fill/game.ts";
 import { rulesetField } from "../engine/game-id/ruleset.ts";
 import { getTsGame } from "../engine/midend/registry.ts";
 import "../games/index.ts";
+
+// A fixture is no registered game: it is built as its tests build it.
+const fixtures = import.meta.glob<BornModule<Record<string, never>>>(
+  "../generated/engine/testing/fixtures/*/*.compiled.ts",
+  { eager: true },
+);
+const gameOf = (
+  id: string,
+): { paramConfig: readonly ParamConfigItem<unknown>[] } | null => {
+  const module =
+    fixtures[`../generated/engine/testing/fixtures/${id}/${id}.compiled.ts`];
+  return getTsGame(id) ?? (module === undefined ? null : fillGame(id, module));
+};
 
 const texts = import.meta.glob<string>("../**/*.description.yaml", {
   eager: true,
@@ -33,7 +48,7 @@ const varied = Object.entries(texts).flatMap(([path, text]) => {
 /** How the game offers a variation by `name`: as a ruleset by its name, as
  * a modifier by its words, or not at all. */
 function offered(id: string, name: string): string[] {
-  const game = getTsGame(id);
+  const game = gameOf(id);
   if (game === null) return [`no game ${id}`];
   const config = game.paramConfig;
   return [

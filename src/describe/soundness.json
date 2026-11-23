@@ -16,6 +16,8 @@
   "src/engine/testing/fixtures/linking/linking.description.yaml#noAnchor": "33f8fb9fe8e6b74d",
   "src/engine/testing/fixtures/linking/linking.description.yaml#pieceLink": "4348e993c92d30c3",
   "src/engine/testing/fixtures/painting/painting.description.yaml#lineFull": "7fd7d5785c27b50a",
+  "src/engine/testing/fixtures/pairing/pairing.description.yaml#quota": "ec7ba33c2483b4d4",
+  "src/engine/testing/fixtures/pairing/pairing.description.yaml#threes": "b68339878f2d833d",
   "src/engine/testing/fixtures/playing/playing.description.yaml#lineFull": "4080d828ef475260",
   "src/engine/testing/fixtures/playing/playing.description.yaml#lineMet": "5e32d78440b4840c",
   "src/games/abcd/abcd.description.yaml#placed": "04e31cd9d302c71d",

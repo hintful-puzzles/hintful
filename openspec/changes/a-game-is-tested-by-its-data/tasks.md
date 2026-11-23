@@ -75,7 +75,7 @@
             `deal.sample`, `space` and `space.grid` the schema names (a
             `deal` key it does not is prose), the painters, `produces` and
             `freedom`, over every born game, against what the fixtures name;
-            the rest is its `NO_FIXTURE_YET` ledger (62 of them, 2026-11-23).
+            the rest is its `NO_FIXTURE_YET` ledger (62 of them at first, 2026-11-23).
             Builtins are left out: each call is run on boards by its
             technique's soundness check. Each fixture is held to a test
             importing its module. Both seen to fail on a plant.
@@ -115,10 +115,28 @@
                   with either glance technique planted out (the 4x4 hand
                   board asks none either way); seen to fail with `links`,
                   `noBareLine`, each glance and `partner`'s `along` planted.
-            - [ ] Next: a fixture for Unruly's cases in `pair.test.ts`
-                  (`click`, `default`, `boardTiers`, `variants`,
-                  `modifiers`, `deal.hide`, `sample.build`), then
-                  Kakurasu's in `hint.test.ts`.
+            - [x] `pairing`: `click`, `default`, `boardTiers`, `variants`,
+                  `modifiers`, `deal.hide` and `sample.build`; Unruly's
+                  cases in `pair.test.ts` moved onto it, and the menu's
+                  boards drawn from the first three. Its `unique` rule is a
+                  shape and no step. Seen to fail with each of the seven
+                  planted off, and the rule's shape planted wrong.
+            - [x] Kakurasu's cases in `hint.test.ts`, on `playing`'s two
+                  line steps and a hand board they solve, a square given so
+                  the first step rings fewer than it stripes (seen to fail
+                  with the stripes planted onto the open squares). No fill
+                  test imports a game's module now. The grep's other hits,
+                  in `engine/hint/` and `palette-source`, read a game's
+                  names, stated words or whole population, and run no
+                  capability: they stay.
+            - [ ] Next: the 28 left in `NO_FIXTURE_YET`, grouped by what
+                  one board can show: the deal's (`grow`, `hideFlag`,
+                  `latin`, `leaves`, `never`, `oneIn`, `options`,
+                  `stripFrom`, `symmetric`, `thorough`, `unpair`,
+                  `withhold`, and `sample`'s `climb`, `dominoes`, `first`,
+                  `lines`, `mend`, `picture`, `pieces`), play's (`bounds`,
+                  `plain`, `shape`, `sizes`, `tally`, `wash`), and
+                  `produces: links`, `space.grid.hexagon`, `space.regions`.
 
 ## 4. The born games
 

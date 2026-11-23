@@ -1,0 +1,13 @@
+# A defect planted in each of the fixture's techniques, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # Two of three alike read as the third being the same piece.
+  threes:
+    conclude: "place(x, d)"
+  # A line one short of its quota read as holding it.
+  quota:
+    for: >-
+      L in lines, d in domain
+      where 2 * count(c in cells(L) where value(c) = d) + 2 >= |cells(L)|,
+      x in cells(L) where not known(x)
