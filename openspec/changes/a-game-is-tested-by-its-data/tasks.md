@@ -68,6 +68,16 @@
       in its engine module's tests on its one game's compiled module, as
       Tents' already are: the `joins` painter on Norinori
       (`engine/fill/render.test.ts`), which a fixture replaces.
+      Begun: the hexagon's shear is held on a `hexGrid` fixture of plain
+      options (`engine/input/target-verb.test.ts`), no game named. Next:
+      define a capability as what a description names (its `play`, `deal`
+      and `space` keys and the builtins its techniques call), count them
+      across the born games' descriptions by a query, and compile fixture
+      descriptions that name no game (`describe/sources.ts` compiles only
+      what it finds; a fixture under `src/engine/testing/` needs a place
+      there). The engine tests that import a game's compiled module today
+      (`git grep -l 'generated/games/.*compiled' -- 'src/engine/**/*.test.ts'`)
+      are where a fixture replaces a game.
 
 ## 4. The born games
 
@@ -97,7 +107,7 @@
       game's outline case left for `mistake-outline.test.ts`.
       `born-game-cases.test.ts` holds every born game to a cases file and
       no test file of its own, seen to fail on a planted one.
-- [ ] 4.2 `docs/testing.md` § "What a new game ships" (and
+- [x] 4.2 `docs/testing.md` § "What a new game ships" (and
       `docs/new-game.md` where it names a test file) say a born game ships
       test data, not tests. Verified by the gate's guide checks.
-      (Written; checked off once the last game moves.)
+      (The guide checks passed with Bricks, the last game, moved.)
