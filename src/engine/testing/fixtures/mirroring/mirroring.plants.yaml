@@ -1,0 +1,20 @@
+# A defect planted in each of the fixture's techniques, which the soundness checks
+# under research/technique-check must find unsound.
+
+techniques:
+  # A square with no number read as numbered.
+  numbered:
+    for: "k in cells where clue(number, k) < 0 and not known(k)"
+  # A square beside a crossed one read as beside a shaded one.
+  beside:
+    for: "c in cells where value(c) = 2, x in open(c)"
+  # A number one short of its shaded squares read as having them all.
+  met:
+    for: >-
+      k in cells where clue(number, k) >= 0 and shaded(k) + 1 >= clue(number, k),
+      O = open(k) where |O| > 0
+  # A number read as needing every open square when it needs all but one.
+  room:
+    for: >-
+      k in cells where clue(number, k) >= 0,
+      O = open(k) where |O| > 0 and clue(number, k) - shaded(k) + 1 >= |O|

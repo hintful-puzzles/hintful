@@ -161,12 +161,19 @@
                   `deal.leaves` is retired, not covered: planted off it
                   failed nothing, and Light Up dealt the same 45 boards
                   without it (proposal.md § "Capabilities").
-            - [ ] Next: the 15 left in `NO_FIXTURE_YET`, grouped by what
-                  one board can show: the deal's (`grow`, `latin`,
-                  `never`, `oneIn`, `stripFrom`, `symmetric`, `thorough`,
-                  `unpair`, and `sample`'s `climb`, `dominoes`, `mend`,
-                  `picture`), and `produces: links`, `space.grid.hexagon`,
-                  `space.regions`. `stripFrom` changes only which draw a
+            - [x] `mirroring`: `deal.symmetric`, `deal.thorough` and
+                  `deal.never`, on numbers counting the shaded squares
+                  beside each unshaded one (`deal.test.ts`,
+                  `game-id.test.ts`). A thorough hide leaves no pair the
+                  board finishes without, and one that is not leaves some.
+                  Seen to fail with the half-turn units, the thorough
+                  setting (each way) and the never kind planted off.
+            - [ ] Next: the 12 left in `NO_FIXTURE_YET`, grouped by what
+                  one board can show: the deal's (`grow`, `latin`, `oneIn`,
+                  `stripFrom`, `unpair`, and `sample`'s `climb`,
+                  `dominoes`, `mend`, `picture`), and `produces: links`,
+                  `space.grid.hexagon`, `space.regions`. A Clusters-like
+                  climb fixture would take `climb`, `mend` and `unpair`. `stripFrom` changes only which draw a
                   strip starts from, so its test needs a way to see that.
 
 ## 4. The born games

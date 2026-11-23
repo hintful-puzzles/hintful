@@ -1,0 +1,114 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: shaded squares none side by side, and a number on
+# each unshaded square counting the shaded squares beside it, the numbers
+# shown symmetric under a half turn, for the fill engine's tests of a
+# symmetric hide, a hide the player may make less thorough, and a kind only
+# a game ID carries, on a description that names no game.
+game: mirroring
+produces: shading
+sizes:
+  w: { min: 2, max: 9 }
+  h: { min: 2, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  shaded(k): "count(p in adj4(k) where value(p) = 1)"
+  open(k): "{p in adj4(k) where not known(p)}"
+shape:
+  - "forall c in cells, x in adj4(c): not (value(c) = 1 and value(x) = 1)"
+clues:
+  # An unshaded square counting the shaded squares beside it.
+  number:
+    at: cell
+    value: "range(0, 4)"
+    means: "value(at) = 2 and count(p in adj4(at) where value(p) = 1) = v"
+  # A square given its value, which only a game ID carries.
+  given:
+    at: cell
+    value: "range(1, 2)"
+    means: "value(at) = v"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: shade }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  blank: 2
+  dealt: given
+  boards: [5x5]
+  hintMarks:
+    ring: the squares the step decides.
+    outline: the number or shaded square the step reasons from.
+deal:
+  answer: shaded squares at random, none side by side
+  number: on every unshaded square, then as many hidden as the board still finishes, each with its partner under a half turn
+  tier: the one tier
+  sample:
+    scatter: { value: 1, share: 0.25, apart: adj4 }
+    rest: 2
+  hide: number
+  # A number whose partner square is shaded goes first, and each other with
+  # its partner.
+  symmetric: halfTurn
+  given: none; only a game ID gives a square
+  never: given
+  thorough:
+    letter: h
+    kw: aggressive-generation
+    name: Aggressive generation
+    doc: Try hiding each number, not only those the solver never read.
+    offFrom: 7
+# Each square's number, then any given square after a comma.
+id:
+  - numbers: number
+  - dots: given
+    cases: [2, 1]
+    before: ","
+tiers: [Easy]
+names:
+  numbered: "a number on an unshaded square"
+  beside: "no two shaded squares side by side"
+  met: "a number with all its shaded squares"
+  room: "a number needing every open square beside it"
+techniques:
+  - id: numbered
+    tier: Easy
+    for: "k in cells where clue(number, k) >= 0 and not known(k)"
+    conclude: "place(k, 2)"
+    says:
+      marks: { outline: "{k}" }
+      look: "{outline: this number} is on an unshaded square"
+      move: "{ring: its square} must be crossed out"
+  - id: beside
+    tier: Easy
+    for: "c in cells where value(c) = 1, x in open(c)"
+    conclude: "place(x, 2)"
+    says:
+      marks: { outline: "{c}" }
+      look: "no two shaded squares sit side by side"
+      move: "{ring: this square}, beside {outline: the outlined one}, must be crossed out"
+  - id: met
+    tier: Easy
+    for: >-
+      k in cells where clue(number, k) >= 0 and shaded(k) = clue(number, k),
+      O = open(k) where |O| > 0
+    conclude: "forall x in O: place(x, 2)"
+    says:
+      marks: { outline: "{k}" }
+      look: "{outline: this number} already has all its shaded squares"
+      move: "{ring: its open square | its open squares} must be crossed out"
+  - id: room
+    tier: Easy
+    for: >-
+      k in cells where clue(number, k) >= 0,
+      O = open(k) where |O| > 0 and clue(number, k) - shaded(k) = |O|
+    conclude: "forall x in O: place(x, 1)"
+    says:
+      marks: { outline: "{k}" }
+      look: "{outline: this number} needs every open square beside it"
+      move: "{ring: its open square | its open squares} must be shaded"

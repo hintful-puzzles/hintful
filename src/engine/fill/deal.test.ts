@@ -5,7 +5,9 @@
  * answer is laid a line at a time, as many in each as the params' size says.
  * On `fleet`, a piece at a time as a tally says, a value no deal gives and a
  * flag that hides more; on `walling`, walls laid first at an option's share
- * and symmetry, each left where its number is hidden. Upstream's game ID
+ * and symmetry, each left where its number is hidden; on `mirroring`, a hide
+ * symmetric under a half turn, one less thorough, and a kind no deal deals.
+ * Upstream's game ID
  * grammar is each game's own cases' (`tents.cases.yaml`'s `ids` and
  * `params`).
  */
@@ -13,14 +15,16 @@
 import { describe, expect, it } from "vitest";
 import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
 import * as linking from "../../generated/engine/testing/fixtures/linking/linking.compiled.ts";
+import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { descValue } from "../contract/desc-error.ts";
 import { randomNew } from "../random/index.ts";
+import { clueList } from "../solve/describe-runtime.ts";
 import { partners } from "../testing/symmetry-partners.ts";
 import { newBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
-import { decodeDesc, givenOf } from "./game-id.ts";
+import { decodeDesc, encodeDesc, givenOf } from "./game-id.ts";
 import { sampleAnswer, sampleLines, samplePieces } from "./sample.ts";
 
 const PIECE = 1;
@@ -256,5 +260,73 @@ describe("walls laid first, at the share and the symmetry the options give", () 
       left += clues.wall.at.length;
     }
     expect(left).toBeGreaterThan(0);
+  });
+});
+
+describe("a hide that keeps its clues symmetric, and may go less far", () => {
+  /** A board of `w` dealt from `seed`, its clues read back from its ID and
+   * checked to finish on its answer. */
+  const dealt = (w: number, thorough: boolean, seed: string) => {
+    const sp = spaceOf(mirroring, { w, h: w });
+    const p = { w, h: w, diff: 0, thorough };
+    const { desc, aux } = dealFill(mirroring, mirroring.deal, p, randomNew(seed));
+    const clues = descValue(
+      decodeDesc<mirroring.Dealt>(mirroring.deal, sp, mirroring.clueMax, desc),
+    );
+    const solved = solveBoard(mirroring, newBoard(mirroring, w, w, clues), 0);
+    expect(solved.verdict).toBe("solved");
+    expect(Array.from(solved.values, (v) => v.toString(36)).join("")).toBe(aux);
+    return { sp, clues, desc };
+  };
+  const seeds = ["mirror-a", "mirror-b", "mirror-c", "mirror-d"];
+
+  it("shows each number with its partner under a half turn", () => {
+    for (const seed of seeds) {
+      const { sp, clues } = dealt(5, true, seed);
+      const shown = Array.from(clues.number.at);
+      expect(shown.length).toBeGreaterThan(0);
+      for (const c of shown) expect(shown).toContain(sp.cells.length - 1 - c);
+    }
+  });
+
+  it("hides every pair it can where thorough, and leaves some it could where not", () => {
+    /** The shown numbers whose pair the board still finishes without. */
+    const spare = (w: number, thorough: boolean, seed: string): number => {
+      const { clues } = dealt(w, thorough, seed);
+      const at = Array.from(clues.number.at);
+      const v = Array.from(clues.number.v);
+      const n = w * w;
+      return at.filter((c) => {
+        const keep = at.flatMap((d, i) => (d === c || d === n - 1 - c ? [] : [i]));
+        const without = {
+          ...clues,
+          number: clueList(
+            keep.map((i) => at[i]),
+            keep.map((i) => v[i]),
+            n,
+          ),
+        };
+        return (
+          solveBoard(mirroring, newBoard(mirroring, w, w, without), 0).verdict ===
+          "solved"
+        );
+      }).length;
+    };
+    for (const seed of seeds) expect(spare(8, true, seed)).toBe(0);
+    expect(seeds.reduce((s, seed) => s + spare(8, false, seed), 0)).toBeGreaterThan(0);
+  });
+
+  it("never deals a kind only a game ID carries, and reads one from an ID", () => {
+    for (const seed of seeds)
+      expect(dealt(5, true, seed).clues.given.at).toHaveLength(0);
+    const sp = spaceOf(mirroring, { w: 3, h: 3 });
+    const { number } = mirroring.deriveClues(new Uint8Array(9).fill(2), sp);
+    const given = clueList([4], [2], 9);
+    const desc = encodeDesc(mirroring.deal, sp, { number, given });
+    const read = descValue(
+      decodeDesc<mirroring.Dealt>(mirroring.deal, sp, mirroring.clueMax, desc),
+    );
+    expect(Array.from(read.given.at)).toEqual([4]);
+    expect(Array.from(read.given.v)).toEqual([2]);
   });
 });

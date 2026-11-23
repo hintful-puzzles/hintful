@@ -4,16 +4,18 @@
  * dialog's game mode with the narrowest board each has an answer on, and the
  * bounds the board and a tier keep beyond the sizes'. On the `fleet` fixture,
  * a tally of pieces the params give, and the flag that hides more clues; on
- * `walling`, options only the deal reads.
+ * `walling`, options only the deal reads; on `mirroring`, a hide the player
+ * may make less thorough.
  */
 
 import { describe, expect, it } from "vitest";
 import * as fleet from "../../generated/engine/testing/fixtures/fleet/fleet.compiled.ts";
+import * as mirroring from "../../generated/engine/testing/fixtures/mirroring/mirroring.compiled.ts";
 import * as sizing from "../../generated/engine/testing/fixtures/sizing/sizing.compiled.ts";
 import * as walling from "../../generated/engine/testing/fixtures/walling/walling.compiled.ts";
 import { spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
-import { type FillParams, tallyClue } from "./game-id.ts";
+import { type FillParams, tallyClue, withThorough } from "./game-id.ts";
 
 const game = fillGame("sizing", sizing);
 const fleetGame = fillGame("fleet", fleet);
@@ -201,5 +203,37 @@ describe("options only the deal reads", () => {
     expect(no(p(6, 5, 20, 4))).toBe("4-way rotational: the grid must be square.");
     expect(no(p(6, 5, 20, 3))).toBeNull();
     expect(no(p(6, 6, 20, 4))).toBeNull();
+  });
+});
+
+describe("a hide the player may make less thorough", () => {
+  const mirroringGame = fillGame("mirroring", mirroring);
+  const p = (w: number, thorough: boolean): FillParams => ({
+    w,
+    h: w,
+    diff: 0,
+    thorough,
+  });
+
+  it("is written by its letter in a full ID where off, and read back", () => {
+    expect(mirroringGame.encodeParams(p(5, false), true)).toBe("5x5h0de");
+    expect(mirroringGame.encodeParams(p(5, true), true)).toBe("5x5de");
+    expect(mirroringGame.encodeParams(p(5, false), false)).toBe("5x5");
+    expect(mirroringGame.decodeParams("5x5h0").thorough).toBe(false);
+    expect(mirroringGame.decodeParams("8x8h1").thorough).toBe(true);
+  });
+
+  it("is on by default narrower than its offFrom, and its label says where it is not", () => {
+    expect(withThorough(mirroring.deal, p(6, false)).thorough).toBe(true);
+    expect(withThorough(mirroring.deal, p(7, true)).thorough).toBe(false);
+    const field = mirroringGame.paramConfig.find(
+      (i) => i.name === "Aggressive generation",
+    );
+    if (field?.type !== "boolean") throw new Error("no thorough field");
+    const words = (q: FillParams) =>
+      field.label?.slot === "tail" ? field.label.words(q) : "no label";
+    expect(words(p(6, true))).toBeNull();
+    expect(words(p(6, false))).toBe("faster generation");
+    expect(words(p(8, true))).toBe("slower generation");
   });
 });
