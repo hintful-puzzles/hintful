@@ -230,6 +230,11 @@ function withGivens(data: DescriptionFile, path: string): DescriptionFile {
   if (data.answer.value.sort !== "cell")
     throw new DescriptionError(`${path}: given: the answer's value is not at a cell`);
   const clues = data.clues ?? {};
+  // The domain names its cell `c`, and a clue its place `at`: Seismic's
+  // number is at most its area's size.
+  const { domain } = data.answer.value;
+  if (/\bat\b/.test(domain))
+    throw new DescriptionError(`${path}: given: the answer's domain reads an at`);
   return {
     ...data,
     clues:
@@ -238,7 +243,7 @@ function withGivens(data: DescriptionFile, path: string): DescriptionFile {
         : {
             [GIVEN]: {
               at: "cell",
-              value: data.answer.value.domain,
+              value: domain.replace(/\bc\b/g, "at"),
               means: "value(at) = v",
             },
             ...clues,

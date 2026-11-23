@@ -340,6 +340,28 @@ draws one.
 - **WHEN** a born game whose sample is a Latin square deals a 6×6 board
 - **THEN** its answer holds each of 1 to 6 once in every row and column
 
+### Requirement: A born game's answer may be searched under a partition dealt first
+
+`deal.divide` with `sizes` SHALL deal a partition before the answer, one
+part at a time grown to a size drawn from a list (one list a ruleset, with
+`by`), and `deal.sample: { search: true }` SHALL find the answer under it
+by the search over the ladder, a cell's values tried in a random order, a
+draw whose search runs out of budget divided again. Where a cell's domain is
+its part's numbers, the keypad SHALL run to the largest size drawn, and a
+cell SHALL take no number past its part's size.
+
+#### Scenario: Areas of drawn sizes, each holding 1 to its size
+
+- **WHEN** a born game whose areas are divided to sizes drawn from 2, 3 and
+  4 deals a 6×7 board
+- **THEN** no area is larger than 4, the board has one answer, and each
+  area holds 1 to its size once
+
+#### Scenario: A number past the cell's area is not typed
+
+- **WHEN** a player selects a cell of an area of three and types 4
+- **THEN** nothing is entered, and the keypad offers 1 to 4
+
 ### Requirement: A born game's values may be typed into a selected cell
 
 A born game whose values are a number line (`play.numbers`) SHALL be played

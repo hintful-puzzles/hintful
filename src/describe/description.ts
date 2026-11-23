@@ -431,12 +431,12 @@ export function divideOf(json: DescriptionJson): DivideJson | null {
 
 /** A dealt partition divided at random, before and apart from the answer:
  * each cell joined at odds `pairs` to a neighbor still alone, and each left
- * alone then to a neighboring part under `most` cells (upstream keen.c). */
-export interface DivideJson {
-  partition: string;
-  pairs: number;
-  most: number;
-}
+ * alone then to a neighboring part under `most` cells (upstream keen.c); or
+ * one part at a time grown to a size drawn from one of `sizes`, the first or,
+ * with `by`, the one a value of that size from its least. */
+export type DivideJson =
+  | { partition: string; pairs: number; most: number }
+  | { partition: string; sizes: number[][]; by?: string };
 
 /** The kinds dealt one a part (`deal.oneKind`), or `null`. */
 export function oneKindOf(json: DescriptionJson): OneKindJson | null {
@@ -537,12 +537,14 @@ export interface ThoroughJson {
  * and `rest` on every other cell. With `noBareLine`, an answer with a row or
  * column all `rest` is drawn again; with `mend`, a cell a rule breaks at takes
  * the other value until none does; with `climb`, a draw after a refused one
- * keeps what the ladder decided on it; or a Latin square (`latin`). */
+ * keeps what the ladder decided on it; a Latin square (`latin`); or an
+ * answer searched under the partition the deal divides first (`search`). */
 export type SampleJson =
   | { build: true | { value: number }; first?: FirstJson }
   | { dominoes: { value: number }; rest: number }
   | { picture: { value: number; rest: number } }
   | { latin: true }
+  | { search: true }
   | { pieces: { value: number; rest: number } }
   | {
       lines: { value: number; count: number | string; apart: "adj4" | "adj8" };

@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a board in areas, each holding the numbers 1 to its
+# size, two equal numbers never side by side, some squares given, for the
+# fill engine's tests of a partition dealt to drawn sizes before the answer
+# and the answer searched under it, on a description that names no game.
+game: zoning
+produces: numbers
+sizes:
+  w: { min: 3, max: 12 }
+  h: { min: 3, max: 12 }
+space:
+  grid: { w: "w", h: "h" }
+  regions: { area: dealt }
+  units: []
+answer:
+  # An area of N squares holds the numbers 1 to N.
+  value: { sort: cell, domain: "range(1, |cells(area(c))|)" }
+given: [value]
+shape:
+  - "forall r in area: distinct(value(c) over c in cells(r))"
+  - "forall c in cells, p in adj4(c): value(p) != value(c)"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  boards: [4x4, 5x5]
+  hintMarks:
+    ring: the square the step decides.
+    outline: the squares the step reasons from.
+    stripes: the area the step is about.
+deal:
+  areas: the partition, connected areas of a size drawn from a list
+  answer: searched under the areas
+  given: every square's number, then each hidden while the board still finishes
+  tier: the one tier
+  divide: { partition: area, sizes: [[2, 3, 4, 4]] }
+  sample: { search: true }
+  hide: given
+id:
+  - walls: area
+  - { digits: given, before: "," }
+tiers: [Easy]
+names:
+  dup: "a placed number's area and neighbors"
+  single: "the only number left in a square"
+  hidden: "the only square left for a number"
+techniques:
+  # A placed number leaves the rest of its area and the squares beside it.
+  - kind: peer.placed
+    as: cull
+    tier: Easy
+    with:
+      peer: "p in cells where p != c and (area(p) = area(c) or p in adj4(c))"
+  # A square down to one number holds it.
+  - kind: one.cell
+    as: lone
+    tier: Easy
+    rung: single
+  # A number with one place left in its area goes there.
+  - kind: one.place
+    as: areaSingle
+    tier: Easy
+    rung: hidden
+    with:
+      group: "r in area, n in range(1, |cells(r)|) where not (exists c in cells(r): value(c) = n)"
+      set: cells(r)
+      value: n

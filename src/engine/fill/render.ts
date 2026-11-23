@@ -2087,7 +2087,7 @@ export function fillRender<C extends Clues<C>>(
     const ts = ds.tileSize;
     const { w, h } = state;
     threeD = raises && ui.raised !== false;
-    top = raises ? topValue(module, spaceOf(module, state)) : 1;
+    top = raises ? topValue(module, spaceOf(module, state), state.dealt) : 1;
     depth = depthOf(state);
     boardW = w;
     const shown = ui.drag?.live ? previewed(state, ui) : state;

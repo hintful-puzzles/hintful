@@ -328,7 +328,7 @@ commit. In design.md § "Decisions" 7's order.
         several is refused; the hint rings notes; done clues are gray; a
         repeat is the engine's marker, not red numerals; saves break
         (approved).
-- [ ] 2.6 Mathrax born: clues at corners, a kind precedence switched by
+- [x] 2.6 Mathrax born: clues at corners, a kind precedence switched by
       option letters, a hide of givens before clues, the board word the
       hint reads stated in the description. In four commits, read at
       `8d7f5200b` (2026-11-23):
@@ -414,6 +414,50 @@ commit. In design.md § "Decisions" 7's order.
       the answer searched under it, `T` a ruleset by a bare letter, its
       reach from the compiled `cull` (`notes.ts`'s `reachOf`), and the
       walk's regions from units beyond rows and columns, its areas.
+      In four commits, read at `0e84347d2` (2026-11-23):
+  - [x] 2.7a A partition dealt to drawn sizes before the answer, and the
+        answer searched under it, tested on a fixture of its own, `zoning`
+        (areas each holding 1 to their size, equal numbers never side by
+        side, givens hidden): `deal.divide` with `sizes`, a list of sizes
+        drawn from (`engine/generate/divide.ts`'s `growToSize`, Seismic's
+        today), one list a ruleset where they differ; `sample: { search:
+        true }`, the answer found by the search over the ladder from the
+        blank board with the partition dealt, values tried in a random
+        order, a draw that runs out of budget drawn again; the ID as
+        `walls` and the givens as `digits` after `,`.
+        Done: `divide.by` names a `play.sizes` setting, checked one list
+        a ruleset; `searchedPositions` takes `random`. A domain that is a
+        part's numbers (`range(1, |cells(P(c))|)`, P divided by sizes) is
+        the one domain a board of numbers may have that differs by cell:
+        the keypad runs to the largest size drawn (the hand-written
+        Seismic's choice, since the keypad reads the params alone), and a
+        cell takes no number past its own domain. `given:`'s kind reads
+        the domain with its cell renamed `at`; `digits` reads a clue's most
+        off the partition read before it; `deriveClues` binds the
+        partition for a cell kind that reads it. The search tried in order
+        put 1 in an area's first square 0.67 of the time, at random 0.31
+        (guarded, seen to fail planted). `zoning` deals in a median of 2 ms
+        at 6x6, 4 ms at 7x9 and 16 ms at 10x10 (2026-11-23); Seismic's
+        keep-apart rule is harder, measured at its flip (2.7d). An area
+        larger than the notes' notation (upstream's "more than nine
+        squares") is not yet refused on reading: 2.7d.
+  - [ ] 2.7b A ruleset written as a bare letter (Seismic's `T`, nothing for
+        the first), on `zoning`: a `play.sizes` setting with `letters` one
+        a ruleset in place of a `letter` and the number.
+  - [ ] 2.7c The walk over a dealt partition, on `zoning` with notes: its
+        regions the units and each partition the rules hold distinct, a
+        part holding each value of its cells' domain; the reach from the
+        compiled `peer.placed` (`notes.ts`'s `reachOf`) for the cull,
+        auto-pencil, Mark-all's clean and the implied notes; the kinds
+        `peer.placed`, `one.cell` and `one.place` read as the walk's own
+        cull and singles; the reach's words (the clean, the cull, a note
+        leg) stated by the description where they are not a row and a
+        column; a cell's notes its own domain (an area's size).
+  - [ ] 2.7d The flip: `mode` the ruleset, the menu (4x4, 6x6, 6x8 and 7x9
+        in both, Easy), the keypad to the largest area dealt, an area of one
+        a leading technique, Seismic's tests to `seismic.cases.yaml`, its
+        TypeScript deleted, the `game-lines` ceiling lowered, its spec
+        deltas and the run in the app.
 
 ## 3. Finish
 

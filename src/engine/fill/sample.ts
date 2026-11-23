@@ -28,11 +28,18 @@ export type Sample =
   | LinesSample
   | PictureSample
   | PiecesSample
-  | LatinSample;
+  | LatinSample
+  | SearchSample;
 
 /** A Latin square on the board, its values `1` to its side. */
 export interface LatinSample {
   readonly latin: true;
+}
+
+/** An answer the search finds under the partition the deal divides first
+ * (`deal.divide`), its values tried in a random order. */
+export interface SearchSample {
+  readonly search: true;
 }
 
 /** A Latin square on the square board `sp`, as upstream's latin.c

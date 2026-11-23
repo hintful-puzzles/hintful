@@ -1,17 +1,22 @@
 /**
- * A dealt partition divided at random into small parts, apart from the
- * answer (`deal.divide`): upstream keen.c's cages, which its clues are then
- * dealt on. Each cell in a random order is joined, at the odds `pairs`, to the
- * first of its neighbors in that order still alone; then each cell left alone
- * is joined to the first of its neighbors' parts under `most` cells.
+ * A dealt partition divided at random apart from the answer
+ * (`deal.divide`), which a deal lays its clues on or searches its answer
+ * under. Two ways:
  *
- * It is not `engine/generate/divide.ts`'s `mergeNeighbors` under a largest
- * size, which deals parts at that size: Keen's difference and quotient sit on
- * two cells, so the pairs are laid first and most parts stay pairs.
+ * - Into small parts, upstream keen.c's cages. Each cell in a random order
+ *   is joined, at the odds `pairs`, to the first of its neighbors in that
+ *   order still alone; then each cell left alone is joined to the first of
+ *   its neighbors' parts under `most` cells. It is not
+ *   `engine/generate/divide.ts`'s `mergeNeighbors` under a largest size,
+ *   which deals parts at that size: Keen's difference and quotient sit on
+ *   two cells, so the pairs are laid first and most parts stay pairs.
+ * - A part at a time, each grown to a size drawn from a list
+ *   (`growToSize`): Seismic's areas, dealt before any number is.
  */
 
 import { Dsf } from "../board/dsf.ts";
 import { shuffle } from "../board/shuffle.ts";
+import { growToSize } from "../generate/divide.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import type { FillDivide } from "./game-id.ts";
@@ -20,13 +25,28 @@ import type { FillDivide } from "./game-id.ts";
 const CHANCE = 1 << 20;
 
 /** Each cell's part, numbered in the order the parts' first cells come;
- * `null` where a cell was left alone, which the deal draws again. */
+ * `null` where a cell was left alone, which the deal draws again. `sizes`
+ * are the board's sizes beyond the grid's, which a list of sizes may be
+ * chosen by. */
 export function dividePartition(
   divide: FillDivide,
   sp: GridSpace,
+  sizes: Readonly<Record<string, number>>,
   rs: RandomState,
 ): Int32Array | null {
   const n = sp.cells.length;
+  if ("sizes" in divide) {
+    // Grown over the whole grid: a board of every cell.
+    if (n !== sp.w * sp.h) throw new Error("divide: sizes grown on a board with holes");
+    const { by } = divide;
+    const list =
+      divide.sizes[by === undefined ? 0 : (sizes[by.size] ?? by.min) - by.min];
+    if (list === undefined) throw new Error("divide: no list of sizes for the board");
+    return numbered(
+      growToSize(sp, rs, () => list[randomUpto(rs, list.length)]),
+      sp.cells,
+    );
+  }
   const order = Array.from(sp.cells);
   shuffle(order, rs);
   const rank = new Int32Array(n);
@@ -57,9 +77,15 @@ export function dividePartition(
     alone[c] = alone[o] = 0;
     dsf.merge(c, o);
   }
-  const part = new Int32Array(n).fill(-1);
+  return numbered(dsf, sp.cells);
+}
+
+/** Each of `cells`' part in `dsf`, numbered in the order of the parts'
+ * first cells. */
+function numbered(dsf: Dsf, cells: readonly number[]): Int32Array {
+  const part = new Int32Array(cells.length).fill(-1);
   let parts = 0;
-  for (const c of sp.cells) {
+  for (const c of cells) {
     const root = dsf.canonify(c);
     if (part[root] < 0) part[root] = parts++;
     part[c] = part[root];

@@ -352,7 +352,15 @@ research tools all read through it; the app never does.
   each be a formula of the sizes (Star Battle's `2 * stars`). `deal.divide`
   instead divides it at random, blind to the answer
   (`engine/fill/divide.ts`): dominoes at `pairs` odds, then each square
-  left alone into a neighboring part under `most` cells. A clue kind `at:`
+  left alone into a neighboring part under `most` cells; or with `sizes`, a
+  part at a time grown to a size drawn from a list, one list a ruleset
+  where `by` names the setting. `sample: { search: true }` then searches the
+  answer under that partition, from the blank board, a square's values
+  tried in a random order, a draw out of budget divided again (`zoning` is
+  the fixture). A domain that is a part's numbers, `range(1,
+  |cells(P(c))|)`, is a board of numbers' only domain that differs by cell:
+  the keypad runs to the largest size drawn, and a square takes no number
+  past its own part's size. A clue kind `at:`
   such a region is a clue a part: derived where its `means` solves for `v`
   (`v = E`, one value, not each tried), `deal.oneKind` keeps one of its
   kinds a part, in turn and well before `poor` (`engine/fill/one-kind.ts`),

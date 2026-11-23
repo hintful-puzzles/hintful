@@ -1,0 +1,9 @@
+ok  zoning     cull                           3  sound    (want sound   )     9 queries    0.3s
+ok  zoning     cull (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/zoning/zoning.description.yaml#cull: recorded sound, proved whole on all 1 boards
+ok  zoning     lone                           3  sound    (want sound   )     9 queries    0.2s
+ok  zoning     lone (planted)                 3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/zoning/zoning.description.yaml#lone: recorded sound, proved whole on all 1 boards
+ok  zoning     areaSingle                     3  sound    (want sound   )    79 queries    2.5s
+ok  zoning     areaSingle (planted)           3  unsound  (want unsound )    10 queries    0.2s   at region area 9
+ok  src/engine/testing/fixtures/zoning/zoning.description.yaml#areaSingle: recorded sound, proved whole on all 1 boards

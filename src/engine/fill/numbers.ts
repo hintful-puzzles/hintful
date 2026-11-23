@@ -42,17 +42,45 @@ import {
 } from "../mechanics/note-taking-cell.ts";
 import { pressedRaised } from "../render/raised.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
-import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import {
+  boardSizeOf,
+  type Clues,
+  type FillBoard,
+  type FillModule,
+  spaceOf,
+} from "./board.ts";
 import { type DoneInput, type DoneMove, doneInput, type PartClueAt } from "./done.ts";
+import type { FillParams } from "./game-id.ts";
 import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 
-/** The largest value a board of numbers on the space `sp` holds: the top of
- * its domain, which is the board's, the same at every cell. */
-export function topValue<C>(module: FillModule<C>, sp: GridSpace): number {
-  // The compiler refuses a board of numbers whose domain reads its clues.
-  const mask = module.domainOf(sp, {} as C, sp.cells[0]);
+/** The largest value a board of numbers on the space `sp` dealt `dealt`
+ * holds: the top of its domain over every cell. */
+export function topValue<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
+  let mask = 0;
+  for (const c of sp.cells) mask |= module.domainOf(sp, dealt, c);
   return 31 - Math.clz32(mask);
+}
+
+/**
+ * The keypad's last value on a board of `size`, which the params alone
+ * give: the top of the domain, the same at every cell; or where a cell's is
+ * the numbers 1 to its part's size, the largest part the deal divides
+ * (Seismic's), as the compiler holds it. A key past it would type nothing
+ * on any board dealt.
+ */
+function keypadTop<C>(
+  module: FillModule<C>,
+  sp: GridSpace,
+  sizes: Readonly<Record<string, number>>,
+): number {
+  const divide = module.deal?.divide;
+  if (divide === undefined || !("sizes" in divide))
+    // The compiler refuses any other domain that differs from cell to cell.
+    return topValue(module, sp, {} as C);
+  const { by } = divide;
+  const list = divide.sizes[by === undefined ? 0 : (sizes[by.size] ?? by.min) - by.min];
+  return Math.max(...(list ?? []));
 }
 
 /** `ui` as a board of numbers keeps it, which `newUi` gives it: the
@@ -113,8 +141,8 @@ export interface NumberInput<C, D> {
     p: Point,
     button: number,
   ): CandidateMove | DoneMove | UiUpdate | null;
-  /** A key a value, then the clear key, for a board of size `size`. */
-  requestKeys(size: { w: number; h: number }): KeyLabel[];
+  /** A key a value, then the clear key, for a board of the params `p`. */
+  requestKeys(p: FillParams): KeyLabel[];
   gesture(board: FillBoard<C>, ui: FillUi, ds: D, move: FillMove): PointerAction[];
 }
 
@@ -145,7 +173,7 @@ export function numberInput<
       at,
       (x, y) => ({ x: o + x * ts, y: o + y * ts, w: ts, h: ts }),
       (x, y) => (x < 0 || y < 0 || x >= b.w || y >= b.h ? 0 : b.values[y * b.w + x]),
-      topValue(module, spaceOf(module, b)),
+      topValue(module, spaceOf(module, b), b.dealt),
     );
   };
   return {
@@ -211,9 +239,12 @@ export function numberInput<
       }
       if (!ui.cursor.visible) return null;
       const n = button === CURSOR_SELECT2 || isEraseKey(button) ? 0 : digitOf(button);
-      if (n === null || n > topValue(module, spaceOf(module, b))) return null;
+      if (n === null) return null;
       const { x, y } = ui.cursor;
       const c = y * b.w + x;
+      // A number the cell cannot hold is not typed (Seismic's past its area).
+      if (n > 0 && (module.domainOf(spaceOf(module, b), b.dealt, c) & (1 << n)) === 0)
+        return null;
       if (b.fixed[c]) return null;
       // A note goes on an empty cell alone.
       if (ui.pencilMode && b.values[c] !== 0) return null;
@@ -226,8 +257,10 @@ export function numberInput<
         ? { type: "set", x, y, n, pencil }
         : { type: "set", x, y, n, pencil, autoElim: fillUi.autoPencil ?? false };
     },
-    requestKeys(size) {
-      return digitKeys(topValue(module, spaceOf(module, size)));
+    requestKeys(p) {
+      return digitKeys(
+        keypadTop(module, spaceOf(module, boardSizeOf(module, p)), p.sizes ?? {}),
+      );
     },
     gesture(b, fillUi, ds, move) {
       const ui = noteTaking(fillUi);

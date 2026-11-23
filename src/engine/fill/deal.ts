@@ -140,6 +140,11 @@ const HIDING_RUN = 6;
  */
 const SHORT_OF_LOWEST_RUN = 64;
 
+/** The positions the search for an answer under a divided partition may try
+ * (`sample: { search: true }`) before the draw is thrown away and the
+ * partition divided again. */
+const ANSWER_SEARCH_BUDGET = 2_000;
+
 export function dealFill<C extends Clues<C>>(
   module: DealtFillModule<C>,
   deal: FillDeal,
@@ -185,14 +190,19 @@ export function dealFill<C extends Clues<C>>(
   const spent = { moves: 0 };
   /** The partition grown round `g` for tier `tier`, by its name, where the
    * deal grows one; `null` where this draw grew none. */
+  /** The partition divided apart from the answer, by its name, where the
+   * deal divides one; `null` where this draw left a cell alone. */
+  const divided = (): Grown | null => {
+    const { divide } = deal;
+    if (divide === undefined) return {};
+    const parts = dividePartition(divide, sp, sizes, rs);
+    return parts === null
+      ? drawRejected("fill: the division left a cell alone")
+      : { [divide.partition]: partitionOf(parts) };
+  };
   const grownRound = (g: Uint8Array, tier: number): Grown | null => {
     const { grow, divide } = deal;
-    if (divide !== undefined) {
-      const parts = dividePartition(divide, sp, rs);
-      return parts === null
-        ? drawRejected("fill: the division left a cell alone")
-        : { [divide.partition]: partitionOf(parts) };
-    }
+    if (divide !== undefined) return divided();
     if (grow === undefined) return {};
     if (module.growBy === undefined)
       throw new Error("deal: a grown partition with no growBy");
@@ -263,7 +273,27 @@ export function dealFill<C extends Clues<C>>(
     const g = buildAnswer(module, deal, sample, sp, p, rs, layouts++, buildTier);
     return g === DEAD_END ? climbBuild("fill: the build met a dead end") : g;
   };
+  /** An answer and the partition it is searched under, divided first; `null`
+   * where the division or the search came to nothing. */
+  const searched = (): { g: Uint8Array; grown: Grown } | null => {
+    const grown = divided();
+    if (grown === null) return null;
+    const blank = new Uint8Array(sp.cells.length);
+    const found = searchedPositions(
+      module,
+      board(module.deriveClues(blank, sp, grown, given)),
+      { budget: ANSWER_SEARCH_BUDGET, random: rs },
+      1,
+    );
+    if (found === null || found.length === 0)
+      return drawRejected("fill: the search found no answer under the partition");
+    return { g: found[0], grown };
+  };
   const draw = (tier: number): { g: Uint8Array; clues: C } | null => {
+    if ("search" in sample) {
+      const got = searched();
+      return got === null ? null : dealt(got.g, got.grown, tier);
+    }
     const g =
       "build" in sample
         ? built(sample)
@@ -287,7 +317,15 @@ export function dealFill<C extends Clues<C>>(
                     );
     if (g === null) return drawRejected("fill: the sample drew no answer");
     const grown = grownRound(g, tier);
-    if (grown === null) return null;
+    return grown === null ? null : dealt(g, grown, tier);
+  };
+  /** Answer `g`'s clues on the partitions `grown`, every one shown but those
+   * of a kind hidden whole; `null` where they are no board. */
+  const dealt = (
+    g: Uint8Array,
+    grown: Grown,
+    tier: number,
+  ): { g: Uint8Array; clues: C } | null => {
     const derived = oneKindEach(
       module,
       deal,

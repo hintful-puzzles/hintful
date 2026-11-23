@@ -26,6 +26,7 @@ import {
   codeOf,
   type Description,
   type DescriptionJson,
+  type DivideJson,
   divideOf,
   firstKindJsonOf,
   type GrowJson,
@@ -190,9 +191,13 @@ export function playOf(
       );
   if (p.numbers !== undefined && json.answer.value.sort !== "cell")
     throw new CompileError("play numbers: the answer's value is not at a cell");
-  // The keypad is the domain, which the params alone must give.
-  if (p.numbers !== undefined && env.cellDomain)
-    throw new CompileError("play numbers: the domain differs from cell to cell");
+  // The keypad is the domain, which the params alone must give: the board's,
+  // or the numbers 1 to a cell's part's size, the part dealt to sizes drawn
+  // from a list (Seismic's areas), whose largest is the keypad's last.
+  if (p.numbers !== undefined && env.cellDomain && partBound(d.domain, json) === null)
+    throw new CompileError(
+      "play numbers: the domain differs from cell to cell, and is no part's numbers",
+    );
   // A raised value leans into the squares next door, where a gap or a clue
   // at a part's first square would be.
   if (p.numbers?.raised === true && (p.gaps !== undefined || p.signs !== undefined))
@@ -749,12 +754,29 @@ const sizeBound = (value: Expr | null, sizes: Readonly<Record<string, SizeRange>
   return hi?.k === "name" ? (sizes[hi.name]?.max ?? Infinity) : Infinity;
 };
 
+/** The most of a `range(1, |cells(P(at))|)`, the numbers of a cell's part
+ * of a partition the deal divides to drawn sizes: the largest size drawn;
+ * `null` where the value is anything else. */
+function partBound(value: Expr | null, json: DescriptionJson): number | null {
+  const divide = divideOf(json);
+  if (divide === null || !("sizes" in divide) || value === null) return null;
+  const hi = value.k === "call" && value.fn === "range" ? value.args[1] : undefined;
+  const ofPart =
+    hi?.k === "size" &&
+    hi.of.k === "call" &&
+    hi.of.fn === "cells" &&
+    hi.of.args[0]?.k === "call" &&
+    hi.of.args[0].fn === divide.partition;
+  return ofPart ? Math.max(...divide.sizes.flat()) : null;
+}
+
 /** Refuses an `id:` segment that cannot write the kind it names. */
 function checkSegments(
   id: readonly IdSegmentJson[],
   d: Description,
   env: Env,
   sizes: Readonly<Record<string, SizeRange>>,
+  json: DescriptionJson,
 ): void {
   for (const [i, seg] of id.entries()) {
     const [kind, ...more] = segmentKinds(seg);
@@ -872,7 +894,7 @@ function checkSegments(
     // A digit is a clue's value, so every value is one, the most a size
     // bounds it by too (Mathrax's givens, to `w`); with a mark between two
     // side by side, a clue is a whole number of any size.
-    const top = values?.[1] ?? sizeBound(c.value, sizes);
+    const top = values?.[1] ?? partBound(c.value, json) ?? sizeBound(c.value, sizes);
     if (
       "digits" in seg &&
       seg.apart === undefined &&
@@ -942,9 +964,10 @@ function tierAliasesOf(
 }
 
 /** The value a sample lays, 0 where it lays no one value: it builds the
- * answer, or draws a Latin square. */
+ * answer, draws a Latin square, or searches one. */
 function sampledValue(sample: SampleJson | null): number {
-  if (sample === null || "build" in sample || "latin" in sample) return 0;
+  if (sample === null || "build" in sample || "latin" in sample || "search" in sample)
+    return 0;
   if ("dominoes" in sample) return sample.dominoes.value;
   if ("lines" in sample) return sample.lines.value;
   if ("picture" in sample) return sample.picture.value;
@@ -974,7 +997,7 @@ export function dealOf(
   // The tally is the params', which the ID does not write.
   const written = kinds.filter((k) => k !== json.play?.tally?.kind);
   checkNamed(id, [...written, ...partitions], hexagon?.outside ?? null);
-  checkSegments(id, d, env, json.sizes);
+  checkSegments(id, d, env, json.sizes, json);
   const { hide, hideFirst, hideFrom, hideWhole } = hideOf(json, d);
   const hides = hide !== null;
   const thorough = thoroughOf(json);
@@ -1033,6 +1056,11 @@ export function dealOf(
   }
   if (divide !== null && !env.regions.has(divide.partition))
     throw new CompileError(`deal divide: ${divide.partition} is no dealt partition`);
+  // The answer is searched under a partition dealt before it.
+  if (sample !== null && "search" in sample && divide === null)
+    throw new CompileError(
+      "deal sample: an answer searched under no divided partition",
+    );
   for (const r of env.regions)
     if (grow?.partition !== r && divide?.partition !== r)
       throw new CompileError(
@@ -1040,6 +1068,7 @@ export function dealOf(
       );
   const oneKind = oneKindDeal(json, d, divide?.partition ?? null);
   const settings = settingsOf(json, env);
+  const divided = divideDeal(divide, settings);
   if (sample !== null && "lines" in sample) {
     const { count } = sample.lines;
     if (typeof count === "string" && !settings.some((s) => s.size === count))
@@ -1155,7 +1184,7 @@ export function dealOf(
     ...present("hideFlag", hideFlagOf(json, d, hides)),
     ...(symmetric === undefined ? {} : { symmetric }),
     ...present("thorough", thorough),
-    ...present("divide", divide),
+    ...present("divide", divided),
     ...(oneKind === null ? {} : { oneKind: oneKind.deal }),
     ...present("onlyFlag", oneKind?.only ?? null),
     ...present("firstKind", firstKind),
@@ -1411,6 +1440,30 @@ function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
   if (out.length > 1)
     throw new CompileError("play sizes: a game has one field of rulesets");
   return out;
+}
+
+/** `deal.divide` as the deal reads it (`FillDivide`): a divide by drawn
+ * sizes with `by` holds the setting's least, and one list a value of it. */
+function divideDeal(
+  divide: DivideJson | null,
+  settings: readonly FillSettingJson[],
+):
+  | Exclude<DivideJson, { sizes: number[][] }>
+  | { partition: string; sizes: number[][]; by?: { size: string; min: number } }
+  | null {
+  if (divide === null || !("sizes" in divide)) return divide;
+  const { partition, sizes, by } = divide;
+  if (by === undefined) {
+    if (sizes.length !== 1)
+      throw new CompileError("deal divide: several lists of sizes, and no by");
+    return { partition, sizes };
+  }
+  const s = settings.find((x) => x.size === by);
+  if (s === undefined)
+    throw new CompileError(`deal divide: ${by} is no size the params give`);
+  if (sizes.length !== s.rulesets.length)
+    throw new CompileError(`deal divide: not one list of sizes a value of ${by}`);
+  return { partition, sizes, by: { size: by, min: s.min } };
 }
 
 /** The symmetries a `first` sample's option chooses among, in upstream's
@@ -2233,11 +2286,18 @@ export function derivedClues(
   const sizes = [...env.sizes.read].sort();
   for (const n of sizes) dealt.push(`${n}: sizes.${n}`);
   const onceKinds = Object.keys(oneIn);
+  // A cell's clue may read the partition too, as a given's value reads the
+  // size of its cell's area (Seismic's).
+  const derived = derive.text();
+  if (grown !== undefined && !partKinds && derived.some((l) => /\bcl\./.test(l)))
+    derived.unshift(
+      `  const cl = { ${grown}: grown[${JSON.stringify(grown)}] } as unknown as Dealt;`,
+    );
   const body =
     onceKinds.length === 0
-      ? [...derive.text(), `  return { ${dealt.join(", ")} };`]
+      ? [...derived, `  return { ${dealt.join(", ")} };`]
       : [
-          ...derive.text(),
+          ...derived,
           // Each kind dealt one in a group is read as the only clue of its
           // kind on the board, beside every other kind.
           `  const cl: Dealt = { ${[

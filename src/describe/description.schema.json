@@ -1548,14 +1548,35 @@
             },
             "divide": {
               "type": "object",
-              "description": "A dealt partition divided at random into small parts, apart from the answer (upstream keen.c): each square in a random order joined, at odds `pairs`, to its first neighbor in that order still alone; then each square left alone joined to its first neighboring part of fewer than `most` squares, the draw thrown away where one is left alone still.",
-              "required": ["partition", "pairs", "most"],
-              "additionalProperties": false,
-              "properties": {
-                "partition": { "type": "string" },
-                "pairs": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
-                "most": { "type": "integer", "minimum": 2 }
-              }
+              "description": "A dealt partition divided at random, apart from the answer. With `pairs` and `most`, into small parts (upstream keen.c): each square in a random order joined, at odds `pairs`, to its first neighbor in that order still alone; then each square left alone joined to its first neighboring part of fewer than `most` squares, the draw thrown away where one is left alone still. With `sizes`, one part at a time grown to a size drawn from a list (`engine/generate/divide.ts`'s `growToSize`), a part with no room left ending short: the first list, or with `by` a size the params give, one list a value of it from its least.",
+              "oneOf": [
+                {
+                  "required": ["partition", "pairs", "most"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "partition": { "type": "string" },
+                    "pairs": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+                    "most": { "type": "integer", "minimum": 2 }
+                  }
+                },
+                {
+                  "required": ["partition", "sizes"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "partition": { "type": "string" },
+                    "by": { "type": "string" },
+                    "sizes": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": { "type": "integer", "minimum": 1 }
+                      }
+                    }
+                  }
+                }
+              ]
             },
             "oneKind": {
               "type": "object",
@@ -1748,6 +1769,15 @@
                   "additionalProperties": false,
                   "properties": {
                     "latin": { "const": true }
+                  }
+                },
+                {
+                  "type": "object",
+                  "description": "The answer searched under the partition the deal divides first (`divide`): from the blank board with the partition dealt, the search by trial and error over the ladder tries each square's values in a random order, and a draw whose search runs out of budget is drawn again.",
+                  "required": ["search"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "search": { "const": true }
                   }
                 },
                 {

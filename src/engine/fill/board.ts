@@ -26,6 +26,7 @@ import {
   TIERS,
 } from "../solve/ladder-runtime.ts";
 import { LATIN_LIBRARY } from "../solve/latin.ts";
+import type { FillDeal } from "./game-id.ts";
 import type { FillPlay } from "./play.ts";
 
 /** A board's clues by kind, a list kind's as lists (Pattern's runs), its
@@ -87,6 +88,9 @@ export interface FillModule<C> {
   /** Where the board is a hexagon (`describe-runtime/hexagon.ts`): the clue kind
    * every cell of the store outside it holds. */
   readonly hexagon?: { readonly outside: string };
+  /** The deal, whose partition divided by drawn sizes, where it has one,
+   * bounds the keypad of a domain that is a part's numbers. */
+  readonly deal?: FillDeal;
 }
 
 /** The stored grid of a board of `module`'s that the params `p` ask for:

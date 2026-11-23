@@ -354,14 +354,18 @@ export interface FillHideFlag {
   readonly words: string;
 }
 
-/** A dealt partition divided at random into small parts (`deal.divide`):
- * each cell joined at odds `pairs` to a neighbor alone, then each left alone
- * to a neighboring part under `most` cells. */
-export interface FillDivide {
-  readonly partition: string;
-  readonly pairs: number;
-  readonly most: number;
-}
+/** A dealt partition divided at random apart from the answer
+ * (`deal.divide`): into small parts, each cell joined at odds `pairs` to a
+ * neighbor alone, then each left alone to a neighboring part under `most`
+ * cells; or a part at a time grown to a size drawn from one of `sizes`, the
+ * first, or with `by` the one at the setting's value less its least. */
+export type FillDivide =
+  | { readonly partition: string; readonly pairs: number; readonly most: number }
+  | {
+      readonly partition: string;
+      readonly sizes: readonly (readonly number[])[];
+      readonly by?: { readonly size: string; readonly min: number };
+    };
 
 /** A setting the player may turn on, under which the deal deals `kinds`
  * alone of `deal.oneKind`'s (`deal.onlyFlag`), written after the tier by its
@@ -1525,6 +1529,8 @@ function readCodes<C extends Clues<C>>(
  * written, so the cells end with the segment. With `apart`, a clue is a whole
  * number, and `apart` is between two with no run between them, exactly
  * there. Behind its `before`, the segment is read only where the mark is.
+ * A clue's most may read a partition read before it, in `cl` (Seismic's
+ * given, at most its area's size).
  */
 function readDigits<C extends Clues<C>>(
   r: DescReader,
@@ -1532,6 +1538,7 @@ function readDigits<C extends Clues<C>>(
   sp: GridSpace,
   clueMax: ClueMax<C>,
   seg: Extract<IdSegment, { readonly digits: string }>,
+  cl: Partial<C>,
 ): Map<string, ClueList> {
   const kind = seg.digits as keyof C;
   const all = sp.cells.length;
@@ -1576,7 +1583,7 @@ function readDigits<C extends Clues<C>>(
       const k = after[letter];
       if (k !== undefined && r.peekIs(isDigit)) {
         const value = Number(r.char());
-        if (value > maxOf(clueMax, k as keyof C, sp, c)) r.fail(DESC_OUT_OF_RANGE);
+        if (value > maxOf(clueMax, k as keyof C, sp, c, cl)) r.fail(DESC_OUT_OF_RANGE);
         const got = numberedAt.get(k);
         got?.at.push(c);
         got?.v.push(value);
@@ -1585,7 +1592,7 @@ function readDigits<C extends Clues<C>>(
       afterClue = true;
       continue;
     }
-    const max = Math.max(maxOf(clueMax, kind, sp, c), topAlso);
+    const max = Math.max(maxOf(clueMax, kind, sp, c, cl), topAlso);
     let value: number;
     if (seg.apart === undefined) {
       value = Number(r.char(isDigit));
@@ -1601,7 +1608,7 @@ function readDigits<C extends Clues<C>>(
       markedAt.get(other)?.push(c);
       continue;
     }
-    if (value > maxOf(clueMax, kind, sp, c)) r.fail(DESC_OUT_OF_RANGE);
+    if (value > maxOf(clueMax, kind, sp, c, cl)) r.fail(DESC_OUT_OF_RANGE);
     at.push(c);
     v.push(value);
   }
@@ -1772,7 +1779,14 @@ export function decodeDesc<C extends Clues<C>>(
         continue;
       }
       if ("digits" in seg) {
-        for (const [kind, list] of readDigits(r, deal, sp, clueMax, seg))
+        for (const [kind, list] of readDigits(
+          r,
+          deal,
+          sp,
+          clueMax,
+          seg,
+          out as Partial<C>,
+        ))
           out[kind as keyof C] = list;
         continue;
       }

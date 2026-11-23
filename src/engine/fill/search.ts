@@ -7,7 +7,9 @@
  * such a game go by the search's answer at every tier.
  */
 
+import { shuffle } from "../board/shuffle.ts";
 import { SEARCH_TIER } from "../contract/difficulty.ts";
+import type { RandomState } from "../random/index.ts";
 import { type Answer, answerCache, solvedPositions } from "../solve/answer-search.ts";
 import type { CellMarks } from "../solve/cell-marks.ts";
 import type { ClueList, GridSpace, Partition } from "../solve/describe-runtime.ts";
@@ -82,6 +84,9 @@ interface SearchFrom {
   /** The value cell `c` is assumed to hold last, so another answer is met
    * before one that has it; the domain's order where absent. */
   readonly last?: (c: number) => number;
+  /** Where given, a cell's values are tried in a random order: a search
+   * that finds an answer to deal (`sample: { search: true }`). */
+  readonly random?: RandomState;
 }
 
 /**
@@ -142,6 +147,7 @@ export function searchedPositions<C>(
           const v = 31 - Math.clz32(d & -d);
           if (m.has(at, v)) vs.push(v);
         }
+        if (from.random !== undefined) shuffle(vs, from.random);
         const last = from.last?.(at);
         if (last !== undefined && vs.includes(last))
           vs.sort((a, b) => (a === last ? 1 : b === last ? -1 : 0));
