@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a Latin square divided into small cages, each with
+# one clue, a sum or a product of its numbers, for the fill engine's tests of
+# a clue at a dealt partition's part (the partition dealt in small parts at
+# random, one kind a part chosen in the deal, a flag that deals one kind
+# alone, written in the desc as upstream Keen's block structure and a letter
+# and a number a part, drawn at the part's first square) on a description
+# that names no game.
+game: caging
+produces: latin
+sizes:
+  w: { min: 3, max: 9 }
+space:
+  grid: { w: "w", h: "w" }
+  regions: { cage: dealt }
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
+define:
+  # Two squares of a filling of K that share a line hold different values.
+  apart(f, K): >-
+    forall x in K, y in before(x, K) where row(x) = row(y) or col(x) = col(y):
+    f(x) != f(y)
+  # A filling of a cage's squares makes its clue, whichever kind it is.
+  makes(f, r): >-
+    (clue(sum, r) = none or sum(x in cells(r) of f(x)) = clue(sum, r))
+    and (clue(product, r) = none or prod(x in cells(r) of f(x)) = clue(product, r))
+shape:
+  - "latin(value, lines)"
+clues:
+  sum:
+    at: cage
+    value: "range(1, |cells(at)| * w)"
+    means: "sum(c in cells(at) of value(c)) = v"
+  product:
+    at: cage
+    value: "range(1, prod(c in cells(at) of w))"
+    means: "prod(c in cells(at) of value(c)) = v"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  signs: { sum: "+", product: "×" }
+  boards: [4x4, 5x5]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the cage or the line the step is about.
+deal:
+  answer: a Latin square
+  cage: the squares in dominoes and then small cages, at random
+  sum: a cage's sum, or its product
+  tier: one of the tiers
+  sample: { latin: true }
+  divide: { partition: cage, pairs: 0.75, most: 6 }
+  # Products and sums in turn; a sum of two too small or too large to
+  # leave a choice is dealt only where nothing else is.
+  oneKind:
+    kinds: [product, sum]
+    poor:
+      sum: "|cells(at)| = 2 and (v <= 4 or v >= 2 * w - 2)"
+  onlyFlag:
+    kinds: [product]
+    letter: m
+    kw: products-only
+    name: Products only
+    doc: Every cage's clue is a product.
+    words: products only
+id:
+  - blocks: cage
+  - parts: cage
+    before: ","
+    letters: { a: sum, m: product }
+tiers: [Easy, Normal]
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a square"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only square left for a number"
+  cage: "the ways to fill a cage"
+  set: "numbers already accounted for"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  # Cage by cage: a value no filling of the cage that makes its clue puts in
+  # a square is struck from it.
+  - kind: fill.support
+    as: cage
+    tier: Easy
+    rung: cage
+    with:
+      group: "r in cage, K = cells(r)"
+      set: K
+      fits: "apart(f, K) and makes(f, r)"
+    says:
+      terms: { r: r }
+      marks: { stripes: "cells(r)" }
+      fact:
+        terms: { at: c, sum: "clue(sum, r)", product: "clue(product, r)" }
+        marks: {}
+        wordings:
+          - when: "clue(sum, r) != none"
+            look: "No way to make {stripes: this cage} sum to {numeral sum} puts {struckOr} in {ring at: this square}"
+          - look: "No way to make {stripes: this cage} multiply to {numeral product} puts {struckOr} in {ring at: this square}"
+  - { use: latin.set, tier: Normal, rung: set }

@@ -5,6 +5,7 @@
   "src/engine/solve/latin.description.yaml#set": "b5ac302d9954e973",
   "src/engine/solve/latin.description.yaml#single": "0791b39aed8af914",
   "src/engine/solve/latin.description.yaml#wing": "e104ec34cad128f8",
+  "src/engine/testing/fixtures/caging/caging.description.yaml#cage": "4334f98c8cb37e02",
   "src/engine/testing/fixtures/climbing/climbing.description.yaml#alone": "ad2e686f18c3b611",
   "src/engine/testing/fixtures/climbing/climbing.description.yaml#dotHas": "43345f85f5ebad25",
   "src/engine/testing/fixtures/climbing/climbing.description.yaml#lastRoom": "a728316cc87776f6",

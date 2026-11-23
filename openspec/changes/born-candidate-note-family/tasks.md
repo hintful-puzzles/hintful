@@ -147,7 +147,34 @@ commit. In design.md § "Decisions" 7's order.
       cell, the block-structure segment, a small-part partition sampled on
       the answer, one kind an element chosen in the deal, the bare flag `m`;
       difference and quotient stated to sit on two cells; done marks on a
-      cage clue.
+      cage clue. In three commits, read at `346c783e0` (2026-11-23):
+  - [x] 2.4a Clues at a dealt partition's parts, tested on a fixture of its
+        own, `caging` (a Latin square in cages, each with a sum or a
+        product): the partition dealt in small parts at random
+        (`deal.divide`, upstream keen.c's dominoes at odds and singles
+        folded in under a most), beside `deal.grow`'s; a kind at a part
+        derived where its meaning holds, a meaning `E = v` solved for `v`
+        rather than tried a value at a time (a product of six cells has
+        9^6 values); one kind a part (`deal.oneKind`: kinds dealt in turn,
+        a poor clue only where no other kind suits, a kind never where its
+        formula refuses); a bare flag after the tier that deals some kinds
+        alone (`deal.onlyFlag`, Keen's `m`); the `blocks` segment
+        (upstream's block structure, moved from Keen to
+        `engine/game-id/block-structure.ts`) and a `parts` segment (a letter
+        of the kind and its number a part, in the order of their first
+        cells); each clue drawn at its part's first cell as its number and
+        sign (`play.signs`), the notes below the label band, red where it
+        breaks; the walk's stripes on a part.
+  - [ ] 2.4b Done marks on a clue at a part: the press, the key and the
+        gray, on `caging`.
+  - [ ] 2.4c The flip: Keen's tests to `keen.cases.yaml`, its TypeScript
+        deleted, the `game-lines` ceiling lowered, its spec deltas; the
+        menu, the `m` variant board, the tier bounds at 3x3. Learned in
+        2.4a: a clue's number in a wording is `{numeral sum}`, as a bare
+        `{sum}` is said as a value's glyph (a product of 30 read "u");
+        difference and quotient each state `|cells(at)| = 2` in their
+        meaning; the sign is drawn on every clue, a products-only board's
+        too (upstream draws none there): a difference the player sees.
 - [ ] 2.5 Towers born: clues at both ends of a line, `numbers` with its
       separator and the optional givens after `,`, a hide from a tier up,
       `fullLine` and `tallestNearest` stated as techniques, the tower

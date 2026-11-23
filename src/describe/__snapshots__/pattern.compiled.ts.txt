@@ -234,10 +234,10 @@ export const deal = {"sample":{"picture":{"value":1,"rest":2}},"id":[{"lists":"r
 
 /** Each clue kind's largest value at an element. */
 export const clueMax = {
-  runs(sp: GridSpace, at: number): number {
+  runs(sp: GridSpace, at: number, _cl: Dealt): number {
     return Number(sp.lineCells[at].length);
   },
-  given(_sp: GridSpace, _at: number): number {
+  given(_sp: GridSpace, _at: number, _cl: Dealt): number {
     return Number(2);
   },
 };

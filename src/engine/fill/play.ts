@@ -139,6 +139,9 @@ export interface FillPlay {
   /** The clue kinds the player may mark done, each with what one is called
    * (`done.ts`): a press on such a clue grays it, and another restores it. */
   readonly done?: Readonly<Record<string, string>>;
+  /** The sign drawn after the number of each clue kind at a dealt
+   * partition's part, by kind: the clue is drawn at its part's first cell. */
+  readonly signs?: Readonly<Record<string, string>>;
   /** The values the player places, by the description's value. */
   readonly values?: Readonly<Record<number, PlayValue>>;
   /** The values only the deal places, a fixed cell's. */

@@ -65,6 +65,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `obfuscate.ts` — solution masking in descs |
 | – `run-length.ts` — the letter-run desc grammar |
 | – `wall-runs.ts` — a region layout as a run-length wall list |
+| – `block-structure.ts` — a partition as upstream Keen's block structure |
 | – `dot-runs.ts` — blanks and dots of two kinds |
 | – `desc-alphabet.ts` — one character per small number |
 | – `desc-reader.ts` — the cursor a desc parser drives |
@@ -656,6 +657,14 @@ write and read the walls half of a `walls,clues` desc. The reader takes a
 `DescReader`, so it composes with the clue half, and it refuses a run past
 the last border. `gapLetters(n)` is the letter run of the clue half.
 Exemplar: `rome/state.ts`.
+
+### `block-structure.ts` — a partition as upstream Keen's block structure
+
+Reach for it for a desc that ships a partition of cages in upstream Keen's
+form, the borders as letter runs with repeat counts.
+`encodeBlockStructure(w, h, joined)` writes it from whether two cells share
+a part, and `readBlockStructure(r, dsf, w, h)` joins a `Dsf` from it.
+Exemplar: the `blocks` id segment (`engine/fill/game-id.ts`).
 
 ### `dot-runs.ts` — blanks and dots of two kinds
 

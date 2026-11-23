@@ -231,6 +231,9 @@ export interface PlayJson {
    * techniques above them; it asks once more after the last, for any. */
   askBefore?: string[];
   labels?: { start?: string };
+  /** The sign drawn after the number of each clue kind at a dealt
+   * partition's part, by kind. */
+  signs?: Record<string, string>;
   /** The preset menu's sizes, `WxH`; the first is the default. */
   boards?: string[];
   /** What each mark of the hint means here (`Game.hint.marks`). */
@@ -301,7 +304,9 @@ export type IdSegmentJson =
       closed?: true;
     }
   | { glyphs: string; values: Record<string, number> }
-  | { records: string; sides: string };
+  | { records: string; sides: string }
+  | { blocks: string }
+  | { parts: string; before?: string; letters: Record<string, string> };
 
 /** The board as a rectangle, or as a hexagon `w` wide and `h` high, stored
  * sheared (`engine/fill/hexagon.ts`), its store's corners holding the clue
@@ -328,14 +333,18 @@ export const segmentKinds = (seg: IdSegmentJson): string[] =>
               ? [seg.glyphs]
               : "records" in seg
                 ? [seg.records, seg.sides]
-                : "digits" in seg
-                  ? [
-                      seg.digits,
-                      ...Object.values(seg.letters ?? {}),
-                      ...Object.values(seg.after ?? {}),
-                      ...Object.values(seg.also ?? {}),
-                    ]
-                  : [seg.numbers];
+                : "blocks" in seg
+                  ? [seg.blocks]
+                  : "parts" in seg
+                    ? Object.values(seg.letters)
+                    : "digits" in seg
+                      ? [
+                          seg.digits,
+                          ...Object.values(seg.letters ?? {}),
+                          ...Object.values(seg.after ?? {}),
+                          ...Object.values(seg.also ?? {}),
+                        ]
+                      : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`
@@ -393,6 +402,55 @@ export function sampleOf(json: DescriptionJson): SampleJson | null {
 export function thoroughOf(json: DescriptionJson): ThoroughJson | null {
   const t = json.deal?.["thorough"];
   return typeof t === "object" ? (t as ThoroughJson) : null;
+}
+
+/** The partition the deal divides at random into small parts
+ * (`deal.divide`), or `null` where it divides none. */
+export function divideOf(json: DescriptionJson): DivideJson | null {
+  const g = json.deal?.["divide"];
+  return typeof g === "object" ? (g as unknown as DivideJson) : null;
+}
+
+/** A dealt partition divided at random, before and apart from the answer:
+ * each cell joined at odds `pairs` to a neighbor still alone, and each left
+ * alone then to a neighboring part under `most` cells (upstream keen.c). */
+export interface DivideJson {
+  partition: string;
+  pairs: number;
+  most: number;
+}
+
+/** The kinds dealt one a part (`deal.oneKind`), or `null`. */
+export function oneKindOf(json: DescriptionJson): OneKindJson | null {
+  const g = json.deal?.["oneKind"];
+  return typeof g === "object" ? (g as unknown as OneKindJson) : null;
+}
+
+/** One clue a part, of one of `kinds`, dealt in turn: each kind to the
+ * first part in a random order it suits, a part where its clue is `poor`
+ * (from tier `from`, where given) only where it suits none, and never where
+ * `never` holds. Each formula reads the part `at` and the clue's value `v`. */
+export interface OneKindJson {
+  kinds: string[];
+  poor?: Record<string, string | { when: string; from: string }>;
+  never?: Record<string, string>;
+}
+
+/** The setting that deals some kinds alone (`deal.onlyFlag`), or `null`. */
+export function onlyFlagOf(json: DescriptionJson): OnlyFlagJson | null {
+  const g = json.deal?.["onlyFlag"];
+  return typeof g === "object" ? (g as unknown as OnlyFlagJson) : null;
+}
+
+/** A setting the player may turn on, written after the tier by its letter,
+ * under which `deal.oneKind` deals `kinds` alone (Keen's `m`). */
+export interface OnlyFlagJson {
+  kinds: string[];
+  letter: string;
+  kw: string;
+  name: string;
+  doc: string;
+  words: string;
 }
 
 /** The partition the deal grows round its answer (`deal.grow`), or `null`

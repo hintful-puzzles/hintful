@@ -304,7 +304,18 @@ research tools all read through it; the app never does.
   answer's value, some closed whole by `closed.oneIn` a tier (none without
   `closed`), merged and mended until the ladder alone finishes the board at
   its tier; `holds`, `smallest` and `parts`, the count a desc must have, may
-  each be a formula of the sizes (Star Battle's `2 * stars`). The
+  each be a formula of the sizes (Star Battle's `2 * stars`). `deal.divide`
+  instead divides it at random, blind to the answer
+  (`engine/fill/divide.ts`): dominoes at `pairs` odds, then each square
+  left alone into a neighboring part under `most` cells. A clue kind `at:`
+  such a region is a clue a part: derived where its `means` solves for `v`
+  (`v = E`, one value, not each tried), `deal.oneKind` keeps one of its
+  kinds a part, in turn and well before `poor` (`engine/fill/one-kind.ts`),
+  `deal.onlyFlag` is a setting after the tier dealing its `kinds` alone,
+  `id:`'s `blocks` writes the partition as upstream Keen's block structure
+  and `parts` a letter and a number a part, and `play.signs` draws each at
+  its part's first square, its number and sign, with every square's notes
+  below that line (`caging` is the fixture). The
   `domino` painter draws two alike pieces touching only each other as one.
   `deal.hide` then takes a kind's clues off
   at the lowest tier, and then at the asked tier: first every clue no

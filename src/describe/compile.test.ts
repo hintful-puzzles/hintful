@@ -1047,3 +1047,77 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/reads more than `i`/);
   });
 });
+
+describe("a clue at a dealt partition's part", () => {
+  const cagingSource = "src/engine/testing/fixtures/caging/caging.description.yaml";
+  type Json = {
+    play: { signs: Record<string, string> };
+    deal: Record<string, unknown>;
+    id: Record<string, unknown>[];
+  };
+  const compileCaging = (over: (json: Json) => unknown): string => {
+    const caging = sources.get(cagingSource);
+    if (caging === undefined || !isFormal(caging)) throw new Error("no caging");
+    return compileGame(
+      over(structuredClone(caging) as never) as never,
+      [...sources.values()].filter(isLibrary),
+      cagingSource,
+      "../../../../engine/describe-runtime.ts",
+      "./step-voice.ts",
+    );
+  };
+
+  it("derives a clue whose meaning solves for it by that solution, not by trying each value", () => {
+    const out = compileCaging((j) => j);
+    const derive = out.slice(out.indexOf("export function deriveClues("));
+    const body = derive.slice(0, derive.indexOf("\nexport "));
+    // Two kinds, each its value bound once from the cells' numbers.
+    expect(body.match(/const v_v = /g)).toHaveLength(2);
+    expect(body).not.toMatch(/for \(let v_v\b/);
+  });
+
+  it("refuses a kind at a part with no sign, and a sign for a kind at none", () => {
+    expect(() =>
+      compileCaging((j) => {
+        delete j.play.signs["sum"];
+        return j;
+      }),
+    ).toThrow(/clue sum: a clue at a part, and no sign/);
+    expect(() =>
+      compileCaging((j) => {
+        j.play.signs["cand"] = "?";
+        return j;
+      }),
+    ).toThrow(/play signs: cand is no clue kind at a part/);
+  });
+
+  it("refuses the parts written before the partition, and a partition both grown and divided", () => {
+    expect(() =>
+      compileCaging((j) => {
+        j.id.reverse();
+        return j;
+      }),
+    ).toThrow(/parts of cage before the partition itself/);
+    expect(() =>
+      compileCaging((j) => {
+        j.deal["grow"] = { partition: "cage", holds: 1 };
+        return j;
+      }),
+    ).toThrow(/deal divide: a partition grown, and one divided/);
+  });
+
+  it("refuses one kind a part that leaves out a kind at the parts, and a flag's letter taken", () => {
+    expect(() =>
+      compileCaging((j) => {
+        (j.deal["oneKind"] as { kinds: string[] }).kinds = ["product"];
+        return j;
+      }),
+    ).toThrow(/sum sits at a part, and is none of its kinds/);
+    expect(() =>
+      compileCaging((j) => {
+        (j.deal["onlyFlag"] as { letter: string }).letter = "d";
+        return j;
+      }),
+    ).toThrow(/deal onlyFlag: the letter d is taken/);
+  });
+});

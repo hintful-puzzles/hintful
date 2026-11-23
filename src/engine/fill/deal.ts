@@ -35,7 +35,9 @@ import {
   solveBoard,
   spaceOf,
 } from "./board.ts";
+import { dividePartition } from "./divide.ts";
 import {
+  elementCount,
   encodeDesc,
   type FillDeal,
   type FillParams,
@@ -48,6 +50,7 @@ import {
 } from "./game-id.ts";
 import { type GrowSizes, growPartition } from "./grow.ts";
 import { latinNumbers } from "./latin-numbers.ts";
+import { type OneKindModule, oneKindEach } from "./one-kind.ts";
 import {
   type BuiltSample,
   type FirstCells,
@@ -89,18 +92,19 @@ interface Reads {
  * beside the partitions grown round it and the clues the params give
  * (`givenOf`); and where it grows a partition, what the parts hold on a
  * board. */
-export type DealtFillModule<C> = SearchedFillModule<C> & {
-  deriveClues(
-    g: ArrayLike<number>,
-    sp: GridSpace,
-    grown: Grown,
-    given: ReturnType<typeof givenOf>,
-    /** A random one of `n`, which a kind dealt one in each group is put at
-     * (`deal.oneIn`). */
-    pick?: (n: number) => number,
-  ): C;
-  growBy?(sp: GridSpace, sizes: Readonly<Record<string, number>>): GrowSizes;
-};
+export type DealtFillModule<C> = SearchedFillModule<C> &
+  OneKindModule<C> & {
+    deriveClues(
+      g: ArrayLike<number>,
+      sp: GridSpace,
+      grown: Grown,
+      given: ReturnType<typeof givenOf>,
+      /** A random one of `n`, which a kind dealt one in each group is put at
+       * (`deal.oneIn`). */
+      pick?: (n: number) => number,
+    ): C;
+    growBy?(sp: GridSpace, sizes: Readonly<Record<string, number>>): GrowSizes;
+  };
 
 /**
  * Which try of a search tier's deal starts from every clue and not from a
@@ -170,7 +174,13 @@ export function dealFill<C extends Clues<C>>(
   /** The partition grown round `g` for tier `tier`, by its name, where the
    * deal grows one; `null` where this draw grew none. */
   const grownRound = (g: Uint8Array, tier: number): Grown | null => {
-    const { grow } = deal;
+    const { grow, divide } = deal;
+    if (divide !== undefined) {
+      const parts = dividePartition(divide, sp, rs);
+      return parts === null
+        ? drawRejected("fill: the division left a cell alone")
+        : { [divide.partition]: partitionOf(parts) };
+    }
     if (grow === undefined) return {};
     if (module.growBy === undefined)
       throw new Error("deal: a grown partition with no growBy");
@@ -266,10 +276,19 @@ export function dealFill<C extends Clues<C>>(
     if (g === null) return drawRejected("fill: the sample drew no answer");
     const grown = grownRound(g, tier);
     if (grown === null) return null;
-    const derived = numbered(
-      module.deriveClues(g, sp, grown, given, (n) => randomUpto(rs, n)),
-      g,
+    const derived = oneKindEach(
+      module,
+      deal,
+      sp,
+      numbered(
+        module.deriveClues(g, sp, grown, given, (n) => randomUpto(rs, n)),
+        g,
+      ),
+      tier,
+      p.only === true,
+      rs,
     );
+    if (derived === null) return drawRejected("fill: a part suits none of the kinds");
     if (!module.isAnswer(g, sp, derived, variations))
       return "build" in sample
         ? climbBuild("fill: the answer built breaks a rule")
@@ -699,7 +718,7 @@ function hidesAny<C extends Clues<C>>(
   const kind = deal.hideFlag?.kind;
   if (kind === undefined) return false;
   return (
-    (clues[kind as keyof C] as ClueList).at.length < sp[deal.universes[kind]].length
+    (clues[kind as keyof C] as ClueList).at.length < elementCount(deal, sp, clues, kind)
   );
 }
 
@@ -729,7 +748,7 @@ function keepingAll<C extends Clues<C>>(
       kept,
       k as keyof C,
       of.map((i) => i - offsets[n]),
-      sp[deal.universes[k]].length,
+      elementCount(deal, sp, clues, k),
     );
   }
   return kept;

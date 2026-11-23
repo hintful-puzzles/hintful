@@ -16,6 +16,10 @@ import {
 } from "../contract/desc-error.ts";
 import { difficultyItem, noSuchTier } from "../contract/difficulty.ts";
 import type { ParamConfigItem } from "../contract/game.ts";
+import {
+  encodeBlockStructure,
+  readBlockStructure,
+} from "../game-id/block-structure.ts";
 import { isDigit, parseLeadingInt } from "../game-id/decimal.ts";
 import { c2n, n2c } from "../game-id/desc-alphabet.ts";
 import { type DescReader, readDesc } from "../game-id/desc-reader.ts";
@@ -106,7 +110,17 @@ export type IdSegment =
    * at edges valued one of the edge's ends, that it is the value of. Where
    * `both`, `sides` is valued 0 or 1 at every edge, and an edge's clue 1 is
    * written from both its ends (upstream's Adjacent), every other edge's 0. */
-  | { readonly records: string; readonly sides: string; readonly both?: true };
+  | { readonly records: string; readonly sides: string; readonly both?: true }
+  /** A dealt partition as upstream's block structure
+   * (`engine/game-id/block-structure.ts`). */
+  | { readonly blocks: string }
+  /** A clue a part of partition `parts`, in the order of the parts' first
+   * cells: its kind's letter (`letters`, by letter), then its number. */
+  | {
+      readonly parts: string;
+      readonly before?: string;
+      readonly letters: Readonly<Record<string, string>>;
+    };
 
 /** A record's side letters, up, right, down and left (upstream unequal.c's
  * `adjthan` order). */
@@ -179,8 +193,27 @@ export interface FillOption {
   }[];
 }
 
-/** The elements a clue kind sits at. */
+/** The elements of the space a clue kind sits at. */
 export type Universe = "cells" | "lines" | "edges";
+
+/** The elements a clue kind sits at: the space's, or the parts of the deal's
+ * one partition. */
+export type ClueUniverse = Universe | "parts";
+
+/** How many elements kind `kind` may sit at on a board dealt `clues`. */
+export function elementCount<C extends Clues<C>>(
+  deal: FillDeal,
+  sp: GridSpace,
+  clues: C,
+  kind: string,
+): number {
+  const u = deal.universes[kind];
+  if (u === undefined) throw new Error(`deal: no clue kind ${kind}`);
+  if (u !== "parts") return sp[u].length;
+  const partition = deal.partitions?.[0];
+  if (partition === undefined) throw new Error(`deal: ${kind} sits at parts of none`);
+  return (clues[partition as keyof C] as Partition).parts.length;
+}
 
 /** What a compiled fill module says of its deal (`deal`). */
 export interface FillDeal {
@@ -225,9 +258,16 @@ export interface FillDeal {
   readonly hideFlag?: FillHideFlag;
   /** How it grows a dealt partition round the answer. */
   readonly grow?: FillGrow;
+  /** How it divides a dealt partition into small parts, apart from the
+   * answer (`divide.ts`). */
+  readonly divide?: FillDivide;
+  /** The kinds at the divided partition's parts dealt one a part. */
+  readonly oneKind?: { readonly kinds: readonly string[]; readonly partition: string };
+  /** The setting under which `oneKind` deals some of its kinds alone. */
+  readonly onlyFlag?: FillOnlyFlag;
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
-  readonly universes: Readonly<Record<string, Universe>>;
+  readonly universes: Readonly<Record<string, ClueUniverse>>;
   /** The dealt partitions, by name: Norinori's regions. */
   readonly partitions?: readonly string[];
   readonly tierLetters: string;
@@ -279,6 +319,28 @@ export interface FillHideFlag {
   readonly words: string;
 }
 
+/** A dealt partition divided at random into small parts (`deal.divide`):
+ * each cell joined at odds `pairs` to a neighbor alone, then each left alone
+ * to a neighboring part under `most` cells. */
+export interface FillDivide {
+  readonly partition: string;
+  readonly pairs: number;
+  readonly most: number;
+}
+
+/** A setting the player may turn on, under which the deal deals `kinds`
+ * alone of `deal.oneKind`'s (`deal.onlyFlag`), written after the tier by its
+ * letter. */
+export interface FillOnlyFlag {
+  readonly kinds: readonly string[];
+  readonly letter: string;
+  readonly kw: string;
+  readonly name: string;
+  readonly doc: string;
+  /** What a board's name says where it is on. */
+  readonly words: string;
+}
+
 /** A variation the player may switch on (`play.modifiers`). */
 export interface FillModifier {
   readonly letter: string;
@@ -313,6 +375,9 @@ export interface FillParams {
   /** Whether the deal hides, in a game whose deal has the setting
    * (`FillDeal.hideFlag`); absent in any other. */
   hides?: boolean;
+  /** Whether the deal deals some kinds alone, in a game whose deal has the
+   * setting (`FillDeal.onlyFlag`); absent in any other. */
+  only?: boolean;
 }
 
 /** Each length's count of a tally of `size`, where the params name none:
@@ -457,16 +522,19 @@ function tallyRefusal(
   return null;
 }
 
-/** The hide flag's Custom field. */
-const hideFlagItem = (f: FillHideFlag): ParamConfigItem<FillParams> => ({
+/** A flag's Custom field, on the params' field `field`. */
+const flagItem = (
+  f: FillHideFlag | FillOnlyFlag,
+  field: "hides" | "only",
+): ParamConfigItem<FillParams> => ({
   kw: f.kw,
   name: f.name,
   type: "boolean",
   doc: f.doc,
-  label: { slot: "tail", words: (p) => (p.hides === true ? f.words : null) },
-  get: (p) => p.hides === true,
+  label: { slot: "tail", words: (p) => (p[field] === true ? f.words : null) },
+  get: (p) => p[field] === true,
   set: (p, v) => {
-    p.hides = v;
+    p[field] = v;
   },
 });
 
@@ -498,16 +566,26 @@ export const withThorough = (deal: FillDeal, p: FillParams): FillParams =>
   deal.thorough === undefined ? p : { ...p, thorough: thoroughBy(deal.thorough, p.w) };
 
 /** Each clue kind's largest value at an element (`clueMax`); a partition has
- * none. */
+ * none. A kind at a partition's parts reads the part's cells off `cl`, the
+ * clues read so far, which hold the partition. */
 export type ClueMax<C> = {
-  readonly [K in keyof C]?: (sp: GridSpace, at: number) => number;
+  readonly [K in keyof C]?: (sp: GridSpace, at: number, cl: C) => number;
 };
 
-/** The largest value of kind `kind` at element `at`. */
-const maxOf = <C>(clueMax: ClueMax<C>, kind: keyof C, sp: GridSpace, at: number) => {
+/** The largest value of kind `kind` at element `at`, beside the clues `cl`
+ * read so far; none are needed where the kind is not at a part. */
+const maxOf = <C>(
+  clueMax: ClueMax<C>,
+  kind: keyof C,
+  sp: GridSpace,
+  at: number,
+  cl: Partial<C> = {},
+) => {
   const max = clueMax[kind];
   if (max === undefined) throw new Error(`id: ${String(kind)} has no values`);
-  return max(sp, at);
+  // A kind not at a part reads nothing of `cl`; one at a part is read after
+  // its partition (the compiler holds `parts` after it).
+  return max(sp, at, cl as C);
 };
 
 /** Each border between two cells side by side, 1 where it divides two parts
@@ -523,6 +601,11 @@ function wallsOf(p: Partition, w: number, h: number): Uint8Array {
       out.push(p.of[y * w + x] === p.of[(y + 1) * w + x] ? 0 : 1);
   return Uint8Array.from(out);
 }
+
+/** A partition's parts in the order of their first cells, as a `parts`
+ * segment writes them. */
+const byFirstCell = (cells: readonly (readonly number[])[]): number[] =>
+  cells.map((_, r) => r).sort((a, b) => cells[a][0] - cells[b][0]);
 
 /** A partition from each cell's part, the parts numbered as `regionNumbers`
  * numbers them: in the order their first cells are met. */
@@ -668,7 +751,8 @@ export function fillParams(
     ...(deal.tally === undefined ? [] : tallyItems(deal.tally)),
     ...options.map(([name, o]) => optionItem(deal, name, o, usual)),
     difficultyItem(tiers, "diff"),
-    ...(deal.hideFlag === undefined ? [] : [hideFlagItem(deal.hideFlag)]),
+    ...(deal.hideFlag === undefined ? [] : [flagItem(deal.hideFlag, "hides")]),
+    ...(deal.onlyFlag === undefined ? [] : [flagItem(deal.onlyFlag, "only")]),
     ...named.map(([variation, m]) =>
       modifierItem<FillParams>({
         kw: m.kw,
@@ -783,6 +867,9 @@ export function fillParams(
       ...(deal.hideFlag === undefined
         ? []
         : [flag(paramConfig, deal.hideFlag.letter, deal.hideFlag.kw, { full: true })]),
+      ...(deal.onlyFlag === undefined
+        ? []
+        : [flag(paramConfig, deal.onlyFlag.letter, deal.onlyFlag.kw, { full: true })]),
       ...(deal.tally === undefined ? [] : [tallyCountsSegment(deal.tally)]),
     ]),
     validateParams(p, full) {
@@ -957,9 +1044,12 @@ function elements(
   return out;
 }
 
+/** The space's elements kind `kind` sits at; a kind at parts is written by
+ * a `parts` segment alone, which the compiler holds it to. */
 function universeOf(deal: FillDeal, kind: string): Universe {
   const u = deal.universes[kind];
   if (u === undefined) throw new Error(`id: no clue kind ${kind}`);
+  if (u === "parts") throw new Error(`id: ${kind} sits at parts`);
   return u;
 }
 
@@ -1003,6 +1093,27 @@ export function encodeDesc<C extends Clues<C>>(
       out += encodeWallRuns(
         wallsOf(dealt[seg.walls as keyof C] as Partition, sp.w, sp.h),
       );
+      continue;
+    }
+    if ("blocks" in seg) {
+      const { of } = dealt[seg.blocks as keyof C] as Partition;
+      out += encodeBlockStructure(sp.w, sp.h, (a, b) => of[a] === of[b]);
+      continue;
+    }
+    if ("parts" in seg) {
+      out += seg.before ?? "";
+      const { cells } = dealt[seg.parts as keyof C] as Partition;
+      const letters = Object.entries(seg.letters);
+      for (const r of byFirstCell(cells)) {
+        const written = letters.flatMap(([letter, kind]) => {
+          const list = listOf(kind);
+          return list.byAt[r] >= 0 ? [`${letter}${list.v[list.byAt[r]]}`] : [];
+        });
+        // A part holds one clue, which the deal deals it.
+        if (written.length !== 1)
+          throw new Error(`id: part ${r} holds ${written.length} clues`);
+        out += written[0];
+      }
       continue;
     }
     if ("runs" in seg) {
@@ -1310,6 +1421,37 @@ export function decodeDesc<C extends Clues<C>>(
         const count = sized?.parts ?? null;
         if (count !== null && parts.cells.length !== count) r.fail(DESC_MALFORMED);
         out[seg.walls as keyof C] = parts;
+        continue;
+      }
+      if ("blocks" in seg) {
+        const n = sp.cells.length;
+        const joined = new Dsf(n);
+        readBlockStructure(r, joined, sp.w, sp.h);
+        out[seg.blocks as keyof C] = partitionOf(regionNumbers(joined, n));
+        continue;
+      }
+      if ("parts" in seg) {
+        if (seg.before !== undefined) r.expect(seg.before);
+        const { cells } = out[seg.parts as keyof C] as Partition;
+        const read = new Map<string, { at: number[]; v: number[] }>(
+          Object.values(seg.letters).map((k) => [k, { at: [], v: [] }]),
+        );
+        for (const part of byFirstCell(cells)) {
+          const kind = seg.letters[r.char((c) => Object.hasOwn(seg.letters, c))];
+          const least = deal.least?.[kind] ?? 0;
+          const max = maxOf(clueMax, kind as keyof C, sp, part, out as Partial<C>);
+          const got = read.get(kind) as { at: number[]; v: number[] };
+          got.at.push(part);
+          got.v.push(r.int(least, max));
+        }
+        for (const [kind, { at, v }] of read) {
+          const order = at.map((_, i) => i).sort((a, b) => at[a] - at[b]);
+          out[kind as keyof C] = clueList(
+            order.map((i) => at[i]),
+            order.map((i) => v[i]),
+            cells.length,
+          );
+        }
         continue;
       }
       if ("runs" in seg) {

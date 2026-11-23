@@ -240,8 +240,9 @@ export function deriveClues(g: ArrayLike<number>, sp: GridSpace, _grown: object 
   const _a1 = sp.cells;
   for (let _i2 = 0; _i2 < _a1.length; _i2++) {
     const v_at = _a1[_i2];
-    const _t3 = sp.w;
-    for (let v_v = 1; v_v <= _t3; v_v++) {
+    L3: {
+      const v_v = (g[v_at] || -1);
+      if (!(((v_v) >>> 0 < 32 && ((rangeMask(1, sp.w) >> v_v) & 1) !== 0))) break L3;
       if (given_at.at(-1) !== v_at && clueHolds_given(g, sp, v_at, v_v)) { given_at.push(v_at); given_v.push(v_v); }
     }
   }
@@ -286,10 +287,10 @@ export const deal = {"square":true,"sample":{"latin":true},"hide":"given","unuse
 
 /** Each clue kind's largest value at an element. */
 export const clueMax = {
-  given(sp: GridSpace, _at: number): number {
+  given(sp: GridSpace, _at: number, _cl: Dealt): number {
     return Number(sp.w);
   },
-  bar(_sp: GridSpace, _at: number): number {
+  bar(_sp: GridSpace, _at: number, _cl: Dealt): number {
     return Number(1);
   },
 };

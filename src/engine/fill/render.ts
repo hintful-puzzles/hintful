@@ -304,6 +304,10 @@ const NUMBER_UNDER = 1 << 14;
 /** The cell's running piece runs on, which way the board does not yet say
  * (`JOINED_OPEN`). */
 const SHAPE_OPEN = 1 << 15;
+/** The clue at a part drawn on the cell, its part's first, broken; and
+ * marked done by the player. */
+const LABEL_BROKEN = 1 << 16;
+const LABEL_DONE = 1 << 17;
 
 /** The step to each of a cell's four sides, up, right, down, left. */
 const DIRS: readonly (readonly [number, number])[] = [
@@ -411,6 +415,34 @@ export function fillRender<C extends Clues<C>>(
       if (k >= 0) return { kind, k };
     }
     return null;
+  };
+
+  /** The kinds at the dealt partition's parts, each drawn at its part's
+   * first cell as its number and its sign. */
+  const partKinds = Object.entries(module.deal?.universes ?? {})
+    .filter(([, u]) => u === "parts")
+    .map(([k]) => k as keyof C & string);
+  const labeled = partKinds.length > 0;
+
+  /** Each part's clue by its first cell: its kind, its index in the kind's
+   * list, and its text. */
+  const labelsOf = (
+    b: FillBoard<C>,
+  ): Map<number, { kind: keyof C & string; k: number; text: string }> => {
+    const out = new Map<number, { kind: keyof C & string; k: number; text: string }>();
+    if (walled === undefined) return out;
+    const { cells } = b.dealt[walled] as Partition;
+    for (const kind of partKinds) {
+      const list = listOf(b.dealt, kind);
+      list.at.forEach((r, k) => {
+        out.set(cells[r][0], {
+          kind,
+          k,
+          text: `${list.v[k]}${play.signs?.[kind] ?? ""}`,
+        });
+      });
+    }
+    return out;
   };
 
   /** Each number's state on the board: done, broken or neither, by its
@@ -803,6 +835,9 @@ export function fillRender<C extends Clues<C>>(
     part: { readonly walls: number; readonly fill: number } | null,
     // The notes a hint's step strikes from the cell, bit `v` a value's.
     struck: number,
+    // The clue of the part this is the first cell of, as written; `null`
+    // where it is none's first.
+    label: string | null,
     // A piece placed or taken away a moment ago: the value it grows from or
     // shrinks into, and how far it has got, 0 to 1.
     anim: { readonly from: number; readonly frac: number } | null = null,
@@ -873,6 +908,18 @@ export function fillRender<C extends Clues<C>>(
         occupied,
         ((lineWord >> JOIN_SHIFT) & 0xf) | (lineWord & SHAPE_OPEN ? JOINED_OPEN : 0),
       );
+    // A part's clue, in ink, red where it breaks, and else gray where the
+    // player marked it done.
+    if (label !== null) {
+      const { origin, options } = labelText(ts, [x, y, h], part?.walls ?? null, label);
+      const ink =
+        lineWord & LABEL_BROKEN
+          ? COL_ERROR
+          : lineWord & LABEL_DONE
+            ? COL_DONE
+            : COL_INK;
+      dr.drawText(origin, options, ink, label);
+    }
     // A board of numbers draws each value as its numeral: a given in ink, the
     // player's in the entry color, red where a rule breaks at the cell.
     if (typed && v !== 0) {
@@ -1049,14 +1096,46 @@ export function fillRender<C extends Clues<C>>(
     };
   };
 
+  /** A part's clue's font: a quarter of the tile, from the left. */
+  const labelFont = (ts: number) =>
+    ({
+      align: "left",
+      baseline: "alphabetic",
+      fontType: "variable",
+      size: Math.floor(ts / 4),
+    }) as const;
+
+  /** Where a part's clue `text` is written in cell `(x, y)`: the top left
+   * of the box a hint's ring goes round (upstream keen.c's). */
+  const labelText = (
+    ts: number,
+    at: readonly [number, number, number],
+    walls: number | null,
+    text: string,
+  ) => {
+    const area = ringTextBox(markBand(ts, at, walls));
+    const options = labelFont(ts);
+    const ink = textBox({ x: 0, y: 0 }, options, text);
+    return { origin: { x: area.x - ink.x, y: area.y - ink.y }, options };
+  };
+
   /** Where `count` notes go in cell `(x, y)`, in order: the box a hint's
-   * ring goes round, so it encloses them all. */
+   * ring goes round, so it encloses them all; on a board of clues at parts,
+   * its part below a clue's line in every cell, so a clue neither shrinks a
+   * cell's notes nor moves them off its neighbors' rows. */
   const noteSlots = (
     ts: number,
     at: readonly [number, number, number],
     walls: number | null,
     count: number,
-  ): NoteSlot[] => noteGrid(ringTextBox(markBand(ts, at, walls)), count);
+  ): NoteSlot[] => {
+    const area = ringTextBox(markBand(ts, at, walls));
+    if (!labeled) return noteGrid(area, count);
+    // A clue's digits and signs ink one height whatever they say.
+    const line = textBox({ x: 0, y: 0 }, labelFont(ts), "0");
+    const top = area.y + line.h + Math.max(1, Math.floor(ts / 32));
+    return noteGrid({ ...area, y: top, h: area.y + area.h - top }, count);
+  };
 
   /**
    * The ring round the link a step asks for, with the link inside it. Where
@@ -1149,13 +1228,17 @@ export function fillRender<C extends Clues<C>>(
       }
     const lineErrors = new Set<number>();
     const gapErrors = new Set<number>();
-    // A broken number is drawn as a badge (`numberStates`), not on the piece.
+    // A broken number is drawn as a badge (`numberStates`), not on the piece;
+    // a part's clue red at its part's first cell.
     for (const [kind, broken] of errors.clues)
       for (const q of broken) {
         const at = listOf(state.dealt, kind as keyof C).at[q];
         if (lineClues.includes(kind as keyof C) || lineLists.includes(kind as keyof C))
           lineErrors.add(at);
         else if (play.gaps?.[kind] !== undefined) gapErrors.add(at);
+        else if (partKinds.includes(kind as keyof C & string))
+          lineWord[(state.dealt[walled as keyof C] as Partition).cells[at][0]] |=
+            LABEL_BROKEN;
         else if (!numbers.includes(kind as keyof C & string)) word[at] |= ERR_AT;
       }
     return { word, lineWord, lineErrors, gapErrors };
@@ -1313,9 +1396,17 @@ export function fillRender<C extends Clues<C>>(
     const ts = ds.tileSize;
     const at = y * w + x;
     const text = numberText(ts, cellX(x, y, h, ts), coord(y, ts));
+    // A part's clue is kept outside the ring, which goes round what the
+    // cell holds below it.
+    const label = labeled ? (labelsOf(b).get(at) ?? null) : null;
+    const avoid: Rect[] = [];
+    if (label !== null) {
+      const t = labelText(ts, [x, y, h], ds.parts?.walls[at] ?? null, label.text);
+      avoid.push(textBox(t.origin, t.options, label.text));
+    }
     const enclosing = (enclose: RingClear["enclose"]): RingClear => ({
       enclose,
-      avoid: [],
+      avoid,
     });
     const v = b.values[at];
     if (typed && v !== 0)
@@ -1328,7 +1419,7 @@ export function fillRender<C extends Clues<C>>(
         ),
       );
     const n = numberAt(b, at);
-    if (n === null) return NOTHING_TO_CLEAR;
+    if (n === null) return avoid.length === 0 ? NOTHING_TO_CLEAR : enclosing([]);
     return enclosing([
       textBox(text.origin, text.options, String(listOf(b.dealt, n.kind).v[n.k])),
     ]);
@@ -1573,11 +1664,13 @@ export function fillRender<C extends Clues<C>>(
     const states = numberStates(shown);
     const joins = joinsOf(shown);
     const washes = washesOf(shown, ui);
+    const labels = labelsOf(state);
     const { parts } = ds;
     for (let y = 0; y < h; y++)
       for (let x = 0; x < w; x++) {
         if (!drawn(state, x, y)) continue;
         const i = y * w + x;
+        const label = labels.get(i) ?? null;
         let k = word[i] | shown.values[i] | (state.fixed[i] ? FIXED : 0);
         if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
         k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
@@ -1587,7 +1680,8 @@ export function fillRender<C extends Clues<C>>(
           (states.get(i) ?? 0) |
           ((joins[i] & 0xf) << JOIN_SHIFT) |
           (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
-          washes[i];
+          washes[i] |
+          (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0);
         const n = shownNumber(state, i, shown.values[i], ui.hiddenShown);
         if (n >= 0 && shown.values[i] === play.hides?.value) lk |= NUMBER_UNDER;
         const part =
@@ -1596,12 +1690,34 @@ export function fillRender<C extends Clues<C>>(
         // A growing piece is no key's: its tile is drawn every frame.
         if (before !== null && before[i] !== shown.values[i]) {
           ds.tiles.forget(i);
-          drawTile(dr, ts, [x, y, h], k, hk, lk, nk, n, part, ds.struck.struck[i], {
-            from: before[i],
-            frac,
-          });
+          drawTile(
+            dr,
+            ts,
+            [x, y, h],
+            k,
+            hk,
+            lk,
+            nk,
+            n,
+            part,
+            ds.struck.struck[i],
+            label?.text ?? null,
+            { from: before[i], frac },
+          );
         } else if (ds.tiles.changed(i, k, hk, lk, nk))
-          drawTile(dr, ts, [x, y, h], k, hk, lk, nk, n, part, ds.struck.struck[i]);
+          drawTile(
+            dr,
+            ts,
+            [x, y, h],
+            k,
+            hk,
+            lk,
+            nk,
+            n,
+            part,
+            ds.struck.struck[i],
+            label?.text ?? null,
+          );
       }
 
     if (notes) drawPencilMode(dr, ds, state, ui);
