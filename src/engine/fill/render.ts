@@ -28,6 +28,7 @@ import { BLACK, GRAY_WASH, REGION_FILLS, WHITE, YELLOW_WASH } from "../color/col
 import {
   CLEAR_MARK,
   cellSurface,
+  clueDoneColor,
   ERROR_TEXT,
   GRID_DARK,
   givenSurface,
@@ -111,6 +112,7 @@ import {
 } from "../solve/describe-runtime.ts";
 import { answerOf, type FillMistake, rulesOf } from "./answer.ts";
 import { type Clues, type FillBoard, listOf, spaceOf } from "./board.ts";
+import { isDone } from "./done.ts";
 import { tallyOf } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import { type FillLink, LINK } from "./marks.ts";
@@ -585,6 +587,10 @@ export function fillRender<C extends Clues<C>>(
   const notes = play.notes === true;
   const COL_PENCIL = COL_ENTRY + 1;
   const COL_PENCIL_BODY = COL_ENTRY + 2;
+  /** Where the player marks clues done (`play.done`, a board of numbers'),
+   * a done clue's gray, after the notes' slots where the board keeps them. */
+  const marksDone = Object.keys(play.done ?? {}).length > 0;
+  const COL_DONE = notes ? COL_PENCIL_BODY + 1 : COL_ENTRY + 1;
   const PENCIL_STYLE: PencilIndicatorStyle = {
     background: COL_BACKGROUND,
     body: COL_PENCIL_BODY,
@@ -691,6 +697,7 @@ export function fillRender<C extends Clues<C>>(
         out[COL_PENCIL] = pencilColor(bg);
         out[COL_PENCIL_BODY] = PENCIL_BODY;
       }
+      if (marksDone) out[COL_DONE] = clueDoneColor(bg);
     }
     for (const { painter, slot } of painted.values())
       painter.colors(bg).forEach((c, i) => {
@@ -1355,7 +1362,8 @@ export function fillRender<C extends Clues<C>>(
   const noteKey = (b: FillBoard<C>, i: number, selected: boolean, ui: FillUi): number =>
     (b.pencil?.[i] ?? 0) | (selected && ui.pencilMode === true ? NOTES_MODE : 0);
 
-  /** Each gap's clue, where it has moved: in ink, red where it breaks. */
+  /** Each gap's clue, where it has moved: in ink, red where it breaks, and
+   * else gray where the player marked it done. */
   function drawGaps(
     dr: GameDrawing,
     ds: FillDrawState,
@@ -1368,10 +1376,15 @@ export function fillRender<C extends Clues<C>>(
     for (const e of sp.edges) {
       const clue = gapClueAt(gapKinds, b, sp, e);
       const err = broken.has(e);
+      const done = clue !== null && isDone(b, clue.name, clue.k);
       const key =
         clue === null
           ? 0
-          : 1 | (clue.kind << 1) | (clue.toward << 8) | (err ? 1 << 10 : 0);
+          : 1 |
+            (clue.kind << 1) |
+            (clue.toward << 8) |
+            (err ? 1 << 10 : 0) |
+            (done ? 1 << 11 : 0);
       if (!ds.gaps.changed(e, key)) continue;
       const a = sp.edgeEnds[2 * e];
       const [x, y] = [a % b.w, Math.floor(a / b.w)];
@@ -1385,7 +1398,12 @@ export function fillRender<C extends Clues<C>>(
         : { x: gap.x, y: gap.y + 1, w: ts + 1, h: g - 1 };
       dr.clip(open);
       dr.drawRect(open, COL_BACKGROUND);
-      clue?.painter.paint(dr, gap, clue.toward, err ? COL_ERROR : COL_INK);
+      clue?.painter.paint(
+        dr,
+        gap,
+        clue.toward,
+        err ? COL_ERROR : done ? COL_DONE : COL_INK,
+      );
       dr.unclip();
       dr.drawUpdate(open);
     }

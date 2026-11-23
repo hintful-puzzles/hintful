@@ -894,6 +894,35 @@ describe("what the fill board reads of a description", () => {
     );
   });
 
+  it("refuses a clue marked done where no press can reach it", () => {
+    const source = "src/engine/testing/fixtures/ordering/ordering.description.yaml";
+    const ordering = sources.get(source);
+    if (ordering === undefined || !isFormal(ordering)) throw new Error("no ordering");
+    const compileOrdering = (done: Record<string, string>) => {
+      const j = structuredClone(ordering) as {
+        play: { done?: Record<string, string> };
+      };
+      j.play.done = done;
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileOrdering({ greater: "sign" })).toContain('"done":{"greater":"sign"}');
+    expect(() => compileOrdering({ given: "given" })).toThrow(
+      /play done: given is no clue kind drawn in a gap/,
+    );
+    expect(() =>
+      compileTents((j: { play: { done: Record<string, string> } }) => {
+        j.play.done = { count: "count" };
+        return j;
+      }),
+    ).toThrow(/play done: count is no clue kind drawn in a gap/);
+  });
+
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {
     expect(() =>
       compileTents((j: { play: { secondary: number } }) => {

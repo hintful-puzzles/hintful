@@ -4,7 +4,8 @@
 # neighboring squares, for the fill engine's tests of a clue at an edge
 # whose value is one of the edge's ends (dealt from the answer, written in
 # the desc as a record a square, drawn in a gap between the squares, red
-# where it breaks) and of the candidate walk running a technique the
+# where it breaks, gray where the player marks it done) and of the
+# candidate walk running a technique the
 # description states, on a description that names no game.
 game: ordering
 produces: latin
@@ -33,6 +34,7 @@ freedom: { kind: fill }
 play:
   numbers: {}
   gaps: { greater: chevron }
+  done: { greater: sign }
   hintNotes: implicit
   boards: [4x4, 5x5]
   hintMarks:

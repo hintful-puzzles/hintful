@@ -6,6 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 import * as ordering from "../../generated/engine/testing/fixtures/ordering/ordering.compiled.ts";
+import { clueDoneColor } from "../color/palette.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import {
   DESC_CONTRADICTORY,
@@ -14,12 +15,23 @@ import {
   validateDesc,
 } from "../contract/desc-error.ts";
 import { UI_UPDATE } from "../contract/game.ts";
-import { LEFT_BUTTON } from "../input/pointer.ts";
+import type { Color } from "../contract/types.ts";
+import {
+  CURSOR_DOWN,
+  CURSOR_LEFT,
+  CURSOR_RIGHT,
+  LEFT_BUTTON,
+  MOD_CTRL,
+  MOD_SHFT,
+  RIGHT_BUTTON,
+} from "../input/pointer.ts";
 import { randomNew } from "../random/index.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
+import type { AnyGame } from "../testing/input-probe.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
-import { type FillBoard, spaceOf } from "./board.ts";
+import { expectDragRepeatsThePress } from "../testing/sweep-probe.ts";
+import { asDealt, type FillBoard, spaceOf } from "./board.ts";
 import { fillGame } from "./game.ts";
 import { encodeDesc } from "./game-id.ts";
 import { type FillMove, isCandidateMove } from "./notes.ts";
@@ -28,6 +40,7 @@ const game = fillGame("ordering", ordering);
 type Board = FillBoard<ordering.Dealt>;
 
 const params = (w: number, diff = 0) => ({ w, h: w, diff });
+const sameColor = (a: Color, b: Color): boolean => a.every((v, i) => v === b[i]);
 /** The tier whose boards need a sign. */
 const NORMAL = 1;
 const board = (w: number, desc: string): Board => game.newState(params(w), desc);
@@ -137,7 +150,7 @@ describe("a board with gaps", () => {
     expect(tip?.[0]).toBeCloseTo(o + TS / 2, -1);
   });
 
-  it("takes a press in a cell and none in a gap", () => {
+  it("takes a press in a cell, and none in a gap without a sign", () => {
     const b = board(4, UPSTREAM);
     const ui = game.newUi(b);
     const ds = game.newDrawState(b, TS);
@@ -146,6 +159,120 @@ describe("a board with gaps", () => {
     expect(ui.cursor).toMatchObject({ x: 1, y: 1, visible: true });
     const inGap = { x: middle(5, o).x + TS / 2 + GAP / 2, y: middle(5, o).y };
     expect(game.interpretMove(b, game.newUi(b), ds, inGap, LEFT_BUTTON)).toBeNull();
+  });
+
+  describe("a sign marked done", () => {
+    const b = board(4, UPSTREAM);
+    const ds = game.newDrawState(b, TS);
+    const o = (game.computeSize(params(4), TS).w - (4 * TS + 3 * GAP)) / 2;
+    /** The middle of the gap right of cell `c`, or below it. */
+    const right = (c: number) => ({
+      x: middle(c, o).x + TS / 2 + GAP / 2,
+      y: middle(c, o).y,
+    });
+    const below = (c: number) => ({
+      x: middle(c, o).x,
+      y: middle(c, o).y + TS / 2 + GAP / 2,
+    });
+    /** The board after the move a press at `p` makes, with `button`. */
+    const pressed = (s: Board, p: { x: number; y: number }, button = LEFT_BUTTON) => {
+      const move = game.interpretMove(s, game.newUi(s), ds, p, button);
+      if (move === null || move === UI_UPDATE)
+        throw new Error("the press made no move");
+      return game.executeMove(s, move);
+    };
+    const doneSigns = (s: Board) => Array.from(s.done["greater"] ?? []);
+
+    it("is marked by a press in its gap with either button, and unmarked by another", () => {
+      // The signs right of cell 0, below it, and right of cell 9.
+      const k = (e: number) => b.dealt.greater.byAt[e];
+      const sp = spaceOf(ordering, b);
+      const once = pressed(b, right(0));
+      expect(doneSigns(once)[k(sp.edgeOf(0, 1))]).toBe(1);
+      expect(doneSigns(once).filter((d) => d === 1)).toHaveLength(1);
+      const other = pressed(once, below(0), RIGHT_BUTTON);
+      expect(doneSigns(other)[k(sp.edgeOf(0, 4))]).toBe(1);
+      expect(doneSigns(pressed(other, right(0)))[k(sp.edgeOf(0, 1))]).toBe(0);
+      // The sign right of a given.
+      expect(doneSigns(pressed(b, right(9)))[k(sp.edgeOf(9, 10))]).toBe(1);
+    });
+
+    it("is drawn gray, and red once it breaks", () => {
+      const colors = game.colors(DEFAULT_BACKGROUND);
+      const inks = (s: Board) => signs(draw(s)).map((op) => colors[op.fill]);
+      const gray = clueDoneColor(DEFAULT_BACKGROUND);
+      const grays = (s: Board) => inks(s).filter((c) => sameColor(c, gray)).length;
+      const marked = pressed(b, below(0));
+      expect(grays(b)).toBe(0);
+      expect(grays(marked)).toBe(1);
+      expect(inks(marked)).toHaveLength(inks(b).length);
+      // Above 3 where the top must be the greater: red, though marked done.
+      const broken = inks(game.executeMove(marked, { set: [0, 1, 4, 3] }));
+      expect(broken.filter((c) => sameColor(c, colors[COL_ERROR]))).toHaveLength(1);
+      expect(grays(game.executeMove(marked, { set: [0, 1, 4, 3] }))).toBe(0);
+    });
+
+    it("is marked by Shift or Ctrl with the arrow toward it, from the selected square", () => {
+      const ui = game.newUi(b);
+      expect(game.interpretMove(b, ui, ds, middle(0, o), LEFT_BUTTON)).toBe(UI_UPDATE);
+      const sp = spaceOf(ordering, b);
+      const down = game.interpretMove(
+        b,
+        ui,
+        ds,
+        { x: 0, y: 0 },
+        CURSOR_DOWN | MOD_SHFT,
+      );
+      expect(down).toEqual({
+        type: "done",
+        kind: "greater",
+        k: b.dealt.greater.byAt[sp.edgeOf(0, 4)],
+      });
+      const across = game.interpretMove(
+        b,
+        ui,
+        ds,
+        { x: 0, y: 0 },
+        CURSOR_RIGHT | MOD_CTRL,
+      );
+      expect(across).toEqual({
+        type: "done",
+        kind: "greater",
+        k: b.dealt.greater.byAt[sp.edgeOf(0, 1)],
+      });
+      // No sign that way: no move, and the cursor stays.
+      expect(
+        game.interpretMove(b, ui, ds, { x: 0, y: 0 }, CURSOR_LEFT | MOD_SHFT),
+      ).toBeNull();
+      expect(ui.cursor).toMatchObject({ x: 0, y: 0 });
+    });
+
+    it("leaves the values and notes as they were, and is gone from the board as dealt", () => {
+      const marked = pressed(b, right(0));
+      expect(marked.values).toEqual(b.values);
+      expect(marked.pencil).toEqual(b.pencil);
+      expect(asDealt(marked).done["greater"]).toEqual(b.done["greater"]);
+    });
+
+    it("is read back from a save as the move it was", () => {
+      const move = { type: "done", kind: "greater", k: 1 };
+      expect(doneSigns(game.executeMove(b, JSON.parse(JSON.stringify(move))))[1]).toBe(
+        1,
+      );
+      expect(() =>
+        game.executeMove(b, { type: "done", kind: "given", k: 0 } as never),
+      ).toThrow();
+    });
+
+    it("is what a drag through the gaps repeats", () => {
+      const declared = game.doneClues;
+      if (declared === undefined) throw new Error("no doneClues");
+      expectDragRepeatsThePress(
+        { ...game, defaultParams: () => params(5, NORMAL) } as unknown as AnyGame,
+        "ordering",
+        declared,
+      );
+    });
   });
 
   it("prints each sign between its cells", () => {

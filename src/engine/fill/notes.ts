@@ -18,15 +18,16 @@ import {
   applyNoteMove as writeNotes,
 } from "../hint/candidate-hint.ts";
 import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import { applyDone, type DoneMove, isDoneShaped } from "./done.ts";
 import { applyEdit, type Edit, editOf } from "./edit.ts";
 
-/** A fill game's move: an edit, or on a board of numbers a typed entry or a
- * note move. Solve, Clear and Reveal stay edits. */
-export type FillMove = Edit | CandidateMove;
+/** A fill game's move: an edit, on a board of numbers a typed entry or a
+ * note move, or a clue marked done. Solve, Clear and Reveal stay edits. */
+export type FillMove = Edit | CandidateMove | DoneMove;
 
-/** Whether `move` is one of the note-taking cell's, not an edit. */
+/** Whether `move` is one of the note-taking cell's. */
 export const isCandidateMove = (move: FillMove): move is CandidateMove =>
-  "type" in move;
+  "type" in move && move.type !== "done";
 
 /** Whether `marks` is a list of notes, as a save holds it. */
 const areMarks = (marks: unknown): boolean =>
@@ -70,6 +71,7 @@ function isCandidate(move: unknown): move is CandidateMove {
 /** `move` as a fill game's move, or refused as `context`'s: a move from a
  * save is read back as whatever it was written as. */
 export function fillMoveOf(move: unknown, context: string): FillMove {
+  if (isDoneShaped(move)) return move;
   return isCandidate(move) ? move : editOf(move, context);
 }
 
@@ -79,9 +81,11 @@ export const applyMove = <C>(
   board: FillBoard<C>,
   move: FillMove,
 ): FillBoard<C> =>
-  isCandidateMove(move)
-    ? applyNoteMove(module, board, move)
-    : applyEdit(module, board, move);
+  !("type" in move)
+    ? applyEdit(module, board, move)
+    : move.type === "done"
+      ? applyDone(board, move)
+      : applyNoteMove(module, board, move);
 
 /** What a fill-all writes on a board of `module`'s: each open cell's domain,
  * its values' bits. */

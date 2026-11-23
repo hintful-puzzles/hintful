@@ -141,6 +141,9 @@ export interface FillBoard<C> {
    * keeps them (`play.notes`, `notes.ts`); `null` where it keeps none. The
    * ladder never reads them. */
   readonly pencil: Int32Array | null;
+  /** Of each clue kind the player may mark done (`play.done`, `done.ts`),
+   * 1 a clue they marked, by its index in the kind's list. */
+  readonly done: Readonly<Record<string, Uint8Array>>;
 }
 
 /** The space a board of `module`'s is read on. */
@@ -192,16 +195,29 @@ export function newBoard<C>(
     fixed,
     mark: new Int32Array(w * h).fill(-1),
     pencil: module.play?.notes === true ? new Int32Array(w * h) : null,
+    done: Object.fromEntries(
+      Object.keys(module.play?.done ?? {}).map((k) => [
+        k,
+        new Uint8Array(listOf(dealt, k as keyof C).at.length),
+      ]),
+    ),
   };
 }
 
-/** The board as dealt: its fixed cells alone, and no marks or notes. */
+/** The board as dealt: its fixed cells alone, and no marks, notes or clues
+ * marked done. */
 export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
   return {
     ...board,
     values: Uint8Array.from(board.values, (v, c) => (board.fixed[c] ? v : 0)),
     mark: new Int32Array(board.mark.length).fill(-1),
     pencil: board.pencil === null ? null : new Int32Array(board.pencil.length),
+    done: Object.fromEntries(
+      Object.entries(board.done).map(([kind, flags]) => [
+        kind,
+        new Uint8Array(flags.length),
+      ]),
+    ),
   };
 }
 

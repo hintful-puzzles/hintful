@@ -79,24 +79,28 @@ commit. In design.md § "Decisions" 7's order.
         step is an empty move. The hide keeps a kind the lowest tier reads
         none of whole until the asked tier's pass, or a Normal board's
         signs all went at Easy and no Normal board was dealt.
-  - [ ] 2.2b Done marks on an edge clue (a press in its gap, or an arrow
+  - [x] 2.2b Done marks on an edge clue (a press in its gap, or an arrow
         with Shift or Ctrl), drawn gray. Built as the shared capability
         "done marks on any clue" (design.md § "Shared": Adjacent, Towers,
         Keen, Undead and Magnets follow), so its board state is keyed by a
-        clue kind and its clue's index, not by edges. The hand-written
-        ones to read: `engine/edge-clue-latin/play.ts`'s `spentDrag` (a
-        press in a gap, a drag on through the gaps), Magnets'
-        `dragMarkVerbs`, and Towers' and Undead's `clueDrag`; all are a
-        `Game.doneClues` (`engine/input/target-verb.ts`), which writes
-        the help's controls line. A flipped Unequal may drop the old
-        `spent` move from saves (docs/descriptions.md: approved for the
-        initiative, 2026-11-22). The `ordering` fixture is where it is
-        tested, as for 2.2a.
+        clue kind and its clue's index, not by edges. A flipped Unequal may
+        drop the old `spent` move from saves (docs/descriptions.md: approved
+        for the initiative, 2026-11-22). Built as `play.done` (a kind and
+        what one is called, which the help's `{{done-clues}}` sentence
+        says), `engine/fill/done.ts` (`DoneMove`, `FillBoard.done`, the
+        gap's press and drag as a `Game.doneClues`, the Shift or Ctrl
+        arrow), drawn in `clueDoneColor`, red over it where the clue
+        breaks; tested on `ordering` (`edges.test.ts`, the drag by the
+        `drag-marks` probe). The compiler refuses a kind not drawn in a
+        gap, or on a board of buttons: a later game adds the press its
+        place needs (a slot, a part's label). The fixture is not in the
+        app, so 2.2c's run looks at the gray in both schemes.
   - [ ] 2.2c The flip: `order` renamed `w`, the alphabet past 9, the
         deal hiding from every clue, Unequal's tests to `cases.yaml`, its
         TypeScript deleted, the `game-lines` ceiling lowered and its spec
         deltas written; its rungs (upstream's greater/lesser beside the
-        fixture's `sign`) settled there.
+        fixture's `sign`) settled there. Its run in the app includes a sign
+        marked done, by press, drag and Shift-arrow, in light and dark.
 - [ ] 2.3 Adjacent born: records flagged from both cells, the legacy `a`,
       the bar painter and a missing bar's breach; `engine/edge-clue-latin/`
       deleted (§ 4).

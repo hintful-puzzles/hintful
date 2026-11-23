@@ -255,7 +255,12 @@ research tools all read through it; the app never does.
   (upstream Unequal's). `play.gaps` names each edge kind's painter
   (`engine/render/pieces/edge.ts`): the board then has a half-tile gap
   between its cells, each edge's clue drawn in its gap, red where it breaks,
-  and printed there in the text. A hide keeps whole, until the asked tier's
+  and printed there in the text. `play.done` names the kinds the player may
+  mark done, each with what one is called (`engine/fill/done.ts`): the board
+  keeps a flag a clue, by kind and index, so the mark is one capability
+  wherever a clue sits, and the game's `doneClues` writes the help's
+  `{{done-clues}}` sentence. A press finds a clue in a gap alone so far, on
+  a board of numbers, and the compiler refuses any other kind. A hide keeps whole, until the asked tier's
   pass, a kind the lowest tier reads none of (signs over a Latin square's
   singles), so the tier that reads it hides from it.
   `deal.sample: { latin: true }`

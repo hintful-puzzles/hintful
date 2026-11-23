@@ -136,6 +136,9 @@ export interface FillPlay {
    * the edge painter named: a board with any has a gap between every two
    * cells. */
   readonly gaps?: Readonly<Record<string, EdgePainterName>>;
+  /** The clue kinds the player may mark done, each with what one is called
+   * (`done.ts`): a press on such a clue grays it, and another restores it. */
+  readonly done?: Readonly<Record<string, string>>;
   /** The values the player places, by the description's value. */
   readonly values?: Readonly<Record<number, PlayValue>>;
   /** The values only the deal places, a fixed cell's. */

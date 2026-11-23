@@ -68,13 +68,7 @@ import {
   linkedCell,
   tierOfBoard,
 } from "./hint.ts";
-import {
-  applyMove,
-  type FillMove,
-  fillMoveOf,
-  isCandidateMove,
-  markAll,
-} from "./notes.ts";
+import { applyMove, type FillMove, fillMoveOf, markAll } from "./notes.ts";
 import { type NumberInput, numberInput, numeral, typedUi } from "./numbers.ts";
 import {
   type FillInput,
@@ -374,6 +368,7 @@ export function fillGame<C extends Clues<C> & object>(
     newUi,
 
     ...inputs,
+    ...(typed === null || typed.done === null ? {} : { doneClues: typed.done.verbs }),
     executeMove: (b, m) => applyMove(module, b, fillMoveOf(m, `${id}: executeMove`)),
     ...(!notes
       ? {}
@@ -429,7 +424,7 @@ export function fillGame<C extends Clues<C> & object>(
       gesture: (b, ui, ds, move, step) => {
         if (typed !== null) return typed.gesture(b, ui, ds, move);
         // A board of buttons makes edits alone.
-        if (isCandidateMove(move))
+        if ("type" in move)
           throw new Error(`${id}: no gesture for ${JSON.stringify(move)}`);
         return buttonGesture(
           buttons as FillInput<C, FillDrawState>,

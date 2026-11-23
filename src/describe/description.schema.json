@@ -822,6 +822,11 @@
               "description": "The clue kinds at edges, each drawn in a gap between its two cells by the painter named (`engine/render/pieces/edge.ts`): a board with any is drawn with a half-tile gap between every two cells.",
               "additionalProperties": { "type": "string" }
             },
+            "done": {
+              "type": "object",
+              "description": "The clue kinds the player may mark done, each with what one is called (\"sign\"), which the help page's sentence on the mark says (`engine/fill/done.ts`): a press on such a clue, with either button, grays it, a drag on grays those that looked the same, and Shift or Ctrl with an arrow marks the one beside the selected square. Each is a kind drawn in a gap (`gaps`), on a board of `numbers`.",
+              "additionalProperties": { "type": "string" }
+            },
             "values": {
               "type": "object",
               "description": "The values the player places, by the description's value: what its verb does (\"place a tent\"), the letter that places it, its three-character glyph in the text format, and the painter that draws it.",

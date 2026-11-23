@@ -238,6 +238,19 @@ export function playOf(
     if (!(painter in EDGE_PAINTERS))
       throw new CompileError(`play gaps: no edge painter ${painter}`);
   }
+  // A clue is marked done by a press where it is drawn, and the engine finds
+  // a press on a clue in a gap alone; the press goes to the board of numbers'
+  // input, which takes no press in a gap of its own.
+  for (const k of Object.keys(p.done ?? {})) {
+    if (p.gaps?.[k] === undefined)
+      throw new CompileError(
+        `play done: ${k} is no clue kind drawn in a gap, the one place a press marks a clue done`,
+      );
+    if (p.numbers === undefined)
+      throw new CompileError(
+        `play done: ${k} is marked done on a board of numbers alone, and play has no \`numbers\``,
+      );
+  }
   const plainPlay = {
     ...rest,
     ...(notes ? { notes } : {}),

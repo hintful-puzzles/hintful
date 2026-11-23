@@ -16,6 +16,9 @@ export interface GapClue {
   readonly kind: number;
   readonly painter: EdgePainter;
   readonly toward: Side;
+  /** The kind's name, and the clue's index in its list. */
+  readonly name: string;
+  readonly k: number;
 }
 
 /** The kinds `play.gaps` names, in its order, each with its painter. */
@@ -43,7 +46,7 @@ export function gapClueAt<C extends Clues<C>>(
     const right = Math.floor(z / b.w) === Math.floor(a / b.w);
     const fromA = list.v[k] === a;
     const toward: Side = right ? (fromA ? 1 : 3) : fromA ? 2 : 0;
-    return { kind: i, painter, toward };
+    return { kind: i, painter, toward, name: kind, k };
   }
   return null;
 }

@@ -23,12 +23,14 @@ import {
   digitOf,
   isCursorMove,
   isEraseKey,
+  isMouseDrag,
+  isMouseRelease,
   LEFT_BUTTON,
   moveCursor,
   RIGHT_BUTTON,
   stripModifiers,
 } from "../input/pointer.ts";
-import { squareGrid } from "../input/target-verb.ts";
+import { beginSweep, endSweep, squareGrid, sweepTo } from "../input/target-verb.ts";
 import {
   type NoteTakingUi,
   noOpEntryResult,
@@ -38,7 +40,8 @@ import {
   toggleNoteTakingMode,
 } from "../mechanics/note-taking-cell.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
-import { type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
+import { type DoneInput, type DoneMove, doneInput } from "./done.ts";
 import { type FillMove, isCandidateMove, markAll } from "./notes.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 
@@ -93,29 +96,65 @@ export const numeral = (v: number): string => String.fromCharCode(digitKeyCode(v
 /** A board of numbers' input: `interpretMove`, the keypad, and the taps and
  * keys that make a move, which a hint's gesture shows. */
 export interface NumberInput<C, D> {
+  /** Where the board has clues the player marks done, that mark's input. */
+  readonly done: DoneInput<C, D> | null;
   interpretMove(
     board: FillBoard<C>,
     ui: FillUi,
     ds: D,
     p: Point,
     button: number,
-  ): CandidateMove | UiUpdate | null;
+  ): CandidateMove | DoneMove | UiUpdate | null;
   /** A key a value, then the clear key, for a board of size `size`. */
   requestKeys(size: { w: number; h: number }): KeyLabel[];
   gesture(board: FillBoard<C>, ui: FillUi, ds: D, move: FillMove): PointerAction[];
 }
 
-export function numberInput<C, D extends { readonly tileSize: number }>(
+export function numberInput<
+  C extends Clues<C>,
+  D extends { readonly tileSize: number },
+>(
   module: FillModule<C>,
   origin: (tileSize: number, board: FillBoard<C>) => number,
   gap: (tileSize: number) => number = () => 0,
 ): NumberInput<C, D> {
   const geometry = squareGrid<FillBoard<C>, D>({ size: (b) => b, border: origin, gap });
   const notes = module.play?.notes === true;
+  const done =
+    module.play === undefined
+      ? null
+      : doneInput<C, D>(module, module.play, origin, gap);
   return {
+    done,
     interpretMove(b, fillUi, ds, p, raw) {
       const ui = noteTaking(fillUi);
       const button = stripModifiers(raw);
+      if (done !== null) {
+        // A press on a clue marks it done, and a drag on marks those that
+        // looked the same.
+        if (isMouseDrag(button)) return sweepTo(done.verbs, b, fillUi, ds, p);
+        if (isMouseRelease(button)) {
+          endSweep(fillUi);
+          return null;
+        }
+        if (button === LEFT_BUTTON || button === RIGHT_BUTTON) {
+          const clue = done.verbs.geometry.pointerTarget(b, ds, p, fillUi);
+          if (clue !== null) {
+            beginSweep(done.verbs, b, fillUi, clue, button, p, true);
+            return clue;
+          }
+        }
+        // A Shift or Ctrl arrow is the mark's alone, and moves no cursor.
+        if (done.isKey(raw)) {
+          // A hidden cursor is shown first, so the clue it marks is seen.
+          if (!ui.cursor.visible) {
+            ui.cursor.visible = true;
+            ui.cursorFromKeyboard = true;
+            return UI_UPDATE;
+          }
+          return done.keyed(b, fillUi, raw);
+        }
+      }
       const at = geometry.pointerTarget(b, ds, p, ui);
       // A press selects a cell the player may type into, or with the right
       // button one that may take notes: an open one, empty for notes. A given
@@ -173,6 +212,8 @@ export function numberInput<C, D extends { readonly tileSize: number }>(
           undefined,
           markAll(module, b),
         );
+      // A hint marks no clue done.
+      if ("type" in move) throw new Error(`no gesture for ${JSON.stringify(move)}`);
       const set = move.set ?? [];
       const entries = [];
       for (let i = 0; i < set.length; i += 2) {

@@ -157,6 +157,9 @@ export interface PlayJson {
   /** The clue kinds at edges, each drawn in the gap between its cells by
    * the edge painter named. */
   gaps?: Record<string, string>;
+  /** The clue kinds the player may mark done, each with what one is
+   * called. */
+  done?: Record<string, string>;
   values?: Record<
     string,
     { does: string; key: string | string[]; glyph: string; paint: string }

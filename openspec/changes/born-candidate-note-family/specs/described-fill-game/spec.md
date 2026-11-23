@@ -99,3 +99,19 @@ selected cell washed.
 - **WHEN** a player presses an open cell of such a board and types 3
 - **THEN** the cell holds 3, drawn in the entry color, and a press on a
   given selects nothing
+
+### Requirement: A born game's clue may be marked done
+
+A born game MAY name clue kinds the player marks done. A press on such a
+clue, with either button, SHALL mark it done and a second SHALL unmark it; a
+drag on from it SHALL do the same to each clue it passes that looked the
+same; and Shift or Ctrl with an arrow SHALL mark the clue between the
+selected cell and its neighbor that way. A clue marked done SHALL be drawn
+gray, and red where it breaks a rule. The mark SHALL change no value or
+note.
+
+#### Scenario: A sign grayed and restored
+
+- **WHEN** a player presses a sign between two cells, then presses it again
+- **THEN** the sign is drawn gray after the first press and in ink after the
+  second, and no cell has changed
