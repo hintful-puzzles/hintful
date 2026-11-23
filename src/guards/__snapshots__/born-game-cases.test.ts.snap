@@ -24,6 +24,16 @@ exports[`boats: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`bricks: pinned hint positions > says, at each pin 1`] = `
+{
+  "overcount": "The outlined 0 beside this cell allows no shaded neighbors at all, so it must stay clear.",
+  "strandSupport": "The outlined shaded brick above rests only on this cell; clearing it would strand that brick, so it must be shaded.",
+  "three": "Shading this cell, next to the outlined shaded bricks, would make three in a row, so it must stay clear.",
+  "undercount": "The outlined 3 beside this cell can't reach 3 shaded neighbors without it, so it must be shaded.",
+  "unsupported": "The outlined cell below this cell is all it could rest on, and it isn't a shaded brick, so it must stay clear.",
+}
+`;
+
 exports[`clusters: pinned hint positions > says, at each pin 1`] = `
 {
   "countFull.more": "The outlined block must touch two more blocks, and the outlined dotted block allows at most one block beside it, so this square, beside only the block, must hold a block.",

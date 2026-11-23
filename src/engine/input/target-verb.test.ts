@@ -18,6 +18,7 @@ import { describe, expect, it } from "vitest";
 import { type HintStep, type HintTrackVerdict, UI_UPDATE } from "../contract/game.ts";
 import type { Point } from "../contract/types.ts";
 import { randomNew } from "../random/index.ts";
+import { hexShift, inHexagon } from "../solve/describe-runtime/hexagon.ts";
 import { REGISTERED_GAMES } from "../testing/enrollment.ts";
 import {
   type AnyGame,
@@ -40,6 +41,7 @@ import {
 } from "./pointer.ts";
 import {
   controlsMarkdown,
+  hexGrid,
   interpretTargetVerbs,
   isRulingOut,
   type KeyOnlyVerb,
@@ -585,5 +587,46 @@ describe("the marks a placement rules out are the right button's", () => {
         .filter(([, g]) => !isRulingOut(g.targetVerbs?.secondary))
         .map(([id]) => id),
     ).toEqual([]);
+  });
+});
+
+describe("a hexagon held as a sheared grid", () => {
+  // A 4 by 4 hexagon in its 5 by 4 store, drawn as a fill game draws one.
+  const s = { w: 5, h: 4 };
+  const ds = { tileSize: 20 };
+  const ui = { cursor: newCursor() };
+  const geometry = hexGrid<typeof s, typeof ds>({
+    size: (b) => b,
+    border: () => 0,
+    shift: (y, ts, b) => hexShift(y, b.h, ts),
+    onBoard: (b, x, y) => inHexagon(b.w, b.h, x, y),
+  });
+  const at = (x: number, y: number) => geometry.pointAt(s, ds, { x, y }, ui);
+  const pressed = (p: Point) => geometry.pointerTarget(s, ds, p, ui);
+
+  it("draws each row half a tile right of the one above", () => {
+    expect(at(1, 1).x - at(1, 0).x).toBe(ds.tileSize / 2);
+    expect(at(1, 3).x - at(1, 2).x).toBe(ds.tileSize / 2);
+  });
+
+  it("lands a press on the cell drawn under it, and off the hexagon on none", () => {
+    let cells = 0;
+    for (let y = 0; y < s.h; y++) {
+      const row = [0, 1, 2, 3, 4].filter((x) => inHexagon(s.w, s.h, x, y));
+      for (const x of row) {
+        cells++;
+        // A quarter tile either side of the middle is still this cell: the
+        // shear is undone before the floor, not after.
+        const p = at(x, y);
+        for (const dx of [-ds.tileSize / 4, ds.tileSize / 4])
+          expect(pressed({ x: p.x + dx, y: p.y })).toEqual({ x, y });
+      }
+      // A tile beyond either end of the row is the hexagon's edge.
+      const first = at(row[0], y);
+      const last = at(row[row.length - 1], y);
+      expect(pressed({ x: first.x - ds.tileSize, y: first.y })).toBeNull();
+      expect(pressed({ x: last.x + ds.tileSize, y: last.y })).toBeNull();
+    }
+    expect(cells).toBe(16);
   });
 });

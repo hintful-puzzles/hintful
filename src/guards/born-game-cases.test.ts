@@ -9,41 +9,35 @@
 import { describe, expect, it } from "vitest";
 import { BORN_GAMES, CASES_FILES } from "../engine/testing/born-games.ts";
 import { describeGameCases, parseGameCases } from "../engine/testing/game-cases.ts";
-import { expectLedger } from "../engine/testing/ledger.ts";
 
 const only = (globalThis as { process?: { env?: Record<string, string | undefined> } })
   .process?.env?.["GAME_CASES"];
 
-/**
- * Born games whose tests are still a test file of their own, until each
- * moves to its cases file (`a-game-is-tested-by-its-data`). **This list only
- * shrinks**: a game born from now on ships a cases file.
- */
-const NOT_YET_DATA: Readonly<Record<string, string>> = {
-  bricks: "bricks.test.ts",
-};
+/** Every test file under a game's directory, from the root: listed, never
+ * loaded. */
+const GAME_TEST_FILES = Object.keys(import.meta.glob("../games/*/*.test.ts")).map(
+  (key) => key.replace(/^\.\.\//, "src/"),
+);
 
 describe("a born game's cases", () => {
   it.skipIf(only !== undefined)("reads a real population", () => {
     expect(BORN_GAMES.length).toBeGreaterThanOrEqual(14);
+    expect(GAME_TEST_FILES.length).toBeGreaterThan(0);
   });
 
-  it.skipIf(only !== undefined)(
-    "has a cases file for every born game not yet moved",
-    () => {
-      expectLedger(
-        BORN_GAMES.filter((b) => b.cases === null).map((b) => b.id),
-        NOT_YET_DATA,
-        {
-          table: "NOT_YET_DATA",
-          file: "src/guards/born-game-cases.test.ts",
-          found: "born games with no cases file",
-          add: 'write `<game>.cases.yaml` beside the description (docs/testing.md § "What a new game ships"); the list only shrinks',
-          value: null,
-        },
-      );
-    },
-  );
+  // Write `<game>.cases.yaml` beside the description (docs/testing.md
+  // § "What a new game ships"); a case it cannot state is an engine check
+  // missing, written in the engine for any game to name.
+  it.skipIf(only !== undefined)("has a cases file for every born game", () => {
+    expect(BORN_GAMES.filter((b) => b.cases === null).map((b) => b.id)).toEqual([]);
+  });
+
+  it.skipIf(only !== undefined)("holds a born game to no test file of its own", () => {
+    const dirs = BORN_GAMES.map((b) => b.source.replace(/[^/]+$/, ""));
+    expect(GAME_TEST_FILES.filter((p) => dirs.some((d) => p.startsWith(d)))).toEqual(
+      [],
+    );
+  });
 
   it.skipIf(only !== undefined)("holds no cases file a born game does not own", () => {
     const owned = new Set(BORN_GAMES.flatMap((b) => (b.cases ? [b.cases.path] : [])));

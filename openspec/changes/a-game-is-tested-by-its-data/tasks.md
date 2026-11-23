@@ -22,7 +22,7 @@
       (`game-cases.ts`, its test on the fake game; `born-game-cases.test.ts`
       runs it; `npm run hint-scan` writes a cases file's pins. `input`,
       `input-cases.ts`, came with Singles.)
-- [ ] 2.2 The cross-game guards for each kind in 1.1 that has none,
+- [x] 2.2 The cross-game guards for each kind in 1.1 that has none,
       each reading its population from what the games declare. See each
       fail on a planted defect before trusting it (`docs/method.md`
       § "See a guard fail before trusting it").
@@ -71,7 +71,7 @@
 
 ## 4. The born games
 
-- [ ] 4.1 Each born game's `*.test.ts` moved to data, one commit a game
+- [x] 4.1 Each born game's `*.test.ts` moved to data, one commit a game
       or a few, the cases of 1.1 kept as data or named by the guard that
       holds them. `npm run test:hint-sweeps` before the last commit.
       Moved: Kakurasu, Unruly, Mosaic, Norinori, Range, Clusters, Star
@@ -83,19 +83,20 @@
       no role, and `brings` is what its last move's placement rules out.
       Singles (`input` for its wrapping cursor and the margin press; its
       rungs on boards too small to load are its pins'), Sticks (an input
-      case reads its board as the codec does, answers or none). Left:
-      Bricks (`input` for the hexagon's cursor, the number pad, and the
-      press through the shear). `wordings` renders a technique's stated step from terms on
+      case reads its board as the codec does, answers or none), Bricks
+      (an input step's `holds`; the hexagon's shear is `hexGrid`'s, on a
+      fixture in `target-verb.test.ts`; "two in five are bricks" is the
+      deal's own `least` check, dropped). `wordings` renders a technique's stated step from terms on
       the compiled module (`BornGame.compiled`), the pieces named as the
       hint names them (`pairPieces`); `draws` takes `any` for a piece in
       the game's own colors. A position's
       `text` and `statusbar` take `null` for none shown. An ID case's `holds` is
       the codec's reading, so it may sit beside a `refused` (Norinori's
       walls read as regions on a board loading refuses); a position's
-      `circled` reads the text inside each hint circle (Mosaic). The
-      rest are `NOT_YET_DATA` in
-      `born-game-cases.test.ts`, which only shrinks; each game's
-      outline case leaves for `mistake-outline.test.ts`.
+      `circled` reads the text inside each hint circle (Mosaic). Each
+      game's outline case left for `mistake-outline.test.ts`.
+      `born-game-cases.test.ts` holds every born game to a cases file and
+      no test file of its own, seen to fail on a planted one.
 - [ ] 4.2 `docs/testing.md` § "What a new game ships" (and
       `docs/new-game.md` where it names a test file) say a born game ships
       test data, not tests. Verified by the gate's guide checks.

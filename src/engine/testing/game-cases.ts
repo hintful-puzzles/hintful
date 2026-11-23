@@ -37,7 +37,7 @@
  * - `input`: a game ID, `moves` played on it, the `cursor` it starts on,
  *   and `events` sent in turn (`input-cases.ts`), each a `key` by name or a
  *   `press`, `drag`, `release` or `click` at a cell or the `margin`, and
- *   what holds once it is sent: `values`, `cursor`, `returns` and
+ *   what holds once it is sent: `values`, `holds`, `cursor`, `returns` and
  *   `preferences`. An entry with no event says what holds as it stands.
  * - `wordings`: a technique's stated wording rendered from `terms`, on cells
  *   numbered on a grid `width` wide (`ring`, and `marks` by role), and what
@@ -75,6 +75,7 @@ import { paramsError } from "../game-id/params.ts";
 import { statedSentence } from "../hint/stated.ts";
 import { Midend } from "../midend/midend.ts";
 import { describeAbsentTiers, describeDealtTiers } from "./absent-tiers.ts";
+import { holdsDiffers } from "./case-fields.ts";
 import type { AnyGame } from "./enrollment.ts";
 import { everyAnswer } from "./every-answer.ts";
 import { describeHintPins, type HintKind } from "./hint-positions.ts";
@@ -695,6 +696,7 @@ export function parseGameCases(text: string, path: string): GameCases {
         ...pointerKinds,
         "button",
         "values",
+        "holds",
         "cursor",
         "returns",
         "preferences",
@@ -746,6 +748,7 @@ export function parseGameCases(text: string, path: string): GameCases {
         line: lineOf(n),
         event,
         ...(values_ === undefined ? {} : { values: values_ as number[] }),
+        ...(s.has("holds") ? { holds: holds(s.get("holds"), `${at}.holds`) } : {}),
         ...(s.has("cursor")
           ? {
               cursor:
@@ -835,36 +838,6 @@ function stepDiffers(
   if (want.says !== undefined && !saysAs(want.says, step.explanation))
     return `says "${step.explanation}", not ${shown(want.says)}`;
   return null;
-}
-
-/** The field at `path` (`dealt.number.at`) of `state`, arrays read whole,
- * and a list of them (a line's runs) each as a list. */
-function fieldOf(state: unknown, path: string): unknown {
-  let at: unknown = state;
-  for (const key of path.split(".")) {
-    if (at === null || typeof at !== "object") return undefined;
-    at = (at as Record<string, unknown>)[key];
-  }
-  const plain = (v: unknown): unknown =>
-    ArrayBuffer.isView(v)
-      ? Array.from(v as unknown as ArrayLike<number>)
-      : Array.isArray(v)
-        ? v.map(plain)
-        : v;
-  return plain(at);
-}
-
-/** What of `holds` `state` does not hold, one line a field. */
-function holdsDiffers(
-  holds: Readonly<Record<string, unknown>>,
-  state: unknown,
-): string[] {
-  return Object.entries(holds).flatMap(([path, want]) => {
-    const got = fieldOf(state, path);
-    return JSON.stringify(got) === JSON.stringify(want)
-      ? []
-      : [`${path} is ${JSON.stringify(got)}, not ${JSON.stringify(want)}`];
-  });
 }
 
 /** The board `id` deals, or the refusal. */

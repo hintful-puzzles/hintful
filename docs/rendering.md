@@ -284,8 +284,9 @@ and thick lines.
   it on a dealt board, a bound too low, or a mark that goes in `UNREACHED`
   with its reason.
 - **A mark that is not a hint mark is outside that requirement.** Pin its
-  board and event seed in the game's own test (exemplar: `bricks.test.ts`,
-  "takes an edge diamond away whole, ground included").
+  board and moves in the game's own tests; a born game's are a `positions`
+  case with `draws` in its cases file (exemplar: `lightup.cases.yaml`, the
+  wash a bulb casts).
 
 **A game that finds mistakes must have painted its mistake overlay on a warm
 frame.** The run's check puts the overlay on a board already painted, and

@@ -30,6 +30,7 @@ import {
   RIGHT_DRAG,
   RIGHT_RELEASE,
 } from "../input/pointer.ts";
+import { holdsDiffers } from "./case-fields.ts";
 import type { AnyGame } from "./enrollment.ts";
 
 const NAMED_KEYS: Readonly<Record<string, number>> = {
@@ -90,6 +91,8 @@ export interface InputStep {
   readonly event: InputEvent | null;
   /** The board's values. */
   readonly values?: readonly number[];
+  /** Fields of the board by path, as a position's `holds`. */
+  readonly holds?: Readonly<Record<string, unknown>>;
   /** The cell the cursor is on, `null` for none. */
   readonly cursor?: readonly [number, number] | null;
   /** What the game made of the event: a `move`, an update of what the
@@ -177,6 +180,8 @@ export function checkInput(game: AnyGame, c: InputCase): string[] {
         Array.from((state as { values: ArrayLike<number> }).values),
         step.values,
       );
+    if (step.holds !== undefined)
+      out.push(...holdsDiffers(step.holds, state).map((d) => `${where}: ${d}`));
     if (step.cursor !== undefined) {
       const t = geometry?.cursorTarget(state, ui) as CellTarget | null | undefined;
       was("cursor", t === null || t === undefined ? null : [t.x, t.y], step.cursor);

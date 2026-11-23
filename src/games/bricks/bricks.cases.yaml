@@ -1,0 +1,145 @@
+# Bricks' cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every kind of step its
+# hint takes, upstream's IDs read on the hexagon, its retired tier letter,
+# the sizes refused, the clues left, and the cursor and presses on the
+# sheared grid. A store cell is numbered y * w + x, w the store's width.
+
+values:
+  shaded: 1
+  clear: 2
+
+hint:
+  params:
+    - {w: 6, h: 7, diff: 0}
+    - {w: 8, h: 10, diff: 0}
+  pins:
+    strandSupport:
+      id: "6x7de:e3fc2ba2c3c4b4a4b2f"
+      moves: [{set: [17, shaded]}]
+    undercount: "6x7de:e3fc2ba2c3c4b4a4b2f"
+    three:
+      id: "6x7de:1_3b2aff3b3a0e3_3a3c1b2b"
+      moves: [{set: [12, shaded]}, {set: [5, shaded]}, {set: [13, shaded]}, {set: [55, shaded]}]
+    unsupported: "6x7de:fa2a3bd2a2_3b2ae3a5a5bf"
+    overcount:
+      id: "6x7de:1_3b2aff3b3a0e3_3a3c1b2b"
+      moves:
+        - {set: [12, shaded]}
+        - {set: [5, shaded]}
+        - {set: [13, shaded]}
+        - {set: [55, shaded]}
+        - {set: [14, clear]}
+        - {set: [20, clear]}
+        - {set: [21, shaded]}
+        - {set: [30, shaded]}
+        - {set: [37, clear]}
+        - {set: [38, shaded]}
+        - {set: [47, shaded]}
+
+tiers:
+  # Off the menu: the smallest boards.
+  dealt: [2x3dn, 3x2dn, 2x10de, 2x4dn]
+
+ids:
+  # A 4 by 4 hexagon in a store ⌈h/2⌉ − 1 wider, 5 by 4: the rows start at
+  # 1, 1, 0 and 0, so the corners sheared off are holes, fixed clear, and
+  # the numbers sit on the hexagon's cells in reading order.
+  - id: "4x4de:2b1c0c2_2b1"
+    holds:
+      w: 5
+      h: 4
+      dealt.hole.at: [0, 5, 14, 19]
+      fixed.0: 1
+      fixed.5: 1
+      fixed.14: 1
+      fixed.19: 1
+      values.0: clear
+      values.5: clear
+      values.14: clear
+      values.19: clear
+      dealt.number.at: [1, 4, 9, 13, 15, 18]
+      dealt.number.v: [2, 1, 0, 2, 2, 1]
+  # Upstream's Tricky is read as Unreasonable.
+  - {id: "7x6dt:ga6c3ac3a2af3_0_3b2_4ag", opens: 7x6dn}
+  - {id: "10x8dt:c3b2c2b4b2a2_1ja3a2f1c3a5ce4c0_3a4b3b3aa3f2a", opens: 10x8dn}
+  - {id: "8x5dt:2c3cb5d3a6fd2_3b2a3d2", opens: 8x5dn}
+  - {id: "12x8dt:g2_1cb4a2b3c2a1i4_2d1b2cd4a2b2bb3b3f2b3b4d4i2b", opens: 12x8dn}
+  # A run of empty cells is read however it is split: the top row's
+  # hexagon cells, 3 to 8 of a store 9 wide, hold a 1 and a 2.
+  - id: "6x7:a1b2ad2a0a4b3fa3b4ab5a5a1e"
+    holds:
+      dealt.number.valueAt.3: -1
+      dealt.number.valueAt.4: 1
+      dealt.number.valueAt.5: -1
+      dealt.number.valueAt.6: -1
+      dealt.number.valueAt.7: 2
+      dealt.number.valueAt.8: -1
+  - {id: "6x7:a8b2ad2a0a4b3fa3b4ab5a5a1e", refused: "/range/"}
+  # A 7 inside the hexagon is a hole: a clear cell that counts nothing.
+  - id: "4x4de:2b1c7c2_2b1"
+    holds:
+      dealt.number.at: [1, 4, 13, 15, 18]
+      fixed.9: 1
+      values.9: clear
+  - {id: "4x4:p", refused: DESC_NOT_UNIQUE}
+
+params:
+  - {read: "7x6dt", full: "7x6dn"}
+  # Only the 2x2 Unreasonable board, which no deal has, is refused.
+  - {read: "2x2de", refused: false}
+  - {read: "2x2dn", refused: "/is Unreasonable/"}
+  - {read: "2x3dn", refused: false}
+
+positions:
+  # The hint carries on from the 2 it began with.
+  - id: "4x4de:2b1c0c2_2b1"
+    steps:
+      - {rung: undercount, set: [2, shaded], says: "/^The outlined 2 beside this cell/"}
+      - {rung: undercount, set: [6, shaded]}
+  # The numbers left are counted.
+  - id: "7x6de:2c1_3ab0c2_3fb2_2a5a3fb2a2a2"
+    statusbar: "Clues left: 13"
+  - id: "7x6de:2c1_3ab0c2_3fb2_2a5a3fb2a2a2"
+    solve: true
+    statusbar: ""
+
+input:
+  # The cursor starts on the hexagon's first cell. A press lands on the
+  # cell drawn under it: row 2's first cell is the store's first, row 0's
+  # third its fourth, and neither holds a number.
+  - id: "4x4de:2b1c0c2_2b1"
+    events:
+      - {cursor: [1, 0]}
+      - {click: [0, 2], holds: {values.10: shaded}}
+      - {click: [3, 0], holds: {values.3: shaded}}
+  # The cursor steps round a cell's six neighbors: 7 and 3 are straight up
+  # and down in the store, 9 and 1 the diagonals across the shear, and Up
+  # and Down zigzag in the column the cursor is drawn in.
+  - id: "4x4de:2b1c0c2_2b1"
+    cursor: [2, 1]
+    events:
+      - {key: pad 6, cursor: [3, 1]}
+      - {key: pad 4, cursor: [2, 1]}
+      - {key: pad 3, cursor: [2, 2]}
+      - {key: pad 7, cursor: [2, 1]}
+      - {key: pad 1, cursor: [1, 2]}
+      - {key: pad 9, cursor: [2, 1]}
+      - {key: down, cursor: [1, 2]}
+      - {key: up, cursor: [2, 1]}
+  # It keeps to the hexagon: Left stops at the row's first cell, which the
+  # shear moves, and Right at its last.
+  - id: "4x4de:2b1c0c2_2b1"
+    cursor: [1, 0]
+    events:
+      - {key: left, cursor: [1, 0]}
+  - id: "4x4de:2b1c0c2_2b1"
+    cursor: [3, 3]
+    events:
+      - {key: right, cursor: [3, 3]}
+  # Ctrl with the pad's 7 steps straight up and clears the cells it leaves
+  # and enters; the main row's 1 shades, where the pad's 1 would move.
+  - id: "4x4de:2b1c0c2_2b1"
+    cursor: [2, 3]
+    events:
+      - {key: ctrl+pad 7, cursor: [2, 2], holds: {values.17: clear, values.12: clear}}
+      - {key: "1", cursor: [2, 2], holds: {values.12: shaded}}
