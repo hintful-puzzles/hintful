@@ -75,6 +75,7 @@ runs, and what a commit may leave to the push and to CI).
 | – Narrowing a game's own sweep | a game's own property test is expensive |
 | Break the code under a new test | you have just written a test, or made one cheaper |
 | A shared module needs its own tests | you extract logic from a game into `src/engine/` |
+| – A capability is tested on a fixture | an engine test runs on a game's compiled module, or a born game names a capability no fixture does |
 | What a game owes the cross-game guards | you add a game, a hint, a difficulty contract, a `Ui` field or a mistake overlay |
 | – How a cross-game guard finds its population | you are writing a cross-game guard, not a game |
 | – Slicing a preset sweep for the gate | you are writing a cross-game guard, not a game, and it walks boards |
@@ -760,6 +761,19 @@ and not pinning values. The games' tests may still catch a defect in the
 module, but as a moved hint walk or a failed tier and not as a named rule in
 100 ms. Exemplar:
 [`wires.test.ts`](../src/engine/mechanics/wires.test.ts).
+
+### A capability is tested on a fixture
+
+What a description names for the engine to run (a key of `play`, `deal` or
+`space`, a painter) is tested on a fixture: a description under
+`src/engine/testing/fixtures/<name>/`, naming no game, that `npm run
+describe` compiles like any other. Build it with `fillGame` in the engine
+test and load boards by ID. A board loads only where its techniques solve
+it, so a fixture states the few it needs, with their plants and soundness
+verdicts. `capability-fixtures.test.ts` counts the capabilities born games
+name that no fixture does, against its ledger, and holds each fixture to a
+test that imports it. Exemplar: `joining`, run by
+[`render.test.ts`](../src/engine/fill/render.test.ts).
 
 ## What a game owes the cross-game guards
 

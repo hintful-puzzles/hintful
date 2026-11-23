@@ -5,6 +5,8 @@
   "src/engine/solve/latin.description.yaml#set": "b5ac302d9954e973",
   "src/engine/solve/latin.description.yaml#single": "0791b39aed8af914",
   "src/engine/solve/latin.description.yaml#wing": "e104ec34cad128f8",
+  "src/engine/testing/fixtures/joining/joining.description.yaml#lineFull": "b60a39de15f7dedc",
+  "src/engine/testing/fixtures/joining/joining.description.yaml#lineMet": "e26375325f8f8f10",
   "src/games/abcd/abcd.description.yaml#placed": "04e31cd9d302c71d",
   "src/games/abcd/abcd.description.yaml#placedDiagonal": "9a302609d4c1a3e9",
   "src/games/abcd/abcd.description.yaml#runs": "d996ec0598a14e1f",

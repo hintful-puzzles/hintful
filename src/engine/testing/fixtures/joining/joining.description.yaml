@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: the smallest board whose shaded square is drawn by a
+# piece that joins its neighbors (`paint: domino`), for the painter's engine
+# tests to run on a description that names no game.
+game: joining
+produces: shading
+sizes:
+  w: { min: 2 }
+  h: { min: 2 }
+space:
+  grid: { w: "w", h: "h" }
+  units: []
+answer:
+  value: { sort: cell, domain: "range(1, 2)" }
+define:
+  open(L): "{c in cells(L) where not known(c)}"
+  need(L): "clue(count, L) - count(c in cells(L) where value(c) = 1)"
+clues:
+  count:
+    at: line
+    value: "range(0, |cells(at)|)"
+    complete: true
+    means: "count(c in cells(at) where value(c) = 1) = v"
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: shade it, key: S, glyph: "###", paint: domino }
+    2: { does: cross it out, key: X, glyph: " x ", paint: cross }
+  primary: 1
+  secondary: 2
+  blank: 2
+  straight: true
+  boards: [4x4]
+  hintMarks:
+    ring: the squares the step decides.
+    stripes: the line the step is about.
+deal:
+  answer: half of the squares shaded, at random
+  count: every row's and column's count
+  tier: the one tier
+  sample:
+    scatter: { value: 1, share: 0.5 }
+    rest: 2
+tiers: [Easy]
+names:
+  lineMet: "a line already at its number"
+  lineFull: "a line needing every open square"
+# A board loads only where deduction solves it, so it has the two steps that
+# solve the boards its tests load.
+techniques:
+  - id: lineMet
+    tier: Easy
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) = 0"
+    conclude: "forall c in O: place(c, 2)"
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}}'s shaded squares already make its number"
+      move: "{ring: its open square | its open squares} must be {unshaded}"
+  - id: lineFull
+    tier: Easy
+    for: "L in lines, O = open(L) where |O| > 0 and need(L) = |O|"
+    conclude: "forall c in O: place(c, 1)"
+    says:
+      marks: { stripes: "cells(L)", reads: "cells(L)" }
+      look: "{stripes: this {unit}} still needs every open square"
+      move: "{ring: its open square | its open squares} must be {shaded}"

@@ -69,15 +69,30 @@
       Tents' already are: the `joins` painter on Norinori
       (`engine/fill/render.test.ts`), which a fixture replaces.
       Begun: the hexagon's shear is held on a `hexGrid` fixture of plain
-      options (`engine/input/target-verb.test.ts`), no game named. Next:
-      define a capability as what a description names (its `play`, `deal`
-      and `space` keys and the builtins its techniques call), count them
-      across the born games' descriptions by a query, and compile fixture
-      descriptions that name no game (`describe/sources.ts` compiles only
-      what it finds; a fixture under `src/engine/testing/` needs a place
-      there). The engine tests that import a game's compiled module today
-      (`git grep -l 'generated/games/.*compiled' -- 'src/engine/**/*.test.ts'`)
-      are where a fixture replaces a game.
+      options (`engine/input/target-verb.test.ts`), no game named.
+      - [x] A capability defined, and counted by a guard:
+            `capability-fixtures.test.ts` takes the keys of `play`, `deal`,
+            `deal.sample`, `space` and `space.grid` the schema names (a
+            `deal` key it does not is prose), the painters, `produces` and
+            `freedom`, over every born game, against what the fixtures name;
+            the rest is its `NO_FIXTURE_YET` ledger (62 of them, 2026-11-23).
+            Builtins are left out: each call is run on boards by its
+            technique's soundness check. Each fixture is held to a test
+            importing its module. Both seen to fail on a plant.
+      - [x] Fixtures compile from `src/engine/testing/fixtures/<name>/`
+            (`npm run describe` globs all of `src/`), with plants and
+            soundness verdicts, since a board loads only where its
+            techniques solve it. The first, `joining`, holds the `joins`
+            painter in `render.test.ts` in place of Norinori (seen to fail
+            with `joins: false`). `docs/testing.md` § "A capability is
+            tested on a fixture".
+      - [ ] The ledger emptied, a fixture at a time, each moving the
+            engine tests that import a game's compiled module for that
+            capability onto it
+            (`git grep -l 'generated/games/.*compiled' -- 'src/engine/**/*.test.ts'`:
+            Tents in `fill/board`, `deal`, `hint`, `pair`, `play`,
+            `render`; Unruly in `pair`, Kakurasu in `hint`). A fixture may
+            name several capabilities; group by what one board can show.
 
 ## 4. The born games
 

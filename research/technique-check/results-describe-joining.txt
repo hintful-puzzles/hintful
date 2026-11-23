@@ -1,0 +1,4 @@
+ok  joining    lineMet                        current: recorded src/engine/testing/fixtures/joining/joining.description.yaml#lineMet e26375325f8f8f10
+ok  joining    lineFull                       3  sound    (want sound   )     6 queries    0.1s
+ok  joining    lineFull (planted)             3  unsound  (want unsound )     1 queries    0.0s   at line 0
+ok  src/engine/testing/fixtures/joining/joining.description.yaml#lineFull: recorded sound, proved whole on all 1 boards

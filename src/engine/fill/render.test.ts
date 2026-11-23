@@ -5,7 +5,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { game as norinori } from "../../generated/games/norinori/norinori.game.ts";
+import * as joining from "../../generated/engine/testing/fixtures/joining/joining.compiled.ts";
 import * as tents from "../../generated/games/tents/tents.compiled.ts";
 import { COL_ERROR } from "../color/roles.ts";
 import { NO_FLASH } from "../render/win-wave.ts";
@@ -14,6 +14,7 @@ import { DEFAULT_BACKGROUND, renderScenario } from "../testing/render-scenario.t
 import type { FillMistake } from "./answer.ts";
 import { type FillBoard, newBoard, spaceOf } from "./board.ts";
 import { applyEdit, type Edit } from "./edit.ts";
+import { fillGame } from "./game.ts";
 import { fillInput, newFillUi } from "./play.ts";
 import { type FillLook, fillRender } from "./render.ts";
 
@@ -133,15 +134,14 @@ describe("a fill game drawn by layers", () => {
 });
 
 describe("a piece that joins", () => {
-  // Norinori's shaded square is the one painter that joins (`Painter.joins`),
-  // until the capability has a description of its own.
+  const game = fillGame("joining", joining);
   it("draws two side by side as one piece, and two apart each in its own cell", () => {
     // Each half reaches the side it shares with the other, where the other's
-    // begins.
-    const id = "6x6dn:1c2aabeb2b2b2aa1c3daf";
+    // begins. The board's answer is its top row shaded.
+    const id = "3x2:3,0,1,1,1";
     const meet = (moves: { set: number[] }[]) => {
-      const xs = renderScenario({ game: norinori, id, moves }).recording.ops.flatMap(
-        (o) => (o.op === "polygon" ? [o.points.map(([x]) => x)] : []),
+      const xs = renderScenario({ game, id, moves }).recording.ops.flatMap((o) =>
+        o.op === "polygon" ? [o.points.map(([x]) => x)] : [],
       );
       return xs.some((a) => xs.some((b) => Math.max(...a) === Math.min(...b)));
     };

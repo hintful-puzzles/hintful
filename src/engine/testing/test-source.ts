@@ -14,7 +14,13 @@
  *
  * Dev/test-only; never imported by production code.
  */
-import { type ExportRef, parsed, type UseKind, usesOf } from "./syntax.ts";
+import {
+  type ExportRef,
+  importedModules,
+  parsed,
+  type UseKind,
+  usesOf,
+} from "./syntax.ts";
 
 const testSource = (() => {
   const modules = {
@@ -54,4 +60,15 @@ export function testFilesUsing(refs: readonly ExportRef[], kind: UseKind): strin
       `test-source: no test uses ${refs.map((r) => r.name).join(" or ")}: renamed or moved?`,
     );
   return found;
+}
+
+/** The test files, by repo-relative path, that import `module` (repo-relative,
+ * with its extension), for a value: a test that takes only its types runs
+ * none of it. */
+export function testFilesImporting(module: string): string[] {
+  return [...testSource]
+    .filter(([path, text]) =>
+      importedModules(parsed(path, text), true).includes(module),
+    )
+    .map(([path]) => path);
 }
