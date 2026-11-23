@@ -265,6 +265,20 @@ export function fillGame<C extends Clues<C> & object>(
           noted(pencilKeepHighlightPref()),
           noted(candidateReadingPref()),
         ]),
+    ...(play.numbers?.raised !== true
+      ? []
+      : [
+          {
+            kw: "appearance",
+            name: "Puzzle appearance",
+            type: "choices",
+            choices: ["2D", "3D"],
+            get: (ui: FillUi) => (ui.raised === false ? 0 : 1),
+            set: (ui: FillUi, v: number) => {
+              ui.raised = v === 1;
+            },
+          } satisfies GamePref<FillUi>,
+        ]),
   ];
   const numbered = module.numbers ?? [];
   const gapKinds = gapKindsOf<C>(play);

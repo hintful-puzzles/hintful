@@ -9,6 +9,7 @@
  * are the note-taking cell's moves (`notes.ts`).
  */
 
+import { fromCoord } from "../board/geometry.ts";
 import { UI_UPDATE, type UiUpdate } from "../contract/game.ts";
 import type { KeyLabel, Point } from "../contract/types.ts";
 import {
@@ -39,6 +40,7 @@ import {
   releaseHighlightAfterEntry,
   toggleNoteTakingMode,
 } from "../mechanics/note-taking-cell.ts";
+import { pressedRaised } from "../render/raised.ts";
 import type { GridSpace } from "../solve/describe-runtime.ts";
 import { type Clues, type FillBoard, type FillModule, spaceOf } from "./board.ts";
 import { type DoneInput, type DoneMove, doneInput, type PartClueAt } from "./done.ts";
@@ -47,7 +49,7 @@ import type { FillPlay, FillUi } from "./play.ts";
 
 /** The largest value a board of numbers on the space `sp` holds: the top of
  * its domain, which is the board's, the same at every cell. */
-function topValue<C>(module: FillModule<C>, sp: GridSpace): number {
+export function topValue<C>(module: FillModule<C>, sp: GridSpace): number {
   // The compiler refuses a board of numbers whose domain reads its clues.
   const mask = module.domainOf(sp, {} as C, sp.cells[0]);
   return 31 - Math.clz32(mask);
@@ -66,6 +68,7 @@ export function typedUi({ drag: _drag, ...ui }: FillUi, play: FillPlay): FillUi 
     ui.autoPencil ??= false;
     ui.candidateReading ??= play.hintNotes ?? DEFAULT_CANDIDATE_READING;
   }
+  if (play.numbers?.raised === true) ui.raised ??= true;
   return ui;
 }
 
@@ -131,12 +134,32 @@ export function numberInput<
     module.play === undefined
       ? null
       : doneInput<C, D>(module, module.play, origin, gap, partClue, slotKinds);
+  /** The cell whose raised value a press at `p` lands on, drawn up and
+   * right of its own square, or `null`. A raised board has no gaps. */
+  const raisedPressed = (b: FillBoard<C>, ds: D, p: Point): Point | null => {
+    const ts = ds.tileSize;
+    const o = origin(ts, b);
+    const at = { x: fromCoord(p.x, ts, o), y: fromCoord(p.y, ts, o) };
+    return pressedRaised(
+      p,
+      at,
+      (x, y) => ({ x: o + x * ts, y: o + y * ts, w: ts, h: ts }),
+      (x, y) => (x < 0 || y < 0 || x >= b.w || y >= b.h ? 0 : b.values[y * b.w + x]),
+      topValue(module, spaceOf(module, b)),
+    );
+  };
   return {
     done,
     interpretMove(b, fillUi, ds, p, raw) {
       const ui = noteTaking(fillUi);
       const button = stripModifiers(raw);
-      if (done !== null) {
+      // A press on a raised value's top is its cell's, wherever it is drawn:
+      // over a neighbor's square or a clue beside the grid.
+      const raisedAt =
+        fillUi.raised === true && (button === LEFT_BUTTON || button === RIGHT_BUTTON)
+          ? raisedPressed(b, ds, p)
+          : null;
+      if (done !== null && raisedAt === null) {
         // A press on a clue marks it done, and a drag on marks those that
         // looked the same.
         if (isMouseDrag(button)) return sweepTo(done.verbs, b, fillUi, ds, p);
@@ -162,7 +185,7 @@ export function numberInput<
           return done.keyed(b, fillUi, raw);
         }
       }
-      const at = geometry.pointerTarget(b, ds, p, ui);
+      const at = raisedAt ?? geometry.pointerTarget(b, ds, p, ui);
       // A press selects a cell the player may type into, or with the right
       // button one that may take notes: an open one, empty for notes. A given
       // is neither, and is not left highlighted.

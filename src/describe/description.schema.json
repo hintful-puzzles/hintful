@@ -811,7 +811,12 @@
               "type": "object",
               "description": "The values are the answer's domain, a line of numbers: each drawn as its numeral, typed into a selected square by its key (`engine/fill/numbers.ts`). A board played so has no `values` and no buttons.",
               "additionalProperties": false,
-              "properties": {}
+              "properties": {
+                "raised": {
+                  "const": true,
+                  "description": "Each value is drawn as a block as tall as it, its top up and right of its square with the numeral on it (upstream towers.c's 3D towers, `engine/render/raised.ts`): a press on a top is its square's, and the player's appearance preference draws them flat. On a board with no gaps and no clues at parts."
+                }
+              }
             },
             "hintNotes": {
               "enum": ["implicit", "populate"],

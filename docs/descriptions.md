@@ -234,7 +234,12 @@ research tools all read through it; the app never does.
   of `values` and the buttons makes the values the answer's domain, a line
   of numbers the board draws as numerals and the player types into a
   selected cell (`engine/fill/numbers.ts`), the keypad a key a value; its
-  domain must be the board's, the same at every cell. A mark on the cells
+  domain must be the board's, the same at every cell. `numbers: { raised:
+  true }` draws each value as a block as tall as it, leaning up and right
+  into the squares and margins next door, which repaint with it, a press
+  on its top taken as its square's, with the appearance preference to draw
+  them flat (`engine/render/raised.ts`; on a board with no gaps and no
+  clues at parts). A mark on the cells
   whose notation is `set of` the answer's domain, with no `of` or `means`
   (`cand: { sort: cell, notation: "set of range(1, w)" }`), is the player's
   candidate notes: a board of numbers alone keeps them (`play.notes`,

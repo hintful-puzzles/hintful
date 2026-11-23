@@ -123,8 +123,10 @@ export interface PlayValue {
 export interface FillPlay {
   /** Where the values are the answer's domain, each drawn as its numeral and
    * typed into a selected cell (`numbers.ts`): such a board has no `values`
-   * and no buttons. */
-  readonly numbers?: Readonly<Record<string, never>>;
+   * and no buttons. `raised`: each value drawn as a block as tall as it,
+   * leaning up and right (`render/raised.ts`), or flat by the player's
+   * appearance preference. */
+  readonly numbers?: { readonly raised?: true };
   /** Whether a board of numbers keeps the player's candidate notes, a set of
    * values an open cell (`notes.ts`): the description's mark of them. */
   readonly notes?: true;
@@ -230,6 +232,9 @@ export interface FillUi {
   /** On a board that keeps notes, how its hint reads a cell with none (the
    * `hint-notes` preference). */
   candidateReading?: CandidateReading;
+  /** On a board whose values are drawn raised, the appearance preference:
+   * raised (3D), or flat (2D). */
+  raised?: boolean;
 }
 
 export function newFillUi(): FillUi {

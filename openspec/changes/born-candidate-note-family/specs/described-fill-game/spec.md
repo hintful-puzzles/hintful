@@ -49,6 +49,25 @@ every clue, not from a board hidden at the lowest tier that finishes it.
 
 ## ADDED Requirements
 
+### Requirement: A born game's values may be drawn raised
+
+With `play.numbers.raised`, each value SHALL be drawn as a block as tall as
+it, its numeral on a top up and right of its square, repainted with the
+squares and margins it reaches into, and a press on its top SHALL be its
+square's. The appearance preference SHALL draw the values flat.
+
+#### Scenario: A tower over the square above
+
+- **WHEN** the player presses inside a square, on the top of the raised
+  value below it
+- **THEN** the square below is selected, and in 2D the square pressed
+
+#### Scenario: A tower taken away
+
+- **WHEN** a raised value is cleared
+- **THEN** the squares up, right and up-right of it are drawn again, and a
+  clue above the top row or a square right of it too
+
 ### Requirement: A born game may hide a kind only from a tier up
 
 `deal.hideFrom` MAY name a tier for a kind of `hide`: a board below that

@@ -158,6 +158,10 @@ export function playOf(
   // The keypad is the domain, which the params alone must give.
   if (p.numbers !== undefined && env.cellDomain)
     throw new CompileError("play numbers: the domain differs from cell to cell");
+  // A raised value leans into the squares next door, where a gap or a clue
+  // at a part's first square would be.
+  if (p.numbers?.raised === true && (p.gaps !== undefined || p.signs !== undefined))
+    throw new CompileError("play numbers: raised, on a board with gaps or part clues");
   if (p.links !== undefined && p.links !== env.cellMark?.name)
     throw new CompileError(
       `play: links names ${p.links}, not the cell mark naming a clue`,

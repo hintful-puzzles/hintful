@@ -83,6 +83,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `live-errors.ts` — the live error marks |
 | – `piece.ts` — a piece on its cell |
 | – `pieces/` — the painters a description names |
+| – `raised.ts` — a value drawn as a block that leans into its neighbors |
 | – `region-walls.ts` — the heavy walls round dealt regions |
 | – `ring.ts` — the round ring |
 | – `hint-mark.ts` — the ring and the outline |
@@ -861,6 +862,17 @@ in, so a board drawn from painters has no palette of its own. A fill
 game's `play:` names one per value by `paint:` (`PAINTERS`), and
 `fill/render.ts` gives each its slots. A new piece is a painter here,
 addressed to the piece, never to a game.
+
+### `raised.ts` — a value drawn as a block that leans into its neighbors
+
+Reach for it where a value is drawn standing up out of its square, its top
+up and right of the square by a share of the tile that grows with the
+value (upstream towers.c's 3D). `topFace` is where the top goes,
+`drawSides` its two sides, `clearOfRises` the part of a square no neighbor
+reaches into, for notes, and `pressedRaised` the square whose top a press
+lands on. A tile repaints with the raised values of the three squares in
+`RECEIVED_FROM` painted over it, inside its clip. Exemplar:
+`engine/fill/render.ts` (`play.numbers.raised`).
 
 ### `region-walls.ts` — the heavy walls round dealt regions
 

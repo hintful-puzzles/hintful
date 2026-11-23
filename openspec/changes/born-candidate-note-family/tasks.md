@@ -270,11 +270,21 @@ commit. In design.md § "Decisions" 7's order.
         sorted by kind, at each tier's pass and in a search tier's strip.
         Measured on six 5x5 Normal `flanking` deals (2026-11-23): 1 given
         and 41 sums left in turn, 30 and 16 in one order.
-  - [ ] 2.5d The tower painter: a value drawn as a solid that reaches into
+  - [x] 2.5d The tower painter: a value drawn as a solid that reaches into
         the tiles up and right of its own, repainted with them, a press on
         its drawn top retargeted to its cell, and the 2D/3D preference;
         on `flanking` (render and input tests: the fixture is not in the
-        app, so the browser look is 2.5e's).
+        app, so the browser look is 2.5e's). Built as
+        `play.numbers.raised` and `engine/render/raised.ts`: the tile loop
+        now takes every cell's words first and then paints, each tile with
+        the raised values of its left, lower and lower-left neighbors over
+        it in its clip; the slots above and right of the board are drawn
+        again by `drawSlots` with them over, and another margin square
+        cleared first. The preference keeps Towers' `appearance` key and
+        its 2D/3D choices. Tested on a raised `flanking`
+        (`fill/raised.test.ts`, its three repaint and press tests seen to
+        fail planted). The compiler refuses `raised` with gaps or clues at
+        parts.
   - [ ] 2.5e The flip: `facing`, `fullLine` and `tallestNearest` as
         placing techniques and `bounds` as arms (2.5b); Towers' tests to
         `towers.cases.yaml`, its TypeScript deleted, the `game-lines`

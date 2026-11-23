@@ -53,10 +53,12 @@ import { CELL, type StepMarks, stepMarks } from "../contract/hint-words.ts";
 import type { Color, DrawTextOptions, Point, Rect, Size } from "../contract/types.ts";
 import { regionFills } from "../generate/region-fill.ts";
 import {
+  type CellHighlight,
   drawCellBackground,
   HIGHLIGHT_ENTRY,
   HIGHLIGHT_NONE,
   HIGHLIGHT_NOTES,
+  highlightFill,
   type NoteSlot,
   noteGrid,
 } from "../mechanics/note-taking-cell.ts";
@@ -95,6 +97,7 @@ import {
   joinToward,
 } from "../render/piece.ts";
 import { PAINTERS, type Painter, type PainterName } from "../render/pieces/index.ts";
+import { clearOfRises, drawSides, RECEIVED_FROM, topFace } from "../render/raised.ts";
 import {
   drawWalledSquare,
   regionWalls,
@@ -119,7 +122,7 @@ import { partKindsOf, tallyOf } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import { type FillLink, LINK } from "./marks.ts";
 import type { FillMove } from "./notes.ts";
-import { numeral } from "./numbers.ts";
+import { numeral, topValue } from "./numbers.ts";
 import type { FillPlay, FillUi } from "./play.ts";
 import type { SearchedFillModule } from "./search.ts";
 import { slotAt, slotClueAt, slotPoint } from "./slots.ts";
@@ -325,6 +328,32 @@ const SHAPE_OPEN = 1 << 15;
  * marked done by the player. */
 const LABEL_BROKEN = 1 << 16;
 const LABEL_DONE = 1 << 17;
+/** On a board drawn raised (`play.numbers.raised`) in 3D: the board is, and
+ * the cell's value is raised. */
+const THREE_D = 1 << 18;
+const RAISED = 1 << 19;
+
+/** A raised value drawn over another tile than its own: its tile and its
+ * words. */
+type RaisedAt = {
+  readonly tile: Rect;
+  readonly word: number;
+  readonly hintWord: number;
+  readonly noteWord: number;
+};
+
+/** What a cell's tile is drawn from this frame, and whether it changed. */
+type TileWords = {
+  readonly k: number;
+  readonly hk: number;
+  readonly lk: number;
+  readonly nk: number;
+  readonly n: number;
+  readonly part: { readonly walls: number; readonly fill: number } | null;
+  readonly label: string | null;
+  readonly anim: { readonly from: number; readonly frac: number } | null;
+  readonly changed: boolean;
+};
 
 /** The step to each of a cell's four sides, up, right, down, left. */
 const DIRS: readonly (readonly [number, number])[] = [
@@ -656,6 +685,12 @@ export function fillRender<C extends Clues<C>>(
    * within a redraw, which sets them from its board first. */
   let depth = 0;
   let boardW = 0;
+  /** Where the board draws its values raised (`play.numbers.raised`),
+   * whether the board being drawn does (the appearance preference) and its
+   * largest value, which stands a fixed share of a tile tall. */
+  const raises = play.numbers?.raised === true;
+  let threeD = false;
+  let top = 1;
   /** Cell `i`'s number as drawn, holding `v`: -1 where it has none, or its
    * piece hides it (`play.hides`) and the preference does not show it. */
   const shownNumber = (
@@ -846,6 +881,67 @@ export function fillRender<C extends Clues<C>>(
     );
   }
 
+  /** A cell's selection as drawn: a board of numbers shows it as the
+   * note-taking cell's highlight, where a board of buttons draws the
+   * cursor's corners. */
+  const highlightOf = (word: number, noteWord: number): CellHighlight =>
+    (word >> TONE_SHIFT) & 3 || !typed || (word & CURSOR) === 0
+      ? HIGHLIGHT_NONE
+      : noteWord & NOTES_MODE
+        ? HIGHLIGHT_NOTES
+        : HIGHLIGHT_ENTRY;
+
+  /**
+   * The raised value of the cell whose tile is `tile`: its sides and its top,
+   * in the cell's surface and its selection's wash, edged in ink; on the top
+   * its numeral, the hatch of a striped line and Check & Save's outline. The
+   * clip is the caller's: a neighbor's tile, where its top reaches in.
+   */
+  function paintRaised(
+    dr: GameDrawing,
+    tile: Rect,
+    { word, hintWord, noteWord }: Omit<RaisedAt, "tile">,
+  ): void {
+    const ts = tile.w;
+    const v = word & 0xff;
+    const face = topFace(tile, v, top);
+    const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
+    const highlight = highlightOf(word, noteWord);
+    const surface = tone ? winSlot(tone) : word & FIXED ? COL_GIVEN : COL_CELL;
+    drawSides(
+      dr,
+      tile,
+      face,
+      highlightFill(highlight, COL_HIGHLIGHT, surface),
+      COL_INK,
+    );
+    drawCellBackground(dr, face, highlight, COL_HIGHLIGHT, surface);
+    if (hintWord & HINT_LINE) dr.drawHatch(face, hatchPeriod(ts));
+    dr.drawPolygon(
+      [
+        { x: face.x, y: face.y - 1 },
+        { x: face.x + ts, y: face.y - 1 },
+        { x: face.x + ts, y: face.y + ts - 1 },
+        { x: face.x, y: face.y + ts - 1 },
+      ],
+      -1,
+      COL_INK,
+    );
+    const { origin, options } = numberText(ts, face.x, face.y);
+    const ink = word & FIXED ? COL_INK : word & ERR_AT ? COL_ERROR : COL_ENTRY;
+    dr.drawText(origin, options, ink, numeral(v));
+    if (word & MISTAKE) drawMistake(dr, ts, face.x, face.y);
+  }
+
+  /** Check & Save's mark on a cell it found wrong, whose face is at
+   * `(tx, ty)`: a red outline inset from its edges. */
+  function drawMistake(dr: GameDrawing, ts: number, tx: number, ty: number): void {
+    const thick = Math.max(1, Math.floor(ts / 16));
+    const inset = Math.max(2, Math.floor(ts / 8));
+    const span = ts - 2 * inset;
+    drawThickRectOutline(dr, tx + inset, ty + inset, span, span, thick, COL_ERROR);
+  }
+
   function drawTile(
     dr: GameDrawing,
     ts: number,
@@ -868,6 +964,9 @@ export function fillRender<C extends Clues<C>>(
     label: string | null,
     // A piece placed or taken away a moment ago: the value it grows from or
     // shrinks into, and how far it has got, 0 to 1.
+    // The raised values of the cells next door that reach into this tile,
+    // painted over it in turn.
+    spill: readonly RaisedAt[],
     anim: { readonly from: number; readonly frac: number } | null = null,
   ): void {
     const v = word & 0xff;
@@ -876,14 +975,7 @@ export function fillRender<C extends Clues<C>>(
     const tile = { x: tx, y: ty, w: ts, h: ts };
     const tone = ((word >> TONE_SHIFT) & 3) as WinTone;
     const piece = v === 0 || lineWord & WASH_HIDES ? undefined : byValue.get(v);
-    // A board of numbers shows its selection as the note-taking cell's
-    // highlight, where a board of buttons draws the cursor's corners.
-    const highlight =
-      tone || !typed || (word & CURSOR) === 0
-        ? HIGHLIGHT_NONE
-        : noteWord & NOTES_MODE
-          ? HIGHLIGHT_NOTES
-          : HIGHLIGHT_ENTRY;
+    const highlight = highlightOf(word, noteWord);
     const ground = tone
       ? winSlot(tone)
       : piece !== undefined && piece.painter.surface !== null
@@ -950,7 +1042,10 @@ export function fillRender<C extends Clues<C>>(
     }
     // A board of numbers draws each value as its numeral: a given in ink, the
     // player's in the entry color, red where a rule breaks at the cell.
-    if (typed && v !== 0) {
+    // A raised value stands on the cell, its numeral on its top.
+    const raised = (lineWord & RAISED) !== 0;
+    if (raised) paintRaised(dr, tile, { word, hintWord, noteWord });
+    else if (typed && v !== 0) {
       const { origin, options } = valueText(ts, [x, y, h], part?.walls ?? null, tx, ty);
       const ink = word & FIXED ? COL_INK : word & ERR_AT ? COL_ERROR : COL_ENTRY;
       dr.drawText(origin, options, ink, numeral(v));
@@ -1061,12 +1156,7 @@ export function fillRender<C extends Clues<C>>(
         );
     }
 
-    if (word & MISTAKE) {
-      const thick = Math.max(1, Math.floor(ts / 16));
-      const inset = Math.max(2, Math.floor(ts / 8));
-      const span = ts - 2 * inset;
-      drawThickRectOutline(dr, tx + inset, ty + inset, span, span, thick, COL_ERROR);
-    }
+    if (word & MISTAKE && !raised) drawMistake(dr, ts, tx, ty);
     if (word & CURSOR && !typed)
       drawRectCorners(
         dr,
@@ -1078,6 +1168,7 @@ export function fillRender<C extends Clues<C>>(
         word & ARMED ? Math.max(3, ts >> 3) : Math.max(2, ts >> 4),
       );
 
+    for (const s of spill) paintRaised(dr, s.tile, s);
     dr.unclip();
     dr.drawUpdate(
       part === null ? { x: tx + 1, y: ty + 1, w: ts - 1, h: ts - 1 } : tile,
@@ -1215,11 +1306,16 @@ export function fillRender<C extends Clues<C>>(
     at: readonly [number, number, number],
     walls: number | null,
     count: number,
-  ): NoteSlot[] =>
-    noteGrid(
-      labeled ? belowClue(ts, at, walls) : ringTextBox(markBand(ts, at, walls)),
-      count,
-    );
+  ): NoteSlot[] => {
+    const band = markBand(ts, at, walls);
+    // In 3D, clear of where the tallest value next door reaches in.
+    const area = labeled
+      ? belowClue(ts, at, walls)
+      : threeD
+        ? ringTextBox(band, { within: clearOfRises(band.box, top) })
+        : ringTextBox(band);
+    return noteGrid(area, count);
+  };
 
   /** Where a typed value goes in cell `(x, y)`, its tile at `(tx, ty)`: the
    * tile's middle; on a board of clues at parts, the middle of the cell below
@@ -1361,6 +1457,7 @@ export function fillRender<C extends Clues<C>>(
     slotErrors: ReadonlySet<number>,
     stripedLine: number,
     marks: StepMarks,
+    raisedInto: (x: number, y: number) => readonly RaisedAt[],
   ): void {
     if (!slotted) return;
     const ts = ds.tileSize;
@@ -1397,6 +1494,13 @@ export function fillRender<C extends Clues<C>>(
       if (key & 8) {
         const thick = Math.max(2, Math.floor(ts / 16));
         drawThickRectOutline(dr, box.x, box.y, ts, ts, thick, COL_HINT_OUTLINE);
+      }
+      // The raised values of the top row and right column reach in over it.
+      const raised = raisedInto(p.x, p.y);
+      if (raised.length > 0) {
+        dr.clip(box);
+        for (const r of raised) paintRaised(dr, r.tile, r);
+        dr.unclip();
       }
       dr.drawUpdate(box);
     }
@@ -1569,6 +1673,11 @@ export function fillRender<C extends Clues<C>>(
       avoid,
     });
     const v = b.values[at];
+    if (threeD && v !== 0) {
+      const face = topFace({ x: tile[0], y: tile[1], w: ts, h: ts }, v, top);
+      const t = numberText(ts, face.x, face.y);
+      return enclosing([textBox(t.origin, t.options, numeral(v))]);
+    }
     if (typed && v !== 0) {
       const t = valueText(ts, [x, y, h], walls, ...tile);
       return enclosing([textBox(t.origin, t.options, numeral(v))]);
@@ -1665,6 +1774,119 @@ export function fillRender<C extends Clues<C>>(
   }
 
   /** The pencil-mode indicator, at the canvas's top right. */
+  /** The raised values that reach into the tile at `(x, y)` of board `b`,
+   * which may be off the board, in the order they are painted over it. */
+  const raisedIntoOf =
+    (b: FillBoard<C>, ts: number, tiles: readonly (TileWords | null)[]) =>
+    (x: number, y: number): RaisedAt[] => {
+      if (!threeD) return [];
+      const { w, h } = b;
+      return RECEIVED_FROM.flatMap(([dx, dy]) => {
+        const [sx, sy] = [x + dx, y + dy];
+        if (sx < 0 || sy < 0 || sx >= w || sy >= h) return [];
+        const t = tiles[sy * w + sx];
+        if (t === null || (t.lk & RAISED) === 0) return [];
+        const tile = { x: cellX(sx, sy, h, ts), y: coord(sy, ts), w: ts, h: ts };
+        return [{ tile, word: t.k, hintWord: t.hk, noteWord: t.nk }];
+      });
+    };
+
+  /**
+   * Each tile that changed, with the raised values next door over it. A
+   * raised value reaches into the tiles up, right and up-right of its own,
+   * which repaint with it. Turning 3D off changes every tile, and turning it
+   * on every tile around a value, so in 2D none needs it.
+   */
+  function paintTiles(
+    dr: GameDrawing,
+    ds: FillDrawState,
+    b: FillBoard<C>,
+    tiles: readonly (TileWords | null)[],
+    raisedInto: (x: number, y: number) => readonly RaisedAt[],
+  ): void {
+    const ts = ds.tileSize;
+    const { w, h } = b;
+    const repaint = tiles.map((t) => t?.changed === true);
+    if (threeD)
+      tiles.forEach((t, i) => {
+        if (!t?.changed) return;
+        const [x, y] = [i % w, Math.floor(i / w)];
+        for (const [dx, dy] of RECEIVED_FROM) {
+          const [rx, ry] = [x - dx, y - dy];
+          if (rx >= 0 && ry >= 0 && rx < w && ry < h) repaint[ry * w + rx] = true;
+        }
+      });
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x;
+        const t = tiles[i];
+        if (t === null || !repaint[i]) continue;
+        drawTile(
+          dr,
+          ts,
+          [x, y, h],
+          t.k,
+          t.hk,
+          t.lk,
+          t.nk,
+          t.n,
+          t.part,
+          ds.struck.struck[i],
+          t.label,
+          raisedInto(x, y),
+          t.anim,
+        );
+      }
+  }
+
+  /**
+   * The squares above the board and right of it, which the raised values of
+   * its top row and right column reach into, where one of those changed: a
+   * clue's slot is drawn again by `drawSlots`, which paints them over it,
+   * and any other square is cleared to the background with them over it.
+   */
+  function repaintMargins(
+    dr: GameDrawing,
+    ds: FillDrawState,
+    b: FillBoard<C>,
+    tiles: readonly (TileWords | null)[],
+    raisedInto: (x: number, y: number) => RaisedAt[],
+  ): void {
+    const ts = ds.tileSize;
+    const { w, h } = b;
+    const pencil = notes ? pencilIndicatorBox(canvasOf(b, null, ts), ts) : null;
+    const margin = [
+      ...Array.from({ length: w + 1 }, (_, x) => [x, -1] as const),
+      ...Array.from({ length: h }, (_, y) => [w, y] as const),
+    ];
+    for (const [x, y] of margin) {
+      const changed = RECEIVED_FROM.some(([dx, dy]) => {
+        const [sx, sy] = [x + dx, y + dy];
+        return sx >= 0 && sy >= 0 && sx < w && sy < h && tiles[sy * w + sx]?.changed;
+      });
+      if (!changed) continue;
+      const s = slotted ? slotAt(w, h, x, y) : -1;
+      if (s >= 0) {
+        ds.slots.forget(s);
+        continue;
+      }
+      const box = { x: coord(x, ts), y: coord(y, ts), w: ts, h: ts };
+      dr.clip(box);
+      dr.drawRect(box, COL_BACKGROUND);
+      for (const r of raisedInto(x, y)) paintRaised(dr, r.tile, r);
+      dr.unclip();
+      dr.drawUpdate(box);
+      if (
+        pencil !== null &&
+        box.x < pencil.x + pencil.size &&
+        pencil.x < box.x + box.w &&
+        box.y < pencil.y + pencil.size &&
+        pencil.y < box.y + box.h
+      )
+        ds.pencilModeShown = null;
+    }
+  }
+
   function drawPencilMode(
     dr: GameDrawing,
     ds: FillDrawState,
@@ -1683,56 +1905,128 @@ export function fillRender<C extends Clues<C>>(
     );
   }
 
-  function redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void {
-    const { state, prev, animTime, ui, flash, hint, mistakes } = frame;
+  /** Each cell's words this frame, and whether its tile changed; `null` for
+   * a cell the board does not draw. `words` are the errors', the mistakes'
+   * and links', and the hint's. */
+  function tileWordsOf(
+    ds: FillDrawState,
+    { state, prev, animTime, ui, flash }: FillFrame<C>,
+    shown: FillBoard<C>,
+    words: {
+      readonly word: Int32Array;
+      readonly lineWord: Int32Array;
+      readonly hintWord: (x: number, y: number) => number;
+    },
+  ): (TileWords | null)[] {
+    const { w, h } = state;
+    const cx = ui.cursor.visible ? ui.cursor.x : -1;
+    const cy = ui.cursor.visible ? ui.cursor.y : -1;
+    // A cell whose value just changed, while the engine drives timed redraws.
+    const before = animTime > 0 && prev !== null ? prev.values : null;
+    const frac = Math.min(1, animTime / PLACE_ANIM_TIME);
+    const states = numberStates(shown);
+    const joins = joinsOf(shown);
+    const washes = washesOf(shown, ui);
+    const labels = labelsOf(state);
+    const { parts } = ds;
+    const tiles: (TileWords | null)[] = new Array(w * h).fill(null);
+    for (let y = 0; y < h; y++)
+      for (let x = 0; x < w; x++) {
+        if (!drawn(state, x, y)) continue;
+        const i = y * w + x;
+        const label = labels.get(i) ?? null;
+        let k = words.word[i] | shown.values[i] | (state.fixed[i] ? FIXED : 0);
+        if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
+        k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
+        const hk = words.hintWord(x, y);
+        let lk =
+          words.lineWord[i] |
+          (states.get(i) ?? 0) |
+          ((joins[i] & 0xf) << JOIN_SHIFT) |
+          (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
+          washes[i] |
+          (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0);
+        const n = shownNumber(state, i, shown.values[i], ui.hiddenShown);
+        if (n >= 0 && shown.values[i] === play.hides?.value) lk |= NUMBER_UNDER;
+        const part =
+          parts === null ? null : { walls: parts.walls[i], fill: parts.fills[i] };
+        if (threeD) lk |= THREE_D | (shown.values[i] !== 0 ? RAISED : 0);
+        const nk = noteKey(shown, i, (k & CURSOR) !== 0, ui);
+        // A growing piece is no key's: its tile is drawn every frame.
+        const grows = before !== null && before[i] !== shown.values[i];
+        if (grows) ds.tiles.forget(i);
+        tiles[i] = {
+          k,
+          hk,
+          lk,
+          nk,
+          n,
+          part,
+          label: label?.text ?? null,
+          anim: grows ? { from: before[i], frac } : null,
+          changed: grows || ds.tiles.changed(i, k, hk, lk, nk),
+        };
+      }
+    return tiles;
+  }
+
+  /** What the first frame draws under every tile: the grid's frame, and
+   * each line's label where the board has them. */
+  function drawFrame(dr: GameDrawing, ds: FillDrawState, state: FillBoard<C>): void {
     const ts = ds.tileSize;
     const { w, h } = state;
+    // A walled board's frame is a wall: each cell paints its own top and
+    // left, so this is the bottom and right of the last row and column. A
+    // hexagon's edge is each of its cells' own, and so is a gapped board's.
+    if (hexagon || gapped) {
+      for (let y = 0; y < h; y++)
+        for (let x = 0; x < w; x++)
+          if (drawn(state, x, y))
+            dr.drawRect(
+              { x: cellX(x, y, h, ts), y: coord(y, ts), w: ts + 1, h: ts + 1 },
+              COL_GRID,
+            );
+    } else
+      dr.drawRect(
+        { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
+        ds.parts === null ? COL_GRID : COL_WALL,
+      );
+    if (labelStart === undefined) return;
+    const size = Math.floor((ts * 2) / 5);
+    const font = {
+      align: "center",
+      baseline: "mathematical",
+      fontType: "variable",
+      size,
+    } as const;
+    const at = start(ts) - Math.floor(ts / 2);
+    for (let y = 0; y < h; y++)
+      dr.drawText(
+        { x: at, y: coord(y, ts) + Math.floor(ts / 2) },
+        font,
+        COL_LABEL,
+        labelStart(y),
+      );
+    for (let x = 0; x < w; x++)
+      dr.drawText(
+        { x: coord(x, ts) + Math.floor(ts / 2), y: at },
+        font,
+        COL_LABEL,
+        labelStart(x),
+      );
+  }
+
+  function redraw(dr: GameDrawing, ds: FillDrawState, frame: FillFrame<C>): void {
+    const { state, ui, hint, mistakes } = frame;
+    const ts = ds.tileSize;
+    const { w, h } = state;
+    threeD = raises && ui.raised !== false;
+    top = raises ? topValue(module, spaceOf(module, state)) : 1;
     depth = depthOf(state);
     boardW = w;
     const shown = ui.drag?.live ? previewed(state, ui) : state;
 
-    if (ds.tiles.firstFrame()) {
-      // A walled board's frame is a wall: each cell paints its own top and
-      // left, so this is the bottom and right of the last row and column. A
-      // hexagon's edge is each of its cells' own, and so is a gapped board's.
-      if (hexagon || gapped) {
-        for (let y = 0; y < h; y++)
-          for (let x = 0; x < w; x++)
-            if (drawn(state, x, y))
-              dr.drawRect(
-                { x: cellX(x, y, h, ts), y: coord(y, ts), w: ts + 1, h: ts + 1 },
-                COL_GRID,
-              );
-      } else
-        dr.drawRect(
-          { x: coord(0, ts), y: coord(0, ts), w: w * ts + 1, h: h * ts + 1 },
-          ds.parts === null ? COL_GRID : COL_WALL,
-        );
-      if (labelStart !== undefined) {
-        const size = Math.floor((ts * 2) / 5);
-        const font = {
-          align: "center",
-          baseline: "mathematical",
-          fontType: "variable",
-          size,
-        } as const;
-        const at = start(ts) - Math.floor(ts / 2);
-        for (let y = 0; y < h; y++)
-          dr.drawText(
-            { x: at, y: coord(y, ts) + Math.floor(ts / 2) },
-            font,
-            COL_LABEL,
-            labelStart(y),
-          );
-        for (let x = 0; x < w; x++)
-          dr.drawText(
-            { x: coord(x, ts) + Math.floor(ts / 2), y: at },
-            font,
-            COL_LABEL,
-            labelStart(x),
-          );
-      }
-    }
+    if (ds.tiles.firstFrame()) drawFrame(dr, ds, state);
 
     // The live errors, on the board as the drag would leave it.
     const { word, lineWord, lineErrors, gapErrors, slotErrors } = errorWords(
@@ -1797,8 +2091,16 @@ export function fillRender<C extends Clues<C>>(
           hintWord[d] |= block.evidenceSides(d % w, Math.floor(d / w)) << BLOCK_SHIFT;
       }
     }
+    // A ring round a raised value goes round its top, where its numeral is.
+    const ringedAt = new Set(targets.map((c) => c.y * w + c.x));
     const markStyle: HintMarkStyle = {
-      band: (x, y) => markBand(ts, [x, y, h], ds.parts?.walls[y * w + x] ?? null),
+      band: (x, y) => {
+        const band = markBand(ts, [x, y, h], ds.parts?.walls[y * w + x] ?? null);
+        const v = shown.values[y * w + x];
+        return threeD && v !== 0 && ringedAt.has(y * w + x)
+          ? { ...band, box: topFace(band.box, v, top) }
+          : band;
+      },
       // A ring keeps its cell's number inside it and its neighbors' outside;
       // the line clues lie past any ring's reach.
       text: (x, y) => cellText(state, ds, x, y),
@@ -1824,81 +2126,28 @@ export function fillRender<C extends Clues<C>>(
             ? h + stripes[0].x
             : -1;
 
-    const cx = ui.cursor.visible ? ui.cursor.x : -1;
-    const cy = ui.cursor.visible ? ui.cursor.y : -1;
-    // A cell whose value just changed, while the engine drives timed redraws.
-    const before = animTime > 0 && prev !== null ? prev.values : null;
-    const frac = Math.min(1, animTime / PLACE_ANIM_TIME);
-    const states = numberStates(shown);
-    const joins = joinsOf(shown);
-    const washes = washesOf(shown, ui);
-    const labels = labelsOf(state);
-    const { parts } = ds;
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++) {
-        if (!drawn(state, x, y)) continue;
-        const i = y * w + x;
-        const label = labels.get(i) ?? null;
-        let k = word[i] | shown.values[i] | (state.fixed[i] ? FIXED : 0);
-        if (x === cx && y === cy) k |= CURSOR | (ui.linkArmed ? ARMED : 0);
-        k |= flash.win(sweepStep(x, y)) << TONE_SHIFT;
-        const hk = hintWord[i] | outlines.packed(x, y);
-        let lk =
-          lineWord[i] |
-          (states.get(i) ?? 0) |
-          ((joins[i] & 0xf) << JOIN_SHIFT) |
-          (joins[i] & JOINED_OPEN ? SHAPE_OPEN : 0) |
-          washes[i] |
-          (label !== null && isDone(state, label.kind, label.k) ? LABEL_DONE : 0);
-        const n = shownNumber(state, i, shown.values[i], ui.hiddenShown);
-        if (n >= 0 && shown.values[i] === play.hides?.value) lk |= NUMBER_UNDER;
-        const part =
-          parts === null ? null : { walls: parts.walls[i], fill: parts.fills[i] };
-        const nk = noteKey(shown, i, (k & CURSOR) !== 0, ui);
-        // A growing piece is no key's: its tile is drawn every frame.
-        if (before !== null && before[i] !== shown.values[i]) {
-          ds.tiles.forget(i);
-          drawTile(
-            dr,
-            ts,
-            [x, y, h],
-            k,
-            hk,
-            lk,
-            nk,
-            n,
-            part,
-            ds.struck.struck[i],
-            label?.text ?? null,
-            { from: before[i], frac },
-          );
-        } else if (ds.tiles.changed(i, k, hk, lk, nk))
-          drawTile(
-            dr,
-            ts,
-            [x, y, h],
-            k,
-            hk,
-            lk,
-            nk,
-            n,
-            part,
-            ds.struck.struck[i],
-            label?.text ?? null,
-          );
-      }
+    const tiles = tileWordsOf(ds, frame, shown, {
+      word,
+      lineWord,
+      hintWord: (x, y) => hintWord[y * w + x] | outlines.packed(x, y),
+    });
+    const raisedInto = raisedIntoOf(state, ts, tiles);
+    paintTiles(dr, ds, state, tiles, raisedInto);
+    if (raises) repaintMargins(dr, ds, state, tiles, raisedInto);
 
     if (notes) drawPencilMode(dr, ds, state, ui);
     if (gapped) drawGaps(dr, ds, state, gapErrors);
-    drawSlots(dr, ds, state, slotErrors, stripedLine, marks);
+    drawSlots(dr, ds, state, slotErrors, stripedLine, marks, raisedInto);
 
     // After every tile, and every frame: `HintMarks.paint` always draws.
     ds.marks.paint(dr, unlinked, area, markStyle);
     for (const l of askedLinks) drawLinkRing(dr, ts, w, l, whole(l));
     drawTallyOf(dr, ds, shown);
 
-    if (lineLists.length > 0)
+    if (lineLists.length > 0) {
+      const [cx, cy] = ui.cursor.visible ? [ui.cursor.x, ui.cursor.y] : [-1, -1];
       drawLists(dr, ds, state, { stripedLine, lineErrors, cx, cy });
+    }
     if (lineClues.length === 0) return;
     const size = Math.floor(ts / 2);
     for (let k = 0; k < w + h; k++) {

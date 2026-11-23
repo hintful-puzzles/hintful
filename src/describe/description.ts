@@ -153,7 +153,7 @@ export interface DescriptionJson {
 export interface PlayJson {
   /** Where the values are the answer's domain, typed into a selected cell:
    * then there are no `values` and no buttons. */
-  numbers?: Record<string, never>;
+  numbers?: { raised?: true };
   /** Where the board keeps notes, how its hint reads a square with none
    * until the player chooses: `populate` where it says nothing. */
   hintNotes?: "implicit" | "populate";
