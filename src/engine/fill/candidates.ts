@@ -14,7 +14,8 @@
  * area of N squares holds 1 to N). Its singles are the walk's own, so the
  * techniques placed as `one.cell` and `one.place` are none of its rungs. The
  * library's strikes are worded by the library (`hint-text.ts`'s Latin words),
- * a firing a leg a cell; where a placed value rules itself out of more than
+ * a firing one leg over the cells with notes written and a leg each over
+ * those without (`byWrittenCell`); where a placed value rules itself out of more than
  * its row and column, the description words how far (`WALK_STEPS`).
  */
 
@@ -59,7 +60,12 @@ import {
   rowColRegions,
   singleReasonOf,
 } from "../hint/latin-hint.ts";
-import { byCell, LIBRARY_STRIKES, latinStrikeRungs } from "../hint/latin-notes.ts";
+import {
+  byCell,
+  byWrittenCell,
+  LIBRARY_STRIKES,
+  latinStrikeRungs,
+} from "../hint/latin-notes.ts";
 import { type Clauses, statedParts, statedSentence } from "../hint/stated.ts";
 import { type StepTable, type StepType, stepVoice } from "../hint/step-voice.ts";
 import { CellMarks } from "../solve/cell-marks.ts";
@@ -462,7 +468,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         ...latinStrikeRungs<FillMove, CandidateFillHint, Reason, CellMarks>(
           on,
           w,
-          byCell,
+          (marks, written) => byWrittenCell(marks, written, w),
         ),
       ],
     });

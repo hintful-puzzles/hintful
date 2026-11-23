@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { LatinSolver, latinLadder } from "../solve/latin.ts";
 import type { Firing, RungContext } from "./candidate-plan.ts";
 import {
+  byWrittenCell,
   type LatinStrikeReason,
   latinNotesLadder,
   latinStrikeRungs,
@@ -26,6 +27,7 @@ describe("a Latin ladder run on the notes", () => {
     nothingEarlier: true,
     populated: true,
     shown,
+    written: shown,
     continues: () => false,
   });
 
@@ -66,5 +68,24 @@ describe("a Latin ladder run on the notes", () => {
     expect(m).toBeInstanceOf(LatinSolver);
     expect([...m.grid]).toEqual([...grid]);
     expect(on.enc.values).toBe(4);
+  });
+});
+
+describe("a firing cut by the notes written", () => {
+  it("strikes the written cells in one leg and each bare cell in its own", () => {
+    // A 3-wide board: cells 0 and 2 have notes written, 1 and 3 none.
+    const written = [0b110, 0, 0b1010, 0];
+    const marks = [
+      { x: 0, y: 0, n: 1 },
+      { x: 1, y: 0, n: 1 },
+      { x: 2, y: 0, n: 3 },
+      { x: 0, y: 1, n: 2 },
+      { x: 1, y: 0, n: 2 },
+    ];
+    expect(byWrittenCell(marks, written, 3)).toEqual([
+      [marks[0], marks[2]],
+      [marks[1], marks[4]],
+      [marks[3]],
+    ]);
   });
 });

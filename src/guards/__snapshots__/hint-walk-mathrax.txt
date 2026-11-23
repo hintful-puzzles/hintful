@@ -1,6 +1,6 @@
 5x5 Easy #0: 26 steps, solved, a540378211661320 [clue:5 dup:2 hiddenSingle:4 note:2 regionsFull:12 single:1]
-5x5 Normal #0: 44 steps, solved, 0383419ab6474686 [clue:10 dup:6 note:6 regionsFull:14 single:8]
-5x5 Tricky #0: 88 steps, solved, ce1454add6a34b4b [clue:26 dup:17 hiddenSingle:3 note:7 set:12 single:22 wing:1]
+5x5 Normal #0: 43 steps, solved, bffce890c9b185ce [clue:9 dup:6 hiddenSingle:2 note:6 regionsFull:12 single:8]
+5x5 Tricky #0: 76 steps, solved, ae4f780580b4f485 [clue:29 dup:12 hiddenSingle:4 note:5 regionsFull:6 set:5 single:15]
 5x5 Unreasonable #0: 19 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 0d24ae9f6a10b581 [clue:7 note:6 set:6]
 5x5 Easy, Addition clues: off #0: 21 steps, solved, 1e407cdcd33e5620 [clue:5 regionsFull:16]
 5x5 Easy, Subtraction clues: off #0: 21 steps, solved, 6a9508e561838d1f [clue:5 hiddenSingle:2 regionsFull:14]

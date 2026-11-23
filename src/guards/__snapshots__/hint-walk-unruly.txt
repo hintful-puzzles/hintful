@@ -1,4 +1,4 @@
 6x6 Easy #0: 26 steps, solved, 29b63d043b64008a [lastGap:10 threes:16]
-6x6 Normal #0: 26 steps, solved, 4a778fda0f7ca2a4 [lastGap:7 quota:1 threes:18]
-8x8 Tricky #0: 45 steps, solved, 137a9404e667bc20 [lastGap:5 lastOne:8 quota:1 threes:31]
-8x8 Normal, unique #0: 48 steps, solved, 97a0ea2b29dd17f7 [lastGap:7 quota:3 threes:35 unique:3]
+6x6 Normal #0: 22 steps, solved, 8e6627bd94170af9 [lastGap:5 quota:3 threes:14]
+8x8 Tricky #0: 45 steps, solved, d1d648088498eba6 [lastGap:11 lastOne:9 quota:1 threes:24]
+8x8 Normal, unique #0: 50 steps, solved, 90708e6d17147315 [lastGap:10 quota:3 threes:34 unique:3]

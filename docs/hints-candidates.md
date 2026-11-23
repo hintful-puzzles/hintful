@@ -717,7 +717,11 @@ within that:
 - **A firing's legs follow what the narration names singular.** The game's
   `legs` cut a technique's firing into legs (`byCell` in
   [`engine/hint/latin-notes.ts`](../src/engine/hint/latin-notes.ts) cuts by cell), and
-  the walk flags the later ones as continuing. A firing whose sentence names
+  the walk flags the later ones as continuing. A cut costs a press a leg:
+  a set cut by cell where every cell's notes were written took Towers 44
+  steps against 13 in one leg, so a firing whose sentence names no one cell
+  cuts only where a leg saves one (`byWrittenCell`, which a rung reads off
+  `RungContext.written`). A firing whose sentence names
   one value ("a tower of height 5…")
   splits by value: one step striking two values under it contradicts the
   sentence. A firing whose premise is a whole region (a cage) splits by

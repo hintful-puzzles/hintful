@@ -1472,6 +1472,11 @@
               "uniqueItems": true,
               "description": "Kinds of `hide` whose clues are each tried, at each tier, before any of the rest, each side in one random order (upstream towers.c's and mathrax.c's givens, then their clues)."
             },
+            "hideBy": {
+              "type": "object",
+              "additionalProperties": { "$ref": "#/$defs/formula" },
+              "description": "By kind of `hide`, a number, a formula of `at` read on the clues as dealt: a clue with a higher one is hidden first, so the board keeps those with the lowest; alike, in a random order. Under `hideFirst`, within each side (Adjacent's givens, those with fewest bars beside them kept, as upstream unequal.c's `gg_best_clue` adds a given where its cell has fewest clues)."
+            },
             "hideFrom": {
               "type": "object",
               "additionalProperties": { "type": "string" },

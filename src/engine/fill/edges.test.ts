@@ -101,6 +101,21 @@ describe("a record a cell", () => {
       expect(encodeDesc(ordering.deal, spaceOf(ordering, b), b.dealt)).toBe(desc);
     }
   });
+
+  it("hides first the givens `deal.hideBy` ranks higher", () => {
+    // The fixture ranks a given by its number, so it keeps smaller ones than
+    // the same module hiding at random. A board keeps the givens its tier
+    // needs, so this compares the two over several deals.
+    const unranked = fillGame("ordering", { ...ordering, hideRank: undefined });
+    const kept = (g: typeof game): number[] =>
+      ["a", "b", "c", "d", "e", "f"].flatMap((seed) => {
+        const { desc } = g.newDesc(params(5, NORMAL), randomNew(seed));
+        return [...board(5, desc).dealt.given.v];
+      });
+    const mean = (xs: readonly number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    const [ranked, random] = [mean(kept(game)), mean(kept(unranked))];
+    expect(ranked + 0.5, `${ranked} against ${random}`).toBeLessThan(random);
+  });
 });
 
 describe("a board with gaps", () => {

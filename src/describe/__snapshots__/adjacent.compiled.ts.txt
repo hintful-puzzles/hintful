@@ -299,6 +299,23 @@ export const clueMax = {
   },
 };
 
+/** Where the hide puts a clue of `kind` at `at` (`deal.hideBy`): a higher
+ * one is hidden first. */
+export function hideRank(sp: GridSpace, cl: Dealt, kind: string, at: number): number {
+  if (kind === "given") {
+    let _g6 = 0;
+    G7: {
+      const _a8 = sp.adj4[at];
+      for (let _i9 = 0; _i9 < _a8.length; _i9++) {
+        if (!((clueAt(cl.bar, sp.adj4Edges[at][_i9]) === 1))) continue;
+        _g6++;
+      }
+    }
+    return Number(_g6);
+  }
+  return 0;
+}
+
 /** The statements a violation names, so a game that draws one its own
  * way names it by a name the description has. */
 export type RuleName = "domain" | "shape.0" | "clue.given" | "clue.bar";

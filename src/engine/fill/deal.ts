@@ -106,6 +106,9 @@ export type DealtFillModule<C> = SearchedFillModule<C> &
       pick?: (n: number) => number,
     ): C;
     growBy?(sp: GridSpace, sizes: Readonly<Record<string, number>>): GrowSizes;
+    /** Where a hidden clue of `kind` at `at` goes in the hide, read on the
+     * clues as dealt (`deal.hideBy`): a higher one is hidden first. */
+    hideRank?(sp: GridSpace, cl: C, kind: string, at: number): number;
   };
 
 /**
@@ -380,16 +383,44 @@ export function dealFill<C extends Clues<C>>(
   };
   /** `units`, shuffled, in the order the deal hides them: every unit of the
    * kinds `deal.hideFirst` names before any of the rest, each side in a
-   * random order. */
+   * random order, and a kind's units ranked by `deal.hideBy` taking its
+   * places in that order higher first, so the kinds stay mixed as they
+   * fell. A unit is of its first clue's kind and ranks as it does. */
   const hideOrder = (clues: C, units: number[][]): number[][] => {
     shuffle(units, rs);
     const { hideFirst } = deal;
-    if (hideFirst === undefined) return units;
+    const { hideRank } = module;
+    if (hideFirst === undefined && hideRank === undefined) return units;
     const offsets = offsetsOf(clues, kinds);
+    const kindOf = (u: readonly number[]): number =>
+      offsets.findLastIndex((o) => o <= u[0]);
+    let order = units;
+    if (hideRank !== undefined) {
+      const rank = (u: readonly number[]): number => {
+        const k = kindOf(u);
+        const list = clues[kinds[k] as keyof C] as ClueList;
+        return hideRank(sp, clues, kinds[k], list.at[u[0] - offsets[k]]);
+      };
+      // Each kind's units, higher first, a stable sort keeping those ranked
+      // alike in their random order; then dealt back into the kind's places.
+      const byKind = kinds.map((_, k) =>
+        units
+          .filter((u) => kindOf(u) === k)
+          .map((u) => ({ u, rank: rank(u) }))
+          .sort((a, b) => b.rank - a.rank)
+          .map(({ u }) => u),
+      );
+      const next = kinds.map(() => 0);
+      order = units.map((u) => {
+        const k = kindOf(u);
+        return byKind[k][next[k]++];
+      });
+    }
+    if (hideFirst === undefined) return order;
     const later = (u: readonly number[]): number =>
-      hideFirst.includes(kinds[offsets.findLastIndex((o) => o <= u[0])]) ? 0 : 1;
-    // A stable sort keeps each side's units in their random order.
-    return units.sort((a, b) => later(a) - later(b));
+      hideFirst.includes(kinds[kindOf(u)]) ? 0 : 1;
+    // A stable sort keeps each side's units in their order.
+    return order.sort((a, b) => later(a) - later(b));
   };
   /**
    * The shortest run from the end of `units` whose clues alone of the
@@ -440,9 +471,9 @@ export function dealFill<C extends Clues<C>>(
    * 84 ms against 43, its Unreasonable 240 against 131, and Light Up's 12x16
    * Normal 68 against 80, bundled (2026-11-23). The tiers between the lowest and `tier` hide nothing that
    * `tier` would not and cost a pass each (Boats' 10x10 Hard, 507 solves a
-   * deal against 404 without them). Thorough, every clue is tried at each
-   * tier; otherwise none at the lowest and as many as the board's shorter
-   * side at `tier`.
+   * deal against 404 without them). Thorough, each tier keeps its shortest
+   * run and then tries every clue of it; otherwise none is tried at the
+   * lowest and as many as the board's shorter side at `tier`.
    *
    * `forSearch` hides at that one tier, and skips the shortest run, for a
    * hide a search's strip follows: the shortest run there took Mosaic's 12x15 Unreasonable deal from 2.6 G instructions
@@ -496,7 +527,14 @@ export function dealFill<C extends Clues<C>>(
     }
     for (const t of tier > from && !forSearch ? [from, tier] : [from]) {
       const units = unitsOf(clues, shown);
-      const order = hideOrder(clues, t === from ? atFrom(units) : units);
+      let order = hideOrder(clues, t === from ? atFrom(units) : units);
+      // The asked tier halves first as well: a kind `from` reads none of
+      // comes to it whole, and Adjacent's 5x5 Hard tried its 25 givens one
+      // at a time there, 26 solves a draw against 7 (2026-11-23).
+      if (thorough && t !== from) {
+        shown = shortestRun(clues, order, t);
+        order = hideOrder(clues, unitsOf(clues, shown));
+      }
       const tries = thorough
         ? order
         : order.slice(0, t === from ? 0 : Math.min(p.w, p.h));

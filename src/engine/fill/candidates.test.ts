@@ -88,16 +88,21 @@ describe("the candidate walk of a board that keeps notes", () => {
     let board = NEEDS_A_SET;
     for (const s of steps.slice(0, at)) board = game.executeMove(board, s.move);
     const { marks } = strikeOf(steps[at]);
-    const { x, y } = marks[0];
-    const c = y * board.w + x;
-    const before = board.pencil?.[c] ?? 0;
-    const after = game.executeMove(board, steps[at].move).pencil?.[c] ?? 0;
-    const struck = marks.reduce((bits, m) => bits | (1 << m.n), 0);
-    // One cell a leg, and the cell keeps every note the step does not name.
-    expect(marks.every((m) => m.x === x && m.y === y)).toBe(true);
-    expect(before & struck).toBe(struck);
-    expect(after).toBe(before & ~struck);
-    expect(after).not.toBe(0);
+    const next = game.executeMove(board, steps[at].move);
+    const cells = new Set(marks.map((m) => m.y * board.w + m.x));
+    // Every cell's notes are written under this reading, so the set is one
+    // step over all its cells, each keeping every note the step does not name.
+    expect(cells.size).toBeGreaterThan(1);
+    for (const c of cells) {
+      const struck = marks
+        .filter((m) => m.y * board.w + m.x === c)
+        .reduce((bits, m) => bits | (1 << m.n), 0);
+      const before = board.pencil?.[c] ?? 0;
+      const after = next.pencil?.[c] ?? 0;
+      expect(before & struck).toBe(struck);
+      expect(after).toBe(before & ~struck);
+      expect(after).not.toBe(0);
+    }
   });
 
   it("follows a strike made a note at a time, and shrinks it to what is left", () => {

@@ -270,7 +270,11 @@ research tools all read through it; the app never does.
   fill ladder resolves as every Latin game's does), worded by the library,
   and the description's own, tried before the library's strikes since a
   player reads a clue before a set; a `reads` mark names the cells whose
-  notes the step reasons from, which the implicit reading writes first. A strike's firing is a leg a cell, or a
+  notes the step reasons from, which the implicit reading writes first. A
+  library strike is one leg over the cells whose notes are written and a
+  leg each over those with none, where the implicit reading writes the
+  values left (`byWrittenCell`). A strike's firing of the description's own
+  is a leg a cell, or a
   leg a value from all its cells where `says` has `shown: value` (Towers'
   heights), each worded by the look of its `says`, of the fact its first
   note is where it words each fact (`fact:`), its `{ring}` the leg's cells
@@ -446,6 +450,11 @@ research tools all read through it; the app never does.
   written. `deal.hide` may list kinds, hidden in one random order across
   them, or with `hideFirst: [kind]` every clue of those kinds tried
   before any of the rest (Towers' givens, then its clues);
+  `hideBy: { kind: formula }` orders a kind's clues among the places the
+  shuffle gave that kind, a higher value of the formula of `at` hidden
+  first, read on the clues as dealt, so the board keeps the lowest
+  (Adjacent's givens with the fewest bars beside them, upstream's choice,
+  and `ordering` the fixture);
   `hideFrom: { kind: Tier }` keeps a kind whole on a board below that tier
   (`flanking` is the fixture); `hideWhole: { kind: { below: Tier, longer:
   { max: 5 } } }` hides every clue of a kind on a board below that tier and

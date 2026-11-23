@@ -97,6 +97,9 @@ export interface RungContext<F = unknown> {
    * under the implicit reading (or before a populate) what its regions leave a
    * cell with none (`impliedNotes`). */
   shown: ArrayLike<number>;
+  /** Every blank cell's notes as written on the walk's board: 0 where none
+   * are, whatever `shown` reads there. */
+  written: ArrayLike<number>;
   /** Whether a firing continues the plan's latest steps, as the frontier
    * judges it: what a rung that waits its turn may still offer early. */
   continues: (f: F) => boolean;
@@ -152,7 +155,11 @@ export interface NotesLadder<S extends CellMarks = CellMarks> {
 export function techniqueRung<M, H, Reason, S extends CellMarks = CellMarks>(
   on: NotesLadder<S>,
   id: string,
-  legs: (f: LadderFiring, shown: ArrayLike<number>) => Firing<M, H, Reason> | null,
+  legs: (
+    f: LadderFiring,
+    shown: ArrayLike<number>,
+    written: ArrayLike<number>,
+  ) => Firing<M, H, Reason> | null,
   { leads = false }: { leads?: boolean } = {},
 ): CandidateRung<M, H, Reason> {
   const entries = on.ladder.entries;
@@ -161,7 +168,7 @@ export function techniqueRung<M, H, Reason, S extends CellMarks = CellMarks>(
   if (!admits(entries[at], on.caps)) return () => [];
   const last = at > 0 && !leads;
   const bit = on.enc.bit ?? ((n: number): number => 1 << n);
-  return ({ populated, nothingEarlier, shown, continues }) => {
+  return ({ populated, nothingEarlier, shown, written, continues }) => {
     if (!populated && !leads) return [];
     const waits = last && !nothingEarlier;
     const m = on.marks();
@@ -176,7 +183,7 @@ export function techniqueRung<M, H, Reason, S extends CellMarks = CellMarks>(
     }
     const out: Firing<M, H, Reason>[] = [];
     for (const f of techniqueFirings(on.ladder, id, m)) {
-      const legged = legs(f, shown);
+      const legged = legs(f, shown, written);
       if (legged && (!waits || continues(legged))) out.push(legged);
     }
     return out;

@@ -1365,6 +1365,68 @@ export function dealOf(
     "};",
     ...(grow === null ? [] : growByOf(grow, env)),
     ...(oneKind === null ? [] : suitsOf(oneKind.json, env, measured, tiers)),
+    ...hideRankOf(
+      json,
+      env,
+      measured,
+      typeof hide === "string" ? [hide] : (hide ?? []),
+    ),
+  ];
+}
+
+/**
+ * `hideRank(sp, cl, kind, at)`: where the hide puts a clue of `kind` at
+ * `at`, by `deal.hideBy`'s formula of `at`: a higher one is hidden first.
+ * None where the deal states no formula.
+ */
+function hideRankOf(
+  json: DescriptionJson,
+  env: Env,
+  measured: (e: Expr) => Expr,
+  hidden: readonly string[],
+): string[] {
+  const by = json.deal?.["hideBy"];
+  if (by === undefined) return [];
+  if (typeof by !== "object" || by === null || Array.isArray(by))
+    throw new CompileError("deal hideBy: a formula of `at` by clue kind");
+  const scratch: string[] = [];
+  const henv = answerEnv(env, { yes: false }, scratch);
+  const lines: string[] = [];
+  for (const [kind, src] of Object.entries(by as Record<string, unknown>)) {
+    if (!hidden.includes(kind))
+      throw new CompileError(`deal hideBy: ${kind} is no kind the deal hides`);
+    if (typeof src !== "string")
+      throw new CompileError(`deal hideBy: ${kind}'s formula of \`at\``);
+    const sorts = env.clues.get(kind) as ClueKind;
+    const out = new Out(2);
+    const e = compileExpr(
+      measured(parse(src)),
+      new Map<string, Val>([["at", { code: "at", sort: sorts.at }]]),
+      henv,
+      out,
+    );
+    if (e.sort.k !== "int" && e.sort.k !== "num")
+      throw new CompileError(`deal hideBy: ${kind}'s formula is not a number`);
+    lines.push(
+      `  if (kind === ${JSON.stringify(kind)}) {`,
+      ...out.text(),
+      `    return Number(${e.code});`,
+      "  }",
+    );
+  }
+  const body = [...scratch.map((s) => `  ${s}`), ...lines, "  return 0;"];
+  return [
+    "",
+    "/** Where the hide puts a clue of `kind` at `at` (`deal.hideBy`): a higher",
+    " * one is hidden first. */",
+    `export function hideRank(${[
+      param("sp", "GridSpace", body),
+      param("cl", "Dealt", body),
+      param("kind", "string", body),
+      param("at", "number", body),
+    ].join(", ")}): number {`,
+    ...body,
+    "}",
   ];
 }
 

@@ -41,8 +41,8 @@ even clue SHALL require all four digits to be even and an odd clue all four to b
 
 ### Requirement: Rules: Mathrax's mistake check re-solves from its givens and clues
 
-Mathrax's `findMistakes` SHALL judge the board against the answer it re-solves
-from the given digits and the clues.
+Mathrax's `findMistakes` SHALL judge the board against its one answer, which
+its givens and clues decide (`described-fill-game`).
 
 #### Scenario: A wrong digit that breaks no rule
 
@@ -52,29 +52,29 @@ from the given digits and the clues.
 
 ### Requirement: Params: Mathrax refuses to deal with no clue type enabled
 
-`validateParams` SHALL refuse, when validating for generation, a parameter set
-with no clue type enabled.
+A full parameter set with no clue type enabled, which only the Custom dialog
+can make since a params string with no letter means all six, SHALL be
+refused.
 
 #### Scenario: Every clue type unchecked
 
-- **WHEN** a parameter set with all six clue types off is validated for
-  generation
+- **WHEN** a parameter set with all six clue types off is validated in full
 - **THEN** it is refused: "At least one clue type must be enabled."
 
 ### Requirement: Params: Mathrax offers only the difficulties a size can support
 
-Mathrax SHALL refuse to *generate* a size-3 board at Normal or at the top tier,
-because a 3×3 grid's four intersections cannot separate those tiers from their
-neighbors. The refusal SHALL name the tiers from the game's tier list, as the
-difficulty menu does. Size 3 at Tricky SHALL be unaffected.
+When a board is to be dealt, a size-3 board at Normal or Unreasonable SHALL
+be refused, in the collection's sentence for a size that has no board of the
+tier, because a 3×3 grid's four corners cannot separate those tiers from
+their neighbors. A size-3 board at Easy or Tricky SHALL be dealt, and a
+size-3 board of any tier that arrives with its desc SHALL load.
 
 #### Scenario: An unsupported size and tier are refused
 
-- **WHEN** a full parameter set requesting size 3 at Normal or the top tier is
-  validated
-- **THEN** it is rejected with a message naming the size, and Normal and the
-  top tier exactly as the difficulty menu does
-- **AND** the same parameters validate successfully when a description is supplied
+- **WHEN** a board of `3dn` or `3dr` is to be dealt
+- **THEN** it is refused: "No 3x3 puzzle is Normal." or "No 3x3 puzzle is
+  Unreasonable."
+- **AND** a board of `3dt` is dealt
 
 ### Requirement: Params: Mathrax's params are the size, a tier letter and the clue-type letters
 
@@ -137,11 +137,12 @@ empty intersections. Encoding and decoding SHALL be exact inverses.
 
 ### Requirement: Description: Mathrax's reading of a description refuses a malformed one
 
-The reading `newState` builds a board from SHALL refuse a description whose
-grid part carries more squares than the grid holds, that contains a digit
-larger than the grid size, that uses an unknown character, that names an
-unknown clue or a clue number outside what that clue can show on a board of
-that size, or whose grid or clue part stops short of covering the grid.
+The reading of the desc SHALL refuse one whose grid part carries more
+squares than the grid holds, that contains a digit larger than the grid
+size, that uses an unknown character, that names an unknown clue or a clue
+number outside what that clue can show on a board of that size, whose grid
+or clue part stops short of covering the grid, or whose givens and clues
+have no answer or more than one.
 
 #### Scenario: An out-of-range digit is rejected
 
@@ -157,8 +158,12 @@ that size, or whose grid or clue part stops short of covering the grid.
 #### Scenario: A quotient of 1 is rejected
 
 - **WHEN** a description carries a division clue of 1
-- **THEN** it is rejected, because two equal cells are shown by the `=` clue,
-  which is a difference of 0
+- **THEN** it is rejected, because two equal cells are shown by the `=` clue
+
+#### Scenario: A board with several answers is rejected
+
+- **WHEN** upstream's Unreasonable `4dr:p,i`, no given and no clue, is read
+- **THEN** it is refused as having more than one answer
 
 ### Requirement: Description: A Mathrax description spells a run in lowercase and a clue in uppercase
 
@@ -184,22 +189,24 @@ alone. The equality clue SHALL be written `S0`.
 
 #### Scenario: A run longer than the alphabet
 
-- **WHEN** a size-6 board with no given and no clue is written
-- **THEN** the description is `zj,y`: 26 and 10 empty squares, then 25 empty
-  intersections
+- **WHEN** `zj,y` is read at size 6
+- **THEN** it reads as 26 and 10 empty squares, then 25 empty intersections,
+  and is refused only for having more than one answer
 
 ### Requirement: Description: A Mathrax clue number is one that two digits of the board can make
 
-On a board of size `o`, the reading SHALL accept a sum from 2 to 2`o`, a
-difference from 0 to `o`−1, a product from 1 to `o`², and a quotient from 2 to
-`o`, and SHALL refuse any other. It SHALL refuse an arithmetic clue with no
-number, an `E` or `O` followed by one, a description with no `,` after the
-last square, and anything after the last intersection.
+On a board of size `w`, the reading SHALL accept a sum from 2 to 2`w`, a
+difference from 0 to `w`−1, a difference of 0 being the equality clue, a
+product from 1 to `w`², and a quotient from 2 to `w`, and SHALL refuse any
+other. It SHALL refuse an arithmetic clue with no number, an `E` or `O`
+followed by one, a description with no `,` after the last square, and
+anything after the last intersection.
 
 #### Scenario: The largest number of each kind on a size-3 board
 
 - **WHEN** `i,A6S2M9D3` is read at size 3
-- **THEN** it loads, with the clues `6+`, `2−`, `9×` and `3÷`
+- **THEN** each number is in range, and the board is refused only because its
+  clues contradict each other
 
 #### Scenario: A difference the digits cannot reach
 
@@ -229,14 +236,34 @@ cell only the digits every clue at its corners permits, given the candidates of
 the cell across that clue. Easy SHALL read an arithmetic clue only when the cell
 across it is down to one digit. Easy and Normal SHALL act only where one digit
 is left; Tricky SHALL strike all that is ruled out. Normal SHALL add the
-set elimination, Tricky the harder one and the wing, and Unreasonable
-forcing chains and guess-and-verify.
+set elimination, and Tricky the harder one and the wing. Unreasonable
+SHALL need the search.
 
 #### Scenario: The solver solves a generated board
 
 - **WHEN** a generated board is solved
 - **THEN** the returned grid is the board's unique Latin-square solution and satisfies
   every clue
+
+### Requirement: Generation: A Mathrax corner deals the first clue its answer makes there
+
+At each corner the deal SHALL derive the first kind, of those the params
+switch on, that the answer's two diagonal pairs make there, in upstream's
+order: a sum, a difference other than 0, equality, a product, a ratio other
+than 1, then even or odd. It SHALL then hide the givens first and the clues
+after, each while the board still finishes at its tier, so an Easy board
+keeps some clues as upstream's does.
+
+#### Scenario: Four odd digits that add alike
+
+- **WHEN** a corner's pairs are all odd and add to the same number, with
+  every kind switched on
+- **THEN** the corner's clue is the sum, not `O`
+
+#### Scenario: An Easy board shows clues
+
+- **WHEN** 5x5 Easy boards are dealt
+- **THEN** each keeps a few givens and some corner clues, not givens alone
 
 ### Requirement: Solver: Mathrax's ladder is its description
 
@@ -289,13 +316,11 @@ marks of the rest of its row and column.
 
 ### Requirement: Hint: Mathrax's hint plan is the shared candidate-elimination walk
 
-The plan SHALL be built by the shared candidate-elimination walk over Mathrax's
-row and column regions (`engine-candidate-hints`, "A row/column Latin square
-answers no question its regions already settle"); a clue is not a region.
-Mathrax SHALL start on the
-reading that pencils in only the notes a deduction needs, because a clue reads
-the cell across it and the rest is singles, so a plan writes notes into few
-cells.
+The plan SHALL be the fill board's candidate walk over Mathrax's row and
+column regions (`described-fill-game`, `engine-candidate-hints`); a clue is
+not a region. Mathrax SHALL start on the reading that pencils in only the
+notes a deduction needs (`play.hintNotes`), because a clue reads the cell
+across it and the rest is singles, so a plan writes notes into few cells.
 
 #### Scenario: A hint with no Ui pencils in only what it needs
 
@@ -318,10 +343,11 @@ strikes in one cell, saying the clue, and a firing SHALL be one step.
 ### Requirement: Hint: A clue step names its clue and what lies across it
 
 A clue step's sentence SHALL name the clue as the board draws it and state the
-operation in words. Whether it names a digit across the clue SHALL be decided by
-the working board and not by the technique's firing: it SHALL say so only
-when a digit is written there, and otherwise SHALL speak of what is still open
-across the clue.
+operation in words. Whether it names a digit across the clue SHALL be decided
+by the board the step is read on, as the description states it (`known` and
+`value` of the cell across the corner): it SHALL say so only when a digit is
+written there, and otherwise SHALL speak of what is still open across the
+clue. A clue's number SHALL be said as a number, never as a value's glyph.
 
 #### Scenario: A clue read against a digit across it names that digit
 
@@ -388,9 +414,9 @@ surface, unless it repeats in its row or column.
 ### Requirement: Look: A Mathrax clue is a lifted disc with a ring and a label in ink
 
 A clue SHALL be a disc in the lifted surface's color with a ring and a label in
-ink, so a clue reads as the puzzle's own in both schemes. The quarter of a clue
-in a cell whose digit contradicts it is excepted: its disc and ring take the
-error colors.
+ink, where the four squares meet, so a clue reads as the puzzle's own in both
+schemes. A clue the board breaks is excepted: its ring and label take the
+error color.
 
 #### Scenario: A clue is drawn as the puzzle's own
 
@@ -401,17 +427,16 @@ error colors.
 ### Requirement: Look: Mathrax draws in red where the board breaks a rule
 
 The renderer SHALL draw in the error color, always and with no mistake check
-asked for, each entered digit that repeats in its row or column, and, in each
-cell where a corner clue is broken, that cell's quarter of the clue
-(`Game.rules`): a clue is broken at a cell when no digit the cell across it
-could hold, or holds, makes the clue with the cell's own.
+asked for, each entered digit that repeats in its row or column, and each
+corner clue the board breaks (`Game.rules`): a clue is broken when no digit
+the cell across it could hold, or holds, makes the clue with a cell's own.
 
 #### Scenario: A digit nothing across its clue pairs with
 
 - **WHEN** the player enters a digit that no digit of the board's size, across
   a clue, makes that clue with
-- **THEN** the clue's quarters in that cell and in the open cell across it are
-  drawn red
+- **THEN** the clue's ring and label are drawn red, whole, not a quarter in
+  each cell
 
 #### Scenario: A repeated digit
 

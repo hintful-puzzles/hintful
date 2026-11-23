@@ -129,6 +129,11 @@ deal:
   tier: one of the tiers
   sample: { latin: true }
   hide: given
+  # Upstream adds a given where fewest bars sit beside it, and so keeps
+  # givens that say least: a board needs its tier more often. Hidden at
+  # random, a 5x5 Hard deal drew 2.6 boards for each of upstream's that the
+  # tier below finished (2026-11-23).
+  hideBy: { given: "count(b in adj4(at) where clue(bar, edge(at, b)) = 1)" }
 # A record a cell, upstream's: its given number or 0, then the letters URDL
 # of its bars, each written from both its cells, and a comma.
 id:

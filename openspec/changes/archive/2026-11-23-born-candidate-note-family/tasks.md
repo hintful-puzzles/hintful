@@ -546,12 +546,12 @@ commit. In design.md § "Decisions" 7's order.
 
 ## 3. Finish
 
-- [ ] 3.1 The figures of `docs/descriptions.md` § "Judging a family moved
+- [x] 3.1 The figures of `docs/descriptions.md` § "Judging a family moved
       onto its description", per game, with `npm run compare-cost` against
       a worktree of this change's baseline, recorded in design.md.
       Recorded 2026-11-23 in design.md § "The figures (3.1)": lines,
       cost, steps. Open:
-  - [ ] 3.1a The deal fixed in the engine (criterion 4): Adjacent 5x5
+  - [x] 3.1a The deal fixed in the engine (criterion 4): Adjacent 5x5
         Hard deals at a median of about 420 ms under vitest against 110 at
         the baseline, every seed past the bar; Unequal 5x5 Tricky and 7x7
         Hard and Towers 5x5 Hard cross it in their slowest seed. All four
@@ -564,17 +564,27 @@ commit. In design.md § "Decisions" 7's order.
         cost a run), fix it in the engine, and measure the four presets
         bundled (the least of several runs, as the criterion says), each
         board under 100 ms or no worse than the baseline's.
-  - [ ] 3.1b The steps (criterion 5): Unequal 2348 / 2367 and Towers
+        Done (design.md § "The figures (3.1)"): bundled, only Adjacent's
+        Hard was over. The asked tier halves before trying each clue, and
+        `deal.hideBy` (tested on `ordering`, seen to fail planted) lets
+        Adjacent keep the givens with fewest bars beside them, as upstream
+        does. Every preset's median is under 100 ms; a few Adjacent Hard
+        seeds still pass it, as one baseline 7x7 Hard seed does.
+  - [x] 3.1b The steps (criterion 5): Unequal 2348 / 2367 and Towers
         2627 / 2659 are more, so a hint does less somewhere; find the rung
         and fix it in the engine, or explain it. Seismic's 3319 / 3174 is
         fewer, to be explained. Criterion 3, the share of each flip's
         needs met by what was built, is to be read off the gap list
         (design.md § "The gap list (1.1)") and recorded beside the rest.
+        Done: Towers' were sets shown a cell a press, now one leg over the
+        cells with notes written (`byWrittenCell`, `RungContext.written`);
+        Unequal's are the walk's path, explained; Seismic's are its areas
+        of one and `regionsFull`; criterion 3 recorded.
 - [x] 3.2 Update `docs/descriptions.md`, `docs/hints-candidates.md` and
       `docs/new-game.md` for what the family added. Done: the keypad's
       reach to the board in play, the 31-square bound and a fixed part of
       one; the walk's rungs; the family in new-game's born section.
-- [ ] 3.3 Commit, push, archive; file the successor with the rest of the
+- [x] 3.3 Commit, push, archive; file the successor with the rest of the
       family and its open question (design.md § "Open Questions"); mark the
       route's task 1.2 with the figures' place and add the successor
       beneath it.

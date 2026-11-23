@@ -1,5 +1,5 @@
-4x4 Normal #0: 24 steps, solved, f7513ed048db7462 [dup:3 hiddenSingle:2 note:3 regionsFull:7 sign:5 single:4]
+4x4 Normal #0: 20 steps, solved, 61e8702128940c43 [dup:2 hiddenSingle:1 note:2 regionsFull:7 sign:5 single:3]
 5x5 Easy #0: 18 steps, solved, f94ab616ba9124c0 [hiddenSingle:1 regionsFull:17]
-5x5 Tricky #0: 33 steps, solved, 66ba63bdfb7969b5 [dup:6 hiddenSingle:2 note:4 regionsFull:7 set:2 sign:5 single:7]
-5x5 Hard #0: 47 steps, solved, 960bffc5b9f7bae5 [dup:8 hiddenSingle:2 note:5 regionsFull:9 sign:13 single:9 wing:1]
+5x5 Tricky #0: 41 steps, solved, 2ae07f7c51a11162 [dup:7 hiddenSingle:2 note:3 regionsFull:11 set:2 sign:9 single:7]
+5x5 Hard #0: 46 steps, solved, 738ce8946d5d9cea [dup:9 note:8 regionsFull:3 set:3 sign:7 single:14 wing:2]
 7x7 Unreasonable #0: 25 steps, Nothing further follows by deduction here. This board's difficulty allows positions that need trial and error: save a checkpoint, try one, and undo if it breaks., 4b58036af74dc4a6 [hiddenSingle:1 note:6 regionsFull:2 sign:15 single:1]

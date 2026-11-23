@@ -276,6 +276,7 @@ export class CandidateWalk<
           nothingEarlier: aiming || nothingEarlier,
           populated: this.setUp.done(),
           shown: this.shown,
+          written: plan.pencil,
           continues: (f) => aiming || frontier.continues(this.premise(f)),
         });
         if (offered.length > 0) nothingEarlier = false;
@@ -479,6 +480,7 @@ export class CandidateWalk<
           nothingEarlier: true,
           populated: true,
           shown: this.shown,
+          written: pencil,
           continues: () => true,
         });
         return offered.map((g) => {

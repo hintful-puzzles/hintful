@@ -437,7 +437,83 @@ Seismic's slow tails are gone (7x9 Tectonic Hard 37 ms against 1,387;
 6x8 Tectonic Hard 82 against 1,948). Keen and Mathrax are as they were.
 Unequal takes 19 more steps and Towers 32 more, which criterion 5 needs
 explained or fixed, and Seismic 145 fewer, which it needs explained.
-Tasks 3.1a and 3.1b hold what is open.
+
+**The deal, fixed (3.1a).** Measured again on the bundle, as the criterion
+says, and not under vitest (CPU time, the least of three runs a seed,
+twelve seeds): Unequal was never over the bar there (its slowest preset
+7x7 Hard, median 22 ms), nor Towers but one 6x6 Hard seed (214 ms).
+Adjacent's Hard was: 5x5 a median of 172 ms against the baseline's 26,
+every seed past 100, and 7x7 114 against 17. Counted per deal (5x5 Hard,
+40 seeds): 475 draws, each trying its 25 givens one at a time at Hard, 26
+solves a draw; the baseline 175 draws of 5 solves. Two causes, both fixed
+in the engine:
+
+- **The asked tier tried every clue one at a time.** A kind the lowest
+  tier reads none of (every given, on a board shown every given) reaches the
+  asked tier whole, and the halving search for the shortest run ran only at
+  the lowest. The asked tier halves too now (`deal.ts`'s `hideUpTo`): 7 solves
+  a draw, and across every game that hides, Boats' 10x10 Hard 99 to 49 ms
+  and Towers' 6x6 Hard tail 214 to 45, Unequal 5x5 Tricky 32 to 41 and
+  Sticks' 5x5 Unreasonable 12 to 27 the only rises, each far under the bar.
+- **The born hide kept fewer givens, which the tier below finished more
+  often.** Both trees grade every board alike (40 of each tree's 5x5 Hard
+  deals, each Hard in both, and none with a given to spare), so the ladders
+  agree; the baseline's boards keep 2 or 3 givens, the born ones 1, and the
+  draws differed for that. Upstream adds a given where its cell is most
+  open, ties to the cell with the fewest bars beside it, and that tie-break
+  was what mattered: a most-open choice alone, transposed as upstream's
+  cube read is, or at random, all kept 1 given and drew 400 to 520 times.
+  The capability is `deal.hideBy` (a formula of `at` by kind; a higher value
+  hidden first, the kinds left mixed as the shuffle put them), which
+  Adjacent states as the bars beside a given, and `ordering` tests.
+
+Adjacent after (bundled, twelve seeds, baseline / born): 5x5 Hard a median
+of 26 / 51 ms, slowest 88 / 135; 7x7 Hard 17 / 51, slowest 116 / 198;
+7x7 Unreasonable 15 / 10. Every median is under the bar. The draws are
+still 1.2 times the baseline's (209 against 175 on 40 seeds), each
+costing about as much, and a draw is a geometric wait: one 5x5 seed in
+twelve and three 7x7 pass 100 ms, as one of the baseline's 7x7 does. An
+early refusal was measured and dropped: the tier below finishes the
+shortest run on 190 of 191 draws, and on 40% of the boards kept.
+
+**The steps (3.1b)**, walked on the baseline's boards in both trees; a plan
+is the walk to the end, so a step is a press of Hint:
+
+- **Towers' 32 more were sets shown a cell a press.** The born walk cut
+  every library strike by cell (`byCell`), where the hand-written hint
+  struck a set in one step: 13 steps became 44. Under the implicit reading
+  a cut by cell is right for a cell with no notes, whose step then writes
+  its values left (Mathrax's notes fell 139 to 77 for it); for one with
+  notes it only adds a press. The rung's context now carries the notes
+  written (`RungContext.written`), and the born walk cuts a library strike
+  into one leg over the written cells and one a cell over the rest
+  (`byWrittenCell`). Towers 2,627 / 2,625; Adjacent 2,001 / 1,973; Keen
+  3,854 / 3,823; Mathrax 2,528 / 2,514.
+- **Unequal's are the walk's path, not a step doing less**: 2,348 / 2,359
+  after the fix, 13 boards fewer and 10 more. Each `sign` step strikes one
+  cell as `greater` and `lesser` did; two 7x7 Tricky boards take 23 and 14
+  more, where the born walk strikes signs across the board (37 steps)
+  before its first single and the hand-written one found one after 6, one
+  sign rung's firings being chosen where two rungs' were.
+- **Seismic's 145 fewer**: an area of one is placed from the deal (51
+  `singleton` steps), and the born walk places a number its area or line
+  leaves alone as `regionsFull` (895 to 938) where the hand-written one
+  struck the placed numbers first (`dup` 294 to 269, `note` 332 to 250,
+  `single` 313 to 274).
+
+**3. What earlier flips built is used**, read off the gap list (§ "The gap
+list (1.1)") and its § "Shared" table: Unequal met none of its needs, being
+the first, and built the notes layer every later flip met. Adjacent met
+nearly all of its own (edges, the gapped grid, done marks) and added the
+records from both ends and the legacy letter. Keen, Towers and Seismic each
+brought a clue universe or deal of their own (parts and the block
+structure; slots, the hide from a tier up and the tower painter; a
+partition dealt first and a bare-letter ruleset), so their share dips
+where the universe is new; Mathrax met its one-kind-an-element from Keen
+and built corners. The share does not rise along the order: it rises
+within a universe and falls at each new one, which is what the successor's
+order should weigh (Solo on Keen's and Seismic's pieces, Salad and Group
+on Towers').
 
 **6. A new game** is skipped: this family moves six games, and the next
 group's first born game measures the kind.

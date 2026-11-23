@@ -30,26 +30,41 @@ and keep-apart rule is satisfied.
   satisfied
 - **THEN** the game is reported solved
 
+### Requirement: Rules: An area of one shows its 1 from the start
+
+A cell whose area is itself alone SHALL hold its 1 from the deal, placed as
+a given is and changed by no edit, and the game ID SHALL NOT write it, so an
+upstream ID reads and writes back byte for byte.
+
+#### Scenario: Upstream's 4x4 with two areas of one
+
+- **WHEN** `4x4de:11bafa,d4c1f3` is opened
+- **THEN** its second and fourth squares of the top row show 1, and its ID
+  writes back unchanged
+
 ### Requirement: Params: A preset is never a long wait
 
-A preset SHALL NOT be a size whose worst observed run is a long wait: it is
-offered to everyone who opens the Type menu, so a long generation there is a
-wait nobody chose, whereas a Custom size is a wait the player asked for, and
-a slow Custom size SHALL be accepted. Every preset SHALL be no larger than
-`MAX_PRESET_CELLS`, the largest area whose worst observed run is short, in
-either mode, and a test SHALL assert this.
+A preset SHALL NOT be a size whose worst observed deal is a long wait: it is
+offered to everyone who opens the Type menu, so a long deal there is a wait
+nobody chose, whereas a Custom size is a wait the player asked for, and a
+slow Custom size SHALL be accepted. The menu SHALL offer 4x4, 6x6, 6x8 and
+7x9, each in both modes at both tiers, with 6x6 Seismic at Easy the default.
 
 #### Scenario: A size whose worst case is a long wait is kept out of the menu
 
 - **WHEN** presets are enumerated
-- **THEN** none of them is a size whose generation tail runs to tens of seconds,
-  whatever the Custom dialog admits
+- **THEN** the largest is 7x9, in either mode, whatever the Custom dialog
+  admits
 
 #### Scenario: The largest preset may take a moment
 
-- **WHEN** an 8×8 preset is dealt, in either mode
-- **THEN** it is offered, though its slowest deal is seconds and not an instant,
-  since no observed deal of that area is a long wait
+- **WHEN** the Type menu is opened
+- **THEN** 7x9 is offered in both modes at both tiers
+
+#### Scenario: A large Custom board is dealt however long it takes
+
+- **WHEN** a 20x20 board is asked for, in either mode
+- **THEN** its params are accepted
 
 ### Requirement: Params: A Seismic params string with no mode is Seismic, and with no difficulty Easy
 
@@ -91,15 +106,23 @@ and a digit `1` to `9` one given.
 ### Requirement: Description: A Seismic description is validated against its regions
 
 Validation SHALL reject a description that uses an unknown clue character,
-that forms a region larger than nine cells, or that places a clue larger than
-its region's size. It SHALL also reject a clue of 0, and a clue list that
-does not cover the board exactly, and SHALL otherwise accept a description of
-the two comma-separated parts.
+that forms an area of more squares than a cell's numbers reach (31), or that
+places a clue larger than its area's size. It SHALL also reject a clue of 0,
+and a clue list that does not cover the board exactly, and SHALL otherwise
+accept a description of the two comma-separated parts, the clue list left out
+included. An area of ten to 31 squares, which upstream refused because its
+notes stopped at nine, SHALL be read.
 
 #### Scenario: An over-large clue is rejected
 
-- **WHEN** a description whose clue exceeds the size of its region is validated
-- **THEN** it is rejected as an over-large clue
+- **WHEN** a description whose clue exceeds the size of its area is validated
+- **THEN** it is rejected as out of range
+
+#### Scenario: An area past what a cell holds is rejected
+
+- **WHEN** an 8x4 description with no wall inside, one area of 32 squares, is
+  validated
+- **THEN** it is rejected as out of range
 
 ### Requirement: Generation: Seismic solves by candidate elimination, graded Easy or Normal
 
@@ -151,19 +174,23 @@ takes no pencil mark.
 
 ### Requirement: Controls: The on-screen keypad offers only digits a board can accept
 
-Seismic's `requestKeys` SHALL offer the digits up to the largest region the
-generator produces in the mode, plus a clear key: entry is capped at the
-pressed cell's region size, so a digit no generated board accepts is a key that
-does nothing. The panel SHALL derive that bound from the generator's own size
-distribution and SHALL NOT restate it as a literal. The bound SHALL be the
-generator's, not the format's, which admits larger regions than the generator
-produces.
+Seismic's keypad SHALL offer the digits up to the largest area the deal
+draws in the board's mode, plus a clear key: entry is capped at the pressed
+cell's area size, so a digit no dealt board accepts is a key that does
+nothing. Where the board in play, from a game ID dealt elsewhere, has a
+larger area, the keypad SHALL reach that area's size. The bound SHALL be read
+from the sizes the description deals, never restated.
 
 #### Scenario: Widening the generator widens the panel
 
-- **WHEN** the generator's region-size distribution is changed to admit a larger
-  region
+- **WHEN** the description's drawn sizes admit a larger area
 - **THEN** the keypad admits the corresponding digits
+
+#### Scenario: An upstream board with an area of six
+
+- **WHEN** upstream's `6x6de:2c1aa4aaa6bb4aba2a1aba3a,g2b5l3l`, whose largest
+  area is six squares, is opened
+- **THEN** the keypad offers 1 to 6, where a dealt 6x6 board's offers 1 to 5
 
 ### Requirement: Controls: A Seismic digit above its region's size, or on a fixed clue, is refused
 
@@ -248,20 +275,22 @@ cell's notes still hold that answer.
 
 ### Requirement: Hint: The deductions the hint makes
 
-The hint SHALL deduce: an empty area of one cell can only hold a 1; a cell with
-one candidate left can only hold it; a number with one cell left in its area
-must go there, unless that cell's candidates are down to it already, which is
-the previous deduction; and a number is struck from every cell outside an area
-that clashes, under the mode's keep-apart rule, with every cell the area still
-has for it. The last SHALL be taken only when no other applies.
+The hint SHALL deduce: a cell with one candidate left can only hold it; a
+number with one cell left in its area must go there, unless that cell's
+candidates are down to it already, which is the previous deduction; and a
+number is struck from every cell outside an area that clashes, under the
+mode's keep-apart rule, with every cell the area still has for it. The last
+SHALL be taken only when no other applies. An area of one has its 1 placed
+as the board is dealt, so no step places it.
 
 #### Scenario: An area starved of a number rules it out of every cell that clashes with all its homes
 
 - **WHEN** every cell an area still notes for 3 lies within 3 cells, along a row
   or column, of a cell outside the area that also notes 3, and a hint is requested
   at that point in Seismic mode
-- **THEN** the step strikes 3 from every such cell at once, rings those cells,
-  hatches the area, and says the area can put its 3 only within that reach of them
+- **THEN** the plan strikes 3 from each such cell, a step a cell, ringing the
+  cell, hatching the area, and saying each cell the area has left for its 3
+  is in line with that cell and within 3 of it
 
 #### Scenario: A number's last home that has one candidate left is a one-candidate step
 
@@ -272,11 +301,12 @@ has for it. The last SHALL be taken only when no other applies.
 
 ### Requirement: Hint: The starved-area deduction is the solver's trial rung
 
-The starved-area deduction is the solver's trial rung in the form a player can
-see: it SHALL strike exactly the candidates the trial rung rejects wherever it
-is the next step, and every cell ruled out by one area and one number SHALL be
-one step. It is a Check, so it SHALL be narrated directly. It SHALL never be
-needed on an Easy board, whose certification uses the singles alone.
+The starved-area deduction is the solver's trial rung in the form a player
+can see: it SHALL strike exactly the candidates the trial rung rejects
+wherever it is the next step, and every cell ruled out by one area and one
+number SHALL be one firing, told a cell at a time. It is a Check, so it SHALL
+be narrated directly. It SHALL never be needed on an Easy board, whose
+certification uses the singles alone.
 
 #### Scenario: An Easy board is never taught the trial
 
@@ -312,8 +342,8 @@ in Tectonic mode.
 
 - **WHEN** a step writes the notes of a cell no placed number rules anything
   out of
-- **THEN** it says "No number stands near enough to rule one out here yet, so
-  pencil in every one."
+- **THEN** it says "No number stands near enough to rule one out of this cell
+  yet, so pencil in every one."
 
 ### Requirement: Look: Seismic draws its numbers, its notes and a broken rule
 

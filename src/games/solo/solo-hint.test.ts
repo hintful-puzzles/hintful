@@ -298,6 +298,7 @@ function* killerReasons(
       ops: [],
       populated: true,
       shown,
+      written: shown,
       continues: () => true,
     };
     for (const rung of soloRungs<SoloMove, unknown>(st, grid))

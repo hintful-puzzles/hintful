@@ -32,7 +32,9 @@ directory SHALL hold no TypeScript but its tests.
 order across them, each kept hidden while the ladder finishes the board.
 With `deal.hideFirst`, every clue of the kinds it names SHALL instead be
 tried at each tier before any clue of the rest, each side in a random
-order. `deal.stripFrom: everyClue` SHALL start every draw of a search tier from
+order. With `deal.hideBy`, a kind's clues SHALL take the places the shuffle
+gave that kind in the order of the stated formula of `at`, the higher
+first, those alike in a random order. `deal.stripFrom: everyClue` SHALL start every draw of a search tier from
 every clue, not from a board hidden at the lowest tier that finishes it.
 
 #### Scenario: Sticks hides lengths and block numbers together
@@ -46,6 +48,13 @@ every clue, not from a board hidden at the lowest tier that finishes it.
   first (`hideFirst: [given]`)
 - **THEN** it shows fewer givens and more sums than the same deal in one
   random order
+
+#### Scenario: Larger givens go first
+
+- **WHEN** `ordering` boards are dealt at Normal, its givens ranked by
+  their numbers (`hideBy: { given: "clue(given, at)" }`)
+- **THEN** the givens they keep are smaller than the same deals hiding at
+  random keep
 
 #### Scenario: Squares go first at the lowest tier too
 

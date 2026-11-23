@@ -36,9 +36,9 @@ clue and no Latin constraint.
 
 ### Requirement: Rules: Towers' mistake check re-solves from its clues and givens
 
-Towers' `findMistakes` SHALL judge the board against the answer it re-solves
-from the clues and givens. A wrong tower and a note set that lacks its height
-SHALL render as the same red cell overlay.
+Towers' `findMistakes` SHALL judge the board against its one answer, which
+its clues and givens decide (`described-fill-game`). A wrong tower and a note
+set that lacks its height SHALL render as the same red cell overlay.
 
 #### Scenario: A wrong tower that breaks no rule
 
@@ -49,12 +49,12 @@ SHALL render as the same red cell overlay.
 
 ### Requirement: Params: A Towers params string is its declared codec's, and one with no difficulty is Easy
 
-Towers' params, a grid size and a difficulty, and their encoding SHALL be
-those its `paramConfig` and its declared codec give (`engine-params`, "A game
-declares its params encoding once, and both codec halves are derived"), with
-no departure from the codec grammar. A params string that carries no
-difficulty SHALL decode to Easy. Easy, Normal, Tricky and Unreasonable SHALL
-be held in `diff` as `"easy"`, `"hard"`, `"extreme"` and `"unreasonable"`.
+Towers' params, a grid size and a tier, and their encoding SHALL be those its
+description states (`described-fill-game`), with no departure from the codec
+grammar. The tier letters SHALL be `e`, `h`, `x` and `u` for Easy, Normal,
+Tricky and Unreasonable, upstream's. A params string that carries no tier
+SHALL decode to Easy. The menu SHALL offer 4×4, 5×5 and 6×6 at every tier,
+and the default board SHALL be 5×5 Easy.
 
 #### Scenario: The tier letters are not the tiers' initials
 
@@ -64,14 +64,15 @@ be held in `diff` as `"easy"`, `"hard"`, `"extreme"` and `"unreasonable"`.
 
 ### Requirement: Params: A 3×3 Towers is not dealt above Normal
 
-When a board is to be generated, `validateParams` SHALL refuse a 3×3 board
-above Normal.
+When a board is to be dealt, a 3×3 board at Tricky or Unreasonable SHALL be
+refused, in the collection's sentence for a size that has no board of the
+tier, because no 3×3 board needs more than Normal.
 
 #### Scenario: A 3×3 Tricky is asked for
 
-- **WHEN** `3dx` or `3du` is validated for a board that is to be generated
-- **THEN** it is refused as a tier no 3×3 puzzle has
-- **AND** the same params are accepted when a description comes with them
+- **WHEN** a board of `3dx` is to be dealt
+- **THEN** it is refused: "No 3x3 puzzle is Tricky."
+- **AND** a board of `3dh` is dealt
 
 ### Requirement: Description: Towers descriptions encode edge clues and grid givens
 
@@ -90,15 +91,21 @@ givens that stand next to each other.
 
 ### Requirement: Description: Towers' reading of a description refuses a malformed one
 
-The reading of the desc that `newState` builds from SHALL refuse the wrong
-number of clue fields, a clue out of `1..w`, an out-of-range given, grid data of
-a length other than `w²`, and a `_` anywhere but between two adjacent givens.
+The reading of the desc SHALL refuse the wrong number of clue fields, a clue
+out of `1..w`, an out-of-range given, grid data of a length other than `w²`,
+a `_` anywhere but between two adjacent givens, and clues and givens that
+have no answer or more than one.
 
 #### Scenario: Malformed description is rejected
 
 - **WHEN** a desc with too few clue fields, or a grid of the wrong length, is
   read
 - **THEN** it is refused with an error and no state is built
+
+#### Scenario: Two facing clues of the grid size
+
+- **WHEN** a 4×4 desc has 4 at both ends of a row
+- **THEN** it is refused as contradictory, since both ends would hold height 1
 
 ### Requirement: Generation: Each Towers tier adds deductions to the one below
 
@@ -116,20 +123,24 @@ forcing chains and a guess that is verified.
 
 ### Requirement: Generation: An Easy Towers board keeps every clue
 
-An Easy board SHALL keep every one of its `4w` edge clues; above Easy the
-generator SHALL remove clues as well as grid givens, for as long as the board
-stays solvable at that difficulty.
+An Easy board SHALL keep every one of its `4w` edge clues, and an Easy board
+of up to 5×5 SHALL show no given, as upstream's; a deal whose clues alone do
+not finish at Easy SHALL be drawn again. Above Easy the deal SHALL hide grid
+givens first and then clues, each while the board stays solvable at its
+tier.
 
 #### Scenario: An Easy board and a Normal one
 
-- **WHEN** a board is generated at Easy
-- **THEN** every one of its `4w` clue fields holds a number
-- **AND** a board generated above Easy may leave clue fields empty
+- **WHEN** a 5×5 board is dealt at Easy
+- **THEN** every one of its `4w` clue fields holds a number and no square
+  holds a given
+- **AND** a board dealt above Easy may leave clue fields empty
 
 ### Requirement: Solver: Towers' ladder is its description
 
-Towers' solver SHALL run the ladder of `towers.description.yaml`: the facing
-pairs, the clue bounds and the arrangements it states and the Latin library's
+Towers' solver SHALL run the ladder of `towers.description.yaml`: the full
+line, the tallest nearest and the facing pairs, which place towers; the clue
+bounds and the arrangements, which strike heights; and the Latin library's
 it places, each at the tier the description gives it, checked sound against
 the description's rules, a Latin square whose clues count the towers seen
 along their lines. The search above them stays the engine's.
@@ -147,7 +158,7 @@ along their lines. The search above them stays the engine's.
 
 - **WHEN** no filling of a clue's line from its cells' candidates, every
   height once, that shows the clue's count puts a height in a cell, at a cap
-  of Hard or above
+  of Normal or above
 - **THEN** the solver strikes that height from that cell, in a firing of its
   own for the cell, recorded with the clue
 
@@ -178,13 +189,15 @@ mode no key SHALL change a cell that holds a tower.
 
 ### Requirement: Controls: An outside clue is struck through by a click or a modified cursor key
 
-A click on an outside clue, or a cursor key held with Shift or Ctrl that points
-onto one, SHALL toggle that clue's struck-through ("done") state.
+A press on an outside clue, a drag across outside clues, or a cursor key held
+with Shift or Ctrl that points onto one, SHALL toggle that clue's
+struck-through ("done") state, as every born game's clue marked done
+(`described-fill-game`).
 
 #### Scenario: Clue strike toggles
 
 - **WHEN** the player clicks an outside clue
-- **THEN** `executeMove` toggles that clue's done flag
+- **THEN** that clue's done flag is toggled, and it is drawn gray
 
 ### Requirement: Preferences: Towers exposes an appearance preference
 
@@ -210,19 +223,16 @@ of every other cell in the same row and column.
 
 ### Requirement: Hint: Towers' hint is the shared candidate plan over rows and columns
 
-Towers' hint SHALL be the collection's candidate-elimination plan, taken
-through its row/column preset (`engine-candidate-hints`, "A shared
-candidate-elimination hint plan" and "A row/column Latin square answers no
-question its regions already settle"), with no departure. Towers SHALL supply
-its clue techniques as rungs over the notes, each saying its clue, one rung of
-its own and its words, which the requirements below state. What its marks
-stand for SHALL be the legend's (`hint.marks`).
+Towers' hint SHALL be the candidate walk every born game with notes hints
+through (`described-fill-game`), over rows and columns, with no departure.
+Its techniques SHALL be its description's, each saying its clue in words
+the description states, a value called a height. What its marks stand for
+SHALL be the legend's (`hint.marks`).
 
 #### Scenario: A single on a Towers board
 
 - **WHEN** a step places a height because it fits one cell of its row
-- **THEN** its sentence is in Towers' own words for a height, and reasons from
-  no clue
+- **THEN** its sentence calls the value a height, and reasons from no clue
 
 ### Requirement: Hint: A Towers clue elimination strikes one height a leg
 
@@ -238,9 +248,12 @@ firing that rules out several heights SHALL be one leg for each height.
 
 ### Requirement: Hint: Towers' own rung is the clue lines that need no notes
 
-Towers' own rung of the walk's ladder SHALL be the clue lines that need no
-notes: a clue equal to the grid size, whose line climbs from 1 beside the
-clue, and then a clue of 1, which has the tallest tower beside it.
+The clue lines that need no notes SHALL be techniques that place and read no
+note, offered before the notes are set up: a clue equal to the grid size,
+whose line climbs from 1 beside the clue ("Clue 4 sees every tower in this
+line, so heights must climb 1, 2, … from the clue"), and a clue of 1, which
+has the tallest tower beside it ("Clue 1 sees one tower in its line, so the
+tallest must stand next to it").
 
 #### Scenario: A full-height clue opens an empty board
 
@@ -267,13 +280,13 @@ pinned".
 
 ### Requirement: Hint: A Towers clue one short of its count keeps the short heights from the cell beside it
 
-Where the towers a clue already sees, taking the placed heights from the
-tallest down until one is missing and counting each that stands nearer the clue
-than the last, number one fewer than the clue, the cell beside the clue holds
-the last tower it sees. A step SHALL strike from that cell as many of the
-shortest heights as there are cells between it and the nearest tower counted,
-leaving out a height that stands at or behind that tower ("Clue 2 already sees
-all but one of its towers").
+Where the towers a clue already sees, the placed heights from the tallest
+down until one is missing, each nearer than the last, number one fewer than
+the clue, the cell beside the clue holds the last tower it sees. A step SHALL
+strike from that cell as many of the shortest heights as there are cells
+between it and the nearest tower counted, none at or behind that tower, a
+height a step ("Clue 2 already sees 1 tower in the line, so the cell nearest
+it must top all between; height 1 can't").
 
 #### Scenario: The tallest tower stands fourth from a clue of 2
 
@@ -325,21 +338,17 @@ remaining heights decide which orders are allowed.
 
 ### Requirement: Hint: Towers' clue eliminations are tried a facing pair first and arrangements last
 
-The deductions `hint` narrates SHALL be found in this order, beginning again
-after each: first every facing pair; then, for each clue in turn, those above
-the grid, below it, to its left and to its right, the clue one short of its
-count and then the heights too near it; the row and column singles; and only
-then, on a board above Easy, a clue's arrangements, ahead of the sets. `hint`
-SHALL use no deduction above the board's own tier.
+The deductions `hint` narrates SHALL be found in the order the description
+states them, beginning again after each: the row and column placements, the
+full lines, the tallest nearest and the facing pairs; then, clue by clue, the
+one short of its count and the heights too near it; the row and column
+singles; and only then, on a board above Easy, a clue's arrangements, ahead
+of the sets. `hint` SHALL use no deduction above the board's own tier.
 
 #### Scenario: An Easy board never hears of arrangements
 
-- **WHEN** the hint is followed on the Easy 4×4 board
-  `2/1/2/4/2/4/2/1/2/3/1/3/3/2/2/1` with nothing entered
-- **THEN** once the notes are set up its first strike is a too-near one
-  ("Clue 3 sees exactly 3 towers along its line; height 3 so near it would
-  hide too many")
-- **AND** no step of the plan speaks of an arrangement, a set or a chain
+- **WHEN** the hint is followed on an Easy 4×4 board with nothing entered
+- **THEN** no step of the plan speaks of an arrangement, a set or a chain
 
 ### Requirement: Look: Towers renders in selectable 3D and 2D styles with pencil marks
 
@@ -364,23 +373,13 @@ auto-sized grid layout.
 ### Requirement: Look: Towers tells its inks apart
 
 The renderer SHALL color given towers, user-entered towers, struck-through
-("done") clues, and error cells distinctly.
+("done") clues, and errors distinctly.
 
 #### Scenario: Two towers of one height in a row
 
 - **WHEN** the player enters a height a second time in one row
-- **THEN** both of those towers' digits are drawn in the error color
-
-### Requirement: Look: Towers repaints the neighbors a tower reaches into
-
-Cells SHALL be diffed against a per-tile cache that accounts for a 3D tower's
-protrusion into the neighbors above it and to its right.
-
-#### Scenario: A tower is placed beside an empty cell
-
-- **WHEN** a tower is entered under the 3D appearance
-- **THEN** the cells above it, to its right and diagonally above-right are
-  repainted in the same frame as its own
+- **THEN** both are marked in the error color, as a repeat is on every
+  board of numbers
 
 ### Requirement: Look: Towers stands its towers on a quiet surface, with a given's lifted
 

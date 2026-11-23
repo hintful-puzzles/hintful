@@ -14,11 +14,11 @@ deduction hint. What it shares with every note-taking game is in
 
 ### Requirement: Rules: Unequal is a Latin square with clues between neighbors
 
-Unequal SHALL be a Latin-square puzzle on an `order × order` grid: the player
-places a number `1..order` in every cell so each row and column contains every
-number exactly once, subject to clues between orthogonally adjacent cells. The
-board SHALL be reported solved exactly while the filled grid satisfies every
-row, column and clue constraint.
+Unequal SHALL be a Latin-square puzzle on a `w × w` grid: the player places a
+number `1..w` in every cell so each row and column contains every number
+exactly once, subject to clues between orthogonally adjacent cells. The board
+SHALL be reported solved exactly while the filled grid satisfies every row,
+column and clue constraint.
 
 #### Scenario: Entering the last correct number completes the board
 
@@ -50,25 +50,21 @@ so two neighbors with no sign between them may hold any two numbers.
 
 ### Requirement: Params: Unequal's parameters and their encoding
 
-Params SHALL be `order` and `diff`, held as the values `"trivial"`, `"easy"`,
-`"tricky"`, `"extreme"` and `"recursive"`, which are the tiers Easy, Normal,
-Tricky, Hard and Unreasonable in that order. They SHALL be encoded `{order}`
-with a `d{c}` suffix for difficulty when full, `c` being `t`, `e`, `k`, `x`
-or `r` in that order of the values. A string with no `d` SHALL decode as
-Normal.
+Params SHALL be the size `w` and the tier Easy, Normal, Tricky, Hard or
+Unreasonable. They SHALL be encoded `{w}` with a `d{c}` suffix for the tier
+when full, `c` being upstream's `t`, `e`, `k`, `x` or `r` in that order. A
+string with no `d` SHALL decode as Normal. The default board SHALL be 4×4 at
+Normal, upstream's.
 
 #### Scenario: A string with no difficulty
 
-- **WHEN** `4` is decoded
-- **THEN** it is a 4×4 board at Normal, whose full form is `4de`
+- **WHEN** `5` is decoded
+- **THEN** it is a 5×5 board at Normal, whose full form is `5de`
 
 #### Scenario: Params round-trip
 
-- **WHEN** params `{ order: 6, diff: "extreme" }` are encoded with
-  `full = true`
-- **THEN** the result is `6dx`
-- **AND** decoding it round-trips the params
-- **AND** encoding with `full = false` yields `6`
+- **WHEN** the params `6dx` are read
+- **THEN** they are 6×6 at Hard, written `6dx` in full and `6` in brief
 
 ### Requirement: Params: Unequal refuses the 3×3 tiers no board needs
 
@@ -103,9 +99,10 @@ toward the up, right, down, or left neighbor.
 ### Requirement: Description: A malformed Unequal description, or a sign flagged at both ends, is refused
 
 A desc SHALL be refused when it has the wrong number of cells, a number outside
-`0..order`, a flag pointing off the grid, or a sign flagged from both its
-cells, which would make each the greater. Every cell SHALL be written out: a
-letter standing for a run of blank cells SHALL be refused.
+`0..w`, a flag pointing off the grid, a sign flagged from both its cells,
+which would make each the greater, or a board with more than one answer.
+Every cell SHALL be written out: a letter standing for a run of blank cells
+SHALL be refused.
 
 #### Scenario: Malformed description is rejected
 
@@ -131,6 +128,18 @@ for a lower tier"), with no departure.
 - **THEN** the solver capped at Tricky does not finish it, and capped at Hard
   it does
 
+### Requirement: Generation: Unequal derives every clue from a Latin square and hides them
+
+A deal SHALL draw a Latin square, derive every given and every true sign
+from it, and hide givens and signs in one random order while the board still
+finishes at its tier, as every born deal hides (`deal.hide`). An Easy board
+reads no sign, so it shows none.
+
+#### Scenario: An Easy board shows no sign
+
+- **WHEN** a board is dealt from the params `5dt`, 5×5 at Easy
+- **THEN** its desc flags no sign
+
 ### Requirement: Solver: Unequal's ladder is its description
 
 Unequal's solver SHALL run the ladder of `unequal.description.yaml`: the sign
@@ -145,13 +154,12 @@ description gives it. The search above them stays the engine's.
 
 ### Requirement: Controls: A digit places a number or toggles its pencil mark, and Backspace or Space clears
 
-Unequal SHALL take its selection from the engine's note-taking cell
-(`engine-notes`, "The note-taking cell is one shared mechanic"). With a cell
-highlighted, a digit `1..order` (entered as a digit, or a letter for 11 and
-above) SHALL place that number, or toggle the pencil mark in pencil mode, and
-backspace, space, or below order 10 the `0` key, SHALL clear it. Immutable
-(given) cells SHALL reject entry, and in pencil mode no key SHALL change a
-cell that holds a number.
+Unequal SHALL be played as every born board of numbers is
+(`described-fill-game`, "A born game's values may be typed into a selected
+cell"). With a cell highlighted, a value's key (a digit, and from 10 a
+letter, `a` for 10) SHALL place that number, or toggle its pencil mark in
+pencil mode, and Backspace, Space or `0` SHALL clear it. Given cells SHALL
+reject entry, and in pencil mode no key SHALL change a cell holding a number.
 
 #### Scenario: Entry into an immutable cell is rejected
 
@@ -160,38 +168,27 @@ cell that holds a number.
 
 ### Requirement: Controls: A clue is struck through by a click or a modified arrow
 
-A click of either button on a greater-than sign in the gap between two cells,
-or a shift/ctrl-cursor toward a neighboring sign, SHALL toggle that sign's
-struck-through ("spent") state.
+A sign SHALL be marked done as every born game's clue is
+(`described-fill-game`, "A born game's clue may be marked done"): a press of
+either button in its gap marks it and a second unmarks it, a drag on marks
+each sign it passes that looked the same, and Shift or Ctrl with an arrow
+marks the sign between the selected cell and its neighbor that way.
 
 #### Scenario: Clicking a clue toggles its spent state
 
-- **WHEN** the player clicks a greater-than sign
-- **THEN** `executeMove` toggles that sign's spent flag
+- **WHEN** the player clicks a greater-than sign, then clicks it again
+- **THEN** the sign is marked done after the first click and unmarked after
+  the second, and no number or note has changed
 
 ### Requirement: Controls: Unequal provides on-screen key labels
 
-Unequal SHALL implement `requestKeys(params)` returning one button per grid
-value `1..order` followed by a clear key (button code `8`, labeled `"Clear"`).
-Each value button's label SHALL be its own character.
+Unequal SHALL offer one key per value `1..w`, labeled `1` to `9` and then
+`a`, `b` and so on, followed by a clear key.
 
 #### Scenario: The keypad covers the grid's digits plus clear (order < 10)
 
-- **WHEN** the key labels are requested for an order-4 Unequal board
+- **WHEN** the key labels are requested for a 4×4 Unequal board
 - **THEN** the result is the buttons `1,2,3,4` followed by a clear key
-
-### Requirement: Controls: The keypad is zero-based from order 10
-
-The value-to-button mapping SHALL depend on the order, so it does not come from
-the shared `digitKeys` helper the other digit games use. For `order < 10` the
-buttons SHALL be `'1'..'9'`, value `v` being the character `'0' + v`. For
-`order ≥ 10` the keypad SHALL be `'0'`-based: `'0'..'9'` cover values `1..10`
-and `'a'`, `'b'` and so on cover `11..order`.
-
-#### Scenario: The keypad is '0'-based for order ≥ 10
-
-- **WHEN** the key labels are requested for an order-11 Unequal board
-- **THEN** the result is the buttons `0,1,…,9,a` (values 1..11) followed by a clear key
 
 ### Requirement: Preferences: Auto-pencil strikes a placed number from its row and column
 
@@ -206,13 +203,12 @@ the other cells of its row and column.
 
 ### Requirement: Hint: Unequal's hint is the shared candidate plan over rows and columns
 
-Unequal's hint SHALL be the collection's candidate plan through its
-row/column preset (`engine-candidate-hints`, "A row/column Latin square
-answers no question its regions already settle"), departing only in the
-reading it starts on. Unequal SHALL supply its sign technique as a rung over
-the notes, saying its two ends and the bound each is held to, and the words
-of its sign deductions, stated below. What its marks stand for SHALL be the
-legend's (`hint.marks`).
+Unequal's hint SHALL be the candidate walk of a born board that keeps notes
+(`described-fill-game`, "A born game with notes hints through the candidate
+walk"), with the sign technique its description states recorded as the rung
+`sign`, a firing a leg a cell, each worded by the description's wording for
+the end it strikes. What its marks stand for SHALL be the legend's
+(`play.hintMarks`).
 
 #### Scenario: A single on an Unequal board
 
@@ -221,8 +217,9 @@ legend's (`hint.marks`).
 
 ### Requirement: Hint: The hint starts on the implicit reading
 
-Unequal's `newUi` SHALL state the implicit reading of an unmarked cell, because
-a sign strikes from one cell at a time.
+Unequal's description SHALL state the implicit reading of an unmarked cell as
+the one a fresh game starts on (`play.hintNotes`), because a sign strikes from
+one cell at a time.
 
 #### Scenario: A hint on a board with no notes
 
@@ -242,15 +239,6 @@ SHALL name the smallest or largest number rather than a vacuous bound.
   across it can still be 1
 - **THEN** the narration says the larger side cannot hold the smallest number,
   and does not say the other cell is "at least 1"
-
-### Requirement: Hint: The hint's marks are drawn in the gap beside the box
-
-The hint's marks SHALL stay in the gap beside the box.
-
-#### Scenario: A selected box a hint rings
-
-- **WHEN** an empty box is selected for an entry while a hint rings it
-- **THEN** the wash fills the box, and the ring is drawn in the gap around it
 
 ### Requirement: Hint: A sign's elimination is one firing of one sign
 
@@ -319,13 +307,12 @@ board between the boxes.
 
 ### Requirement: Look: Unequal renders greater-than signs between cells
 
-`redraw` SHALL render the `order × order` grid with a gap between cells,
-drawing a greater-than sign in the gap pointing from the larger toward the
-smaller cell of each sign dealt. Each sign SHALL be colored to distinguish a
-normal sign, a currently-violated sign (red), and a struck-through ("spent")
-sign.
+`redraw` SHALL render the `w × w` grid with a gap between cells, drawing a
+greater-than sign in the gap pointing from the larger toward the smaller cell
+of each sign dealt. Each sign SHALL be colored to distinguish a normal sign, a
+currently-violated sign (red), and a sign marked done (gray).
 
 #### Scenario: A board draws its greater-than signs
 
-- **WHEN** the initial frame of a generated board is rendered
+- **WHEN** the initial frame of a dealt board is rendered
 - **THEN** a greater-than polygon is drawn in the gap of each sign

@@ -1771,7 +1771,9 @@ Reach for it when a Latin game's hint deduces from the notes.
 `LatinSolver` marks over the walk's grid, and `latinStrikeRungs` makes the
 library's set, fish and wing rungs of the plan, so the game writes legs
 only for its own techniques; `byCell` cuts a firing a leg a cell, for a
-game whose sentence names one cell's notes. Exemplars:
+game whose sentence names one cell's notes, and `byWrittenCell` a leg each
+only for the cells with no notes written, the rest in one, for a walk
+under the implicit reading. Exemplars:
 `src/games/salad/hint.ts`; a born board's walk builds its rungs so from its
 description (`src/engine/fill/candidates.ts`).
 
