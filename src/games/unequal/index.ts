@@ -112,7 +112,7 @@ import {
 /** Why a strike is forced (docs/hints.md § "Writing the narration"):
  * indication, then reasoning, which the walk concludes with the move it makes.
  * `o` is the grid order. The words, and how they read at the value extremes,
- * are [`hint-text.ts`](./hint-text.ts)'s. */
+ * are [`hint-text.ts`](../../engine/hint/hint-text.ts)'s. */
 function premise(reason: HintReason, marks: readonly Mark[], o: number): Premise {
   switch (reason.kind) {
     case "greater":

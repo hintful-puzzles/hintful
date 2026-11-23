@@ -32,6 +32,13 @@ TypeScript and tests excluded:
 | ABCD, Ascent, Crossing, Seismic | 2,334, 5,696, 3,923, 2,138 | the route's "Numbers": the gap list places each |
 | Rome | 2,871 | in the route's lines group, but takes notes: the gap list places it |
 
+The gap list (design.md § "The gap list (1.1)") split the family: this
+change moves the first six, Unequal, Adjacent, Keen, Towers, Mathrax and
+Seismic, which build the notes layer and the clue universes on the Latin
+core; its successor, filed when this change is archived, moves Solo, Salad,
+Group, ABCD, Undead, Magnets, Rome, Crossing and Map. Ascent goes to lines
+and loops.
+
 The engine gains, as the gap list finds them: candidate notes on the fill
 board, which the ladder reads as facts; mark-all; the keypad; what each game's
 clues need. Each capability is one another game could adopt. A game may

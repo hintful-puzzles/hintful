@@ -331,7 +331,7 @@ function findMistakes(state: KeenState): readonly KeenMistake[] {
  * indication, then reasoning, which the walk concludes. `ns` is the struck value
  * list. Cage deductions name the cage by its clue; the generic Latin arms read
  * identically to Unequal's, narrated once, shared. The words are
- * [`hint-text.ts`](./hint-text.ts)'s. */
+ * [`hint-text.ts`](../../engine/hint/hint-text.ts)'s. */
 function premise(reason: HintReason, marks: readonly Mark[]): Premise {
   switch (reason.kind) {
     case "cage":
