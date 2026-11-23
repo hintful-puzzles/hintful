@@ -43,6 +43,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -222,6 +223,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -265,6 +267,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -339,6 +342,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -759,6 +763,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -802,6 +807,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -854,6 +860,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -1082,6 +1089,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -1195,6 +1203,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -1319,6 +1328,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -1423,6 +1433,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -1716,6 +1727,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -1954,6 +1966,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -1998,6 +2011,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -2074,6 +2088,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -2118,6 +2133,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -2278,6 +2294,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
@@ -2330,6 +2347,7 @@ exports[`capability surface > matches the recorded capability surface 1`] = `
   {
     "drawState": [
       "clues",
+      "corners",
       "gaps",
       "lists",
       "marks",
