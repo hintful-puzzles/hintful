@@ -1,0 +1,90 @@
+# Range's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every kind of step its
+# hint takes, upstream's IDs read as the right numbers and what it never
+# writes refused, the size bounds, and the plain numbers the hint and the
+# status bar leave alone.
+
+values:
+  shaded: 1
+  clear: 2
+
+hint:
+  params:
+    - {w: 9, h: 6, diff: 0}
+  pins:
+    besideShaded:
+      id: "9x6de:f3a8e2b7b7e8_7e3b5b6e4a7f"
+      moves: [{set: [46, 1]}]
+    capped.satisfied:
+      id: "9x6de:9a9g2c7k12_5k3c5g4a6"
+      moves: [{set: [1, 2]}]
+    capped.overrun: "9x6de:f3a8e2b7b7e8_7e3b5b6e4a7f"
+    reach: "9x6de:a4d6a4_9e7e7j6e10e4_6a5d8a"
+    cut:
+      id: "9x6de:3e11h9a5c10j6c5a8h11e12"
+      moves:
+        - {set: [24, 2, 5, 2, 4, 2, 3, 2, 9, 2, 14, 2, 22, 2, 29, 2, 48, 2, 49, 2, 50, 2, 44, 2, 35, 2, 26, 2, 8, 1, 7, 2, 16, 1, 25, 2, 33, 2, 2, 2, 1, 1, 10, 2, 18, 2, 27, 1, 28, 2, 42, 2, 51, 2, 13, 2, 12, 2, 11, 1, 20, 2, 37, 2, 39, 2, 40, 2, 41, 1, 45, 1, 46, 2, 52, 2]}
+
+ids:
+  # Upstream's run code: a number a shown clue, `_` between two side by
+  # side, and a letter a run of squares without one. A numbered square is
+  # dealt clear, and no move changes it.
+  - id: "9x6:9a9g2c7k12_5k3c5g4a6"
+    holds:
+      dealt.number.at: [0, 2, 10, 14, 26, 27, 39, 43, 51, 53]
+      dealt.number.v: [9, 9, 2, 7, 12, 5, 3, 5, 4, 6]
+      values.0: clear
+      fixed.0: 1
+  # What upstream writes reads, though these two numbers have no answer;
+  # what it never writes is refused.
+  - id: "3x3:2c5d"
+    refused: DESC_CONTRADICTORY
+    holds: {dealt.number.v: [2, 5]}
+  - id: "3x3:2_5g"
+    refused: DESC_CONTRADICTORY
+    holds: {dealt.number.v: [2, 5]}
+  - {id: "3x3:2c5d,x", refused: "/too long/"}
+  # A `_` anywhere but between two numbers side by side.
+  - {id: "3x3:_2c5d", refused: '/"_"/'}
+  - {id: "3x3:2_c5d", refused: '/"c"/'}
+  - {id: "3x3:2c_5d", refused: '/"_"/'}
+  # A number past what its row and column hold, and a 0.
+  - {id: "3x3:25g", refused: "/out of range/"}
+  - {id: "3x3:0h", refused: "/out of range/"}
+  - {id: "3x3:j2", refused: "/too long/"}
+  # A board with more than one answer is read, and not played.
+  - id: "4x4:c6h3_6b"
+    refused: DESC_NOT_UNIQUE
+    holds: {dealt.number.v: [6, 3, 6]}
+
+params:
+  - {read: "6x9de", refused: false}
+  - {read: "64x65de", refused: "/at most 128/"}
+  - {read: "2x2de", refused: "/at least 3/"}
+  - {read: "1x5de", refused: false}
+  # On a strip the rules settle every board with one answer.
+  - {read: "1x5du", refused: "/No 1x5 puzzle is Unreasonable/"}
+
+positions:
+  # A number is never faded or counted, and the board solves.
+  - id: "9x6de:a4d6a4_9e7e7j6e10e4_6a5d8a"
+    statusbar: null
+  - id: "9x6de:a4d6a4_9e7e7j6e10e4_6a5d8a"
+    solve: true
+    status: solved
+  # The hint outlines a region with no block round a number, so circles none.
+  - id: "9x6de:9a9g2c7k12_5k3c5g4a6"
+    moves: [{set: [1, clear]}]
+    steps: [{rung: capped.satisfied}]
+    circled: []
+  - id: "9x6de:f3a8e2b7b7e8_7e3b5b6e4a7f"
+    steps: [{rung: capped.overrun}]
+    circled: []
+  - id: "9x6de:a4d6a4_9e7e7j6e10e4_6a5d8a"
+    steps: [{rung: reach}]
+    circled: []
+  - id: "9x6de:3e11h9a5c10j6c5a8h11e12"
+    moves:
+      - {set: [24, 2, 5, 2, 4, 2, 3, 2, 9, 2, 14, 2, 22, 2, 29, 2, 48, 2, 49, 2, 50, 2, 44, 2, 35, 2, 26, 2, 8, 1, 7, 2, 16, 1, 25, 2, 33, 2, 2, 2, 1, 1, 10, 2, 18, 2, 27, 1, 28, 2, 42, 2, 51, 2, 13, 2, 12, 2, 11, 1, 20, 2, 37, 2, 39, 2, 40, 2, 41, 1, 45, 1, 46, 2, 52, 2]}
+    steps: [{rung: cut}]
+    circled: []

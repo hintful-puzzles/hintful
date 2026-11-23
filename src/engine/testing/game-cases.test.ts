@@ -85,6 +85,16 @@ describe("a case, checked", () => {
     }
   });
 
+  it("reads a null status bar as none shown, and an absent one as not checked", () => {
+    const none = { ...fakeGame, statusbarText: undefined };
+    const check = (game: typeof fakeGame, text: string) =>
+      read(text).positions.flatMap((c) => checkPosition(game, c));
+    const position = "positions:\n  - id: t3:g3-1\n";
+    expect(check(none, `${position}    statusbar: null\n`)).toEqual([]);
+    expect(check(fakeGame, `${position}    statusbar: null\n`)).not.toEqual([]);
+    expect(check(fakeGame, `${position}    status: ongoing\n`)).toEqual([]);
+  });
+
   it("reads what a board refused as unplayable holds", () => {
     const stuck = { ...fakeGame, finishesByDeduction: () => false };
     const check = (text: string) => read(text).ids.flatMap((c) => checkId(stuck, c));

@@ -123,8 +123,12 @@ export interface PositionCase extends At {
   readonly moves: readonly unknown[];
   readonly solve: boolean;
   readonly status: string | null;
-  readonly text: string | null;
-  readonly statusbar: string | null;
+  /** The text written, `null` where the game writes none; absent, not
+   * checked. */
+  readonly text?: string | null;
+  /** The status bar's words, `null` where the game shows none; absent, not
+   * checked. */
+  readonly statusbar?: string | null;
   readonly breaks: readonly string[] | null;
   readonly mistakes: number | null;
   readonly steps: readonly StepShape[] | null;
@@ -244,6 +248,20 @@ export function parseGameCases(text: string, path: string): GameCases {
   };
   const opt = <T>(node: unknown, read: (n: Node) => T): T | null =>
     isNode(node) ? read(node) : null;
+  /** `key` of `e` as words, or `null` written for none; nothing where the
+   * key is absent. */
+  const orNone = <K extends string>(
+    e: Map<string, Node>,
+    key: K,
+    where: string,
+  ): Partial<Record<K, string | null>> => {
+    if (!e.has(key)) return {};
+    const node = e.get(key);
+    const v = js(node);
+    return { [key]: v === null ? null : str(node, `${where}.${key}`) } as Partial<
+      Record<K, string | null>
+    >;
+  };
 
   const top = entries(doc.contents, path, SECTIONS);
 
@@ -436,8 +454,8 @@ export function parseGameCases(text: string, path: string): GameCases {
         moves: items(e.get("moves"), `${where}.moves`).map((m) => named(js(m), m)),
         solve: opt(e.get("solve"), (n) => bool(n, `${where}.solve`)) ?? false,
         status: opt(e.get("status"), (n) => str(n, `${where}.status`)),
-        text: opt(e.get("text"), (n) => str(n, `${where}.text`)),
-        statusbar: opt(e.get("statusbar"), (n) => str(n, `${where}.statusbar`)),
+        ...orNone(e, "text", where),
+        ...orNone(e, "statusbar", where),
         breaks:
           breaks === undefined
             ? null
@@ -655,8 +673,8 @@ export function checkPosition(game: AnyGame, c: PositionCase): string[] {
       out.push(`${what} ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
   };
   if (c.status !== null) was("status", game.status(state), c.status);
-  if (c.text !== null) was("text", game.textFormat?.(state) ?? null, c.text);
-  if (c.statusbar !== null)
+  if (c.text !== undefined) was("text", game.textFormat?.(state) ?? null, c.text);
+  if (c.statusbar !== undefined)
     was(
       "status bar",
       game.statusbarText?.(state, game.newUi(state)) ?? null,

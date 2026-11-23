@@ -32,7 +32,12 @@
             on all fourteen with the overlay's mark planted away; Pattern
             left `NO_OVERLAY_TEST`.
       - [ ] A desc written back, in `upstream-descs.test.ts`.
-      - [ ] A deal's clues are its answer's, and its symmetry holds.
+      - [x] A deal's symmetry holds (`dealt-symmetry.test.ts`): a
+            symmetric hide's clues and a sample's first cells at their
+            option's symmetry, read from each compiled deal; seen to fail
+            on Light Up, Range and Sticks with the half-turn copy and the
+            hide's pairing planted wrong.
+      - [ ] A deal's clues are its answer's (with Boats or Singles).
       - [ ] What a placement brings (`rulesOut`).
       - [ ] Absence over every picture of a small size.
 
@@ -52,7 +57,8 @@
 - [ ] 4.1 Each born game's `*.test.ts` moved to data, one commit a game
       or a few, the cases of 1.1 kept as data or named by the guard that
       holds them. `npm run test:hint-sweeps` before the last commit.
-      Moved: Kakurasu, Unruly, Mosaic, Norinori. An ID case's `holds` is
+      Moved: Kakurasu, Unruly, Mosaic, Norinori, Range. A position's
+      `text` and `statusbar` take `null` for none shown. An ID case's `holds` is
       the codec's reading, so it may sit beside a `refused` (Norinori's
       walls read as regions on a board loading refuses); a position's
       `circled` reads the text inside each hint circle (Mosaic). The

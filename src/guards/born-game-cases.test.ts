@@ -25,7 +25,6 @@ const NOT_YET_DATA: Readonly<Record<string, string>> = {
   clusters: "clusters.test.ts",
   lightup: "lightup.test.ts",
   pattern: "pattern.test.ts",
-  range: "range.test.ts",
   singles: "singles.test.ts",
   starbattle: "starbattle.test.ts",
   sticks: "sticks.test.ts",
