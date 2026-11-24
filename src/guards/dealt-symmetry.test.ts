@@ -14,7 +14,8 @@ import { leafPresets } from "../engine/testing/presets.ts";
 import { partners } from "../engine/testing/symmetry-partners.ts";
 
 interface DealShape {
-  readonly hide?: string;
+  /** A symmetric hide's one kind. */
+  readonly hide?: readonly [{ readonly kind: string }];
   readonly symmetric?: "halfTurn";
   readonly sample?: { readonly first?: { value: number; symmetry: string } };
   readonly settings?: readonly { readonly id: string; readonly default?: number }[];
@@ -58,9 +59,10 @@ describe("a deal is as symmetric as its description says", () => {
         };
         const id = `${game.encodeParams(p, true)}:${desc}`;
         if (deal.symmetric !== undefined && deal.hide !== undefined) {
-          const at = new Set(Array.from(state.dealt[deal.hide].at));
+          const { kind } = deal.hide[0];
+          const at = new Set(Array.from(state.dealt[kind].at));
           for (const c of at)
-            expect(at.has(p.w * p.h - 1 - c), `${id}: ${deal.hide} at ${c}`).toBe(true);
+            expect(at.has(p.w * p.h - 1 - c), `${id}: ${kind} at ${c}`).toBe(true);
         }
         if (first !== null) {
           const symm =

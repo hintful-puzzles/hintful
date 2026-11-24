@@ -1,7 +1,8 @@
 ## Next
 
-4.1, the one-user keys renamed or folded (design.md § "The one-user
-keys", § "The hide keys"). Open: none.
+4.1's rest: `deal.firstKind` into `deal.oneKind` (`pick: first`) and
+`play.hides` renamed `play.covers` (design.md § "The one-user keys").
+The hide keys are one `hide`, and `withhold` is `never`'s. Open: none.
 
 ## 1. Design
 

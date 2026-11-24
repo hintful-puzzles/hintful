@@ -48,9 +48,8 @@ deal:
   greater: every true sign, then each hidden while the board still finishes
   tier: one of the tiers
   sample: { latin: true }
-  hide: [given, greater]
   # The larger numbers go first, so a board keeps its smaller givens.
-  hideBy: { given: "clue(given, at)" }
+  hide: { given: { by: "clue(given, at)" }, greater }
 id:
   - { records: given, sides: greater }
 tiers: [Easy, Normal]

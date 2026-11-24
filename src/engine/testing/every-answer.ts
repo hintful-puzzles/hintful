@@ -27,14 +27,7 @@ const MOST_GRIDS = 1 << 16;
 /** The deal's fields under which a board is not the clues its answer
  * derives: some hidden, a partition grown round it, numbers drawn apart
  * from it, or a setting only the deal reads. */
-const NOT_THE_ANSWERS = [
-  "hide",
-  "hideFlag",
-  "grow",
-  "partitions",
-  "latin",
-  "unpair",
-] as const;
+const NOT_THE_ANSWERS = ["hide", "grow", "partitions", "latin", "unpair"] as const;
 
 /** Whether the deal reads a number or a choice of its own, so a board is
  * one of many an answer has. */

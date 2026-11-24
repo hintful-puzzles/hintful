@@ -70,6 +70,27 @@ export function partitionOfKind(deal: FillDeal, kind: string): string {
   return partition;
 }
 
+/** A kind the deal hides (`FillDeal.hide`). */
+export interface HiddenKind {
+  readonly kind: string;
+  /** Its clues are each tried before those of a kind without (upstream's
+   * givens before its clues). */
+  readonly first?: true;
+  /** Kept whole on a board below this tier, by its index. */
+  readonly from?: number;
+  /** Hidden whole on a board below a tier, by the tier's index, with
+   * variation `with` on where given, and within bounds: the answer is drawn
+   * again until the board finishes without it. */
+  readonly whole?: {
+    readonly below: number;
+    readonly bounds: SizeBounds;
+    readonly with?: string;
+  };
+  /** Hidden only where this flag is on, and then a board hiding none of it
+   * is drawn again. */
+  readonly when?: string;
+}
+
 /** What a compiled fill module says of its deal (`deal`). */
 export interface FillDeal {
   /** Whether the grid is as high as it is wide, so one size gives both. */
@@ -80,24 +101,9 @@ export interface FillDeal {
   /** The settings the params give, in their order (`params/settings.ts`). */
   readonly settings: readonly FillSetting[];
   readonly sample: Sample | null;
-  /** The clue kind the deal hides while the board still finishes, or the
-   * kinds it hides in one random order. */
-  readonly hide?: string | readonly string[];
-  /** The kinds of `hide` whose clues are each tried before any of the rest
-   * (upstream's givens before its clues). */
-  readonly hideFirst?: readonly string[];
-  /** A kind of `hide` kept whole on a board below a tier, by the tier's
-   * index. */
-  readonly hideFrom?: Readonly<Record<string, number>>;
-  /** A kind of `hide` hidden whole on a board below a tier, by the tier's
-   * index, with variation `with` on where given, and within bounds: the
-   * answer is drawn again until the board finishes without it. */
-  readonly hideWhole?: Readonly<
-    Record<
-      string,
-      { readonly below: number; readonly bounds: SizeBounds; readonly with?: string }
-    >
-  >;
+  /** The kinds the deal hides while the board still finishes, in one random
+   * order, each as `HiddenKind` says. */
+  readonly hide?: readonly HiddenKind[];
   /** Where a search tier's strip starts every draw: from every clue, not
    * from a board of the lowest tier one draw in eight (Sticks'). */
   readonly stripFrom?: "everyClue";
@@ -122,8 +128,6 @@ export interface FillDeal {
   /** The flag under which the hide tries every clue, and as many as the
    * board's shorter side where it is off; absent, it tries every one. */
   readonly thorough?: string;
-  /** A kind the deal hides beside `hide`'s where the flag `when` is on. */
-  readonly hideFlag?: { readonly kind: string; readonly when: string };
   /** How it grows a dealt partition round the answer. */
   readonly grow?: FillGrow;
   /** How it divides each dealt partition it divides, apart from the answer

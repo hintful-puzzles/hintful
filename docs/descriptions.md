@@ -502,21 +502,25 @@ research tools all read through it; the app never does.
   blocks). `deal.oneIn: { kind: group }` derives a kind whose meaning reads
   its own clues (Sticks' length reads `room`) once on a random cell of each
   group, as the only clue of its kind, so no second copy of the meaning is
-  written. `deal.hide` may list kinds, hidden in one random order across
-  them, or with `hideFirst: [kind]` every clue of those kinds tried
-  before any of the rest (Towers' givens, then its clues);
-  `hideBy: { kind: formula }` orders a kind's clues among the places the
-  shuffle gave that kind, a higher value of the formula of `at` hidden
-  first, read on the clues as dealt, so the board keeps the lowest
-  (Adjacent's givens with the fewest bars beside them, upstream's choice,
-  and `ordering` the fixture);
-  `hideFrom: { kind: Tier }` keeps a kind whole on a board below that tier
-  (`flanking` is the fixture); `hideWhole: { kind: { below: Tier, longer:
-  { max: 5 } } }` hides every clue of a kind on a board below that tier and
-  within those bounds (`play.bounds`' measures), and with `with: Variation`
-  on a board with it on, each where given, the answer drawn again until the
-  board finishes without it (Towers' Easy boards up to 5x5, which show no
-  given, as upstream's; Solo's Killer boards, `killing` the fixture); `stripFrom: everyClue` starts every search-tier draw from every clue,
+  written. `deal.hide` is one kind, a list of them hidden in one random
+  order across them, or by kind how it is hidden, in the deal's order
+  (`hide: { given: { first: true }, sum, … }`, a kind with nothing to say
+  bare). A kind's `first: true` has every clue of it tried before any of a
+  kind without (Towers' givens, then its clues); `by: formula` orders its
+  clues among the places the shuffle gave that kind, a higher value of the
+  formula of `at` hidden first, read on the clues as dealt, so the board
+  keeps the lowest (Adjacent's givens with the fewest bars beside them,
+  upstream's choice, and `ordering` the fixture); `from: Tier` keeps it
+  whole on a board below that tier (`flanking` is the fixture); `whole:
+  { below: Tier, longer: { max: 5 } }` hides every clue of it on a board
+  below that tier and within those bounds (`play.bounds`' measures), and
+  with `with: Variation` on a board with it on, each where given, the
+  answer drawn again until the board finishes without it (Towers' Easy
+  boards up to 5x5, which show no given, as upstream's; Solo's Killer
+  boards, `killing` the fixture); and `when: flag` hides it only where the
+  flag is on, a board hiding none of it then drawn again (Boats' numbers
+  under Remove numbers). `stripFrom: everyClue` starts every search-tier
+  draw from every clue,
   where the lowest tier's boards leave the search too little to strip.
   A stream's code may name a kind whose digit follows it on its cell
   (`codes: { B: "block 0, joins" }`, Sticks' `B2`). A bar painter `across` or `down`
@@ -538,9 +542,11 @@ research tools all read through it; the app never does.
   `id:`'s `lists` one line a `/` and one number a `.` (`order: columns`
   puts the columns first), drawn in the margins, which grow to hold the
   longest, and each fifth grid line doubled. `deal.sample: picture` draws
-  upstream's smoothed random picture. A kind named in `deal.never` is never
-  dealt by a deal, only read from an ID (Pattern's given squares, which
-  `dots` with `before: ","` writes after the lists). A search tier with no
+  upstream's smoothed random picture. What `deal.never` names is never
+  dealt by a deal, only read from an ID: a kind (Pattern's given squares,
+  which `dots` with `before: ","` writes after the lists), or by kind at
+  cells the values never derived (`never: { seg: [3] }`, Boats' segment of
+  unknown shape, which the player is to find). A search tier with no
   clue to hide draws until the ladder stops short and the search says one.
   `least_start(L, R, k, v)` and `greatest_start` are where run `k` of list
   `R` can start on line `L`, its runs of `v` packed one way and the other
@@ -557,10 +563,7 @@ research tools all read through it; the app never does.
   at the board of a length and its count that the params give, by its name
   (Boats' fleet, `f3` and `,3,2,1`); it is skipped as a derived kind, and drawn beneath
   the board (`engine/fill/tally-display.ts`). `deal.sample: pieces` lays
-  its pieces as straight runs of a value, none touching. `deal.hideFlag:
-  { kind, when }` names the flag under which `deal.hide` hides `kind`
-  too, and a board hiding none of it is drawn again; `deal.withhold` names
-  values a kind is never derived as (Boats' shapeless segment). `numbers`'
+  its pieces as straight runs of a value, none touching. `numbers`'
   `hidden` writes a clue not shown and `closed` a comma after each; a
   stream of `codes` alone writes a kind's values by letters with runs of
   empty cells between, and `lastRun: false` leaves its last run off. `play.shape` draws a kind as its cell's piece, never a

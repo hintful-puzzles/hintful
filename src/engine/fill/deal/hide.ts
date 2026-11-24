@@ -80,15 +80,15 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
     }
     return out;
   };
-  /** Every unit of the kinds `deal.hideFirst` names before any of the rest,
-   * each side in a random order, and a kind's units ranked by `deal.hideBy`
+  /** Every unit of the kinds hidden `first` before any of the rest, each
+   * side in a random order, and a kind's units ranked by its `by`
    * taking its places in that order higher first, so the kinds stay mixed
    * as they fell. A unit is of its first clue's kind and ranks as it does. */
   const hideOrder = (clues: C, units: number[][]): number[][] => {
     shuffle(units, rs);
-    const { hideFirst } = deal;
+    const firsts = (deal.hide ?? []).filter((h) => h.first === true).map((h) => h.kind);
     const { hideRank } = module;
-    if (hideFirst === undefined && hideRank === undefined) return units;
+    if (firsts.length === 0 && hideRank === undefined) return units;
     const offsets = offsetsOf(clues, kinds);
     const kindOf = (u: readonly number[]): number =>
       offsets.findLastIndex((o) => o <= u[0]);
@@ -114,9 +114,9 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
         return byKind[k][next[k]++];
       });
     }
-    if (hideFirst === undefined) return order;
+    if (firsts.length === 0) return order;
     const later = (u: readonly number[]): number =>
-      hideFirst.includes(kinds[kindOf(u)]) ? 0 : 1;
+      firsts.includes(kinds[kindOf(u)]) ? 0 : 1;
     // A stable sort keeps each side's units in their order.
     return order.sort((a, b) => later(a) - later(b));
   };
@@ -128,7 +128,7 @@ export function hideOf<C extends Clues<C>>(cx: DealContext<C>): Hide<C> {
    * stay is some 7 solves and 15, not 100 (Boats' 10x10, 2026-11-23).
    *
    * The end, since a hide in order drops the units it tries first: kept from
-   * the start, `deal.hideFirst`'s givens alone stayed, and a Mathrax Easy
+   * the start, the givens hidden `first` alone stayed, and a Mathrax Easy
    * board showed no clue.
    */
   const shortestRun = (clues: C, units: readonly number[][], t: number): number[] => {

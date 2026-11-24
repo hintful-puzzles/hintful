@@ -160,8 +160,7 @@ deal:
   clues: every corner's clue, of the first kind on that it makes, then each hidden while the board still finishes
   tier: one of the tiers
   sample: { latin: true }
-  hide: [given, sum, difference, equal, product, quotient, parity]
-  hideFirst: [given]
+  hide: { given: { first: true }, sum, difference, equal, product, quotient, parity }
   firstKind: [sum, difference, equal, product, quotient, parity]
 settings:
   clueTypes:

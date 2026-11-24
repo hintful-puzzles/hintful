@@ -42,7 +42,7 @@ export type DealtFillModule<C> = SearchedFillModule<C> &
     ): C;
     growBy?(sp: GridSpace, sizes: Readonly<Record<string, number>>): GrowSizes;
     /** Where a hidden clue of `kind` at `at` goes in the hide, read on the
-     * clues as dealt (`deal.hideBy`): a higher one is hidden first. */
+     * clues as dealt (a hidden kind's `by`): a higher one is hidden first. */
     hideRank?(sp: GridSpace, cl: C, kind: string, at: number): number;
   };
 

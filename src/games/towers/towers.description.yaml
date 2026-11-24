@@ -154,10 +154,9 @@ deal:
   sees: every clue, then above Easy each hidden, once no more cells can be, while the board still finishes
   tier: one of the tiers
   sample: { latin: true }
-  hide: [given, sees]
-  hideFirst: [given]
-  hideFrom: { sees: Normal }
-  hideWhole: { given: { below: Normal, longer: { max: 5 } } }
+  hide:
+    given: { first: true, whole: { below: Normal, longer: { max: 5 } } }
+    sees: { from: Normal }
 # Upstream's: the clues a slot at a time between slashes, top, bottom, left
 # and right, then a comma and the givens where there are any.
 id:

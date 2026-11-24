@@ -1134,14 +1134,16 @@ describe("what the fill board reads of a description", () => {
         j.id[1] = { ...j.id[1], codes: { B: "mark 0" } };
       }),
     ).toContain('"codes":{"B":"mark 0"}');
-    expect(compileFlanking(() => {})).toContain('"hideFirst":["given"]');
-    const hiding = (first: string[]) => () =>
+    expect(compileFlanking(() => {})).toContain('{"kind":"given","first":true}');
+    const hiding = (hide: Record<string, unknown>) => () =>
       compileFlanking((j) => {
-        (j as unknown as { deal: Record<string, unknown> }).deal["hideFirst"] = first;
+        (j as unknown as { deal: Record<string, unknown> }).deal["hide"] = hide;
       });
-    expect(hiding(["sees"])).toThrow(/deal hideFirst: sees is not hidden/);
-    expect(hiding(["given", "flank"])).toThrow(
-      /deal hideFirst: every hidden kind, and none after them/,
+    expect(hiding({ given: { first: true }, flank: { first: true } })).toThrow(
+      /deal hide: every kind first, and none after them/,
+    );
+    expect(hiding({ given: { last: true }, flank: null })).toThrow(
+      /deal hide: given's last is none of first, by, from, whole, when/,
     );
   });
 
@@ -1164,7 +1166,7 @@ describe("what the fill board reads of a description", () => {
         "./step-voice.ts",
       );
     };
-    expect(compileFleet(() => {})()).toContain('"hideFlag"');
+    expect(compileFleet(() => {})()).toContain('{"kind":"n","when":"stripClues"}');
     expect(
       compileFleet((j) => {
         j.settings.stripClues.letter = "f";

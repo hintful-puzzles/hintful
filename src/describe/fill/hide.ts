@@ -1,7 +1,8 @@
 /**
- * The hide of a fill game's deal (`engine/fill/deal/hide.ts`): which kinds
- * it hides, in what order and from which tier, which it hides whole, where
- * a formula ranks a clue, the setting that hides one more kind, and the
+ * The hide of a fill game's deal (`engine/fill/deal/hide.ts`), `deal.hide`:
+ * the kinds it hides, in its order, and by kind whether it is tried first,
+ * the tier it is first hidden at, the boards it is hidden whole on, the
+ * formula ranking its clues and the flag it is hidden under; and the
  * symmetry of the clues it leaves.
  */
 
@@ -20,161 +21,148 @@ import { parse } from "../expr.ts";
 import { answerEnv, param, tierIndex } from "./emit.ts";
 import { dealFlag, type SettingOut } from "./settings.ts";
 
-/** `deal.hide`, one kind or several, those tried before the rest
- * (`hideFirst`), and the tier each is first hidden at (`hideFrom`). */
+/** A kind the deal hides as `FillDeal.hide` holds it: `by` is compiled
+ * into `hideRank`, and the rest are the deal's. */
+export interface HiddenKindOut {
+  kind: string;
+  first?: true;
+  from?: number;
+  whole?: { below: number; bounds: SizeBoundsJson; with?: string };
+  when?: string;
+}
+
+/** What a kind's entry in `deal.hide` may say. */
+const PROPERTIES = ["first", "by", "from", "whole", "when"] as const;
+
+/** `deal.hide`'s entries, in its order, each with its properties: one kind,
+ * a list of them, or by kind its properties (`null` for none). */
+function hideEntries(json: DescriptionJson): [string, Record<string, unknown>][] {
+  const h = json.deal?.["hide"];
+  if (h === undefined) return [];
+  if (typeof h === "string") return [[h, {}]];
+  if (Array.isArray(h) && h.every((k) => typeof k === "string"))
+    return h.map((k: string) => [k, {}]);
+  if (typeof h === "object" && h !== null && !Array.isArray(h))
+    return Object.entries(h as Record<string, unknown>).map(([k, v]) => {
+      if (v !== null && (typeof v !== "object" || Array.isArray(v)))
+        throw new CompileError(`deal hide: ${k}'s properties, or none`);
+      return [k, (v ?? {}) as Record<string, unknown>];
+    });
+  throw new CompileError(
+    "deal hide: a clue kind, a list of them, or their properties by kind",
+  );
+}
+
+/** `deal.hide` as the deal reads it; `null` where it hides nothing. */
 export function hideOf(
   json: DescriptionJson,
   d: Description,
-): {
-  hide: string | readonly string[] | null;
-  hideFirst: readonly string[] | null;
-  hideFrom: Record<string, number> | null;
-  hideWhole: Record<string, HideWhole> | null;
-} {
-  const hideJson = json.deal?.["hide"];
-  // One kind, or several hidden in one random order.
-  const hide =
-    typeof hideJson === "string" ||
-    (Array.isArray(hideJson) && hideJson.every((k) => typeof k === "string"))
-      ? (hideJson as string | readonly string[])
-      : null;
-  if (hideJson !== undefined && hide === null)
-    throw new CompileError("deal hide: a clue kind, or a list of them");
-  const kinds = typeof hide === "string" ? [hide] : (hide ?? []);
-  for (const k of kinds) {
-    const c = d.clueKinds.get(k);
-    if (c === undefined) throw new CompileError(`deal hide: no clue kind ${k}`);
+  settings: readonly SettingOut[],
+): HiddenKindOut[] | null {
+  const entries = hideEntries(json);
+  if (entries.length === 0) return null;
+  const tiers = json.tiers ?? [];
+  const out = entries.map(([kind, props]): HiddenKindOut => {
+    const c = d.clueKinds.get(kind);
+    if (c === undefined) throw new CompileError(`deal hide: no clue kind ${kind}`);
     if (c.complete)
-      throw new CompileError(`deal hide: ${k} is complete, so none of it is hidden`);
-  }
-  const first = json.deal?.["hideFirst"];
-  const hideFirst =
-    Array.isArray(first) && first.every((k) => typeof k === "string")
-      ? (first as string[])
-      : null;
-  if (first !== undefined) {
-    if (hideFirst === null || hideFirst.length === 0)
-      throw new CompileError("deal hideFirst: a list of the kinds deal hide names");
-    for (const k of hideFirst)
-      if (!kinds.includes(k))
-        throw new CompileError(`deal hideFirst: ${k} is not hidden`);
-    if (hideFirst.length >= kinds.length)
-      throw new CompileError("deal hideFirst: every hidden kind, and none after them");
-  }
-  return {
-    hide,
-    hideFirst,
-    hideFrom: hideFromOf(json, kinds),
-    hideWhole: hideWholeOf(json, kinds),
-  };
+      throw new CompileError(`deal hide: ${kind} is complete, so none of it is hidden`);
+    for (const p of Object.keys(props))
+      if (!(PROPERTIES as readonly string[]).includes(p))
+        throw new CompileError(
+          `deal hide: ${kind}'s ${p} is none of ${PROPERTIES.join(", ")}`,
+        );
+    const { first, from, whole, when } = props;
+    if (first !== undefined && first !== true)
+      throw new CompileError(`deal hide: ${kind}'s first is true, or absent`);
+    return {
+      kind,
+      ...(first === true ? { first: true as const } : {}),
+      ...(from === undefined ? {} : { from: fromOf(kind, from, tiers) }),
+      ...(whole === undefined ? {} : { whole: wholeOf(json, kind, whole, tiers) }),
+      ...(when === undefined
+        ? {}
+        : { when: dealFlag(settings, String(when), `deal hide: ${kind}'s when`) }),
+    };
+  });
+  const firsts = out.filter((h) => h.first === true).length;
+  if (firsts === out.length && firsts > 0)
+    throw new CompileError("deal hide: every kind first, and none after them");
+  return out;
+}
+
+/** A kind's `from`: the tier, by its index, below which it is kept whole. */
+function fromOf(kind: string, tier: unknown, tiers: readonly string[]): number {
+  if (typeof tier !== "string")
+    throw new CompileError(`deal hide: ${kind}'s from is a tier, by its name`);
+  const i = tierIndex(tiers, tier, "deal hide");
+  if (i === 0)
+    throw new CompileError(`deal hide: ${kind} from the lowest tier is every tier`);
+  return i;
 }
 
 const SIZE_MEASURES = ["sum", "area", "shorter", "longer"] as const;
 
-/** `deal.hideWhole`: each kind of `hidden` the deal hides whole below a
- * tier, by the tier's index (past the last where none is named), with a
- * variation on where one is named, on a board within the bounds; `null`
- * where there is none. */
-function hideWholeOf(
+/** A kind's `whole`: hidden whole on a board below a tier, by the tier's
+ * index (past the last where none is named), with a variation on where one
+ * is named, within the bounds. */
+function wholeOf(
   json: DescriptionJson,
-  hidden: readonly string[],
-): Record<string, HideWhole> | null {
-  const whole = json.deal?.["hideWhole"];
-  if (whole === undefined) return null;
-  if (typeof whole !== "object" || whole === null || Array.isArray(whole))
-    throw new CompileError("deal hideWhole: a tier and bounds by clue kind");
-  const out: Record<string, HideWhole> = {};
-  for (const [kind, spec] of Object.entries(whole as Record<string, unknown>)) {
-    if (!hidden.includes(kind))
-      throw new CompileError(`deal hideWhole: ${kind} is no kind the deal hides`);
-    const {
-      below,
-      with: variation,
-      ...bounds
-    } = spec as { below?: unknown; with?: unknown } & SizeBoundsJson;
-    if (below !== undefined && typeof below !== "string")
-      throw new CompileError(`deal hideWhole: ${kind} below a tier, by its name`);
-    if (variation !== undefined && json.variations?.[variation as string] === undefined)
-      throw new CompileError(
-        `deal hideWhole: ${kind} with ${String(variation)}, no variation`,
-      );
-    if (below === undefined && variation === undefined)
-      throw new CompileError(
-        `deal hideWhole: ${kind} below a tier or with a variation`,
-      );
-    for (const name of Object.keys(bounds))
-      if (!(SIZE_MEASURES as readonly string[]).includes(name))
-        throw new CompileError(`deal hideWhole: ${kind}'s ${name} is no size bound`);
-    const tiers = json.tiers ?? [];
-    out[kind] = {
-      below:
-        below === undefined ? tiers.length : tierIndex(tiers, below, "deal hideWhole"),
-      bounds,
-      ...(variation === undefined ? {} : { with: variation as string }),
-    };
-    if (out[kind].below === 0)
-      throw new CompileError(
-        `deal hideWhole: ${kind} below the lowest tier is no board`,
-      );
-  }
-  return out;
-}
-
-/** A kind hidden whole (`FillDeal.hideWhole`). */
-interface HideWhole {
-  below: number;
-  bounds: SizeBoundsJson;
-  with?: string;
-}
-
-/** `deal.hideFrom`: each kind of `hidden` the deal keeps whole below a
- * tier, by the tier's index; `null` where there is none. */
-function hideFromOf(
-  json: DescriptionJson,
-  hidden: readonly string[],
-): Record<string, number> | null {
-  const from = json.deal?.["hideFrom"];
-  if (from === undefined) return null;
-  if (typeof from !== "object" || Array.isArray(from))
-    throw new CompileError("deal hideFrom: a tier by clue kind");
-  const out: Record<string, number> = {};
-  for (const [kind, tier] of Object.entries(from)) {
-    if (!hidden.includes(kind))
-      throw new CompileError(`deal hideFrom: ${kind} is no kind the deal hides`);
-    if (typeof tier !== "string")
-      throw new CompileError(`deal hideFrom: ${kind}'s tier by its name`);
-    out[kind] = tierIndex(json.tiers ?? [], tier, "deal hideFrom");
-    if (out[kind] === 0)
-      throw new CompileError(
-        `deal hideFrom: ${kind} from the lowest tier is every tier`,
-      );
-  }
-  return out;
+  kind: string,
+  spec: unknown,
+  tiers: readonly string[],
+): { below: number; bounds: SizeBoundsJson; with?: string } {
+  if (typeof spec !== "object" || spec === null || Array.isArray(spec))
+    throw new CompileError(
+      `deal hide: ${kind}'s whole is a tier, a variation and bounds`,
+    );
+  const {
+    below,
+    with: variation,
+    ...bounds
+  } = spec as { below?: unknown; with?: unknown } & SizeBoundsJson;
+  if (below !== undefined && typeof below !== "string")
+    throw new CompileError(`deal hide: ${kind} whole below a tier, by its name`);
+  if (variation !== undefined && json.variations?.[variation as string] === undefined)
+    throw new CompileError(
+      `deal hide: ${kind} whole with ${String(variation)}, no variation`,
+    );
+  if (below === undefined && variation === undefined)
+    throw new CompileError(`deal hide: ${kind} whole below a tier or with a variation`);
+  for (const name of Object.keys(bounds))
+    if (!(SIZE_MEASURES as readonly string[]).includes(name))
+      throw new CompileError(`deal hide: ${kind}'s whole ${name} is no size bound`);
+  const at = below === undefined ? tiers.length : tierIndex(tiers, below, "deal hide");
+  if (at === 0)
+    throw new CompileError(
+      `deal hide: ${kind} whole below the lowest tier is no board`,
+    );
+  return {
+    below: at,
+    bounds,
+    ...(variation === undefined ? {} : { with: variation as string }),
+  };
 }
 
 /**
  * `hideRank(sp, cl, kind, at)`: where the hide puts a clue of `kind` at
- * `at`, by `deal.hideBy`'s formula of `at`: a higher one is hidden first.
- * None where the deal states no formula.
+ * `at`, by its `by`, a formula of `at`: a higher one is hidden first. None
+ * where no kind states one.
  */
 export function hideRankOf(
   json: DescriptionJson,
   env: Env,
   measured: (e: Expr) => Expr,
-  hidden: readonly string[],
 ): string[] {
-  const by = json.deal?.["hideBy"];
-  if (by === undefined) return [];
-  if (typeof by !== "object" || by === null || Array.isArray(by))
-    throw new CompileError("deal hideBy: a formula of `at` by clue kind");
+  const by = hideEntries(json).filter(([, props]) => props["by"] !== undefined);
+  if (by.length === 0) return [];
   const scratch: string[] = [];
   const henv = answerEnv(env, { yes: false }, scratch);
   const lines: string[] = [];
-  for (const [kind, src] of Object.entries(by as Record<string, unknown>)) {
-    if (!hidden.includes(kind))
-      throw new CompileError(`deal hideBy: ${kind} is no kind the deal hides`);
+  for (const [kind, props] of by) {
+    const src = props["by"];
     if (typeof src !== "string")
-      throw new CompileError(`deal hideBy: ${kind}'s formula of \`at\``);
+      throw new CompileError(`deal hide: ${kind}'s by is a formula of \`at\``);
     const sorts = env.clues.get(kind) as ClueKind;
     const out = new Out(2);
     const e = compileExpr(
@@ -184,7 +172,7 @@ export function hideRankOf(
       out,
     );
     if (e.sort.k !== "int" && e.sort.k !== "num")
-      throw new CompileError(`deal hideBy: ${kind}'s formula is not a number`);
+      throw new CompileError(`deal hide: ${kind}'s by is not a number`);
     lines.push(
       `  if (kind === ${JSON.stringify(kind)}) {`,
       ...out.text(),
@@ -195,8 +183,8 @@ export function hideRankOf(
   const body = [...scratch.map((s) => `  ${s}`), ...lines, "  return 0;"];
   return [
     "",
-    "/** Where the hide puts a clue of `kind` at `at` (`deal.hideBy`): a higher",
-    " * one is hidden first. */",
+    "/** Where the hide puts a clue of `kind` at `at` (its `by` in `deal.hide`):",
+    " * a higher one is hidden first. */",
     `export function hideRank(${[
       param("sp", "GridSpace", body),
       param("cl", "Dealt", body),
@@ -206,27 +194,6 @@ export function hideRankOf(
     ...body,
     "}",
   ];
-}
-
-/** `deal.hideFlag`: a clue kind the deal hides beside `deal.hide`'s, whose
- * hide it joins, where a flag of the deal's is on; `null` where there is
- * none. */
-export function hideFlagOf(
-  json: DescriptionJson,
-  d: Description,
-  hides: boolean,
-  settings: readonly SettingOut[],
-): { kind: string; when: string } | null {
-  const f = json.deal?.["hideFlag"];
-  if (f === undefined) return null;
-  if (!hides)
-    throw new CompileError("deal hideFlag: a setting of the hide, and no hide");
-  const { kind, when } = f as Record<string, unknown>;
-  if (typeof kind !== "string" || typeof when !== "string")
-    throw new CompileError("deal hideFlag: { kind, when }");
-  if (!d.clueKinds.has(kind))
-    throw new CompileError(`deal hideFlag: no clue kind ${kind}`);
-  return { kind, when: dealFlag(settings, when, "deal hideFlag") };
 }
 
 /** `deal.symmetric` as the deal reads it: a symmetry by its name, or the

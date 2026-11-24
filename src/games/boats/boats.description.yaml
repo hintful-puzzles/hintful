@@ -276,9 +276,8 @@ deal:
     pieces: { value: 1, rest: 2 }
   # A segment of unknown shape is what the player places: the deal gives a
   # shape.
-  withhold: { seg: [3] }
-  hide: seg
-  hideFlag: { kind: n, when: stripClues }
+  never: { seg: [3] }
+  hide: { seg, n: { when: stripClues } }
 settings:
   # The fleet: its longest boat's length after the grid's, each length's
   # count at the end.

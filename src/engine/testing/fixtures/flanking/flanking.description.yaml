@@ -45,9 +45,7 @@ deal:
   flank: every sum, then above Easy each hidden, once no more squares can be, while the board still finishes
   tier: one of the tiers
   sample: { latin: true }
-  hide: [given, flank]
-  hideFirst: [given]
-  hideFrom: { flank: Normal }
+  hide: { given: { first: true }, flank: { from: Normal } }
 id:
   - { numbers: flank, between: "/" }
   - { digits: given, apart: "_", before: "," }

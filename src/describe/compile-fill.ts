@@ -29,7 +29,7 @@ import type { Expr } from "./expr.ts";
 import { firstKindOf, latinOf, oneKindDeal, suitsOf } from "./fill/clue-steps.ts";
 import { derivedClues } from "./fill/derive.ts";
 import { answerEnv, param, present, tierIndex } from "./fill/emit.ts";
-import { hideFlagOf, hideOf, hideRankOf, symmetricOf } from "./fill/hide.ts";
+import { hideOf, hideRankOf, symmetricOf } from "./fill/hide.ts";
 import { checkNamed, checkSegments, hexagonOf } from "./fill/id-checks.ts";
 import { Letters } from "./fill/letters.ts";
 import { partsOfKinds, universesOf } from "./fill/locations.ts";
@@ -96,7 +96,7 @@ function dealOf(
   const written = kinds.filter((k) => k !== tallyKindOf(json));
   checkNamed(id, [...written, ...partitions], hexagon?.outside ?? null);
   checkSegments(id, d, env, json);
-  const { hide, hideFirst, hideFrom, hideWhole } = hideOf(json, d);
+  const hide = hideOf(json, d, settings);
   const hides = hide !== null;
   const thoroughJson = json.deal?.["thorough"];
   const thorough =
@@ -111,7 +111,7 @@ function dealOf(
   if (stripFrom !== undefined && (stripFrom !== "everyClue" || !hides))
     throw new CompileError("deal stripFrom: everyClue, where the deal hides");
   const symmetric = json.deal?.["symmetric"];
-  if (symmetric !== undefined && typeof hide !== "string")
+  if (symmetric !== undefined && hide?.length !== 1)
     throw new CompileError(
       "deal symmetric: the symmetry of the clues left, and no hide of one kind",
     );
@@ -157,7 +157,6 @@ function dealOf(
   const firstKind = firstKindOf(json, d);
   const tierAliases = tierAliasesOf(json, tiers, tierLetters);
   const { grid } = json.space;
-  const hideFlag = hideFlagOf(json, d, hides, settings);
   // A retired letter is one an old ID may still hold, so no field takes it.
   for (const letter of Object.keys(unusedLetters ?? {}))
     if (letters.has(letter))
@@ -167,17 +166,13 @@ function dealOf(
     ...(hexagon === null ? {} : { hexagon }),
     settings,
     sample,
-    ...(hides ? { hide } : {}),
-    ...present("hideFirst", hideFirst),
-    ...present("hideFrom", hideFrom),
-    ...present("hideWhole", hideWhole),
+    ...present("hide", hide),
     ...(stripFrom === undefined ? {} : { stripFrom }),
     ...present("tierFlag", tierFlag),
     ...present("unusedLetters", unusedLetters),
     ...present("tierAliases", tierAliases),
     ...(typeof unpair === "string" ? { unpair } : {}),
     ...present("latin", latin),
-    ...present("hideFlag", hideFlag),
     ...present("symmetric", symmetricDeal),
     ...present("thorough", thorough),
     ...present("divide", divided),
@@ -214,12 +209,7 @@ function dealOf(
     "};",
     ...(grow === null ? [] : growByOf(grow, env)),
     ...(oneKind === null ? [] : suitsOf(oneKind.json, env, measured, tiers)),
-    ...hideRankOf(
-      json,
-      env,
-      measured,
-      typeof hide === "string" ? [hide] : (hide ?? []),
-    ),
+    ...hideRankOf(json, env, measured),
   ];
 }
 

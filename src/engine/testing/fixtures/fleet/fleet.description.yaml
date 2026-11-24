@@ -83,9 +83,8 @@ deal:
   sample:
     pieces: { value: 1, rest: 2 }
   # A piece square of any shape is the ID's alone: the deal gives a shape.
-  withhold: { seg: [3] }
-  hide: seg
-  hideFlag: { kind: n, when: stripClues }
+  never: { seg: [3] }
+  hide: { seg, n: { when: stripClues } }
 settings:
   fleet:
     kind: tally

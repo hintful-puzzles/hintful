@@ -44,7 +44,11 @@ import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
 import { dealFill } from "./deal.ts";
 import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
-import type { FillDeal } from "./game-id.ts";
+import type { FillDeal, HiddenKind } from "./game-id.ts";
+
+/** The flanking deal's hide, read as the engine's type. */
+const hidden: readonly HiddenKind[] = flanking.deal.hide;
+
 import { slotAt, slotPoint } from "./slots.ts";
 
 const game = fillGame("flanking", flanking);
@@ -129,7 +133,10 @@ describe("a clue at a slot in the desc", () => {
       }
       return { given, flank };
     };
-    const { hideFirst: _, ...together } = flanking.deal;
+    const together: FillDeal = {
+      ...flanking.deal,
+      hide: hidden.map(({ first: _, ...h }) => h),
+    };
     const inTurn = left(flanking.deal);
     const mixed = left(together);
     // Measured 2026-11-23: 1 square and 41 sums left squares first, 30 and 16 not.
@@ -141,7 +148,10 @@ describe("a clue at a slot in the desc", () => {
     // Easy hiding sums as well: the squares alone finish the board, so a
     // shortest run kept from the start of the order, where the squares are,
     // leaves squares and no sum.
-    const { hideFrom: _, ...atEasy } = flanking.deal;
+    const atEasy: FillDeal = {
+      ...flanking.deal,
+      hide: hidden.map(({ from: _, ...h }) => h),
+    };
     let given = 0;
     let flank = 0;
     for (const seed of ["a", "b", "c", "d", "e", "f"]) {
@@ -159,7 +169,11 @@ describe("a clue at a slot in the desc", () => {
     // finishes no board without a square, its `rest` reading one.
     const deal: FillDeal = {
       ...flanking.deal,
-      hideWhole: { given: { below: NORMAL + 1, bounds: { longer: { max: 4 } } } },
+      hide: flanking.deal.hide.map((h) =>
+        h.kind === "given"
+          ? { ...h, whole: { below: NORMAL + 1, bounds: { longer: { max: 4 } } } }
+          : h,
+      ),
     };
     /** The squares a Normal deal of `deal` leaves on a `w` by `w` board,
      * over some seeds. */

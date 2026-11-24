@@ -102,7 +102,7 @@ describe("a record a cell", () => {
     }
   });
 
-  it("hides first the givens `deal.hideBy` ranks higher", () => {
+  it("hides first the givens their `by` ranks higher", () => {
     // The fixture ranks a given by its number, so it keeps smaller ones than
     // the same module hiding at random. A board keeps the givens its tier
     // needs, so this compares the two over several deals.

@@ -1896,31 +1896,6 @@
           },
           "description": "What the generator chooses, in words; `sample` where the deal samples an answer and derives the clues from each kind's `means`, and `hide` where it then hides a kind's clues.",
           "properties": {
-            "withhold": {
-              "type": "object",
-              "description": "By clue kind at cells, values no deal derives, which only a game ID writes: a value that holds wherever a more telling one does (Boats' segment of unknown shape).",
-              "additionalProperties": {
-                "type": "array",
-                "items": {
-                  "type": "integer"
-                },
-                "minItems": 1
-              }
-            },
-            "hideFlag": {
-              "type": "object",
-              "required": ["kind", "when"],
-              "additionalProperties": false,
-              "description": "A clue kind the deal also hides, in one random order with `hide`'s, where the flag `when` of the settings is on (Boats' `S`, Remove numbers).",
-              "properties": {
-                "kind": {
-                  "type": "string"
-                },
-                "when": {
-                  "type": "string"
-                }
-              }
-            },
             "never": {
               "oneOf": [
                 {
@@ -1933,9 +1908,27 @@
                   },
                   "minItems": 2,
                   "uniqueItems": true
+                },
+                {
+                  "type": "object",
+                  "minProperties": 1,
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "const": "all"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        },
+                        "minItems": 1
+                      }
+                    ]
+                  }
                 }
               ],
-              "description": "A clue kind, or several, that no deal deals: only a game ID carries one (Pattern's given squares, which only upstream's pictures hold)."
+              "description": "What no deal deals, which only a game ID carries: a clue kind, several, or by kind `all` of it or the values of a kind at cells it never derives. A whole kind: Pattern's given squares, which only upstream's pictures hold. A value: one that holds wherever a more telling one does (Boats' segment of unknown shape)."
             },
             "latin": {
               "type": "object",
@@ -1967,60 +1960,67 @@
                   },
                   "minItems": 2,
                   "uniqueItems": true
-                }
-              ],
-              "description": "A clue kind the deal hides from the answer's, or several hidden in one random order, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier."
-            },
-            "hideFirst": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "minItems": 1,
-              "uniqueItems": true,
-              "description": "Kinds of `hide` whose clues are each tried, at each tier, before any of the rest, each side in one random order (upstream towers.c's and mathrax.c's givens, then their clues)."
-            },
-            "hideBy": {
-              "type": "object",
-              "additionalProperties": {
-                "$ref": "#/$defs/formula"
-              },
-              "description": "By kind of `hide`, a number, a formula of `at` read on the clues as dealt: a clue with a higher one is hidden first, so the board keeps those with the lowest; alike, in a random order. Under `hideFirst`, within each side (Adjacent's givens, those with fewest bars beside them kept, as upstream unequal.c's `gg_best_clue` adds a given where its cell has fewest clues)."
-            },
-            "hideFrom": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              },
-              "description": "By kind of `hide`, the tier from which the deal hides it: a board below that tier shows every clue of the kind (Towers' clues at Easy)."
-            },
-            "hideWhole": {
-              "type": "object",
-              "description": "By kind of `hide`, a board on which the deal hides every clue of it: one below the tier `below`, with the variation `with` on, and within the size bounds given beside it, as `play.bounds` states them, each where given. The answer is drawn again until the board finishes without the kind (upstream towers.c's Easy boards up to 5x5, which show no given; solo.c's Killer boards, which show none).",
-              "additionalProperties": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "below": {
-                    "type": "string"
-                  },
-                  "with": {
-                    "type": "string"
-                  },
-                  "sum": {
-                    "$ref": "#/$defs/sizeBound"
-                  },
-                  "area": {
-                    "$ref": "#/$defs/sizeBound"
-                  },
-                  "shorter": {
-                    "$ref": "#/$defs/sizeBound"
-                  },
-                  "longer": {
-                    "$ref": "#/$defs/sizeBound"
+                },
+                {
+                  "type": "object",
+                  "minProperties": 1,
+                  "additionalProperties": {
+                    "oneOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "properties": {
+                          "first": {
+                            "const": true,
+                            "description": "Its clues are each tried, at each tier, before those of a kind without, each side in one random order (upstream towers.c's and mathrax.c's givens, then their clues)."
+                          },
+                          "by": {
+                            "$ref": "#/$defs/formula",
+                            "description": "A number, a formula of `at` read on the clues as dealt: a clue with a higher one is hidden first, so the board keeps those with the lowest; alike, in a random order, and within each side of `first` (Adjacent's givens, those with fewest bars beside them kept, as upstream unequal.c's `gg_best_clue` adds a given where its cell has fewest clues)."
+                          },
+                          "from": {
+                            "type": "string",
+                            "description": "The tier from which the deal hides it: a board below that tier shows every clue of the kind (Towers' clues at Easy)."
+                          },
+                          "when": {
+                            "type": "string",
+                            "description": "A flag of the settings under which alone it is hidden; a board with the flag on that hides none of it is drawn again (Boats' `S`, Remove numbers)."
+                          },
+                          "whole": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "description": "A board on which the deal hides every clue of it: one below the tier `below`, with the variation `with` on, and within the size bounds given beside them, as `play.bounds` states them, each where given. The answer is drawn again until the board finishes without the kind (upstream towers.c's Easy boards up to 5x5, which show no given; solo.c's Killer boards, which show none).",
+                            "properties": {
+                              "below": {
+                                "type": "string"
+                              },
+                              "with": {
+                                "type": "string"
+                              },
+                              "sum": {
+                                "$ref": "#/$defs/sizeBound"
+                              },
+                              "area": {
+                                "$ref": "#/$defs/sizeBound"
+                              },
+                              "shorter": {
+                                "$ref": "#/$defs/sizeBound"
+                              },
+                              "longer": {
+                                "$ref": "#/$defs/sizeBound"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
                   }
                 }
-              }
+              ],
+              "description": "The clue kinds the deal hides from the answer's, in one random order, a tier at a time from the lowest: the clues the finishing ladder never read go first, then each other, in a random order, is taken off while the board still finishes at the tier. One kind, a list of them, or by kind how it is hidden, each kind in the deal's order."
             },
             "oneIn": {
               "type": "object",

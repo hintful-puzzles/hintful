@@ -41,12 +41,15 @@ export function refusalOf<C extends Clues<C>>(
     // `DIFF_KINTERSECT` on the killer scale as well as the asked tier.
     if (belowTops.some((caps) => finishes(clues, caps)))
       return "fill: another scale's tier below its top finishes the board";
-    // A board the hide flag asked to hide a kind hides one of it (upstream
-    // boats.c refused a stripped board that showed every number).
+    // A board a flag asked to hide a kind hides one of it (upstream boats.c
+    // refused a stripped board that showed every number).
     if (
-      deal.hideFlag !== undefined &&
-      isOn(deal, p, deal.hideFlag.when) &&
-      !hidesAny(clues, deal, sp)
+      deal.hide?.some(
+        (h) =>
+          h.when !== undefined &&
+          isOn(deal, p, h.when) &&
+          !hidesAny(clues, deal, sp, h.kind),
+      )
     )
       return "fill: the board hides none of the flag's kind";
     return null;

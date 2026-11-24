@@ -287,7 +287,7 @@ export const bounds = {"all":{},"tiers":[{"tier":2,"longer":{"min":5}},{"tier":3
 export const hintMarks = {"ring":"the cell the step fills in with a number.","strike":"the pencil marks the step crosses out.","outline":"what the step reasons from: the two cells either side of a bar, or of no bar at all (the one whose marks are struck, and \"its neighbor\"), the cells that already account for the numbers being crossed out, the number just placed, or \"the middle cell\" a step weighs and the cells it reads.","stripes":"the row or column the sentence names: \"in this row\". Or the several it names together, such as \"these 2 columns\", where one number fits only the outlined cells."} as const;
 
 /** How the engine deals the board and writes its game ID. */
-export const deal = {"square":true,"settings":[],"sample":{"latin":true},"hide":"given","unusedLetters":{"a":"size"},"id":[{"records":"given","sides":"bar","both":true}],"universes":{"given":"cells","bar":"edges"},"tierLetters":"tekxr","sizes":{"w":{"min":3,"max":31}},"least":{"given":1,"bar":0}} as const;
+export const deal = {"square":true,"settings":[],"sample":{"latin":true},"hide":[{"kind":"given"}],"unusedLetters":{"a":"size"},"id":[{"records":"given","sides":"bar","both":true}],"universes":{"given":"cells","bar":"edges"},"tierLetters":"tekxr","sizes":{"w":{"min":3,"max":31}},"least":{"given":1,"bar":0}} as const;
 
 /** Each clue kind's largest value at an element. */
 export const clueMax = {
@@ -299,8 +299,8 @@ export const clueMax = {
   },
 };
 
-/** Where the hide puts a clue of `kind` at `at` (`deal.hideBy`): a higher
- * one is hidden first. */
+/** Where the hide puts a clue of `kind` at `at` (its `by` in `deal.hide`):
+ * a higher one is hidden first. */
 export function hideRank(sp: GridSpace, cl: Dealt, kind: string, at: number): number {
   if (kind === "given") {
     let _g6 = 0;

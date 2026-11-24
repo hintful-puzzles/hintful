@@ -71,15 +71,13 @@ export function keepingOf<C extends Clues<C>>(
   };
 }
 
-/** Whether `clues` hide one of the hide flag's kind: fewer than its
- * universe. */
+/** Whether `clues` hide one of `kind`: fewer than its universe. */
 export function hidesAny<C extends Clues<C>>(
   clues: C,
   deal: FillDeal,
   sp: GridSpace,
+  kind: string,
 ): boolean {
-  const kind = deal.hideFlag?.kind;
-  if (kind === undefined) return false;
   return (
     (clues[kind as keyof C] as ClueList).at.length < elementCount(deal, sp, clues, kind)
   );

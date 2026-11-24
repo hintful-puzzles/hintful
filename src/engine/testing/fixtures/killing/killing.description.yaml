@@ -95,8 +95,7 @@ deal:
   tier: the one tier
   sample: { search: true }
   divide: { partition: cage, pairs: 0.75, most: 3 }
-  hide: given
-  hideWhole: { given: { with: Killer } }
+  hide: { given: { whole: { with: Killer } } }
 settings:
   Killer:
     kind: flag

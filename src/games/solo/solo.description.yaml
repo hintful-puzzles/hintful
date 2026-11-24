@@ -148,8 +148,7 @@ deal:
     - { partition: block, equal: w }
     - { partition: cage, pairs: 0.75, most: 3 }
   sample: { search: true }
-  hide: given
-  hideWhole: { given: { with: Killer } }
+  hide: { given: { whole: { with: Killer } } }
   symmetric: symmetry
 # Upstream solo.c's order: the blocks, `x`, `k`, the symmetry's code, the tier.
 settings:

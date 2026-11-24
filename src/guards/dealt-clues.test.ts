@@ -2,9 +2,9 @@
  * A deal's clues are as its description says, where it says more than that
  * the answer keeps them (which the rules' guards hold of every board):
  *
- * - A value the deal withholds (`deal.withhold`, Boats' segment of unknown
- *   shape) is never dealt: the player is to find it.
- * - The kind a hide flag hides (`deal.hideFlag`, Boats' numbers) is dealt at
+ * - A value `deal.never` names (Boats' segment of unknown shape) is never
+ *   dealt: the player is to find it.
+ * - The kind hidden under a flag (its `when` in `deal.hide`, Boats' numbers) is dealt at
  *   every place it can sit with the flag off, and at fewer with it on.
  *
  * For every born game whose description declares either, each board dealt at
@@ -27,12 +27,36 @@ import { leafPresets } from "../engine/testing/presets.ts";
 const BOARDS = 2;
 
 interface DealShape {
+  /** The values of a kind `deal.never` names. */
   readonly withhold?: Readonly<Record<string, readonly number[]>>;
+  /** The kind hidden under a flag, and the flag. */
   readonly hideFlag?: { readonly kind: string; readonly when: string };
 }
 
+/** What `born` declares of the two, the values from its description's
+ * `never` and the flagged kind from its compiled hide. */
+function shapeOf(born: (typeof BORN_GAMES)[number]): DealShape {
+  const never = (born.description["deal"] as { never?: unknown } | undefined)?.never;
+  const values =
+    typeof never === "object" && never !== null && !Array.isArray(never)
+      ? Object.entries(never).filter(([, v]) => Array.isArray(v))
+      : [];
+  const compiled = born.compiled["deal"] as {
+    hide?: readonly { kind: string; when?: string }[];
+  };
+  const flagged = (compiled.hide ?? []).flatMap((h) =>
+    h.when === undefined ? [] : [{ kind: h.kind, when: h.when }],
+  );
+  if (flagged.length > 1)
+    throw new Error(`${born.id}: the guard reads one flagged kind`);
+  return {
+    ...(values.length === 0 ? {} : { withhold: Object.fromEntries(values) }),
+    ...(flagged.length === 0 ? {} : { hideFlag: flagged[0] }),
+  };
+}
+
 const declaring = BORN_GAMES.flatMap((born) => {
-  const deal = (born.description["deal"] ?? {}) as DealShape;
+  const deal = shapeOf(born);
   const universes = (born.compiled["deal"] as { universes?: Record<string, string> })
     ?.universes;
   return deal.withhold === undefined && deal.hideFlag === undefined

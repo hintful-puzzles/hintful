@@ -64,8 +64,7 @@ deal:
   sum: every corner's clue, then each hidden while the board still finishes
   tier: one of the tiers
   sample: { latin: true }
-  hide: [given, sum, difference, same, parity]
-  hideFirst: [given]
+  hide: { given: { first: true }, sum, difference, same, parity }
   firstKind: [sum, difference, same, parity]
 settings:
   clueTypes:

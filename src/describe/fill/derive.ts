@@ -108,17 +108,37 @@ function onceOf(
   );
 }
 
-/** The clue kinds `deal.never` names: dealt by no deal, carried only by an
- * ID (Pattern's given squares, which only upstream's pictures hold). */
-function neverOf(json: DescriptionJson, d: Description): string[] {
+/** What `deal.never` says no deal deals, which only an ID carries: whole
+ * kinds (Pattern's given squares, which only upstream's pictures hold), and
+ * values of a kind at cells (Boats' segment of a shape not given). It is a
+ * kind, a list of them, or by kind its values, or `all`. */
+function neverOf(
+  json: DescriptionJson,
+  d: Description,
+): { kinds: string[]; values: ReadonlyMap<string, readonly number[]> } {
   const never = json.deal?.["never"];
-  const kinds = never === undefined ? [] : typeof never === "string" ? [never] : never;
-  if (!Array.isArray(kinds))
-    throw new CompileError("deal never: a clue kind, or a list");
-  for (const k of kinds)
-    if (typeof k !== "string" || !d.clueKinds.has(k))
-      throw new CompileError(`deal never: ${String(k)} is no clue kind`);
-  return kinds as string[];
+  const byKind: Record<string, unknown> =
+    never === undefined
+      ? {}
+      : typeof never === "string"
+        ? { [never]: "all" }
+        : Array.isArray(never)
+          ? Object.fromEntries(never.map((k) => [String(k), "all"]))
+          : (never as Record<string, unknown>);
+  const kinds: string[] = [];
+  const values = new Map<string, number[]>();
+  for (const [k, v] of Object.entries(byKind)) {
+    if (!d.clueKinds.has(k)) throw new CompileError(`deal never: ${k} is no clue kind`);
+    if (v === "all") kinds.push(k);
+    else if (!(Array.isArray(v) && v.every((n) => Number.isInteger(n))))
+      throw new CompileError(`deal never: ${k}'s values are a list of numbers, or all`);
+    else if (d.clueKinds.get(k)?.at !== "cell")
+      throw new CompileError(
+        `deal never: ${k}'s values, and it is no clue kind at a cell`,
+      );
+    else values.set(k, v as number[]);
+  }
+  return { kinds, values };
 }
 
 /** `E` where a meaning is `E = v` or `v = E`, alone or a term of a
@@ -137,24 +157,6 @@ function solvedFor(means: Expr): Expr | null {
   if (isV(means.b) && freeOfV(means.a)) return means.a;
   if (isV(means.a) && freeOfV(means.b)) return means.b;
   return null;
-}
-
-/** `deal.withhold`'s values of `kind`: values a deal never derives, which
- * only an ID writes (Boats' segment of a shape not given). */
-function withheldOf(json: DescriptionJson, d: Description, kind: string): number[] {
-  const w = json.deal?.["withhold"];
-  if (w === undefined) return [];
-  if (typeof w !== "object" || Array.isArray(w))
-    throw new CompileError("deal withhold: { kind: [values] }");
-  const byKind = w as Record<string, unknown>;
-  for (const k of Object.keys(byKind))
-    if (d.clueKinds.get(k)?.at !== "cell")
-      throw new CompileError(`deal withhold: ${k} is no clue kind at a cell`);
-  const values = byKind[kind];
-  if (values === undefined) return [];
-  if (!Array.isArray(values) || !values.every((n) => Number.isInteger(n)))
-    throw new CompileError(`deal withhold: ${kind}'s values are a list of numbers`);
-  return values as number[];
 }
 
 /**
@@ -245,7 +247,8 @@ export function derivedClues(
   const once = new Out(1);
   const outside = json.space.grid?.hexagon?.outside;
   const latinKind = latinOf(json, d)?.kind;
-  const never = [...neverOf(json, d), ...(latinKind === undefined ? [] : [latinKind])];
+  const { kinds: neverKinds, values: neverValues } = neverOf(json, d);
+  const never = [...neverKinds, ...(latinKind === undefined ? [] : [latinKind])];
   const tally = tallyKindOf(json) ?? undefined;
   /** Whether a kind sits at the dealt partition's parts, whose cells its
    * meaning reads off the partition. */
@@ -381,7 +384,7 @@ export function derivedClues(
             ? `inHexagon(sp.w, sp.h, ${a} % sp.w, Math.floor(${a} / sp.w)) && `
             : "";
         // A value only an ID writes is never derived.
-        const withheld = withheldOf(json, d, kind).map((n) => ` && ${v} !== ${n}`);
+        const withheld = (neverValues.get(kind) ?? []).map((n) => ` && ${v} !== ${n}`);
         derive.emit(
           `if (${within}${at}.at(-1) !== ${a}${withheld.join("")} && clueHolds_${kind}(g, sp, ${parts ? "cl, " : ""}${a}, ${v})) { ${at}.push(${a}); ${vs}.push(${v}); }`,
         );

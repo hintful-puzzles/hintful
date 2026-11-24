@@ -103,8 +103,8 @@ each setting's fields together.
 - `deal.oneKind.alone: { when: <setting>, kinds: [...] }` replaces
   `deal.onlyFlag` (folded into its neighbor): with the flag on, the deal
   deals those kinds alone.
-- `deal.hideFlag: { kind, when: <setting> }` keeps its place until the hide
-  keys become one (§ "The hide keys"); it no longer holds a Custom field.
+- A hidden kind's `when: <setting>` (§ "The hide keys") hides it only
+  where the flag is on; it holds no Custom field.
 - `deal.thorough: <setting>` names a flag; the setting carries `onBelow`.
 - A `set`'s members are the kinds the deal deals; `deal.firstKind` reads
   them.
@@ -153,11 +153,47 @@ changed, under HEAD and the change, the game IDs compared byte for byte.
 
 ### The one-user keys
 
-Decided per key at task 4.1, each renamed for its concept with a second
-fixture, folded, or kept with the game that could adopt it. Already
-decided: `deal.onlyFlag` folds into `deal.oneKind` (above).
+Decided per key at task 4.1 (2026-11-24), each renamed for its concept,
+folded, or kept. Every one already has a fixture beside its game (the
+census of § "The census" run over `src/engine/testing/fixtures/` too), so
+none needs a second; 4.2 renames those fixtures named for a game.
+
+- **Folded**: `deal.onlyFlag` into `deal.oneKind.alone` (above); the hide
+  keys into one `hide` and `withhold` into `never` (§ "The hide keys");
+  `deal.firstKind` into `deal.oneKind`, whose `pick: first` keeps at each
+  place the first of its kinds the answer makes there (Mathrax), where
+  the default, `pick: turn`, deals them in turn by how each suits a part
+  (Keen). Both say "one clue of these kinds at a place"; how it is chosen
+  is the property.
+- **Renamed**: `play.hides` to `play.covers`, a value whose piece covers
+  its cell's number, so the play's key is not the deal's `hide`.
+- **Kept, named for their concept**: `deal.unpair`, `deal.latin`,
+  `deal.oneIn`, `deal.thorough`, `deal.stripFrom`; `play.shape`,
+  `play.wash`, `play.labels`, `play.sweepWith`, `play.wrap`, `play.links`,
+  `play.glance`, `play.askBefore`. The proposal's guess that `hides`,
+  `wash` and `shape` are one "a piece covers a square" concept does not
+  hold: `wash` changes what the rules read (a washed cell is the secondary
+  value) and is never a hint's step, `covers` changes only the drawing, and
+  `shape` draws a clue as a piece. A key that draws, one that rules and one
+  that clues are three.
 
 ### The hide keys
 
-`hide`, `hideFirst`, `hideFrom`, `hideWhole`, `hideBy`, `hideFlag` and
-`withhold` become one `hide` at task 4.1.
+`hide`, `hideFirst`, `hideFrom`, `hideWhole`, `hideBy` and `hideFlag` are
+one `hide` (done 2026-11-24): one kind, a list, or by kind how it is
+hidden, in the deal's order, each kind's `first`, `by`, `from`, `whole`
+and `when` its old key's meaning. `FillDeal.hide` is the list of those
+records, `by` compiled into the module's `hideRank`. `symmetric`,
+`thorough` and `stripFrom` stay beside it: each is how the whole hide
+goes, not how a kind is hidden, and each has more than one user.
+
+`withhold` is not the hide's: a value withheld is never derived, as a
+kind `never` names is never dealt, and neither is hidden by the hide. It
+folds into `never`, which takes by kind `all` or the values
+(`never: { seg: [3] }`).
+
+The fold held every board: `deal-compare` against HEAD dealt the same
+boards on all 66 presets of Adjacent, Boats, Mathrax, Solo and Towers,
+three seeds each. Boats' Remove numbers is on no preset, so no board of it
+was compared; `dealt-clues.test.ts` deals it each way and holds it to what
+`when` claims.
