@@ -1,17 +1,13 @@
 ## Next
 
-1.1, the census. Open: none.
+2.1, the settings concept (design.md § "One `settings:` key"). Open: none.
 
 ## 1. Design
 
-- [ ] 1.1 The census, as queries in design.md: every key of `play:` and
-      `deal:` and every segment kind, with its born users; every setting
-      the params give and how it is spelled. Re-measure the proposal's
-      figures.
-- [ ] 1.2 Per one-user key: its concept, and rename with a second fixture,
-      fold into a neighbor, or keep with the reason another game could
-      adopt it. Per setting: its place in `settings`. The one codec's
-      segment kinds. Write the decisions in design.md.
+- [x] 1.1 The census, as queries in design.md § "The census": nine
+      spellings, not eight, and the "two codecs" false.
+- [x] 1.2 The decisions in design.md § "Decisions"; the one-user keys'
+      own at 4.1.
 
 ## 2. Settings
 
