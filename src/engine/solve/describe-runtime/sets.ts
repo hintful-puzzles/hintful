@@ -259,11 +259,14 @@ export function facesOf(n: number): readonly number[] {
   return faceLists[n];
 }
 
-/** `range(a, b)` as a set of values. */
+/** `range(a, b)` as a set of values. A value outside 0 to 31 has no place in
+ * a 32-bit mask, and `1 << d` would put it at `d mod 32` without a word. */
 export function rangeMask(a: number, b: number): number {
   if (a > b) return 0;
-  // Bits a to b at once, where both are places of a 32-bit mask.
-  if (a >= 0 && b < 30) return (2 << b) - (1 << a);
+  if (a < 0 || b > 31)
+    throw new RangeError(`range(${a}, ${b}): a set holds only the values 0 to 31`);
+  // Bits a to b at once, where b + 1 is a place of a 32-bit mask.
+  if (b < 30) return (2 << b) - (1 << a);
   let m = 0;
   for (let d = a; d <= b; d++) m |= 1 << d;
   return m;

@@ -113,6 +113,8 @@ export function compileLibrary(
     boxesDealt: false,
     diagonals: false,
     cellDomain: false,
+    // The library's techniques run on boards of numbers too.
+    numerals: true,
     sizes: { names: new Set(), read: new Set() },
     used,
     concluding: false,
@@ -320,6 +322,7 @@ export function compileGame(
       read: new Set(),
     },
     cellDomain: false,
+    numerals: json.play?.numbers !== undefined,
     used,
     concluding: false,
     answer: null,

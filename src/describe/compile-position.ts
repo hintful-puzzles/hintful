@@ -486,6 +486,7 @@ export function compilePlanning(
     boxesDealt: false,
     diagonals: false,
     cellDomain: false,
+    numerals: false,
     edgeMark: null,
     edgeMarkSort: "edge",
     relation: null,

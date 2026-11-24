@@ -97,32 +97,33 @@ migration onto the fill deal, which is where this refusal lives.
 
 ## 3.1 The four properties (read 2026-11-24)
 
-What each bug was, what would catch it planted again, and the cheapest
-tier that does:
+What each bug was, what catches it planted again, and the cheapest tier
+that does. Each plant below was run and seen to fail.
 
 - **A range past 31** (973039781): `x in range(lo, hi)` built
   `rangeMask(lo, hi)`, whose `1 << d` wraps at 32, so a cage total of 32
   or more was in no range. The compiler now compares a number with the
-  ends, but `rangeMask` still wraps for any caller. It throws on a bound
-  outside 0 to 31, and a property test over every pair of bounds from -2
-  to 40 asks for the exact set or the throw. Planted again (the compiler's
-  comparison reverted), Keen's derivation throws.
+  ends; `rangeMask` itself now throws on a bound outside 0 to 31, and a
+  property test over every pair of bounds from -2 to 40 asks for the exact
+  set or the throw (fails with the throw removed). With the compiler's
+  comparison reverted, a Keen 6x6 deal throws `range(1, 36)`. Every
+  generated `rangeMask` call is bounded by a size whose maximum is 31 at
+  most (Adjacent's `w`, Solo's `across`, Group's `order` 26).
 - **Emitted and read names** (5d92bb887, `_sp` emitted and `sp` read): the
-  generated modules are typechecked by the gate (`npm run typecheck` reads
-  `src/generated/`), so a name read and never bound fails in every module
-  that has the form. Planted again (`play.ts`'s `param("sp", …)` back to
-  `_sp`), the typecheck of `squaring` fails. No test adds to that; the
-  hand-written `_cl` and `_c` beside it are the same shape and the same
-  check covers them.
-- **Numerals in wording** ("sum to g"): a stated clause says a number term
-  in digits (`String(n)`, the fill hint gives no `value`), and Keen's and
-  Mathrax's clue numbers say `{numeral …}`. The other direction is open: a
-  board of numbers past 9 draws 10 on as letters (`digitKeyCode`), so
-  Solo's 16-value board draws `c` where its hint says `12`. Check it in
-  the app; if so, a value term is said as the board draws it and a count
-  or a clue in digits, and which a term is is the wording compiler's to
-  know from the term's sort.
-- **Per-tier clue kinds** (the `ordering` Normal deal): to find in the log
-  (`git log -S` on `deal/one-kind.ts` and `hide.ts`); the property is that
-  every kind a technique on the ladder up to the asked tier reads is dealt
-  at that tier.
+  gate typechecks `src/generated/`, so a name read and never bound fails in
+  every module with the form. With `play.ts`'s `domainOf` planted back to
+  `_sp`, ten fixtures' modules fail the typecheck. No test is added.
+- **Numerals in wording** ("sum to g"): on a board of numbers a term said
+  bare goes through the value hook (`numeral`, a letter past nine), which
+  is right for a value and wrong for a clue's number or a count. The
+  compiler now refuses, on a board of numbers (`Env.numerals`) and in the
+  library, a bare term whose expression, or the `let` it names, reads a
+  clue, a size or a `count`/`sum`/`prod` (`checkStated`). No description
+  had one; Keen's `{numeral sum}` turned back to `{sum}` is refused
+  (`compile.test.ts`), and passes with the check off. On a shading board
+  the hook is digits, so a bare clue there is said as drawn and stays
+  allowed.
+- **Per-tier clue kinds** (a6e0921d2: the hide pruned the signs at Easy,
+  leaving no Normal `ordering` board): planting the keep off (`unread` all
+  false in `deal/hide.ts`) fails six tests in `edges.test.ts` and
+  `corners.test.ts`. Already guarded; no test is added.

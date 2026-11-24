@@ -1984,7 +1984,10 @@ count of the leg's own ring, which no slot says without marking the words.
 `{a term}` says a value with its article ("an A") and `{numeral term}` a plain
 count where `{term}` is a value the board draws another way (a letter). A
 clue's number is a count, not a value: Keen's `{numeral sum}`, as a bare
-`{sum}` of 16 reads "g" (a value past `z`'s throws). On a fill board `{unit}`
+`{sum}` of 16 reads "g" (a value past `z`'s throws). On a board of numbers
+the compiler refuses a term said bare that reads a clue, a size or a
+`count`, `sum` or `prod`, written in the term or in the `let` it names
+(`checkStated`). On a fill board `{unit}`
 names the board's unit holding the cells: row, column, the blocks' name, or
 diagonal.
 `{derived outline: words}` is a reference whose words claim what the board

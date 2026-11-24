@@ -396,6 +396,9 @@ export interface Env {
   /** Whether the answer's domain is a cell's (it reads `c`), so `domain`
    * alone names nothing. */
   cellDomain: boolean;
+  /** Whether the board draws its values as numerals (`play.numbers`), a
+   * letter past nine, so a hint's term said plainly is said so. */
+  numerals: boolean;
   /** The description's sizes the grid does not give, which the board deals
    * where a technique reads one: those read, by name. */
   sizes: { names: ReadonlySet<string>; read: Set<string> };

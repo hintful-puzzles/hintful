@@ -1038,7 +1038,15 @@ function techniqueFunction(t: Technique, fnName: string, env: Env): CompiledTech
       `${t.id}: its dearest read grows with the board as ${power(growth)}, past ${power(MAX_GROWTH)}: bind a set once outside the loops that read it, or keep what it reads (docs/descriptions.md § "What a technique compiles to")`,
     );
   if (t.says !== null)
-    checkStated(t.id, t.says, saysFields.variants, tenv.factSays?.sorts ?? null);
+    checkStated(
+      t.id,
+      t.says,
+      saysFields.variants,
+      tenv.factSays?.sorts ?? null,
+      undefined,
+      null,
+      env.numerals ? t.binders : null,
+    );
   // The game's hook supplies a technique's terms whichever arm held, so every
   // arm supplies the same.
   const suppliedFields = ((): { terms: string[]; marks: string[] } | null => {

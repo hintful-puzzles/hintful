@@ -1,8 +1,6 @@
 ## Next
 
-3.1, the four properties: design.md § "3.1" says what each needs, the
-range first. Solo's 16-value hint wording is to be seen in the app.
-Open: none.
+4.1, the capability-fixtures guard by tier. Open: none.
 
 ## 1. Design
 
@@ -21,9 +19,9 @@ Open: none.
 
 ## 3. Properties
 
-- [ ] 3.1 Property tests: ranges over the full domain, emitted and read
-      names, numerals in wording, per-tier clue kinds. Each of the four
-      bugs in the proposal, planted again, fails one.
+- [x] 3.1 Each of the four bugs, planted again, fails a check: the range
+      property test, the typecheck, `checkStated`'s bare count, the hide's
+      six tests (design.md § "3.1").
 
 ## 4. Fixtures read at their tier
 

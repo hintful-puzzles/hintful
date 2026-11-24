@@ -28,7 +28,14 @@ import type {
   Technique,
   Wording,
 } from "./description.ts";
-import type { Expr } from "./expr.ts";
+import type { Binder, Expr } from "./expr.ts";
+
+/** Whether `e` is a number counted or a clue's (`clue(…)`, `|…|`, a
+ * `count`, `sum` or `prod`), never a value a cell takes. */
+const isCount = (e: Expr): boolean =>
+  (e.k === "call" && e.fn === "clue") ||
+  e.k === "size" ||
+  (e.k === "agg" && (e.fn === "count" || e.fn === "sum" || e.fn === "prod"));
 
 /**
  * Every slot of a technique's stated clauses names what the technique states:
@@ -51,6 +58,10 @@ export function checkStated(
   /** A planner's step that decides elements of several sorts names one of
    * them in each ring reference, as a role of several sorts does. */
   ringSorts: readonly string[] | null = null,
+  /** On a board that draws its values as numerals, the technique's binders,
+   * whose `let`s a term may name; `null` on any other, whose terms said
+   * plainly are said in digits. */
+  binders: readonly Binder[] | null = null,
 ): void {
   // A clause reads a lexicon word before a term, so a term of that name would
   // silently never be said.
@@ -63,6 +74,23 @@ export function checkStated(
       throw new CompileError(
         `${id}: a term named ${name} is shadowed by the lexicon's word of that name: rename the term`,
       );
+  // A term said plainly is said as the board draws a value, a letter past
+  // nine on a board of numbers. A clue's number or a count is no value: said
+  // plainly, Keen's cage of 16 was to "sum to g".
+  const lets = new Map(
+    (binders ?? []).filter((b) => b.kind === "let").map((b) => [b.name, b.of]),
+  );
+  const counts = (e: Expr): boolean => {
+    const bound = e.k === "name" ? lets.get(e.name) : undefined;
+    return isCount(bound ?? e);
+  };
+  const counted = new Set(
+    binders === null
+      ? []
+      : [...says.variants.flatMap((v) => v.terms), ...(says.fact?.terms ?? [])]
+          .filter((x) => x.expr !== null && counts(x.expr))
+          .map((x) => x.name),
+  );
   const isNum = (s?: Sort): boolean => s?.k === "num" || s?.k === "int";
   const isElems = (s?: Sort): boolean =>
     s !== undefined && (s.k === "elem" || (s.k === "set" && s.of.k === "elem"));
@@ -80,7 +108,12 @@ export function checkStated(
       } catch (e) {
         throw new CompileError(`${id}: says ${where}${part}: ${(e as Error).message}`);
       }
-      const plain = (name: string, inner: boolean): void => {
+      // `s`'s numbers are the terms it says as numbers, `{numeral …}` and the like.
+      const plain = (name: string, inner: boolean, s: ClauseSlot): void => {
+        if (counted.has(name) && !STATED_WORDS.has(name) && !s.numbers?.includes(name))
+          throw new CompileError(
+            `${id}: says ${where}${part} says {${name}}, a number counted or a clue's, as a value is drawn: say {numeral ${name}}`,
+          );
         if (
           STATED_WORDS.has(name) ||
           isNum(sorts.get(name)) ||
@@ -107,10 +140,10 @@ export function checkStated(
         // Squares the step places, whatever the description marks.
         if (s.role === "if" || s.role === "has" || s.role === "fit") continue;
         if (s.role === "ring" && s.name !== null && ringNames(s.name) !== null) {
-          for (const n of s.inner) plain(n, true);
+          for (const n of s.inner) plain(n, true, s);
           continue;
         }
-        if (s.role === null) plain(s.name as string, false);
+        if (s.role === null) plain(s.name as string, false, s);
         else if (s.name === null) {
           if (s.role !== "ring" && !roles.has(s.role))
             throw new CompileError(
@@ -126,7 +159,7 @@ export function checkStated(
           throw new CompileError(
             `${id}: says ${where}${part} names {${s.role} ${s.name}}, and ${s.name} is no term of elements`,
           );
-        for (const n of s.inner) plain(n, true);
+        for (const n of s.inner) plain(n, true, s);
       }
     }
   };

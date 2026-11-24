@@ -407,6 +407,25 @@ it("compass walks a straight line in each of the eight directions", () => {
   expect(compass(sp, 5, 9, 1)).toBe(-1);
 });
 
+it("range(a, b) holds exactly a to b, and refuses a bound no mask has a place for", () => {
+  // Every pair of bounds either side of the mask's 32 places: the set read
+  // back bit by bit is the range, or the call throws.
+  let held = 0;
+  for (let a = -2; a <= 40; a++)
+    for (let b = -2; b <= 40; b++) {
+      if (a <= b && (a < 0 || b > 31)) {
+        expect(() => rangeMask(a, b), `${a}..${b}`).toThrow(RangeError);
+        continue;
+      }
+      const m = rangeMask(a, b);
+      const got = Array.from({ length: 32 }, (_, d) => d).filter((d) => (m >>> d) & 1);
+      const want = Array.from({ length: Math.max(0, b - a + 1) }, (_, i) => a + i);
+      expect(got, `${a}..${b}`).toEqual(want);
+      held++;
+    }
+  expect(held).toBeGreaterThan(500);
+});
+
 it("run_lengths reads a line's runs in order", () => {
   expect([...runsOf([3, 4, 5, 6, 7, 8], [3, 5, 6, 8])]).toEqual([1, 2, 1]);
   expect([...runsOf([0, 1, 2], [])]).toEqual([]);

@@ -325,7 +325,7 @@ describe("a stated clause names only what its technique states", () => {
   it("so a number term, a lexicon word and a role it marks are said", () => {
     expect(() =>
       stated({
-        look: "{outline: the outlined {noun}} has {n} {shaded} {outline near: neighbor | neighbors}",
+        look: "{outline: the outlined {noun}} has {numeral n} {shaded} {outline near: neighbor | neighbors}",
         move: "{ring} must be {unshaded}",
       }),
     ).not.toThrow();
@@ -1028,6 +1028,24 @@ describe("what the fill board reads of a description", () => {
     );
     expect(() => compileSolo("{numeral lines} rows}", "{tally} rows}")).toThrow(
       /says look says \{tally\}, which only the library's wordings are given/,
+    );
+  });
+
+  it("refuses a clue's number said bare on a board of numbers, which would say 16 as g", () => {
+    const source = "src/games/keen/keen.description.yaml";
+    const keen = sources.get(source);
+    if (keen === undefined || !isFormal(keen)) throw new Error("no keen");
+    const compileKeen = (to: string) => () =>
+      compileGame(
+        JSON.parse(JSON.stringify(keen).replace("sum to {numeral sum}", to)) as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    expect(compileKeen("sum to {numeral sum}")).not.toThrow();
+    expect(compileKeen("sum to {sum}")).toThrow(
+      /says \{sum\}, a number counted or a clue's, as a value is drawn: say \{numeral sum\}/,
     );
   });
 
