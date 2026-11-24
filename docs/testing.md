@@ -813,6 +813,19 @@ name that no fixture does, against its ledger, and holds each fixture to a
 test that imports it. Exemplar: `joining`, run by
 [`render.test.ts`](../src/engine/fill/render.test.ts).
 
+**Test a kind at a tier that reads it.** The hide keeps or drops a clue by
+whether the ladder read it, so a test of how a kind is hidden, at a tier
+whose techniques read none of it, sees nothing move whatever the code does. `cornering`'s Easy reads a parity and no other
+corner clue; its `pair`, at Normal, reads the rest. The compiler refuses a
+hidden kind that no tier reads at all.
+
+**An engine fix is verified on a born game that reaches it, too.** Run the
+fixture's test, then deal the born games whose descriptions take the path
+(`deal-compare` against HEAD, or the game's own tests) and say what moved.
+A fixture states only the few techniques it needs, so the board it deals can
+leave the path untested where a game's full ladder would reach it: a hide fix
+that moved nothing on `cornering`'s Easy moved every Mathrax Easy deal.
+
 ## What a game owes the cross-game guards
 
 A game joins a cross-game guard by declaring or having the thing the guard

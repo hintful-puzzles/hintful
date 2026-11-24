@@ -492,8 +492,10 @@ function freshChecked(r: Recheck, id: string, env: Env): void {
 }
 
 /** A technique compiled: its function, whether it reads the board's clues,
- * and the bindings that name a clue: each a cell's, whose clue is the one at
- * it, and each a clue's index in its kind's list, by the kind. */
+ * and the bindings that name a clue: each an element's, with the kinds
+ * placed at its sort, whose clues are the ones at it (a corner's, not the
+ * cell's of the same index), and each a clue's index in its kind's list, by
+ * the kind. */
 export interface CompiledTechnique {
   readonly code: string;
   readonly clues: boolean;
@@ -503,7 +505,7 @@ export interface CompiledTechnique {
    * notes offers it before the notes are set up. */
   readonly leads: boolean;
   readonly reads: {
-    readonly cells: readonly string[];
+    readonly at: Readonly<Record<string, readonly string[]>>;
     readonly clues: Readonly<Record<string, string>>;
   };
 }
@@ -1174,7 +1176,15 @@ function techniqueFunction(t: Technique, fnName: string, env: Env): CompiledTech
       !concludes(t.conclude, "strike", env) &&
       !readsCandidates,
     reads: {
-      cells: sorts.filter((s) => named(s) === "cell").map((s) => s.name),
+      at: Object.fromEntries(
+        sorts.flatMap((s) => {
+          const e = named(s);
+          const kinds = [...env.clues]
+            .filter(([, c]) => c.at.k === "elem" && c.at.e === e)
+            .map(([k]) => k);
+          return kinds.length === 0 ? [] : [[s.name, kinds]];
+        }),
+      ),
       clues: Object.fromEntries(
         sorts.flatMap((s) => {
           const e = named(s);

@@ -852,6 +852,30 @@ export function mentions(
   return children(e).some((c) => mentions(c, fn, defs, seen));
 }
 
+/** The clue kinds `e` reads by `clue(kind, …)` or `clues(kind)`, itself or
+ * through the definitions it names. */
+export function kindsRead(
+  e: Expr,
+  defs: ReadonlyMap<string, Definition>,
+  out = new Set<string>(),
+  seen = new Set<string>(),
+): Set<string> {
+  if (
+    e.k === "call" &&
+    (e.fn === "clue" || e.fn === "clues") &&
+    e.args[0]?.k === "name"
+  )
+    out.add(e.args[0].name);
+  const named = e.k === "call" ? e.fn : e.k === "name" ? e.name : null;
+  const d = named === null ? undefined : defs.get(named);
+  if (named !== null && d !== undefined && !seen.has(named)) {
+    seen.add(named);
+    kindsRead(d.body, defs, out, seen);
+  }
+  for (const c of children(e)) kindsRead(c, defs, out, seen);
+  return out;
+}
+
 /**
  * Refuse a read of `fn` in `e` that could make the set `fn` defines lose a
  * member as it gains one, so that its least fixed point is the set the

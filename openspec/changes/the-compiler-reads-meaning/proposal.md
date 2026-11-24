@@ -32,8 +32,10 @@ silent until a real game used the path:
   the deal's per-tier clue kinds; differential where an interpreter of the
   same expression exists.
 - **An engine fix is verified on a born game that reaches it**, as well as
-  on its fixture: `docs/testing.md` says so, and the fixture's guard asks
-  that each fixture's capability is read by the tier it is tested at.
+  on its fixture: `docs/testing.md` says so, and says to test a kind at a
+  tier that reads it. The compiler refuses a hidden kind no technique
+  reads, and the deal counts a clue read at the element a firing binds,
+  a corner's at a corner, not the cell of the same index.
 
 ## Capabilities
 

@@ -1259,6 +1259,30 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/settings clueTypes: a kind named twice/);
   });
 
+  it("refuses a hidden kind no technique reads, since the hide keeps none of it", () => {
+    // Cornering's corner kinds but parity are read by `pair` alone: without
+    // it, a test of how they are dealt sees every one hidden.
+    const source = "src/engine/testing/fixtures/cornering/cornering.description.yaml";
+    const cornering = sources.get(source);
+    if (cornering === undefined || !isFormal(cornering))
+      throw new Error("no cornering");
+    const j = structuredClone(cornering) as unknown as {
+      techniques: { id?: string }[];
+      names: Record<string, string>;
+    };
+    j.techniques = j.techniques.filter((t) => t.id !== "pair");
+    delete j.names["pair"];
+    expect(() =>
+      compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      ),
+    ).toThrow(/deal hide: no technique reads sum, so the hide keeps none of it/);
+  });
+
   it("refuses a walk's step under a rung its technique does not give", () => {
     const source = "src/engine/testing/fixtures/flanking/flanking.description.yaml";
     const flanking = sources.get(source);

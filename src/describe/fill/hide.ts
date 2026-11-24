@@ -15,6 +15,7 @@ import {
   Out,
   type Val,
 } from "../compile-sorts.ts";
+import { kindsRead } from "../compile-terms.ts";
 import type { Description, DescriptionJson, SizeBoundsJson } from "../description.ts";
 import type { Expr } from "../expr.ts";
 import { parse } from "../expr.ts";
@@ -88,7 +89,34 @@ export function hideOf(
   const firsts = out.filter((h) => h.first === true).length;
   if (firsts === out.length && firsts > 0)
     throw new CompileError("deal hide: every kind first, and none after them");
+  const read = readByTechniques(d);
+  for (const { kind } of out)
+    if (!read.has(kind) && !isGiven(d.clueKinds.get(kind)?.means ?? null))
+      throw new CompileError(
+        `deal hide: no technique reads ${kind}, so the hide keeps none of it`,
+      );
   return out;
+}
+
+const GIVEN = JSON.stringify(parse("value(at) = v"));
+
+/** Whether a kind means the answer's value at its cell: a given, which a
+ * technique reads as the value placed there. */
+const isGiven = (means: Expr | null): boolean => JSON.stringify(means) === GIVEN;
+
+/** The kinds a technique reads, or the domain every tier's notes start
+ * from. The hide keeps a clue only where the ladder read it, so a kind none
+ * reads is hidden whole, and a fixture of it tests nothing of its deal. */
+function readByTechniques(d: Description): Set<string> {
+  const read = kindsRead(d.domain, d.defs);
+  for (const t of d.techniques)
+    for (const e of [
+      ...t.binders.flatMap((b) => [b.of, b.where]),
+      t.premise,
+      t.conclude,
+    ])
+      if (e !== null) kindsRead(e, d.defs, read);
+  return read;
 }
 
 /** A kind's `from`: the tier, by its index, below which it is kept whole. */

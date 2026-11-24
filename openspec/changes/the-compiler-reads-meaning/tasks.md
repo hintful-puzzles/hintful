@@ -1,11 +1,6 @@
 ## Next
 
-4.1. Read 2026-11-24: a test's tier is in its code, so the guard derives
-from the description instead: each fixture's clue kinds, and the lowest
-tier whose techniques (own and library) read each, by walking the parsed
-`for`/`conclude` for `clue(kind, …)`; the compiled `techniques[].reads`
-records no corner or edge kind (`cornering`: `"clues":{}`). Then 4.2,
-5.1, 5.2. Open: none.
+5.1, then 5.2. Open: none.
 
 ## 1. Design
 
@@ -30,10 +25,12 @@ records no corner or edge kind (`cornering`: `"clues":{}`). Then 4.2,
 
 ## 4. Fixtures read at their tier
 
-- [ ] 4.1 The capability-fixtures guard asks that a fixture's capability is
-      read at the tier its case tests; `cornering` would have failed.
-- [ ] 4.2 `docs/testing.md`: an engine fix is verified on a born game that
-      reaches it, too.
+- [x] 4.1 A clue read at the element a firing binds (`reads.at`), and a
+      hidden kind no technique reads refused in `hideOf`; no deal moved
+      (design.md § "4.1").
+- [x] 4.2 `docs/testing.md` § "A capability is tested on a fixture": test
+      a kind at a tier that reads it, and verify an engine fix on a born
+      game that reaches it.
 
 ## 5. Close
 

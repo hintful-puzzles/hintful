@@ -472,7 +472,11 @@ research tools all read through it; the app never does.
   `domino` painter draws two alike pieces touching only each other as one.
   `deal.hide` then takes a kind's clues off
   at the lowest tier, and then at the asked tier: first every clue no
-  firing's bindings read, then all but the shortest run from the end of a
+  firing's bindings read (a binding of an element reads the clue of each
+  kind placed at that element's sort, so a corner's binding a corner's
+  clue; a kind no technique reads, by `clue(kind, …)` or `clues(kind)`, or
+  the domain reads, is refused, a given excepted, since the hide would
+  keep none of it), then all but the shortest run from the end of a
   random order the board still finishes with, then each other in a random
   order while it still finishes at that tier. A draw the lowest tier does not finish with every
   clue is thrown away, since hiding at a higher tier costs more than drawing

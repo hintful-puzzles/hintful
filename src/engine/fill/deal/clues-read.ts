@@ -10,10 +10,10 @@ import type { SearchedFillModule } from "../search.ts";
 import { offsetsOf } from "./keeping.ts";
 
 /** What a firing of a technique reads of the clues, by its bindings: the
- * clue at each cell named, and each clue named by its index in its kind
- * (`techniques`' `reads`). */
+ * clue of each kind listed at each element named, and each clue named by its
+ * index in its kind (`techniques`' `reads`). */
 interface Reads {
-  readonly cells: readonly string[];
+  readonly at: Readonly<Record<string, readonly string[]>>;
   readonly clues: Readonly<Record<string, string>>;
 }
 
@@ -21,7 +21,7 @@ interface Reads {
  * The clues of the kinds `kinds`, by their index in one numbering of them
  * all ({@link offsetsOf}), that a firing of the ladder read on its way to
  * finishing `board` at tier `cap`: each one a binding of the firing names,
- * by its cell or by its index.
+ * by its element or by its index.
  */
 export function cluesRead<C extends Clues<C>>(
   module: SearchedFillModule<C>,
@@ -35,11 +35,14 @@ export function cluesRead<C extends Clues<C>>(
     Record<string, { readonly reads?: Reads }>
   >;
   const read = new Set<number>();
-  /** Each hidden clue at cell `c`, read. */
-  const readAt = (c: number) => {
-    for (const [n, list] of lists.entries())
-      if (list.byAt[c] >= 0) read.add(offsets[n] + list.byAt[c]);
+  /** The clue of each of `of` at element `e` of their place, read. */
+  const readAt = (of: readonly string[], e: number) => {
+    for (const kind of of) {
+      const n = kinds.indexOf(kind);
+      if (n >= 0 && lists[n].byAt[e] >= 0) read.add(offsets[n] + lists[n].byAt[e]);
+    }
   };
+  const atCells = kinds.filter((k) => module.deal?.universes[k] === "cells");
   const { marks, entries } = marksOf(module, board);
   let current: Reads | null = null;
   marks.recorder = (rec) => {
@@ -51,10 +54,10 @@ export function cluesRead<C extends Clues<C>>(
     // binding of its own: it reads the cell placed, which the firing that
     // placed it named, and each cell it strikes.
     if (binding === undefined) {
-      readAt(rec.y * board.w + rec.x);
+      readAt(atCells, rec.y * board.w + rec.x);
       return;
     }
-    for (const name of current.cells) readAt(binding[name]);
+    for (const [name, of] of Object.entries(current.at)) readAt(of, binding[name]);
     for (const [name, of] of Object.entries(current.clues)) {
       const n = kinds.indexOf(of);
       if (n >= 0) read.add(offsets[n] + binding[name]);

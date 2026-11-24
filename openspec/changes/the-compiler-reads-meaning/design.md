@@ -127,3 +127,24 @@ that does. Each plant below was run and seen to fail.
   leaving no Normal `ordering` board): planting the keep off (`unread` all
   false in `deal/hide.ts`) fails six tests in `edges.test.ts` and
   `corners.test.ts`. Already guarded; no test is added.
+
+## 4.1 What a fixture can be held to (2026-11-24)
+
+The tier a test deals at is in its code, so no guard reads it. What the
+description says is guarded instead, in the compiler, which holds games
+too: `hideOf` refuses a hidden kind that no technique and not the domain
+reads (`clue(kind, …)`, `clues(kind)`, through definitions), a given
+excepted, since the hide would keep none of it. `cornering` without `pair`
+is refused (`compile.test.ts`; passes with the refusal off). As `cornering`
+stood it read every kind at Normal and would pass: its defect was a test
+at a tier reading none of the kind, which `docs/testing.md` now states.
+
+Reading for it found the deal's read set wrong for any clue not at a cell.
+The compiled `reads` named a firing's cell bindings alone, and `cluesRead`
+looked each cell's index up in every kind's list: a corner, line or edge
+clue of that index was marked read, and one a corner binding named was not.
+`reads.at` now names each element binding with the kinds placed at its
+sort; the placing path marks the kinds at cells (`corners.test.ts`, fails
+with the old reading). Same boards on all 176 deals of Boats, Mathrax,
+Towers and Unequal against HEAD (`deal-compare`, 4 seeds a preset): the
+prune's `finishes` check had covered the error, at the cost of its prune.

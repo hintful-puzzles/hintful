@@ -23,6 +23,7 @@ import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { cluesRead } from "./deal/clues-read.ts";
 import { firstKindEach } from "./deal/first-kind.ts";
 import { encodeDesc } from "./desc.ts";
 import { fillGame } from "./game.ts";
@@ -289,6 +290,26 @@ describe("a corner's clue in the text", () => {
       "+---+---+---+---+",
       "",
     ]);
+  });
+});
+
+describe("the clues a ladder reads at corners", () => {
+  it("are the corners its firings name, never a cell's of the same index", () => {
+    // Easy's `parity` binds a cell and a corner and reads a parity alone, so
+    // a sum, a difference or a same read there is a cell's index taken for a
+    // corner's: the hide would then hide at Easy the clues only Normal reads.
+    const others = ["sum", "difference", "same"];
+    let boards = 0;
+    for (const seed of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
+      const p = params(5, NORMAL);
+      const b = game.newState(p, game.newDesc(p, randomNew(seed)).desc);
+      if (b.dealt.parity.at.length === 0) continue;
+      boards++;
+      expect(cluesRead(cornering, b, 0, ["parity"]).size, seed).toBeGreaterThan(0);
+      expect(cluesRead(cornering, b, 0, others), seed).toEqual(new Set());
+      expect(cluesRead(cornering, b, NORMAL, others).size, seed).toBeGreaterThan(0);
+    }
+    expect(boards).toBeGreaterThan(0);
   });
 });
 
