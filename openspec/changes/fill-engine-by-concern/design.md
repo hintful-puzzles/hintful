@@ -88,6 +88,18 @@ The latin renumber is written twice, in `numbered` and in `buildAnswer`,
 and each sits at its own point in the rng order. Both call the one
 module.
 
+As built (2.3): `deal.ts` is the runner, 110 lines: `dealt` runs the derive
+and `CLUE_STEPS`, `draw` the sampler and the partition, then the search
+tier's runners or the loop that hides and asks `accept.ts`. A sampler
+returns the answer and, for `search`, the partition drawn with it, so
+`search` is a sampler beside the rest. `draws` stays local to the stripped
+search runner, the one reader. The base a climb shares (space, variations,
+givens, `board`, `finishes`) is `dealBase`, and the climb takes no hide
+settings, so a climb never meets the symmetric hide's refusal.
+`one-kind.ts`, `first-kind.ts` and `latin-numbers.ts` moved into `deal/`
+as the steps' modules; the hide's index arithmetic is `deal/keeping.ts`,
+which the climb's `unpaired` shares.
+
 ### 4. The renderer: a core, cell layers and sites (`render.ts`, 2.2)
 
 Concepts:

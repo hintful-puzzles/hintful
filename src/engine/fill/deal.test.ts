@@ -37,10 +37,10 @@ import { randomNew } from "../random/index.ts";
 import { clueList } from "../solve/describe-runtime.ts";
 import { partners } from "../testing/symmetry-partners.ts";
 import { newBoard, paramSpaceOf, solveBoard } from "./board.ts";
+import { latinNumbers } from "./deal/latin-numbers.ts";
 import { dealFill } from "./deal.ts";
 import { decodeDesc, encodeDesc } from "./desc.ts";
 import { givenOf } from "./game-id.ts";
-import { latinNumbers } from "./latin-numbers.ts";
 import {
   sampleAnswer,
   sampleDominoes,

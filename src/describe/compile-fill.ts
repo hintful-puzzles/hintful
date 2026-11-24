@@ -2529,7 +2529,7 @@ function hideFlagOf(
 }
 
 /** `deal.latin`: a kind on every cell the deal numbers as a Latin square
- * and renumbers under `under` (`engine/fill/latin-numbers.ts`), never derived
+ * and renumbers under `under` (`engine/fill/deal/latin-numbers.ts`), never derived
  * from the answer; `null` where it deals none. */
 function latinOf(
   json: DescriptionJson,

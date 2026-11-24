@@ -8,16 +8,16 @@
  * division where it can, then a subtraction, a product and a sum).
  */
 
-import { shuffle } from "../board/shuffle.ts";
-import type { RandomState } from "../random/index.ts";
+import { shuffle } from "../../board/shuffle.ts";
+import type { RandomState } from "../../random/index.ts";
 import {
   type ClueList,
   clueList,
   type GridSpace,
   type Partition,
-} from "../solve/describe-runtime.ts";
-import type { Clues } from "./board.ts";
-import type { FillDeal } from "./game-id.ts";
+} from "../../solve/describe-runtime.ts";
+import type { Clues } from "../board.ts";
+import type { FillDeal } from "../game-id.ts";
 
 /** A module whose deal keeps one clue a part: how well a kind's clue suits a
  * part, 0 never, 1 poorly, 2 well, on a board of a tier. */

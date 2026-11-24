@@ -46,7 +46,8 @@ import {
 } from "./board.ts";
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
-import { type DealtFillModule, dealFill } from "./deal.ts";
+import type { DealtFillModule } from "./deal/context.ts";
+import { dealFill } from "./deal.ts";
 import { decodeDesc } from "./desc.ts";
 import type { Edit } from "./edit.ts";
 import {

@@ -23,8 +23,8 @@ import { NO_FLASH } from "../render/win-wave.ts";
 import { type DrawOp, RecordingDrawing } from "../testing/recording-drawing.ts";
 import { DEFAULT_BACKGROUND } from "../testing/render-scenario.ts";
 import { type FillBoard, solveBoard, spaceOf } from "./board.ts";
+import { firstKindEach } from "./deal/first-kind.ts";
 import { encodeDesc } from "./desc.ts";
-import { firstKindEach } from "./first-kind.ts";
 import { fillGame } from "./game.ts";
 import { givenOf } from "./game-id.ts";
 

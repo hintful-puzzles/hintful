@@ -357,7 +357,7 @@ research tools all read through it; the app never does.
   switches kinds off, each by a letter after the tier in a full ID and a
   check box in Custom, every kind on where no letter is written, the
   board's name saying the shorter of those on and off
-  (`engine/fill/first-kind.ts`). `digits` writes a
+  (`engine/fill/deal/first-kind.ts`). `digits` writes a
   kind bounded by a size of at most 9 (Mathrax's givens, to `w`) a digit
   each. A hide keeps whole, until the asked tier's
   pass, a kind the lowest tier reads none of (signs over a Latin square's
@@ -382,7 +382,7 @@ research tools all read through it; the app never does.
   cell turned (Clusters', upstream's hill climb, five to seven times quicker
   to a Normal board than fresh draws); `deal.unpair` takes off two alike
   clues side by side, so the answer is the ladder's and not the sample, and
-  a climb's search tier hides nothing (`engine/fill/deal.ts`, `climbFill`).
+  a climb's search tier hides nothing (`engine/fill/deal/climb.ts`).
   A region the space deals (`regions:
   { r: dealt }`) is a partition: `id:`'s `walls` writes it as upstream's
   wall runs, the board draws it as walls and fills (the partition among the
@@ -421,7 +421,7 @@ research tools all read through it; the app never does.
   no technique need say so. A clue kind `at:`
   such a region is a clue a part: derived where its `means` solves for `v`
   (`v = E`, one value, not each tried), `deal.oneKind` keeps one of its
-  kinds a part, in turn and well before `poor` (`engine/fill/one-kind.ts`),
+  kinds a part, in turn and well before `poor` (`engine/fill/deal/one-kind.ts`),
   `deal.onlyFlag` is a setting after the tier dealing its `kinds` alone,
   `id:`'s `blocks` writes the partition as upstream Keen's block structure,
   or with `counts: false` as Solo's, a letter's repeats written out (with
@@ -541,7 +541,7 @@ research tools all read through it; the app never does.
   cell, one desc-alphabet character each (Singles'). `deal.latin` deals
   such a kind as a Latin square's numbers, the build standing on them, and
   then numbers each cell holding `under` again to repeat one its row or
-  column keeps (`engine/fill/latin-numbers.ts`). `play.hides` is a value
+  column keeps (`engine/fill/deal/latin-numbers.ts`). `play.hides` is a value
   whose piece hides its cell's number, with a preference that shows it
   smaller, flipped by a press in the half tile round the grid; `play.wrap`
   carries the cursor over the edge; the `ring` painter circles a kept

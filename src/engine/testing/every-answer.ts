@@ -14,7 +14,7 @@ import {
   tierOf,
 } from "../contract/difficulty.ts";
 import { type Clues, spaceOf } from "../fill/board.ts";
-import type { DealtFillModule } from "../fill/deal.ts";
+import type { DealtFillModule } from "../fill/deal/context.ts";
 import { encodeDesc } from "../fill/desc.ts";
 import { type FillDeal, type FillParams, givenOf } from "../fill/game-id.ts";
 import { variationsOf } from "../fill/params/modifiers.ts";

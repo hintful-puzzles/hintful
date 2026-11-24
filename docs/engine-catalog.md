@@ -1162,7 +1162,11 @@ cell layer is a module of `render/layers/`, which `render/tile.ts`'s
 `drawTile` calls in its paint order, and what is drawn after the tiles is a
 site, a module of `render/sites/` and a line of `render.ts`'s `SITES`.
 `marks.ts` holds the hint's mark kinds beside the cells.
-`deal.ts` deals a board from the answer `sample.ts` draws. `desc.ts` is
+`deal.ts` deals a board from the answer `sample.ts` draws: it runs the
+phases of a draw, each a module of `deal/` (a sampler a line of
+`samplers.ts`'s registry, the partition, the clue steps in `clue-steps.ts`'s
+order, the hide, the acceptance), with the search tier's runners and the
+climb beside them. `desc.ts` is
 its desc, from the description's `id:`: a segment kind is a module of
 `segments/` and a line of `desc.ts`'s registry. `game-id.ts` is its params,
 each setting a module of `params/` that `fillParams` places in the params'
@@ -1241,7 +1245,8 @@ leave open, the second answers its search meets (as the cells that break
 each), and whether the tier below finishes the board too. It also names the
 cells that never move, where the answer has what a region counts. The search
 is usually `solvedPositions` from `answer-search.ts`. Exemplar:
-`engine/fill/grow.ts`, with the judge `engine/fill/deal.ts` hands it.
+`engine/fill/grow.ts`, with the judge `engine/fill/deal/partition.ts` hands
+it.
 
 ### `laydomino.ts` — random domino tiling
 
@@ -1254,8 +1259,8 @@ Reach for `placeSymmetricBlacks` when black squares are placed
 symmetrically; the `SYMM_*` values and their Custom-dialog labels are beside
 it. It works through callbacks over the caller's board, and **the
 caller clears its board first**. Its order deals the boards, the
-`SYMM_ROT4` odd-center `<=` included. Exemplar: `engine/fill/deal.ts`
-(`buildAnswer`, a description's `sample.first`).
+`SYMM_ROT4` odd-center `<=` included. Exemplar:
+`engine/fill/deal/first-laid.ts` (a description's `sample.first`).
 
 ### `symmetry.ts` — the symmetries a pattern keeps, and their orbits
 
@@ -1263,7 +1268,7 @@ Reach for `Symmetry` when a pattern is to look the same turned or
 reflected: each is named by what it keeps, never by an upstream game's
 number, since those differ (`SET_BLACKS_SYMM` maps the names to
 `set_blacks`'). `orbitOf(s, w, h, c)` is the squares one goes to.
-Exemplar: `engine/fill/deal.ts` (a symmetric hide, `deal.symmetric`).
+Exemplar: `engine/fill/deal/hide.ts` (a symmetric hide, `deal.symmetric`).
 
 ### `loopgen.ts` — random loop generation
 

@@ -18,7 +18,8 @@ import { latinGenerate, matching } from "../solve/latin.ts";
 
 type Near = "adj4" | "adj8";
 
-/** How a deal draws its answer: built by the ladder (`buildAnswer`),
+/** How a deal draws its answer (`deal/samplers.ts`): built by the ladder
+ * (`buildAnswer`),
  * scattered (`sampleAnswer`), as dominoes (`sampleDominoes`), or a count to
  * every line (`sampleLines`). */
 export type Sample =
@@ -284,10 +285,10 @@ export interface ScatterSample {
    * Tents rejects one as giving nothing away. */
   readonly noBareLine?: boolean;
   /** Whether a cell a rule breaks at takes the other value, until none does
-   * (`deal.ts`, `mended`). */
+   * (`deal/climb.ts`, `mended`). */
   readonly mend?: true;
   /** Whether a draw after a refused one keeps what the ladder decided on it
-   * (`deal.ts`, `climbFill`). */
+   * (`deal/climb.ts`). */
   readonly climb?: true;
   /** The cells dealt a value before the scatter of `each` draws the rest
    * (Sticks' blocks). */

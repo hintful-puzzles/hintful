@@ -6,10 +6,10 @@
  * and add in pairs to 6 are a sum and never Odd).
  */
 
-import { type ClueList, clueList } from "../solve/describe-runtime.ts";
-import type { Clues } from "./board.ts";
-import type { FillDeal, FillParams } from "./game-id.ts";
-import { kindsOn } from "./params/kind-letters.ts";
+import { type ClueList, clueList } from "../../solve/describe-runtime.ts";
+import type { Clues } from "../board.ts";
+import type { FillDeal, FillParams } from "../game-id.ts";
+import { kindsOn } from "../params/kind-letters.ts";
 
 /**
  * `derived` with no clue of a kind board `p` switches off, and of

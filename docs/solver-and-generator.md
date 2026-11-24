@@ -1194,7 +1194,7 @@ states what it wants:
   ([`mend-division.ts`](../src/engine/generate/mend-division.ts)), whose doc says what
   it moves and keeps. The game supplies the judge, with its ladder
   capped at the tier asked for. Exemplar: the judge the fill deal hands
-  `growPartition` ([`fill/deal.ts`](../src/engine/fill/deal.ts)).
+  `growPartition` ([`fill/deal/partition.ts`](../src/engine/fill/deal/partition.ts)).
   `redivide.ts` mends only regions of one size.
 - **The draw gives a mend its places to start and its small regions; no
   mend does.** On a blank board the deductions start only from a region that
@@ -1322,7 +1322,7 @@ the boards a seed deals move").
   and `if (!solve(`. A solver with a multi-valued verdict makes bare
   truthiness a bug: where a code for "ambiguous" is truthy, a strip runs
   straight past uniqueness. Compare against the verdict wanted. Exemplar:
-  `finishes` in [`engine/fill/deal.ts`](../src/engine/fill/deal.ts).
+  `finishes` in [`engine/fill/deal/context.ts`](../src/engine/fill/deal/context.ts).
 - **The dirty scratch.** When a generator hands its solver a reused board,
   ask what state that board is in on entry; a gate that re-solves on what the
   last candidate left behind judges garbage. Exemplar:
@@ -1331,8 +1331,8 @@ the boards a seed deals move").
   board still solves, so it preserves a solvable board and cannot make one.
   Any step that edits the answer after it was built owes a solve before the
   stripping. Exemplar: the fill deal, which holds every answer it samples to
-  the rules with its derived clues before it hides one
-  ([`fill/deal.ts`](../src/engine/fill/deal.ts)).
+  the rules with its derived clues before it hides one (`dealt` in
+  [`fill/deal.ts`](../src/engine/fill/deal.ts)).
 - **The mutating validator.** A C-descended `validate` that returns a
   verdict and also writes a flag into the board is a hazard once a later
   whole-cell comparison reads that byte. Where the generator depends on it,

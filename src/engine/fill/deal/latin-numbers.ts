@@ -6,10 +6,10 @@
  * deal them.
  */
 
-import { shuffle } from "../board/shuffle.ts";
-import type { RandomState } from "../random/index.ts";
-import type { GridSpace } from "../solve/describe-runtime.ts";
-import { latinGenerateRect } from "../solve/latin.ts";
+import { shuffle } from "../../board/shuffle.ts";
+import type { RandomState } from "../../random/index.ts";
+import type { GridSpace } from "../../solve/describe-runtime.ts";
+import { latinGenerateRect } from "../../solve/latin.ts";
 
 /**
  * Each cell's number, 1 to the longer side: a Latin square's where `g` does
