@@ -226,6 +226,9 @@ export function violations(g0: ArrayLike<number>, sp: GridSpace, cl: Dealt): Vio
   return _out;
 }
 
+/** The sort of element the answer's values sit on. */
+export const answerSort = "cell";
+
 /** Whether a given clue at `at` valued `v` holds of the whole board `g`. */
 export function clueHolds_given(g: ArrayLike<number>, _sp: GridSpace, at: number, v: number): boolean {
   return ((g[at] || -1) === v);

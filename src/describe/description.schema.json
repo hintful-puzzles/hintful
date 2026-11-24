@@ -1267,13 +1267,13 @@
             },
             "values": {
               "type": "object",
-              "description": "The values the player places, by the description's value: what its verb does (\"place a tent\"), the letter that places it, its three-character glyph in the text format, and the painter that draws it.",
+              "description": "The values the player places, by the description's value: what its verb does (\"place a tent\"), the letter that places it, its three-character glyph in the text format, and the painter that draws it. A value on an edge (`answer.value.sort: edge`) has no glyph: its painter, an edge painter, gives its text.",
               "propertyNames": {
                 "pattern": "^[1-9][0-9]*$"
               },
               "additionalProperties": {
                 "type": "object",
-                "required": ["does", "key", "glyph", "paint"],
+                "required": ["does", "key", "paint"],
                 "additionalProperties": false,
                 "properties": {
                   "does": {

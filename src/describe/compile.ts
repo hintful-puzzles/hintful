@@ -1038,7 +1038,10 @@ function cellDomain(
   if (!names.has("c") || "c" in sizes) return [];
   env.cellDomain = true;
   const out = new Out(1);
-  const scope = new Map<string, Val>([["c", { code: "v_c", sort: elem("cell") }]]);
+  // `c` is an element of the answer's sort: a cell, or an edge.
+  const scope = new Map<string, Val>([
+    ["c", { code: "v_c", sort: elem(env.answerSort) }],
+  ]);
   const v = compileExpr(domain, scope, env, out);
   if (!isMask(v.sort)) throw new CompileError("the domain is not a set of values");
   const cl = env.readsClues.yes ? "cl: Dealt, " : "_cl: Dealt, ";
@@ -1085,7 +1088,7 @@ function wideDomain(domain: Expr, env: Env): string[] {
   env.cellDomain = true;
   const out = new Out(1);
   const scope = new Map<string, Val>([
-    ["c", { code: "v_c", sort: elem("cell") }],
+    ["c", { code: "v_c", sort: elem(env.answerSort) }],
     [d, { code: "v_d", sort: NUM }],
   ]);
   const [a, b] = range.args.map((x) => {

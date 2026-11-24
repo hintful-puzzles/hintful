@@ -62,6 +62,13 @@ export function fillOf(
   const settings =
     json.play === undefined ? [] : settingsOf(json, d, env, json.tiers ?? [], letters);
   return [
+    ...(json.play === undefined
+      ? []
+      : [
+          "",
+          "/** The sort of element the answer's values sit on. */",
+          `export const answerSort = ${JSON.stringify(d.answerSort)};`,
+        ]),
     ...markWhileOf(json, env, measured),
     ...derivedClues(json, d, env, measured),
     ...playOf(json, d, env, measured),

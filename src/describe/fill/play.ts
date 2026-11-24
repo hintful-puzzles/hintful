@@ -5,6 +5,7 @@
  * mark may stand.
  */
 
+import { EDGE_VALUE_PAINTERS } from "../../engine/render/pieces/edge-value.ts";
 import { compileExpr } from "../compile-expr.ts";
 import {
   CompileError,
@@ -112,6 +113,21 @@ export function playOf(
       );
   if (p.numbers !== undefined && json.answer.value.sort !== "cell")
     throw new CompileError("play numbers: the answer's value is not at a cell");
+  // A value on a cell prints as its glyph; one on an edge, which runs one of
+  // two ways, as its edge painter says.
+  const onEdges = json.answer.value.sort === "edge";
+  for (const [v, { glyph, paint }] of Object.entries(values)) {
+    if (!onEdges && glyph === undefined)
+      throw new CompileError(`play values: ${v} has no glyph`);
+    if (onEdges && glyph !== undefined)
+      throw new CompileError(
+        `play values: ${v} is on an edge, which its painter prints, and has a glyph`,
+      );
+    if (onEdges && !(paint in EDGE_VALUE_PAINTERS))
+      throw new CompileError(
+        `play values: ${v} is on an edge, and ${paint} is no edge painter`,
+      );
+  }
   // The keypad is the domain, which the params alone must give: the board's,
   // or the numbers 1 to a cell's part's size, the part dealt to sizes drawn
   // from a list (Seismic's areas), whose largest is the keypad's last.

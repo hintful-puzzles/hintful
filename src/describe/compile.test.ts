@@ -801,17 +801,19 @@ describe("a witness is written for a hint only", () => {
 
 describe("what the fill board reads of a description", () => {
   const tentsSource = "src/games/tents/tents.description.yaml";
-  const compileTents = (over: (json: never) => unknown): string => {
-    const tents = sources.get(tentsSource);
-    if (tents === undefined || !isFormal(tents)) throw new Error("no Tents");
+  const compileEdited = (source: string, over: (json: never) => unknown): string => {
+    const json = sources.get(source);
+    if (json === undefined || !isFormal(json)) throw new Error(`no ${source}`);
     return compileGame(
-      over(structuredClone(tents) as never) as never,
+      over(structuredClone(json) as never) as never,
       [...sources.values()].filter(isLibrary),
-      tentsSource,
+      source,
       "../../engine/describe-runtime.ts",
       "./step-voice.ts",
     );
   };
+  const compileTents = (over: (json: never) => unknown): string =>
+    compileEdited(tentsSource, over);
 
   it("writes the clues a sampled deal derives only where the deal samples", () => {
     expect(compileTents((j) => j)).toContain("export function deriveClues(");
@@ -1383,6 +1385,34 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(
       /play defaultTier: the menu does not offer the default board at Unreasonable/,
     );
+  });
+
+  it("prints a value on a cell by its glyph, and one on an edge by its edge painter", () => {
+    type Values = {
+      play: { values: Record<string, { glyph?: string; paint: string }> };
+    };
+    expect(() =>
+      compileTents((j: Values) => {
+        delete j.play.values["1"].glyph;
+        return j;
+      }),
+    ).toThrow(/play values: 1 has no glyph/);
+    const lacing = "src/engine/testing/fixtures/lacing/lacing.description.yaml";
+    expect(compileEdited(lacing, (j) => j)).toContain('answerSort = "edge"');
+    expect(() =>
+      compileEdited(lacing, (j: Values) => {
+        j.play.values["1"].glyph = " | ";
+        return j;
+      }),
+    ).toThrow(
+      /play values: 1 is on an edge, which its painter prints, and has a glyph/,
+    );
+    expect(() =>
+      compileEdited(lacing, (j: Values) => {
+        j.play.values["1"].paint = "tent";
+        return j;
+      }),
+    ).toThrow(/play values: 1 is on an edge, and tent is no edge painter/);
   });
 
   it("refuses a button whose value the player does not place, and a link that is not the cell mark", () => {

@@ -115,7 +115,9 @@ function dragWords(play: FillPlay, noun: string, lines: boolean): string {
 export interface PlayValue {
   readonly does: string;
   readonly key: string | readonly string[];
-  readonly glyph: string;
+  /** A cell's value's text; a value on an edge has none, its painter
+   * printing it (`EDGE_VALUE_PAINTERS`). */
+  readonly glyph?: string;
   readonly paint: string;
 }
 

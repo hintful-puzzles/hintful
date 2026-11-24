@@ -12,9 +12,15 @@ import type { RulesOf } from "../contract/rules.ts";
 import { NO_SOLUTION } from "../contract/solve-failure.ts";
 import type { GameStatus } from "../contract/types.ts";
 import { entryMistake } from "../hint/entry-mistakes.ts";
+import {
+  EDGE_VALUE_PAINTERS,
+  type EdgeValuePainter,
+  type EdgeValuePainterName,
+} from "../render/pieces/edge-value.ts";
 import { type Answer, answerCache, solveFromAnswer } from "../solve/answer-search.ts";
 import {
   clueAt,
+  type GridSpace,
   type ListClues,
   listAt,
   type Partition,
@@ -34,6 +40,7 @@ import {
 import { cornerClueAt, signedText } from "./corners.ts";
 import type { Edit } from "./edit.ts";
 import type { FillMove } from "./notes.ts";
+import type { FillPlay } from "./play.ts";
 import { answerSearched, type SearchedFillModule, searches } from "./search.ts";
 import { slotClueAt } from "./slots.ts";
 
@@ -69,6 +76,13 @@ export interface AnswerReading<C> {
   /** Each cell's part of the partition printed as walls between its parts
    * (`walledParts`), as the board draws it. */
   readonly walls?: (board: FillBoard<C>) => ArrayLike<number> | null;
+  /** Where the answer's values sit on the edges, each value's text by its
+   * painter, printed in place of the wall between the edge's two cells, and
+   * the space the board's edges are numbered on. */
+  readonly edges?: {
+    readonly text: Readonly<Record<number, EdgeValuePainter>>;
+    readonly space: (board: FillBoard<C>) => GridSpace;
+  };
   /** The dealt partition whose parts hold the part clues. */
   readonly partition?: keyof C;
   /** The clue kinds at the partition's parts, each printed after the row
@@ -88,6 +102,18 @@ export interface AnswerReading<C> {
       b: FillBoard<C>,
     ) => readonly [number, number];
   };
+}
+
+/** Each value an edge may hold, its text, by the edge painter its `paint`
+ * names. */
+export function edgeTextOf(play: FillPlay): Readonly<Record<number, EdgeValuePainter>> {
+  return Object.fromEntries(
+    Object.entries(play.values ?? {}).map(([v, { paint }]) => {
+      if (!(paint in EDGE_VALUE_PAINTERS))
+        throw new Error(`play: no edge painter ${paint}`);
+      return [Number(v), EDGE_VALUE_PAINTERS[paint as EdgeValuePainterName]];
+    }),
+  );
 }
 
 /** The board's one answer: where the game searches, the search's; in any
@@ -462,6 +488,23 @@ function gridFormat<C extends Clues<C>>(
     gap !== undefined
       ? !inside(x, y) || !inside(x2, y2)
       : parts === null || part(x, y) !== part(x2, y2);
+  // Between two cells of a board whose answer is on the edges, the edge's
+  // value, blank where it is open.
+  const { edges } = reading;
+  const sp = edges?.space(board) ?? null;
+  const edgeText = (
+    x: number,
+    y: number,
+    x2: number,
+    y2: number,
+    way: "beside" | "above",
+  ): string | null => {
+    if (edges === undefined || sp === null || !inside(x, y) || !inside(x2, y2))
+      return null;
+    const v = values[sp.edgeOf(y * w + x, y2 * w + x2)];
+    if (v !== 0) return edges.text[v][way];
+    return way === "beside" ? " " : "   ";
+  };
   const between = (x: number, y: number, x2: number, y2: number): string | null =>
     gap !== undefined && inside(x, y) && inside(x2, y2)
       ? gap(board, y * w + x, y2 * w + x2)
@@ -480,17 +523,32 @@ function gridFormat<C extends Clues<C>>(
       if (margin && y === h + 1 && x === w) return "   ";
       const g = between(x, y - 1, x, y);
       if (g !== null) return ` ${g} `;
+      const e = edgeText(x, y - 1, x, y, "above");
+      if (e !== null) return e;
       return walled(x, y - 1, x, y) ? "---" : "   ";
     },
     left: (x, y) => {
       if (margin && x === w + 1 && y === h) return " ";
-      return between(x - 1, y, x, y) ?? (walled(x - 1, y, x, y) ? "|" : " ");
+      return (
+        between(x - 1, y, x, y) ??
+        edgeText(x - 1, y, x, y, "beside") ??
+        (walled(x - 1, y, x, y) ? "|" : " ")
+      );
     },
     cell: (x, y) => {
       if (x === w && y === h) return "   ";
       // A row's line is its index; a column's comes after the rows.
       if (x === w) return clue(y);
       if (y === h) return clue(h + x);
+      // A cell of a board whose answer is on the edges holds no value: only
+      // its number, where it has one.
+      if (edges !== undefined) {
+        for (const kind of reading.numbers ?? []) {
+          const n = listOf(dealt, kind).valueAt[y * w + x];
+          if (n >= 0) return ` ${n} `;
+        }
+        return "   ";
+      }
       // A number on a cell the player fills sits inside the glyph of what the
       // cell holds, where the glyph leaves its middle blank (Singles' `[3]`).
       for (const kind of reading.numbers ?? []) {

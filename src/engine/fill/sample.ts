@@ -302,22 +302,32 @@ const shareOf = (share: number, n: number): number => Math.floor(share * n + 1e-
 /** An answer as `sample` draws it on `sp`, or `null` where this draw found no
  * room for every scattered cell or no partner for each, or left a line bare
  * that `noBareLine` refuses. Where each cell is drawn alone, a cell `kept`
- * holds a value keeps it. */
+ * holds a value keeps it. `elements` are those the answer's values sit on:
+ * the cells, or the edges, which keep no distance, partner or line. */
 export function sampleAnswer(
   sample: ScatterSample,
   sp: GridSpace,
   rs: RandomState,
   kept: Uint8Array | null = null,
+  elements: readonly number[] = sp.cells,
 ): Uint8Array | null {
-  const n = sp.cells.length;
+  const n = elements.length;
   const { scatter, partner } = sample;
+  if (
+    elements !== sp.cells &&
+    (scatter.apart !== undefined ||
+      scatter.joinedRest === true ||
+      partner !== undefined ||
+      sample.noBareLine === true)
+  )
+    throw new Error("sample: only a cell keeps a distance, a partner or a line");
   const g = new Uint8Array(n);
   if (scatter.each === true) {
     if (scatter.apart !== undefined || partner !== undefined)
       throw new Error("sample: a value at each cell's chance keeps no distance");
     // A chance in 2^16, the share's own where it is a half.
     const odds = Math.round(scatter.share * 65536);
-    for (const c of sp.cells)
+    for (const c of elements)
       g[c] =
         kept !== null && kept[c] !== 0
           ? kept[c]
@@ -327,7 +337,7 @@ export function sampleAnswer(
     return g;
   }
   if (kept !== null) throw new Error("sample: only a cell drawn alone is kept");
-  const order = Int32Array.from(sp.cells);
+  const order = Int32Array.from(elements);
   const share = shareOf(scatter.share, n);
   // Tried, the share is of the cells tried, and none need be taken.
   let left = scatter.tried === true ? 0 : share;
@@ -381,7 +391,7 @@ export function sampleAnswer(
     if (paired.includes(-1)) return null;
     for (const r of paired) g[rooms[r]] = partner.value;
   }
-  for (const c of sp.cells) if (g[c] === 0) g[c] = sample.rest;
+  for (const c of elements) if (g[c] === 0) g[c] = sample.rest;
   if (
     sample.noBareLine === true &&
     sp.lines.some((L) => sp.lineCells[L].every((c) => g[c] === sample.rest))

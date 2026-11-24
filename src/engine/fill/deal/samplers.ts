@@ -7,7 +7,7 @@
 
 import { drawRejected } from "../../contract/deal-census.ts";
 import { inHexagon } from "../../solve/describe-runtime.ts";
-import type { Clues } from "../board.ts";
+import { type Clues, elementsOf } from "../board.ts";
 import { piecesOf } from "../params/tally.ts";
 import {
   type Sample,
@@ -95,7 +95,15 @@ const SAMPLERS: {
       sample.first === undefined
         ? null
         : firstLaid(sample.first, cx.deal, cx.p, cx.rs, cx.layouts++);
-    return answer(sampleAnswer(sample, cx.sp, cx.rs, outsideKept(sample, cx, first)));
+    return answer(
+      sampleAnswer(
+        sample,
+        cx.sp,
+        cx.rs,
+        outsideKept(sample, cx, first),
+        elementsOf(cx.module, cx.sp),
+      ),
+    );
   },
 };
 

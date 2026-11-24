@@ -89,9 +89,9 @@ export function numbersOf(
       answerEnv(env, { yes: false }, scratch),
       out,
     );
-    if (v.sort.k !== "set" || v.sort.of.k !== "elem" || v.sort.of.e !== "cell")
+    if (v.sort.k !== "set" || v.sort.of.k !== "elem" || v.sort.of.e !== env.answerSort)
       throw new CompileError(
-        `clue ${kind}: the sets its meaning ranges over are not cells`,
+        `clue ${kind}: the sets its meaning ranges over are not the answer's ${env.answerSort}s`,
       );
     const body = [
       ...scratch.map((s) => `    ${s}`),

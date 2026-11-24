@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: lines drawn between squares side by side, each
+# number counting the lines at its square, for the fill engine's tests of an
+# answer whose values sit on the edges, dealt, drawn, played and hinted, on a
+# description that names no game.
+game: lacing
+produces: lines
+sizes:
+  w: { min: 2, max: 9 }
+  h: { min: 2, max: 9 }
+space:
+  grid: { w: "w", h: "h" }
+  edges: true
+  units: []
+answer:
+  # The edge between two squares side by side: 1 a line, 2 none.
+  value:
+    sort: edge
+    domain: "range(1, 2)"
+define:
+  # The edges round square c.
+  round(c): "set(edge(c, y) over y in adj4(c))"
+  # The lines at square c.
+  lines(c): "count(e in round(c) where value(e) = 1)"
+  # The edges of S not yet decided.
+  open(S): "{e in S where not known(e)}"
+clues:
+  # The lines at a square.
+  number: { at: cell, value: "range(0, 4)", means: "count(e in round(at) where value(e) = 1) = v" }
+freedom: { kind: fill }
+play:
+  values:
+    1: { does: draw a line, key: L, paint: line }
+    2: { does: cross it out, key: X, paint: cross }
+  primary: 1
+  secondary: 2
+  blank: 2
+  boards: [4x4]
+  hintMarks:
+    ring: the edges the step decides.
+    outline: the number the step reasons from.
+deal:
+  answer: each edge a line at even odds
+  number: every square's, then each hidden while the board still finishes
+  tier: the one tier
+  sample:
+    scatter: { value: 1, share: 0.5 }
+    rest: 2
+  hide: number
+id:
+  - digits: number
+tiers: [Easy]
+kindWords:
+  # A number counts the lines at its square.
+  group: "q in clues(number), a = at(q)"
+  set: "set(edge(a, y) over y in adj4(a))"
+  need: "v(q) - lines(a)"
+  rest: 2
+  fill: 1
+  zero: "v(q) = 0"
+  mark: outline
+  marks: { outline: "{a}" }
+  unit: "this {clue}"
+  has: "{clue: its line | all {clue} of its lines}"
+  items: "{n: line | lines}"
+  slots: "open {n: edge | edges}"
+  restWord: "can't be a line"
+  fillWord: "must be a line"
+names:
+  numberCount: "a number's count of lines"
+# A board loads only where deduction solves it, so it has the one step that
+# solves the boards its tests load.
+techniques:
+  # A number with all its lines has no more: its other edges are open. One
+  # that reaches its count only with every edge left a line has them all.
+  - kind: count.both
+    as: numberCount
+    tier: Easy
+    with:
+      terms: { placed: "n < v(q)", clue: "v(q)" }

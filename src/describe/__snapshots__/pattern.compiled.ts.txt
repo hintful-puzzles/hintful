@@ -187,6 +187,9 @@ export function violations(g0: ArrayLike<number>, sp: GridSpace, cl: Dealt): Vio
   return _out;
 }
 
+/** The sort of element the answer's values sit on. */
+export const answerSort = "cell";
+
 /** The clues the whole board `g` deals: each kind at each element where
  * one of its values holds, the first in its values' order; the
  * partition the deal grew round it; and the sizes the params give. */

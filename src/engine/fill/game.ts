@@ -26,6 +26,7 @@ import { inHexagon } from "../solve/describe-runtime.ts";
 import {
   type AnswerReading,
   clearMistakes,
+  edgeTextOf,
   type FillMistake,
   findMistakes,
   revealOne,
@@ -262,10 +263,9 @@ export function fillGame<C extends Clues<C> & object>(
     glyphs:
       play.numbers === undefined
         ? Object.fromEntries(
-            Object.entries({ ...play.given, ...play.values }).map(([v, { glyph }]) => [
-              Number(v),
-              glyph,
-            ]),
+            Object.entries({ ...play.given, ...play.values }).flatMap(
+              ([v, { glyph }]) => (glyph === undefined ? [] : [[Number(v), glyph]]),
+            ),
           )
         : // Every value a cell's domain mask can hold.
           Object.fromEntries(
@@ -274,6 +274,9 @@ export function fillGame<C extends Clues<C> & object>(
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
+    ...(module.answerSort === "cell"
+      ? {}
+      : { edges: { text: edgeTextOf(play), space: (b) => spaceOf(module, b) } }),
     walls: (b) => walledParts(module, b),
     ...(deal.partitions === undefined
       ? {}

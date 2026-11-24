@@ -4,73 +4,154 @@ ok  latin      single                         current: recorded src/engine/solve
 ok  latin      set                            current: recorded src/engine/solve/latin.description.yaml#set b5ac302d9954e973
 ok  latin      fish                           current: recorded src/engine/solve/latin.description.yaml#fish 655c8b81fe0798b1
 ok  latin      wing                           current: recorded src/engine/solve/latin.description.yaml#wing e104ec34cad128f8
+--  blocking +Jigsaw: not checked, since its box partition is dealt, and every other board's blocks stand in for it
+--  blocking +Jigsaw +X: not checked, since its box partition is dealt, and every other board's blocks stand in for it
+--  blocking +X: no board of order 3 has an answer, so nothing is checked there
+ok  boxing     areaCull                       current: recorded src/engine/testing/fixtures/boxing/boxing.description.yaml#areaCull 9692fb50e3a5058a
+ok  caging     cage                           current: recorded src/engine/testing/fixtures/caging/caging.description.yaml#cage 4334f98c8cb37e02
+ok  climbing   dotHas                         current: recorded src/engine/testing/fixtures/climbing/climbing.description.yaml#dotHas 43345f85f5ebad25
+ok  climbing   lastRoom                       current: recorded src/engine/testing/fixtures/climbing/climbing.description.yaml#lastRoom a728316cc87776f6
+ok  climbing   alone                          current: recorded src/engine/testing/fixtures/climbing/climbing.description.yaml#alone ad2e686f18c3b611
+--  cornering  no board of order 3 holds a difference clue, so no reading of one is checked there
+--  cornering  no board of order 3 holds a same clue, so no reading of one is checked there
+--  cornering  no board of order 3 holds a parity clue, so no reading of one is checked there
+ok  cornering  parity                         current: recorded src/engine/testing/fixtures/cornering/cornering.description.yaml#parity 3417294d7c0ae987
+ok  cornering  pair                           current: recorded src/engine/testing/fixtures/cornering/cornering.description.yaml#pair 503af5a8c60335fc
+ok  dividing   cageCull                       current: recorded src/engine/testing/fixtures/dividing/dividing.description.yaml#cageCull 233a7ddb68836ca3
+ok  dividing   cageLast                       current: recorded src/engine/testing/fixtures/dividing/dividing.description.yaml#cageLast f90742342057b612
+ok  dividing   cageSets                       current: recorded src/engine/testing/fixtures/dividing/dividing.description.yaml#cageSets fbb24518d279b532
+ok  fitting    cageCull                       current: recorded src/engine/testing/fixtures/fitting/fitting.description.yaml#cageCull 68c917245ca5c048
+ok  flanking   rest                           current: recorded src/engine/testing/fixtures/flanking/flanking.description.yaml#rest 6e61b93e00732628
+ok  flanking   flank                          current: recorded src/engine/testing/fixtures/flanking/flanking.description.yaml#flank 56e80fad2815025b
+ok  grading    cageCull                       current: recorded src/engine/testing/fixtures/grading/grading.description.yaml#cageCull e7b7c3c2cc622f22
+ok  grading    cageLast                       current: recorded src/engine/testing/fixtures/grading/grading.description.yaml#cageLast 329a44525cb3e6b6
+ok  grading    cageSets                       current: recorded src/engine/testing/fixtures/grading/grading.description.yaml#cageSets a8e15824d124ef0a
+ok  growing    fullRegion                     current: recorded src/engine/testing/fixtures/growing/growing.description.yaml#fullRegion 7d4113a0b643b452
+ok  growing    exactRegion                    current: recorded src/engine/testing/fixtures/growing/growing.description.yaml#exactRegion e3a07d7a5b5aa942
+ok  growing    domino                         current: recorded src/engine/testing/fixtures/growing/growing.description.yaml#domino 836da8809365cd1c
+ok  growing    between                        current: recorded src/engine/testing/fixtures/growing/growing.description.yaml#between ba2435c76aae0723
+ok  growing    partner                        current: recorded src/engine/testing/fixtures/growing/growing.description.yaml#partner db43e5ad3b106749
+ok  joining    lineMet                        current: recorded src/engine/testing/fixtures/joining/joining.description.yaml#lineMet e26375325f8f8f10
+ok  joining    lineFull                       current: recorded src/engine/testing/fixtures/joining/joining.description.yaml#lineFull b60a39de15f7dedc
+ok  lacing     numberCount                    3  sound    (want sound   )     9 queries    0.1s
+ok  lacing     numberCount (planted)          3  unsound  (want unsound )     1 queries    0.0s   at clue number 0
+ok  src/engine/testing/fixtures/lacing/lacing.description.yaml#numberCount: recorded sound, proved whole on all 1 boards
+ok  linking    pieceLink                      current: recorded src/engine/testing/fixtures/linking/linking.description.yaml#pieceLink 4348e993c92d30c3
+ok  linking    noAnchor                       current: recorded src/engine/testing/fixtures/linking/linking.description.yaml#noAnchor 33f8fb9fe8e6b74d
+ok  linking    anchorsDone                    current: recorded src/engine/testing/fixtures/linking/linking.description.yaml#anchorsDone fbb85256bf6b2e50
+ok  linking    nextToPiece                    current: recorded src/engine/testing/fixtures/linking/linking.description.yaml#nextToPiece 7b65270bf5ccbdc7
+ok  linking    anchorSingle                   current: recorded src/engine/testing/fixtures/linking/linking.description.yaml#anchorSingle 17abf6baa204e210
+ok  linking    anchorLink                     current: recorded src/engine/testing/fixtures/linking/linking.description.yaml#anchorLink b78500d223674c62
+ok  linking    anchorDiagonal                 current: recorded src/engine/testing/fixtures/linking/linking.description.yaml#anchorDiagonal 90444514df3108f8
+ok  linking    lineCount                      current: recorded src/engine/testing/fixtures/linking/linking.description.yaml#lineCount 46c90d0a8612bcc8
+ok  mirroring  numbered                       current: recorded src/engine/testing/fixtures/mirroring/mirroring.description.yaml#numbered 1a4fb244c1d5e2d6
+ok  mirroring  beside                         current: recorded src/engine/testing/fixtures/mirroring/mirroring.description.yaml#beside e75b1cb53424e873
+ok  mirroring  met                            current: recorded src/engine/testing/fixtures/mirroring/mirroring.description.yaml#met b399366f408cb88b
+ok  mirroring  room                           current: recorded src/engine/testing/fixtures/mirroring/mirroring.description.yaml#room 1ed421c83c2e4fce
+ok  numbering  besideShaded                   current: recorded src/engine/testing/fixtures/numbering/numbering.description.yaml#besideShaded bfdc769b37ef68c9
+ok  numbering  sameLine                       current: recorded src/engine/testing/fixtures/numbering/numbering.description.yaml#sameLine 73951e5f690a8f13
+ok  numbering  sandwich                       current: recorded src/engine/testing/fixtures/numbering/numbering.description.yaml#sandwich 2f87d863262bb72b
+ok  numbering  pair                           current: recorded src/engine/testing/fixtures/numbering/numbering.description.yaml#pair 414a45d05a63af04
+ok  numbering  boxedIn                        current: recorded src/engine/testing/fixtures/numbering/numbering.description.yaml#boxedIn 7c46a53c62412fe0
+ok  ordering   sign                           current: recorded src/engine/testing/fixtures/ordering/ordering.description.yaml#sign c815661e2f4005e2
+ok  painting   lineFull                       current: recorded src/engine/testing/fixtures/painting/painting.description.yaml#lineFull 7fd7d5785c27b50a
+--  pairing: no board of order 3 has an answer, so nothing is checked there
+--  pairing +unique: no board of order 3 has an answer, so nothing is checked there
+ok  pairing    threes                         current: recorded src/engine/testing/fixtures/pairing/pairing.description.yaml#threes b68339878f2d833d
+ok  pairing    quota                          current: recorded src/engine/testing/fixtures/pairing/pairing.description.yaml#quota ec7ba33c2483b4d4
+ok  picturing  lineMet                        current: recorded src/engine/testing/fixtures/picturing/picturing.description.yaml#lineMet e26375325f8f8f10
+ok  picturing  lineFull                       current: recorded src/engine/testing/fixtures/picturing/picturing.description.yaml#lineFull b60a39de15f7dedc
+ok  playing    lineMet                        current: recorded src/engine/testing/fixtures/playing/playing.description.yaml#lineMet 5e32d78440b4840c
+ok  playing    lineFull                       current: recorded src/engine/testing/fixtures/playing/playing.description.yaml#lineFull 4080d828ef475260
+ok  shearing   met                            current: recorded src/engine/testing/fixtures/shearing/shearing.description.yaml#met f0fd809eb8aba0c0
+ok  shearing   short                          current: recorded src/engine/testing/fixtures/shearing/shearing.description.yaml#short 822dd2160aef63e0
+--  sizing n=2: no board of order 3 has an answer, so nothing is checked there
+ok  sizing     beside                         current: recorded src/engine/testing/fixtures/sizing/sizing.description.yaml#beside 6e7c45701a7f011a
+ok  sizing     full                           current: recorded src/engine/testing/fixtures/sizing/sizing.description.yaml#full 110040676c15e353
+ok  sizing     room                           current: recorded src/engine/testing/fixtures/sizing/sizing.description.yaml#room b2777d13a651d7b7
+ok  stretching twoClues                       current: recorded src/engine/testing/fixtures/stretching/stretching.description.yaml#twoClues 6efa0bb94ecfcd0f
+ok  stretching tooLong                        current: recorded src/engine/testing/fixtures/stretching/stretching.description.yaml#tooLong 879d33c6cf4d8230
+ok  stretching unreachable                    current: recorded src/engine/testing/fixtures/stretching/stretching.description.yaml#unreachable e5203882df688c20
+ok  tallying   corner                         current: recorded src/engine/testing/fixtures/tallying/tallying.description.yaml#corner c8fa19b0f9a329ea
+ok  tallying   full                           current: recorded src/engine/testing/fixtures/tallying/tallying.description.yaml#full 8ee3487dd946315b
+ok  tallying   room                           current: recorded src/engine/testing/fixtures/tallying/tallying.description.yaml#room 1629d7e577f21037
+--  turning +X: no board of order 3 has an answer, so nothing is checked there
+ok  walling    beside                         current: recorded src/engine/testing/fixtures/walling/walling.description.yaml#beside 4411df65e8ac0f65
+ok  walling    met                            current: recorded src/engine/testing/fixtures/walling/walling.description.yaml#met c396f71fd63bcf45
+ok  walling    room                           current: recorded src/engine/testing/fixtures/walling/walling.description.yaml#room 38f40db8d4c6c068
+ok  washing    beside                         current: recorded src/engine/testing/fixtures/washing/washing.description.yaml#beside 7ef646ccdb5fc62e
+ok  washing    met                            current: recorded src/engine/testing/fixtures/washing/washing.description.yaml#met c75b7c378d850757
+ok  zoning     cull                           current: recorded src/engine/testing/fixtures/zoning/zoning.description.yaml#cull 2fb8b4b2ffeb6290
+ok  zoning     lone                           current: recorded src/engine/testing/fixtures/zoning/zoning.description.yaml#lone 717837a428fc40de
+ok  zoning     areaSingle                     current: recorded src/engine/testing/fixtures/zoning/zoning.description.yaml#areaSingle 1fb136a69589c608
+ok  zoning     starve                         current: recorded src/engine/testing/fixtures/zoning/zoning.description.yaml#starve 9dfb0fc9f7af1cf1
 --  abcd +no diagonal n=3: no board of order 3 has an answer, so nothing is checked there
 --  abcd +no diagonal n=3: no board of order 4 has an answer, so nothing is checked there
-ok  abcd       placed                         current: recorded src/games/abcd/abcd.description.yaml#placed 43ecf850cbceb846
-ok  abcd       satisfied                      current: recorded src/games/abcd/abcd.description.yaml#satisfied b25f16bed897a014
-ok  abcd       single                         current: recorded src/games/abcd/abcd.description.yaml#single 8df2899ff39685cf
-ok  abcd       runs                           current: recorded src/games/abcd/abcd.description.yaml#runs eecd4a4b322c7361
-ok  abcd       placedDiagonal                 current: recorded src/games/abcd/abcd.description.yaml#placedDiagonal 31350236741f4ab6
-ok  adjacent   adjacent                       current: recorded src/games/adjacent/adjacent.description.yaml#adjacent 2fb58118aa866778
-ok  adjacent   adjacentSet                    current: recorded src/games/adjacent/adjacent.description.yaml#adjacentSet 14ea8ea02dde0804
-ok  ascent     once                           current: recorded src/games/ascent/ascent.description.yaml#once 6c4ca0bf1e0261e5
-ok  ascent     onlySquare                     current: recorded src/games/ascent/ascent.description.yaml#onlySquare 4f4ebe0633c047d0
-ok  ascent     nextTo                         current: recorded src/games/ascent/ascent.description.yaml#nextTo dad3dfb3972589bf
-ok  ascent     reach                          current: recorded src/games/ascent/ascent.description.yaml#reach a65b2fd610d94216
-ok  ascent     deadEnd                        current: recorded src/games/ascent/ascent.description.yaml#deadEnd 453938b1d5c3d951
-ok  ascent     overlap                        current: recorded src/games/ascent/ascent.description.yaml#overlap aadba58e18c9e77c
-ok  ascent     onlyNumberNear                 current: recorded src/games/ascent/ascent.description.yaml#onlyNumberNear f4d54a5c6e16db54
-ok  ascent     onlyNumber                     current: recorded src/games/ascent/ascent.description.yaml#onlyNumber 8d8b8086c57ad378
-ok  ascent     onLine                         current: recorded src/games/ascent/ascent.description.yaml#onLine af1667393c43b2cb
-ok  ascent     overlapEdges                   current: recorded src/games/ascent/ascent.description.yaml#overlapEdges aadba58e18c9e77c
+ok  abcd       placed                         current: recorded src/games/abcd/abcd.description.yaml#placed 04e31cd9d302c71d
+ok  abcd       satisfied                      current: recorded src/games/abcd/abcd.description.yaml#satisfied 2dce060c0b516ef2
+ok  abcd       single                         current: recorded src/games/abcd/abcd.description.yaml#single ec4a656a24f43566
+ok  abcd       runs                           current: recorded src/games/abcd/abcd.description.yaml#runs d996ec0598a14e1f
+ok  abcd       placedDiagonal                 current: recorded src/games/abcd/abcd.description.yaml#placedDiagonal 9a302609d4c1a3e9
+ok  adjacent   adjacent                       current: recorded src/games/adjacent/adjacent.description.yaml#adjacent 513e7c6b0bb77feb
+ok  adjacent   adjacentSet                    current: recorded src/games/adjacent/adjacent.description.yaml#adjacentSet db61df73cd87120b
+ok  ascent     once                           current: recorded src/games/ascent/ascent.description.yaml#once f0e735854c5a7705
+ok  ascent     onlySquare                     current: recorded src/games/ascent/ascent.description.yaml#onlySquare 640e381f3f20c24f
+ok  ascent     nextTo                         current: recorded src/games/ascent/ascent.description.yaml#nextTo 249d53f814e7f0b6
+ok  ascent     reach                          current: recorded src/games/ascent/ascent.description.yaml#reach 797e5bdfe4d2311b
+ok  ascent     deadEnd                        current: recorded src/games/ascent/ascent.description.yaml#deadEnd 51327a22948af988
+ok  ascent     overlap                        current: recorded src/games/ascent/ascent.description.yaml#overlap 60c11df7adea99a1
+ok  ascent     onlyNumberNear                 current: recorded src/games/ascent/ascent.description.yaml#onlyNumberNear 8a11a005282118a1
+ok  ascent     onlyNumber                     current: recorded src/games/ascent/ascent.description.yaml#onlyNumber 90a503dc43b5d03a
+ok  ascent     onLine                         current: recorded src/games/ascent/ascent.description.yaml#onLine ea7e0ff0c0107396
+ok  ascent     overlapEdges                   current: recorded src/games/ascent/ascent.description.yaml#overlapEdges 60c11df7adea99a1
 ok  blackbox   ray                            current: recorded src/games/blackbox/blackbox.description.yaml#ray f636c015c8af43e9
-ok  boats      given                          current: recorded src/games/boats/boats.description.yaml#given a3cf86c709bc7ea1
-ok  boats      near                           current: recorded src/games/boats/boats.description.yaml#near 1470f2511ceaad31
-ok  boats      touch                          current: recorded src/games/boats/boats.description.yaml#touch d7816c1e83050516
-ok  boats      lineShips                      current: recorded src/games/boats/boats.description.yaml#lineShips 352defb035ae737a
-ok  boats      total                          current: recorded src/games/boats/boats.description.yaml#total ca8dfad539bf64db
-ok  boats      center                         current: recorded src/games/boats/boats.description.yaml#center 693414342b84811e
-ok  boats      extend                         current: recorded src/games/boats/boats.description.yaml#extend 3a19cdcbd48b32ff
-ok  boats      lineWater                      current: recorded src/games/boats/boats.description.yaml#lineWater 214ea00b428cefd7
-ok  boats      isolated                       current: recorded src/games/boats/boats.description.yaml#isolated 817506d2cd16614c
-ok  boats      grow                           current: recorded src/games/boats/boats.description.yaml#grow b0042b7aede060a4
-ok  boats      onlyFit                        current: recorded src/games/boats/boats.description.yaml#onlyFit 646342cf12e3c107
-ok  boats      centerRoom                     current: recorded src/games/boats/boats.description.yaml#centerRoom 1dd29a0902188f01
-ok  boats      tooLong                        current: recorded src/games/boats/boats.description.yaml#tooLong 586c1db1aaaf4cff
-ok  boats      shortRun                       current: recorded src/games/boats/boats.description.yaml#shortRun 529516ed3c752cbb
-ok  boats      hidden                         current: recorded src/games/boats/boats.description.yaml#hidden 3f5f3dd6584f63a2
-ok  boats      onlyRuns                       current: recorded src/games/boats/boats.description.yaml#onlyRuns 24065a8861b7644c
-ok  boats      shared                         current: recorded src/games/boats/boats.description.yaml#shared 1002611d0b34efc7
-ok  boats      lastWater                      current: recorded src/games/boats/boats.description.yaml#lastWater b94f7da4b6645adc
-ok  boats      lastShip                       current: recorded src/games/boats/boats.description.yaml#lastShip 6cd6388f969fbcdf
-ok  boats      centerTrial                    current: recorded src/games/boats/boats.description.yaml#centerTrial ef675dadcfea0869
-ok  bricks     strandSupport                  current: recorded src/games/bricks/bricks.description.yaml#strandSupport 1a930f6b27207da5
-ok  bricks     undercount                     current: recorded src/games/bricks/bricks.description.yaml#undercount c422dc834a1adb7d
-ok  bricks     three                          current: recorded src/games/bricks/bricks.description.yaml#three 25b6fe2825dfd2c0
-ok  bricks     unsupported                    current: recorded src/games/bricks/bricks.description.yaml#unsupported e1f0b7668e86a70c
-ok  bricks     overcount                      current: recorded src/games/bricks/bricks.description.yaml#overcount f3ebeada7b052282
-ok  bridges    exactSpace                     current: recorded src/games/bridges/bridges.description.yaml#exactSpace 910496a5912730f9
-ok  bridges    everyNeighbor                  current: recorded src/games/bridges/bridges.description.yaml#everyNeighbor 1efe4ed1cc18b617
-ok  bridges    needsThisWay                   current: recorded src/games/bridges/bridges.description.yaml#needsThisWay c804c35bdc6c56dd
-ok  bridges    sealing                        current: recorded src/games/bridges/bridges.description.yaml#sealing bb0beaa3793cf8c7
-ok  bridges    tooMany                        current: recorded src/games/bridges/bridges.description.yaml#tooMany e6abe4bd9e960ed7 held
-ok  bridges    mustReachOut                   current: recorded src/games/bridges/bridges.description.yaml#mustReachOut b0f038de29399314
-ok  bridges    loop                           current: recorded src/games/bridges/bridges.description.yaml#loop 3fa296088bcb29e6
-ok  clusters   broken                         current: recorded src/games/clusters/clusters.description.yaml#broken 65c7cde6d2c2757c
-ok  clusters   refute                         current: recorded src/games/clusters/clusters.description.yaml#refute cd223a7f41b9f687
-ok  clusters   countFull                      current: recorded src/games/clusters/clusters.description.yaml#countFull 5a6a8512f2bf9504
-ok  clusters   countShort                     current: recorded src/games/clusters/clusters.description.yaml#countShort 4deefdf4fdb18a80
-ok  crossing   onlyNumber                     current: recorded src/games/crossing/crossing.description.yaml#onlyNumber dcd71dc5a5a9ecff
-ok  crossing   onlyRun                        current: recorded src/games/crossing/crossing.description.yaml#onlyRun e744ec94e9dcc104
-ok  crossing   sharedDigit                    current: recorded src/games/crossing/crossing.description.yaml#sharedDigit 63da9dbe8e58fa08
-ok  crossing   crossRuns                      current: recorded src/games/crossing/crossing.description.yaml#crossRuns 547844708eac80ae
-ok  crossing   narrow                         current: recorded src/games/crossing/crossing.description.yaml#narrow 80fb41717624a12f
-ok  crossing   misread                        current: recorded src/games/crossing/crossing.description.yaml#misread 8202184f5b8b0c4b
-ok  crossing   twice                          current: recorded src/games/crossing/crossing.description.yaml#twice 66673463d09eaca1
+ok  boats      given                          current: recorded src/games/boats/boats.description.yaml#given a54b673f176adda9
+ok  boats      near                           current: recorded src/games/boats/boats.description.yaml#near 927e3b096881f5b9
+ok  boats      touch                          current: recorded src/games/boats/boats.description.yaml#touch f9cc6f3660dc50e6
+ok  boats      lineShips                      current: recorded src/games/boats/boats.description.yaml#lineShips 6524d53718747bc1
+ok  boats      total                          current: recorded src/games/boats/boats.description.yaml#total 095bd55217a45ecc
+ok  boats      center                         current: recorded src/games/boats/boats.description.yaml#center f017f6ecc44bb506
+ok  boats      extend                         current: recorded src/games/boats/boats.description.yaml#extend 79623e03da51cce7
+ok  boats      lineWater                      current: recorded src/games/boats/boats.description.yaml#lineWater d996bcf266a4bb86
+ok  boats      isolated                       current: recorded src/games/boats/boats.description.yaml#isolated 26b0d84afb9f8bd4
+ok  boats      grow                           current: recorded src/games/boats/boats.description.yaml#grow dd4bd4424601a4ec
+ok  boats      onlyFit                        current: recorded src/games/boats/boats.description.yaml#onlyFit cab8cc37a38139bf
+ok  boats      centerRoom                     current: recorded src/games/boats/boats.description.yaml#centerRoom 02609ef1a345c4d9
+ok  boats      tooLong                        current: recorded src/games/boats/boats.description.yaml#tooLong c73014490ce69ca7
+ok  boats      shortRun                       current: recorded src/games/boats/boats.description.yaml#shortRun 07d25a4513cb8813
+ok  boats      hidden                         current: recorded src/games/boats/boats.description.yaml#hidden 34710c9e08e1821a
+ok  boats      onlyRuns                       current: recorded src/games/boats/boats.description.yaml#onlyRuns b3ac19400a0e7474
+ok  boats      shared                         current: recorded src/games/boats/boats.description.yaml#shared fce9b7e5ddc55c8f
+ok  boats      lastWater                      current: recorded src/games/boats/boats.description.yaml#lastWater c5ccadacd02fc774
+ok  boats      lastShip                       current: recorded src/games/boats/boats.description.yaml#lastShip 164798d790232597
+ok  boats      centerTrial                    current: recorded src/games/boats/boats.description.yaml#centerTrial 5c324735e20f0f21
+ok  bricks     strandSupport                  current: recorded src/games/bricks/bricks.description.yaml#strandSupport c8c69bb2158910f0
+ok  bricks     undercount                     current: recorded src/games/bricks/bricks.description.yaml#undercount a1b3edaa0b462e88
+ok  bricks     three                          current: recorded src/games/bricks/bricks.description.yaml#three 6e66e0ddf7494a0d
+ok  bricks     unsupported                    current: recorded src/games/bricks/bricks.description.yaml#unsupported 70cb91ad0d6b6395
+ok  bricks     overcount                      current: recorded src/games/bricks/bricks.description.yaml#overcount c3e534db8108f0d7
+ok  bridges    exactSpace                     current: recorded src/games/bridges/bridges.description.yaml#exactSpace b6314d1f8fa0251f
+ok  bridges    everyNeighbor                  current: recorded src/games/bridges/bridges.description.yaml#everyNeighbor 63c51a93fe1d5c71
+ok  bridges    needsThisWay                   current: recorded src/games/bridges/bridges.description.yaml#needsThisWay 73a44e6598dcebc3
+ok  bridges    sealing                        current: recorded src/games/bridges/bridges.description.yaml#sealing e83dbd515e76b101
+ok  bridges    tooMany                        current: recorded src/games/bridges/bridges.description.yaml#tooMany f5da786f0d3be4d1 held
+ok  bridges    mustReachOut                   current: recorded src/games/bridges/bridges.description.yaml#mustReachOut 8adea7a87c6b3b6a
+ok  bridges    loop                           current: recorded src/games/bridges/bridges.description.yaml#loop ca299cfa9aa82c20
+ok  clusters   broken                         current: recorded src/games/clusters/clusters.description.yaml#broken c3f4009e7a7b5f10
+ok  clusters   refute                         current: recorded src/games/clusters/clusters.description.yaml#refute e4cd8b67a7705e63
+ok  clusters   countFull                      current: recorded src/games/clusters/clusters.description.yaml#countFull de6fcc36e9a401f2
+ok  clusters   countShort                     current: recorded src/games/clusters/clusters.description.yaml#countShort 4c32917e676195f8
+ok  crossing   onlyNumber                     current: recorded src/games/crossing/crossing.description.yaml#onlyNumber f81d3797a0a2ffd9
+ok  crossing   onlyRun                        current: recorded src/games/crossing/crossing.description.yaml#onlyRun fac5fd221386207a
+ok  crossing   sharedDigit                    current: recorded src/games/crossing/crossing.description.yaml#sharedDigit cd745bccd921f7be
+ok  crossing   crossRuns                      current: recorded src/games/crossing/crossing.description.yaml#crossRuns b507b2a678a165c0
+ok  crossing   narrow                         current: recorded src/games/crossing/crossing.description.yaml#narrow c09328fba8d97739
+ok  crossing   misread                        current: recorded src/games/crossing/crossing.description.yaml#misread 0715d4b59128d4bd
+ok  crossing   twice                          current: recorded src/games/crossing/crossing.description.yaml#twice 3926b6e5148d6e1f
 --  dominosa: no board of order 3 has an answer, so nothing is checked there
-ok  dominosa   placed                         current: recorded src/games/dominosa/dominosa.description.yaml#placed aaa21bd4bdde4d12
-ok  dominosa   onlySpot                       current: recorded src/games/dominosa/dominosa.description.yaml#onlySpot 2f02afafd482aa39
-ok  dominosa   squareOnly                     current: recorded src/games/dominosa/dominosa.description.yaml#squareOnly 6c21808ffb81e2fd
+ok  dominosa   placed                         current: recorded src/games/dominosa/dominosa.description.yaml#placed bb2444751f8df893
+ok  dominosa   onlySpot                       current: recorded src/games/dominosa/dominosa.description.yaml#onlySpot 6653525606e5c3fc
+ok  dominosa   squareOnly                     current: recorded src/games/dominosa/dominosa.description.yaml#squareOnly 7bb566f9e93d6dcf
 ok  dominosa   squareSingleDomino             current: recorded src/games/dominosa/dominosa.description.yaml#squareSingleDomino 33dcfb74d7251a6a
 ok  dominosa   mustOverlap                    current: recorded src/games/dominosa/dominosa.description.yaml#mustOverlap a09a47eadc634152
 ok  dominosa   localDuplicate                 current: recorded src/games/dominosa/dominosa.description.yaml#localDuplicate 8bf8be08a15fbd38
@@ -83,14 +164,14 @@ ok  filling    onlyWay                        current: recorded src/games/fillin
 ok  filling    tooBig                         current: recorded src/games/filling/filling.description.yaml#tooBig 1eb633c772b5be4b
 ok  filling    noRoom                         current: recorded src/games/filling/filling.description.yaml#noRoom 77a3a65df3cf0b4b
 ok  filling    tooFar                         current: recorded src/games/filling/filling.description.yaml#tooFar 827256e1b261a8c9
-ok  filling    onlyNumber                     current: recorded src/games/filling/filling.description.yaml#onlyNumber ee7637b121121923
+ok  filling    onlyNumber                     current: recorded src/games/filling/filling.description.yaml#onlyNumber a36d384434ffa76a
 ok  galaxies   dotTile                        current: recorded src/games/galaxies/galaxies.description.yaml#dotTile 977887789b1ca5ae
 ok  galaxies   split                          current: recorded src/games/galaxies/galaxies.description.yaml#split 2ca941717841f35d
 ok  galaxies   separate                       current: recorded src/games/galaxies/galaxies.description.yaml#separate 9dc9f32d1b31be6b
 ok  galaxies   enclosed                       current: recorded src/games/galaxies/galaxies.description.yaml#enclosed 9fe87147244c69b3
-ok  galaxies   soleOwner                      current: recorded src/games/galaxies/galaxies.description.yaml#soleOwner a4e5dcb94cfead93
-ok  galaxies   onlyReach                      current: recorded src/games/galaxies/galaxies.description.yaml#onlyReach 20f9268fa7e7f347
-ok  galaxies   exclave                        current: recorded src/games/galaxies/galaxies.description.yaml#exclave 2ea7f666f01f0514
+ok  galaxies   soleOwner                      current: recorded src/games/galaxies/galaxies.description.yaml#soleOwner 5238a02bbeda1041
+ok  galaxies   onlyReach                      current: recorded src/games/galaxies/galaxies.description.yaml#onlyReach 57614bbd7cf3ae9d
+ok  galaxies   exclave                        current: recorded src/games/galaxies/galaxies.description.yaml#exclave f14bb80abf9a4afa
 ok  galaxies   mirrorWall                     current: recorded src/games/galaxies/galaxies.description.yaml#mirrorWall 3604158e40632b4c
 ok  group      associativity                  current: recorded src/games/group/group.description.yaml#associativity 1cbd65edae24cbf3
 ok  group      identity                       current: recorded src/games/group/group.description.yaml#identity 66982cf6ea3a5546
@@ -105,99 +186,107 @@ ok  guess      blacksForced                   current: recorded src/games/guess/
 ok  guess      blacksAccounted                current: recorded src/games/guess/guess.description.yaml#blacksAccounted 386bd6dd9e7a162b
 ok  guess      totalAccounted                 current: recorded src/games/guess/guess.description.yaml#totalAccounted b9825eb9e2ac8d71
 ok  guess      noRepeats                      current: recorded src/games/guess/guess.description.yaml#noRepeats 5cedaa3ba228cb25
-ok  keen       cageEasy                       current: recorded src/games/keen/keen.description.yaml#cageEasy dae0a870dc08936c
-ok  keen       cage                           current: recorded src/games/keen/keen.description.yaml#cage d77f8397b482db1f
-ok  keen       cageLine                       current: recorded src/games/keen/keen.description.yaml#cageLine c521794c25e9c5a4
-ok  lightup    shine                          current: recorded src/games/lightup/lightup.description.yaml#shine eb3473c30506b63d
-ok  lightup    square                         current: recorded src/games/lightup/lightup.description.yaml#square 893684dbb16f8409
-ok  lightup    darkSet                        current: recorded src/games/lightup/lightup.description.yaml#darkSet 7fa9aed0fd421430
-ok  lightup    clueSet                        current: recorded src/games/lightup/lightup.description.yaml#clueSet 4ddce73559f063bb
-ok  loopy      deadEnd                        current: recorded src/games/loopy/loopy.description.yaml#deadEnd a349b66eff194470
-ok  loopy      lineContinues                  current: recorded src/games/loopy/loopy.description.yaml#lineContinues 2d8eb6d2423375ca
-ok  loopy      dotFull                        current: recorded src/games/loopy/loopy.description.yaml#dotFull 484ef9f88b04d8a8
-ok  loopy      clueFull                       current: recorded src/games/loopy/loopy.description.yaml#clueFull 3fe0f47986093ecd
-ok  loopy      clueStarved                    current: recorded src/games/loopy/loopy.description.yaml#clueStarved c7e9d656df4372f8
-ok  loopy      clueBlockedPair                current: recorded src/games/loopy/loopy.description.yaml#clueBlockedPair c200579188c110af
-ok  loopy      clueOneShort                   current: recorded src/games/loopy/loopy.description.yaml#clueOneShort f872a8e853ab0846
-ok  loopy      earlyLoop                      current: recorded src/games/loopy/loopy.description.yaml#earlyLoop cc910b67d19efe2b
-ok  loopy      closed                         current: recorded src/games/loopy/loopy.description.yaml#closed c9d65d863e130142
-ok  loopy      related                        current: recorded src/games/loopy/loopy.description.yaml#related 8ed50f734ebc6ee5
-ok  loopy      cornerAtDot                    current: recorded src/games/loopy/loopy.description.yaml#cornerAtDot 97c61411514ae4b3
-ok  loopy      cornerOther                    current: recorded src/games/loopy/loopy.description.yaml#cornerOther 347c7a1659c3cb52
-ok  loopy      cornerBoth                     current: recorded src/games/loopy/loopy.description.yaml#cornerBoth 908016b1d5dffea9
-ok  loopy      clueBound                      current: recorded src/games/loopy/loopy.description.yaml#clueBound 4b6acb8c2a501baa
-ok  loopy      cornerFromClue                 current: recorded src/games/loopy/loopy.description.yaml#cornerFromClue db7bb28f232d3fa5
-ok  loopy      cornerAcross                   current: recorded src/games/loopy/loopy.description.yaml#cornerAcross 5757339d3aeb9113
-ok  loopy      cornerExit                     current: recorded src/games/loopy/loopy.description.yaml#cornerExit 712164c935326b05
-ok  loopy      cornerOppositeExit             current: recorded src/games/loopy/loopy.description.yaml#cornerOppositeExit f96dbb6fe6d39a05
-ok  loopy      matchingPair                   current: recorded src/games/loopy/loopy.description.yaml#matchingPair 79de760b159b964f
-ok  loopy      pairAtClue                     current: recorded src/games/loopy/loopy.description.yaml#pairAtClue 789689845f23cfb4
-ok  loopy square 2x2 parityClue                     3  sound    (want sound   )     4 queries    2.3s
-ok  loopy square 2x2 parityClue (planted)           3  unsound  (want unsound )     1 queries    0.1s   at face 0
-ok  loopy triangular 2x1 parityClue                     3  sound    (want sound   )     4 queries    0.4s
-ok  loopy honeycomb 2x1 parityClue                     3  sound    (want sound   )     2 queries    1.7s
-ok  loopy      linkClue                       current: recorded src/games/loopy/loopy.description.yaml#linkClue 56c13c6f9f2df5db
-ok  loopy      pairFromCorner                 current: recorded src/games/loopy/loopy.description.yaml#pairFromCorner 1b19ef1776952763
-ok  loopy      cornerFromPair                 current: recorded src/games/loopy/loopy.description.yaml#cornerFromPair d49fd5ec8774dbcc
-ok  loopy      pairAtDot                      current: recorded src/games/loopy/loopy.description.yaml#pairAtDot e638cd875bd0f97f
-ok  loopy square 2x2 parityDot                      3  sound    (want sound   )     9 queries    0.8s
-ok  loopy square 2x2 parityDot (planted)            3  unsound  (want unsound )     2 queries    0.1s   at cell 1
-ok  loopy triangular 2x1 parityDot                      3  sound    (want sound   )     6 queries    0.6s
-ok  loopy honeycomb 2x1 parityDot                      3  sound    (want sound   )    10 queries    0.3s
-ok  loopy      linkDot                        current: recorded src/games/loopy/loopy.description.yaml#linkDot 79166d8679d6c664
+ok  kakurasu   lineMet                        current: recorded src/games/kakurasu/kakurasu.description.yaml#lineMet 130d3ee03e341884
+ok  kakurasu   lineFull                       current: recorded src/games/kakurasu/kakurasu.description.yaml#lineFull 3b34f80a08d728c0
+ok  kakurasu   tooMuch                        current: recorded src/games/kakurasu/kakurasu.description.yaml#tooMuch e9b9f002e232e6da
+ok  kakurasu   everyWay                       current: recorded src/games/kakurasu/kakurasu.description.yaml#everyWay ce38d96f97145173
+ok  kakurasu   noWay                          current: recorded src/games/kakurasu/kakurasu.description.yaml#noWay 1e0c2096048d385c
+ok  keen       cageEasy                       current: recorded src/games/keen/keen.description.yaml#cageEasy 089f1f4ee4d5ea48
+ok  keen       cage                           current: recorded src/games/keen/keen.description.yaml#cage a38494f619d08d76
+ok  keen       cageLine                       current: recorded src/games/keen/keen.description.yaml#cageLine c20c64d297bf1370
+ok  lightup    shine                          current: recorded src/games/lightup/lightup.description.yaml#shine b958f4816dfa588f
+ok  lightup    clueFull                       current: recorded src/games/lightup/lightup.description.yaml#clueFull fb5149ca1acdb394
+ok  lightup    clueExact                      current: recorded src/games/lightup/lightup.description.yaml#clueExact 55ca72b1335030f3
+ok  lightup    square                         current: recorded src/games/lightup/lightup.description.yaml#square 7269eb51ed17ed45
+ok  lightup    darkSet                        current: recorded src/games/lightup/lightup.description.yaml#darkSet 08400dcc239c2dcc
+ok  lightup    clueSet                        current: recorded src/games/lightup/lightup.description.yaml#clueSet 2c94d96b0db92525
+ok  loopy      deadEnd                        current: recorded src/games/loopy/loopy.description.yaml#deadEnd 50d6489e9cb1dc40
+ok  loopy      lineContinues                  current: recorded src/games/loopy/loopy.description.yaml#lineContinues d871cc82bcda1bda
+ok  loopy      dotFull                        current: recorded src/games/loopy/loopy.description.yaml#dotFull c3f3a7ded0ece702
+ok  loopy      clueFull                       current: recorded src/games/loopy/loopy.description.yaml#clueFull f7520169c2b2b43f
+ok  loopy      clueStarved                    current: recorded src/games/loopy/loopy.description.yaml#clueStarved c8845035d52bf7cb
+ok  loopy      clueBlockedPair                current: recorded src/games/loopy/loopy.description.yaml#clueBlockedPair c1b6ec0150bb2f3f
+ok  loopy      clueOneShort                   current: recorded src/games/loopy/loopy.description.yaml#clueOneShort 411cc438c5554416
+ok  loopy      earlyLoop                      current: recorded src/games/loopy/loopy.description.yaml#earlyLoop ca5f3c9713071b3b
+ok  loopy      closed                         current: recorded src/games/loopy/loopy.description.yaml#closed 00d9352c80873ffe
+ok  loopy      related                        current: recorded src/games/loopy/loopy.description.yaml#related b7ef95a31a591b55
+ok  loopy      cornerAtDot                    current: recorded src/games/loopy/loopy.description.yaml#cornerAtDot 472fb601c05515e3
+ok  loopy      cornerOther                    current: recorded src/games/loopy/loopy.description.yaml#cornerOther 112cfc26909dc022
+ok  loopy      cornerBoth                     current: recorded src/games/loopy/loopy.description.yaml#cornerBoth 7b667f0195892679
+ok  loopy      clueBound                      current: recorded src/games/loopy/loopy.description.yaml#clueBound ac2278bc0f4af65a
+ok  loopy      cornerFromClue                 current: recorded src/games/loopy/loopy.description.yaml#cornerFromClue 15e3ca9fec204fb5
+ok  loopy      cornerAcross                   current: recorded src/games/loopy/loopy.description.yaml#cornerAcross 142e90ed63945183
+ok  loopy      cornerExit                     current: recorded src/games/loopy/loopy.description.yaml#cornerExit aa17ad79c495de55
+ok  loopy      cornerOppositeExit             current: recorded src/games/loopy/loopy.description.yaml#cornerOppositeExit 26dd5fdff4b867d5
+ok  loopy      matchingPair                   current: recorded src/games/loopy/loopy.description.yaml#matchingPair 57b126dbb4ab995f
+ok  loopy      pairAtClue                     current: recorded src/games/loopy/loopy.description.yaml#pairAtClue bfad557427aa4264
+ok  loopy      parityClue                     current: recorded src/games/loopy/loopy.description.yaml#parityClue 01831a5a5325647c
+ok  loopy      linkClue                       current: recorded src/games/loopy/loopy.description.yaml#linkClue 3459cf1f60791e2b
+ok  loopy      pairFromCorner                 current: recorded src/games/loopy/loopy.description.yaml#pairFromCorner 711876e7d553acf3
+ok  loopy      cornerFromPair                 current: recorded src/games/loopy/loopy.description.yaml#cornerFromPair 9f29e93cb78a6ddc
+ok  loopy      pairAtDot                      current: recorded src/games/loopy/loopy.description.yaml#pairAtDot 7c963a373e7acb8f
+ok  loopy      parityDot                      current: recorded src/games/loopy/loopy.description.yaml#parityDot 7bede4f33d2c98ab
+ok  loopy      linkDot                        current: recorded src/games/loopy/loopy.description.yaml#linkDot 5224dcb63eeb1154
 ok  magnets    pair                           current: recorded src/games/magnets/magnets.description.yaml#pair dc076fef2e4ea27d
-ok  magnets    repel                          current: recorded src/games/magnets/magnets.description.yaml#repel e9ffc22bc177cda3
+ok  magnets    repel                          current: recorded src/games/magnets/magnets.description.yaml#repel 257680e151e69b3f
 ok  magnets    tile                           current: recorded src/games/magnets/magnets.description.yaml#tile b031d9b26087ceec
-ok  magnets    single                         current: recorded src/games/magnets/magnets.description.yaml#single c39e33c6cb459bda
-ok  magnets    count                          current: recorded src/games/magnets/magnets.description.yaml#count b90ff8e9ae00ba17
+ok  magnets    single                         current: recorded src/games/magnets/magnets.description.yaml#single 8495977a4718b97c
+ok  magnets    count                          current: recorded src/games/magnets/magnets.description.yaml#count 0a6d7b8e7b216562
 ok  magnets    oddGap                         current: recorded src/games/magnets/magnets.description.yaml#oddGap 20daa93db3b3e43f
 ok  magnets    marked                         current: recorded src/games/magnets/magnets.description.yaml#marked 53ce858e6b2a6004
 ok  magnets    oneNeutral                     current: recorded src/games/magnets/magnets.description.yaml#oneNeutral 54e5435ac8f14066
 ok  magnets    everyTile                      current: recorded src/games/magnets/magnets.description.yaml#everyTile e07b02415b29f219
 ok  magnets    onlyEnd                        current: recorded src/games/magnets/magnets.description.yaml#onlyEnd a60be8c4bddcb1d8
-ok  map        placed                         current: recorded src/games/map/map.description.yaml#placed 4fd98bc943217d4d
-ok  map        lone                           current: recorded src/games/map/map.description.yaml#lone 0773824955d3b30b
-ok  map        pair                           current: recorded src/games/map/map.description.yaml#pair 7efee19ea4e8610e
+ok  map        placed                         current: recorded src/games/map/map.description.yaml#placed ac3fc325d8345b0b
+ok  map        lone                           current: recorded src/games/map/map.description.yaml#lone 3364634a00300054
+ok  map        pair                           current: recorded src/games/map/map.description.yaml#pair 47f6224836f3e114
 ok  map        weigh                          current: recorded src/games/map/map.description.yaml#weigh ce6783cf609bad73
 --  mathrax    no board of order 3 holds a difference clue, so no reading of one is checked there
+--  mathrax    no board of order 3 holds a equal clue, so no reading of one is checked there
 --  mathrax    no board of order 3 holds a product clue, so no reading of one is checked there
 --  mathrax    no board of order 3 holds a quotient clue, so no reading of one is checked there
 --  mathrax    no board of order 3 holds a parity clue, so no reading of one is checked there
 --  mathrax    no board of order 4 holds a quotient clue, so no reading of one is checked there
-ok  mathrax    clueEasy                       current: recorded src/games/mathrax/mathrax.description.yaml#clueEasy 356b96bffe0a1985
-ok  mathrax    clue                           current: recorded src/games/mathrax/mathrax.description.yaml#clue 60edbd1405d98708
-ok  mathrax    clueTricky                     current: recorded src/games/mathrax/mathrax.description.yaml#clueTricky 0228a20000ae028a
-ok  mines      alone                          current: recorded src/games/mines/mines.description.yaml#alone 4e1eed453f1d14f9
-ok  mines      pair                           current: recorded src/games/mines/mines.description.yaml#pair fddf2a5e7c20c85e
-ok  mines      region                         current: recorded src/games/mines/mines.description.yaml#region 1b52b1298acabc7d
-ok  mines      regions                        current: recorded src/games/mines/mines.description.yaml#regions 97ff58878666da05
-ok  mines      count                          current: recorded src/games/mines/mines.description.yaml#count d495157a57a52b10
-ok  mosaic     alone                          current: recorded src/games/mosaic/mosaic.description.yaml#alone b7e03d2d0eb2e5a5
-ok  mosaic     compared                       current: recorded src/games/mosaic/mosaic.description.yaml#compared 593b1c787eb941c0
-ok  net        fitLock                        current: recorded src/games/net/net.description.yaml#fitLock 38a1efce39a67bba
-ok  net        fitNote                        current: recorded src/games/net/net.description.yaml#fitNote fd879dff8f6f55db
-ok  net        loopLock                       current: recorded src/games/net/net.description.yaml#loopLock ef764f8cd8ac4d16
-ok  net        loopNote                       current: recorded src/games/net/net.description.yaml#loopNote 0a2ed4757473e777
-ok  net        sealLock                       current: recorded src/games/net/net.description.yaml#sealLock ff17c2170ff6722b
-ok  net        sealNote                       current: recorded src/games/net/net.description.yaml#sealNote 059a742abf33e752
-ok  net        strandLock                     current: recorded src/games/net/net.description.yaml#strandLock 9a4b8dfd7b616067
-ok  net        strandNote                     current: recorded src/games/net/net.description.yaml#strandNote 8d15dee609eda0d2
-ok  palisade   cluesVersusRegionSize          current: recorded src/games/palisade/palisade.description.yaml#cluesVersusRegionSize 306e99ef1c7604a1
-ok  palisade   numberExhausted                current: recorded src/games/palisade/palisade.description.yaml#numberExhausted 43a558dd5d9340cd
-ok  palisade   notTooBig                      current: recorded src/games/palisade/palisade.description.yaml#notTooBig be0999777791236f
-ok  palisade   notTooSmall                    3  sound    (want sound   )     1 queries    0.6s
-ok  palisade   notTooSmall (planted)          3  unsound  (want unsound )     1 queries    0.1s   at eset
-ok  palisade   noDanglingEdges                current: recorded src/games/palisade/palisade.description.yaml#noDanglingEdges 4085b9d7b00c6e13
-ok  palisade   equivalentEdges                current: recorded src/games/palisade/palisade.description.yaml#equivalentEdges ca7548a179d8ad55
-ok  palisade   inside                         current: recorded src/games/palisade/palisade.description.yaml#inside 3ecafb481b2c6cd4
-ok  path       forced                         current: recorded src/games/path/path.description.yaml#forced 4166c7676819ceb9
-ok  path       lineBreaks                     current: recorded src/games/path/path.description.yaml#lineBreaks 03e5b94937ea48f3
-ok  path step=0 pairBreaks                     3  sound    (want sound   )     9 queries   91.9s
-ok  path step=0 pairBreaks (planted)           3  unsound  (want unsound )     2 queries   17.9s   at cell 1
-..  path step=1 pairBreaks: not proved whole in time, asked on 20 boards, one an answer, every answer: no defect
-ok  path step=1 pairBreaks                     3  sound    (want sound   )   180 queries  109.0s
-ok  path       weighed                        current: recorded src/games/path/path.description.yaml#weighed d43019ebd1443e4d held
-ok  pattern    line                           current: recorded src/games/pattern/pattern.description.yaml#line 63b157899163ce59
+ok  mathrax    clueEasy                       current: recorded src/games/mathrax/mathrax.description.yaml#clueEasy 6e0542d4a126409c
+ok  mathrax    clue                           current: recorded src/games/mathrax/mathrax.description.yaml#clue ede262511d5056cd
+ok  mathrax    clueTricky                     current: recorded src/games/mathrax/mathrax.description.yaml#clueTricky 6618ef45cbba09bf
+ok  mines      alone                          current: recorded src/games/mines/mines.description.yaml#alone 315cb703343bdcb1
+ok  mines      pair                           current: recorded src/games/mines/mines.description.yaml#pair 5ebcd39989ac9cad
+ok  mines      region                         current: recorded src/games/mines/mines.description.yaml#region 7c21761fee2cb5eb
+ok  mines      regions                        current: recorded src/games/mines/mines.description.yaml#regions d16ac06f16a328c7
+ok  mines      count                          current: recorded src/games/mines/mines.description.yaml#count cd4a1a14e8583086
+ok  mosaic     alone                          current: recorded src/games/mosaic/mosaic.description.yaml#alone b4028a7e5a9da40e
+ok  mosaic     compared                       current: recorded src/games/mosaic/mosaic.description.yaml#compared 79eee952cf039f70
+ok  net        fitLock                        current: recorded src/games/net/net.description.yaml#fitLock 566be98bc9f08f29
+ok  net        fitNote                        current: recorded src/games/net/net.description.yaml#fitNote c830cb8e299f1680
+ok  net        loopLock                       current: recorded src/games/net/net.description.yaml#loopLock 1ee78ec5842b061d
+ok  net        loopNote                       current: recorded src/games/net/net.description.yaml#loopNote b69705a49a49afd4
+ok  net        sealLock                       current: recorded src/games/net/net.description.yaml#sealLock 714f4ae06285c25c
+ok  net        sealNote                       current: recorded src/games/net/net.description.yaml#sealNote 2e3a93399274a855
+ok  net        strandLock                     current: recorded src/games/net/net.description.yaml#strandLock 918896ea77817248
+ok  net        strandNote                     current: recorded src/games/net/net.description.yaml#strandNote 0e3effe51efa7205
+ok  norinori   domino                         current: recorded src/games/norinori/norinori.description.yaml#domino b1858d124828a766
+ok  norinori   partner                        current: recorded src/games/norinori/norinori.description.yaml#partner 583c4371f4a93fab
+ok  norinori   between                        current: recorded src/games/norinori/norinori.description.yaml#between b42eb1c83bbaf5ec
+ok  norinori   alone                          current: recorded src/games/norinori/norinori.description.yaml#alone e12076ce6dfdd6ee
+ok  norinori   claimed                        current: recorded src/games/norinori/norinori.description.yaml#claimed c87f6dfe1144e5f6
+ok  norinori   fullRegion                     current: recorded src/games/norinori/norinori.description.yaml#fullRegion 0b66d02b95e27a21
+ok  norinori   exactRegion                    current: recorded src/games/norinori/norinori.description.yaml#exactRegion cd140218f57f93e0
+ok  norinori   neededRegion                   current: recorded src/games/norinori/norinori.description.yaml#neededRegion 8a5ec9d6ab05ace8
+ok  norinori   blocked                        current: recorded src/games/norinori/norinori.description.yaml#blocked 2fe178fc9c5073d8
+ok  norinori   crowded                        current: recorded src/games/norinori/norinori.description.yaml#crowded d4cc4e54b3ad5276 held
+ok  palisade   cluesVersusRegionSize          current: recorded src/games/palisade/palisade.description.yaml#cluesVersusRegionSize 61a9456ff7e29db9
+ok  palisade   numberExhausted                current: recorded src/games/palisade/palisade.description.yaml#numberExhausted 48e6a3ba88e2d3de
+ok  palisade   notTooBig                      current: recorded src/games/palisade/palisade.description.yaml#notTooBig f547844ec912692a
+ok  palisade   notTooSmall                    current: recorded src/games/palisade/palisade.description.yaml#notTooSmall 95315ac026542636
+ok  palisade   noDanglingEdges                current: recorded src/games/palisade/palisade.description.yaml#noDanglingEdges 3a1f7d57306ea5db
+ok  palisade   equivalentEdges                current: recorded src/games/palisade/palisade.description.yaml#equivalentEdges 9316bda534003155
+ok  palisade   inside                         current: recorded src/games/palisade/palisade.description.yaml#inside 05569ac888e9020c
+ok  path       forced                         current: recorded src/games/path/path.description.yaml#forced b31255aa38d8cbc0
+ok  path       lineBreaks                     current: recorded src/games/path/path.description.yaml#lineBreaks df34a949f386c693
+ok  path       pairBreaks                     current: recorded src/games/path/path.description.yaml#pairBreaks 546f86059902031b held
+ok  path       weighed                        current: recorded src/games/path/path.description.yaml#weighed 446ea2d6d1fde0d4 held
+ok  pattern    line                           current: recorded src/games/pattern/pattern.description.yaml#line a894b662d0ba2622
 ok  pearl      square                         current: recorded src/games/pearl/pearl.description.yaml#square 86e9a09715b57af7
 ok  pearl      blackPearl                     current: recorded src/games/pearl/pearl.description.yaml#blackPearl 1a2afd2d31222e05
 ok  pearl      blackRunsOn                    current: recorded src/games/pearl/pearl.description.yaml#blackRunsOn 3b4107c2f4774e1e
@@ -206,11 +295,11 @@ ok  pearl      whiteCannotTurn                current: recorded src/games/pearl/
 ok  pearl      whiteTurnsOpposite             current: recorded src/games/pearl/pearl.description.yaml#whiteTurnsOpposite 685750b4a8ca9c46
 ok  pearl      closed                         current: recorded src/games/pearl/pearl.description.yaml#closed 9760fcf45903de06
 ok  pearl      earlyLoop                      current: recorded src/games/pearl/pearl.description.yaml#earlyLoop f04c5265bb1d7c23
-ok  pearl      earlyThrough                   current: recorded src/games/pearl/pearl.description.yaml#earlyThrough ffc98a669f2696a0
-ok  range      besideShaded                   current: recorded src/games/range/range.description.yaml#besideShaded 30d88e1687848dc8
-ok  range      capped                         current: recorded src/games/range/range.description.yaml#capped cfd82046474cf580
-ok  range      reach                          current: recorded src/games/range/range.description.yaml#reach f172a70b4c81f94f
-ok  range      cut                            current: recorded src/games/range/range.description.yaml#cut 10aba11f149d83f1
+ok  pearl      earlyThrough                   current: recorded src/games/pearl/pearl.description.yaml#earlyThrough 5696e2a0f7d7c276
+ok  range      besideShaded                   current: recorded src/games/range/range.description.yaml#besideShaded a9671750d552ebe8
+ok  range      capped                         current: recorded src/games/range/range.description.yaml#capped 3c4b3f9daf0722bb
+ok  range      reach                          current: recorded src/games/range/range.description.yaml#reach a886205a06d17448
+ok  range      cut                            current: recorded src/games/range/range.description.yaml#cut 1dc46a6a8f37808e
 ok  rect       fit                            current: recorded src/games/rect/rect.description.yaml#fit 93acff73d8bfd415
 ok  rect       uncovered                      current: recorded src/games/rect/rect.description.yaml#uncovered f6fb18b1868f45b3
 ok  rect       boxed                          current: recorded src/games/rect/rect.description.yaml#boxed 54145192a792881e
@@ -218,129 +307,133 @@ ok  rect       reach                          current: recorded src/games/rect/r
 ok  rect       overlap                        current: recorded src/games/rect/rect.description.yaml#overlap 0628c060c724efe6
 ok  rect       starve                         current: recorded src/games/rect/rect.description.yaml#starve cf1d15bfe0315f53
 ok  rect       line                           current: recorded src/games/rect/rect.description.yaml#line e627d5564403bde0
-ok  rome       cull                           current: recorded src/games/rome/rome.description.yaml#cull 9322df47105ec4e3
-ok  rome       lone                           current: recorded src/games/rome/rome.description.yaml#lone 03fc75ed4e6db79b
+ok  rome       cull                           current: recorded src/games/rome/rome.description.yaml#cull f4feecaf54f23323
+ok  rome       lone                           current: recorded src/games/rome/rome.description.yaml#lone 21100deecdc89bc4
 ok  rome       loop                           current: recorded src/games/rome/rome.description.yaml#loop 49e6fe5029144184
-ok  rome       onlyHome                       current: recorded src/games/rome/rome.description.yaml#onlyHome 2fef8f144ebf2538
+ok  rome       onlyHome                       current: recorded src/games/rome/rome.description.yaml#onlyHome df87e2758051fc95
 ok  rome       pair                           current: recorded src/games/rome/rome.description.yaml#pair b1fe0477c5d2d4e7
 ok  rome       reach                          current: recorded src/games/rome/rome.description.yaml#reach 1d81fcce1d0e71fe
 ok  rome       opposite                       current: recorded src/games/rome/rome.description.yaml#opposite 25e3975765312a07
 ok  salad      border                         current: recorded src/games/salad/salad.description.yaml#border 6690332696d689ec
-ok  seismic    cull                           current: recorded src/games/seismic/seismic.description.yaml#cull f00bb7de25e2b356
-ok  seismic    lone                           current: recorded src/games/seismic/seismic.description.yaml#lone 60fa9bfbc2213c43
-ok  seismic    areaSingle                     current: recorded src/games/seismic/seismic.description.yaml#areaSingle 37b6727ed4a4457c
-ok  seismic    starve                         current: recorded src/games/seismic/seismic.description.yaml#starve 532d97bd98819607
-ok  separate   sharedLetter                   current: recorded src/games/separate/separate.description.yaml#sharedLetter 33ed026ed17fb0b6
-ok  separate   walledApart                    current: recorded src/games/separate/separate.description.yaml#walledApart 9d59bf39929aa43d
-ok  separate   onlyWay                        current: recorded src/games/separate/separate.description.yaml#onlyWay 171e648978f776a1
-ok  signpost   onlyNext                       current: recorded src/games/signpost/signpost.description.yaml#onlyNext 6e9b493f9318ab8d held
-ok  signpost   onlyBefore                     current: recorded src/games/signpost/signpost.description.yaml#onlyBefore d0bb1d49764f3315 held
-ok  singles    besideCovered                  current: recorded src/games/singles/singles.description.yaml#besideCovered 20d26df02d49b570
+ok  seismic    cull                           current: recorded src/games/seismic/seismic.description.yaml#cull ebcaebcbcf25640f
+ok  seismic    lone                           current: recorded src/games/seismic/seismic.description.yaml#lone 7997b3d9f16608cd
+ok  seismic    areaSingle                     current: recorded src/games/seismic/seismic.description.yaml#areaSingle c6e5d3b312ce9583
+ok  seismic    starve                         current: recorded src/games/seismic/seismic.description.yaml#starve dcb2436259842c12
+ok  separate   sharedLetter                   current: recorded src/games/separate/separate.description.yaml#sharedLetter 290c1c71f0ed6e6f
+ok  separate   walledApart                    current: recorded src/games/separate/separate.description.yaml#walledApart e3362fba65b29104
+ok  separate   onlyWay                        current: recorded src/games/separate/separate.description.yaml#onlyWay d49799e7d79364c9
+ok  signpost   onlyNext                       current: recorded src/games/signpost/signpost.description.yaml#onlyNext c3900343bd960291 held
+ok  signpost   onlyBefore                     current: recorded src/games/signpost/signpost.description.yaml#onlyBefore 947fa0f82827e544 held
+ok  singles    besideCovered                  current: recorded src/games/singles/singles.description.yaml#besideCovered 32518325d62e435f
 ok  singles    sameLine                       current: recorded src/games/singles/singles.description.yaml#sameLine eb59194415ca27a0
 ok  singles    sandwich                       current: recorded src/games/singles/singles.description.yaml#sandwich c927d1485547a188
 ok  singles    pair                           current: recorded src/games/singles/singles.description.yaml#pair 06a67a8b3cf35edf
-ok  singles    corner                         current: recorded src/games/singles/singles.description.yaml#corner 4a75b50cd84498e8
-ok  singles    boxedIn                        current: recorded src/games/singles/singles.description.yaml#boxedIn 92fba43f06103015
+ok  singles    corner                         current: recorded src/games/singles/singles.description.yaml#corner bfb8405d79a57e3b
+ok  singles    boxedIn                        current: recorded src/games/singles/singles.description.yaml#boxedIn 315eadbd291bda3f
 ok  singles    offset                         current: recorded src/games/singles/singles.description.yaml#offset ca4f3cce6b52deb6
-ok  singles    split                          current: recorded src/games/singles/singles.description.yaml#split e233189b0736ae57
+ok  singles    split                          current: recorded src/games/singles/singles.description.yaml#split 046803069f7da796
 ok  slant      clue                           current: recorded src/games/slant/slant.description.yaml#clue 0f8412a4c886a6ac
-ok  slant      loop                           3  sound    (want sound   )     9 queries    0.1s
-ok  slant      loop (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at cell 0
-ok  slant      pair                           3  sound    (want sound   )     1 queries    0.3s
-ok  slant      pair (planted)                 3  unsound  (want unsound )     1 queries    0.0s   at eset
-ok  slant      share                          3  sound    (want sound   )     1 queries    0.2s
-ok  slant      share (planted)                3  unsound  (want unsound )     1 queries    0.1s   at eset
+ok  slant      loop                           current: recorded src/games/slant/slant.description.yaml#loop cb927e9a8a8f0ada
+ok  slant      pair                           current: recorded src/games/slant/slant.description.yaml#pair f4dbf90e88b4df86
+ok  slant      share                          current: recorded src/games/slant/slant.description.yaml#share 7e2682c119756131
 ok  slant      deadEnd                        current: recorded src/games/slant/slant.description.yaml#deadEnd 920191dc219537d6
 ok  slant      same                           current: recorded src/games/slant/slant.description.yaml#same 992815544f5baede
 ok  slant      drawn                          current: recorded src/games/slant/slant.description.yaml#drawn e60ecfe7266c1f77
 ok  slant      one                            current: recorded src/games/slant/slant.description.yaml#one 1e381329cf3b3591
 ok  slant      three                          current: recorded src/games/slant/slant.description.yaml#three 43a9ef0c6741138e
 ok  slant      two                            current: recorded src/games/slant/slant.description.yaml#two 841cde6a977f0392
---  solo +Jigsaw +Killer: not checked, since its box partition is dealt, and only blocks(a, b) is built
---  solo +Jigsaw +Killer +X: not checked, since its box partition is dealt, and only blocks(a, b) is built
+--  solo +Jigsaw +Killer: not checked, since its block partition is dealt, and every other board's blocks stand in for it
+--  solo +Jigsaw +Killer +X: not checked, since its block partition is dealt, and every other board's blocks stand in for it
 --  solo +Killer +X: no board of order 3 has an answer, so nothing is checked there
-ok  solo       boxSingle                      current: recorded src/games/solo/solo.description.yaml#boxSingle d3b16c0dfb4c6a33
-ok  solo       cageSingle                     current: recorded src/games/solo/solo.description.yaml#cageSingle 057daa6f045f5ee7
-ok  solo       regionRule                     current: recorded src/games/solo/solo.description.yaml#regionRule 6b7e36e93837eef5
-ok  solo       cageMinMax                     current: recorded src/games/solo/solo.description.yaml#cageMinMax 634c7528dcc126fc
-ok  solo       partMinMax                     current: recorded src/games/solo/solo.description.yaml#partMinMax 20fc1b38d2fd2538
-ok  solo       cageSums                       current: recorded src/games/solo/solo.description.yaml#cageSums 94de01c503810c9d
-ok  solo       partSums                       current: recorded src/games/solo/solo.description.yaml#partSums ce89d4668d27a9ce
-ok  solo       intersect                      current: recorded src/games/solo/solo.description.yaml#intersect 41f5b3476f81ae87
-ok  solo       digitSet                       current: recorded src/games/solo/solo.description.yaml#digitSet 4cac11ec03577bbe
-ok  spokes     saturation                     current: recorded src/games/spokes/spokes.description.yaml#saturation 0ce1da02d22a5524
-ok  spokes     twoOnes                        current: recorded src/games/spokes/spokes.description.yaml#twoOnes 4ca70acb7667b1a1
-ok  spokes     exhaustion                     current: recorded src/games/spokes/spokes.description.yaml#exhaustion be1230a480899142
-ok  spokes     lineBreaks                     current: recorded src/games/spokes/spokes.description.yaml#lineBreaks 62f6cb36ac05ba48
-ok  spokes     spareBreaks                    current: recorded src/games/spokes/spokes.description.yaml#spareBreaks 7fadbf7c7e6b9910 held
+ok  solo       blockSingle                    current: recorded src/games/solo/solo.description.yaml#blockSingle 5d280abe34834e88
+ok  solo       intersect                      current: recorded src/games/solo/solo.description.yaml#intersect 2a60cd4105a9be6b
+ok  solo       digitSet                       current: recorded src/games/solo/solo.description.yaml#digitSet 82774216c7185f42
+ok  solo       cageCull                       current: recorded src/games/solo/solo.description.yaml#cageCull 2d4402ce0c1cfc56
+ok  solo       cageSingle                     current: recorded src/games/solo/solo.description.yaml#cageSingle 35a6577ff7ffb34b
+ok  solo       regionRule                     current: recorded src/games/solo/solo.description.yaml#regionRule 83a689e8ef24b826
+ok  solo       cageMinMax                     current: recorded src/games/solo/solo.description.yaml#cageMinMax c7b20e4aaed19bd2
+ok  solo       partMinMax                     current: recorded src/games/solo/solo.description.yaml#partMinMax 655987fee7c7f38a
+ok  solo       cageSums                       current: recorded src/games/solo/solo.description.yaml#cageSums 9a5535c2b65af1e8
+ok  solo       partSums                       current: recorded src/games/solo/solo.description.yaml#partSums 40e374950ca7a9ef
+ok  spokes     saturation                     current: recorded src/games/spokes/spokes.description.yaml#saturation c9b8702767611b31
+ok  spokes     twoOnes                        current: recorded src/games/spokes/spokes.description.yaml#twoOnes 1ea7da97a2fb7699
+ok  spokes     exhaustion                     current: recorded src/games/spokes/spokes.description.yaml#exhaustion eabeff3f9f3c6c87
+ok  spokes     lineBreaks                     current: recorded src/games/spokes/spokes.description.yaml#lineBreaks 9e46d6a11df4d965
+ok  spokes     spareBreaks                    current: recorded src/games/spokes/spokes.description.yaml#spareBreaks 5273da8c535f922a held
 --  starbattle stars=1: no board of order 3 has an answer, so nothing is checked there
 --  starbattle stars=2: no board of order 3 has an answer, so nothing is checked there
 --  starbattle stars=3: no board of order 3 has an answer, so nothing is checked there
 --  starbattle stars=2: no board of order 4 has an answer, so nothing is checked there
 --  starbattle stars=3: no board of order 4 has an answer, so nothing is checked there
-ok  starbattle around                         current: recorded src/games/starbattle/starbattle.description.yaml#around 440f9276c7e3b8a6
-ok  starbattle fullLine                       current: recorded src/games/starbattle/starbattle.description.yaml#fullLine b82c243d882b6acf
-ok  starbattle fullRegion                     current: recorded src/games/starbattle/starbattle.description.yaml#fullRegion dee5785ecc7efd94
-ok  starbattle exactLine                      current: recorded src/games/starbattle/starbattle.description.yaml#exactLine 92987f30d77318c0
-ok  starbattle exactRegion                    current: recorded src/games/starbattle/starbattle.description.yaml#exactRegion 6f81ef07e15e3643
-ok  starbattle confined                       current: recorded src/games/starbattle/starbattle.description.yaml#confined 405df02e1a11026e
-ok  starbattle neededLine                     current: recorded src/games/starbattle/starbattle.description.yaml#neededLine fd1fe55304ede20d
-ok  starbattle neededRegion                   current: recorded src/games/starbattle/starbattle.description.yaml#neededRegion 80870ad6fbc4527a
-ok  starbattle crowdedLine                    current: recorded src/games/starbattle/starbattle.description.yaml#crowdedLine c426ec182a071faa
-ok  starbattle crowdedRegion                  current: recorded src/games/starbattle/starbattle.description.yaml#crowdedRegion 8d3ac01fe2b265bb
-ok  starbattle banded                         current: recorded src/games/starbattle/starbattle.description.yaml#banded d21260f4842b074a
-ok  starbattle starvedLine                    current: recorded src/games/starbattle/starbattle.description.yaml#starvedLine 6e37030ca917d588
-ok  starbattle starvedRegion                  current: recorded src/games/starbattle/starbattle.description.yaml#starvedRegion 6c4b1da3bf878361
-ok  sticks     overConnected                  current: recorded src/games/sticks/sticks.description.yaml#overConnected 4a086b3d7b7f9e47
-ok  sticks     twoClues                       current: recorded src/games/sticks/sticks.description.yaml#twoClues 2e41323646ff2a9c
-ok  sticks     tooLong                        current: recorded src/games/sticks/sticks.description.yaml#tooLong 8b31e31f54f415bf
-ok  sticks     starved                        current: recorded src/games/sticks/sticks.description.yaml#starved a669376b51062953
-ok  sticks     unreachable                    current: recorded src/games/sticks/sticks.description.yaml#unreachable 6c8dc03fd8dc0e11
-ok  subsets    placed                         current: recorded src/games/subsets/subsets.description.yaml#placed b98817e5f490567d
+ok  starbattle around                         current: recorded src/games/starbattle/starbattle.description.yaml#around 3116b1d677421e48
+ok  starbattle fullLine                       current: recorded src/games/starbattle/starbattle.description.yaml#fullLine 8a2042ce8d08f752
+ok  starbattle fullRegion                     current: recorded src/games/starbattle/starbattle.description.yaml#fullRegion 765a35bfb27cb2d5
+ok  starbattle exactLine                      current: recorded src/games/starbattle/starbattle.description.yaml#exactLine cfb40283f1c7cf85
+ok  starbattle exactRegion                    current: recorded src/games/starbattle/starbattle.description.yaml#exactRegion 6c81c0749089c3ec
+ok  starbattle confined                       current: recorded src/games/starbattle/starbattle.description.yaml#confined bc1f251575caaf63
+ok  starbattle neededLine                     current: recorded src/games/starbattle/starbattle.description.yaml#neededLine 7368310f1d5dc853
+ok  starbattle neededRegion                   current: recorded src/games/starbattle/starbattle.description.yaml#neededRegion b86936ba3411c7bc
+ok  starbattle crowdedLine                    current: recorded src/games/starbattle/starbattle.description.yaml#crowdedLine c911dbc8ef16fa52
+ok  starbattle crowdedRegion                  current: recorded src/games/starbattle/starbattle.description.yaml#crowdedRegion 9f11322836270e28
+ok  starbattle banded                         current: recorded src/games/starbattle/starbattle.description.yaml#banded a000cdfb39a19e3f
+ok  starbattle starvedLine                    current: recorded src/games/starbattle/starbattle.description.yaml#starvedLine 62ede1cc40403848
+ok  starbattle starvedRegion                  current: recorded src/games/starbattle/starbattle.description.yaml#starvedRegion 0b96509c250bf6ba
+ok  sticks     overConnected                  current: recorded src/games/sticks/sticks.description.yaml#overConnected ac785a571683fe51
+ok  sticks     twoClues                       current: recorded src/games/sticks/sticks.description.yaml#twoClues 628e032cc41ad69a
+ok  sticks     tooLong                        current: recorded src/games/sticks/sticks.description.yaml#tooLong d0baa367df534dfd
+ok  sticks     starved                        current: recorded src/games/sticks/sticks.description.yaml#starved f07f90cdeeb2a4ad
+ok  sticks     unreachable                    current: recorded src/games/sticks/sticks.description.yaml#unreachable f908be93d08125bd
+ok  subsets    placed                         current: recorded src/games/subsets/subsets.description.yaml#placed d84f0d98ed561e7c
 ok  subsets    carryIn                        current: recorded src/games/subsets/subsets.description.yaml#carryIn 3ffeb14057154748
 ok  subsets    carryOut                       current: recorded src/games/subsets/subsets.description.yaml#carryOut cb9cdaa7a752bb57
 ok  subsets    noShoe                         current: recorded src/games/subsets/subsets.description.yaml#noShoe 014697d015af9554
-ok  subsets    noShoeBeside                   current: recorded src/games/subsets/subsets.description.yaml#noShoeBeside dc423c35accbd735
-ok  subsets    lone                           current: recorded src/games/subsets/subsets.description.yaml#lone 47cdfc04200c7150
-ok  subsets    onlyCell                       current: recorded src/games/subsets/subsets.description.yaml#onlyCell 6ff1a148e5faa254 held
+ok  subsets    noShoeBeside                   current: recorded src/games/subsets/subsets.description.yaml#noShoeBeside 3f53afb5d6b38833
+ok  subsets    lone                           current: recorded src/games/subsets/subsets.description.yaml#lone c5dbf6c5ed2ed89b
+ok  subsets    onlyCell                       current: recorded src/games/subsets/subsets.description.yaml#onlyCell 4009216507025477 held
 ok  subsets    smaller                        current: recorded src/games/subsets/subsets.description.yaml#smaller c72a0f402d1a8430
 ok  subsets    bigger                         current: recorded src/games/subsets/subsets.description.yaml#bigger d8a814791a5d60bf
-ok  tents      tentLink                       current: recorded src/games/tents/tents.description.yaml#tentLink 50a3c7aa33f0da5c
+ok  tents      tentLink                       current: recorded src/games/tents/tents.description.yaml#tentLink af2847c54810272f
 ok  tents      noTree                         current: recorded src/games/tents/tents.description.yaml#noTree c77f5b1088eadb9a
 ok  tents      treesDone                      current: recorded src/games/tents/tents.description.yaml#treesDone 954e6fe7d8913043
-ok  tents      nextToTent                     current: recorded src/games/tents/tents.description.yaml#nextToTent cda39d405b1c5a84
+ok  tents      nextToTent                     current: recorded src/games/tents/tents.description.yaml#nextToTent 2f7b29c1c8b6eb4b
 ok  tents      treeSingle                     current: recorded src/games/tents/tents.description.yaml#treeSingle f617613fe1d48983
 ok  tents      treeLink                       current: recorded src/games/tents/tents.description.yaml#treeLink 34f2468f3c729441
 ok  tents      treeDiagonal                   current: recorded src/games/tents/tents.description.yaml#treeDiagonal 99ed6ac3c5fb357f
 ok  tents      lineCount                      current: recorded src/games/tents/tents.description.yaml#lineCount d42a7b2426d5937c
 ok  tents      lineNeighbors                  current: recorded src/games/tents/tents.description.yaml#lineNeighbors e6665becff0a8624
-ok  towers     facing                         current: recorded src/games/towers/towers.description.yaml#facing 49ab76706cb7b30e
-ok  towers     bounds                         current: recorded src/games/towers/towers.description.yaml#bounds 24e50d4ab3fc4c78
-ok  towers     arrangement                    current: recorded src/games/towers/towers.description.yaml#arrangement 311822269a07a3ea
-ok  tracks     oneWayIn                       current: recorded src/games/tracks/tracks.description.yaml#oneWayIn b0acfb3d652c8f2f
-ok  tracks     bothSidesLeft                  current: recorded src/games/tracks/tracks.description.yaml#bothSidesLeft df36f9894e8192d3
-ok  tracks     clueFull                       current: recorded src/games/tracks/tracks.description.yaml#clueFull a0399bf0aa422c82
-ok  tracks     clueExact                      current: recorded src/games/tracks/tracks.description.yaml#clueExact de9178a17bdc74db
-ok  tracks     closeLoop                      current: recorded src/games/tracks/tracks.description.yaml#closeLoop e475b55d6e99ba6f
-ok  tracks     strand                         current: recorded src/games/tracks/tracks.description.yaml#strand 7614620afe18a9bc
-ok  tracks     finishEarly                    current: recorded src/games/tracks/tracks.description.yaml#finishEarly a6da615d5c1a11ef
-ok  tracks     looseEnd                       current: recorded src/games/tracks/tracks.description.yaml#looseEnd bfa3a67d87e0e753
-ok  tracks     sharedFate                     current: recorded src/games/tracks/tracks.description.yaml#sharedFate 8cea3049aee9754d
-ok  tracks     sharedFateEmpties              current: recorded src/games/tracks/tracks.description.yaml#sharedFateEmpties 8d2a2f8ab3933cde
-ok  tracks     parity                         current: recorded src/games/tracks/tracks.description.yaml#parity aa415208518933fe held
-ok  undead     single                         current: recorded src/games/undead/undead.description.yaml#single 0a9f886959ff3d01
-ok  undead     total                          current: recorded src/games/undead/undead.description.yaml#total 7a6de133692cb44d
-ok  undead     sightline                      current: recorded src/games/undead/undead.description.yaml#sightline 9adb4ed51ea9fadf held
-ok  unequal    sign                           current: recorded src/games/unequal/unequal.description.yaml#sign e8b4c171334b86a5
+ok  towers     fullLine                       current: recorded src/games/towers/towers.description.yaml#fullLine 9760f6ecdf473928
+ok  towers     tallestNearest                 current: recorded src/games/towers/towers.description.yaml#tallestNearest cc8746956387cfe1
+ok  towers     facing                         current: recorded src/games/towers/towers.description.yaml#facing 84194f1aeca240dc
+ok  towers     clueBounds                     current: recorded src/games/towers/towers.description.yaml#clueBounds ad4c0a6548cfe9ab
+ok  towers     arrangement                    current: recorded src/games/towers/towers.description.yaml#arrangement 73d72abaab1fa20c
+ok  tracks     oneWayIn                       current: recorded src/games/tracks/tracks.description.yaml#oneWayIn 6b7f9244e905ef16
+ok  tracks     bothSidesLeft                  current: recorded src/games/tracks/tracks.description.yaml#bothSidesLeft 8996a02c55eefbca
+ok  tracks     clueFull                       current: recorded src/games/tracks/tracks.description.yaml#clueFull 1c80b9e04d103866
+ok  tracks     clueExact                      current: recorded src/games/tracks/tracks.description.yaml#clueExact 2b305ad3016f42a5
+ok  tracks     closeLoop                      current: recorded src/games/tracks/tracks.description.yaml#closeLoop b637e5a8b3d487aa
+ok  tracks     strand                         current: recorded src/games/tracks/tracks.description.yaml#strand 0cd5b74f000ea10d
+ok  tracks     finishEarly                    current: recorded src/games/tracks/tracks.description.yaml#finishEarly 276b91b20b42354a
+ok  tracks     looseEnd                       current: recorded src/games/tracks/tracks.description.yaml#looseEnd 9255efbee0396a4e
+ok  tracks     sharedFate                     current: recorded src/games/tracks/tracks.description.yaml#sharedFate 3ad0d4222ad2e766
+ok  tracks     sharedFateEmpties              current: recorded src/games/tracks/tracks.description.yaml#sharedFateEmpties ebbef903349cc82f
+ok  tracks     parity                         current: recorded src/games/tracks/tracks.description.yaml#parity 665a5867509475b3 held
+ok  undead     single                         current: recorded src/games/undead/undead.description.yaml#single 171efef76be63999
+ok  undead     total                          current: recorded src/games/undead/undead.description.yaml#total 5d355c36f7b54146
+ok  undead     sightline                      current: recorded src/games/undead/undead.description.yaml#sightline c743a4e781cb132d held
+ok  unequal    sign                           current: recorded src/games/unequal/unequal.description.yaml#sign c815661e2f4005e2
 --  unruly: no board of order 3 has an answer, so nothing is checked there
 --  unruly +unique: no board of order 3 has an answer, so nothing is checked there
-ok  unruly     threes                         current: recorded src/games/unruly/unruly.description.yaml#threes 9e71f82efa3d4dea
-ok  unruly     lastGap                        current: recorded src/games/unruly/unruly.description.yaml#lastGap 6b9aba132cb0d075
-ok  unruly     quota                          current: recorded src/games/unruly/unruly.description.yaml#quota 11527fb0a0d99964
-ok  unruly     lastOne                        current: recorded src/games/unruly/unruly.description.yaml#lastOne a7590235f976c6eb
-ok  unruly     unique                         current: recorded src/games/unruly/unruly.description.yaml#unique dee95605fe91a8cf
+ok  unruly     threes                         current: recorded src/games/unruly/unruly.description.yaml#threes 0db932925de62872
+ok  unruly     lastGap                        current: recorded src/games/unruly/unruly.description.yaml#lastGap c2d91b7daa8042b1
+ok  unruly     quota                          current: recorded src/games/unruly/unruly.description.yaml#quota 6837aef97780228f
+ok  unruly     lastOne                        current: recorded src/games/unruly/unruly.description.yaml#lastOne 325853112138efa3
+ok  unruly     unique                         current: recorded src/games/unruly/unruly.description.yaml#unique 7878d6b96d103917
+ok  wordtrail  onlyWord                       current: recorded src/games/wordtrail/wordtrail.description.yaml#onlyWord 745b68dab766fdca
+ok  wordtrail  onlyLength                     current: recorded src/games/wordtrail/wordtrail.description.yaml#onlyLength 9f88f920bd073076
+--  skeleton nsymbols=3: no board of order 4 has an answer, so nothing is checked there
+ok  skeleton   absent                         current: recorded src/skeleton/code/skeleton.description.yaml#absent 706d2e11aaa9851d
 --  skeleton: no board of order 3 has an answer, so nothing is checked there
-ok  skeleton   forced                         current: recorded src/skeleton/edges/skeleton.description.yaml#forced 80bab7a3467d114f
-ok  skeleton   pairBreaks                     current: recorded src/skeleton/edges/skeleton.description.yaml#pairBreaks 93b5329729bbf6dd
-ok  skeleton   count                          current: recorded src/skeleton/grid/skeleton.description.yaml#count ce7c19a6fc164862
-ok  skeleton   shared                         current: recorded src/skeleton/grid/skeleton.description.yaml#shared 174fec326783f63e
+ok  skeleton   forced                         current: recorded src/skeleton/edges/skeleton.description.yaml#forced d53254da4816de74
+ok  skeleton   pairBreaks                     current: recorded src/skeleton/edges/skeleton.description.yaml#pairBreaks 5bbfbd40580a714a
+ok  skeleton   count                          current: recorded src/skeleton/grid/skeleton.description.yaml#count 890b3bc2c13e2a18
+ok  skeleton   shared                         current: recorded src/skeleton/grid/skeleton.description.yaml#shared 254df13438e51dc4

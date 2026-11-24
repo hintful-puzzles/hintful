@@ -52,6 +52,9 @@ export const listOf = <C>(dealt: C, kind: keyof C): ClueList => dealt[kind] as C
 /** What a fill game's compiled module offers the engine, over its clues
  * `C`. */
 export interface FillModule<C> {
+  /** The sort of element the answer's values sit on: a cell, or the edge
+   * between two cells side by side. */
+  readonly answerSort: "cell" | "edge";
   /** The units no value repeats in, those of every variation. */
   readonly units: readonly string[];
   /** The unit each variation adds, by the unit's name: a board has it only
@@ -71,7 +74,8 @@ export interface FillModule<C> {
   /** How the board is played: where `dealt` names a clue kind at a cell,
    * the cell is dealt holding it. */
   readonly play?: FillPlay;
-  /** The values cell `c` may hold, as a bitmask (bit `d`). */
+  /** The values element `c` of the answer's sort may hold, as a bitmask
+   * (bit `d`). */
   domainOf(sp: GridSpace, cl: C, c: number): number;
   /** The answer check and the violations, a variation's rules where
    * `variations` has it on: a module with none takes no such argument. */
@@ -173,10 +177,12 @@ export interface FillBoard<C> {
   readonly dealt: C;
   /** The variations on, by name: the params', which no move changes. */
   readonly variations: readonly string[];
-  /** Each cell's value, the description's, 0 where it has none. */
+  /** Each element's value, the description's, 0 where it has none: an
+   * element of the answer's sort (`elementsOf`), numbered as the space
+   * numbers it. */
   readonly values: Uint8Array;
-  /** 1 where the cell's domain leaves it one value, placed as the board is
-   * dealt: no edit changes it. */
+  /** 1 where the element's domain leaves it one value, placed as the board
+   * is dealt: no edit changes it. */
   readonly fixed: Uint8Array;
   /** The element each cell's mark names, `-1` where it has none. */
   readonly mark: Int32Array;
@@ -277,14 +283,20 @@ export const paramSpaceOf = <C>(
     variations: p.variations ?? [],
   });
 
+/** The elements of `sp` the answer's values sit on, by the module's sort. */
+export const elementsOf = (
+  module: { readonly answerSort: "cell" | "edge" },
+  sp: GridSpace,
+): readonly number[] => (module.answerSort === "edge" ? sp.edges : sp.cells);
+
 /** The bits `mask` holds one of, as that value, or 0 where it holds more or
  * none. */
 const onlyValue = (mask: number): number =>
   mask !== 0 && (mask & (mask - 1)) === 0 ? 31 - Math.clz32(mask) : 0;
 
 /** A fresh `w` by `h` board on the clues `dealt` with `variations` on, each
- * cell its domain leaves one value, and each the `play.dealt` kind sits at,
- * holding it. */
+ * element its domain leaves one value, and each cell the `play.dealt` kind
+ * sits at, holding it. */
 export function newBoard<C>(
   module: FillModule<C>,
   w: number,
@@ -293,9 +305,10 @@ export function newBoard<C>(
   variations: readonly string[] = [],
 ): FillBoard<C> {
   const sp = describedSpace(module.units, w, h);
-  const values = new Uint8Array(w * h);
-  const fixed = new Uint8Array(w * h);
-  for (const c of sp.cells) {
+  const elements = elementsOf(module, sp);
+  const values = new Uint8Array(elements.length);
+  const fixed = new Uint8Array(elements.length);
+  for (const c of elements) {
     const only = onlyValue(module.domainOf(sp, dealt, c));
     if (only === 0) continue;
     values[c] = only;
@@ -344,10 +357,10 @@ export function asDealt<C>(board: FillBoard<C>): FillBoard<C> {
   };
 }
 
-/** Every value any cell of the board may hold, as a bitmask. */
+/** Every value any element of the board may hold, as a bitmask. */
 function domainMask<C>(module: FillModule<C>, sp: GridSpace, dealt: C): number {
   let mask = 0;
-  for (const c of sp.cells) mask |= module.domainOf(sp, dealt, c);
+  for (const c of elementsOf(module, sp)) mask |= module.domainOf(sp, dealt, c);
   return mask;
 }
 
@@ -361,7 +374,13 @@ export function marksOf<C>(
 ): { marks: CellMarks; ok: boolean; entries: Ladder["entries"] } {
   const sp = spaceOf(module, board);
   const values = board.values.slice();
-  const marks = new CellMarks(sp, domainMask(module, sp, board.dealt), values);
+  const marks = new CellMarks(
+    sp,
+    domainMask(module, sp, board.dealt),
+    values,
+    null,
+    module.answerSort,
+  );
   const { entries, placing, striking } = ladderOf(module, board);
   marks.placing = placing;
   marks.striking = striking;
