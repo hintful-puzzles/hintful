@@ -144,18 +144,22 @@ const fixesItsValue = (e: Expr): boolean =>
 
 /**
  * Refuses `play.signs` that leave a clue undrawn or name one not drawn with
- * a sign. A clue at a part is drawn at its first cell with its sign, on a
- * board of numbers, whose cells hold no number of their own; one at a corner
- * on a disc where its cells meet. A list is a word a value, from the least,
- * of a range the sizes do not move.
+ * a sign. A clue at a part is drawn at its first cell, with its sign where
+ * it has one (Solo's Killer totals have none), on a board of numbers, whose
+ * cells hold no number of their own; one at a corner on a disc where its
+ * cells meet, with its sign. A list is a word a value, from the least, of a
+ * range the sizes do not move.
  */
 function checkSigns(p: PlayJson, d: Description, env: Env): void {
   const signed = (at: string): boolean => env.regions.has(at) || at === "corner";
-  for (const [k, c] of d.clueKinds)
-    if (signed(c.at) && p.signs?.[k] === undefined)
+  for (const [k, c] of d.clueKinds) {
+    if (env.regions.has(c.at) && p.numbers === undefined)
+      throw new CompileError(`clue ${k}: a clue at a part, on a board of buttons`);
+    if (c.at === "corner" && p.signs?.[k] === undefined)
       throw new CompileError(
-        `clue ${k}: a clue at a ${c.at === "corner" ? "corner" : "part"}, and no sign in play signs`,
+        `clue ${k}: a clue at a corner, and no sign in play signs`,
       );
+  }
   for (const [k, sign] of Object.entries(p.signs ?? {})) {
     if (!signed(d.clueKinds.get(k)?.at ?? ""))
       throw new CompileError(`play signs: ${k} is no clue kind at a part or a corner`);
@@ -1051,7 +1055,23 @@ function checkSegments(
       );
     if ("cells" in seg && c.at !== "cell")
       throw new CompileError(`id: cells of ${kind}, which is not a cell's clue`);
-    if ("digits" in seg && seg.apart !== undefined && c.at !== "cell")
+    // A part's clue is written at the part's first cell (Solo's Killer
+    // totals), so its partition is read before it, and nothing else is.
+    const partClue = env.regions.has(c.at);
+    const readBefore = id
+      .slice(0, i)
+      .some(
+        (s) =>
+          ("blocks" in s && s.blocks === c.at) || ("walls" in s && s.walls === c.at),
+      );
+    const alone =
+      "digits" in seg &&
+      Object.keys({ ...seg.letters, ...seg.after, ...seg.also }).length === 0;
+    if ("digits" in seg && partClue && (!readBefore || !alone))
+      throw new CompileError(
+        `id: digits of ${kind}, a clue at a part, alone in its segment and after its partition`,
+      );
+    if ("digits" in seg && seg.apart !== undefined && c.at !== "cell" && !partClue)
       throw new CompileError(`id: digits of ${kind}, which is not a cell's clue`);
   }
 }
@@ -1187,6 +1207,7 @@ export function dealOf(
         return [k, u];
       }),
   );
+  const partsOf = partsOfKinds(d, universes);
   const sample = sampleOf(json);
   const grow = growOf(json);
   const divides = dividesOf(json);
@@ -1213,18 +1234,8 @@ export function dealOf(
         `${r}: a fill game's dealt partition is one the deal grows or divides`,
       );
   const settings = settingsOf(json, env);
-  // The partition among the units a variation deals is divided only where
-  // it is on.
-  const boxesBy = boxesDealtBy(json, env);
   const divided =
-    divides.length === 0
-      ? null
-      : divides.map((x) => ({
-          ...divideDeal(x, settings, json),
-          ...(boxesBy !== null && x.partition === env.boxes
-            ? { variation: boxesBy }
-            : {}),
-        }));
+    divides.length === 0 ? null : divides.map((x) => divideOn(x, settings, json));
   // The kinds dealt one a part sit at the parts of one partition divided.
   const oneKind = oneKindDeal(
     json,
@@ -1377,6 +1388,7 @@ export function dealOf(
       "records" in seg && flagKind(d, seg.sides) ? { ...seg, both: true } : seg,
     ),
     universes,
+    ...partsOf,
     ...(partitions.length === 0 ? {} : { partitions }),
     tierLetters,
     sizes: json.sizes,
@@ -1727,7 +1739,7 @@ function hideOf(
   hide: string | readonly string[] | null;
   hideFirst: readonly string[] | null;
   hideFrom: Record<string, number> | null;
-  hideWhole: Record<string, { below: number; bounds: SizeBoundsJson }> | null;
+  hideWhole: Record<string, HideWhole> | null;
 } {
   const hideJson = json.deal?.["hide"];
   // One kind, or several hidden in one random order.
@@ -1770,33 +1782,59 @@ function hideOf(
 const SIZE_MEASURES = ["sum", "area", "shorter", "longer"] as const;
 
 /** `deal.hideWhole`: each kind of `hidden` the deal hides whole below a
- * tier, by the tier's index, on a board within the bounds; `null` where
- * there is none. */
+ * tier, by the tier's index (past the last where none is named), with a
+ * variation on where one is named, on a board within the bounds; `null`
+ * where there is none. */
 function hideWholeOf(
   json: DescriptionJson,
   hidden: readonly string[],
-): Record<string, { below: number; bounds: SizeBoundsJson }> | null {
+): Record<string, HideWhole> | null {
   const whole = json.deal?.["hideWhole"];
   if (whole === undefined) return null;
   if (typeof whole !== "object" || whole === null || Array.isArray(whole))
     throw new CompileError("deal hideWhole: a tier and bounds by clue kind");
-  const out: Record<string, { below: number; bounds: SizeBoundsJson }> = {};
+  const out: Record<string, HideWhole> = {};
   for (const [kind, spec] of Object.entries(whole as Record<string, unknown>)) {
     if (!hidden.includes(kind))
       throw new CompileError(`deal hideWhole: ${kind} is no kind the deal hides`);
-    const { below, ...bounds } = spec as { below?: unknown } & SizeBoundsJson;
-    if (typeof below !== "string")
+    const {
+      below,
+      with: variation,
+      ...bounds
+    } = spec as { below?: unknown; with?: unknown } & SizeBoundsJson;
+    if (below !== undefined && typeof below !== "string")
       throw new CompileError(`deal hideWhole: ${kind} below a tier, by its name`);
+    if (variation !== undefined && json.variations?.[variation as string] === undefined)
+      throw new CompileError(
+        `deal hideWhole: ${kind} with ${String(variation)}, no variation`,
+      );
+    if (below === undefined && variation === undefined)
+      throw new CompileError(
+        `deal hideWhole: ${kind} below a tier or with a variation`,
+      );
     for (const name of Object.keys(bounds))
       if (!(SIZE_MEASURES as readonly string[]).includes(name))
         throw new CompileError(`deal hideWhole: ${kind}'s ${name} is no size bound`);
-    out[kind] = { below: tierIndex(json.tiers ?? [], below, "deal hideWhole"), bounds };
+    const tiers = json.tiers ?? [];
+    out[kind] = {
+      below:
+        below === undefined ? tiers.length : tierIndex(tiers, below, "deal hideWhole"),
+      bounds,
+      ...(variation === undefined ? {} : { with: variation as string }),
+    };
     if (out[kind].below === 0)
       throw new CompileError(
         `deal hideWhole: ${kind} below the lowest tier is no board`,
       );
   }
   return out;
+}
+
+/** A kind hidden whole (`FillDeal.hideWhole`). */
+interface HideWhole {
+  below: number;
+  bounds: SizeBoundsJson;
+  with?: string;
 }
 
 /** `deal.hideFrom`: each kind of `hidden` the deal keeps whole below a
@@ -2031,13 +2069,50 @@ type FillBlocksJson = {
  * on every other board, is dealt (Solo's Jigsaw), or `null` where none
  * deals it. */
 export function boxesDealtBy(json: DescriptionJson, env: Env): string | null {
-  const { boxes } = env;
-  if (boxes === null || json.space.regions?.[boxes] === "dealt") return null;
+  return env.boxes === null ? null : dealtBy(json, env.boxes);
+}
+
+/** The deal's `partsOf`, the partition each kind at parts sits at, where
+ * any kind does. */
+function partsOfKinds(
+  d: Description,
+  universes: Record<string, string>,
+): { partsOf?: Record<string, string> } {
+  const partsOf = Object.fromEntries(
+    [...d.clueKinds]
+      .filter(([k]) => universes[k] === "parts")
+      .map(([k, c]) => [k, c.at]),
+  );
+  return Object.keys(partsOf).length === 0 ? {} : { partsOf };
+}
+
+/** A divide as the deal reads it: a partition a variation deals is divided
+ * only where it is on. */
+function divideOn(
+  x: DivideJson,
+  settings: ReturnType<typeof settingsOf>,
+  json: DescriptionJson,
+): ReturnType<typeof divideDeal> & { variation?: string } {
+  const by = dealtBy(json, x.partition);
+  return {
+    ...divideDeal(x, settings, json),
+    ...(by === null ? {} : { variation: by }),
+  };
+}
+
+/** The variation under which partition `r` is dealt, where the plain board
+ * deals none: one that replaces a partition cut otherwise (Solo's Jigsaw
+ * blocks) or adds it (Solo's Killer cages). `null` where every board deals
+ * it, or none. */
+function dealtBy(json: DescriptionJson, r: string): string | null {
+  if (json.space.regions?.[r] === "dealt") return null;
   const by = Object.entries(json.variations ?? {}).filter(
-    ([, v]) => v.replace?.space?.regions?.[boxes] === "dealt",
+    ([, v]) =>
+      v.replace?.space?.regions?.[r] === "dealt" ||
+      v.add?.space?.regions?.[r] === "dealt",
   );
   if (by.length > 1)
-    throw new CompileError(`${boxes}: dealt by ${by.map(([n]) => n).join(" and ")}`);
+    throw new CompileError(`${r}: dealt by ${by.map(([n]) => n).join(" and ")}`);
   return by[0]?.[0] ?? null;
 }
 
@@ -2662,6 +2737,10 @@ export function derivedClues(
     const vs = `${kind}_v`;
     derive.emit(`const ${at}: number[] = [];`);
     derive.emit(`const ${vs}: number[] = [];`);
+    // A board a variation's partition is not dealt on has no clue at its
+    // parts (Solo's cages and their totals, Killer's alone).
+    const gated = parts && dealtBy(json, c.at) !== null;
+    if (gated) derive.open(`if (cl.${c.at} !== undefined) {`);
     // A meaning `E = v` is solved for `v`: a value at a time would try 9^6
     // products on a cage of six.
     const solved = solvedFor(measured(c.means));
@@ -2702,8 +2781,9 @@ export function derivedClues(
         );
       },
     );
+    if (gated) derive.close();
     dealt.push(
-      `${kind}: clueList(${at}, ${vs}, ${parts ? `cl.${c.at}.parts.length` : `sp.${universe}.length`})`,
+      `${kind}: clueList(${at}, ${vs}, ${parts ? `cl.${c.at}${gated ? "?" : ""}.parts.length${gated ? " ?? 0" : ""}` : `sp.${universe}.length`})`,
     );
   }
   if (dealt.length > 0) env.used.add("clueList");

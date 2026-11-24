@@ -67,8 +67,8 @@ deal:
   sample: { search: true }
   hide: given
 id:
-  - blocks: box
-  - { blocks: cage, before: "," }
+  - { blocks: box, counts: false }
+  - { blocks: cage, before: ",", counts: false }
   - parts: cage
     before: ","
     letters: { a: sum }

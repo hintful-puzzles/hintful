@@ -125,7 +125,13 @@ export type IdSegment =
    * (`engine/game-id/block-structure.ts`), after `before` and before
    * `after` where given; with them, nothing on a board that does not deal
    * it (`FillDivide.variation`). */
-  | { readonly blocks: string; readonly before?: string; readonly after?: string }
+  | {
+      readonly blocks: string;
+      readonly before?: string;
+      readonly after?: string;
+      /** A letter's repeats written out, never counted (Solo's). */
+      readonly counts?: false;
+    }
   /** A clue a part of partition `parts`, in the order of the parts' first
    * cells: its kind's letter (`letters`, by letter), then its number. */
   | {
@@ -246,9 +252,19 @@ export function elementCount<C extends Clues<C>>(
   const u = deal.universes[kind];
   if (u === undefined) throw new Error(`deal: no clue kind ${kind}`);
   if (u !== "parts") return sp[u].length;
-  const partition = deal.partitions?.[0];
+  // A board its partition is not dealt on has no part for it (Solo's
+  // cages, Killer's alone).
+  return (
+    (clues[partitionOfKind(deal, kind) as keyof C] as Partition | undefined)?.parts
+      .length ?? 0
+  );
+}
+
+/** The partition kind `kind` sits at the parts of. */
+export function partitionOfKind(deal: FillDeal, kind: string): string {
+  const partition = deal.partsOf?.[kind];
   if (partition === undefined) throw new Error(`deal: ${kind} sits at parts of none`);
-  return (clues[partition as keyof C] as Partition).parts.length;
+  return partition;
 }
 
 /** What a compiled fill module says of its deal (`deal`). */
@@ -272,10 +288,13 @@ export interface FillDeal {
    * index. */
   readonly hideFrom?: Readonly<Record<string, number>>;
   /** A kind of `hide` hidden whole on a board below a tier, by the tier's
-   * index, and within bounds: the answer is drawn again until the board
-   * finishes without it. */
+   * index, with variation `with` on where given, and within bounds: the
+   * answer is drawn again until the board finishes without it. */
   readonly hideWhole?: Readonly<
-    Record<string, { readonly below: number; readonly bounds: SizeBounds }>
+    Record<
+      string,
+      { readonly below: number; readonly bounds: SizeBounds; readonly with?: string }
+    >
   >;
   /** Where a search tier's strip starts every draw: from every clue, not
    * from a board of the lowest tier one draw in eight (Sticks'). */
@@ -324,6 +343,8 @@ export interface FillDeal {
   readonly id: readonly IdSegment[];
   /** Where each clue kind sits. */
   readonly universes: Readonly<Record<string, ClueUniverse>>;
+  /** The partition each kind at parts sits at, by kind. */
+  readonly partsOf?: Readonly<Record<string, string>>;
   /** The dealt partitions, by name: Norinori's regions. */
   readonly partitions?: readonly string[];
   readonly tierLetters: string;
@@ -567,6 +588,8 @@ export interface FillModifier {
   readonly note?: string;
   /** The most lines a board 2i squares across may have the other way. */
   readonly most?: readonly number[];
+  /** What a board with it on is held to. */
+  readonly bounds?: SizeBounds;
 }
 
 export interface FillParams {
@@ -1189,8 +1212,12 @@ export function fillParams(
           ? "Width and height must both be even."
           : `Width and height must both be multiples of ${step}.`;
       for (const [variation, m] of named) {
+        if (!variationsOf(p).includes(variation)) continue;
+        const past = m.bounds === undefined ? null : beyond(m.bounds, p);
+        if (past !== null)
+          return `${m.name}: ${past[0].toLowerCase()}${past.slice(1)}.`;
         const { most } = m;
-        if (most === undefined || !variationsOf(p).includes(variation)) continue;
+        if (most === undefined) continue;
         for (const [across, along, side, other] of [
           [p.w, p.h, "wide", "high"],
           [p.h, p.w, "high", "wide"],
@@ -1430,6 +1457,53 @@ function boardCells(deal: FillDeal, sp: GridSpace): readonly number[] {
   return sp.cells.filter((c) => inHexagon(sp.w, sp.h, c % sp.w, Math.floor(c / sp.w)));
 }
 
+/** A clue list at parts as a list at cells, each clue at its part's first
+ * cell (Solo's Killer totals); none on a board without the partition. */
+function atFirstCells(
+  list: ClueList,
+  parts: Partition | null,
+  sp: GridSpace,
+): ClueList {
+  const n = sp.cells.length;
+  if (parts === null) return clueList([], [], n);
+  const byCell = Array.from(
+    list.at,
+    (r, k) => [parts.cells[r][0], list.v[k]] as const,
+  ).sort((a, b) => a[0] - b[0]);
+  return clueList(
+    byCell.map(([c]) => c),
+    byCell.map(([, v]) => v),
+    n,
+  );
+}
+
+/** The clues a `digits` segment writes of kind `kind`, at cells: a kind at
+ * parts at each part's first cell. */
+function digitsListOf<C extends Clues<C>>(
+  deal: FillDeal,
+  sp: GridSpace,
+  dealt: C,
+  kind: string,
+): ClueList {
+  const list = dealt[kind as keyof C] as ClueList;
+  if (deal.universes[kind] !== "parts") return list;
+  const parts = dealt[partitionOfKind(deal, kind) as keyof C] as Partition | undefined;
+  return atFirstCells(list, parts ?? null, sp);
+}
+
+/** A clue list at cells, each in one part, as the list at those parts: one
+ * clue a part, where `null` holds which part has none or two. */
+function atParts(list: ClueList, parts: Partition): ClueList | null {
+  const v = new Array<number>(parts.parts.length).fill(-1);
+  for (let k = 0; k < list.at.length; k++) {
+    const r = parts.of[list.at[k]];
+    if (v[r] >= 0) return null;
+    v[r] = list.v[k];
+  }
+  if (v.some((x) => x < 0)) return null;
+  return clueList(parts.parts, v, parts.parts.length);
+}
+
 /** The desc of the clues `dealt`, by the deal's `id`. */
 export function encodeDesc<C extends Clues<C>>(
   deal: FillDeal,
@@ -1450,7 +1524,7 @@ export function encodeDesc<C extends Clues<C>>(
       if (partition === undefined) continue;
       const { of } = partition;
       out += seg.before ?? "";
-      out += encodeBlockStructure(sp.w, sp.h, (a, b) => of[a] === of[b]);
+      out += encodeBlockStructure(sp.w, sp.h, (a, b) => of[a] === of[b], seg.counts);
       out += seg.after ?? "";
       continue;
     }
@@ -1492,7 +1566,7 @@ export function encodeDesc<C extends Clues<C>>(
       continue;
     }
     if ("digits" in seg) {
-      const list = listOf(seg.digits);
+      const list = digitsListOf(deal, sp, dealt, seg.digits);
       // Behind its mark, the segment is written only where it holds a clue,
       // unless it is always written.
       if (seg.before !== undefined && seg.always !== true && list.at.length === 0)
@@ -2045,6 +2119,30 @@ export function decodeDesc<C extends Clues<C>>(
       }
       if ("runs" in seg) {
         out[seg.runs as keyof C] = readRunCells(r, sp.cells.length);
+        continue;
+      }
+      if ("digits" in seg && deal.universes[seg.digits] === "parts") {
+        // A part's clue, written at one of its cells, on a board that deals
+        // the partition (Solo's Killer totals, upstream reading one
+        // anywhere in its cage); read at most its part's largest.
+        const parts = out[partitionOfKind(deal, seg.digits) as keyof C] as
+          | Partition
+          | undefined;
+        const kind = seg.digits as keyof C;
+        if (parts === undefined) {
+          out[kind] = clueList([], [], 0);
+          continue;
+        }
+        const atCell: ClueMax<C> = {
+          [kind]: (s: GridSpace, c: number, cl: C) =>
+            maxOf(clueMax, kind, s, parts.of[c], cl),
+        } as ClueMax<C>;
+        const cells = readDigits(r, deal, sp, atCell, seg, out as Partial<C>).get(
+          seg.digits,
+        );
+        const list = cells === undefined ? null : atParts(cells, parts);
+        if (list === null) r.fail(DESC_MALFORMED);
+        out[kind] = list as ClueList;
         continue;
       }
       if ("digits" in seg) {

@@ -1331,13 +1331,13 @@ describe("a clue at a dealt partition's part", () => {
     expect(body).not.toMatch(/for \(let v_v\b/);
   });
 
-  it("refuses a kind at a part with no sign, and a sign for a kind at none", () => {
-    expect(() =>
+  it("draws a kind at a part with no sign as its number, and refuses a sign for a kind at none", () => {
+    expect(
       compileCaging((j) => {
         delete j.play.signs["sum"];
         return j;
       }),
-    ).toThrow(/clue sum: a clue at a part, and no sign/);
+    ).toContain('"signs":{"product":"×"');
     expect(() =>
       compileCaging((j) => {
         j.play.signs["cand"] = "?";

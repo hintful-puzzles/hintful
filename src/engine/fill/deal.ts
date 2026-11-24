@@ -201,7 +201,12 @@ export function dealFill<C extends Clues<C>>(
   /** The hidden kinds this board hides whole (`deal.hideWhole`). */
   const whole = kinds.filter((k) => {
     const h = deal.hideWhole?.[k];
-    return h !== undefined && p.diff < h.below && within(h.bounds, p);
+    return (
+      h !== undefined &&
+      p.diff < h.below &&
+      (h.with === undefined || variations.includes(h.with)) &&
+      within(h.bounds, p)
+    );
   });
   /** Every hidden clue's index in that numbering, but those of a kind hidden
    * whole: a board that does not finish without them is drawn again. */

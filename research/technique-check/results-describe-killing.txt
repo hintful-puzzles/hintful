@@ -1,0 +1,9 @@
+ok  killing +Killer cageCull                       3  sound    (want sound   )     9 queries    0.2s
+ok  killing +Killer cageCull (planted)             3  unsound  (want unsound )     1 queries    0.1s   at cell 0
+ok  src/engine/testing/fixtures/killing/killing.description.yaml#cageCull: recorded sound, proved whole on all 1 boards
+ok  killing +Killer cageLast                       3  sound    (want sound   )    79 queries    1.5s
+ok  killing +Killer cageLast (planted)             3  unsound  (want unsound )     1 queries    0.1s   at region cage 0
+ok  src/engine/testing/fixtures/killing/killing.description.yaml#cageLast: recorded sound, proved whole on all 1 boards
+ok  killing +Killer cageSets                       3  sound    (want sound   )    79 queries    1.4s
+ok  killing +Killer cageSets (planted)             3  unsound  (want unsound )    10 queries    0.2s   at region cage 9
+ok  src/engine/testing/fixtures/killing/killing.description.yaml#cageSets: recorded sound, proved whole on all 1 boards

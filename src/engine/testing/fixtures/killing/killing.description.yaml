@@ -1,0 +1,168 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a Latin square with some numbers given, and a rule
+# the player switches on that divides it into small cages, each showing its
+# sum as a plain number and holding no number twice, and shows no given at
+# all. For the fill engine's tests of a partition and its clues a modifier
+# adds (Solo's Killer): divided, written and read only on a board with the
+# modifier on, each cage's sum written as a digit at its first square, the
+# givens hidden whole under it, and the size it bounds; on a description
+# that names no game.
+game: killing
+produces: latin
+sizes:
+  w: { min: 3, max: 7 }
+space:
+  grid: { w: "w", h: "w" }
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
+shape:
+  - "latin(value, units)"
+variations:
+  Killer:
+    add:
+      space:
+        regions: { cage: dealt }
+      shape:
+        - "forall r in cage: distinct(value(c) over c in cells(r))"
+      clues:
+        total:
+          at: cage
+          complete: true
+          value: "range(1, 28)"
+          means: "sum(c in cells(at) of value(c)) = v"
+      techniques:
+        # A placed number leaves the rest of its cage.
+        - kind: peer.placed
+          as: cageCull
+          tier: Easy
+          rung: dup
+          with:
+            peer: "p in cells where p != c and cage(p) = cage(c)"
+        # A cage with one open square holds what its sum leaves there. A
+        # cage with no sum is one the answer's search has not dealt it yet.
+        - kind: sum.last
+          as: cageLast
+          tier: Easy
+          with:
+            group: >-
+              r in cage where clue(total, r) != none,
+              K = {c in cells(r) where not known(c)}, t = owed(r)
+            set: K
+            total: t
+          says:
+            terms: { t: t }
+            marks: { stripes: "cells(r)" }
+            look: "{stripes: This cage}'s other squares leave {numeral t}"
+            move: "{ring: its last square} must be {t}"
+        # Cage by cage: a value in no set of different values that makes
+        # what its sum leaves is struck.
+        - kind: sum.sets
+          as: cageSets
+          tier: Easy
+          with:
+            group: >-
+              r in cage where clue(total, r) != none,
+              K = {c in cells(r) where not known(c)}, t = owed(r)
+              where t != 0 and |K| > 1
+            set: K
+            total: t
+          says:
+            terms: { t: t }
+            marks: { stripes: "cells(r)" }
+            look: "No set of different numbers that makes {numeral t} in {stripes: this cage} has {struckOr}"
+define:
+  # What a cage's sum leaves once its filled squares are taken out.
+  owed(r): "clue(total, r) - sum(c in cells(r) where known(c) of value(c))"
+freedom: { kind: fill }
+play:
+  numbers: {}
+  modifiers:
+    Killer:
+      letter: k
+      kw: killer
+      name: Killer
+      words: Killer
+      rule: cages show their sums in place of given numbers.
+      bounds: { longer: { max: 5 } }
+  boards: [4x4, 5x5]
+  variants: [{ board: 4x4, with: [Killer], tier: Easy }]
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    stripes: the cage or the line the step is about.
+deal:
+  cage: under Killer, the squares in dominoes and then cages of three, at random
+  answer: searched under the cages
+  total: a cage's sum
+  given: every square's number, then each hidden while the board still finishes; under Killer, every one
+  tier: the one tier
+  sample: { search: true }
+  divide: { partition: cage, pairs: 0.75, most: 3 }
+  hide: given
+  hideWhole: { given: { with: Killer } }
+# As upstream solo.c writes a Killer board: the givens, then the cages, then
+# each cage's sum at its first square, behind commas.
+id:
+  - digits: given
+    apart: _
+  - { blocks: cage, before: ",", counts: false }
+  - digits: total
+    apart: _
+    before: ","
+tiers: [Easy]
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a square"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only square left for a number"
+  set: "numbers already accounted for"
+  cageLast: "a cage's last square"
+  cageSets: "the sets that make a cage's sum"
+# The walk's words for how far a placed number reaches: its row and column,
+# and with Killer on its cage.
+steps:
+  clean:
+    ring: cell
+    terms: { Killer: flag }
+    wordings:
+      - when: Killer
+        move: "any number already in its square's row, column or cage"
+      - move: "any number already in its square's row or column"
+  note:
+    ring: cell
+    terms: { Killer: flag, vs: values, unruled: flag }
+    wordings:
+      - when: unruled
+        look: "No number stands in {ring}'s row or column yet"
+        move: "pencil in every one"
+      - when: Killer
+        look: "Only {vs} {vs: isn't | aren't} already in {ring}'s row, column or cage"
+        move: "pencil {vs: it | them} in"
+      - look: "Only {vs} {vs: isn't | aren't} already in {ring}'s row or column"
+        move: "pencil {vs: it | them} in"
+  cull:
+    ring: cell
+    terms: { Killer: flag, n: number }
+    wordings:
+      - when: Killer
+        move: "row, column or cage"
+      - move: "row or column"
+  regionsFull:
+    ring: cell
+    terms: { Killer: flag, n: number }
+    wordings:
+      - when: Killer
+        look: "Every other number is already in {ring}'s row, column or cage"
+        move: "it can only be {n}"
+      - look: "Every other number is already in {ring}'s row or column"
+        move: "it can only be {n}"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  - { use: latin.set, tier: Easy, rung: set }

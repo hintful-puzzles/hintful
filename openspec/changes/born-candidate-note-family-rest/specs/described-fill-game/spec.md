@@ -154,3 +154,47 @@ dealt ones and back to the squarest blocks of the order.
   `2x3` board, and back
 - **THEN** the board is a 6×6 dealing its blocks, then `2x3` again, with any
   modifier left as it was
+
+### Requirement: A partition a modifier adds is the board's only under it
+
+A partition a variation adds to a born game's space, and the clues at its
+parts, SHALL be divided, derived, written in the desc, read from it and
+drawn only on a board with the variation on. A clue kind at parts SHALL be
+read at the parts of the partition it names, whichever the board deals
+first.
+
+#### Scenario: Killer's cages
+
+- **WHEN** a board of a game whose Killer modifier adds cages and their
+  totals is dealt with Killer off, and with it on
+- **THEN** the first deals, writes and draws no cage and no total, and the
+  second deals both, each total its cage's sum in the answer
+
+### Requirement: A part's clue may be written as upstream Solo writes it
+
+A born game's `digits` segment of a clue kind at parts SHALL write each
+part's clue at the part's first cell in reading order, and SHALL read it at
+any cell of the part, refusing a desc that gives a part none or two. A
+`blocks` segment with `counts: false` SHALL write a letter's repeats out,
+never as a count, and either form SHALL be read.
+
+#### Scenario: A Killer board's sums
+
+- **WHEN** a Killer board's desc is written and read back, and then read
+  with each cage's sum at its last cell, and with a cage given two
+- **THEN** the first reads back byte for byte, the second reads the same
+  totals, and the third is refused
+
+### Requirement: A modifier may hide a kind whole and bound the board
+
+A born game's `deal.hideWhole` MAY name a variation, `with:`, under which
+the deal hides every clue of the kind, drawing the answer again until the
+board finishes without it. A modifier MAY state `bounds` on the board's
+size, as `play.bounds` states them, which a board with it on SHALL keep. A
+clue at a part with no sign in `play.signs` SHALL be drawn as its number.
+
+#### Scenario: Killer shows no given
+
+- **WHEN** a board is dealt with Killer on, whose `hideWhole` names it
+- **THEN** it shows no given number, its cages' totals drawn as plain
+  numbers, and a board past Killer's bounds is refused with Killer's name

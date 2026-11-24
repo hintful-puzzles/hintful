@@ -216,8 +216,10 @@ research tools all read through it; the app never does.
   description: the owner approved that for the whole initiative
   (2026-11-22), so a later change states the break and does not ask.
   `play.modifiers` puts a variation in the params by its letter, with the
-  `most` lines a board of each width may have where the rule bounds the
-  size, and `sizes.step` holds a side to a multiple. `play.bounds` says
+  `most` lines a board of each width may have or the `bounds` (as
+  `play.bounds`') a board with it on keeps, where the rule bounds the size
+  (Solo's X needs 4 numbers, its Killer holds at most 9; `killing` is the
+  fixture), and `sizes.step` holds a side to a multiple. `play.bounds` says
   what the sizes alone cannot: the sides' sum, product, shorter and longer,
   and in `tiers` a tier's own (Range's `w + h` and its strips). A size the
   rules read that the grid is not measured in is the params' and is named in
@@ -421,11 +423,17 @@ research tools all read through it; the app never does.
   (`v = E`, one value, not each tried), `deal.oneKind` keeps one of its
   kinds a part, in turn and well before `poor` (`engine/fill/one-kind.ts`),
   `deal.onlyFlag` is a setting after the tier dealing its `kinds` alone,
-  `id:`'s `blocks` writes the partition as upstream Keen's block structure
-  (with `after`, a mark after it, and nothing at all on a board that does
-  not deal it) and `parts` a letter and a number a part, and `play.signs` draws each at
-  its part's first square, its number and sign, with every square's notes
-  below that line (`caging` is the fixture). The
+  `id:`'s `blocks` writes the partition as upstream Keen's block structure,
+  or with `counts: false` as Solo's, a letter's repeats written out (with
+  `after`, a mark after it, and nothing at all on a board that does not
+  deal it) and `parts` a letter and a number a part, or `digits` a number
+  at each part's first square and read anywhere in it, one a part, and
+  `play.signs` draws each at its part's first square, its number and sign
+  (the number alone for a kind with none: Solo's Killer totals), with
+  every square's notes below that line (`caging` is the fixture). A
+  partition a variation adds (`add: { space: { regions: { cage: dealt } }
+  }`, Solo's Killer) is divided, written, read and drawn, and its parts'
+  clues derived, only on a board with it on (`killing` is the fixture). The
   `domino` painter draws two alike pieces touching only each other as one.
   `deal.hide` then takes a kind's clues off
   at the lowest tier, and then at the asked tier: first every clue no
@@ -495,9 +503,10 @@ research tools all read through it; the app never does.
   `hideFrom: { kind: Tier }` keeps a kind whole on a board below that tier
   (`flanking` is the fixture); `hideWhole: { kind: { below: Tier, longer:
   { max: 5 } } }` hides every clue of a kind on a board below that tier and
-  within those bounds (`play.bounds`' measures), the answer drawn again
-  until the board finishes without it (Towers' Easy boards up to 5x5, which
-  show no given, as upstream's); `stripFrom: everyClue` starts every search-tier draw from every clue,
+  within those bounds (`play.bounds`' measures), and with `with: Variation`
+  on a board with it on, each where given, the answer drawn again until the
+  board finishes without it (Towers' Easy boards up to 5x5, which show no
+  given, as upstream's; Solo's Killer boards, `killing` the fixture); `stripFrom: everyClue` starts every search-tier draw from every clue,
   where the lowest tier's boards leave the search too little to strip.
   `digits`' `after: { B: kind }` writes one digit of that kind straight
   after a letter's cell (Sticks' `B2`). A bar painter `across` or `down`

@@ -10,7 +10,7 @@
  * `y` a run of 1 to 25, and `z` a run of 25 that closes no border, so a longer
  * run is written as `z`s and a remainder. A letter three times or more in a
  * row is written once and then the count, and twice as itself (Keen's
- * second pass; Solo writes none).
+ * second pass; Solo writes none, and reads none).
  */
 
 import type { Dsf } from "../board/dsf.ts";
@@ -35,11 +35,13 @@ function borderCells(i: number, w: number, h: number): [number, number] {
 const bordersOf = (w: number, h: number): number => (w - 1) * h + w * (h - 1);
 
 /** The block structure of `joined`, which holds two cells together where
- * they share a part. */
+ * they share a part; with `counts` false, a letter's repeats written out,
+ * as Solo's are. */
 export function encodeBlockStructure(
   w: number,
   h: number,
   joined: (a: number, b: number) => boolean,
+  counts = true,
 ): string {
   let raw = "";
   let run = 0;
@@ -57,6 +59,7 @@ export function encodeBlockStructure(
     raw += run > 0 ? String.fromCharCode(96 + run) : "_";
     run = 0;
   }
+  if (!counts) return raw;
   // A run of one letter where the count is shorter.
   let out = "";
   for (let r = 0; r < raw.length; ) {

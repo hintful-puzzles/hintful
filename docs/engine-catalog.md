@@ -660,9 +660,11 @@ Exemplar: `rome/state.ts`.
 ### `block-structure.ts` — a partition as upstream Keen's block structure
 
 Reach for it for a desc that ships a partition of cages in upstream Keen's
-form, the borders as letter runs with repeat counts.
-`encodeBlockStructure(w, h, joined)` writes it from whether two cells share
-a part, and `readBlockStructure(r, dsf, w, h)` joins a `Dsf` from it.
+form, the borders as letter runs with repeat counts, or Solo's, the same
+runs with no counts.
+`encodeBlockStructure(w, h, joined, counts)` writes it from whether two
+cells share a part, and `readBlockStructure(r, dsf, w, h)` joins a `Dsf`
+from it, either form.
 Exemplar: the `blocks` id segment (`engine/fill/game-id.ts`).
 
 ### `dot-runs.ts` — blanks and dots of two kinds

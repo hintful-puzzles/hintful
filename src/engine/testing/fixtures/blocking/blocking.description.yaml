@@ -72,7 +72,7 @@ deal:
   sample: { search: true }
   hide: given
 id:
-  - { blocks: box, after: "," }
+  - { blocks: box, after: ",", counts: false }
   - digits: given
     apart: _
 tiers: [Easy]

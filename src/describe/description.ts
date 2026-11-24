@@ -280,6 +280,7 @@ export interface ModifierJson {
   rule: string;
   note?: string;
   most?: number[];
+  bounds?: SizeBoundsJson;
 }
 
 /** A game born from its description: its catalog entry, the engine's
@@ -322,7 +323,7 @@ export type IdSegmentJson =
     }
   | { glyphs: string; values: Record<string, number> }
   | { records: string; sides: string }
-  | { blocks: string; before?: string; after?: string }
+  | { blocks: string; before?: string; after?: string; counts?: false }
   | { parts: string; before?: string; letters: Record<string, string> }
   | { codes: Record<string, string>; before?: string };
 

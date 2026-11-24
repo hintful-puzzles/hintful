@@ -401,7 +401,11 @@ function withPartClues<C extends Clues<C>>(
   const { partClues, partition } = reading;
   if (partClues === undefined || partition === undefined) return grid;
   const { w, dealt } = board;
-  const { cells } = dealt[partition] as Partition;
+  // A board a variation's partition is not dealt on (Solo's cages, Killer's
+  // alone) has no part clue.
+  const dealtParts = dealt[partition] as Partition | undefined;
+  if (dealtParts === undefined) return grid;
+  const { cells } = dealtParts;
   const byFirst = new Map<number, string>();
   for (const kind of partClues.kinds) {
     const list = listOf(dealt, kind);
@@ -444,7 +448,9 @@ function gridFormat<C extends Clues<C>>(
   // A dealt partition's walls alone, where there is one: each cell's part,
   // `-1` off the grid, and a line only between two that differ.
   const parts =
-    reading.partition === undefined ? null : (dealt[reading.partition] as Partition).of;
+    reading.partition === undefined
+      ? null
+      : ((dealt[reading.partition] as Partition | undefined)?.of ?? null);
   const part = (x: number, y: number): number =>
     x < 0 || y < 0 || x >= w || y >= h ? -1 : (parts?.[y * w + x] ?? 0);
   // Between two cells of a gapped board, its gap's clue in place of a wall.

@@ -1184,7 +1184,7 @@
             },
             "modifiers": {
               "type": "object",
-              "description": "Each variation the player may switch on, by its name: its letter in the params, its Custom field (`kw`, `name`), its words in a board's name and the rule the help lists (`engine/game-id/modifier.ts`), and `most`, where the rule bounds the size: a board 2i squares across has at most `most[i]` lines the other way.",
+              "description": "Each variation the player may switch on, by its name: its letter in the params, its Custom field (`kw`, `name`), its words in a board's name and the rule the help lists (`engine/game-id/modifier.ts`), and where the rule bounds the size, `most` (a board 2i squares across has at most `most[i]` lines the other way) or `bounds`, as `play.bounds` states them (Solo's X needs 4 numbers, and its Killer holds at most 9).",
               "additionalProperties": {
                 "type": "object",
                 "required": ["letter", "kw", "name", "words", "rule"],
@@ -1199,6 +1199,16 @@
                   "most": {
                     "type": "array",
                     "items": { "type": "integer", "minimum": 0 }
+                  },
+                  "bounds": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "sum": { "$ref": "#/$defs/sizeBound" },
+                      "area": { "$ref": "#/$defs/sizeBound" },
+                      "shorter": { "$ref": "#/$defs/sizeBound" },
+                      "longer": { "$ref": "#/$defs/sizeBound" }
+                    }
                   }
                 }
               }
@@ -1426,11 +1436,12 @@
                 "type": "object",
                 "required": ["blocks"],
                 "additionalProperties": false,
-                "description": "A dealt partition as upstream's block structure (`engine/game-id/block-structure.ts`, upstream Keen's and Solo's): the borders between two cells side by side, those inside the rows in reading order and then those between them column by column, as runs of borders inside a part, each a letter `a`-`y` for 1 to 25 before a border between parts, `_` for none and `z` for 25 with none after, and a letter repeated three times or more written once and then the count. With `before`, it follows that mark, and with `after`, that mark follows it. A partition a variation deals in place of blocks (Solo's Jigsaw) is written, with its marks, only on a board that deals it.",
+                "description": "A dealt partition as upstream's block structure (`engine/game-id/block-structure.ts`, upstream Keen's and Solo's): the borders between two cells side by side, those inside the rows in reading order and then those between them column by column, as runs of borders inside a part, each a letter `a`-`y` for 1 to 25 before a border between parts, `_` for none and `z` for 25 with none after, and a letter repeated three times or more written once and then the count (Keen's), or with `counts: false` written out (Solo's). With `before`, it follows that mark, and with `after`, that mark follows it. A partition a variation deals (Solo's Jigsaw blocks and Killer cages) is written, with its marks, only on a board that deals it.",
                 "properties": {
                   "blocks": { "type": "string" },
                   "before": { "type": "string", "minLength": 1, "maxLength": 1 },
-                  "after": { "type": "string", "minLength": 1, "maxLength": 1 }
+                  "after": { "type": "string", "minLength": 1, "maxLength": 1 },
+                  "counts": { "const": false }
                 }
               },
               {
@@ -1581,13 +1592,13 @@
             },
             "hideWhole": {
               "type": "object",
-              "description": "By kind of `hide`, a board on which the deal hides every clue of it: one below the tier `below` and within the size bounds given beside it, as `play.bounds` states them. The answer is drawn again until the board finishes without the kind (upstream towers.c's Easy boards up to 5x5, which show no given).",
+              "description": "By kind of `hide`, a board on which the deal hides every clue of it: one below the tier `below`, with the variation `with` on, and within the size bounds given beside it, as `play.bounds` states them, each where given. The answer is drawn again until the board finishes without the kind (upstream towers.c's Easy boards up to 5x5, which show no given; solo.c's Killer boards, which show none).",
               "additionalProperties": {
                 "type": "object",
-                "required": ["below"],
                 "additionalProperties": false,
                 "properties": {
                   "below": { "type": "string" },
+                  "with": { "type": "string" },
                   "sum": { "$ref": "#/$defs/sizeBound" },
                   "area": { "$ref": "#/$defs/sizeBound" },
                   "shorter": { "$ref": "#/$defs/sizeBound" },

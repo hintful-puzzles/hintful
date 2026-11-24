@@ -106,7 +106,36 @@ the predecessor's were, in a commit before the flip.
         names, since `given:` reads `c` in the domain as its cell (the
         loader now refuses a size named `c`); the fill codec writes the
         default tier's `dt`, which upstream omits and reads either way.
-  - [ ] 2.1e The flip: its words as `says`, its tests to `cases.yaml`.
+  - [x] 2.1e What a draft of Solo's born description refused, read
+        2026-11-24 by compiling it and dealing each board: Killer's cages
+        and totals were dealt and written on every board; a total, a clue
+        at a part, could not be written as upstream's digits at the cage's
+        first cell; the blocks were written with Keen's repeat counts, which
+        upstream Solo neither writes nor reads; the givens were not hidden
+        whole under Killer; a part's clue needed a sign; and X's and
+        Killer's size bounds had no place. Built on the `killing` fixture:
+        a partition a variation adds is divided, written, read and drawn,
+        and its clues derived, only under it (`FillDivide.variation` for
+        `add` too); a kind at parts names its partition
+        (`FillDeal.partsOf`, where `partitions[0]` was assumed); `digits`
+        writes a part's clue at its first cell and reads it anywhere in the
+        part, one a part; `blocks` takes `counts: false` (and `blocking`'s
+        and `fitting`'s, which claim Solo's form, now write it); `hideWhole`
+        takes `with:` a variation, its tier optional; a part's clue with no
+        sign is drawn as its number; a modifier takes `bounds`.
+  - [ ] 2.1f The flip. The draft (`solo-born-draft.yaml` here, its game
+        `soloborn`, compiled as a fixture under
+        `src/engine/testing/fixtures/soloborn/` while it is worked on, and
+        removed at the flip) compiles and deals every board, reads and
+        writes upstream's four test IDs byte for byte, Killer with no
+        given. Still to do: the killer techniques under `Killer`'s `add`
+        and the walk's steps with X and Killer flags (in the draft); the
+        `says` of Solo's own techniques (drafted: `digitSet` became arms
+        `setRows`/`setColumns`, each a rung, since an arm is a rung on a
+        board of notes); soundness for each; tiers above Easy on boards of
+        4 numbers or fewer refused (a 4 Jigsaw loses Normal and Tricky,
+        a 2x2 Killer its tiers above Easy: list them); the tests to
+        `cases.yaml`; run in the app.
 - [ ] 2.2 ABCD born: the number size, letters, the walk with no region, a
       clue per value derived, written and drawn in a margin, corner
       crosses, `D` and `R`.

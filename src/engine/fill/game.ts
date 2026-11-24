@@ -55,6 +55,7 @@ import {
   type FillModifier,
   type FillParams,
   fillParams,
+  partitionOfKind,
   partKindsOf,
   setBlocks,
   sizesOf,
@@ -326,7 +327,11 @@ export function fillGame<C extends Clues<C> & object>(
     ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
     ...(deal.partitions === undefined
       ? {}
-      : { partition: deal.partitions[0] as keyof C }),
+      : {
+          partition: (partKinds.length === 0
+            ? deal.partitions[0]
+            : partitionOfKind(deal, partKinds[0])) as keyof C,
+        }),
     ...(partKinds.length === 0
       ? {}
       : { partClues: { kinds: partKinds, signs: play.signs ?? {} } }),
