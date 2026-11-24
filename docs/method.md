@@ -132,8 +132,13 @@ against what is already on disk.
 ## Compare a cost in instructions, not in time
 
 Whether a change made a walk or a deal dearer is a count of the instructions
-the work retires, `npm run compare-cost` (its header says how to make the
-baseline it is given). CPU time is the work at the speed of the core it got
+the work retires, `npm run compare-cost -- --base <commit> <game…>`, which
+checks the commit out and removes it again. **Every flip runs it with
+`--quick`** against the commit before it, a few seconds a game: one board a
+menu entry and one round, no spread, read only for a large change, the kind
+two flips shipped unseen (a deal three and four times dearer). The full run,
+five rounds, gives a family's figures and settles what the quick one shows.
+CPU time is the work at the speed of the core it got
 and the caches it shared, and on this machine, always busy, it moves with
 the load: the same fixed loop took 27% more CPU time beside ten busy
 processes and 0.1% more instructions. A difference in CPU time smaller than

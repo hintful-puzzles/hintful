@@ -58,6 +58,7 @@ runs, and what a commit may leave to the push and to CI).
 | – A kind a rung id does not say | a test needs a case of a rung, a step's shape, a later leg, or a position off the hint's own line |
 | – Follow a plan through `walkHint` | a game's own test follows its hint, or its internal firings, from a position |
 | A game's verdict in one command | you are writing or changing a game and want everything the collection asks of it, in a minute |
+| A game played in the browser | a game's play changes in a way a player sees, or a game is moved onto its description |
 | Render scenarios | your game draws a highlight, an overlay, a cursor or an animation frame |
 | – A frame that needs the browser | a check has to be made in the running app and the frame is deep in a game |
 | – Watching an offline update | a change touches the service worker, `pwa.ts` or the offline status in Preferences |
@@ -288,6 +289,23 @@ literals, hint wording, note vocabulary) are checked by guards outside
   filter alone runs a floor over the collection against one game. The scope
   travels as the commit hook's does (§ "A cross-game guard the hooks can
   narrow").
+
+## A game played in the browser
+
+`npm run play-smoke -- <game> [--type <params>]` plays a deal in Chrome, as
+`playwright-cli` drives it, on a dev server of its own: a press and a right
+press on the board, each with `1` after it, then the hint walked through its
+beats to the solve. It prints the moves it saw, the hint's sentences and
+every console error, exception and failed request, exits 1 where the walk did
+not solve the board or any of those were seen, and screenshots the deal, the
+finish, and the solved board in both schemes. A flip runs it before it is
+done, and so does any change a player sees on the board. Look at the
+screenshots: the smoke checks that the game plays, never how it looks, and
+the traps it handles are in its header
+([`scripts/play-smoke.ts`](../scripts/play-smoke.ts)).
+
+It plays the default board, or the `--type` given; a frame deeper in a game
+is § "A frame that needs the browser".
 
 ## Render scenarios
 

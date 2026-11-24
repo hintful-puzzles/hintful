@@ -1,19 +1,25 @@
 /**
  * What a change costs a game's hint walk and its deal, counted in instructions
- * retired: `npm run compare-cost -- --baseline <dir> [--rounds <n>] <game…>`.
+ * retired:
  *
- * The baseline is a checkout of the commit to compare against, made beside
- * the session's other scratch files and never inside this tree:
+ *     npm run compare-cost -- --base <commit> [--quick | --rounds <n>] <game…>
+ *     npm run compare-cost -- --baseline <dir> [--quick | --rounds <n>] <game…>
  *
- *     git worktree add --detach <scratchpad>/base <commit>
- *     npm run compare-cost -- --baseline <scratchpad>/base tents boats
- *     git worktree remove --force <scratchpad>/base
+ * `--base` checks the commit out as a worktree in the system's temporary
+ * directory, and removes it when the command ends, however it ends;
+ * `--baseline` takes a checkout already made. It refuses a baseline whose
+ * `package-lock.json` differs from this tree's, whose dependencies would then
+ * not be its own, and otherwise links this tree's `node_modules` into it. It
+ * copies its worker and the worker's config there too, so both trees walk
+ * with the same code, and stops at a tree its config cannot bundle, with
+ * Vite's message.
  *
- * It refuses a baseline whose `package-lock.json` differs from this tree's,
- * whose dependencies would then not be its own, and otherwise links this
- * tree's `node_modules` into it. It copies its worker and the worker's config
- * there too, so both trees walk with the same code, and stops at a tree its
- * config cannot bundle, with Vite's message.
+ * **`--quick`** deals one board a menu entry and counts one round: no spread
+ * is measured, so it is read only for a large change, the kind a flip has
+ * shipped unseen (a deal three times dearer). Every flip runs it; the full
+ * run, five rounds of four boards an entry, gives a family's figures and
+ * settles a change the quick run shows (`docs/method.md` § "Compare a cost in
+ * instructions, not in time").
  *
  * **What is counted is the bundle** (`scripts/checks/cost.vite.config.mts`):
  * each tree's worker and the named games, built by Vite as the app builds
@@ -30,7 +36,7 @@
  * does not move; elsewhere this says so and stops.
  *
  * **What it runs.** The boards are dealt once, at the baseline: four on each
- * menu board of at most 100 squares. Then, round by round, alternating which
+ * menu board of at most 100 squares (one under `--quick`). Then, round by round, alternating which
  * tree goes first, each tree runs three processes a game: one that only loads
  * the bundle, one that walks every board by its hint to the end, and one that
  * deals each board's params once. A figure is a run's count less the
@@ -49,7 +55,7 @@
  * Steps and technique tries are the engine's own counts and are exact; tries
  * read "–" in a tree from before the counter (`techniqueTries`).
  */
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import {
   copyFileSync,
   existsSync,
@@ -85,32 +91,62 @@ const KILL_MS = 600_000;
 function usage(why: string): never {
   console.error(`compare-cost: ${why}`);
   console.error(
-    "usage: npm run compare-cost -- --baseline <dir> [--rounds <n>] <game…>",
+    "usage: npm run compare-cost -- (--base <commit> | --baseline <dir>) [--quick | --rounds <n>] <game…>",
   );
   process.exit(2);
 }
 
-function parseArgs(argv: readonly string[]): {
-  baseline: string;
+interface Args {
+  /** A commit to check out, or a checkout already made. */
+  baseline: { commit: string } | { dir: string };
   rounds: number;
+  /** Boards dealt on each menu entry. */
+  boards: number;
   games: string[];
-} {
-  let baseline: string | null = null;
-  let rounds = 5;
+}
+
+function parseArgs(argv: readonly string[]): Args {
+  let baseline: Args["baseline"] | null = null;
+  let rounds: number | null = null;
+  let quick = false;
   const games: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--baseline")
-      baseline = argv[++i] ?? usage("--baseline needs a directory");
+      baseline = {
+        dir: path.resolve(argv[++i] ?? usage("--baseline needs a directory")),
+      };
+    else if (arg === "--base")
+      baseline = { commit: argv[++i] ?? usage("--base needs a commit") };
     else if (arg === "--rounds") rounds = Number(argv[++i]);
+    else if (arg === "--quick") quick = true;
     else if (arg.startsWith("-")) usage(`no option ${arg}`);
     else games.push(arg);
   }
-  if (baseline === null) usage("name the baseline tree with --baseline");
-  if (!Number.isInteger(rounds) || rounds < 2)
+  if (baseline === null) usage("name the baseline with --base or --baseline");
+  if (quick && rounds !== null) usage("--quick counts one round; drop --rounds");
+  if (rounds !== null && (!Number.isInteger(rounds) || rounds < 2))
     usage("--rounds is a whole number of 2 or more");
   if (games.length === 0) usage("name the games to compare");
-  return { baseline: path.resolve(baseline), rounds, games };
+  return { baseline, rounds: quick ? 1 : (rounds ?? 5), boards: quick ? 1 : 4, games };
+}
+
+/** Check `commit` out where the scratch directory is, so the exit that
+ * removes the one removes the other; the worktree is unregistered then too. */
+function checkedOut(commit: string): string {
+  const git = (args: readonly string[]) => {
+    const r = spawnSync("git", args, { cwd: ROOT, encoding: "utf8" });
+    if (r.status !== 0) usage(`git ${args.join(" ")}:\n${r.stderr.trim()}`);
+    return r.stdout.trim();
+  };
+  const sha = git(["rev-parse", "--verify", `${commit}^{commit}`]);
+  const dir = path.join(scratch, `base-${sha.slice(0, 9)}`);
+  git(["worktree", "add", "--detach", dir, sha]);
+  process.on("exit", () => {
+    spawnSync("git", ["worktree", "remove", "--force", dir], { cwd: ROOT });
+    spawnSync("git", ["worktree", "prune"], { cwd: ROOT });
+  });
+  return dir;
 }
 
 /** Make `tree` a baseline this can run in, or say why it cannot be one. */
@@ -239,11 +275,14 @@ function compared(base: readonly number[], work: readonly number[]): string {
 }
 
 async function main(): Promise<void> {
-  const { baseline, rounds, games } = parseArgs(process.argv.slice(2));
+  const args = parseArgs(process.argv.slice(2));
+  const { rounds, boards: boardsAnEntry, games } = args;
   if (process.platform !== "darwin")
     usage(
       `this is ${process.platform}, and the count is macOS's (/usr/bin/time -l, instructions retired): no figure is reported in its place`,
     );
+  const baseline =
+    "dir" in args.baseline ? args.baseline.dir : checkedOut(args.baseline.commit);
   prepareBaseline(baseline);
   console.error("bundling the worker in each tree");
   const trees = {
@@ -255,6 +294,7 @@ async function main(): Promise<void> {
   const dealt = await counted(trees.baseline, {
     COST_KIND: "list",
     COST_GAMES: games.join(","),
+    COST_BOARDS: String(boardsAnEntry),
   });
   const boards = dealt.out.boards ?? {};
   const lines: string[] = [];
@@ -317,7 +357,7 @@ async function main(): Promise<void> {
     const tries = (n: number | null) => (n === null ? "–" : String(n));
     lines.push(
       [
-        `${game} (${ids.length} boards, ${rounds} rounds)`,
+        `${game} (${ids.length} boards, ${rounds} round${rounds === 1 ? "" : "s"})`,
         `  walk instructions ${compared(b.walk, w.walk)}`,
         `  walk cycles       ${compared(b.walkCycles, w.walkCycles)}`,
         `  deal instructions ${compared(b.deal, w.deal)}`,
@@ -330,8 +370,14 @@ async function main(): Promise<void> {
     );
     console.error(lines.at(-1));
   }
+  const against =
+    "commit" in args.baseline
+      ? `Baseline ${args.baseline.commit}`
+      : `Baseline ${baseline}`;
   console.log(
-    `Baseline ${baseline} / working tree ${ROOT}: median net of start-up, ± half the larger spread\n`,
+    rounds === 1
+      ? `${against} / working tree ${ROOT}: one round net of start-up, no spread measured; read only a large change, and settle one with the full run\n`
+      : `${against} / working tree ${ROOT}: median net of start-up, ± half the larger spread\n`,
   );
   console.log(lines.join("\n"));
 }

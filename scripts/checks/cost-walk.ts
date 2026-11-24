@@ -6,7 +6,8 @@
  *
  * `COST_KIND` says which run:
  *
- * - `list`: deal the boards of `COST_GAMES` and write their IDs to `COST_OUT`;
+ * - `list`: deal `COST_BOARDS` boards on each menu entry of `COST_GAMES` and
+ *   write their IDs to `COST_OUT`;
  * - `none`: do nothing, the start-up the others are counted net of;
  * - `walk`: load the boards of `COST_GAME` in `COST_LIST` and walk each by
  *   its hint to the end;
@@ -51,10 +52,10 @@ function area(encoded: string): number | null {
   return w * Number(size[2] ?? w);
 }
 
-const BOARDS_A_PRESET = 4;
 const MAX_AREA = 100;
 
 function list(): CostRun {
+  const boardsAPreset = Number(process.env["COST_BOARDS"] ?? 4);
   const boards: Record<string, string[]> = {};
   for (const id of env("COST_GAMES").split(",")) {
     const game = load(id);
@@ -65,7 +66,7 @@ function list(): CostRun {
       if (a === null)
         throw new Error(`cost-walk: ${id}'s params ${encoded} give no size`);
       if (a > MAX_AREA) continue;
-      for (let k = 0; k < BOARDS_A_PRESET; k++) {
+      for (let k = 0; k < boardsAPreset; k++) {
         const { desc } = game.newDesc(
           params,
           randomNew(`compare-cost ${encoded} ${k}`),

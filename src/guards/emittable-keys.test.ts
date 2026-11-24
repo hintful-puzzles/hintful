@@ -150,7 +150,7 @@ function panelCodesByGame(): Map<string, Set<number>> {
   return byGame;
 }
 
-/** `src/games/unruly/index.ts` → `unruly`. */
+/** `src/games/unruly/unruly.description.yaml` → `unruly`. */
 function gameIdOf(path: string): string {
   return /^src\/games\/([^/]+)\//.exec(path)?.[1] ?? "";
 }
@@ -197,7 +197,7 @@ describe("no game tests a button this frontend cannot send", () => {
     // asserted too: a glob whose shape changed would key every lookup on `""`
     // and quietly hand every game an empty panel.
     expect(panels.size).toBeGreaterThanOrEqual(12);
-    expect(gameIdOf("src/games/unruly/index.ts")).toBe("unruly");
+    expect(gameIdOf("src/games/unruly/unruly.description.yaml")).toBe("unruly");
     // A file in a game's folder, the registry beside them aside.
     const inFolders = sources.filter((f) => f.fileName.split("/").length > 3);
     expect(inFolders.length).toBeGreaterThan(0);
@@ -246,7 +246,9 @@ describe("no game tests a button this frontend cannot send", () => {
     // picks.
     expect(emittableFromKeyMap.has(BACKSPACE)).toBe(false);
     expect(emittable("src/games/abcd/index.ts").has(BACKSPACE)).toBe(true);
-    expect(emittable("src/games/unruly/index.ts").has(BACKSPACE)).toBe(false);
+    expect(emittable("src/games/unruly/unruly.description.yaml").has(BACKSPACE)).toBe(
+      false,
+    );
     expect(dead).toEqual([]);
   });
 

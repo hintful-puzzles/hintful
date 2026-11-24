@@ -2536,7 +2536,8 @@ two pilots failed while their families went on (the owner, 2026-11-22).
    share met should rise along a family, and where it does not, the
    family's next order is the question.
 4. **The cost is counted, and nothing a player feels is left.** The walk
-   and the deal against the change's baseline, by `npm run compare-cost`
+   and the deal against the change's baseline, by `npm run compare-cost`,
+   and each flip against the commit before it with `--quick`
    (`docs/method.md` § "Compare a cost in instructions, not in time"). A
    rise outside the spread is explained by the steps and tries beside it
    or by the code. A deal or a walk that takes more than 100 ms of CPU
@@ -2552,6 +2553,14 @@ two pilots failed while their families went on (the owner, 2026-11-22).
    family's kind written new, with no hand-written game before it, records
    its description's lines and what the engine gained for it. That is the
    figure the initiative is for, and it is recorded the first time.
+
+**What a flip has left is one command**, `npm run flip -- <game>`, before
+its commit or after it: what is still in the game's directory, every file
+citing one of its deleted modules (the guides apart), the `game-lines`
+ceiling, the snapshots that name the game with the test that writes each,
+and the guards' lines that name its id. A flip is played in the browser by
+`npm run play-smoke -- <game>` ([`testing.md`](./testing.md) § "A game
+played in the browser").
 
 ## What this builds on
 

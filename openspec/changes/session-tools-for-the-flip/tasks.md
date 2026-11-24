@@ -8,14 +8,15 @@
 
 ## 2. Tools
 
-- [ ] 2.1 `compare-cost --base <commit>` makes, links and removes its own
-      worktree; a `--quick` mode; `docs/method.md` says to run the quick
-      one per flip.
-- [ ] 2.2 `npm run flip -- <game>` lists what a flip has left (proposal).
-- [ ] 2.3 `npm run play-smoke -- <game>`: the browser walk, with the traps
-      the proposal names handled once.
-- [ ] 2.4 `npm run replace`: literal, multi-file, refuses a match that is
-      not unique, prints the diff's shape.
+- [x] 2.1 `compare-cost --base <commit>` and `--quick` (Towers: 7 s);
+      the worktree goes on any exit, SIGTERM seen.
+- [x] 2.2 `npm run flip -- <game>`; a planted guide citation of a deleted
+      Solo module is named after the flip's commit (modules from history).
+- [x] 2.3 `npm run play-smoke -- <game>`: Towers and Solo solved, light and
+      dark; traps met on the way (the first-open card, the finish dialog,
+      the solve's flash, a reload dealing again) are in its header.
+- [x] 2.4 `npm run replace`: literal, multi-file or a YAML spec, refuses a
+      match that is not unique, prints the diff's shape.
 - [ ] 2.5 The hand-kept lists a flip edits derived from what each game is,
       each new derivation seen to fail on a planted case.
 
