@@ -30,8 +30,9 @@ see through one checks for it by hand:
 **Structural reading:** `inlined` reads a name that no scope binds and that
 names a definition with no parameters as that definition's body, as it reads
 a call. Every site already inlines its head, so every one sees through both
-spellings, and the hand-written copies go. A definition reading itself would
-now loop at compile time: the description is refused where it is parsed.
+spellings, and the hand-written copies go. A definition may read itself
+(Flood's `flooded(c)`, a planning game's fixed point), so nothing refuses
+one: a check that inlines such a call loops as it did before.
 
 ### The cycle forms, matched by their text
 

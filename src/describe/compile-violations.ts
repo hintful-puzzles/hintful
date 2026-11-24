@@ -403,7 +403,10 @@ class Check {
       out.close();
       return;
     }
-    const cycle = e.k === "quant" && this.env.answerSort === "edge" ? cycleOf(e) : null;
+    const cycle =
+      e.k === "quant" && this.env.answerSort === "edge"
+        ? cycleOf(e, scope, this.env)
+        : null;
     if (cycle !== null) {
       // Read as one: the sure edges, and each of them on a cycle of the
       // others, found together rather than by a walk from each.
@@ -432,7 +435,9 @@ class Check {
       return;
     }
     const diagonals =
-      e.k === "quant" && this.env.answerSort === "cell" ? pointCycleOf(e) : null;
+      e.k === "quant" && this.env.answerSort === "cell"
+        ? pointCycleOf(e, scope, this.env)
+        : null;
     if (diagonals !== null) {
       // The same over the points: each drawn diagonal, by its square and
       // the two points it joins, and those on a cycle of the others.
@@ -565,7 +570,7 @@ class Check {
       const sureWalk =
         sureOnly &&
         !this.premade.has(first.of) &&
-        throughSet(this.resolved(first.of, scope), scope, env) !== null;
+        throughSet(inlined(first.of, scope, this.env), scope, env) !== null;
       const [must, mayAll, whole] =
         this.premade.get(first.of) ??
         this.members(first.of, scope, sureWalk ? NO_MAY : null);
@@ -1025,7 +1030,8 @@ class Check {
       out.emit(`let ${mayHi} = -1;`);
       out.emit(`let ${sureLo} = -1;`);
       out.emit(`let ${sureHi} = Infinity;`);
-      out.emit(`let ${any} = false;`);
+      // Whether any member is sure, which only the least reads.
+      if (min) out.emit(`let ${any} = false;`);
       const last = agg.binders.at(-1);
       const saved = Out.fresh("_wsv");
       out.emit(`const ${saved}: readonly number[] | null = ${WITNESS};`);
@@ -1042,7 +1048,7 @@ class Check {
           out.emit(`${mayLo} = Math.min(${mayLo}, ${t.lo});`);
           out.emit(`${mayHi} = Math.max(${mayHi}, ${t.hi});`);
           out.open(`if (${sure} === ${T}) {`);
-          out.emit(`${any} = true;`);
+          if (min) out.emit(`${any} = true;`);
           out.emit(`${sureLo} = Math.max(${sureLo}, ${t.lo});`);
           out.emit(`${sureHi} = Math.min(${sureHi}, ${t.hi});`);
           out.close();
@@ -1064,7 +1070,7 @@ class Check {
       const [must, may, whole] = this.members(e.of, scope);
       out.emit(`const ${lo} = ${must}.length;`);
       out.emit(`const ${hi} = ${whole} ? ${may}.length : Infinity;`);
-      if (throughSet(this.resolved(e.of, scope), scope, this.env) === null)
+      if (throughSet(inlined(e.of, scope, this.env), scope, this.env) === null)
         return { lo, hi, yes: null, no: null };
       // A region too big is named by its sure squares, one too small by its
       // possible ones; where the answer is on the edges, by the edges round
@@ -1139,7 +1145,7 @@ class Check {
    * set's members stopped: for `{x in S where P}`, and for any set
    * {@link heldSet} reads; `null` for any other term. */
   private sureAndMaybe(e0: Expr, scope: Scope): [string, string, string] | null {
-    const e = this.resolved(e0, scope);
+    const e = inlined(e0, scope, this.env);
     const filtered =
       e.k === "agg" &&
       e.fn === "set" &&
@@ -1188,14 +1194,6 @@ class Check {
     return made;
   }
 
-  /** `e` inlined, a definition with no parameters read as its body: a set
-   * may be named by one (Range's `unshaded`). */
-  private resolved(e0: Expr, scope: Scope): Expr {
-    const def =
-      e0.k === "name" && !scope.has(e0.name) ? this.env.defs.get(e0.name) : undefined;
-    return inlined(def?.params.length === 0 ? def.body : e0, scope, this.env);
-  }
-
   /**
    * The set `e` as {@link sureAndMaybe}'s three names. A set of the board's
    * elements read from the answer (`heldSet`) is bounded by its form:
@@ -1214,7 +1212,7 @@ class Check {
     scope: Scope,
     needMay: ((must: string) => string) | null = null,
   ): [string, string, string] {
-    const e = this.resolved(e0, scope);
+    const e = inlined(e0, scope, this.env);
     const { out, env } = this;
     const must = Out.fresh("_must");
     const may = Out.fresh("_may");
@@ -1404,7 +1402,7 @@ class Check {
   ): { of: Expr; walk: [string, string, string]; sure: string; may: string } | null {
     const [first, ...rest] = e.binders;
     if (first?.kind !== "in") return null;
-    const of = this.resolved(first.of, scope);
+    const of = inlined(first.of, scope, this.env);
     if (throughSet(of, scope, this.env) === null || this.walkCache(of, scope) === null)
       return null;
     const free = new Set<string>();
@@ -1446,10 +1444,7 @@ class Check {
 function throughSet(e: Expr, scope: Scope, env: Env): [Expr, Binder] | null {
   if (e.k !== "call" || e.fn !== "through" || e.args.length !== 2) return null;
   const [c, S0] = e.args;
-  // The set may be named by a definition (Separate's `joined`).
-  const def =
-    S0.k === "name" && !scope.has(S0.name) ? env.defs.get(S0.name) : undefined;
-  const S = inlined(def?.params.length === 0 ? def.body : S0, scope, env);
+  const S = inlined(S0, scope, env);
   if (readsHeld(c) || S.k !== "agg" || S.fn !== "set" || S.where !== null) return null;
   const [bnd, ...more] = S.binders;
   if (bnd === undefined || more.length > 0 || bnd.kind !== "in") return null;
@@ -1466,9 +1461,7 @@ function throughSet(e: Expr, scope: Scope, env: Env): [Expr, Binder] | null {
  * answer is evaluated as it is.
  */
 function heldSet(e0: Expr, scope: Scope, env: Env): boolean {
-  const def =
-    e0.k === "name" && !scope.has(e0.name) ? env.defs.get(e0.name) : undefined;
-  const e = inlined(def?.params.length === 0 ? def.body : e0, scope, env);
+  const e = inlined(e0, scope, env);
   if (throughSet(e, scope, env) !== null) return true;
   if (e.k === "bin" && e.op === "+")
     return heldSet(e.a, scope, env) || heldSet(e.b, scope, env);
@@ -1499,9 +1492,7 @@ function heldLetsInPlace(e: Expr, scope: Scope, env: Env): Expr {
   );
   if (i < 0) return e;
   const L = e.binders[i];
-  const def =
-    L.of.k === "name" && !scope.has(L.of.name) ? env.defs.get(L.of.name) : undefined;
-  const S = def?.params.length === 0 ? def.body : L.of;
+  const S = inlined(L.of, scope, env);
   const avoid = new Set<string>();
   freeNames(S, avoid, new Set());
   const rest: Expr = {

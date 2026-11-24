@@ -1506,6 +1506,15 @@ says how each form is read; what a description's author acts on:
   decided elements needs nothing: a rule is reported once its elements are
   decided, and bounding it earlier is that form's work in the compiler,
   never a game's.
+- **A form is read by its structure, never its spelling.** A definition is
+  read as its body wherever a form is looked for, one with no parameters
+  (a named set) as well as a call, so a set named and the same set written
+  in place are one check. The loop forms are matched up to the names they
+  bind, the order of a filter's conjuncts, the sides of `=` and `!=`, a
+  where written as `implies`, and a set less one edge written `S - {e}`.
+  `src/describe/spellings.test.ts` compiles each named read written in
+  place, and each loop form written other ways, and asks for the same
+  check.
 - **A player's mark is read where its `of` names one definition** at its
   element (Tracks' `2 - drawn(at) / 2`): the check then takes the marks,
   each a mask of the values it allows, after the board's other inputs, and

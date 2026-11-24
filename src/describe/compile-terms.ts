@@ -294,9 +294,14 @@ export function chainPin(bnd: Binder, scope: Scope, env: Env): Expr | null {
   return null;
 }
 
-/** A call of a definition read as its body, its parameters replaced by the
- * arguments, until it is no such call. */
+/** A definition read as its body, until `e` is no definition: a call, its
+ * parameters replaced by the arguments, and a name of one with none (a
+ * named set), so each spelling of a term is analyzed as one. */
 export function inlined(e: Expr, scope: Scope, env: Env): Expr {
+  if (e.k === "name") {
+    const def = scope.has(e.name) ? undefined : env.defs.get(e.name);
+    return def?.params.length === 0 ? inlined(def.body, scope, env) : e;
+  }
   const def = e.k === "call" && !scope.has(e.fn) ? env.defs.get(e.fn) : undefined;
   if (e.k !== "call" || def === undefined || def.params.length !== e.args.length)
     return e;
@@ -946,105 +951,254 @@ export function joinOf(
 }
 
 /**
- * `forall e in edges where W: end2(e) not in through(end1(e), {x in edges
- * where W' and x != e})`, `W'` being `W` said of `x` (either end may come
- * first): no edge W holds of closes a loop of such edges. Both checks read
- * it as one walk over the edges W holds of, where edge by edge it is a walk
- * from each. Its binder, or `null` for any other statement.
+ * `e` as a text two terms share where they say the same: each definition
+ * read as its body, each bound name by where it is bound, the conjuncts of
+ * `and` and the disjuncts of `or` in one order, and the sides of `=`, `!=`,
+ * `iff`, `+` and `*` in one order. So `x != e and W(x)` and `W(x) and e !=
+ * x` are one term.
  */
-export function cycleOf(e: Extract<Expr, { k: "quant" }>): Binder | null {
+function canonical(
+  e0: Expr,
+  scope: Scope,
+  env: Env,
+  bound: Map<string, string>,
+): string {
+  const shadowed =
+    (e0.k === "name" && bound.has(e0.name)) || (e0.k === "call" && bound.has(e0.fn));
+  const e = shadowed ? e0 : inlined(e0, scope, env);
+  const go = (x: Expr, b = bound): string => canonical(x, scope, env, b);
+  switch (e.k) {
+    case "num":
+      return String(e.v);
+    case "name":
+      return bound.get(e.name) ?? e.name;
+    case "call":
+      return `${bound.get(e.fn) ?? e.fn}(${e.args.map((a) => go(a)).join(",")})`;
+    case "set":
+      return `{${e.elems.map((a) => go(a)).join(",")}}`;
+    case "size":
+    case "not":
+    case "neg":
+      return `${e.k}(${go(e.of)})`;
+    case "with":
+      return `with(${go(e.cell)},${go(e.value)},${go(e.body)})`;
+    case "bin": {
+      if (e.op === "and" || e.op === "or") {
+        const flat: Expr[] = [];
+        const spread = (x: Expr): void => {
+          const y = inlined(x, scope, env);
+          if (y.k === "bin" && y.op === e.op) {
+            spread(y.a);
+            spread(y.b);
+          } else flat.push(y);
+        };
+        spread(e);
+        return `${e.op}(${flat
+          .map((x) => go(x))
+          .sort()
+          .join(",")})`;
+      }
+      const sides = [go(e.a), go(e.b)];
+      if (["=", "!=", "iff", "+", "*"].includes(e.op)) sides.sort();
+      return `${e.op}(${sides.join(",")})`;
+    }
+    case "quant":
+    case "agg": {
+      const b = new Map(bound);
+      const parts = e.binders.map((x) => {
+        const of = go(x.of, b);
+        b.set(x.name, `#${b.size}`);
+        const where = x.where === null ? "" : `|${go(x.where, b)}`;
+        return `${x.kind}:${of}${where}`;
+      });
+      const rest =
+        e.k === "quant"
+          ? `${e.q}:${go(e.body, b)}`
+          : `${e.fn}:${e.where === null ? "" : go(e.where, b)}:${e.term === null ? "" : go(e.term, b)}`;
+      return `[${parts.join(";")}]${rest}`;
+    }
+  }
+}
+
+/** Whether `a` and `b` say the same, read as {@link canonical} reads them. */
+export function sameTerm(a: Expr, b: Expr, scope: Scope, env: Env): boolean {
+  return canonical(a, scope, env, new Map()) === canonical(b, scope, env, new Map());
+}
+
+/** A name no description can write, standing for the edge a set's filter
+ * is said of. */
+const EDGE = "$edge";
+
+/**
+ * The set `S` as a set of edges filtered, its filter's conjuncts said of
+ * {@link EDGE}: `edges`, `{x in edges where A and B}`, a definition of one,
+ * a set over a set of edges filtered further, and `S - {t}` as the conjunct
+ * that the edge is not `t`. `null` for any other set.
+ */
+function edgeFilter(S0: Expr, scope: Scope, env: Env): Expr[] | null {
+  const S = inlined(S0, scope, env);
+  if (S.k === "name") return S.name === "edges" && !scope.has("edges") ? [] : null;
+  if (S.k === "bin" && S.op === "-" && S.b.k === "set" && S.b.elems.length === 1) {
+    const rest = edgeFilter(S.a, scope, env);
+    if (rest === null) return null;
+    return [...rest, { k: "bin", op: "!=", a: nm(EDGE), b: S.b.elems[0] }];
+  }
+  if (S.k !== "agg" || S.fn !== "set" || S.where !== null || S.binders.length !== 1)
+    return null;
+  const [x] = S.binders;
+  if (x.kind !== "in" || S.term?.k !== "name" || S.term.name !== x.name) return null;
+  const base = edgeFilter(x.of, scope, env);
+  if (base === null) return null;
+  const own =
+    x.where === null
+      ? []
+      : fillConjuncts(x.where, scope, env).map((c) =>
+          substitute(c, new Map([[x.name, nm(EDGE)]]), new Set()),
+        );
+  return [...base, ...own];
+}
+
+/**
+ * No edge of a set closes a loop of the set's edges: a binder over a set of
+ * edges, and a walk from one end of the bound edge to the other over the
+ * same set less that edge, which it does not reach. Written `forall e in
+ * edges where W: end2(e) not in through(end1(e), {x in edges where W' and x
+ * != e})`, or with the set named, with `implies` for the where, or with the
+ * filter's conjuncts in any order and either end first. Both checks read it
+ * as one walk over the set's edges, where edge by edge it is a walk from
+ * each. Its binder, over `edges` and filtered by the set's filter, or `null`
+ * for any other statement.
+ */
+export function cycleOf(
+  e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
+): Binder | null {
   if (e.q !== "forall" || e.binders.length !== 1) return null;
   const [b] = e.binders;
-  if (b.kind !== "in" || b.of.k !== "name" || b.of.name !== "edges" || b.where === null)
-    return null;
-  const { body } = e;
+  if (b.kind !== "in") return null;
+  const said = (c: Expr): Expr =>
+    substitute(c, new Map([[b.name, nm(EDGE)]]), new Set());
+  const ofB = edgeFilter(b.of, scope, env);
+  if (ofB === null) return null;
+  let body = inlined(e.body, scope, env);
+  const own = b.where === null ? [] : fillConjuncts(b.where, scope, env);
+  if (body.k === "bin" && body.op === "implies") {
+    own.push(...fillConjuncts(body.a, scope, env));
+    body = inlined(body.b, scope, env);
+  }
   if (body.k !== "bin" || body.op !== "notin") return null;
-  const end = (x: Expr, fn: string) =>
-    x.k === "call" &&
-    x.fn === fn &&
-    x.args.length === 1 &&
-    x.args[0].k === "name" &&
-    x.args[0].name === b.name;
-  const walk = body.b;
+  const walk = inlined(body.b, scope, env);
   if (walk.k !== "call" || walk.fn !== "through" || walk.args.length !== 2) return null;
   const [from, S] = walk.args;
+  const end = (x: Expr, fn: string): boolean => {
+    const y = inlined(x, scope, env);
+    return (
+      y.k === "call" &&
+      y.fn === fn &&
+      y.args.length === 1 &&
+      y.args[0].k === "name" &&
+      y.args[0].name === b.name
+    );
+  };
   if (
     !(end(body.a, "end2") && end(from, "end1")) &&
     !(end(body.a, "end1") && end(from, "end2"))
   )
     return null;
-  if (S.k !== "agg" || S.fn !== "set" || S.where !== null || S.binders.length !== 1)
-    return null;
-  const [x] = S.binders;
-  if (x.kind !== "in" || x.of.k !== "name" || x.of.name !== "edges" || x.where === null)
-    return null;
-  if (S.term?.k !== "name" || S.term.name !== x.name) return null;
-  const w = x.where;
-  const same = substitute(b.where, new Map([[b.name, nm(x.name)]]), new Set());
-  const apart: Expr = { k: "bin", op: "!=", a: nm(x.name), b: nm(b.name) };
-  if (
-    w.k !== "bin" ||
-    w.op !== "and" ||
-    JSON.stringify(w.a) !== JSON.stringify(same) ||
-    JSON.stringify(w.b) !== JSON.stringify(apart)
-  )
-    return null;
-  return b;
+  const filter = [...ofB, ...own.map(said)];
+  const walked = edgeFilter(S, scope, env);
+  if (walked === null) return null;
+  // The walk's set less the bound edge: the conjunct that its edge is not
+  // the bound one, and else the binder's filter said of its edge.
+  const apart: Expr = { k: "bin", op: "!=", a: nm(EDGE), b: nm(b.name) };
+  const i = walked.findIndex((c) => sameTerm(c, apart, scope, env));
+  if (i < 0) return null;
+  const rest = walked.filter((_, j) => j !== i);
+  if (rest.some((c) => readsFree(c, b.name))) return null;
+  const key = (cs: readonly Expr[]): string =>
+    cs
+      .map((c) => canonical(c, scope, env, new Map()))
+      .sort()
+      .join(";");
+  if (key(rest) !== key(filter)) return null;
+  const where = filter
+    .map((c) => substitute(c, new Map([[EDGE, nm(b.name)]]), new Set()))
+    .reduce<Expr | null>(
+      (a, c) => (a === null ? c : { k: "bin", op: "and", a, b: c }),
+      null,
+    );
+  return { name: b.name, kind: "in", of: nm("edges"), where };
 }
 
 /**
  * `forall c in cells [where W], k in J, q in before(k, J): q not in
- * linked(k, c)`, `J` the points square c's diagonal joins: no diagonal
- * closes a loop, the cycle form over the points (Slant's). The violation
- * check reads it as one walk over the diagonals drawn. Its three binders,
- * or `null` for any other statement.
+ * linked(k, c)`, `J` the points square c's diagonal joins, `{p in points(c)
+ * where slash(c, p) = value(c)}`: no diagonal closes a loop, the cycle form
+ * over the points (Slant's). J may be named by a definition and its
+ * equation written either way round. The violation check reads it as one
+ * walk over the diagonals drawn. Its three binders, J written in the form
+ * above, or `null` for any other statement.
  */
 export function pointCycleOf(
   e: Extract<Expr, { k: "quant" }>,
+  scope: Scope,
+  env: Env,
 ): readonly [Binder, Binder, Binder] | null {
   if (e.q !== "forall" || e.binders.length !== 3) return null;
   const [c, k, q] = e.binders;
   if (c.kind !== "in" || c.of.k !== "name" || c.of.name !== "cells") return null;
   if (k.kind !== "in" || k.where !== null || q.kind !== "in" || q.where !== null)
     return null;
-  const J = k.of;
-  if (J.k !== "agg" || J.fn !== "set" || J.where !== null || J.binders.length !== 1)
-    return null;
-  const [p] = J.binders;
   const call = (fn: string, ...args: Expr[]): Expr => ({ k: "call", fn, args });
-  const ends: Expr = {
-    k: "bin",
-    op: "=",
-    a: call("slash", nm(c.name), nm(p.name)),
-    b: call("value", nm(c.name)),
+  // The point's name as the statement binds it, so the form compiles as
+  // it is written in the stated spelling.
+  const stated = inlined(k.of, scope, env);
+  const named = stated.k === "agg" ? stated.binders[0]?.name : undefined;
+  const P =
+    named === undefined || [c.name, k.name, q.name].includes(named) ? "p" : named;
+  const J: Expr = {
+    k: "agg",
+    fn: "set",
+    binders: [
+      {
+        name: P,
+        kind: "in",
+        of: call("points", nm(c.name)),
+        where: {
+          k: "bin",
+          op: "=",
+          a: call("slash", nm(c.name), nm(P)),
+          b: call("value", nm(c.name)),
+        },
+      },
+    ],
+    where: null,
+    term: nm(P),
   };
-  if (
-    p.kind !== "in" ||
-    JSON.stringify(p.of) !== JSON.stringify(call("points", nm(c.name))) ||
-    JSON.stringify(p.where) !== JSON.stringify(ends) ||
-    JSON.stringify(J.term) !== JSON.stringify(nm(p.name))
-  )
-    return null;
-  const before = q.of;
+  if (!sameTerm(k.of, J, scope, env)) return null;
+  const before = inlined(q.of, scope, env);
   if (
     before.k !== "call" ||
     before.fn !== "before" ||
     before.args.length !== 2 ||
-    JSON.stringify(before.args[0]) !== JSON.stringify(nm(k.name)) ||
-    JSON.stringify(before.args[1]) !== JSON.stringify(k.of)
+    !sameTerm(before.args[0], nm(k.name), scope, env) ||
+    !sameTerm(before.args[1], J, scope, env)
   )
     return null;
-  const { body } = e;
+  const body = inlined(e.body, scope, env);
   if (body.k !== "bin" || body.op !== "notin") return null;
-  const walk = body.b;
+  const walk = inlined(body.b, scope, env);
   if (
-    JSON.stringify(body.a) !== JSON.stringify(nm(q.name)) ||
+    !sameTerm(body.a, nm(q.name), scope, env) ||
     walk.k !== "call" ||
     walk.fn !== "linked" ||
-    JSON.stringify(walk.args) !== JSON.stringify([nm(k.name), nm(c.name)])
+    walk.args.length !== 2 ||
+    !sameTerm(walk.args[0], nm(k.name), scope, env) ||
+    !sameTerm(walk.args[1], nm(c.name), scope, env)
   )
     return null;
-  return [c, k, q];
+  return [c, { ...k, of: J }, { ...q, of: call("before", nm(k.name), J) }];
 }
 
 /** Whether `e` reads the name `n` without binding it. */

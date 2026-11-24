@@ -103,6 +103,7 @@ import {
   readsOnlyAt,
   readsRound,
   SIGHT_BENT,
+  sameTerm,
   sharedKey,
   sizeTest,
 } from "./compile-terms.ts";
@@ -1976,12 +1977,7 @@ function keptEdgeSet(
     env.supposed.length > 0
   )
     return null;
-  let set = of;
-  if (set.k === "name" && !scope.has(set.name)) {
-    const def = env.defs.get(set.name);
-    if (def !== undefined && def.params.length === 0) set = def.body;
-  }
-  set = inlined(set, scope, env);
+  const set = inlined(of, scope, env);
   if (
     set.k !== "agg" ||
     set.fn !== "set" ||
@@ -2084,7 +2080,7 @@ function wholeGraph(
     );
     return { code: r, sort: BOOL };
   }
-  const cycle = env.answerSort === "edge" ? cycleOf(e) : null;
+  const cycle = env.answerSort === "edge" ? cycleOf(e, scope, env) : null;
   if (cycle === null) return null;
   const set: Expr = {
     k: "agg",
@@ -2685,7 +2681,7 @@ function stretchOver(
     b.of.k !== "call" ||
     b.of.fn !== "cells" ||
     b.of.args.length !== 1 ||
-    JSON.stringify(b.of.args[0]) !== JSON.stringify(line)
+    !sameTerm(b.of.args[0], line, scope, env)
   )
     return null;
   const L = compileExpr(line, scope, env, out);

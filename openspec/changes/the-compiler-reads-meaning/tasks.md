@@ -1,21 +1,21 @@
 ## Next
 
-1.1, where the compiler's analysis keys on spelling. Open: none.
+2.3, a rule that can never hold refused by the deal, naming it
+(design.md § "2.3"). Open: none.
 
 ## 1. Design
 
-- [ ] 1.1 Where analysis keys on spelling: grep the compiler for matches on
-      a rule's written form (named sets, `cycleOf`, `pointCycleOf`, and the
-      like); for each, the structural reading that replaces it. Write it
-      in design.md.
+- [x] 1.1 Where analysis keys on spelling: design.md § "1.1".
 
 ## 2. Normalize
 
-- [ ] 2.1 Named sets inlined (or their analysis shared) before analysis; the
-      99b14db8 case is a test.
-- [ ] 2.2 Structural recognition for each form 1.1 lists.
+- [x] 2.1 Named sets inlined: `inlined` reads a definition with no
+      parameters as its body; Boats', Blackbox's and the tallying
+      fixture's checks now bound what they evaluated. `spellings.test.ts`.
+- [x] 2.2 The loop forms by structure (`sameTerm`, `edgeFilter`), and the
+      stretch's line; respellings of Path's and Slant's in the same test.
 - [ ] 2.3 A rule that can never hold refused at compile time, or the deal
-      bounded and named; plant 99b14db8's `noLoop` again and see a refusal,
+      bounded and named; plant a rule false everywhere and see a refusal,
       not a hang.
 
 ## 3. Properties
