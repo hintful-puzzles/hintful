@@ -859,7 +859,7 @@ export class CandidateWalk<
     const { plan } = this;
     const x = i % plan.w;
     const y = (i / plan.w) | 0;
-    const { premise, where: _where, struck: _struck, rung, ...rest } = words;
+    const { premise, where: _where, struck: _struck, long, rung, ...rest } = words;
     let bits = this.shown[i];
     for (const m of marks) bits &= ~this.bit(m.n);
     // The view was taken before the firing, so a value an earlier fold placed
@@ -871,7 +871,8 @@ export class CandidateWalk<
     // What the fold concludes is said of the ringed cell, so its conclusion
     // names it: "so this cell must be 3".
     const here = mark.this("ring", CELL, [{ x, y }], plan.conclude.cell);
-    const concluded = (move: Narration): Sentence => so({ look: premise, move });
+    const concluded = (move: Narration): Sentence =>
+      so({ look: premise, move, ...(long === undefined ? {} : { long }) });
     const highlightsOf = (said: Sentence): H =>
       ({
         ...rest,
@@ -968,7 +969,7 @@ export class CandidateWalk<
     words: RungStrikeWords<H, Reason>,
   ): HintStep<M, H, PlanRung<Reason>> {
     const marks = [...struck];
-    const { premise, where, struck: noun, rung, ...rest } = words;
+    const { premise, where, struck: noun, long, rung, ...rest } = words;
     // The ending names the notes it strikes, and re-renders from them when a
     // refresh finds some already gone.
     const { what, after } = this.plan.conclude.strike({ where, struck: noun });
@@ -976,6 +977,7 @@ export class CandidateWalk<
     const said = so({
       look: struckCellsOutlined(premise, marks),
       move: phrase`${struckNotes} ${after}`,
+      ...(long === undefined ? {} : { long }),
     });
     return {
       move: this.strike(marks),

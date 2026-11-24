@@ -113,9 +113,9 @@ describe("one note-taking vocabulary", () => {
       "pencils?: Uint8Array;",
     ]);
     // And the solver rule matches solvers and nothing else.
-    expect(isSolver("src/games/solo/solver.ts")).toBe(true);
+    expect(isSolver("src/games/abcd/solver.ts")).toBe(true);
     expect(isSolver("src/games/boats/hint-solver.ts")).toBe(true);
-    expect(isSolver("src/games/solo/state.ts")).toBe(false);
+    expect(isSolver("src/games/abcd/state.ts")).toBe(false);
   });
 
   it("holds every game's candidate notes under one field name", () => {

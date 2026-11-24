@@ -878,7 +878,7 @@ absolute sets and not toggles. Exemplar: `setEdge` in
 **A game that types values implements `requestKeys(params): KeyLabel[]`.** An
 absent hook is an empty keypad, and on touch the panel is the only way to
 type. Normative: the on-screen-keys requirements of `engine-input`.
-Exemplars: [`solo/index.ts`](../src/games/solo/index.ts), `engine/fill/numbers.ts`,
+Exemplars: `engine/fill/numbers.ts`,
 [`undead/index.ts`](../src/games/undead/index.ts) (keys with word labels).
 
 - **Build digits with `digitKeys(n)`** from

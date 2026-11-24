@@ -383,7 +383,8 @@ grid" on, and names the limit a menu breaks. What a game decides to fit it:
 
 `Game.paramConfig` is the "Custom type…" form, and the dialog rejects
 exactly what a game ID would. Exemplars: the skeleton's `state.ts`,
-[`solo/index.ts`](../src/games/solo/index.ts) (a fold).
+`play.blocks` in [`solo.description.yaml`](../src/games/solo/solo.description.yaml)
+(a fold to the squarest blocks).
 
 - **A key matches the C config slug.** `get` returns an index for a choice
   and a string for a text field, and `set` is its inverse.

@@ -117,7 +117,7 @@ import {
   type Partition,
 } from "../solve/describe-runtime.ts";
 import { answerOf, type FillMistake, rulesOf } from "./answer.ts";
-import { type Clues, type FillBoard, listOf, spaceOf } from "./board.ts";
+import { type Clues, type FillBoard, listOf, spaceOf, walledParts } from "./board.ts";
 import {
   cornerCell,
   cornerClueAt,
@@ -565,21 +565,12 @@ export function fillRender<C extends Clues<C>>(
     return out;
   }
 
-  /** Each cell's part of the walled partition: a dealt one's, or the
-   * block its space puts it in. */
-  const walledOf = (b: FillBoard<C>): ArrayLike<number> => {
-    const dealt = (b.dealt as Readonly<Record<string, unknown>>)[walled as string];
-    if (dealt !== undefined) return (dealt as Partition).of;
-    const sp = spaceOf(module, b);
-    return Int32Array.from(sp.cells, (c) => sp.boxes.indexOf(sp.boxOf[c]));
-  };
-
   /** Each cell's walls and the slot of its part's fill, where the board has
    * a partition drawn; and where it has them, its inset partition's walls
    * and the diagonals through it. */
   const partsOf = (b: FillBoard<C>): FillDrawState["parts"] => {
-    if (walled === undefined) return null;
-    const of = walledOf(b);
+    const of = walledParts(module, b);
+    if (of === null) return null;
     const fills = regionFills(of, b.w, REGION_SURFACES.length);
     const sp = spaceOf(module, b);
     const diagonal = new Uint8Array(b.w * b.h);
@@ -587,13 +578,17 @@ export function fillRender<C extends Clues<C>>(
       if (!sp.units.includes(L)) return;
       for (const c of sp.lineCells[L]) diagonal[c] |= 1 << k;
     });
+    // A partition a variation adds is dealt only on a board with it on.
+    const insetParts =
+      inset === undefined
+        ? undefined
+        : ((b.dealt as Readonly<Record<string, unknown>>)[inset] as
+            | Partition
+            | undefined);
     return {
       walls: regionWalls(b.w, b.h, of),
       fills: Uint8Array.from(of, (r) => COL_REGION + fills[r]),
-      inset:
-        inset === undefined
-          ? null
-          : regionWalls(b.w, b.h, (b.dealt[inset] as Partition).of),
+      inset: insetParts === undefined ? null : regionWalls(b.w, b.h, insetParts.of),
       diagonal,
     };
   };
@@ -2350,7 +2345,10 @@ export function fillRender<C extends Clues<C>>(
     numbersLeft,
     partClueBox(ts, b, c) {
       if (!labeled || labeledBy === undefined) return null;
-      const { of, cells } = b.dealt[labeledBy] as Partition;
+      // A partition a variation adds is dealt only on a board with it on.
+      const parts = b.dealt[labeledBy] as Partition | undefined;
+      if (parts === undefined) return null;
+      const { of, cells } = parts;
       const first = cells[of[c]][0];
       const label = labelsOf(b).get(first);
       if (label === undefined) return null;

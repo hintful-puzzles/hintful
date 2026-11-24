@@ -17,17 +17,6 @@ import {
   type SaladParams,
   type SaladState,
 } from "../../src/games/salad/state.ts";
-import { soloGame } from "../../src/games/solo/index.ts";
-import {
-  DIFF_EASY,
-  DIFF_HARD,
-  DIFF_KREGION,
-  DIFF_NORMAL,
-  DIFF_TRICKY,
-  type SoloParams,
-  type SoloState,
-  SYMM_NONE,
-} from "../../src/games/solo/state.ts";
 import { type Dealt, describedGame } from "./description.ts";
 import type { Clue } from "./evaluate.ts";
 import type { Elem } from "./space.ts";
@@ -57,63 +46,6 @@ export interface Binding<P, S> {
 }
 
 const cellAt = (space: { cells: Elem[] }, i: number): Elem => space.cells[i];
-
-export const soloBinding: Binding<SoloParams, SoloState> = {
-  game: soloGame,
-  description: describedGame("src/games/solo/solo.description.yaml"),
-  params: [
-    ...[DIFF_EASY, DIFF_NORMAL, DIFF_TRICKY].map((diff) => ({
-      ...soloGame.defaultParams(),
-      c: 2,
-      r: 3,
-      diff,
-    })),
-    ...[DIFF_NORMAL, DIFF_TRICKY, DIFF_HARD].map((diff) => ({
-      ...soloGame.defaultParams(),
-      c: 3,
-      r: 3,
-      diff,
-    })),
-    { ...soloGame.defaultParams(), diff: DIFF_NORMAL, xtype: true },
-    { ...soloGame.defaultParams(), c: 9, r: 1, diff: DIFF_NORMAL },
-    {
-      ...soloGame.defaultParams(),
-      symm: SYMM_NONE,
-      kdiff: DIFF_KREGION,
-      killer: true,
-    },
-  ],
-  dealt: (s) => ({
-    variations: [
-      ...(s.params.r === 1 ? ["Jigsaw"] : []),
-      ...(s.xtype ? ["X"] : []),
-      ...(s.killer ? ["Killer"] : []),
-    ],
-    sizes: { c: s.params.c, r: s.params.r },
-    regions: {
-      box: s.blocks.blocks,
-      ...(s.killerData ? { cage: s.killerData.kblocks.blocks } : {}),
-    },
-    givens: s.grid.map((v, i) => (s.immutable[i] ? v : 0)),
-    clues: (space) => {
-      const k = s.killerData;
-      if (k === null) return [];
-      const cages = space.names.get("cage") as Elem[];
-      return k.kblocks.blocks.map((cells, i) => ({
-        kind: "total",
-        at: cages[i],
-        v: Math.max(...cells.map((c) => k.kgrid[c])),
-      }));
-    },
-  }),
-  entries: (s) => s.grid,
-  notes: (s) => s.pencil,
-  withEntries: (s, values, notes) => ({
-    ...s,
-    grid: Int8Array.from(values),
-    pencil: notes ? Int32Array.from(notes) : new Int32Array(s.grid.length),
-  }),
-};
 
 /** A border clue as Salad numbers it (top, left, bottom, right), as the
  * space numbers its slots (above each column, below each, left of each row,

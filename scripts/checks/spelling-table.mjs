@@ -372,7 +372,6 @@ export const QUOTATIONS = {
     "src/games/slide/render.ts",
     "src/games/slide/slide-render.test.ts",
     "src/games/sokoban/render.ts",
-    "src/games/solo/render.ts",
   ],
   frontend_default_colour: [
     "AGENTS.md",

@@ -7,23 +7,27 @@ techniques:
   # A unit's sum left with its whole cages' totals not taken out.
   regionRule:
     for: >-
-      u in rows + cols + box, W = {r in cage where inside(r, u)}, L = set(c over
-      r in cage where r not in W, c in cells(r) where not known(c) and c in
-      cells(u)) where |L| > 0 and |L| < w, s = sum(d in domain of d) - sum(c in
-      cells(u) where known(c) of value(c)), R = {c in cells(cage(first(L)))
-      where not known(c) and c not in L}, t = owed(cage(first(L))) - s
-  # A line's value struck from the rest of a box it merely meets.
+      u in rows + cols + block
+      where not (exists r in cage: clue(total, r) = none),
+      W = {r in cage where inside(r, u)},
+      L = set(c over r in cage where r not in W, c in cells(r)
+      where not known(c) and c in cells(u))
+      where |L| > 0 and |L| < w,
+      s = sum(d in domain of d) - sum(c in cells(u) where known(c) of value(c)),
+      R = {c in cells(cage(first(L))) where not known(c) and c not in L},
+      t = owed(cage(first(L))) - s
+  # A line's value struck from the rest of a block it merely meets.
   intersect:
     conclude: >-
       forall c in cells(b) where c not in cells(L) and d in cand(c): strike(c, d)
+  # One row fewer than the columns it fits in still taken to fill them.
   digitSet:
     for: >-
-      d in domain, Y0 = {L in rows where not (exists c in cells(L): value(c) =
-      d)}, X0 = range(0, w - 1) - set(x(c) over c in cells where value(c) = d),
-      T in subsets(X0) where |T| = 0 or (2 <= |T| and |T| <= |Y0| - 2), Y = {L
-      in Y0 where not (exists c in cells(L): x(c) in T and d in cand(c))} where
-      |Y| >= |Y0| - |T| - 1
+      d in domain,
+      Y0 = {L in rows where not (exists c in cells(L): value(c) = d)},
+      X0 = range(0, w - 1) - set(x(c) over c in cells where value(c) = d),
+      T in subsets(X0) where |T| = 0 or (2 <= |T| and |T| <= |Y0| - 2),
+      Y = {L in Y0 where not (exists c in cells(L): x(c) in T and d in cand(c))} where |Y| >= |Y0| - |T| - 1
     conclude: >-
-      (|T| > 0 or (forall L in rows: exists c in cells(L): d in cand(c))) and
-      (forall L in Y0 - Y, c in cells(L) where x(c) in X0 - T and d in cand(c):
-      strike(c, d))
+      (|T| > 0 or (forall L in rows: exists c in cells(L): d in cand(c)))
+      and (forall L in Y0 - Y, c in cells(L) where x(c) in X0 - T and d in cand(c): strike(c, d))

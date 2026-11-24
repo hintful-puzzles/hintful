@@ -168,13 +168,6 @@ const BOUNDED_OTHERWISE: Record<string, readonly string[]> = {
   "games/sixteen/state.ts › newDesc": [
     "rejection sampling over moves: only undoing or over-repeating the last line is refused",
   ],
-  "games/solo/generator.ts › genKillerCages": [
-    "each pass steps past a block or merges one away",
-  ],
-  "games/solo/generator.ts › mergeSomeCages": ["uses up a candidate pair each pass"],
-  "games/solo/generator.ts › newSoloDesc": [
-    "each pass merges cages or leaves, and misses count `ntries` to 50",
-  ],
   "games/tracks/generator.ts › spreadOnes": [
     "each bend leaves one line fewer with a clue of 1, or it stops",
   ],

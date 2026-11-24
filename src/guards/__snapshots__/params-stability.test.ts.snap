@@ -765,8 +765,8 @@ bump:h  full=10x13"
 `;
 
 exports[`encoded params are byte-stable > solo 1`] = `
-"default  full=3x3
-preset:Standard/Standard: 2x3 Easy  full=2x3
+"default  full=3x3dt  brief=3x3
+preset:Standard/Standard: 2x3 Easy  full=2x3dt  brief=2x3
 preset:Standard/Standard: 2x3 Normal  full=2x3db  brief=2x3
 preset:Standard/Standard: 2x3 Tricky  full=2x3di  brief=2x3
 preset:Standard/Standard: 3x3 Normal  full=3x3db  brief=3x3
@@ -774,20 +774,19 @@ preset:Standard/Standard: 3x3 Tricky  full=3x3di  brief=3x3
 preset:Standard/Standard: 3x3 Hard  full=3x3da  brief=3x3
 preset:Standard/Standard: 3x3 Extreme  full=3x3de  brief=3x3
 preset:Standard/Standard: 3x3 Unreasonable  full=3x3du  brief=3x3
-preset:Standard/Standard: 3x3 X Normal  full=3x3xdb  brief=3x3x
-preset:Standard/Standard: 3x3 Killer Easy  full=3x3ka  brief=3x3k
-preset:Jigsaw/Jigsaw: 9x9 Easy  full=9j
+preset:Standard/Standard: 3x3 Normal, X  full=3x3xdb  brief=3x3x
+preset:Standard/Standard: 3x3 Easy, Killer  full=3x3kdt  brief=3x3k
+preset:Jigsaw/Jigsaw: 9x9 Easy  full=9jdt  brief=9j
 preset:Jigsaw/Jigsaw: 9x9 Normal  full=9jdb  brief=9j
 preset:Jigsaw/Jigsaw: 9x9 Tricky  full=9jdi  brief=9j
 preset:Jigsaw/Jigsaw: 9x9 Hard  full=9jda  brief=9j
 preset:Jigsaw/Jigsaw: 9x9 Extreme  full=9jde  brief=9j
 preset:Jigsaw/Jigsaw: 9x9 Unreasonable  full=9jdu  brief=9j
-bump:c  full=4x3
-bump:r  full=3x4
-bump:symm  full=3x3r4  brief=3x3
-bump:kdiff  full=3x3
-flip:xtype  full=3x3x
-flip:killer  full=3x3k"
+bump:w  full=3x3dt  brief=3x3
+bump:h  full=3x3dt  brief=3x3
+bump:options.symmetry  full=3x3r4dt  brief=3x3
+bump:sizes.across  full=4x3dt  brief=4x3
+bump:sizes.down  full=3x4dt  brief=3x4"
 `;
 
 exports[`encoded params are byte-stable > spokes 1`] = `

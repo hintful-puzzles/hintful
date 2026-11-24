@@ -42,6 +42,7 @@ import {
   paramSpaceOf,
   solveBoard,
   spaceOf,
+  walledParts,
 } from "./board.ts";
 import { type CandidateFillModule, candidateFill } from "./candidates.ts";
 import { cornerKindsOf, cornerRange } from "./corners.ts";
@@ -325,6 +326,7 @@ export function fillGame<C extends Clues<C> & object>(
     lineClues: module.lineClues,
     ...(module.lineLists === undefined ? {} : { lineLists: module.lineLists }),
     ...(module.slotClues === undefined ? {} : { slotClues: module.slotClues }),
+    walls: (b) => walledParts(module, b),
     ...(deal.partitions === undefined
       ? {}
       : {

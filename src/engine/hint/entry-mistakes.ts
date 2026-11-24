@@ -11,7 +11,7 @@
  * the hint must refuse on rather than narrate from.
  */
 
-import { type CandidateMove, type NoteEncoding, noteBitOf } from "./candidate-hint.ts";
+import { type NoteEncoding, noteBitOf } from "./candidate-hint.ts";
 
 export type EntryMistakeKind = "cell" | "note";
 
@@ -91,16 +91,3 @@ export function revealEntry<M>(
   }
   return null;
 }
-
-type SetMove = Extract<CandidateMove, { type: "set" }>;
-
-/** The Latin family's `set` move. Clearing is spelled twice because a game
- * whose plain clear keeps the notes under an entry wipes them with the pencil
- * clear; where the plain clear already wipes them, the second changes nothing. */
-export const setMoves: EntryMoves<SetMove> = {
-  clear: (x, y) => [
-    { type: "set", x, y, n: 0, pencil: false },
-    { type: "set", x, y, n: 0, pencil: true },
-  ],
-  place: (x, y, n) => ({ type: "set", x, y, n, pencil: false }),
-};

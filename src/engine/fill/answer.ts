@@ -66,7 +66,10 @@ export interface AnswerReading<C> {
    * the one between cells `a` and `z` as one character, a space for none:
    * printed in place of the wall between them. */
   readonly gap?: (board: FillBoard<C>, a: number, z: number) => string;
-  /** The dealt partition, printed as walls between its parts. */
+  /** Each cell's part of the partition printed as walls between its parts
+   * (`walledParts`), as the board draws it. */
+  readonly walls?: (board: FillBoard<C>) => ArrayLike<number> | null;
+  /** The dealt partition whose parts hold the part clues. */
   readonly partition?: keyof C;
   /** The clue kinds at the partition's parts, each printed after the row
    * of its part's first cell as its number and its sign (`play.signs`). */
@@ -272,7 +275,9 @@ export function rulesOf<C>(module: FillModule<C>): RulesOf<FillBoard<C>> {
     { units, violations, isAnswer },
     {
       grid: (b) => washedValues(module, b),
-      size: (b) => [b.w, b.h],
+      // The board's own space: the units its variations have, and its
+      // blocks, cut or dealt.
+      space: (b) => spaceOf(module, b),
       deals: (b) => [b.dealt, b.variations] as const,
     },
   );
@@ -445,12 +450,9 @@ function gridFormat<C extends Clues<C>>(
     }
     return "   ";
   };
-  // A dealt partition's walls alone, where there is one: each cell's part,
+  // A walled partition's walls alone, where there is one: each cell's part,
   // `-1` off the grid, and a line only between two that differ.
-  const parts =
-    reading.partition === undefined
-      ? null
-      : ((dealt[reading.partition] as Partition | undefined)?.of ?? null);
+  const parts = reading.walls?.(board) ?? null;
   const part = (x: number, y: number): number =>
     x < 0 || y < 0 || x >= w || y >= h ? -1 : (parts?.[y * w + x] ?? 0);
   // Between two cells of a gapped board, its gap's clue in place of a wall.

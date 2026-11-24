@@ -243,6 +243,24 @@ export function spaceOf<C>(module: FillModule<C>, b: SpaceOf): GridSpace {
   return describedSpace(units, b.w, b.h, blocks(bw, bh));
 }
 
+/** Each cell's part of the partition a board is walled by: the one among
+ * its units where it has one (a Sudoku's blocks, cut or dealt), else the
+ * first it deals; null where it has neither, or the partition is one a
+ * variation deals and the board is without it. */
+export function walledParts<C>(
+  module: FillModule<C>,
+  b: SpaceOf,
+): ArrayLike<number> | null {
+  const dealt = b.dealt as Readonly<Record<string, unknown>>;
+  const name = module.boxes?.name ?? module.deal?.partitions?.[0];
+  if (name === undefined) return null;
+  const parts = dealt[name] as Partition | undefined;
+  if (parts !== undefined) return parts.of;
+  if (module.boxes === undefined) return null;
+  const sp = spaceOf(module, b);
+  return Int32Array.from(sp.cells, (c) => sp.boxes.indexOf(sp.boxOf[c]));
+}
+
 /** The space a board of the params `p` is read on, before it is dealt. */
 export const paramSpaceOf = <C>(
   module: FillModule<C>,

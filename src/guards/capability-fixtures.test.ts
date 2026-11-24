@@ -38,12 +38,7 @@ const FIXTURES = Object.entries(fixtureTexts).map(([key, text]) => ({
 
 /** The capabilities each fixture does not cover yet, while a born game names
  * them. Each leaves as a fixture names it. */
-const NO_FIXTURE_YET: readonly string[] = [
-  // No fixture's lowest tier finishes a board without its givens (flanking's
-  // and ordering's were tried); `slots.test.ts` runs the deal on flanking's
-  // Normal through a deal of its own.
-  "deal.hideWhole",
-];
+const NO_FIXTURE_YET: readonly string[] = [];
 
 type Json = Readonly<Record<string, unknown>>;
 

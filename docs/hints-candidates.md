@@ -157,8 +157,9 @@ region are declared".
   game's own solver already tests ("A candidate game's regions may come from
   a partition").
 
-Exemplars: [`solo/index.ts`](../src/games/solo/index.ts)'s `regionsOf` (row,
-column, block, diagonals, then the Killer cage as `holdsEvery: false`);
+Exemplars: [`fill/candidates.ts`](../src/engine/fill/candidates.ts)'s
+`regionsOf` (a described board's units, a block's `holdsEvery` read off its
+cells' domains);
 `romeRegions` in [`rome/state.ts`](../src/games/rome/state.ts) (areas from a
 `Dsf`, `holdsEvery` only at four squares).
 
@@ -205,9 +206,10 @@ citation repeats names, not regions".
   one kind of region says "this area" and carries no name; a game on the
   preset has a constant phrase.
 
-Exemplar: `regionsOf` and `noRepeatRegionNames` in
-[`solo/index.ts`](../src/games/solo/index.ts), guarded by
-`solo-hint.test.ts` "solo no-repeat region names".
+Exemplar: the walk's `steps:` in
+[`solo.description.yaml`](../src/games/solo/solo.description.yaml), a
+wording for each set of the modifiers that add a region (X's diagonals,
+Killer's cages).
 
 ## A strike's words are a premise
 

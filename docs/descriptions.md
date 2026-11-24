@@ -53,7 +53,7 @@ itself is § "The file". A game whose techniques are stated:
    reads now (§ "Checking a technique sound").
 4. **Builds its ladder on the board's clues** with
    `describedLadder(module, dealt)`, or `latinLadder` where it places the
-   Latin library ([`solo/solver.ts`](../src/games/solo/solver.ts)).
+   Latin library ([`group/solver.ts`](../src/games/group/solver.ts)).
    The engine runs every technique on `dealt` where the module's
    `techniques` says it reads it, on placing and on striking too; a module
    none of whose techniques reads the clues takes `null`. The game names a
@@ -68,8 +68,8 @@ itself is § "The file". A game whose techniques are stated:
    that the grid is not measured in (Salad's `nums`, Seismic's `mode`).
    A kind given on the squares where the board's array says so is
    `cluesWhere(array, given, value?)`;
-   [`filling/state.ts`](../src/games/filling/state.ts) deals clues so and
-   [`solo/state.ts`](../src/games/solo/state.ts) cages. The board goes on
+   [`filling/state.ts`](../src/games/filling/state.ts) deals clues so. The
+   board goes on
    the space the module's `units` declare, `describedSpace(units, w, h,
    parts)` (`latinSpace(o)` is a Latin square's), asked for where it is
    needed: the runtime keeps every space it builds, so a game keeps none
@@ -433,7 +433,11 @@ research tools all read through it; the app never does.
   every square's notes below that line (`caging` is the fixture). A
   partition a variation adds (`add: { space: { regions: { cage: dealt } }
   }`, Solo's Killer) is divided, written, read and drawn, and its parts'
-  clues derived, only on a board with it on (`killing` is the fixture). The
+  clues derived, only on a board with it on (`killing` is the fixture), and
+  a technique it adds is a rung of the hint only there. The live errors,
+  the answer check and the text format read the board's own space: its
+  variations' units and its blocks, cut or dealt, the text walling the
+  partition the board draws (`walledParts`). The
   `domino` painter draws two alike pieces touching only each other as one.
   `deal.hide` then takes a kind's clues off
   at the lowest tier, and then at the asked tier: first every clue no
@@ -1938,7 +1942,9 @@ count of the leg's own ring, which no slot says without marking the words.
 `{a term}` says a value with its article ("an A") and `{numeral term}` a plain
 count where `{term}` is a value the board draws another way (a letter). A
 clue's number is a count, not a value: Keen's `{numeral sum}`, as a bare
-`{sum}` of 16 reads "g" (a value past `z`'s throws).
+`{sum}` of 16 reads "g" (a value past `z`'s throws). On a fill board `{unit}`
+names the board's unit holding the cells: row, column, the blocks' name, or
+diagonal.
 `{derived outline: words}` is a reference whose words claim what the board
 does not show, which `Narration.depth` counts; `{derived each outline: …}`
 claims it of each element apart, a fact apiece (Rect's clues a rectangle

@@ -153,6 +153,19 @@ function sameCode(before: string, after: string): boolean {
   return a.length === b.length && a.every((t, i) => t === b[i]);
 }
 
+/** `paths` and each description's compiled module. The module is generated
+ * and never in a diff or the index, and the code reaches the description only
+ * through it: a description is its module. */
+function withCompiled(paths: readonly string[]): string[] {
+  return [
+    ...paths,
+    ...paths
+      .filter((p) => p.startsWith("src/") && p.endsWith(".description.yaml"))
+      .map(compiledPath)
+      .filter((p) => existsSync(path.join(ROOT, p))),
+  ];
+}
+
 /**
  * The change a plan is made for: the staged one, or with `since` everything
  * between that commit and `HEAD`. A deleted file is listed by its path and a
@@ -163,16 +176,7 @@ function changeOf(since: string | null): Change {
   const listed = git(["diff", "--name-only", "--no-renames", ...range])
     .split("\n")
     .filter(Boolean);
-  // A description's module is generated and never in a diff, and the code
-  // reaches the description only through it: an edited description is an
-  // edited module.
-  const paths = [
-    ...listed,
-    ...listed
-      .filter((p) => p.startsWith("src/") && p.endsWith(".description.yaml"))
-      .map(compiledPath)
-      .filter((p) => existsSync(path.join(ROOT, p))),
-  ];
+  const paths = withCompiled(listed);
   const prose = new Set(
     paths.filter((p) => {
       if (!p.endsWith(".ts") || p.endsWith(".test.ts") || gameOf(p) !== null)
@@ -343,17 +347,19 @@ function pushLines(change: Change, graph: Graph): string[] {
 /** The paths that are one game's, tracked or not: its directory, its
  * description and help page among them, and its icons. */
 function gamePaths(id: string): string[] {
-  return git([
-    "ls-files",
-    "--cached",
-    "--others",
-    "--exclude-standard",
-    "--",
-    `src/games/${id}/`,
-    `src/assets/icons/${id}-*`,
-  ])
-    .split("\n")
-    .filter(Boolean);
+  return withCompiled(
+    git([
+      "ls-files",
+      "--cached",
+      "--others",
+      "--exclude-standard",
+      "--",
+      `src/games/${id}/`,
+      `src/assets/icons/${id}-*`,
+    ])
+      .split("\n")
+      .filter(Boolean),
+  );
 }
 
 /**
@@ -407,6 +413,12 @@ function verify(): void {
     game.narrow.includes("src/guards/hint-resume.test.ts"),
     "a Pearl-only push selects hint-resume through the registry",
   );
+  // A born game's directory holds no code: its verdict reached the registry
+  // only through the compiled module, and walked 19 files without it.
+  expect(
+    gameTestFiles("keen").includes("src/guards/capability-surface.test.ts"),
+    "a born game's verdict reaches the registry's readers",
+  );
 
   const midend = push(["src/engine/midend/midend.ts"]);
   expect(
@@ -428,8 +440,8 @@ function verify(): void {
     "engine-source.ts's glob puts hint-em-dash in whole for an engine module",
   );
   expect(
-    engine.scope.includes("solo") && !engine.scope.includes("pearl"),
-    "latin-hint.ts reaches Solo and not Pearl",
+    engine.scope.includes("salad") && !engine.scope.includes("pearl"),
+    "latin-hint.ts reaches Salad and not Pearl",
   );
   // The other direction: the saving itself. A broad glob added to a helper
   // every hint guard imports (`hint-games.ts`, `enrollment.ts`) would make

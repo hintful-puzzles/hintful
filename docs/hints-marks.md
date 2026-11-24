@@ -174,7 +174,7 @@ The parts are in [`engine/render/hint-mark.ts`](../src/engine/render/hint-mark.t
 exports' comments say what each owns, and `expectRing` in
 [`engine/testing/mark-shape.ts`](../src/engine/testing/mark-shape.ts)
 asserts a ring on a recorded frame. Exemplars:
-[`solo/render.ts`](../src/games/solo/render.ts) for a gutter between cells
+[`fill/render.ts`](../src/engine/fill/render.ts) for a gutter between cells
 and a clue in a corner,
 [`skeleton/grid/render.ts`](../src/skeleton/grid/render.ts) for a number in
 the middle.
@@ -290,7 +290,7 @@ erase and repaint undo it.
   Erase before the tiles, because no color painted after them is right
   everywhere a band reaches. The erase runs when the marks' shape changes, so
   the game keys nothing on it. Exemplar:
-  [`solo/render.ts`](../src/games/solo/render.ts).
+  [`fill/render.ts`](../src/engine/fill/render.ts).
 - **Inside (`outer = 0`)**, where cells tile exactly and draw their own
   outline, or where the gap between cells is what walls are made of. Nothing
   needs erasing: the cell whose overlay changed repaints and takes its mark

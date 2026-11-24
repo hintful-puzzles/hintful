@@ -180,6 +180,8 @@ function byValue(marks: readonly Mark[]): Mark[][] {
 interface OwnReason {
   readonly kind: string;
   readonly premise?: Narration;
+  /** Why the strike's sentence runs long, as its wording says (`long:`). */
+  readonly long?: string;
   readonly say?: (later: boolean) => Sentence;
   readonly reads?: readonly Point[];
 }
@@ -227,6 +229,19 @@ export type CandidateFillHooks<C, Ui> = Pick<
  * past it; `uiOf` is the `Ui` a fresh game starts with, whose reading a hint
  * asked for with none is walked under.
  */
+/** A stated clause's `{unit}`: the board's unit holding every cell of
+ * `cells`, by its noun, a row and a column before a box (`box`, the
+ * partition's name) and a diagonal. */
+function unitName(sp: GridSpace, box: string, cells: readonly number[]): string {
+  const holds = (lines: readonly number[]): boolean =>
+    lines.some((L) => cells.every((c) => sp.lineCells[L].includes(c)));
+  if (holds(sp.rows)) return "row";
+  if (holds(sp.cols)) return "column";
+  if (holds(sp.boxes)) return box;
+  if (holds(sp.diagonals)) return "diagonal";
+  throw new Error("stated clause: {unit} names cells no one unit holds");
+}
+
 export function candidateFill<C, Ui extends CandidatePrefsUi>(
   module: CandidateFillModule<C>,
   tierOf: (board: FillBoard<C>) => number,
@@ -300,9 +315,9 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
   function ownLegs(
     id: string,
     f: LadderFiring,
-    w: number,
-    h: number,
+    sp: GridSpace,
   ): Firing<FillMove, CandidateFillHint, Reason> {
+    const { w, h } = sp;
     const { says } = f.reasons[0] as Said<unknown, StatedSays>;
     const kind = says.arm ?? module.techniques[id]?.rung ?? id;
     const stated = module.STATED?.[says.arm === undefined ? id : `${id}.${says.arm}`];
@@ -339,6 +354,12 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           value: numeral,
           noun: vocab.cell,
           valueNoun: vocab.noun,
+          unit: (els: readonly Point[]) =>
+            unitName(
+              sp,
+              module.boxes?.name ?? "area",
+              els.map((p) => p.y * w + p.x),
+            ),
         },
       };
     };
@@ -378,6 +399,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
         reason: {
           kind,
           premise: look,
+          ...(clauses.long === undefined ? {} : { long: clauses.long }),
           ...(reads === undefined ? {} : { reads }),
         },
       };
@@ -461,6 +483,7 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
           throw new Error(`${reason.kind} places, and strikes nothing`);
         return {
           premise: reason.premise,
+          ...(reason.long === undefined ? {} : { long: reason.long }),
           ...(reason.reads === undefined ? {} : { reads: reason.reads }),
         };
       },
@@ -484,14 +507,17 @@ export function candidateFill<C, Ui extends CandidatePrefsUi>(
       // clues, which a player reads before a set or a wing. One that places
       // reading no notes is offered before they are set up.
       rungs: [
-        ...own.map((id) =>
-          techniqueRung<FillMove, CandidateFillHint, Reason>(
-            on,
-            id,
-            (f) => ownLegs(id, f, w, board.h),
-            { leads: module.techniques[id]?.leads === true },
+        // A technique a variation adds is in the ladder of a board with it on.
+        ...own
+          .filter((id) => on.ladder.entries.some((e) => e.id === id))
+          .map((id) =>
+            techniqueRung<FillMove, CandidateFillHint, Reason>(
+              on,
+              id,
+              (f) => ownLegs(id, f, sp),
+              { leads: module.techniques[id]?.leads === true },
+            ),
           ),
-        ),
         ...latinStrikeRungs<FillMove, CandidateFillHint, Reason, CellMarks>(
           on,
           w,

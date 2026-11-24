@@ -135,7 +135,7 @@ The shapes that are not the plain one:
 | Read this for | Where |
 | --- | --- |
 | a technique that, restarted, visits only what a firing reached, so the restart costs little | `CellMarks.visit`, and [`descriptions.md`](./descriptions.md) § "What a technique compiles to" |
-| two scales, each capped and graded apart | [`solo/solver.ts`](../src/games/solo/solver.ts) `SolverUsage.ladder` |
+| two scales, each capped and graded apart | `capsOf`, in [`engine/fill/board.ts`](../src/engine/fill/board.ts), and `scales:` in [`solo.description.yaml`](../src/games/solo/solo.description.yaml) |
 | a Search no description states, after the compiled techniques | `withSearch`, in [`engine/solve/latin.ts`](../src/engine/solve/latin.ts) |
 | a hint rung offering a technique's firing only where it serves another | `keptRung`, in [`engine/hint/glance.ts`](../src/engine/hint/glance.ts) |
 | a count kept from the firings tally rather than a wrapped rung | [`undead/solver.ts`](../src/games/undead/solver.ts) `solveDeductive` |
@@ -1316,8 +1316,7 @@ the boards a seed deals move").
   definition says what it does.** Tidying it moves the boards, which is
   allowed for a player-visible reason and is no refactor. Such a quirk may be a deliberate skip, verbatim dead code, the
   release build's semantics where a diagnostics `#ifdef` had early-outs, or a
-  contradiction the shipped build does not report. Exemplars: `mergeSomeCages`
-  in [`solo/generator.ts`](../src/games/solo/generator.ts) and `fillSquare` in
+  contradiction the shipped build does not report. Exemplar: `fillSquare` in
   [`slant/solver.ts`](../src/games/slant/solver.ts).
 - **The truthiness trap.** Grep a solver-gated generator for `if (solve(`
   and `if (!solve(`. A solver with a multi-valued verdict makes bare

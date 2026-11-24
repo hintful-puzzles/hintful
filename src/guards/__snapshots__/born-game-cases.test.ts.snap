@@ -173,6 +173,25 @@ exports[`singles: pinned hint positions > says, at each pin 1`] = `
 }
 `;
 
+exports[`solo: pinned hint positions > says, at each pin 1`] = `
+{
+  "cageMinMax": "This cage's open cells make 7; the others leave no room for 7, 8 or 9, so this cell can only be 1, 2, 3, 4, 5 or 6.",
+  "cageSingle": "This cage's other cells leave 9, so its last cell must be 9.",
+  "cageSums": "No set of different numbers that makes 19 in this cage's open cells has 1, so this cell can only be 2, 3, 4, 5, 6, 7, 8 or 9.",
+  "clean": "Now clear the easy ones: cross out any number already in its cell's row, column or block.",
+  "dup": "The 6 just placed can't repeat in its row, column or block, so the 6 must go from the other cells.",
+  "hiddenSingle": "No other cell in this block can be 1, so this cell must be 1.",
+  "intersect": "Every cell of this block that can still take 1 lies in one row, so this cell must be 3.",
+  "note": "Only 2, 3 and 9 aren't already in this cell's row, column or block, so pencil them in.",
+  "regionsFull": "Every other number is already in this cell's row, column or block, so it can only be 2.",
+  "set": "The outlined cells already account for 1 and 9 between them, so this cell can only be 5 or 7.",
+  "setColumns": "These 2 columns fit 4 only in the outlined cells, taking both rows' 4, so this cell can only be 2 or 6.",
+  "setRows": "These 2 rows fit 2 only in the outlined cells, taking both columns' 2, so this cell can only be 4, 7 or 9.",
+  "single": "Every other number has been ruled out in this cell, so it can only be 2.",
+  "wing": "Whatever goes in the middle cell, it or another outlined cell in a line or block with this cell must have 9, so the 9 must go.",
+}
+`;
+
 exports[`starbattle: pinned hint positions > says, at each pin 1`] = `
 {
   "around": "No star may touch the outlined star, even diagonally, so each ringed square must be empty.",

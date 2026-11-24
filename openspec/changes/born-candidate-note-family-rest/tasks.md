@@ -123,19 +123,38 @@ the predecessor's were, in a commit before the flip.
         and `fitting`'s, which claim Solo's form, now write it); `hideWhole`
         takes `with:` a variation, its tier optional; a part's clue with no
         sign is drawn as its number; a modifier takes `bounds`.
-  - [ ] 2.1f The flip. The draft (`solo-born-draft.yaml` here, its game
-        `soloborn`, compiled as a fixture under
-        `src/engine/testing/fixtures/soloborn/` while it is worked on, and
-        removed at the flip) compiles and deals every board, reads and
-        writes upstream's four test IDs byte for byte, Killer with no
-        given. Still to do: the killer techniques under `Killer`'s `add`
-        and the walk's steps with X and Killer flags (in the draft); the
-        `says` of Solo's own techniques (drafted: `digitSet` became arms
-        `setRows`/`setColumns`, each a rung, since an arm is a rung on a
-        board of notes); soundness for each; tiers above Easy on boards of
-        4 numbers or fewer refused (a 4 Jigsaw loses Normal and Tricky,
-        a 2x2 Killer its tiers above Easy: list them); the tests to
-        `cases.yaml`; run in the app.
+  - [x] 2.1f The flip: `solo.description.yaml` is the draft, every
+        technique checked sound, its tests `solo.cases.yaml` (upstream's
+        IDs read and written back, the refusals the old tests held, the
+        live errors, a pin for every rung). Run in the app: a deal, input,
+        a hint walk solved to the end, live errors, X, Killer and Jigsaw,
+        dark mode. What the flip added to the engine, each for any game:
+        a partition or technique a variation adds is absent, undrawn and
+        no rung on a board without it (a Standard board crashed drawing
+        Killer's cages, and its hint asked for Killer's rungs); the live
+        errors and the answer check read the board's own space, its
+        variations' units and its blocks (they read the module's units on
+        a bare grid: an X diagonal broke a Standard board, and a repeat in
+        a cut block broke nothing); the text format walls the partition
+        the board draws (`walledParts`, shared with the renderer); a
+        stated `{unit}` names the board's unit holding the cells; a
+        strike's `long:` reaches its step, as a placement's did (the walk
+        dropped it). What a
+        player sees differ: saves break (pre-approved); the full params
+        write Easy's `dt`; `kx`, an order upstream never writes, is not
+        read; two runs of blanks in a row read as one, as upstream reads
+        them, where the port refused them; the blocks are tinted with the
+        region fills and the cages dashed in ink inside them; a label
+        reads "3x3 Normal, X" for "3x3 X Normal"; the hint's words are
+        the description's `says` and the walk's `steps`; a 4 Jigsaw has
+        no Normal or Tricky and a 2x2 Killer nothing above Easy, as
+        upstream's generator deals none; the text of a Killer board
+        prints its blocks and each row's totals, not its cages; the
+        Killer preset's full form is `3x3kdt`, the default symmetry, where
+        it was `3x3ka` (Killer hides every given, so no board differs).
+        Found on the way: `npm run game` walked a born game's directory,
+        YAML alone, and so ran 19 test files where the commit runs some
+        130; it now reaches the compiled module, as the commit does.
 - [ ] 2.2 ABCD born: the number size, letters, the walk with no region, a
       clue per value derived, written and drawn in a margin, corner
       crosses, `D` and `R`.

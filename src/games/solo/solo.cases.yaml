@@ -1,0 +1,515 @@
+# Solo's cases, which the engine's tests read
+# (src/engine/testing/game-cases.ts): a position for every rung its hint
+# takes in each mode, upstream's IDs read and written back, its params, and
+# the rules broken.
+
+hint:
+  seeds: 3
+  params:
+    - {w: 6, h: 6, diff: 0, sizes: {across: 2, down: 3}}
+    - {w: 6, h: 6, diff: 1, sizes: {across: 2, down: 3}}
+    - {w: 6, h: 6, diff: 2, sizes: {across: 2, down: 3}}
+    - {w: 9, h: 9, diff: 1, sizes: {across: 3, down: 3}}
+    - {w: 9, h: 9, diff: 3, sizes: {across: 3, down: 3}}
+    - {w: 9, h: 9, diff: 4, sizes: {across: 3, down: 3}}
+    - {w: 9, h: 9, diff: 1, sizes: {across: 3, down: 3}, variations: [X]}
+    - {w: 9, h: 9, diff: 0, sizes: {across: 3, down: 3}, variations: [Killer]}
+    - {w: 9, h: 9, diff: 1, sizes: {across: 9, down: 1}, variations: [Jigsaw]}
+  unreached:
+    populate: >-
+      spoken under the reading that pencils every candidate in first, and Solo's hint starts on the one that pencils in only as needed (play.hintNotes)
+  pins:
+    # Held on 189 of 1851 positions walked.
+    clean:
+      id: "3x3da:a5a8c2b2_8a7c6_9a6b5_4g4_2c3b5b8c4_1g9_7b8a2_7c6a9_4b6c8a1a"
+      moves:
+        - {type: set, x: 5, y: 0, n: 6, pencil: false, autoElim: false}
+        - {type: set, x: 8, y: 2, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 8, y: 4, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 6, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 7, y: 6, n: 6, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 6, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 3, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 7, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 7, n: 1, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 3, y: 3, n: 3}, {x: 3, y: 3, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 3, n: 3}, {x: 4, y: 3, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 5, n: 2}, {x: 4, y: 5, n: 3}, {x: 4, y: 5, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 5, n: 2}, {x: 5, y: 5, n: 3}, {x: 5, y: 5, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 7, n: 2}, {x: 3, y: 7, n: 5}]}
+        - {type: set, x: 5, y: 7, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 8, y: 7, n: 3, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 7, n: 5, pencil: false, autoElim: false}
+    # Held on 536 of 1851 positions walked.
+    note:
+      id: "3x3de:d3a2e4a2_9b4_8c9a3a5e1a6a4a6a1a5a7a1e2a3a7c1_8b5_1a3e7a8d"
+      moves:
+        - {type: set, x: 3, y: 2, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 0, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 7, y: 1, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 5, n: 6, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 6, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 7, n: 8, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 1, n: 1}, {x: 0, y: 1, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 8, n: 3}, {x: 8, y: 8, n: 4}, {x: 8, y: 8, n: 9}]}
+    # Held on 1134 of 1851 positions walked.
+    dup: "2x3di:d4d6a2a5a2d4a6a3a1d2d"
+    # Held on 1132 of 1851 positions walked.
+    single:
+      id: "3x3de:d3a2e4a2_9b4_8c9a3a5e1a6a4a6a1a5a7a1e2a3a7c1_8b5_1a3e7a8d"
+      moves:
+        - {type: set, x: 3, y: 2, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 0, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 7, y: 1, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 5, n: 6, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 6, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 7, n: 8, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 1, n: 1}, {x: 0, y: 1, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 8, n: 3}, {x: 8, y: 8, n: 4}, {x: 8, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 2}, {x: 0, y: 4, n: 3}, {x: 0, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 4, n: 2}, {x: 4, y: 4, n: 7}, {x: 4, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 6, n: 2}, {x: 0, y: 6, n: 6}, {x: 0, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 6, n: 2}, {x: 4, y: 6, n: 5}, {x: 4, y: 6, n: 6}, {x: 4, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 3, n: 4}, {x: 4, y: 3, n: 7}, {x: 4, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 7, n: 4}, {x: 4, y: 7, n: 6}, {x: 4, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 8, n: 1}, {x: 0, y: 8, n: 6}, {x: 0, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 0, n: 6}, {x: 2, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 0, n: 5}, {x: 1, y: 0, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 1, n: 5}, {x: 1, y: 1, n: 7}]}
+        - {type: set, x: 1, y: 8, n: 1, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 8, n: 1}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 6, n: 5}, {x: 5, y: 6, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 6, n: 5}, {x: 6, y: 6, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 6, n: 6}, {x: 4, y: 6, n: 5}, {x: 4, y: 6, n: 6}]}
+        - {type: set, x: 4, y: 5, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 8, n: 6, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 3, y: 8, n: 2}, {x: 3, y: 8, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 3, n: 2}, {x: 3, y: 3, n: 3}, {x: 3, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 3, n: 2}, {x: 1, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 5, n: 3}, {x: 3, y: 5, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 3, n: 4}, {x: 5, y: 3, n: 7}, {x: 5, y: 3, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 5, n: 4}, {x: 5, y: 5, n: 8}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 4, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 3, n: 4}, {x: 7, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 5, n: 4}, {x: 7, y: 5, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 4, n: 3}, {x: 8, y: 4, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 7, n: 2}, {x: 7, y: 7, n: 4}, {x: 7, y: 7, n: 6}, {x: 7, y: 7, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 8, n: 2}, {x: 7, y: 8, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 4, n: 3}, {x: 2, y: 4, n: 8}, {x: 2, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 5, n: 3}, {x: 6, y: 5, n: 8}]}
+        - {type: pencilStrike, marks: [{x: 7, y: 7, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 7, n: 7}, {x: 8, y: 7, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 7, y: 8, n: 4}]}
+    # Held on 1764 of 1851 positions walked.
+    regionsFull: "2x3dt:d4_3d5a5b6a4_3a6b1a1d2_6d"
+    # Held on 1393 of 1851 positions walked.
+    hiddenSingle: "2x3dt:2c6c1f5a6_3a5f4c4c1"
+    # Held on 169 of 1851 positions walked.
+    set:
+      id: "3x3de:d3a2e4a2_9b4_8c9a3a5e1a6a4a6a1a5a7a1e2a3a7c1_8b5_1a3e7a8d"
+      moves:
+        - {type: set, x: 3, y: 2, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 0, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 7, y: 1, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 5, n: 6, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 6, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 7, n: 8, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 1, n: 1}, {x: 0, y: 1, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 8, n: 3}, {x: 8, y: 8, n: 4}, {x: 8, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 2}, {x: 0, y: 4, n: 3}, {x: 0, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 4, n: 2}, {x: 4, y: 4, n: 7}, {x: 4, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 6, n: 2}, {x: 0, y: 6, n: 6}, {x: 0, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 6, n: 2}, {x: 4, y: 6, n: 5}, {x: 4, y: 6, n: 6}, {x: 4, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 3, n: 4}, {x: 4, y: 3, n: 7}, {x: 4, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 7, n: 4}, {x: 4, y: 7, n: 6}, {x: 4, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 8, n: 1}, {x: 0, y: 8, n: 6}, {x: 0, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 0, n: 6}, {x: 2, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 6}]}
+    # Held on 105 of 1851 positions walked.
+    wing:
+      id: "3x3de:d3a2e4a2_9b4_8c9a3a5e1a6a4a6a1a5a7a1e2a3a7c1_8b5_1a3e7a8d"
+      moves:
+        - {type: set, x: 3, y: 2, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 0, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 7, y: 1, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 5, n: 6, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 6, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 7, n: 8, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 1, n: 1}, {x: 0, y: 1, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 8, n: 3}, {x: 8, y: 8, n: 4}, {x: 8, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 2}, {x: 0, y: 4, n: 3}, {x: 0, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 4, n: 2}, {x: 4, y: 4, n: 7}, {x: 4, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 6, n: 2}, {x: 0, y: 6, n: 6}, {x: 0, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 6, n: 2}, {x: 4, y: 6, n: 5}, {x: 4, y: 6, n: 6}, {x: 4, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 3, n: 4}, {x: 4, y: 3, n: 7}, {x: 4, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 7, n: 4}, {x: 4, y: 7, n: 6}, {x: 4, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 8, n: 1}, {x: 0, y: 8, n: 6}, {x: 0, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 0, n: 6}, {x: 2, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 0, n: 5}, {x: 1, y: 0, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 1, n: 5}, {x: 1, y: 1, n: 7}]}
+        - {type: set, x: 1, y: 8, n: 1, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 0, y: 8, n: 1}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 6, n: 5}, {x: 5, y: 6, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 6, n: 5}, {x: 6, y: 6, n: 6}]}
+        - {type: pencilStrike, marks: [{x: 0, y: 6, n: 6}, {x: 4, y: 6, n: 5}, {x: 4, y: 6, n: 6}]}
+        - {type: set, x: 4, y: 5, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 8, n: 6, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 3, y: 8, n: 2}, {x: 3, y: 8, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 3, n: 2}, {x: 3, y: 3, n: 3}, {x: 3, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 3, n: 2}, {x: 1, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 5, n: 3}, {x: 3, y: 5, n: 9}]}
+    # Held on 223 of 1851 positions walked.
+    intersect:
+      id: "2x3di:4a2e6d2_5b6_6b5_2d6e2a1"
+      moves:
+        - {type: set, x: 4, y: 0, n: 6, pencil: false, autoElim: false}
+        - {type: set, x: 5, y: 1, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 4, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 5, n: 6, pencil: false, autoElim: false}
+    # Held on 21 of 1851 positions walked.
+    setRows:
+      id: "3x3de:d3a2e4a2_9b4_8c9a3a5e1a6a4a6a1a5a7a1e2a3a7c1_8b5_1a3e7a8d"
+      moves:
+        - {type: set, x: 3, y: 2, n: 5, pencil: false, autoElim: false}
+        - {type: set, x: 3, y: 0, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 7, y: 1, n: 8, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 2, n: 2, pencil: false, autoElim: false}
+        - {type: set, x: 1, y: 5, n: 6, pencil: false, autoElim: false}
+        - {type: set, x: 2, y: 6, n: 4, pencil: false, autoElim: false}
+        - {type: set, x: 0, y: 7, n: 8, pencil: false, autoElim: false}
+        - {type: pencilAdd, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 1, n: 1}, {x: 0, y: 1, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 8, n: 3}, {x: 8, y: 8, n: 4}, {x: 8, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 2}, {x: 0, y: 4, n: 3}, {x: 0, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 4, n: 2}, {x: 4, y: 4, n: 7}, {x: 4, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 6, n: 2}, {x: 0, y: 6, n: 6}, {x: 0, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 6, n: 2}, {x: 4, y: 6, n: 5}, {x: 4, y: 6, n: 6}, {x: 4, y: 6, n: 9}]}
+    # Held on 5 of 1851 positions walked.
+    setColumns:
+      id: "3x3de:c6b8c8_5a7f2b5a3_9_6b9a7a8c7c4c2a8a4b3_4_7a3b9f9a7_6c6b8c"
+      moves:
+        - {type: set, x: 8, y: 0, n: 7, pencil: false, autoElim: false}
+        - {type: set, x: 7, y: 0, n: 5, pencil: false, autoElim: false}
+    # Held on 703 of 1851 positions walked.
+    cageSingle:
+      id: "3x3kdt:zzzc,______a_____a____a___a_a______ba______a_________aa___ab_ab_aabaa_aaaaa___a_a___a_aa_aa_a__a_aa_aaaab,14_15_7_8_13_22_7a10g9c15_4a16_11a7_12b11c13a16a3_13d17a17a13_3_10_7b9a19c7_10_11c14a4c3a18c17b"
+      moves:
+        - {type: pencilAdd, marks: [{x: 2, y: 0, n: 1}, {x: 2, y: 0, n: 2}, {x: 2, y: 0, n: 3}, {x: 2, y: 0, n: 4}, {x: 2, y: 0, n: 5}, {x: 2, y: 0, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 4}, {x: 2, y: 1, n: 5}, {x: 2, y: 1, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 0, n: 1}, {x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 3}, {x: 3, y: 0, n: 4}, {x: 3, y: 0, n: 5}, {x: 3, y: 0, n: 6}, {x: 3, y: 0, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 1, n: 1}, {x: 3, y: 1, n: 2}, {x: 3, y: 1, n: 3}, {x: 3, y: 1, n: 4}, {x: 3, y: 1, n: 5}, {x: 3, y: 1, n: 6}, {x: 3, y: 1, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 0, n: 4}, {x: 4, y: 0, n: 5}, {x: 4, y: 0, n: 6}, {x: 4, y: 0, n: 7}, {x: 4, y: 0, n: 8}, {x: 4, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 1, n: 4}, {x: 4, y: 1, n: 5}, {x: 4, y: 1, n: 6}, {x: 4, y: 1, n: 7}, {x: 4, y: 1, n: 8}, {x: 4, y: 1, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 0, n: 4}, {x: 5, y: 0, n: 5}, {x: 5, y: 0, n: 6}, {x: 5, y: 0, n: 7}, {x: 5, y: 0, n: 8}, {x: 5, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 1, n: 4}, {x: 5, y: 1, n: 5}, {x: 5, y: 1, n: 6}, {x: 5, y: 1, n: 7}, {x: 5, y: 1, n: 8}, {x: 5, y: 1, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 1, n: 4}, {x: 6, y: 1, n: 5}, {x: 6, y: 1, n: 6}, {x: 6, y: 1, n: 7}, {x: 6, y: 1, n: 8}, {x: 6, y: 1, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 0, n: 1}, {x: 6, y: 0, n: 2}, {x: 6, y: 0, n: 3}, {x: 6, y: 0, n: 4}, {x: 6, y: 0, n: 5}, {x: 6, y: 0, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 0, n: 1}, {x: 7, y: 0, n: 2}, {x: 7, y: 0, n: 3}, {x: 7, y: 0, n: 4}, {x: 7, y: 0, n: 5}, {x: 7, y: 0, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 1, n: 1}, {x: 7, y: 1, n: 2}, {x: 7, y: 1, n: 3}, {x: 7, y: 1, n: 4}, {x: 7, y: 1, n: 5}, {x: 7, y: 1, n: 6}, {x: 7, y: 1, n: 7}, {x: 7, y: 1, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 2, n: 1}, {x: 7, y: 2, n: 2}, {x: 7, y: 2, n: 3}, {x: 7, y: 2, n: 4}, {x: 7, y: 2, n: 5}, {x: 7, y: 2, n: 6}, {x: 7, y: 2, n: 7}, {x: 7, y: 2, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 2, n: 6}, {x: 2, y: 2, n: 7}, {x: 2, y: 2, n: 8}, {x: 2, y: 2, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 3, n: 6}, {x: 2, y: 3, n: 7}, {x: 2, y: 3, n: 8}, {x: 2, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 2, n: 1}, {x: 3, y: 2, n: 2}, {x: 3, y: 2, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 2, n: 1}, {x: 4, y: 2, n: 2}, {x: 4, y: 2, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 2, n: 7}, {x: 5, y: 2, n: 8}, {x: 5, y: 2, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 3, n: 7}, {x: 5, y: 3, n: 8}, {x: 5, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 2, n: 2}, {x: 6, y: 2, n: 3}, {x: 6, y: 2, n: 4}, {x: 6, y: 2, n: 5}, {x: 6, y: 2, n: 6}, {x: 6, y: 2, n: 7}, {x: 6, y: 2, n: 8}, {x: 6, y: 2, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 3, n: 2}, {x: 6, y: 3, n: 3}, {x: 6, y: 3, n: 4}, {x: 6, y: 3, n: 5}, {x: 6, y: 3, n: 6}, {x: 6, y: 3, n: 7}, {x: 6, y: 3, n: 8}, {x: 6, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 2, n: 1}, {x: 8, y: 2, n: 2}, {x: 8, y: 2, n: 3}, {x: 8, y: 2, n: 4}, {x: 8, y: 2, n: 5}, {x: 8, y: 2, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 3, n: 1}, {x: 8, y: 3, n: 2}, {x: 8, y: 3, n: 3}, {x: 8, y: 3, n: 4}, {x: 8, y: 3, n: 5}, {x: 8, y: 3, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 3, n: 2}, {x: 3, y: 3, n: 3}, {x: 3, y: 3, n: 4}, {x: 3, y: 3, n: 5}, {x: 3, y: 3, n: 6}, {x: 3, y: 3, n: 7}, {x: 3, y: 3, n: 8}, {x: 3, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 3, n: 2}, {x: 4, y: 3, n: 3}, {x: 4, y: 3, n: 4}, {x: 4, y: 3, n: 5}, {x: 4, y: 3, n: 6}, {x: 4, y: 3, n: 7}, {x: 4, y: 3, n: 8}, {x: 4, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 7}, {x: 0, y: 4, n: 8}, {x: 0, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 5, n: 7}, {x: 0, y: 5, n: 8}, {x: 0, y: 5, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 4, n: 1}, {x: 2, y: 4, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 5, n: 1}, {x: 2, y: 5, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 4, n: 8}, {x: 8, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 5, n: 8}, {x: 8, y: 5, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 5, n: 8}, {x: 1, y: 5, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 6, n: 8}, {x: 1, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 5, n: 4}, {x: 3, y: 5, n: 5}, {x: 3, y: 5, n: 6}, {x: 3, y: 5, n: 7}, {x: 3, y: 5, n: 8}, {x: 3, y: 5, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 6, n: 4}, {x: 3, y: 6, n: 5}, {x: 3, y: 6, n: 6}, {x: 3, y: 6, n: 7}, {x: 3, y: 6, n: 8}, {x: 3, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 5, n: 1}, {x: 4, y: 5, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 6, n: 1}, {x: 4, y: 6, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 5, n: 1}, {x: 6, y: 5, n: 2}, {x: 6, y: 5, n: 3}, {x: 6, y: 5, n: 4}, {x: 6, y: 5, n: 5}, {x: 6, y: 5, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 5, n: 1}, {x: 7, y: 5, n: 2}, {x: 7, y: 5, n: 3}, {x: 7, y: 5, n: 4}, {x: 7, y: 5, n: 5}, {x: 7, y: 5, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 6, n: 1}, {x: 0, y: 6, n: 2}, {x: 0, y: 6, n: 3}, {x: 0, y: 6, n: 4}, {x: 0, y: 6, n: 5}, {x: 0, y: 6, n: 6}, {x: 0, y: 6, n: 7}, {x: 0, y: 6, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 7, n: 1}, {x: 0, y: 7, n: 2}, {x: 0, y: 7, n: 3}, {x: 0, y: 7, n: 4}, {x: 0, y: 7, n: 5}, {x: 0, y: 7, n: 6}, {x: 0, y: 7, n: 7}, {x: 0, y: 7, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 6, n: 1}, {x: 6, y: 6, n: 2}, {x: 6, y: 6, n: 3}, {x: 6, y: 6, n: 4}, {x: 6, y: 6, n: 5}, {x: 6, y: 6, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 7, n: 1}, {x: 6, y: 7, n: 2}, {x: 6, y: 7, n: 3}, {x: 6, y: 7, n: 4}, {x: 6, y: 7, n: 5}, {x: 6, y: 7, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 7, n: 5}, {x: 3, y: 7, n: 6}, {x: 3, y: 7, n: 7}, {x: 3, y: 7, n: 8}, {x: 3, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 7, n: 5}, {x: 4, y: 7, n: 6}, {x: 4, y: 7, n: 7}, {x: 4, y: 7, n: 8}, {x: 4, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 7, n: 1}, {x: 5, y: 7, n: 2}, {x: 5, y: 7, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 8, n: 1}, {x: 5, y: 8, n: 2}, {x: 5, y: 8, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 8, n: 1}, {x: 0, y: 8, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 8, n: 1}, {x: 1, y: 8, n: 2}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 8, n: 8}, {x: 6, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 8, n: 8}, {x: 7, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 8, n: 4}, {x: 8, y: 8, n: 5}, {x: 8, y: 8, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 6, n: 1}, {x: 8, y: 6, n: 2}, {x: 8, y: 6, n: 3}, {x: 8, y: 6, n: 4}, {x: 8, y: 6, n: 5}, {x: 8, y: 6, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 7, n: 1}, {x: 8, y: 7, n: 2}, {x: 8, y: 7, n: 3}, {x: 8, y: 7, n: 4}, {x: 8, y: 7, n: 5}, {x: 8, y: 7, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 3, n: 4}, {x: 0, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 3, n: 1}, {x: 1, y: 3, n: 2}, {x: 1, y: 3, n: 3}, {x: 1, y: 3, n: 4}, {x: 1, y: 3, n: 5}, {x: 1, y: 3, n: 6}, {x: 1, y: 3, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 4, n: 1}, {x: 1, y: 4, n: 2}, {x: 1, y: 4, n: 3}, {x: 1, y: 4, n: 4}, {x: 1, y: 4, n: 5}, {x: 1, y: 4, n: 6}, {x: 1, y: 4, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 7, n: 1}, {x: 2, y: 7, n: 2}, {x: 2, y: 7, n: 3}, {x: 2, y: 7, n: 4}, {x: 2, y: 7, n: 5}, {x: 2, y: 7, n: 6}, {x: 2, y: 7, n: 7}, {x: 2, y: 7, n: 8}, {x: 2, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 8, n: 1}, {x: 2, y: 8, n: 2}, {x: 2, y: 8, n: 3}, {x: 2, y: 8, n: 4}, {x: 2, y: 8, n: 5}, {x: 2, y: 8, n: 6}, {x: 2, y: 8, n: 7}, {x: 2, y: 8, n: 8}, {x: 2, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 6, n: 2}, {x: 2, y: 6, n: 3}, {x: 2, y: 6, n: 4}, {x: 2, y: 6, n: 5}, {x: 2, y: 6, n: 6}, {x: 2, y: 6, n: 7}, {x: 2, y: 6, n: 8}, {x: 2, y: 6, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 7, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 8, n: 1}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 4, n: 1}, {x: 5, y: 4, n: 2}, {x: 5, y: 4, n: 3}, {x: 5, y: 4, n: 4}, {x: 5, y: 4, n: 5}, {x: 5, y: 4, n: 6}, {x: 5, y: 4, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 6, y: 2, n: 2}, {x: 6, y: 2, n: 3}]}
+        - {type: pencilStrike, marks: [{x: 6, y: 3, n: 8}, {x: 6, y: 3, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 3, n: 7}, {x: 2, y: 3, n: 8}, {x: 2, y: 3, n: 9}]}
+        - {type: set, x: 2, y: 3, n: 6, pencil: false, autoElim: false}
+        - {type: pencilStrike, marks: [{x: 2, y: 0, n: 6}, {x: 2, y: 1, n: 6}, {x: 2, y: 2, n: 6}, {x: 1, y: 3, n: 6}, {x: 3, y: 3, n: 6}, {x: 4, y: 3, n: 6}, {x: 6, y: 3, n: 6}, {x: 8, y: 3, n: 6}, {x: 1, y: 4, n: 6}, {x: 2, y: 6, n: 6}, {x: 2, y: 7, n: 6}, {x: 2, y: 8, n: 6}]}
+    # Held on 623 of 1851 positions walked.
+    cageMinMax: "3x3kdt:zzzc,______a_____a____a___a_a______ba______a_________aa___ab_ab_aabaa_aaaaa___a_a___a_aa_aa_a__a_aa_aaaab,14_15_7_8_13_22_7a10g9c15_4a16_11a7_12b11c13a16a3_13d17a17a13_3_10_7b9a19c7_10_11c14a4c3a18c17b"
+    # Held on 505 of 1851 positions walked.
+    cageSums:
+      id: "3x3kdt:zzzc,aa__a__a_a_____a_____aa_a__aaa_a__aa_____________a_aaab__a_b___a_aa_a_aaaa____aa__aa__a_aaaa_aab_a_,5a5a13_19_14a7_19_16_6d9c12_19_7a13a13g22a8a17_14_7d8e14_9a11_10a15_11_11a4_11a14_10c10e5c17a"
+      moves:
+        - {type: pencilAdd, marks: [{x: 0, y: 0, n: 1}, {x: 0, y: 0, n: 2}, {x: 0, y: 0, n: 3}, {x: 0, y: 0, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 0, n: 1}, {x: 1, y: 0, n: 2}, {x: 1, y: 0, n: 3}, {x: 1, y: 0, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 0, n: 1}, {x: 2, y: 0, n: 2}, {x: 2, y: 0, n: 3}, {x: 2, y: 0, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 0, n: 1}, {x: 3, y: 0, n: 2}, {x: 3, y: 0, n: 3}, {x: 3, y: 0, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 0, n: 4}, {x: 4, y: 0, n: 5}, {x: 4, y: 0, n: 6}, {x: 4, y: 0, n: 7}, {x: 4, y: 0, n: 8}, {x: 4, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 1, n: 4}, {x: 4, y: 1, n: 5}, {x: 4, y: 1, n: 6}, {x: 4, y: 1, n: 7}, {x: 4, y: 1, n: 8}, {x: 4, y: 1, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 0, n: 5}, {x: 6, y: 0, n: 6}, {x: 6, y: 0, n: 7}, {x: 6, y: 0, n: 8}, {x: 6, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 0, n: 5}, {x: 7, y: 0, n: 6}, {x: 7, y: 0, n: 7}, {x: 7, y: 0, n: 8}, {x: 7, y: 0, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 0, n: 1}, {x: 8, y: 0, n: 2}, {x: 8, y: 0, n: 3}, {x: 8, y: 0, n: 4}, {x: 8, y: 0, n: 5}, {x: 8, y: 0, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 1, n: 1}, {x: 8, y: 1, n: 2}, {x: 8, y: 1, n: 3}, {x: 8, y: 1, n: 4}, {x: 8, y: 1, n: 5}, {x: 8, y: 1, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 1, n: 1}, {x: 2, y: 1, n: 2}, {x: 2, y: 1, n: 3}, {x: 2, y: 1, n: 4}, {x: 2, y: 1, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 1, n: 1}, {x: 3, y: 1, n: 2}, {x: 3, y: 1, n: 3}, {x: 3, y: 1, n: 4}, {x: 3, y: 1, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 1, n: 1}, {x: 7, y: 1, n: 2}, {x: 7, y: 1, n: 3}, {x: 7, y: 1, n: 4}, {x: 7, y: 1, n: 5}, {x: 7, y: 1, n: 6}, {x: 7, y: 1, n: 7}, {x: 7, y: 1, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 2, n: 1}, {x: 7, y: 2, n: 2}, {x: 7, y: 2, n: 3}, {x: 7, y: 2, n: 4}, {x: 7, y: 2, n: 5}, {x: 7, y: 2, n: 6}, {x: 7, y: 2, n: 7}, {x: 7, y: 2, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 2, n: 3}, {x: 2, y: 2, n: 4}, {x: 2, y: 2, n: 5}, {x: 2, y: 2, n: 6}, {x: 2, y: 2, n: 7}, {x: 2, y: 2, n: 8}, {x: 2, y: 2, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 3, n: 3}, {x: 2, y: 3, n: 4}, {x: 2, y: 3, n: 5}, {x: 2, y: 3, n: 6}, {x: 2, y: 3, n: 7}, {x: 2, y: 3, n: 8}, {x: 2, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 2, n: 1}, {x: 4, y: 2, n: 2}, {x: 4, y: 2, n: 3}, {x: 4, y: 2, n: 4}, {x: 4, y: 2, n: 5}, {x: 4, y: 2, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 2, n: 1}, {x: 5, y: 2, n: 2}, {x: 5, y: 2, n: 3}, {x: 5, y: 2, n: 4}, {x: 5, y: 2, n: 5}, {x: 5, y: 2, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 3, n: 4}, {x: 7, y: 3, n: 5}, {x: 7, y: 3, n: 6}, {x: 7, y: 3, n: 7}, {x: 7, y: 3, n: 8}, {x: 7, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 4, n: 4}, {x: 6, y: 4, n: 5}, {x: 6, y: 4, n: 6}, {x: 6, y: 4, n: 7}, {x: 6, y: 4, n: 8}, {x: 6, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 4, n: 4}, {x: 7, y: 4, n: 5}, {x: 7, y: 4, n: 6}, {x: 7, y: 4, n: 7}, {x: 7, y: 4, n: 8}, {x: 7, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 4, n: 1}, {x: 0, y: 4, n: 2}, {x: 0, y: 4, n: 3}, {x: 0, y: 4, n: 4}, {x: 0, y: 4, n: 5}, {x: 0, y: 4, n: 6}, {x: 0, y: 4, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 4, n: 1}, {x: 1, y: 4, n: 2}, {x: 1, y: 4, n: 3}, {x: 1, y: 4, n: 4}, {x: 1, y: 4, n: 5}, {x: 1, y: 4, n: 6}, {x: 1, y: 4, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 4, n: 8}, {x: 2, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 5, n: 8}, {x: 2, y: 5, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 4, n: 1}, {x: 4, y: 4, n: 2}, {x: 4, y: 4, n: 3}, {x: 4, y: 4, n: 4}, {x: 4, y: 4, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 4, n: 1}, {x: 5, y: 4, n: 2}, {x: 5, y: 4, n: 3}, {x: 5, y: 4, n: 4}, {x: 5, y: 4, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 5, n: 1}, {x: 5, y: 5, n: 2}, {x: 5, y: 5, n: 3}, {x: 5, y: 5, n: 4}, {x: 5, y: 5, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 5, n: 1}, {x: 0, y: 5, n: 2}, {x: 0, y: 5, n: 3}, {x: 0, y: 5, n: 4}, {x: 0, y: 5, n: 5}, {x: 0, y: 5, n: 6}, {x: 0, y: 5, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 5, n: 1}, {x: 1, y: 5, n: 2}, {x: 1, y: 5, n: 3}, {x: 1, y: 5, n: 4}, {x: 1, y: 5, n: 5}, {x: 1, y: 5, n: 6}, {x: 1, y: 5, n: 7}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 5, n: 5}, {x: 6, y: 5, n: 6}, {x: 6, y: 5, n: 7}, {x: 6, y: 5, n: 8}, {x: 6, y: 5, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 6, n: 5}, {x: 6, y: 6, n: 6}, {x: 6, y: 6, n: 7}, {x: 6, y: 6, n: 8}, {x: 6, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 5, n: 1}, {x: 7, y: 5, n: 2}, {x: 7, y: 5, n: 3}, {x: 7, y: 5, n: 4}, {x: 7, y: 5, n: 5}, {x: 7, y: 5, n: 6}, {x: 7, y: 5, n: 7}, {x: 7, y: 5, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 5, n: 1}, {x: 8, y: 5, n: 2}, {x: 8, y: 5, n: 3}, {x: 8, y: 5, n: 4}, {x: 8, y: 5, n: 5}, {x: 8, y: 5, n: 6}, {x: 8, y: 5, n: 7}, {x: 8, y: 5, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 6, n: 2}, {x: 0, y: 6, n: 3}, {x: 0, y: 6, n: 4}, {x: 0, y: 6, n: 5}, {x: 0, y: 6, n: 6}, {x: 0, y: 6, n: 7}, {x: 0, y: 6, n: 8}, {x: 0, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 7, n: 2}, {x: 0, y: 7, n: 3}, {x: 0, y: 7, n: 4}, {x: 0, y: 7, n: 5}, {x: 0, y: 7, n: 6}, {x: 0, y: 7, n: 7}, {x: 0, y: 7, n: 8}, {x: 0, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 6, n: 6}, {x: 3, y: 6, n: 7}, {x: 3, y: 6, n: 8}, {x: 3, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 7, n: 6}, {x: 3, y: 7, n: 7}, {x: 3, y: 7, n: 8}, {x: 3, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 6, n: 2}, {x: 4, y: 6, n: 3}, {x: 4, y: 6, n: 4}, {x: 4, y: 6, n: 5}, {x: 4, y: 6, n: 6}, {x: 4, y: 6, n: 7}, {x: 4, y: 6, n: 8}, {x: 4, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 7, n: 2}, {x: 4, y: 7, n: 3}, {x: 4, y: 7, n: 4}, {x: 4, y: 7, n: 5}, {x: 4, y: 7, n: 6}, {x: 4, y: 7, n: 7}, {x: 4, y: 7, n: 8}, {x: 4, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 6, n: 2}, {x: 5, y: 6, n: 3}, {x: 5, y: 6, n: 4}, {x: 5, y: 6, n: 5}, {x: 5, y: 6, n: 6}, {x: 5, y: 6, n: 7}, {x: 5, y: 6, n: 8}, {x: 5, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 7, n: 2}, {x: 5, y: 7, n: 3}, {x: 5, y: 7, n: 4}, {x: 5, y: 7, n: 5}, {x: 5, y: 7, n: 6}, {x: 5, y: 7, n: 7}, {x: 5, y: 7, n: 8}, {x: 5, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 6, n: 1}, {x: 7, y: 6, n: 2}, {x: 7, y: 6, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 7, n: 1}, {x: 7, y: 7, n: 2}, {x: 7, y: 7, n: 3}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 6, n: 2}, {x: 8, y: 6, n: 3}, {x: 8, y: 6, n: 4}, {x: 8, y: 6, n: 5}, {x: 8, y: 6, n: 6}, {x: 8, y: 6, n: 7}, {x: 8, y: 6, n: 8}, {x: 8, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 7, n: 2}, {x: 8, y: 7, n: 3}, {x: 8, y: 7, n: 4}, {x: 8, y: 7, n: 5}, {x: 8, y: 7, n: 6}, {x: 8, y: 7, n: 7}, {x: 8, y: 7, n: 8}, {x: 8, y: 7, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 7, n: 1}, {x: 6, y: 7, n: 2}, {x: 6, y: 7, n: 3}, {x: 6, y: 7, n: 4}, {x: 6, y: 7, n: 5}, {x: 6, y: 7, n: 6}, {x: 6, y: 7, n: 7}, {x: 6, y: 7, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 8, n: 1}, {x: 5, y: 8, n: 2}, {x: 5, y: 8, n: 3}, {x: 5, y: 8, n: 4}, {x: 5, y: 8, n: 5}, {x: 5, y: 8, n: 6}, {x: 5, y: 8, n: 7}, {x: 5, y: 8, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 8, n: 1}, {x: 6, y: 8, n: 2}, {x: 6, y: 8, n: 3}, {x: 6, y: 8, n: 4}, {x: 6, y: 8, n: 5}, {x: 6, y: 8, n: 6}, {x: 6, y: 8, n: 7}, {x: 6, y: 8, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 8, n: 1}, {x: 3, y: 8, n: 2}, {x: 3, y: 8, n: 3}, {x: 3, y: 8, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 8, n: 1}, {x: 4, y: 8, n: 2}, {x: 4, y: 8, n: 3}, {x: 4, y: 8, n: 4}]}
+        - {type: pencilAdd, marks: [{x: 7, y: 8, n: 8}, {x: 7, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 8, n: 8}, {x: 8, y: 8, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 0, n: 1}, {x: 5, y: 0, n: 2}, {x: 5, y: 0, n: 3}, {x: 5, y: 0, n: 4}, {x: 5, y: 0, n: 5}, {x: 5, y: 0, n: 6}, {x: 5, y: 0, n: 7}, {x: 5, y: 0, n: 8}, {x: 5, y: 0, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 0, n: 4}, {x: 4, y: 0, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 1, n: 8}, {x: 4, y: 1, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 5, y: 0, n: 1}, {x: 5, y: 0, n: 2}, {x: 5, y: 0, n: 3}, {x: 5, y: 0, n: 4}, {x: 5, y: 0, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 8, y: 0, n: 1}, {x: 8, y: 0, n: 2}]}
+        - {type: pencilStrike, marks: [{x: 8, y: 1, n: 5}, {x: 8, y: 1, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 2, y: 6, n: 1}, {x: 2, y: 6, n: 2}, {x: 2, y: 6, n: 3}, {x: 2, y: 6, n: 4}, {x: 2, y: 6, n: 5}, {x: 2, y: 6, n: 6}, {x: 2, y: 6, n: 7}, {x: 2, y: 6, n: 8}, {x: 2, y: 6, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 1, n: 5}]}
+        - {type: pencilStrike, marks: [{x: 3, y: 1, n: 1}]}
+        - {type: pencilStrike, marks: [{x: 2, y: 6, n: 5}, {x: 2, y: 6, n: 6}, {x: 2, y: 6, n: 7}, {x: 2, y: 6, n: 8}, {x: 2, y: 6, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 6, n: 6}, {x: 1, y: 6, n: 7}, {x: 1, y: 6, n: 8}, {x: 1, y: 6, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 8, y: 5, n: 1}, {x: 8, y: 5, n: 2}, {x: 8, y: 5, n: 3}, {x: 8, y: 5, n: 4}, {x: 8, y: 5, n: 7}, {x: 8, y: 5, n: 8}]}
+        - {type: pencilStrike, marks: [{x: 7, y: 5, n: 1}, {x: 7, y: 5, n: 2}, {x: 7, y: 5, n: 5}, {x: 7, y: 5, n: 6}, {x: 7, y: 5, n: 7}, {x: 7, y: 5, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 1, y: 3, n: 1}, {x: 1, y: 3, n: 2}, {x: 1, y: 3, n: 3}, {x: 1, y: 3, n: 4}, {x: 1, y: 3, n: 5}, {x: 1, y: 3, n: 6}, {x: 1, y: 3, n: 7}, {x: 1, y: 3, n: 8}, {x: 1, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 3, n: 1}, {x: 0, y: 3, n: 2}, {x: 0, y: 3, n: 3}, {x: 0, y: 3, n: 4}, {x: 0, y: 3, n: 5}, {x: 0, y: 3, n: 6}, {x: 0, y: 3, n: 7}, {x: 0, y: 3, n: 8}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 1, n: 2}, {x: 0, y: 1, n: 3}, {x: 0, y: 1, n: 4}, {x: 0, y: 1, n: 5}, {x: 0, y: 1, n: 6}, {x: 0, y: 1, n: 7}, {x: 0, y: 1, n: 8}, {x: 0, y: 1, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 0, y: 2, n: 2}, {x: 0, y: 2, n: 3}, {x: 0, y: 2, n: 4}, {x: 0, y: 2, n: 5}, {x: 0, y: 2, n: 6}, {x: 0, y: 2, n: 7}, {x: 0, y: 2, n: 8}, {x: 0, y: 2, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 1, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 4, y: 3, n: 1}, {x: 4, y: 3, n: 2}, {x: 4, y: 3, n: 3}, {x: 4, y: 3, n: 4}, {x: 4, y: 3, n: 5}, {x: 4, y: 3, n: 6}, {x: 4, y: 3, n: 7}, {x: 4, y: 3, n: 8}, {x: 4, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 5, y: 3, n: 1}, {x: 5, y: 3, n: 2}, {x: 5, y: 3, n: 3}, {x: 5, y: 3, n: 4}, {x: 5, y: 3, n: 5}, {x: 5, y: 3, n: 6}, {x: 5, y: 3, n: 7}, {x: 5, y: 3, n: 8}, {x: 5, y: 3, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 3, n: 6}, {x: 3, y: 3, n: 7}, {x: 3, y: 3, n: 8}, {x: 3, y: 3, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 4, y: 3, n: 1}, {x: 4, y: 3, n: 2}, {x: 4, y: 3, n: 3}, {x: 4, y: 3, n: 4}, {x: 4, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 3, y: 2, n: 1}, {x: 3, y: 2, n: 2}, {x: 3, y: 2, n: 3}, {x: 3, y: 2, n: 4}, {x: 3, y: 2, n: 5}, {x: 3, y: 2, n: 6}, {x: 3, y: 2, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 5, y: 3, n: 1}, {x: 5, y: 3, n: 2}, {x: 5, y: 3, n: 3}, {x: 5, y: 3, n: 4}, {x: 5, y: 3, n: 5}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 2, n: 1}, {x: 6, y: 2, n: 2}, {x: 6, y: 2, n: 3}, {x: 6, y: 2, n: 4}, {x: 6, y: 2, n: 5}, {x: 6, y: 2, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 6, y: 3, n: 1}, {x: 6, y: 3, n: 2}, {x: 6, y: 3, n: 3}, {x: 6, y: 3, n: 4}, {x: 6, y: 3, n: 5}, {x: 6, y: 3, n: 6}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 4, n: 1}, {x: 8, y: 4, n: 2}, {x: 8, y: 4, n: 3}, {x: 8, y: 4, n: 4}, {x: 8, y: 4, n: 5}, {x: 8, y: 4, n: 6}, {x: 8, y: 4, n: 7}, {x: 8, y: 4, n: 8}, {x: 8, y: 4, n: 9}]}
+        - {type: pencilAdd, marks: [{x: 8, y: 3, n: 1}, {x: 8, y: 3, n: 2}, {x: 8, y: 3, n: 3}, {x: 8, y: 3, n: 4}, {x: 8, y: 3, n: 5}, {x: 8, y: 3, n: 6}, {x: 8, y: 3, n: 7}]}
+        - {type: pencilStrike, marks: [{x: 8, y: 4, n: 8}, {x: 8, y: 4, n: 9}]}
+        - {type: pencilStrike, marks: [{x: 6, y: 7, n: 8}]}
+        - {type: pencilStrike, marks: [{x: 6, y: 8, n: 8}]}
+
+ids:
+  # Boards upstream's generator wrote, one a mode, read and written back.
+  - {id: "3x3:d1b4c6_3_7_2a1g2_6a7b6b5_3a6g7a8_2b4b6a6_4g2a5_6_7_4c9b4d", writesBack: true}
+  - {id: "3x3x:9h5c1b6d2a4c7_9a5e6_2e5_4e2a9_7c6a7d5b8c9h8", writesBack: true}
+  - id: "9j:e5i4_3b2_6_7a3b5c5_3e1b2b7e9_8c9b8a7_2_4b6_7i4e,_afb__b__aa___ba___b_a___aa__b___c_b_ciaade____ba____bdbbea_a__bf_"
+    writesBack: true
+  - id: "3x3k:zzzc,__aa____aa____a_b__a_a_aaa__a_____aa___a_a____ca__ba__aaa_________a_____aa__a_aa____ab__a_b_a___ba_a_,5_5_12a13a9_9_16b9a13d9_13_8a7_20e12b11a5_13_17a13a7a5b4a8a14_12a13a15b14b15a12a12b18_4_8b15f10a"
+    writesBack: true
+  # The givens: a separator with no number before it, a run of blanks
+  # straight after a number, a number outside 1 to 9, and the grid cut short
+  # or run on. Two runs of blanks in a row read as one, as upstream reads
+  # them.
+  - {id: "3x3:_zzz1_2", refused: '/"_"/'}
+  - {id: "3x3:zzz1_a2", refused: '/"a"/'}
+  - {id: "3x3:zzza1_0", refused: DESC_OUT_OF_RANGE}
+  - {id: "3x3:zzza1_10", refused: DESC_OUT_OF_RANGE}
+  - {id: "3x3:zzza1", refused: DESC_TOO_SHORT}
+  - {id: "3x3:zzzd", refused: DESC_TOO_LONG}
+  - {id: "3x3:zzza1_2_", refused: DESC_TOO_LONG}
+  # A Killer board with no symmetry, and the same with a second sum in the
+  # cage holding the first 8, or the first cage's sum left out.
+  - id: "3x3ka:zzzc,___a__a__a_________________aaa_a__aa__________a____aaaaaba_aba__aaa_aa_a__a_aaaba_a_aa_a__a_a___aaa__,15_14_8_8a5_12_11d19c5_10_7_11_8_12a14_11f10c12_4a15b9a12a6_17a17a9_10a13a14a12e14a8a6_10a11f11a15a"
+    writesBack: true
+  - id: "3x3ka:zzzc,___a__a__a_________________aaa_a__aa__________a____aaaaaba_aba__aaa_aa_a__a_aaaba_a_aa_a__a_a___aaa__,15_14_8_8_8_5_12_11d19c5_10_7_11_8_12a14_11f10c12_4a15b9a12a6_17a17a9_10a13a14a12e14a8a6_10a11f11a15a"
+    refused: DESC_MALFORMED
+  - id: "3x3ka:zzzc,___a__a__a_________________aaa_a__aa__________a____aaaaaba_aba__aaa_aa_a__a_aaaba_a_aa_a__a_a___aaa__,a14_8_8a5_12_11d19c5_10_7_11_8_12a14_11f10c12_4a15b9a12a6_17a17a9_10a13a14a12e14a8a6_10a11f11a15a"
+    refused: DESC_MALFORMED
+  # The cages' first `a`, joining the top row's fourth and fifth cells,
+  # written `__`: each is a cage of one cell.
+  - id: "3x3ka:zzzc,_______a__a_________________aaa_a__aa__________a____aaaaaba_aba__aaa_aa_a__a_aaaba_a_aa_a__a_a___aaa__,15_14_8_8a5_12_11d19c5_10_7_11_8_12a14_11f10c12_4a15b9a12a6_17a17a9_10a13a14a12e14a8a6_10a11f11a15a"
+    refused: DESC_MALFORMED
+  # A Killer board with its givens alone.
+  - {id: "3x3ka:zzzc", refused: DESC_TOO_SHORT}
+  # A 6 by 6 board upstream dealt, its opening `2_5` written `25`, and with a
+  # comma after its givens.
+  - {id: "2x3:2_5d1c4d3_2b6_2d2c3d1_5", writesBack: true}
+  - {id: "2x3:25d1c4d3_2b6_2d2c3d1_5", refused: DESC_OUT_OF_RANGE}
+  - {id: "2x3:2_5d1c4d3_2b6_2d2c3d1_5,", refused: DESC_TOO_LONG}
+  # A Jigsaw whose top row's first four cells are a block, the next two a
+  # second and the last three a third.
+  - id: "9jda:6c5a2d7_2b1e3f5d3_7a8g7a4_3d1f5e1b3_7d9a6c2,cacababaea______bdab_abdb_cdbba__a_d_bcaadbdba__a__dcbca"
+    writesBack: true
+  # A Jigsaw board's blocks missing, cut short, or run on.
+  - id: "9j:e5i4_3b2_6_7a3b5c5_3e1b2b7e9_8c9b8a7_2_4b6_7i4e"
+    refused: DESC_TOO_SHORT
+  - id: "9j:e5i4_3b2_6_7a3b5c5_3e1b2b7e9_8c9b8a7_2_4b6_7i4e,_afb__b__aa___ba___b_a___aa__b___c_b_ciaade____ba____bdbbea_a__bf"
+    refused: DESC_TOO_SHORT
+  - id: "9j:e5i4_3b2_6_7a3b5c5_3e1b2b7e9_8c9b8a7_2_4b6_7i4e,_afb__b__aa___ba___b_a___aa__b___c_b_ciaade____ba____bdbbea_a__bf__"
+    refused: DESC_TOO_LONG
+  - id: "9j:e5i4_3b2_6_7a3b5c5_3e1b2b7e9_8c9b8a7_2_4b6_7i4e,_afb__b__aa___ba___b_a___aa__b___c_b_ciaade____ba____bdbbea_a__bf_,"
+    refused: DESC_TOO_LONG
+
+params:
+  # Upstream's: the blocks' sizes, `j` for Jigsaw, `x` and `k`, the
+  # symmetry where it is not the 2-way rotation, then the tier.
+  - {read: "3x3", full: "3x3dt", brief: "3x3"}
+  - {read: "9j", full: "9jdt", brief: "9j"}
+  - {read: "3x3x", full: "3x3xdt", brief: "3x3x"}
+  - {read: "3x3k", full: "3x3kdt", brief: "3x3k"}
+  - {read: "3x3ada", full: "3x3ada", brief: "3x3"}
+  - {read: "3x3md4", full: "3x3md4dt"}
+  - {read: "3x3r2", full: "3x3dt"}
+  # A Jigsaw written as a rectangle's sizes, as upstream reads it.
+  - {read: "3x3j", full: "9jdt"}
+  # A symmetry no encoder writes.
+  - {read: "3x3m3", refused: '/"m"/'}
+  - {read: "3x3r7", refused: '/"r"/'}
+  - {read: "3x3md8", refused: '/"m"/'}
+  - {read: "3x3a5", refused: '/"5"/'}
+  # Blocks one wide that are not a Jigsaw, more than 31 numbers, and a
+  # Killer past 9.
+  - {read: "1x3", refused: "Columns of sub-blocks must be at least 2."}
+  - {read: "6x6", refused: "Width and height must both be at most 31."}
+  - {read: "4x3k", refused: "Killer (digit sums): width and height must both be at most 9."}
+  # A grid of 4 numbers has Easy boards alone.
+  - {read: "2x2dt", refused: false}
+  - {read: "2x2db", refused: "No 4x4 puzzle is Normal."}
+  - {read: "4jdb", refused: "No 4x4 puzzle is Normal."}
+  - {read: "2x2kdb", refused: "No 4x4 puzzle is Normal."}
+  - {read: "3x3", label: "Standard: 3x3 Easy"}
+  - {read: "9jdb", label: "Jigsaw: 9x9 Normal"}
+  - {read: "3x3xdb", label: "Standard: 3x3 Normal, X"}
+  - {read: "3x3ada", label: "Standard: 3x3 Hard, no symmetry"}
+
+positions:
+  # The blocks' walls, and the givens.
+  - id: "2x2:a3e2_3e4a"
+    text: |
+      +---+---+---+---+
+      | .   3 | .   . |
+      +       +       +
+      | .   . | .   2 |
+      +---+---+---+---+
+      | 3   . | .   . |
+      +       +       +
+      | .   . | 4   . |
+      +---+---+---+---+
+  # A Killer board: the blocks walled, and each cage's sum after the row of
+  # its first square.
+  - id: "2x2k:p,__a_a___aac__a_a,5_9_6c4a5a8_3d"
+    text: |
+      +---+---+---+---+
+      | .   . | .   . | 5 9 6
+      +       +       +
+      | .   . | .   . | 4
+      +---+---+---+---+
+      | .   . | .   . | 5 8 3
+      +       +       +
+      | .   . | .   . |
+      +---+---+---+---+
+  # The board solved.
+  - id: "3x3:d1b4c6_3_7_2a1g2_6a7b6b5_3a6g7a8_2b4b6a6_4g2a5_6_7_4c9b4d"
+    solve: true
+    status: solved
+  - id: "3x3k:zzzc,__aa____aa____a_b__a_a_aaa__a_____aa___a_a____ca__ba__aaa_________a_____aa__a_aa____ab__a_b_a___ba_a_,5_5_12a13a9_9_16b9a13d9_13_8a7_20e12b11a5_13_17a13a7a5b4a8a14_12a13a15b14b15a12a12b18_4_8b15f10a"
+    solve: true
+    status: solved
+  # Killer: two 2s in the cage of 8 break the cage alone, its sum still
+  # open; and a 4 and a 3 in the cage of 6 overshoot its sum.
+  - id: "2x2k:p,__a_a___aac__a_a,5_9_6c4a5a8_3d"
+    moves: [{set: [10, 2]}, {set: [13, 2]}]
+    breaks: [Killer.shape.0]
+  - id: "2x2k:p,__a_a___aac__a_a,5_9_6c4a5a8_3d"
+    moves: [{set: [2, 4]}, {set: [3, 3]}]
+    breaks: [clue.total]
+  # Two 1s in the top-left block, in neither one row nor one column, break
+  # it; and two on the long diagonal of a board without X break nothing.
+  - id: "2x2:a3e2_3e4a"
+    moves: [{set: [0, 1]}, {set: [5, 1]}]
+    breaks: [shape.0]
+  - id: "2x2:a3e2_3e4a"
+    moves: [{set: [0, 1]}, {set: [10, 1]}]
+    breaks: []
+  # Two 1s in the top row break it.
+  - id: "2x2:a3e2_3e4a"
+    moves: [{set: [0, 1]}, {set: [2, 1]}]
+    breaks: [shape.0]
+
+input:
+  # A number typed into the square the cursor is on, and cleared by 0, as
+  # by Backspace.
+  - id: "2x2:a3e2_3e4a"
+    events:
+      - {key: down}
+      - {key: "1", holds: {values.4: 1}}
+      - {key: "0", holds: {values.4: 0}}

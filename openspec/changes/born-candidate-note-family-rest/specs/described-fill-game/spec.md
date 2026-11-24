@@ -161,7 +161,8 @@ A partition a variation adds to a born game's space, and the clues at its
 parts, SHALL be divided, derived, written in the desc, read from it and
 drawn only on a board with the variation on. A clue kind at parts SHALL be
 read at the parts of the partition it names, whichever the board deals
-first.
+first. A technique the variation adds SHALL be a rung of the hint only on a
+board with it on.
 
 #### Scenario: Killer's cages
 
@@ -169,6 +170,44 @@ first.
   totals is dealt with Killer off, and with it on
 - **THEN** the first deals, writes and draws no cage and no total, and the
   second deals both, each total its cage's sum in the answer
+
+#### Scenario: A hint on a board without Killer
+
+- **WHEN** a hint is asked, or the board drawn, on a Solo board with Killer
+  off
+- **THEN** it reads no cage technique and draws no cage, and neither fails
+
+### Requirement: A born board's rules and text read its own space
+
+The live errors and the answer check of a born game SHALL read the board's
+own space: the units its variations have, and its blocks, cut by its sizes or
+dealt. Its text format SHALL wall the partition the board draws as walls,
+the blocks where it has them, and print a part's clues after the row of the
+part's first cell.
+
+#### Scenario: A repeat in a block, and one on a diagonal without X
+
+- **WHEN** two equal numbers stand in one block of a Solo board, in neither
+  one row nor one column, and on another board two stand on a long diagonal
+  with X off
+- **THEN** the first breaks the Latin rule and the second breaks nothing
+
+#### Scenario: A Killer board's text
+
+- **WHEN** a 2x2 Killer board is printed as text
+- **THEN** its walls are the blocks', and each row is followed by the totals
+  of the cages that start in it
+
+### Requirement: A stated wording names a unit by the board's unit
+
+A born game's stated wording SHALL say `{unit}` as the board's unit holding
+the cells it refers to: row, column, the blocks' partition by its name, or
+diagonal.
+
+#### Scenario: A block single
+
+- **WHEN** Solo's hint places a number with one place left in a block
+- **THEN** it says "No other cell in this block can be" the number
 
 ### Requirement: A part's clue may be written as upstream Solo writes it
 

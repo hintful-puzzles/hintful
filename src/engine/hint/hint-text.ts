@@ -41,7 +41,7 @@ import { lineUnit } from "./step-voice.ts";
 
 // --- lists and articles ------------------------------------------------------
 
-export { indefinite, joinNums, joinOr };
+export { indefinite, joinNums };
 
 /** Each value once, in order. */
 const distinct = (ns: number[]): number[] => [...new Set(ns)].sort((a, b) => a - b);
@@ -169,6 +169,9 @@ export interface Premise {
   premise: Narration;
   where?: string;
   struck?: string;
+  /** Why the step needs more room than a glance gives (`Sentence.long`), as
+   * the premise's stated wording says. */
+  long?: string;
 }
 
 /**

@@ -13,14 +13,13 @@ import { presetMenu } from "../../src/engine/game-id/param-label.ts";
 import { randomNew } from "../../src/engine/random/index.ts";
 import { groupGame } from "../../src/games/group/index.ts";
 import { saladGame } from "../../src/games/salad/index.ts";
-import { soloGame } from "../../src/games/solo/index.ts";
-import { DIFF_HARD, DIFF_TRICKY, SYMM_NONE } from "../../src/games/solo/state.ts";
 import { game as adjacentGame } from "../../src/generated/games/adjacent/adjacent.game.ts";
 import { game as clustersGame } from "../../src/generated/games/clusters/clusters.game.ts";
 import { game as keenGame } from "../../src/generated/games/keen/keen.game.ts";
 import { game as mathraxGame } from "../../src/generated/games/mathrax/mathrax.game.ts";
 import { game as mosaicGame } from "../../src/generated/games/mosaic/mosaic.game.ts";
 import { game as seismicGame } from "../../src/generated/games/seismic/seismic.game.ts";
+import { game as soloGame } from "../../src/generated/games/solo/solo.game.ts";
 import { game as starbattleGame } from "../../src/generated/games/starbattle/starbattle.game.ts";
 import { game as towersGame } from "../../src/generated/games/towers/towers.game.ts";
 import { game as unequalGame } from "../../src/generated/games/unequal/unequal.game.ts";
@@ -49,14 +48,9 @@ const GAMES: [string, AnyGame][] = [
 /** Boards beyond the presets: Killer at other sizes and tiers, and with X. */
 const EXTRA: Record<string, unknown[]> = {
   group: [2, 3, 4].map((diff) => ({ w: 8, diff, id: false })),
-  solo: [
-    { c: 2, r: 3, diff: DIFF_TRICKY },
-    { c: 3, r: 3, diff: DIFF_TRICKY },
-    { c: 3, r: 3, diff: DIFF_HARD },
-    { c: 6, r: 1, diff: DIFF_TRICKY },
-    { c: 3, r: 3, xtype: true },
-    { c: 3, r: 3, xtype: true, killer: true },
-  ].map((p) => ({ ...soloGame.defaultParams(), symm: SYMM_NONE, killer: true, ...p })),
+  solo: ["2x3kadi", "3x3kadi", "3x3kada", "6jkadi", "3x3xkadb"].map((p) =>
+    soloGame.decodeParams(p),
+  ),
 };
 const SEEDS = 3;
 const STEPS = 200;

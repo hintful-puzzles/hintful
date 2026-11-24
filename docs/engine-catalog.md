@@ -1345,11 +1345,11 @@ family: pass `rs` for a random matching in generation and leave it out for a
 deterministic existence check (`tents/`). A repeated symbol, the `seed`
 hook, `cubeOut` and the family's generator shapes are in
 [`solver-and-generator.md`](./solver-and-generator.md). Exemplar:
-`solo/solver.ts`. Its singles, sets, fish and wing are
+`group/solver.ts`. Its singles, sets, fish and wing are
 `latin.compiled.ts`, compiled from `latin.description.yaml` by
 `npm run describe` and never edited by hand; `latinLadder` pairs each with
 its reason, and runs a described game's own on its clues
-([`descriptions.md`](./descriptions.md); exemplar `solo/solver.ts`).
+([`descriptions.md`](./descriptions.md); exemplar `group/solver.ts`).
 `describe-runtime.ts` is what compiled code reads, and the modules under
 `describe-runtime/` hold it: the marks' interface, the numbered grid
 (`describedSpace`, `latinSpace`), kept by shape, and a game's `ClueList`s
@@ -1364,7 +1364,7 @@ a value a cell and the values each may still hold, and the edges' and
 cells' marks where the description keeps them. `WideCellMarks` holds a
 domain whose values run past 31 (`ascent/solver.ts`). A game's solver
 extends `CellMarks` only to keep a Search no description states. Exemplar:
-`solo/solver.ts`; the guide is [`descriptions.md`](./descriptions.md)
+`crossing/solver.ts`; the guide is [`descriptions.md`](./descriptions.md)
 § "The runtime a ladder runs on".
 
 ### `ladder-runtime.ts` — what a compiled ladder runs on
@@ -1754,7 +1754,7 @@ supplies its rungs, regions and words; the walk itself is
 - **A plain row/column square calls `runLatinCandidatePlan`** and supplies
   its rungs and words alone. A game whose singles narrate otherwise
   fails to type-check against it and calls `runCandidatePlan`
-  (`solo/index.ts`). See [`hints-candidates.md`](./hints-candidates.md) §
+  (`abcd/hint.ts`). See [`hints-candidates.md`](./hints-candidates.md) §
   "The row/column preset".
 - **`buildSteps` hands its plan the prefs' `judging`**, and the game wires
   `judgeMove` as `candidateJudge` over the same `buildSteps`.
