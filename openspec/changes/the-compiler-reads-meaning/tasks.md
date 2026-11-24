@@ -1,6 +1,11 @@
 ## Next
 
-4.1, the capability-fixtures guard by tier. Open: none.
+4.1. Read 2026-11-24: a test's tier is in its code, so the guard derives
+from the description instead: each fixture's clue kinds, and the lowest
+tier whose techniques (own and library) read each, by walking the parsed
+`for`/`conclude` for `clue(kind, …)`; the compiled `techniques[].reads`
+records no corner or edge kind (`cornering`: `"clues":{}`). Then 4.2,
+5.1, 5.2. Open: none.
 
 ## 1. Design
 
