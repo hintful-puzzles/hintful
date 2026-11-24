@@ -11,6 +11,7 @@ import { shuffle } from "../board/shuffle.ts";
 import { drawRejected } from "../contract/deal-census.ts";
 import { retryLimit } from "../contract/retry-limit.ts";
 import { placeSymmetricBlacks } from "../generate/symmetric-blacks.ts";
+import { orbitOf, SET_BLACKS_SYMM } from "../generate/symmetry.ts";
 import { type RandomState, randomUpto } from "../random/index.ts";
 import { dealUnreasonable } from "../solve/answer-search.ts";
 import {
@@ -48,6 +49,8 @@ import {
   partitionOf,
   piecesOf,
   sizesOf,
+  symmetricOf,
+  symmetryOf,
   variationsOf,
   within,
 } from "./game-id.ts";
@@ -187,7 +190,8 @@ export function dealFill<C extends Clues<C>>(
   const thorough = p.thorough ?? true;
   const kinds = hiddenKinds(deal, p);
   const kind = (kinds.length === 0 ? undefined : kinds[0]) as keyof C | undefined;
-  if (kinds.length > 1 && deal.symmetric !== undefined)
+  const symmetry = symmetricOf(deal, p);
+  if (kinds.length > 1 && symmetry !== "none")
     throw new Error("deal: a symmetric hide is of one kind");
   /** The clues with only `shown` of the hidden kinds, by their index in one
    * numbering of them all (`offsetsOf`). */
@@ -378,32 +382,37 @@ export function dealFill<C extends Clues<C>>(
         : drawRejected("fill: the answer drawn breaks a rule");
     if (kind === undefined) return { g, clues: derived };
     const list = derived[kind] as ClueList;
-    // A clue whose partner square has none cannot be shown symmetrically.
+    // A clue a square of whose orbit has none cannot be shown symmetrically.
     const shown =
-      deal.symmetric === undefined
+      symmetry === "none"
         ? allShown(derived)
-        : shownOf(list).filter((i) => partnerOf(list, i) >= 0);
+        : shownOf(list).filter((i) => orbitClues(list, i) !== null);
     return { g, clues: keeping(derived, shown) };
   };
-  /** The index of the clue at clue `i`'s partner square under the deal's
-   * symmetry, `-1` where it has none: a half turn takes a cell to the cell
-   * as far from the end as it is from the start. */
-  const partnerOf = (list: ClueList, i: number): number => {
+  /** The indices of the clues at the squares of clue `i`'s orbit under the
+   * deal's symmetry, its own first, or `null` where a square has none. */
+  const orbitClues = (list: ClueList, i: number): number[] | null => {
     if (deal.universes[kind as string] !== "cells")
       throw new Error("deal: a symmetric hide is of clues at cells");
-    return list.byAt[sp.cells.length - 1 - list.at[i]];
+    const out: number[] = [];
+    for (const c of orbitOf(symmetry, sp.w, sp.h, list.at[i])) {
+      const j = list.byAt[c];
+      if (j < 0) return null;
+      out.push(j);
+    }
+    return out;
   };
-  /** The clues `shown` in the units they are hidden in: each with its
-   * partner where the deal is symmetric, alone otherwise. */
+  /** The clues `shown` in the units they are hidden in: each with those of
+   * its orbit still shown where the deal is symmetric, alone otherwise. */
   const unitsOf = (clues: C, shown: readonly number[]): number[][] => {
-    if (deal.symmetric === undefined) return shown.map((i) => [i]);
+    if (symmetry === "none") return shown.map((i) => [i]);
     const list = clues[kind as keyof C] as ClueList;
     const of = new Set(shown);
     const out: number[][] = [];
     for (const i of shown) {
-      const j = partnerOf(list, i);
-      if (j === i || !of.has(j)) out.push([i]);
-      else if (i < j) out.push([i, j]);
+      const unit = (orbitClues(list, i) ?? [i]).filter((j) => of.has(j));
+      // Once, at the orbit's first clue still shown.
+      if (Math.min(...unit) === i) out.push(unit);
     }
     return out;
   };
@@ -994,11 +1003,14 @@ function firstLaid(
   draw: number,
 ): Uint8Array {
   const start = new Uint8Array(p.w * p.h);
+  const symmetry = symmetryOf(deal, p, first.symmetry);
+  const symm = SET_BLACKS_SYMM[symmetry];
+  if (symm === undefined) throw new Error(`deal: first cells keep no ${symmetry}`);
   placeSymmetricBlacks({
     w: p.w,
     h: p.h,
     blackpc: rampedShare(first.ramp, optionOf(deal, p, first.share), draw),
-    symm: optionOf(deal, p, first.symmetry),
+    symm,
     rs,
     isBlack: (x, y) => start[y * p.w + x] === first.value,
     setBlack: (x, y, on) => {

@@ -112,6 +112,7 @@ the `engine-helpers` spec and the engine specs an entry names.
 | – `mend-division.ts` — mend a division until it has one answer |
 | – `laydomino.ts` — random domino tiling |
 | – `symmetric-blacks.ts` — symmetric black-square placement |
+| – `symmetry.ts` — the symmetries a pattern keeps, and their orbits |
 | – `loopgen.ts` — random loop generation |
 | – `word-list/` — English words to deal and to accept |
 | – `region-fill.ts` — a fill for each region of a division |
@@ -1247,6 +1248,14 @@ it. It works through callbacks over the caller's board, and **the
 caller clears its board first**. Its order deals the boards, the
 `SYMM_ROT4` odd-center `<=` included. Exemplar: `engine/fill/deal.ts`
 (`buildAnswer`, a description's `sample.first`).
+
+### `symmetry.ts` — the symmetries a pattern keeps, and their orbits
+
+Reach for `Symmetry` when a pattern is to look the same turned or
+reflected: each is named by what it keeps, never by an upstream game's
+number, since those differ (`SET_BLACKS_SYMM` maps the names to
+`set_blacks`'). `orbitOf(s, w, h, c)` is the squares one goes to.
+Exemplar: `engine/fill/deal.ts` (a symmetric hide, `deal.symmetric`).
 
 ### `loopgen.ts` — random loop generation
 

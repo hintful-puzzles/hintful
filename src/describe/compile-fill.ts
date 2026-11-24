@@ -8,6 +8,12 @@
  */
 
 import { WALK_STEPS } from "../engine/fill/walk-steps.ts";
+import {
+  SET_BLACKS_SYMM,
+  SQUARE_ONLY,
+  SYMMETRIES,
+  type Symmetry,
+} from "../engine/generate/symmetry.ts";
 import { EDGE_PAINTERS } from "../engine/render/pieces/edge.ts";
 import { bindingLoops, compileExpr } from "./compile-expr.ts";
 import {
@@ -1177,11 +1183,6 @@ export function dealOf(
     if (dividedNames.indexOf(name) !== dividedNames.lastIndexOf(name))
       throw new CompileError(`deal divide: ${name} is divided twice`);
   }
-  // The answer is searched under a partition dealt before it.
-  if (sample !== null && "search" in sample && divides.length === 0)
-    throw new CompileError(
-      "deal sample: an answer searched under no divided partition",
-    );
   for (const r of partitions)
     if (grow?.partition !== r && !dividedNames.includes(r))
       throw new CompileError(
@@ -1246,15 +1247,20 @@ export function dealOf(
       throw new CompileError(
         `deal sample first: ${share} is no number the options give`,
       );
-    if (options[symmetry]?.choices?.length !== SYMMETRIES)
+    const kept = options[symmetry]?.choices?.map((c) => c.symmetry);
+    if (
+      kept === undefined ||
+      kept.some((s) => s === undefined || SET_BLACKS_SYMM[s] === undefined)
+    )
       throw new CompileError(
-        `deal sample first: ${symmetry} is no option of the ${SYMMETRIES} symmetries`,
+        `deal sample first: ${symmetry} is no option of the symmetries first cells keep (${Object.keys(SET_BLACKS_SYMM).join(", ")})`,
       );
     if (!hides && "build" in sample)
       throw new CompileError(
         "deal sample first: the build is on the first cells' clues with every hidden one hidden, and no hide",
       );
   }
+  const symmetricDeal = symmetricOf(symmetric, options);
   const tierFlag =
     json.tierFlag === undefined
       ? null
@@ -1311,7 +1317,7 @@ export function dealOf(
     ...present("latin", latin),
     ...present("tally", tallyOf(json, tiers)),
     ...present("hideFlag", hideFlagOf(json, d, hides)),
-    ...(symmetric === undefined ? {} : { symmetric }),
+    ...present("symmetric", symmetricDeal),
     ...present("thorough", thorough),
     ...present("divide", divided),
     ...(oneKind === null ? {} : { oneKind: oneKind.deal }),
@@ -1670,10 +1676,6 @@ function divideDeal(
   return { partition, sizes, by: { size: by, min: s.min } };
 }
 
-/** The symmetries a `first` sample's option chooses among, in upstream's
- * order (`engine/generate/symmetric-blacks.ts`). */
-const SYMMETRIES = 5;
-
 /** `deal.hide`, one kind or several, those tried before the rest
  * (`hideFirst`), and the tier each is first hidden at (`hideFrom`). */
 function hideOf(
@@ -1805,15 +1807,55 @@ function optionsJsonOf(
 ): Record<
   string,
   Omit<OptionJson, "choices"> & {
-    choices?: { name: string; words?: string; bounds?: BoundsOut }[];
+    choices?: {
+      name: string;
+      words?: string;
+      bounds?: BoundsOut;
+      symmetry?: Symmetry;
+      code?: string;
+    }[];
   }
 > {
   const used = new Set(["d", ...taken]);
   return Object.fromEntries(
     Object.entries(optionsOf(json)).map(([name, o]) => {
-      if (used.has(o.letter))
-        throw new CompileError(`deal options: the letter ${o.letter} is taken`);
-      used.add(o.letter);
+      const codes = o.choices?.map((c) => c.code) ?? [];
+      if (o.letter === undefined) {
+        // Written by its codes in place of a letter: one a choice, and none
+        // beginning with a letter another field is written by.
+        if (codes.length === 0 || codes.some((c) => c === undefined || c === ""))
+          throw new CompileError(
+            `deal options: ${name} has no letter, and not a code a choice`,
+          );
+        if (new Set(codes).size !== codes.length)
+          throw new CompileError(`deal options: ${name} has two choices of one code`);
+        for (const c of codes as string[])
+          if (used.has(c[0] ?? ""))
+            throw new CompileError(
+              `deal options: ${name}'s code ${c} begins with a letter taken`,
+            );
+      } else {
+        if (codes.some((c) => c !== undefined))
+          throw new CompileError(`deal options: ${name} has a letter and codes`);
+        if (used.has(o.letter))
+          throw new CompileError(`deal options: the letter ${o.letter} is taken`);
+        used.add(o.letter);
+      }
+      const symmetries = o.choices?.filter((c) => c.symmetry !== undefined).length ?? 0;
+      if (symmetries > 0 && symmetries !== o.choices?.length)
+        throw new CompileError(
+          `deal options: ${name} has a symmetry on some choices only`,
+        );
+      for (const c of o.choices ?? [])
+        if (
+          c.symmetry !== undefined &&
+          SQUARE_ONLY.has(c.symmetry) &&
+          c.bounds?.square !== true &&
+          json.space.grid?.w !== json.space.grid?.h
+        )
+          throw new CompileError(
+            `deal options: ${name}'s ${c.name} keeps ${c.symmetry}, which needs a square board`,
+          );
       const [min, max] =
         o.choices === undefined ? [o.min, o.max] : [0, o.choices.length - 1];
       if (min === undefined || max === undefined)
@@ -1840,6 +1882,24 @@ function optionsJsonOf(
       });
       return [name, { ...o, min, max, ...(choices === undefined ? {} : { choices }) }];
     }),
+  );
+}
+
+/** `deal.symmetric` as the deal reads it: a symmetry by its name, or the
+ * option whose choices name them; `null` where the deal keeps none. */
+function symmetricOf(
+  symmetric: unknown,
+  options: Readonly<Record<string, { choices?: readonly { symmetry?: Symmetry }[] }>>,
+): Symmetry | { option: string } | null {
+  if (symmetric === undefined) return null;
+  if ((SYMMETRIES as readonly unknown[]).includes(symmetric))
+    return symmetric as Symmetry;
+  const choices =
+    typeof symmetric === "string" ? options[symmetric]?.choices : undefined;
+  if (choices?.every((c) => c.symmetry !== undefined))
+    return { option: symmetric as string };
+  throw new CompileError(
+    `deal symmetric: ${String(symmetric)} is no symmetry (${SYMMETRIES.join(", ")}) nor an option of them`,
   );
 }
 

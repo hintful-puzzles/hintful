@@ -1,0 +1,119 @@
+# yaml-language-server: $schema=../../../../describe/description.schema.json
+
+# A fixture, not a game: a Latin square, some of its squares given, the
+# givens left keeping a symmetry the player chooses among eight, written in
+# a full game ID as upstream solo.c writes it (`m4`, the default unwritten),
+# after a rule the player switches on that adds the two diagonals. For the
+# fill engine's tests of a symmetric hide by the orbits of any symmetry, and
+# of a deal option written as its choice's code, on a description that names
+# no game.
+game: turning
+produces: latin
+sizes:
+  w: { min: 4, max: 7 }
+space:
+  grid: { w: "w", h: "w" }
+  units: [rows, cols]
+answer:
+  value: { sort: cell, domain: "range(1, w)" }
+given: [value]
+marks:
+  cand: { sort: cell, notation: "set of range(1, w)" }
+shape:
+  - "latin(value, units)"
+variations:
+  # The diagonals are units, after the rest.
+  X:
+    add:
+      space: { diagonals: true, units: [diagonals] }
+freedom: { kind: fill }
+play:
+  numbers: {}
+  boards: [5x5, 6x6]
+  modifiers:
+    X:
+      letter: x
+      kw: diagonals
+      name: Diagonals
+      words: X
+      rule: each of the two diagonals holds every number once too.
+  hintMarks:
+    ring: the square the step decides.
+    strike: the notes the step crosses out.
+    outline: the squares the step reasons from.
+    stripes: the row, column or diagonal the step is about.
+deal:
+  answer: searched
+  given: every square's number, then each hidden with the others of its orbit while the board still finishes
+  tier: the one tier
+  sample: { search: true }
+  hide: given
+  symmetric: symmetry
+  options:
+    symmetry:
+      kw: symmetry
+      name: Symmetry
+      default: 1
+      doc: The symmetry the given numbers keep.
+      choices:
+        - { name: None, words: no symmetry, code: a, symmetry: none }
+        - { name: 2-way rotation, code: r2, symmetry: halfTurn }
+        - { name: 4-way rotation, code: r4, symmetry: quarterTurn }
+        - { name: 2-way mirror, code: m2, symmetry: mirrorLeftRight }
+        - { name: 2-way diagonal mirror, code: md2, symmetry: mirrorDiagonal }
+        - { name: 4-way mirror, code: m4, symmetry: mirrorBothWays }
+        - { name: 4-way diagonal mirror, code: md4, symmetry: mirrorBothDiagonals }
+        - { name: 8-way mirror, code: m8, symmetry: mirrorEightWays }
+id:
+  - digits: given
+    apart: _
+tiers: [Easy]
+names:
+  dup: "a placed number's row and column"
+  single: "the only number left in a square"
+  regionsFull: "every other number already placed"
+  hiddenSingle: "the only square left for a number"
+  set: "numbers already accounted for"
+# The walk's words for how far a placed number reaches: its row and column,
+# and with X on its diagonals.
+steps:
+  clean:
+    ring: cell
+    terms: { X: flag }
+    wordings:
+      - when: X
+        move: "any number already in its square's row, column or diagonal"
+      - move: "any number already in its square's row or column"
+  note:
+    ring: cell
+    terms: { X: flag, vs: values, unruled: flag }
+    wordings:
+      - when: unruled
+        look: "No number stands in {ring}'s row or column yet"
+        move: "pencil in every one"
+      - when: X
+        look: "Only {vs} {vs: isn't | aren't} already in {ring}'s row, column or diagonal"
+        move: "pencil {vs: it | them} in"
+      - look: "Only {vs} {vs: isn't | aren't} already in {ring}'s row or column"
+        move: "pencil {vs: it | them} in"
+  cull:
+    ring: cell
+    terms: { X: flag, n: number }
+    wordings:
+      - when: X
+        move: "row, column or diagonal"
+      - move: "row or column"
+  regionsFull:
+    ring: cell
+    terms: { X: flag, n: number }
+    wordings:
+      - when: X
+        look: "Every other number is already in {ring}'s row, column or diagonal"
+        move: "it can only be {n}"
+      - look: "Every other number is already in {ring}'s row or column"
+        move: "it can only be {n}"
+techniques:
+  - { use: latin.placed, tier: Easy, rung: dup }
+  - { use: latin.hiddenSingle, tier: Easy, rung: hiddenSingle }
+  - { use: latin.single, tier: Easy, rung: single }
+  - { use: latin.set, tier: Easy, rung: set }

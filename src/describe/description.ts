@@ -5,6 +5,7 @@
  * `research/` read its rules too. Reading the file is `load.ts`'s.
  */
 
+import type { Symmetry } from "../engine/generate/symmetry.ts";
 import { type Binder, type Expr, parse } from "./expr.ts";
 
 /** A game's help page, as `description.schema.json` states it. */
@@ -394,7 +395,8 @@ export function optionsOf(json: DescriptionJson): Record<string, OptionJson> {
 /** A setting the params give that only the deal reads: a number from `min`
  * to `max`, or with `choices` one of them by its index. */
 export interface OptionJson {
-  letter: string;
+  /** Absent where every choice has a `code`. */
+  letter?: string;
   kw: string;
   name: string;
   default: number;
@@ -409,6 +411,8 @@ export interface OptionJson {
       square?: true;
       tiers?: Record<string, SizeBoundsJson>;
     };
+    symmetry?: Symmetry;
+    code?: string;
   }[];
 }
 

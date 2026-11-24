@@ -78,6 +78,20 @@
     "countOrFormula": {
       "oneOf": [{ "type": "integer", "minimum": 1 }, { "$ref": "#/$defs/formula" }]
     },
+    "symmetry": {
+      "description": "A symmetry a pattern keeps (`engine/generate/symmetry.ts`): the board turned a half or a quarter, or reflected left to right, top to bottom, in its main diagonal, both ways, in both diagonals, or all eight ways.",
+      "enum": [
+        "none",
+        "halfTurn",
+        "quarterTurn",
+        "mirrorLeftRight",
+        "mirrorTopBottom",
+        "mirrorDiagonal",
+        "mirrorBothWays",
+        "mirrorBothDiagonals",
+        "mirrorEightWays"
+      ]
+    },
     "sizeBound": {
       "type": "object",
       "minProperties": 1,
@@ -1553,10 +1567,10 @@
             },
             "options": {
               "type": "object",
-              "description": "Settings the params give that only the deal reads, by name, each written in a full game ID as its letter and a number: a number from `min` to `max`, or with `choices` the index of one, each choice with its `bounds` on the board's size, of which `square` asks a square board, and its `words` in a board's name. Neither is offered on the preset menu but as a board names it after its `WxH` (`7x7s4`).",
+              "description": "Settings the params give that only the deal reads, by name, each written in a full game ID as its letter and a number: a number from `min` to `max`, or with `choices` the index of one, each choice with its `bounds` on the board's size, of which `square` asks a square board, and its `words` in a board's name. With no letter, each choice has a `code` the ID writes in its place. An option whose every choice names the `symmetry` it keeps chooses one for `symmetric` or a `first` sample. Neither is offered on the preset menu but as a board names it after its `WxH` (`7x7s4`).",
               "additionalProperties": {
                 "type": "object",
-                "required": ["letter", "kw", "name", "default", "doc"],
+                "required": ["kw", "name", "default", "doc"],
                 "additionalProperties": false,
                 "properties": {
                   "letter": { "type": "string", "pattern": "^[a-z]$" },
@@ -1580,6 +1594,12 @@
                       "properties": {
                         "name": { "type": "string" },
                         "words": { "type": "string" },
+                        "symmetry": { "$ref": "#/$defs/symmetry" },
+                        "code": {
+                          "type": "string",
+                          "pattern": "^[a-z][a-z0-9]*$",
+                          "description": "What a full game ID writes for the choice, in an option with no `letter`; the default's is read and never written (upstream solo.c's `m4`)."
+                        },
                         "bounds": {
                           "type": "object",
                           "additionalProperties": false,
@@ -1732,8 +1752,8 @@
               "description": "A search tier's deal strips every draw from every clue, and not from a board of the lowest tier but one draw in eight: quicker where the lowest tier's boards leave the search little to strip (Sticks')."
             },
             "symmetric": {
-              "enum": ["halfTurn"],
-              "description": "The clues `hide` leaves are symmetric under a half turn of the board: a clue whose partner square has none goes first, and each other goes with its partner."
+              "type": "string",
+              "description": "The clues `hide` leaves keep a symmetry: a symmetry by its name, or a deal option whose choices name them. A clue a square of whose orbit has none goes first, and each other with the clues of its orbit still shown."
             },
             "thorough": {
               "type": "object",
@@ -1816,7 +1836,7 @@
                 },
                 {
                   "type": "object",
-                  "description": "The answer searched under the partition the deal divides first (`divide`): from the blank board with the partition dealt, the search by trial and error over the ladder tries each square's values in a random order, and a draw whose search runs out of budget is drawn again.",
+                  "description": "The answer searched under the partitions the deal divides first (`divide`), or under the board's units alone where it divides none: from the blank board with the partition dealt, the search by trial and error over the ladder tries each square's values in a random order, and a draw whose search runs out of budget is drawn again.",
                   "required": ["search"],
                   "additionalProperties": false,
                   "properties": {

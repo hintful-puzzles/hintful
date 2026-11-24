@@ -45,6 +45,7 @@ import { RULESET_KW, rulesetItem } from "../game-id/ruleset.ts";
 import { encodeRunLength } from "../game-id/run-length.ts";
 import { encodeWallRuns, readRegionWalls } from "../game-id/wall-runs.ts";
 import { regionNumbers } from "../generate/divide.ts";
+import type { Symmetry } from "../generate/symmetry.ts";
 import {
   type ClueList,
   clueList,
@@ -196,9 +197,11 @@ export type ChoiceBounds = SizeBounds & {
 
 /** A setting the params give that only the deal reads (`deal.options`): a
  * number from `min` to `max`, or with `choices` the index of one. A full ID
- * writes it as its letter and the number. */
+ * writes it as its letter and the number, or where its choices have codes,
+ * as the choice's code, the default's never. */
 export interface FillOption {
-  readonly letter: string;
+  /** Absent where the choices have codes. */
+  readonly letter?: string;
   readonly kw: string;
   readonly name: string;
   readonly default: number;
@@ -211,6 +214,10 @@ export interface FillOption {
     readonly name: string;
     readonly words?: string;
     readonly bounds?: ChoiceBounds;
+    /** The symmetry the choice keeps, where the option is a symmetry. */
+    readonly symmetry?: Symmetry;
+    /** What a full ID writes for it, where the option has no letter. */
+    readonly code?: string;
   }[];
 }
 
@@ -286,9 +293,9 @@ export interface FillDeal {
    * which a cell is renumbered to repeat a number of its row or column
    * (`latin-numbers.ts`). */
   readonly latin?: { readonly kind: string; readonly under: number };
-  /** The symmetry the clues it leaves keep: a clue and its partner under a
-   * half turn are hidden together. */
-  readonly symmetric?: "halfTurn";
+  /** The symmetry the clues it leaves keep, or the option that chooses it:
+   * the clues at the squares of one orbit are hidden together. */
+  readonly symmetric?: Symmetry | { readonly option: string };
   readonly thorough?: FillThorough;
   /** The board kind the params give as a count of pieces of each length. */
   readonly tally?: FillTally;
@@ -612,6 +619,21 @@ export const optionOf = (deal: FillDeal, p: FillParams, name: string): number =>
   return p.options?.[name] ?? o.default;
 };
 
+/** The symmetry option `name` chooses on a board of `p`. */
+export const symmetryOf = (deal: FillDeal, p: FillParams, name: string): Symmetry => {
+  const s = deal.options?.[name]?.choices?.[optionOf(deal, p, name)]?.symmetry;
+  if (s === undefined) throw new Error(`deal: option ${name} chooses no symmetry`);
+  return s;
+};
+
+/** The symmetry the clues a deal of board `p` leaves keep: `none` where it
+ * keeps none. */
+export const symmetricOf = (deal: FillDeal, p: FillParams): Symmetry => {
+  const s = deal.symmetric;
+  if (s === undefined) return "none";
+  return typeof s === "string" ? s : symmetryOf(deal, p, s.option);
+};
+
 /** The kinds of `deal.kindLetters` board `p` deals, in the letters' order:
  * every one where `p` names none. */
 export const kindsOn = (deal: FillDeal, p: FillParams): readonly string[] =>
@@ -894,27 +916,10 @@ export function fillParams(
           : letters(paramConfig, RULESET_KW, s.letters),
       ),
       ...(deal.tally === undefined ? [] : [tallySizeSegment(deal.tally)]),
-      // An option only the deal reads, which only a full ID carries: absent,
-      // it is the option's default.
-      ...options.map(([name, o]) =>
-        num(
-          paramConfig,
-          o.letter,
-          {
-            get: (p) => optionOf(deal, p, name),
-            set: (p, v) => {
-              p.options = { ...p.options, [name]: v };
-            },
-          },
-          {
-            full: true,
-            whenAbsent: (p) => {
-              p.options = { ...p.options, [name]: o.default };
-            },
-          },
-        ),
-      ),
       ...named.map(([, m]) => flag(paramConfig, m.letter, m.kw)),
+      // After the modifiers' letters, as upstream solo.c writes its
+      // symmetry after `x` and `k`.
+      ...options.map(([name, o]) => optionSegment(deal, paramConfig, name, o)),
       // A deal setting, which only a full ID carries, and only where it is
       // off: absent, it is on whatever the size, as upstream reads it, so an
       // upstream ID deals as it did there.
@@ -1119,6 +1124,43 @@ function tierFlagSegment(
       if (s[i] !== flag.letter) return i;
       p.diff = flag.tier;
       return i + 1;
+    },
+  };
+}
+
+/** Option `name` in the params, which only a full ID carries: its letter and
+ * the number, or its choice's code, longest first where one begins another,
+ * and the default's never written. Absent, it is the option's default. */
+function optionSegment(
+  deal: FillDeal,
+  config: readonly ParamConfigItem<FillParams>[],
+  name: string,
+  o: FillOption,
+): ParamsSegment<FillParams> {
+  const set = (p: FillParams, v: number) => {
+    p.options = { ...p.options, [name]: v };
+  };
+  if (o.letter !== undefined)
+    return num(
+      config,
+      o.letter,
+      { get: (p) => optionOf(deal, p, name), set },
+      { full: true, whenAbsent: (p) => set(p, o.default) },
+    );
+  const codes = (o.choices ?? []).map((c, i) => {
+    if (c.code === undefined) throw new Error(`deal: option ${name} has no letter`);
+    return [c.code, i] as const;
+  });
+  const longestFirst = [...codes].sort(([a], [b]) => b.length - a.length);
+  return {
+    encode: (p, full) => {
+      const v = optionOf(deal, p, name);
+      return full && v !== o.default ? (codes[v]?.[0] ?? "") : "";
+    },
+    decode: (s, i, p) => {
+      const found = longestFirst.find(([code]) => s.startsWith(code, i));
+      set(p, found?.[1] ?? o.default);
+      return found === undefined ? i : i + found[0].length;
     },
   };
 }

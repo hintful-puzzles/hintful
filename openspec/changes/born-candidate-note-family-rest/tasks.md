@@ -84,6 +84,16 @@ the predecessor's were, in a commit before the flip.
         (`{n}j`, `c` the order), the Jigsaw ruleset, whose `box` the deal
         divides (`equal: w`, built in 2.1c) where every other board's is
         `blocks(r, c)`.
+        Built, the symmetry, on the `turning` fixture: the symmetries are
+        named by what they keep (`engine/generate/symmetry.ts`, nine), a
+        choice names its `symmetry` (Light Up's and Sticks' too, whose
+        `first` sample now maps a name to `set_blacks`' number), and
+        `deal.symmetric` takes a name or such an option, hiding a clue with
+        its orbit; an option with no letter writes each choice's `code`,
+        the default's never; options are written after the modifiers'
+        letters (no game had both); and the search sample runs where no
+        partition is divided, on the board's units alone (Solo's Standard
+        and X boards). Left: the sizes.
   - [ ] 2.1e The flip: its words as `says`, its tests to `cases.yaml`.
 - [ ] 2.2 ABCD born: the number size, letters, the walk with no region, a
       clue per value derived, written and drawn in a margin, corner

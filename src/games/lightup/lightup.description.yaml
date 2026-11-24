@@ -163,18 +163,22 @@ deal:
       # board mirrored both ways (none in 400,000 searched, 2026-11-02) and
       # 3x4 and 3x5 have, so no bound refuses it: its deal gives up.
       choices:
-        - { name: None, words: no symmetry }
+        - { name: None, words: no symmetry, symmetry: none }
         - name: 2-way mirror
+          symmetry: mirrorTopBottom
           bounds: { tiers: { Unreasonable: { longer: { min: 4 } } } }
         - name: 2-way rotational
+          symmetry: halfTurn
           bounds: { tiers: { Unreasonable: { longer: { min: 4 } } } }
         - name: 4-way mirror
+          symmetry: mirrorBothWays
           bounds:
             longer: { min: 3 }
             tiers:
               Normal: { longer: { min: 4 } }
               Unreasonable: { longer: { min: 4 } }
         - name: 4-way rotational
+          symmetry: quarterTurn
           bounds:
             square: true
             longer: { min: 3 }

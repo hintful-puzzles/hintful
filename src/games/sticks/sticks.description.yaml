@@ -192,11 +192,12 @@ deal:
         left to right, and <em>4-way rotational</em> makes the grid look the
         same after a quarter turn, which needs a square grid.
       choices:
-        - { name: None, words: no symmetry }
-        - name: 2-way mirror
-        - name: 2-way rotational
-        - name: 4-way mirror
+        - { name: None, words: no symmetry, symmetry: none }
+        - { name: 2-way mirror, symmetry: mirrorTopBottom }
+        - { name: 2-way rotational, symmetry: halfTurn }
+        - { name: 4-way mirror, symmetry: mirrorBothWays }
         - name: 4-way rotational
+          symmetry: quarterTurn
           bounds: { square: true }
   # The blocks first, at the share and the symmetry the params give
   # (upstream's set_blacks), then a line at random in every other square.

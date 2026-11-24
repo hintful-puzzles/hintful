@@ -79,11 +79,12 @@ deal:
       default: 2
       doc: How the walls are arranged.
       choices:
-        - { name: None, words: no symmetry }
-        - name: 2-way mirror
-        - name: 2-way rotational
-        - name: 4-way mirror
+        - { name: None, words: no symmetry, symmetry: none }
+        - { name: 2-way mirror, symmetry: mirrorTopBottom }
+        - { name: 2-way rotational, symmetry: halfTurn }
+        - { name: 4-way mirror, symmetry: mirrorBothWays }
         - name: 4-way rotational
+          symmetry: quarterTurn
           bounds: { square: true }
   sample:
     first: { value: 3, share: walls, symmetry: symmetry }

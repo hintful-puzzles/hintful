@@ -392,9 +392,10 @@ research tools all read through it; the app never does.
   (a number, a size, or `w`), which a desc's parts must keep. A list
   divides several in turn (`fitting`'s blocks, then its cages).
   `sample: { search: true }` then searches the
-  answer under those partitions, from the blank board, a square's values
-  tried in a random order, a draw out of budget divided again (`zoning` is
-  the fixture). A clue at a part is the answer's, so the blank board shows
+  answer under those partitions, or under the board's units alone where it
+  divides none (`turning`), from the blank board, a square's values tried
+  in a random order, a draw out of budget divided again (`zoning` is the
+  fixture). A clue at a part is the answer's, so the blank board shows
   none, and a conclusion that is false is a contradiction: a technique
   reading a part's clue reads only a part that has one (`r in cage where
   clue(sum, r) != none`, the `grading` fixture's), or the search finds no
@@ -438,12 +439,19 @@ research tools all read through it; the app never does.
   no block, never faint, never counted, and outlined as any square of an
   area. `id:`'s `digits` writes such a kind as upstream does, a digit a
   number and a letter a run without one; with `apart`, a whole number, and
-  `apart` between two side by side (Range's `_`). `deal.symmetric:
-  halfTurn` hides a clue with its partner under a half turn, so the clues
-  shown stay symmetric. `deal.options` are settings of the deal by letter, a
+  `apart` between two side by side (Range's `_`). `deal.symmetric`
+  hides a clue with the others of its orbit under a symmetry, so the clues
+  shown keep it: a symmetry by its name (`halfTurn`; the names are
+  `engine/generate/symmetry.ts`'s, each by what it keeps, since upstream
+  numbers them differently in each game), or a deal option whose every
+  choice names its `symmetry` (the `turning` fixture's eight, Solo's).
+  `deal.options` are settings of the deal by letter, a
   number in a range or one of named choices, a choice with the size bounds
   it binds; a preset board names one after its `WxH` (`7x7s4`), and a label
-  names one only where it is not that board's, or the default. `build:
+  names one only where it is not that board's, or the default. An option
+  with no letter writes each choice's `code` in its place, the default's
+  never (upstream solo.c's `m4`). Options are written after the modifiers'
+  letters. `build:
   { value }` lays that value alone, each on a cell that may still hold it
   (a build ladders at the lowest tier until one meets a dead end or builds
   an answer that breaks a rule, and a tier higher after each that does),
