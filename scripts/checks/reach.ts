@@ -6,7 +6,9 @@
  *
  *   1. an import, static or dynamic, by relative or root-anchored specifier,
  *      read with `ts.preProcessFile` the way the compiler reads it. A queried
- *      import (`?raw`, `?url`) reaches the file as text and is not followed;
+ *      import (`?raw`, `?url`) reaches the file as text and is not followed,
+ *      and a statement that is a type's alone (`import type`) is erased
+ *      before any test runs, so it reaches nothing;
  *   2. an `import.meta.glob` call, taken as the literal directory before its
  *      first wildcard. That is coarser than the pattern and only ever in the
  *      direction of reaching more (`select-tests.ts` says why a hand-rolled
@@ -232,6 +234,26 @@ function resolve(fromFile: string, spec: string): string | null {
   return hit === undefined ? null : path.relative(ROOT, hit);
 }
 
+/** How many times each specifier is imported or re-exported by a statement
+ * that is a type's alone (`import type`, `export type … from`). An import
+ * that names a type among values (`import { type A }`) is not one: it can
+ * stay as an import for its side effects. */
+function typeOnlySpecs(file: string, text: string): Map<string, number> {
+  const out = new Map<string, number>();
+  if (!/\b(import|export) type\b/.test(text)) return out;
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
+  for (const s of source.statements) {
+    const typeOnly =
+      (ts.isImportDeclaration(s) &&
+        s.importClause?.phaseModifier === ts.SyntaxKind.TypeKeyword) ||
+      (ts.isExportDeclaration(s) && s.isTypeOnly);
+    const spec = (s as ts.ImportDeclaration | ts.ExportDeclaration).moduleSpecifier;
+    if (typeOnly && spec !== undefined && ts.isStringLiteral(spec))
+      out.set(spec.text, (out.get(spec.text) ?? 0) + 1);
+  }
+  return out;
+}
+
 const edgeCache = new Map<string, Edges>();
 
 /** What `file` (repo-relative) reads directly. */
@@ -240,9 +262,18 @@ export function edges(file: string): Edges {
   if (hit !== undefined) return hit;
   const source = readFileSync(path.join(ROOT, file), "utf8");
   const imports: Edges["imports"] = [];
+  // An `import type` or `export type … from` is erased before a test runs, so
+  // it carries nothing a test can observe; the typecheck is its own step.
+  const erased = typeOnlySpecs(file, source);
   const specs = ts
     .preProcessFile(source, true, true)
     .importedFiles.map((f) => f.fileName)
+    .filter((spec) => {
+      const left = erased.get(spec) ?? 0;
+      if (left === 0) return true;
+      erased.set(spec, left - 1);
+      return false;
+    })
     .concat([...source.matchAll(URL_REF)].map((m) => m[1] ?? ""));
   for (const spec of specs) {
     if (!spec.startsWith(".") && !spec.startsWith("/")) continue;

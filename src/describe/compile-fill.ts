@@ -31,12 +31,12 @@ import { derivedClues } from "./fill/derive.ts";
 import { answerEnv, param, present, tierIndex } from "./fill/emit.ts";
 import { hideFlagOf, hideOf, hideRankOf, symmetricOf } from "./fill/hide.ts";
 import { checkNamed, checkSegments, hexagonOf } from "./fill/id-checks.ts";
+import { Letters } from "./fill/letters.ts";
 import { partsOfKinds, universesOf } from "./fill/locations.ts";
 import { numbersOf } from "./fill/numbers.ts";
 import {
   kindLettersOf,
   optionsJsonOf,
-  settingLetters,
   settingsOf,
   tallyOf,
   tierAliasesOf,
@@ -59,11 +59,12 @@ export function fillOf(
   env: Env,
   measured: (e: Expr) => Expr,
 ): string[] {
+  const letters = new Letters();
   return [
     ...markWhileOf(json, env, measured),
     ...derivedClues(json, d, env, measured),
-    ...playOf(json, d, env, measured),
-    ...dealOf(json, d, env, measured),
+    ...playOf(json, d, env, measured, letters),
+    ...dealOf(json, d, env, measured, letters),
     ...numbersOf(json, d, env, measured),
   ];
 }
@@ -80,6 +81,7 @@ function dealOf(
   d: Description,
   env: Env,
   measured: (e: Expr) => Expr,
+  letters: Letters,
 ): string[] {
   if (json.play === undefined) return [];
   const kinds = [...d.clueKinds.keys()];
@@ -91,7 +93,7 @@ function dealOf(
   // The tally is the params', which the ID does not write.
   const written = kinds.filter((k) => k !== json.play?.tally?.kind);
   checkNamed(id, [...written, ...partitions], hexagon?.outside ?? null);
-  checkSegments(id, d, env, json.sizes, json);
+  checkSegments(id, d, env, json);
   const { hide, hideFirst, hideFrom, hideWhole } = hideOf(json, d);
   const hides = hide !== null;
   const thorough = thoroughOf(json);
@@ -100,12 +102,7 @@ function dealOf(
       throw new CompileError(
         "deal thorough: a setting of how the deal hides, and no hide",
       );
-    const taken = [
-      "d",
-      ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
-    ];
-    if (taken.includes(thorough.letter))
-      throw new CompileError(`deal thorough: the letter ${thorough.letter} is taken`);
+    letters.claim(thorough.letter, "deal thorough");
   }
   const stripFrom = json.deal?.["stripFrom"];
   if (stripFrom !== undefined && (stripFrom !== "everyClue" || !hides))
@@ -127,7 +124,7 @@ function dealOf(
   const divides = dividesOf(json);
   const dividedNames = divides.map((x) => x.partition);
   checkPartitions(grow, divides, sample, partitions, tiers, env);
-  const settings = settingsOf(json, env);
+  const settings = settingsOf(json, env, letters);
   const divided =
     divides.length === 0 ? null : divides.map((x) => divideOn(x, settings, json));
   // The kinds dealt one a part sit at the parts of one partition divided.
@@ -141,11 +138,7 @@ function dealOf(
   checkSample(json, d, sample, settings, hides);
   const unpair = json.deal?.["unpair"];
   const latin = latinOf(json, d);
-  const options = optionsJsonOf(json, tiers, [
-    ...settings.flatMap(settingLetters),
-    ...(thorough === null ? [] : [thorough.letter]),
-    ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
-  ]);
+  const options = optionsJsonOf(json, tiers, letters);
   checkFirst(sample, options, hides);
   const symmetricDeal = symmetricOf(symmetric, options);
   const tierFlag =
@@ -155,41 +148,23 @@ function dealOf(
           letter: json.tierFlag.letter,
           tier: tierIndex(tiers, json.tierFlag.tier, "tierFlag"),
         };
-  if (
-    tierFlag !== null &&
-    [...Object.values(options).map((o) => o.letter), "d"].includes(tierFlag.letter)
-  )
-    throw new CompileError(`tierFlag: the letter ${tierFlag.letter} is taken`);
+  if (tierFlag !== null) letters.claim(tierFlag.letter, "tierFlag");
   const unusedLetters = json.unusedLetters ?? null;
   const firstKind = firstKindOf(json, d);
   const kindLetters = kindLettersOf(json, d);
-  const taken = [
-    ...settings.flatMap(settingLetters),
-    ...Object.values(options).map((o) => o.letter),
-    ...(thorough === null ? [] : [thorough.letter]),
-    ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
-    ...(tierFlag === null ? [] : [tierFlag.letter]),
-    ...(oneKind?.only == null ? [] : [oneKind.only.letter]),
-    ...(kindLetters ?? []).map((l) => l.letter),
-    "d",
-  ];
-  if (
-    oneKind?.only != null &&
-    taken.filter((l) => l === oneKind.only?.letter).length > 1
-  )
-    throw new CompileError(`deal onlyFlag: the letter ${oneKind.only.letter} is taken`);
-  for (const { letter } of kindLetters ?? [])
-    if (taken.filter((l) => l === letter).length > 1)
-      throw new CompileError(`deal kindLetters: the letter ${letter} is taken`);
-  for (const letter of Object.keys(unusedLetters ?? {}))
-    if (taken.includes(letter))
-      throw new CompileError(`unusedLetters: the letter ${letter} is taken`);
+  if (oneKind?.only != null) letters.claim(oneKind.only.letter, "deal onlyFlag");
+  for (const { letter } of kindLetters ?? []) letters.claim(letter, "deal kindLetters");
   const tierAliases = tierAliasesOf(json, tiers, tierLetters);
   const { grid } = json.space;
   const blocksDeal = fillBlocksOf(json, env);
   // The blocks' letter follows the size, before any modifier's.
-  if (blocksDeal !== null && taken.includes(blocksDeal.letter))
-    throw new CompileError(`play blocks: the letter ${blocksDeal.letter} is taken`);
+  if (blocksDeal !== null) letters.claim(blocksDeal.letter, "play blocks");
+  const tally = tallyOf(json, tiers, letters);
+  const hideFlag = hideFlagOf(json, d, hides, letters);
+  // A retired letter is one an old ID may still hold, so no field takes it.
+  for (const letter of Object.keys(unusedLetters ?? {}))
+    if (letters.has(letter))
+      throw new CompileError(`unusedLetters: the letter ${letter} is taken`);
   const deal = {
     ...(grid !== undefined && grid.w === grid.h ? { square: true } : {}),
     ...(hexagon === null ? {} : { hexagon }),
@@ -206,8 +181,8 @@ function dealOf(
     ...present("tierAliases", tierAliases),
     ...(typeof unpair === "string" ? { unpair } : {}),
     ...present("latin", latin),
-    ...present("tally", tallyOf(json, tiers)),
-    ...present("hideFlag", hideFlagOf(json, d, hides)),
+    ...present("tally", tally),
+    ...present("hideFlag", hideFlag),
     ...present("symmetric", symmetricDeal),
     ...present("thorough", thorough),
     ...present("divide", divided),

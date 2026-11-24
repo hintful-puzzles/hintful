@@ -50,12 +50,17 @@ const SEGMENT_KINDS = {
 
 type Kinds = typeof SEGMENT_KINDS;
 
-/** A segment of the desc: an entry of the description's `id:`. */
-export type IdSegment = {
-  [K in keyof Kinds]: Kinds[K] extends SegmentKind<infer S> ? S : never;
-}[keyof Kinds];
+/** The key naming a segment kind, which its entries hold. */
+export type SegmentKey = keyof Kinds;
 
-const KEYS = Object.keys(SEGMENT_KINDS) as (keyof Kinds)[];
+/** The `id:` entry of the segment kind `K`. */
+export type SegmentOf<K extends SegmentKey> =
+  Kinds[K] extends SegmentKind<infer S> ? S : never;
+
+/** A segment of the desc: an entry of the description's `id:`. */
+export type IdSegment = { [K in SegmentKey]: SegmentOf<K> }[SegmentKey];
+
+const KEYS = Object.keys(SEGMENT_KINDS) as SegmentKey[];
 
 /** The kind of segment `seg` is. */
 function kindOf(seg: IdSegment): SegmentKind<IdSegment> {

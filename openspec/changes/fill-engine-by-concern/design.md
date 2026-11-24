@@ -187,6 +187,19 @@ a sample error now hears of the sample's first. Every born game's module is
 the same byte for byte: HEAD's compiler, run over the split one's output,
 writes none of 140.
 
+As built (2.4, the registries): the compiler cannot load the engine's
+segment modules, since `scripts/describe.ts` runs under node's type
+stripping and they reach syntax it refuses (a parameter property). So each
+kind's `names` sits beside its check in the compiler's `SEGMENTS`, keyed by
+the engine's exported `SegmentKey` and typed by `SegmentOf<K>`, types alone;
+`description.ts`'s `IdSegmentJson` and `segmentKinds` are gone, and a
+code's meaning is `engine/fill/segments/code-said.ts`, which imports
+nothing, read by both sides. `fill/letters.ts` is the registry of params
+letters. It also holds the tally's and the hide flag's letters, which no
+list held, and it holds the tier flag to every field's letters, where it
+was held to the options' alone. Every born description compiles under it,
+to the same bytes.
+
 ### 6. Clue locations (2.5): per registry, unless 2.4 shows otherwise
 
 A location (lines, slots, corners, edges, parts) has a part in each of

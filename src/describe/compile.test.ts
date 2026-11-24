@@ -1104,6 +1104,39 @@ describe("what the fill board reads of a description", () => {
     );
   });
 
+  it("refuses a params letter any other field holds, the tally's and the hide flag's included", () => {
+    const source = "src/engine/testing/fixtures/fleet/fleet.description.yaml";
+    const fleet = sources.get(source);
+    if (fleet === undefined || !isFormal(fleet)) throw new Error("no fleet");
+    type Json = {
+      play: { tally: { size: { letter: string } }; boards: string[] };
+      deal: { hideFlag: { letter: string } };
+    };
+    const compileFleet = (edit: (j: Json) => void) => () => {
+      const j = structuredClone(fleet) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileFleet(() => {})()).toContain('"hideFlag"');
+    expect(
+      compileFleet((j) => {
+        j.deal.hideFlag.letter = "f";
+      }),
+    ).toThrow(/deal hideFlag: the letter f is taken/);
+    expect(
+      compileFleet((j) => {
+        j.play.tally.size.letter = "d";
+        j.play.boards = ["5x5d2"];
+      }),
+    ).toThrow(/play tally: the letter d is taken/);
+  });
+
   it("refuses a precedence of one kind or across places, and a letter taken or a kind not switchable", () => {
     const source = "src/engine/testing/fixtures/cornering/cornering.description.yaml";
     const cornering = sources.get(source);

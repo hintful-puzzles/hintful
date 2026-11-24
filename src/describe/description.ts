@@ -5,6 +5,7 @@
  * `research/` read its rules too. Reading the file is `load.ts`'s.
  */
 
+import type { IdSegment } from "../engine/fill/desc.ts";
 import type { Symmetry } from "../engine/generate/symmetry.ts";
 import { type Binder, type Expr, parse } from "./expr.ts";
 
@@ -115,8 +116,9 @@ export interface DescriptionJson {
   play?: PlayJson;
   /** A game born from its description: its catalog entry. */
   catalog?: CatalogJson;
-  /** A fill game's game ID: the codec's segments in order. */
-  id?: IdSegmentJson[];
+  /** A fill game's game ID: the codec's segments in order
+   * (`engine/fill/segments/`). */
+  id?: IdSegment[];
   /** The letter of each tier in the params' `d<letter>`, in order. */
   tierLetters?: string;
   /** A bare letter older game IDs write for a tier: read, never written. */
@@ -295,45 +297,6 @@ export interface CatalogJson {
   similar?: string;
 }
 
-/** A piece of a fill game's game ID (`engine/fill/segments/`): `runs`, the
- * cells a clue kind sits at as upstream's run code; `dots`, a two-valued
- * kind's clues as upstream's dot runs; or `numbers`, a clue kind's values in
- * the space's order, or the columns first. */
-export type IdSegmentJson =
-  | { runs: string }
-  | { walls: string }
-  | { dots: string; cases: [number, number]; before?: string }
-  | { lists: string; order?: "columns" }
-  | { cells: string }
-  | {
-      digits: string;
-      apart?: string;
-      before?: string;
-      letters?: Record<string, string>;
-      after?: Record<string, string>;
-      also?: Record<string, string>;
-    }
-  | {
-      numbers: string;
-      before?: string;
-      between?: string;
-      order?: "columns";
-      hidden?: string;
-      closed?: true;
-    }
-  | { glyphs: string; values: Record<string, number> }
-  | { records: string; sides: string }
-  | { blocks: string; before?: string; after?: string; counts?: false }
-  | { parts: string; before?: string; letters: Record<string, string> }
-  | { codes: Record<string, string>; before?: string };
-
-/** What a `codes` segment's code stands for: a kind whose number follows the
- * code, or a kind and one of its values, the code whole. */
-export const codeOf = (said: string): { kind: string; value: number | null } => {
-  const [kind, value] = said.split(" ");
-  return { kind, value: value === undefined ? null : Number(value) };
-};
-
 /** The board as a rectangle, or as a hexagon `w` wide and `h` high, stored
  * sheared (`engine/fill/hexagon.ts`), its store's corners holding the clue
  * kind `outside`. */
@@ -342,41 +305,6 @@ export interface GridJson {
   h: string;
   hexagon?: { outside: string };
 }
-
-/** The clue kinds or dealt partition an ID segment writes. */
-export const segmentKinds = (seg: IdSegmentJson): string[] =>
-  "runs" in seg
-    ? [seg.runs]
-    : "walls" in seg
-      ? [seg.walls]
-      : "dots" in seg
-        ? [seg.dots]
-        : "lists" in seg
-          ? [seg.lists]
-          : "cells" in seg
-            ? [seg.cells]
-            : "glyphs" in seg
-              ? [seg.glyphs]
-              : "records" in seg
-                ? [seg.records, seg.sides]
-                : "blocks" in seg
-                  ? [seg.blocks]
-                  : "parts" in seg
-                    ? Object.values(seg.letters)
-                    : "codes" in seg
-                      ? [
-                          ...new Set(
-                            Object.values(seg.codes).map((c) => codeOf(c).kind),
-                          ),
-                        ]
-                      : "digits" in seg
-                        ? [
-                            seg.digits,
-                            ...Object.values(seg.letters ?? {}),
-                            ...Object.values(seg.after ?? {}),
-                            ...Object.values(seg.also ?? {}),
-                          ]
-                        : [seg.numbers];
 
 /** What the generator chooses, in words, and, where the deal samples an
  * answer and derives the clues from it, how it samples, as `sample`

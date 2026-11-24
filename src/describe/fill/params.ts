@@ -15,9 +15,9 @@ import {
   optionsOf,
   type PlayJson,
   type SizeBoundsJson,
-  thoroughOf,
 } from "../description.ts";
 import { tierIndex } from "./emit.ts";
+import type { Letters } from "./letters.ts";
 import { blocksOf } from "./partitions.ts";
 
 /** A size beyond the grid's as the deal holds it (`FillSetting`). */
@@ -29,7 +29,7 @@ export type FillSettingJson = ({ letter: string } | { letters: string[] }) & {
 
 /** The letters a setting is written by in the params: its one before the
  * number, or each of its bare ones but the one written as nothing. */
-export const settingLetters = (s: { letter?: string; letters?: readonly string[] }) =>
+const settingLetters = (s: { letter?: string; letters?: readonly string[] }) =>
   s.letter !== undefined ? [s.letter] : (s.letters ?? []).filter((l) => l !== "");
 
 /**
@@ -38,7 +38,11 @@ export const settingLetters = (s: { letter?: string; letters?: readonly string[]
  * value. A size with no setting, a setting of no such size, a letter another
  * field takes, or a second ruleset field is refused.
  */
-export function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
+export function settingsOf(
+  json: DescriptionJson,
+  env: Env,
+  letters: Letters,
+): FillSettingJson[] {
   const given = json.play?.sizes ?? {};
   // A board sized by its blocks gives their sizes as its own.
   const blocks: readonly (number | string)[] =
@@ -46,20 +50,11 @@ export function settingsOf(json: DescriptionJson, env: Env): FillSettingJson[] {
   for (const n of env.sizes.names)
     if (given[n] === undefined && !blocks.includes(n))
       throw new CompileError(`play sizes: ${n} is a size the params must give`);
-  const taken = new Set([
-    "d",
-    ...Object.values(json.play?.modifiers ?? {}).map((m) => m.letter),
-    ...(thoroughOf(json) === null ? [] : [thoroughOf(json)?.letter]),
-  ]);
   const out = Object.entries(given).map(([size, s]) => {
     const range = json.sizes[size];
     if (range === undefined || !env.sizes.names.has(size))
       throw new CompileError(`play sizes: ${size} is no size beyond the grid's`);
-    for (const letter of settingLetters(s)) {
-      if (taken.has(letter))
-        throw new CompileError(`play sizes: the letter ${letter} is taken`);
-      taken.add(letter);
-    }
+    for (const letter of settingLetters(s)) letters.claim(letter, "play sizes");
     if (range.max === undefined || s.rulesets.length !== range.max - range.min + 1)
       throw new CompileError(`play sizes: ${size} has not one ruleset a value`);
     const rest = { size, min: range.min, rulesets: s.rulesets };
@@ -88,7 +83,7 @@ type BoundsOut = SizeBoundsJson & {
 export function optionsJsonOf(
   json: DescriptionJson,
   tiers: readonly string[],
-  taken: readonly string[],
+  letters: Letters,
 ): Record<
   string,
   Omit<OptionJson, "choices"> & {
@@ -101,7 +96,6 @@ export function optionsJsonOf(
     }[];
   }
 > {
-  const used = new Set(["d", ...taken]);
   return Object.fromEntries(
     Object.entries(optionsOf(json)).map(([name, o]) => {
       const codes = o.choices?.map((c) => c.code) ?? [];
@@ -115,16 +109,14 @@ export function optionsJsonOf(
         if (new Set(codes).size !== codes.length)
           throw new CompileError(`deal options: ${name} has two choices of one code`);
         for (const c of codes as string[])
-          if (used.has(c[0] ?? ""))
+          if (letters.has(c[0] ?? ""))
             throw new CompileError(
               `deal options: ${name}'s code ${c} begins with a letter taken`,
             );
       } else {
         if (codes.some((c) => c !== undefined))
           throw new CompileError(`deal options: ${name} has a letter and codes`);
-        if (used.has(o.letter))
-          throw new CompileError(`deal options: the letter ${o.letter} is taken`);
-        used.add(o.letter);
+        letters.claim(o.letter, "deal options");
       }
       const symmetries = o.choices?.filter((c) => c.symmetry !== undefined).length ?? 0;
       if (symmetries > 0 && symmetries !== o.choices?.length)
@@ -184,9 +176,14 @@ interface Tally {
 
 /** `play.tally`: a board kind of two fields, each length and its count, the
  * params give; `null` where there is none. */
-export function tallyOf(json: DescriptionJson, tiers: readonly string[]): Tally | null {
+export function tallyOf(
+  json: DescriptionJson,
+  tiers: readonly string[],
+  letters: Letters,
+): Tally | null {
   const t = json.play?.tally;
   if (t === undefined) return null;
+  letters.claim(t.size.letter, "play tally");
   const kind = json.clues?.[t.kind];
   const fields = Object.keys(kind?.fields ?? {});
   if (kind?.at !== "board" || fields.length !== 2)
@@ -233,17 +230,15 @@ export function kindLettersOf(
 export function checkedModifiers(
   json: DescriptionJson,
   modifiers: NonNullable<PlayJson["modifiers"]>,
+  letters: Letters,
 ): NonNullable<PlayJson["modifiers"]> {
-  const letters = new Set<string>();
   for (const [name, m] of Object.entries(modifiers)) {
     const v = json.variations?.[name];
     if (v === undefined)
       throw new CompileError(`play modifiers: ${name} is no variation`);
     if (v.replace !== undefined)
       throw new CompileError(`play modifiers: ${name} replaces, so it is a ruleset`);
-    if (m.letter === "d" || letters.has(m.letter))
-      throw new CompileError(`play modifiers: the letter ${m.letter} is taken`);
-    letters.add(m.letter);
+    letters.claim(m.letter, "play modifiers");
   }
   // The board passes the variations after its clues, which an answer check
   // takes only where it reads one.

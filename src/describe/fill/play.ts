@@ -20,6 +20,7 @@ import type { Description, DescriptionJson, PlayJson } from "../description.ts";
 import type { Expr } from "../expr.ts";
 import { parse } from "../expr.ts";
 import { answerEnv, param } from "./emit.ts";
+import type { Letters } from "./letters.ts";
 import { checkGaps, checkSigns, marginsOf } from "./locations.ts";
 import { boundsOf, menuOf, sizeOf } from "./menu.ts";
 import { notesOf } from "./notes.ts";
@@ -98,6 +99,7 @@ export function playOf(
   d: Description,
   env: Env,
   measured: (e: Expr) => Expr,
+  letters: Letters,
 ): string[] {
   const p = json.play;
   if (p === undefined) return [];
@@ -265,7 +267,7 @@ export function playOf(
       : [
           "",
           "/** The variations the player may switch on, by name (`engine/fill/game-id.ts`). */",
-          `export const modifiers = ${JSON.stringify(checkedModifiers(json, modifiers))} as const;`,
+          `export const modifiers = ${JSON.stringify(checkedModifiers(json, modifiers, letters))} as const;`,
         ]),
     ...(hintMarks === undefined
       ? []

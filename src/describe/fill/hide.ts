@@ -18,6 +18,7 @@ import type { Description, DescriptionJson, SizeBoundsJson } from "../descriptio
 import type { Expr } from "../expr.ts";
 import { parse } from "../expr.ts";
 import { answerEnv, param, tierIndex } from "./emit.ts";
+import type { Letters } from "./letters.ts";
 
 /** `deal.hide`, one kind or several, those tried before the rest
  * (`hideFirst`), and the tier each is first hidden at (`hideFrom`). */
@@ -223,6 +224,7 @@ export function hideFlagOf(
   json: DescriptionJson,
   d: Description,
   hides: boolean,
+  letters: Letters,
 ): HideFlag | null {
   const f = json.deal?.["hideFlag"];
   if (f === undefined) return null;
@@ -233,6 +235,7 @@ export function hideFlagOf(
     throw new CompileError("deal hideFlag: { kind, letter, kw, name, doc, words }");
   if (!d.clueKinds.has(kind as string))
     throw new CompileError(`deal hideFlag: no clue kind ${String(kind)}`);
+  letters.claim(letter as string, "deal hideFlag");
   return { kind, letter, kw, name, doc, words } as HideFlag;
 }
 

@@ -1,8 +1,7 @@
 ## Next
 
-2.4's second half: the letters' registry and the segment checks keyed by
-`SEGMENT_KINDS`, `IdSegmentJson` becoming `IdSegment` (design.md § 5; the
-move is done). Open: none. Goes before
+2.5, by design.md § 6: whether each location's parts are found from its
+engine file by a reference. Then 3.1. Open: none. Goes before
 `a-fill-board-of-any-slot` (`describe-the-whole-catalog` § "0. The
 refactor first").
 
@@ -23,9 +22,9 @@ game's cases, render snapshots, ID cases and fingerprints pass unchanged.
       230.
 - [x] 2.3 Deal steps (`deal.ts`). deal.ts 1,135 → 110 lines, with
       `deal/`'s modules each under 250.
-- [ ] 2.4 The compiler's per-concept parts (`compile-fill.ts`). The move:
-      compile-fill.ts 2,845 → 312 lines, `fill/`'s modules each under 460.
-      Left: the letters' registry, and the segment checks keyed.
+- [x] 2.4 The compiler's per-concept parts (`compile-fill.ts`): 2,845 →
+      under 320 lines, `fill/`'s modules each under 460; the letters'
+      registry, and the segment kinds read by key.
 - [ ] 2.5 Clue locations: each one module across all four, if task 1.1
       finds that is the cleaner cut than per-registry.
 

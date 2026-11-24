@@ -4,6 +4,7 @@
 import { DESC_TOO_LONG } from "../../contract/desc-error.ts";
 import { clueList } from "../../solve/describe-runtime.ts";
 import type { Clues } from "../board.ts";
+import { codeSaid } from "./code-said.ts";
 import { type Decoding, maxOf, type SegmentKind, universeOf } from "./segment.ts";
 
 /** A clue an element of its kinds' one place, in the space's order, between
@@ -22,10 +23,7 @@ function codesOf(
   codes: Readonly<Record<string, string>>,
 ): { readonly code: string; readonly kind: string; readonly value: number | null }[] {
   return Object.entries(codes)
-    .map(([code, said]) => {
-      const [kind, value] = said.split(" ");
-      return { code, kind, value: value === undefined ? null : Number(value) };
-    })
+    .map(([code, said]) => ({ code, ...codeSaid(said) }))
     .sort((a, b) => b.code.length - a.code.length);
 }
 
