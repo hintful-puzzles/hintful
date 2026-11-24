@@ -1185,6 +1185,17 @@ decides values (`PLACE` facts) and, where the game's mark is a link, marks
 `game.ts` is `fillGame`, every hook of the contract from these, which a
 game born from its description registers.
 
+What a fill game does by hand has a second copy beside this one, kept for
+what still routes to it: `src/skeleton/grid/` is the scaffold of a
+hand-written grid game and the exemplar the guides' step lists cite, and
+the candidate modules (`hint/candidate-hint.ts`, `latin-hint.ts`,
+`latin-notes.ts`) are the hint of a hand-written game of notes, and what the
+fill engine's own `candidates.ts` builds on, so they stay; a game's own
+adapter onto them goes when the game is born. Which games still route there
+is a query (`git grep -l -e engine/hint/latin -e engine/hint/candidate-hint
+-- src/games`). The skeleton goes when no hand-written grid game is begun,
+and with it the guides' exemplars.
+
 ### `edge-hint.ts` — a hint on an edge between squares
 
 Name an edge a step decides or reasons from by its `EDGE` kind, keyed by

@@ -33,25 +33,17 @@ export interface HiddenKindOut {
 }
 
 /** What a kind's entry in `deal.hide` may say. */
-const PROPERTIES = ["first", "by", "from", "whole", "when"] as const;
+type HideJson = NonNullable<NonNullable<DescriptionJson["deal"]>["hide"]>;
+type HideProps = NonNullable<Exclude<HideJson, string | string[]>[string]>;
 
 /** `deal.hide`'s entries, in its order, each with its properties: one kind,
  * a list of them, or by kind its properties (`null` for none). */
-function hideEntries(json: DescriptionJson): [string, Record<string, unknown>][] {
-  const h = json.deal?.["hide"];
+function hideEntries(json: DescriptionJson): [string, HideProps][] {
+  const h = json.deal?.hide;
   if (h === undefined) return [];
   if (typeof h === "string") return [[h, {}]];
-  if (Array.isArray(h) && h.every((k) => typeof k === "string"))
-    return h.map((k: string) => [k, {}]);
-  if (typeof h === "object" && h !== null && !Array.isArray(h))
-    return Object.entries(h as Record<string, unknown>).map(([k, v]) => {
-      if (v !== null && (typeof v !== "object" || Array.isArray(v)))
-        throw new CompileError(`deal hide: ${k}'s properties, or none`);
-      return [k, (v ?? {}) as Record<string, unknown>];
-    });
-  throw new CompileError(
-    "deal hide: a clue kind, a list of them, or their properties by kind",
-  );
+  if (Array.isArray(h)) return h.map((k) => [k, {}]);
+  return Object.entries(h).map(([k, v]) => [k, v ?? {}]);
 }
 
 /** `deal.hide` as the deal reads it; `null` where it hides nothing. */
@@ -68,14 +60,7 @@ export function hideOf(
     if (c === undefined) throw new CompileError(`deal hide: no clue kind ${kind}`);
     if (c.complete)
       throw new CompileError(`deal hide: ${kind} is complete, so none of it is hidden`);
-    for (const p of Object.keys(props))
-      if (!(PROPERTIES as readonly string[]).includes(p))
-        throw new CompileError(
-          `deal hide: ${kind}'s ${p} is none of ${PROPERTIES.join(", ")}`,
-        );
     const { first, from, whole, when } = props;
-    if (first !== undefined && first !== true)
-      throw new CompileError(`deal hide: ${kind}'s first is true, or absent`);
     return {
       kind,
       ...(first === true ? { first: true as const } : {}),
@@ -83,7 +68,7 @@ export function hideOf(
       ...(whole === undefined ? {} : { whole: wholeOf(json, kind, whole, tiers) }),
       ...(when === undefined
         ? {}
-        : { when: dealFlag(settings, String(when), `deal hide: ${kind}'s when`) }),
+        : { when: dealFlag(settings, when, `deal hide: ${kind}'s when`) }),
     };
   });
   const firsts = out.filter((h) => h.first === true).length;
@@ -120,16 +105,12 @@ function readByTechniques(d: Description): Set<string> {
 }
 
 /** A kind's `from`: the tier, by its index, below which it is kept whole. */
-function fromOf(kind: string, tier: unknown, tiers: readonly string[]): number {
-  if (typeof tier !== "string")
-    throw new CompileError(`deal hide: ${kind}'s from is a tier, by its name`);
+function fromOf(kind: string, tier: string, tiers: readonly string[]): number {
   const i = tierIndex(tiers, tier, "deal hide");
   if (i === 0)
     throw new CompileError(`deal hide: ${kind} from the lowest tier is every tier`);
   return i;
 }
-
-const SIZE_MEASURES = ["sum", "area", "shorter", "longer"] as const;
 
 /** A kind's `whole`: hidden whole on a board below a tier, by the tier's
  * index (past the last where none is named), with a variation on where one
@@ -137,29 +118,14 @@ const SIZE_MEASURES = ["sum", "area", "shorter", "longer"] as const;
 function wholeOf(
   json: DescriptionJson,
   kind: string,
-  spec: unknown,
+  spec: NonNullable<HideProps["whole"]>,
   tiers: readonly string[],
 ): { below: number; bounds: SizeBoundsJson; with?: string } {
-  if (typeof spec !== "object" || spec === null || Array.isArray(spec))
-    throw new CompileError(
-      `deal hide: ${kind}'s whole is a tier, a variation and bounds`,
-    );
-  const {
-    below,
-    with: variation,
-    ...bounds
-  } = spec as { below?: unknown; with?: unknown } & SizeBoundsJson;
-  if (below !== undefined && typeof below !== "string")
-    throw new CompileError(`deal hide: ${kind} whole below a tier, by its name`);
-  if (variation !== undefined && json.variations?.[variation as string] === undefined)
-    throw new CompileError(
-      `deal hide: ${kind} whole with ${String(variation)}, no variation`,
-    );
+  const { below, with: variation, ...bounds } = spec;
+  if (variation !== undefined && json.variations?.[variation] === undefined)
+    throw new CompileError(`deal hide: ${kind} whole with ${variation}, no variation`);
   if (below === undefined && variation === undefined)
     throw new CompileError(`deal hide: ${kind} whole below a tier or with a variation`);
-  for (const name of Object.keys(bounds))
-    if (!(SIZE_MEASURES as readonly string[]).includes(name))
-      throw new CompileError(`deal hide: ${kind}'s whole ${name} is no size bound`);
   const at = below === undefined ? tiers.length : tierIndex(tiers, below, "deal hide");
   if (at === 0)
     throw new CompileError(
@@ -168,7 +134,7 @@ function wholeOf(
   return {
     below: at,
     bounds,
-    ...(variation === undefined ? {} : { with: variation as string }),
+    ...(variation === undefined ? {} : { with: variation }),
   };
 }
 
@@ -182,15 +148,14 @@ export function hideRankOf(
   env: Env,
   measured: (e: Expr) => Expr,
 ): string[] {
-  const by = hideEntries(json).filter(([, props]) => props["by"] !== undefined);
+  const by = hideEntries(json).flatMap(([kind, { by: src }]) =>
+    src === undefined ? [] : [{ kind, src }],
+  );
   if (by.length === 0) return [];
   const scratch: string[] = [];
   const henv = answerEnv(env, { yes: false }, scratch);
   const lines: string[] = [];
-  for (const [kind, props] of by) {
-    const src = props["by"];
-    if (typeof src !== "string")
-      throw new CompileError(`deal hide: ${kind}'s by is a formula of \`at\``);
+  for (const { kind, src } of by) {
     const sorts = env.clues.get(kind) as ClueKind;
     const out = new Out(2);
     const e = compileExpr(

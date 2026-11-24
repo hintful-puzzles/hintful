@@ -32,18 +32,14 @@ export function latinOf(
   json: DescriptionJson,
   d: Description,
 ): { readonly kind: string; readonly under: number } | null {
-  const latin = json.deal?.["latin"];
+  const latin = json.deal?.latin;
   if (latin === undefined) return null;
-  if (typeof latin !== "object" || latin === null)
-    throw new CompileError("deal latin: { kind, under }");
-  const { kind, under } = latin as { kind?: unknown; under?: unknown };
-  if (typeof kind !== "string" || d.clueKinds.get(kind)?.at !== "cell")
-    throw new CompileError(`deal latin: ${String(kind)} is no clue kind at a cell`);
-  if (typeof under !== "number" || json.play?.values?.[String(under)] === undefined)
-    throw new CompileError(
-      `deal latin: under ${String(under)}, which is no value played`,
-    );
-  if (json.deal?.["hide"] !== undefined)
+  const { kind, under } = latin;
+  if (d.clueKinds.get(kind)?.at !== "cell")
+    throw new CompileError(`deal latin: ${kind} is no clue kind at a cell`);
+  if (json.play?.values?.[String(under)] === undefined)
+    throw new CompileError(`deal latin: under ${under}, which is no value played`);
+  if (json.deal?.hide !== undefined)
     throw new CompileError("deal latin: every number is shown, and none hidden");
   return { kind, under };
 }

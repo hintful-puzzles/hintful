@@ -1160,9 +1160,6 @@ describe("what the fill board reads of a description", () => {
     expect(hiding({ given: { first: true }, flank: { first: true } })).toThrow(
       /deal hide: every kind first, and none after them/,
     );
-    expect(hiding({ given: { last: true }, flank: null })).toThrow(
-      /deal hide: given's last is none of first, by, from, whole, when/,
-    );
   });
 
   it("refuses a params letter any other field holds, the tally's and the hide flag's included", () => {

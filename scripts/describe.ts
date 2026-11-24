@@ -25,6 +25,7 @@ import { globSync } from "tinyglobby";
 import { WARN_GROWTH } from "../src/describe/compile-growth.ts";
 import { lintDescription } from "../src/describe/lint.ts";
 import { loadDescriptionFile } from "../src/describe/load.ts";
+import { SCHEMA_TYPES, schemaTypes } from "../src/describe/schema-types.ts";
 import { unchecked } from "../src/describe/soundness.ts";
 import {
   bornFiles,
@@ -47,6 +48,25 @@ const written: string[] = [];
 const steep: string[] = [];
 const wanted = new Set<string>();
 const skipped: string[] = [];
+function write(from: string, to: string, text: string): void {
+  wanted.add(to);
+  const path = `${root}${to}`;
+  if (existsSync(path) && readFileSync(path, "utf8") === text) return;
+  // A dev server and a test run may generate at once, and a reader must
+  // never see half a module: each writes its own file and renames it into
+  // place.
+  mkdirSync(dirname(path), { recursive: true });
+  const partial = `${path}.${process.pid}.partial`;
+  writeFileSync(partial, text);
+  renameSync(partial, path);
+  written.push(`${from} -> ${to}`);
+}
+const schemaPath = "src/describe/description.schema.json";
+write(
+  schemaPath,
+  SCHEMA_TYPES,
+  await schemaTypes(JSON.parse(readFileSync(`${root}${schemaPath}`, "utf8"))),
+);
 for (const [f, file] of sources) {
   if (!compiles(file)) {
     // Steps with nothing to compile them into are almost certainly a
@@ -60,19 +80,7 @@ for (const [f, file] of sources) {
   }
   const out = compiledPath(f);
   const code = compileSource(f, sources);
-  for (const [to, text] of [[out, code], ...bornFiles(f, file)]) {
-    wanted.add(to);
-    const path = `${root}${to}`;
-    if (existsSync(path) && readFileSync(path, "utf8") === text) continue;
-    // A dev server and a test run may generate at once, and a reader must
-    // never see half a module: each writes its own file and renames it into
-    // place.
-    mkdirSync(dirname(path), { recursive: true });
-    const partial = `${path}.${process.pid}.partial`;
-    writeFileSync(partial, text);
-    renameSync(partial, path);
-    written.push(`${f} -> ${to}`);
-  }
+  for (const [to, text] of [[out, code], ...bornFiles(f, file)]) write(f, to, text);
   // Each technique states its growth above it (`techniqueGrowth`).
   for (const m of code.matchAll(
     /grows with the board as n\^([\d.]+)\. \*\/\nexport function (\w+)/g,

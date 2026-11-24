@@ -38,6 +38,8 @@ Measured 2026-11-24 at 98b5275e2:
 ### Modified Capabilities
 
 - `described-fill-game`: the description's shape has one source.
+- `build-pipeline`: the types generated from the schema join the compiled
+  modules as what is generated into `src/generated/`.
 
 ## Impact
 

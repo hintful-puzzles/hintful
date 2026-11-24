@@ -234,10 +234,12 @@
           "$ref": "#/$defs/saidMark"
         },
         "strand": {
-          "$ref": "#/$defs/saidMark"
+          "$ref": "#/$defs/saidMark",
+          "description": "A set drawn apart from the outline (Singles' corner kept from being boxed in)."
         },
         "reads": {
-          "$ref": "#/$defs/saidMark"
+          "$ref": "#/$defs/saidMark",
+          "description": "Drawn in no role: the cells the premise reads that no other mark shows, which the hint's walk counts as read (a line a firing fills whole, as against one it only hatches)."
         }
       }
     },

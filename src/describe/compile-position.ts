@@ -26,7 +26,6 @@ import {
 } from "./compile-sorts.ts";
 import { stepsBlock } from "./compile-stated.ts";
 import {
-  type AssignJson,
   type LayerJson,
   OPEN_DOMAIN,
   type PlanningApplied,
@@ -253,8 +252,8 @@ function compileMove(
       const where = `move ${m.name} set ${i}`;
       // Each layer's term, written at place `at` of it.
       const write = (sc: Map<string, Val> | ReadonlyMap<string, Val>, at: string) => {
-        for (const [layer, src] of Object.entries(assign as AssignJson)) {
-          if (layer === "for") continue;
+        for (const [layer, src] of Object.entries(assign)) {
+          if (layer === "for" || src === undefined) continue;
           const sort = env.position?.get(layer) as LayerSort;
           env.carrying = sort.carried ? layer : null;
           const t = compileExpr(parsed(game, `${where} ${layer}`, src), sc, env, pl);

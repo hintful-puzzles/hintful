@@ -98,19 +98,19 @@ function dealOf(
   checkSegments(id, d, env, json);
   const hide = hideOf(json, d, settings);
   const hides = hide !== null;
-  const thoroughJson = json.deal?.["thorough"];
+  const thoroughJson = json.deal?.thorough;
   const thorough =
     thoroughJson === undefined
       ? null
-      : dealFlag(settings, String(thoroughJson), "deal thorough");
+      : dealFlag(settings, thoroughJson, "deal thorough");
   if (thorough !== null && !hides)
     throw new CompileError(
       "deal thorough: a setting of how the deal hides, and no hide",
     );
-  const stripFrom = json.deal?.["stripFrom"];
-  if (stripFrom !== undefined && (stripFrom !== "everyClue" || !hides))
+  const stripFrom = json.deal?.stripFrom;
+  if (stripFrom !== undefined && !hides)
     throw new CompileError("deal stripFrom: everyClue, where the deal hides");
-  const symmetric = json.deal?.["symmetric"];
+  const symmetric = json.deal?.symmetric;
   if (symmetric !== undefined && hide?.length !== 1)
     throw new CompileError(
       "deal symmetric: the symmetry of the clues left, and no hide of one kind",
@@ -141,7 +141,7 @@ function dealOf(
     settings,
   );
   checkSample(json, d, sample, settings, hides);
-  const unpair = json.deal?.["unpair"];
+  const unpair = json.deal?.unpair;
   const latin = latinOf(json, d);
   checkFirst(sample, settings, hides);
   const symmetricDeal = symmetricOf(symmetric, settings);

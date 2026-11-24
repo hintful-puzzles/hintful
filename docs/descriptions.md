@@ -30,7 +30,14 @@ progress as it goes through `research/progress.ts`, since vitest shows no
 
 Every game has a description, `src/games/<id>/<id>.description.yaml`, which
 holds at least its help page ([`help-pages.md`](./help-pages.md)); the file
-itself is § "The file". A game whose techniques are stated:
+itself is § "The file".
+
+**A fill game is born**: its description is the whole game, and
+`npm run describe` compiles and registers it
+([`new-game.md`](./new-game.md) § "A game born from its description"). It
+states its techniques and checks them sound (steps 1 and 3 below); the
+engine does the rest. The steps after are what a hand-written game whose
+techniques are stated does in TypeScript:
 
 1. **States its techniques in `<name>.description.yaml`** beside the code
    that runs them. It places the library's with `use` and states its own
@@ -100,6 +107,7 @@ and techniques, and:
 
 | Section | Read it when |
 | --- | --- |
+| Words this guide uses | a word here reads as jargon |
 | The file | you write a description, or one fails to load |
 | The formula syntax | you write or read a technique |
 | What a technique compiles to | you read a compiled module, or a statement is slow |
@@ -119,14 +127,57 @@ and techniques, and:
 | Judging a family moved onto its description | you move hand-written games onto their descriptions, or judge a change that did |
 | What this builds on | you design a new part of the language or the engine, or write about the approach |
 
+## Words this guide uses
+
+- **Born**: a game whose description has `catalog:`. The compiler writes
+  its `<id>.game.ts` and `<id>.catalog.ts`, and its directory holds no
+  TypeScript. *Born new* never had a hand-written game; *moved* had one.
+- **Technique**: one deduction, `for` binders, a `premise` and what it
+  `conclude`s, compiled to a function the ladder runs.
+- **Ladder** and **tier**: the techniques by difficulty, easiest first;
+  `tiers:` names the difficulties, and a tier's ladder is its techniques and
+  those below.
+- **Firing**: one binding of a technique's binders where its premise holds.
+  Its conclusion is a step's move, and its binding the step's reason.
+- **Rung**: what a step is recorded under: a technique's `rung:`, an arm's
+  where `arms` split it, else its id. `names:` says what a player calls
+  each.
+- **Walk**: how the hint goes through a board: the fill walk runs the
+  ladder on the marks the player can make; a board of notes runs the
+  candidate walk (`engine/fill/candidates.ts`) on its candidates.
+- **Partition** and **part**: a division of the cells, named in
+  `space.regions`, dealt by the board or cut by a formula
+  (`blocks(a, b)`); a part is one piece, `cage(c)` the one holding `c`.
+  A clue `at:` a partition sits one a part.
+- **Unit**: a set of cells a rule reads as one line or group: a row, a
+  column, or each part of a partition `units` lists.
+- **Slot**: a place beyond either end of a row or column, `space.slots`,
+  where a clue that sees along the line sits (Towers').
+- **Kind**: a clue kind, one entry of `clues:`; a *kind of rule* is
+  `kinds.ts`'s, one placement standing for its techniques (§ "A kind of
+  rule places its techniques").
+- **Dealt**: given by the board, not by the rules: a dealt clue, partition
+  or relation.
+
 ## The file
 
 A description is YAML, read by one loader
 ([`describe/load.ts`](../src/describe/load.ts)) under YAML 1.2's core schema
 and validated against
-[`description.schema.json`](../src/describe/description.schema.json), which
-says every field. `npm run describe`, the help build, the tests and the
-research tools all read through it; the app never does.
+[`description.schema.json`](../src/describe/description.schema.json).
+`npm run describe`, the help build, the tests and the research tools all
+read through it; the app never does.
+
+**The schema is the one statement of what each field means**, in its
+`description` strings: read a field there, and change what a field means
+there. `npm run describe` generates the TypeScript the compiler reads the
+file as from it (into `src/generated/`, by
+[`schema-types.ts`](../src/describe/schema-types.ts)), each description its
+JSDoc, so an editor shows the same words over a YAML key and over the code
+that reads it, and the typecheck refuses code that reads a field the
+schema lacks. `description.ts` names what it needs of the generated types,
+adding only what `load.ts` adds to a file. This section holds what a field's
+description cannot: the rules for writing one, and why.
 
 - **Quote every formula, or write it as a block scalar** (`>-` folds a long
   one onto several lines, joined by spaces). Unquoted, `forall c in cells:

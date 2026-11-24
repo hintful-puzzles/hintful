@@ -44,12 +44,10 @@ export function checkSample(
     )
       throw new CompileError(`deal sample: ${count} is no size the params give`);
   }
-  const unpair = json.deal?.["unpair"];
+  const unpair = json.deal?.unpair;
   if (unpair !== undefined) {
-    if (typeof unpair !== "string" || d.clueKinds.get(unpair)?.at !== "cell")
-      throw new CompileError(
-        `deal unpair: ${String(unpair)} is no clue kind at a cell`,
-      );
+    if (d.clueKinds.get(unpair)?.at !== "cell")
+      throw new CompileError(`deal unpair: ${unpair} is no clue kind at a cell`);
     if (hides)
       throw new CompileError(
         "deal unpair: a board's answer is the ladder's, and a hide",

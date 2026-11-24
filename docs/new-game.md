@@ -234,19 +234,13 @@ is one to weigh against a pointer.
 A fill game, whose player sets each cell to one of a few values toward one
 answer, with clues on cells or lines and optionally a link from a cell to a
 clue beside it, is written as its description alone: no `index.ts`, no
-skeleton. Exemplars: Kakurasu (born new); Tents, Unruly, Mosaic, Range and
-Norinori (moved), Norinori with a dealt partition. The rest moved show
-what the board may be beyond that: Clusters an answer the deal climbs
-toward its tier, Light Up a value that washes cells,
-Sticks lines along an axis, Bricks a hexagon, Pattern a list clue to a
-line, Singles a Latin square's numbers, Boats a tally of pieces the
-params give, and Star Battle a size the params give beyond the grid's.
-A board of numbers the player notes candidates on is born too, its hint
-the candidate walk: Unequal (clues between squares), Adjacent (records
-flagged from both cells), Keen (a clue a dealt part), Towers (clues
-beyond each end of a line, values drawn raised), Mathrax (clues at
-corners) and Seismic (parts dealt to drawn sizes before the answer, a
-ruleset a bare letter).
+skeleton. A board of numbers the player notes candidates on is born too, its
+hint the candidate walk. Exemplar: Kakurasu, born new. The born games are
+those whose description has `catalog:` (`git grep -l '^catalog:' -- src/games`,
+and `BORN_GAMES` for a guard); what a board may be beyond Kakurasu's, each
+capability on its own, is a fixture under `src/engine/testing/fixtures/`
+([`testing.md`](./testing.md) § "A capability is tested on a fixture"),
+and a born game that uses it is found by grepping for its key.
 Its directory holds
 `<game>.description.yaml`, `<game>.plants.yaml` and `<game>.cases.yaml`,
 and no test code ([`testing.md`](./testing.md) § "What a new game ships").

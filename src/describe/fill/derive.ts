@@ -33,16 +33,7 @@ import { dealtBy, dealtPartitions } from "./partitions.ts";
 /** `deal.oneIn`: by clue kind, the cells a clue at `at` is the one of, so
  * the deal shows one in each such group, at a random member. */
 function oneInOf(json: DescriptionJson): Readonly<Record<string, string>> {
-  const got = json.deal?.["oneIn"];
-  if (got === undefined) return {};
-  const groups: Record<string, string> = {};
-  for (const [k, g] of typeof got === "object" && !Array.isArray(got)
-    ? Object.entries(got)
-    : [])
-    if (typeof g === "string") groups[k] = g;
-  if (typeof got !== "object" || Object.keys(groups).length !== Object.keys(got).length)
-    throw new CompileError("deal oneIn: a formula of `at` by clue kind");
-  return groups;
+  return json.deal?.oneIn ?? {};
 }
 
 /**
@@ -116,27 +107,25 @@ function neverOf(
   json: DescriptionJson,
   d: Description,
 ): { kinds: string[]; values: ReadonlyMap<string, readonly number[]> } {
-  const never = json.deal?.["never"];
-  const byKind: Record<string, unknown> =
+  const never = json.deal?.never;
+  const byKind: Readonly<Record<string, "all" | number[]>> =
     never === undefined
       ? {}
       : typeof never === "string"
         ? { [never]: "all" }
         : Array.isArray(never)
-          ? Object.fromEntries(never.map((k) => [String(k), "all"]))
-          : (never as Record<string, unknown>);
+          ? Object.fromEntries(never.map((k) => [k, "all"]))
+          : never;
   const kinds: string[] = [];
   const values = new Map<string, number[]>();
   for (const [k, v] of Object.entries(byKind)) {
     if (!d.clueKinds.has(k)) throw new CompileError(`deal never: ${k} is no clue kind`);
     if (v === "all") kinds.push(k);
-    else if (!(Array.isArray(v) && v.every((n) => Number.isInteger(n))))
-      throw new CompileError(`deal never: ${k}'s values are a list of numbers, or all`);
     else if (d.clueKinds.get(k)?.at !== "cell")
       throw new CompileError(
         `deal never: ${k}'s values, and it is no clue kind at a cell`,
       );
-    else values.set(k, v as number[]);
+    else values.set(k, v);
   }
   return { kinds, values };
 }

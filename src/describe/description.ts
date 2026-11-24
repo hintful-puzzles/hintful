@@ -5,281 +5,57 @@
  * `research/` read its rules too. Reading the file is `load.ts`'s.
  */
 
-import type { IdSegment } from "../engine/fill/desc.ts";
-import type { Symmetry } from "../engine/generate/symmetry.ts";
+import type * as Schema from "../generated/describe/description.schema.ts";
 import { type Binder, type Expr, parse } from "./expr.ts";
 
-/** A game's help page, as `description.schema.json` states it. */
-export interface HelpJson {
-  rules: string;
-  controls: string;
-  sections?: { heading: string; body: string }[];
-  origins?: string;
-  hints?: string;
-  parameters?: { before?: string; after?: string };
-}
+/** A game's file as `description.schema.json` states it, before `load.ts`
+ * reads it: every description type below is named from it. */
+type Game = Schema.Game;
+/** `T` with the fields `K` stated. */
+type Stated<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
+
+export type HelpJson = Schema.Help;
 
 /** A game's description that is its help page and no formal rules yet. */
-export interface HelpOnlyJson {
-  game: string;
-  help: HelpJson;
-}
+export type HelpOnlyJson = Stated<Pick<Game, "game" | "help">, "help">;
 
-/** A size the rules are stated over, as `description.schema.json` says it:
- * no `max` where the rules set none. */
-export interface SizeRange {
-  min: number;
-  max?: number;
-  /** Where the size is a multiple of it alone. */
-  step?: number;
-}
+export type SizeRange = NonNullable<Game["sizes"]>[string];
 
-/** A description with its formal rules, as `description.schema.json` states
- * it, and the help page of a cataloged game. */
-export interface DescriptionJson {
-  game: string;
-  help?: HelpJson;
-  produces: string;
-  sizes: Record<string, SizeRange>;
-  space: {
-    /** The board as a rectangle, or, in its place, a count of cells with no
-     * geometry, whose neighbors are a relation the board deals. */
-    grid?: GridJson;
-    cells?: string;
-    /** A tiling the deal decides, in place of a grid: its dots, edges,
-     * faces and angles. `square` where it is always the grid of squares. */
-    tiling?: true | "square";
-    /** Relations the board deals, each a set of cells for each cell. */
-    relations?: Record<string, "dealt">;
-    slots?: boolean;
-    /** `king` where a diagonal neighbor is across an edge too. */
-    edges?: boolean | "king";
-    corners?: boolean;
-    points?: boolean;
-    centers?: boolean;
-    diagonals?: boolean;
-    regions?: Record<string, "dealt" | string>;
-    units: string[];
-  };
-  answer: {
-    value: {
-      sort: "cell" | "edge";
-      domain: string;
-      wide?: boolean;
-      to?: string;
-      repeat?: { value: string; times: string };
-    };
-  };
-  given?: string[];
-  /** What the player can write down. A mark on the edges a technique reads
-   * says what of the answer it narrows: `of`, read of the edge `at`. A mark
-   * that names one element a cell says what its naming `v` means of the
-   * answer: `means`, read of the cell `at`. */
-  marks?: Record<
-    string,
-    {
-      sort: string;
-      notation: string;
-      of?: string;
-      means?: string;
-      /** What the mark needs to stand, read of the cell `at`: an edit drops
-       * a mark whose `while` the values it leaves break. */
-      while?: string;
-    }
-  >;
-  define?: Record<string, string>;
-  /** How a rule is seen broken, by name with its parameters (`stuck(t)`):
-   * `when` is a definition the techniques call, and `look` the words naming
-   * what broke, which a technique's `{broke}` says (`load.ts` expands it),
-   * its `terms` read at the firing's witness. */
-  breaks?: Record<string, BreakJson>;
-  shape?: string[];
-  rules?: Record<string, string>;
-  /** Statements the rules imply, by name, said so a breach shows on a board
-   * still being filled: read by the violation check alone. */
-  implied?: Record<string, string>;
-  clues?: Record<
-    string,
-    {
-      at: string;
-      per?: "value";
-      list?: true;
-      value?: string;
-      fields?: Record<string, { at?: string; list?: true; value: string }>;
-      means: string;
-      complete?: boolean;
-    }
-  >;
-  freedom: { kind: string };
-  deal?: DealJson;
-  /** How the player fills the board, for a fill game the engine plays. */
-  play?: PlayJson;
-  /** A game born from its description: its catalog entry. */
-  catalog?: CatalogJson;
-  /** The settings the params give, by name, in the params' order and the
-   * Custom dialog's. */
+/** The fields only a planning game's description states. */
+type PlanningOnly = "position" | "moves" | "finish" | "lose" | "deadEnds" | "views";
+
+/** A description with its formal rules, and the help page of a cataloged
+ * game: its techniques as `load.ts` leaves them, each kind of rule expanded
+ * and each `{broke}` said. */
+export type DescriptionJson = Stated<
+  Omit<Game, PlanningOnly | "techniques" | "variations" | "steps" | "settings">,
+  "produces" | "sizes" | "answer" | "freedom"
+> & {
+  space: Stated<Schema.Space, "units">;
   settings?: Record<string, SettingJson>;
-  /** A fill game's game ID: the codec's segments in order
-   * (`engine/fill/segments/`). */
-  id?: IdSegment[];
-  /** The letter of each tier in the params' `d<letter>`, in order. */
-  tierLetters?: string;
-  /** A bare letter older game IDs write for a tier: read, never written. */
-  tierFlag?: { letter: string; tier: string };
-  /** Bare letters older game IDs write, each after the size or the tier: read,
-   * and never written. */
-  unusedLetters?: Record<string, "size" | "tier">;
-  tierAliases?: Record<string, string>;
-  tiers?: string[];
-  /** What a placement rules out at a glance, which the engine's `auto-cross`
-   * preference makes for the player: the preference's words, and the
-   * techniques whose conclusions a placement brings (`Game.rulesOut`). */
-  rulesOut?: { name: string; placing: number; techniques: string[] };
-  /** Grading scales besides `tiers`, by name, each its tiers easiest first. */
-  scales?: Record<string, string[]>;
   techniques?: TechniqueJson[];
-  /** Kinds of step the game's planner emits (`StatedStep`), by id. */
   steps?: Record<string, StatedStep>;
-  /** What the game says that is not the lexicon's. */
-  words?: GameWords;
-  /** Clause source a clause says by name, `{name}`, written once
-   * (`load.ts` expands them). */
-  phrases?: Record<string, string>;
-  /** What a kind of rule's parameters are in this game, said once
-   * (`kinds.ts`); a placement's `with` overrides. */
-  kindWords?: Record<string, unknown>;
-  /** What a player calls each technique, by its id or by a rung it is
-   * recorded under: what Check & save names a move by. */
-  names?: Record<string, string>;
   variations?: Record<string, VariationJson>;
-}
+};
 
-/** A fill game's `play:`: the engine's `FillPlay` (`engine/fill/play.ts`),
- * with its link named by the cell mark it draws. */
-export interface PlayJson {
-  /** Where the values are the answer's domain, typed into a selected cell:
-   * then there are no `values` and no buttons. */
-  numbers?: { raised?: true };
-  /** Where the board keeps notes, how its hint reads a square with none
-   * until the player chooses: `populate` where it says nothing. */
-  hintNotes?: "implicit" | "populate";
-  /** The clue kinds at edges, each drawn in the gap between its cells by
-   * the edge painter named. */
-  gaps?: Record<string, string>;
-  /** The clue kinds the player may mark done, each with what one is
-   * called. */
-  done?: Record<string, string>;
-  values?: Record<
-    string,
-    { does: string; key: string | string[]; glyph: string; paint: string }
-  >;
-  given?: Record<string, { glyph: string; paint: string }>;
-  primary?: number;
-  secondary?: number;
-  blank?: number;
-  erase?: string;
-  /** Whether a drag keeps to one row or column. */
-  straight?: true;
-  /** The one button whose drag sweeps, where the other's does not. */
-  sweepWith?: "secondary";
-  /** A wash over the open cells where `when` holds, which read as the
-   * secondary value, and a preference that draws that value's piece on one. */
-  wash?: { when: string; pref?: { kw: string; name: string } };
-  /** A value whose piece covers its cell's number, and the preference that
-   * shows it. */
-  covers?: { value: number; pref: { kw: string; name: string } };
-  /** Whether the cursor carries over the grid's edge. */
-  wrap?: true;
-  click?: "toggle" | "cycle";
-  /** The clue kind at a cell that the cell is dealt holding. */
-  dealt?: string;
-  /** The clue kind at a cell that gives the cell's piece and its shape,
-   * drawn as the piece and never as a number. */
-  shape?: string;
-  /** The default board, `WxH`, where it is not the first. */
-  default?: string;
-  /** The tier the default board is dealt at, where it is not the first the
-   * menu offers it at. */
-  defaultTier?: string;
-  /** The first and last tier a board is offered at, by its `WxH`. */
-  boardTiers?: Record<string, [string, string]>;
-  /** The boards after the menu's grid: a size, its variations and its tier. */
-  variants?: { board: string; with: string[]; tier: string }[];
-  /** What the sizes alone cannot say of a board, and of a board of a tier. */
-  bounds?: SizeBoundsJson & { tiers?: Record<string, SizeBoundsJson> };
-  /** The numbers on cells drawn plain: no block, never faint, not counted. */
-  plain?: string[];
-  links?: string;
-  /** The techniques that read a link the board shows at a glance, run once on
-   * the drawn links before each step of the hint. */
-  glance?: string[];
-  /** The techniques before which the hint asks for a deeper link, for the
-   * techniques above them; it asks once more after the last, for any. */
-  askBefore?: string[];
-  labels?: { start?: string };
-  /** The sign drawn after the number of each clue kind at a dealt
-   * partition's part or at a corner, by kind; a kind of one value is drawn
-   * as its sign alone, and a list gives a word a value from the least. */
-  signs?: Record<string, string | string[]>;
-  /** The preset menu's sizes, `WxH`; the first is the default. */
-  boards?: string[];
-  /** What each mark of the hint means here (`Game.hint.marks`). */
-  hintMarks?: Partial<Record<"ring" | "outline" | "stripes" | "strike", string>>;
-}
+export type PlayJson = NonNullable<Game["play"]>;
 
 /** Bounds on a board's two sides together: their sum, their product, the
  * shorter and the longer. */
-export type SizeBoundsJson = Partial<
-  Record<"sum" | "area" | "shorter" | "longer", { min?: number; max?: number }>
->;
+export type SizeBoundsJson = Omit<NonNullable<PlayJson["bounds"]>, "tiers">;
 
-/**
- * A setting the params give (`settings:`), of one `kind`, each a module of
- * `engine/fill/params/` that says what its fields mean; the schema holds
- * each kind to its own. It `gives` a variation of its name, a size of its
- * name, or, without, only the deal reads it, by its name. It is written
- * after the size, or `after: tier`.
- */
-export interface SettingJson {
-  kind: "flag" | "number" | "choice" | "set" | "tally" | "blocks";
-  gives?: "variation" | "size";
-  after?: "tier";
-  letter?: string;
-  kw?: string;
-  name?: string;
-  doc?: string;
-  words?: string | { on: string; off: string };
-  /** A flag's quirks: written where it is off, and on by default on a board
-   * narrower than `onBelow`. */
-  written?: "off";
-  onBelow?: number;
-  /** A variation's rule and bounds. */
-  rule?: string;
-  note?: string;
-  most?: number[];
-  bounds?: SizeBoundsJson;
-  min?: number;
-  max?: number;
-  default?: number;
-  choices?: ChoiceJson[];
-  members?: {
-    letter: string;
-    kind: string;
-    kw: string;
-    name: string;
-    doc: string;
-    word: string;
-  }[];
-  /** A tally's two fields, and the tier a tally of one piece is dealt at. */
-  size?: { kw: string; name: string; doc: string; max: number; default: number };
-  counts?: { kw: string; name: string; doc: string };
-  single?: string;
-  /** Blocks' fields, and the rule of each puzzle, by name: the one with
-   * blocks cut and the variation that deals them. */
-  columns?: { kw: string; name: string; doc: string };
-  rows?: { kw: string; name: string };
-  rulesets?: Record<string, string>;
-}
+/** Every key of any member of `U`. */
+type KeyOfAny<U> = U extends unknown ? keyof U : never;
+
+/** The union `U` with each member's absent fields readable, as `undefined`,
+ * so a field several kinds share reads without first asking the kind. */
+type Readable<U, All = U> = U extends unknown
+  ? U & { [K in Exclude<KeyOfAny<All>, keyof U>]?: undefined }
+  : never;
+
+/** A setting the params give, of one `kind`, each a module of
+ * `engine/fill/params/` that says what its fields mean. */
+export type SettingJson = Readable<Schema.Setting>;
 
 /** The board clue a `tally` setting gives, which the ID does not write, or
  * `null`. */
@@ -287,215 +63,50 @@ export const tallyKindOf = (json: DescriptionJson): string | null =>
   Object.entries(json.settings ?? {}).find(([, s]) => s.kind === "tally")?.[0] ?? null;
 
 /** One choice of a setting. */
-export interface ChoiceJson {
-  name: string;
-  words?: string;
-  code?: string;
-  rule?: string;
-  least?: number;
-  bounds?: SizeBoundsJson & { square?: true; tiers?: Record<string, SizeBoundsJson> };
-  symmetry?: Symmetry;
-}
+export type ChoiceJson = NonNullable<
+  Extract<SettingJson, { choices?: unknown }>["choices"]
+>[number];
 
-/** A game born from its description: its catalog entry, the engine's
- * `PuzzleData`. */
-export interface CatalogJson {
-  name: string;
-  aliases?: string[];
-  description: string;
-  objective: string;
-  collection: string;
-  family: string;
-  similar?: string;
-}
-
-/** The board as a rectangle, or as a hexagon `w` wide and `h` high, stored
- * sheared (`engine/fill/hexagon.ts`), its store's corners holding the clue
- * kind `outside`. */
-export interface GridJson {
-  w: string;
-  h: string;
-  hexagon?: { outside: string };
-}
-
-/** What the generator chooses, in words, and, where the deal samples an
- * answer and derives the clues from it, how it samples, as `sample`
- * ({@link sampleOf}), and the partition it grows round the answer
- * ({@link growOf}). */
-type DealJson = Record<
-  string,
-  | boolean
-  | string
-  | readonly string[]
-  | SampleJson
-  | GrowJson
-  | Record<string, string>
-  | Record<string, number[]>
->;
+type DealJson = NonNullable<Game["deal"]>;
 
 /** How a description's deal samples an answer, or `null` where it does not. */
 export function sampleOf(json: DescriptionJson): SampleJson | null {
-  const sample = json.deal?.["sample"];
-  return typeof sample === "object" ? (sample as SampleJson) : null;
+  return json.deal?.sample ?? null;
 }
 
 /** The partitions the deal divides at random (`deal.divide`), one or a
  * list, in the order it divides them: none where it divides none. */
 export function dividesOf(json: DescriptionJson): readonly DivideJson[] {
-  const g = json.deal?.["divide"];
-  if (Array.isArray(g)) return g as unknown as DivideJson[];
-  return typeof g === "object" ? [g as unknown as DivideJson] : [];
+  const g = json.deal?.divide;
+  return g === undefined ? [] : Array.isArray(g) ? g : [g];
 }
 
-/** A dealt partition divided at random, before and apart from the answer:
- * each cell joined at odds `pairs` to a neighbor still alone, and each left
- * alone then to a neighboring part under `most` cells (upstream keen.c); one
- * part at a time grown to a size drawn from one of `sizes`, the first or,
- * with `by`, the one a value of that size from its least; or tiled by parts
- * of `equal` cells (upstream divvy.c), a number, a size the params give, or
- * `w`, the board's width. */
-export type DivideJson =
-  | { partition: string; pairs: number; most: number }
-  | { partition: string; sizes: number[][]; by?: string }
-  | { partition: string; equal: number | string };
+export type DivideJson = Schema.Divide;
 
 /** The kinds dealt one a part (`deal.oneKind`), or `null`. */
 export function oneKindOf(json: DescriptionJson): OneKindJson | null {
-  const g = json.deal?.["oneKind"];
-  return typeof g === "object" ? (g as unknown as OneKindJson) : null;
+  return json.deal?.oneKind ?? null;
 }
 
-/** One clue a place, of one of `kinds`. With `pick: first`, the first of
- * them the answer makes there. Else (`pick: turn`) at a part, dealt in
- * turn: each kind to the first part in a random order it suits, a part
- * where its clue is `poor` (from tier `from`, where given) only where it
- * suits none, and never where `never` holds; and where the flag
- * `alone.when` is on, `alone.kinds` alone. Each formula reads the part `at`
- * and the clue's value `v`. */
-export interface OneKindJson {
-  kinds: string[];
-  pick?: "turn" | "first";
-  poor?: Record<string, string | { when: string; from: string }>;
-  never?: Record<string, string>;
-  alone?: { when: string; kinds: string[] };
-}
+export type OneKindJson = NonNullable<DealJson["oneKind"]>;
 
 /** The partition the deal grows round its answer (`deal.grow`), or `null`
  * where it grows none. */
 export function growOf(json: DescriptionJson): GrowJson | null {
-  const g = json.deal?.["grow"];
-  return typeof g === "object" ? (g as GrowJson) : null;
+  return json.deal?.grow ?? null;
 }
 
-/** A dealt partition grown round the answer: a part round each cell of the
- * sample's value, joined until each holds `holds` of them, none but a closed
- * piece smaller than `smallest`; one of the answer's pieces of `holds` cells
- * in `closed.oneIn[tier]` closed as a part of its own, at most one part in
- * `closed.atMostOneIn`; and the parts mended until the ladder finishes the
- * board at the tier. */
-export interface GrowJson {
-  partition: string;
-  /** Each a number or a formula of the board's sizes. */
-  holds: number | string;
-  smallest: number | string;
-  /** How many parts a board has, where the rules fix it. */
-  parts?: number | string;
-  closed?: { oneIn: number[]; atMostOneIn: number };
-}
+export type GrowJson = NonNullable<DealJson["grow"]>;
 
-/** How a deal samples an answer: built by the ladder (`build`); `dominoes`
- * of a value, packed, none touching another along a side; `lines`, `count`
- * of a value in every row and column, none within `apart`; or `scatter`'s
- * value on a share of the cells, optionally none within `apart`
- * of another; `partner`'s value beside each, along `along`, the two matched;
- * and `rest` on every other cell. With `noBareLine`, an answer with a row or
- * column all `rest` is drawn again; with `mend`, a cell a rule breaks at takes
- * the other value until none does; with `climb`, a draw after a refused one
- * keeps what the ladder decided on it; a Latin square (`latin`); or an
- * answer searched under the partition the deal divides first (`search`). */
-export type SampleJson =
-  | { build: true | { value: number }; first?: FirstJson }
-  | { dominoes: { value: number }; rest: number }
-  | { picture: { value: number; rest: number } }
-  | { latin: true }
-  | { search: true }
-  | { pieces: { value: number; rest: number } }
-  | {
-      lines: { value: number; count: number | string; apart: "adj4" | "adj8" };
-      rest: number;
-    }
-  | {
-      scatter: {
-        value: number;
-        share: number;
-        apart?: "adj4" | "adj8";
-        each?: true;
-        tried?: true;
-        joinedRest?: true;
-      };
-      partner?: { value: number; along: "adj4" | "adj8" };
-      rest: number;
-      noBareLine?: boolean;
-      mend?: true;
-      climb?: true;
-      first?: FirstJson;
-    };
+export type SampleJson = NonNullable<DealJson["sample"]>;
 
-/** A value dealt on a share of the cells before the rest of the answer, as
- * symmetric as an option asks, the share raised by `ramp` as draws fail. */
-interface FirstJson {
-  value: number;
-  share: string;
-  symmetry: string;
-  ramp?: { every: number; step: number; top: number };
-}
+export type GameWords = NonNullable<Game["words"]>;
 
-/** A game's nouns, compiled into its module as `WORDS`: the engine's
- * lexicon words `{noun}` (a board position, "square" unless the game's genre
- * says "cell"), `{valueNoun}` (a value, "number" unless the game says
- * otherwise) and `{alongside}` (how a deduction's cells share a unit with the
- * one it decides, "in line with" unless the game's units differ). */
-export interface GameWords {
-  cell?: string;
-  value?: string;
-  alongside?: string;
-}
+export type StatedStep = Schema.Steps[string];
 
-/** What a step's term is: a `number`, said by the game's value words; a
- * `flag`, which an `if` and a `when` read; a `unit`, said as its name
- * ("row", "column", "block", "diagonal"); a `word` the planner makes, said
- * as it is (a word game's guess); `values`, several numbers said by
- * the value words as a list ("1, 2 and 4"), whose count form reads how many;
- * a list of words, one of which the planner supplies and the clause says
- * as it is (a tile's shape, a heading); or a `clause`, the move of one of the
- * steps it names, which the planner names with what that step is told by and
- * the voice speaks in place, its references with it (a reason a sentence
- * joins to another); or `clauses`, several such moves said as a list ("a, b
- * and c"), where how many a sentence joins is the board's. */
-export type StepTermKind =
-  | "number"
-  | "flag"
-  | "unit"
-  | "word"
-  | "values"
-  | readonly string[]
-  | { readonly clause: readonly string[] }
-  | { readonly clauses: readonly string[] };
+export type StepTermKind = NonNullable<StatedStep["terms"]>[string];
 
-/** A kind of hint step a planner emits: what its sentence reads, which the
- * planner supplies, and its clauses. */
-export interface StatedStep extends Worded {
-  /** The sort of the elements the step decides, or the sorts, each named by a
-   * reference (`{ring sign: …}`), where it decides elements of several. */
-  ring: string | string[];
-  terms?: Record<string, StepTermKind>;
-  /** The sorts marked in each role. */
-  marks?: Partial<Record<StepMarkRole, string[]>>;
-}
-
-/** The roles a planner's step marks in besides its ring: its evidence, and
- * the notes it strikes (Wordguess's letters, where a step rules them out). */
-export type StepMarkRole = "outline" | "stripes" | "strand" | "strike";
+export type StepMarkRole = keyof NonNullable<StatedStep["marks"]>;
 
 /** The description with the named variations applied, in order. */
 export function withVariations(
@@ -554,22 +165,16 @@ export function withEveryVariation(json: DescriptionJson): DescriptionJson {
   return withVariations(json, Object.keys(json.variations ?? {}));
 }
 
+/** A variation as the file states it, a fill game's or a planning game's. */
+type SchemaVariation = NonNullable<Game["variations"]>[string];
+
 /** A variation: blocks added to the description, or replacing its blocks of
- * the same name. */
-export interface VariationJson {
-  add?: Pick<DescriptionJson, "define" | "rules" | "clues" | "shape" | "techniques"> & {
-    space?: {
-      diagonals?: true;
-      regions?: Record<string, "dealt" | string>;
-      units?: string[];
-    };
+ * the same name; its techniques as `load.ts` leaves them. */
+export type VariationJson = Omit<SchemaVariation, "add"> & {
+  add?: Omit<NonNullable<SchemaVariation["add"]>, "techniques"> & {
+    techniques?: TechniqueJson[];
   };
-  replace?: {
-    space?: Partial<DescriptionJson["space"]>;
-    /** Clue kinds of the same names, each read as a whole. */
-    clues?: DescriptionJson["clues"];
-  };
-}
+};
 
 /**
  * What a variation is, read off what it does. One that only adds is a
@@ -581,150 +186,70 @@ export const variationWord = (v: {
   readonly replace?: unknown;
 }): "modifier" | "ruleset" => (v.replace === undefined ? "modifier" : "ruleset");
 
+/** Where a technique sits on the ladder. */
+type Placing = Pick<
+  Extract<Schema.Technique, { use: string }>,
+  "tier" | "from" | "until" | "rung"
+>;
+
 /** A technique stated in the description, or one of a library's placed at a
- * tier of the game's (`use`: `"<library>.<id>"`). */
+ * tier of the game's, as `load.ts` leaves them: a kind of rule's placement is
+ * expanded to the technique it states. */
 export type TechniqueJson =
   | ({ id: string } & Placing & StatedTechnique)
   | ({ use: string } & Placing);
 
-/** Where a technique sits on the ladder. */
-interface Placing {
-  tier: string;
-  from?: string;
-  until?: string;
-  rung?: string | string[];
-}
+type SchemaSays = NonNullable<Schema.Statement["says"]>;
 
-/** What a technique says, wherever it is stated. */
-export interface StatedTechnique {
-  /** `"place"`: the engine runs it as each value is placed, with its first
-   * binder bound to the placed cell, and not as a rung of the ladder;
-   * `"strike"`, as a fact strikes a value from the cell. */
-  on?: "place" | "strike";
-  for: string;
-  premise?: string;
-  conclude: string;
+/** What a technique says, wherever it is stated, as `load.ts` leaves it. */
+export type StatedTechnique = Omit<Schema.Statement, "says"> & {
   says?: StatedSays;
   /** The defect planted in a technique a kind of rule expanded to
    * (`kinds.ts`), which a game's plants file then does not state. */
   plant?: { for?: string; conclude?: string };
   /** The kind of rule it was placed as (`kinds.ts`), where it was. */
   fromKind?: string;
-}
+};
 
-/** What a technique's hint step speaks of. `arms` splits the step by which
- * condition holds, first true winning, each arm adding its own terms and marks
- * to the shared ones (an arm's names win). An arm is a different deduction,
- * with its own rung; a wording is the same deduction said for what the board
- * shows. */
-export interface StatedSays extends Worded {
-  /** `each`: a step for every square the firing decides, each its own argument
-   * (Light Up's discounts); `legs`, the same with the later squares continuing
-   * the first (Sticks: a number's one reason over several squares); `value`,
-   * on a board of notes, a step for every value the firing strikes, from all
-   * its squares (Towers' heights); absent, one step for the firing. */
-  shown?: "each" | "legs" | "value";
-  /** Report what held in the technique's `where`s and `premise` with the
-   * firing (`Witness`). */
-  witness?: boolean;
-  /** Report the elements whose marks the `where`s and `premise` read
-   * (`Reads`). */
-  reads?: boolean;
+/** A technique's `says`, with the terms `load.ts` adds for `{broke}`. */
+export type StatedSays = Omit<SchemaSays, "terms" | "arms"> & {
   terms?: Record<string, SaidTermJson>;
-  marks?: SaidMarksJson;
-  /** What each square the firing decides has of its own, read where the
-   * conclusion's `place` or `strike` makes it. Its wordings are tried there,
-   * in the conclusion's scope. */
-  fact?: Worded & {
-    terms?: Record<string, string>;
-    marks?: Partial<Record<SaidRole, string>>;
-  };
   arms?: Record<
     string,
-    Worded & {
-      when: string;
+    Omit<NonNullable<SchemaSays["arms"]>[string], "terms"> & {
       terms?: Record<string, SaidTermJson>;
-      marks?: SaidMarksJson;
     }
   >;
-}
+};
+
+/** The clauses a step's words are said in, each a relation of its own. */
+type ClauseName =
+  | "look"
+  | "follows"
+  | "move"
+  | "effect"
+  | "aim"
+  | "answers"
+  | "again"
+  | "later";
 
 /** A step's words as a description states them: clauses with slots, which
  * `engine/hint/stated.ts` renders (docs/hints.md § "Writing the narration"). */
-export interface StatedClauses {
-  look?: string;
-  follows?: string;
-  move?: string;
-  /** What a move that no rule forces does: its `effect` relation. */
-  effect?: string;
-  /** What the move works toward, said first ("Working on tile 3:"); with no
-   * `look`, the move only serves it. */
-  aim?: string;
-  /** How the move answers a danger its `look` names, said before it ("One
-   * way to avoid it"): its `answers` relation. */
-  answers?: string;
-  /** A later leg's reasoning, said after its move in place of `look` and
-   * `follows`: its `again` relation. */
-  again?: string;
-  /** What a later leg says as its move, where it differs from `move`. */
-  later?: string;
-}
+export type StatedClauses = Pick<StatedStep, ClauseName>;
 
 /** Clauses, and the wordings tried before them in order, the first whose
  * `when` holds giving the step its words; a part a wording does not state is
- * the clauses'. A wording with no `when` holds always, and comes last. A
- * firing's `when` reads the binding, the terms, and the marks by role; a
- * fact's reads the conclusion's scope. */
-export interface Worded extends StatedClauses, Long {
-  wordings?: (StatedClauses & Long & { when?: string })[];
-}
+ * the clauses'. */
+type Worded = StatedClauses & Pick<StatedStep, "long" | "wordings">;
 
-/** Why a wording may run past the line (`NARRATION_LIMIT`), said beside it
- * where it can; on a part, it covers every wording the part states. */
-interface Long {
-  long?: string;
-}
+export type SaidRole = keyof Schema.SaidMarks;
 
-/** The roles a technique's `says` marks elements in; the firing's facts are
- * ringed without being said. `strand` is a set drawn apart from the outline
- * (Singles' corner kept from being boxed in). `reads` is drawn in no role: the
- * cells the premise reads that no other mark shows, which the hint's walk
- * counts as read (a line a firing fills whole, as against one it only hatches). */
-export type SaidRole = "outline" | "stripes" | "strike" | "strand" | "reads";
+export type SuppliedKind = Extract<Schema.SaidTerm, { supplied: string }>["supplied"];
 
-/** A firing's marks as a description states them: a set by role, or where a
- * step marks elements of several sorts in one role (Loopy's clue and dot), a
- * set of each by its sort's name, or a set only the game's code can find. */
-type SaidMarksJson = Partial<
-  Record<SaidRole, string | Record<string, string> | { supplied: "elements" }>
->;
-
-/** What a term only the game's code can know is, which the module types for
- * the game's hook to return; `words` is a list of words said as they are (the
- * words Wordtrail's trails spell); `several` is the engine's, whether the step
- * decides more than one element over all its legs. */
-export type SuppliedKind =
-  | "flag"
-  | "number"
-  | "element"
-  | "elements"
-  | "words"
-  | "several";
-
-/** A rule's break clause as a description states it (`DescriptionJson.breaks`). */
-export interface BreakJson {
-  when: string;
-  terms?: Record<string, string>;
-  look: string;
-}
-
-/** A term as a description states it: a formula over the binding, the kind
- * of value the game supplies, or a term of the break that held, which the
- * loader adds for `{broke}` (`term: null` for whether that break held). */
-type SaidTermJson =
-  | string
-  | { supplied: SuppliedKind }
-  | { broke: string; term: string | null };
+/** A term as a description states it, or a term of the break that held,
+ * which the loader adds for `{broke}` (`term: null` for whether that break
+ * held). */
+type SaidTermJson = Schema.SaidTerm | { broke: string; term: string | null };
 
 /** A term a firing says: its formula, where the game supplies it its kind,
  * or where it is a break's, the break and its term (`null`: whether it was
@@ -746,111 +271,41 @@ export interface SaidMark {
   expr: Expr | null;
 }
 
-/** Techniques stated once, for every game that places them. */
-export interface LibraryJson {
-  library: string;
-  /** Kinds of step a library's consumers emit without a firing (`StatedStep`). */
-  steps?: Record<string, StatedStep>;
+/** Techniques stated once, for every game that places them, as `load.ts`
+ * leaves them. */
+export type LibraryJson = Omit<Schema.Library, "techniques"> & {
   techniques: Record<string, StatedTechnique>;
-}
+};
 
-/** One layer of a planning game's position: a value a cell. */
-export interface LayerJson {
-  /** `integers` where it is not finite. */
-  domain: string;
-  /** Where the domain is `integers`, the values the checker searches. */
-  checked?: string;
-  /** The layer is an arrangement: each value of its domain on this many
-   * cells. */
-  arranged?: string;
-  /** Exactly one cell holds this value, every other another of the domain. */
-  once?: string;
-  /** Where this formula of the cell `c` is false, the layer holds 0. */
-  on?: string;
-  /** A value a move copies and no rule reads. */
-  carried?: true;
-  /** The layer holds a value a face, or one for the whole board, not a value
-   * a cell. */
-  over?: "faces" | "board";
-}
+export type LayerJson = Schema.Layer;
 
 /** A layer's domain where it is not finite. */
 export const OPEN_DOMAIN = "integers";
 
-/** A table the board deals: a function of its arguments' sorts to an
- * element. */
-export interface TableJson {
-  of: ("cell" | "face" | "num")[];
-  to: "cell" | "face";
-}
+export type AssignJson = Schema.Assignments[number];
 
-/** Cells a move assigns: its binders, the last of them the cell, and a term
- * for each layer it assigns, read on the position before the move. With no
- * binders, it assigns layers over the board. */
-export type AssignJson = { for?: string } & Record<string, string>;
+export type MoveJson = NonNullable<Game["moves"]>[string];
 
-/** A move of a planning game: its arguments, its guard, and what it sets. */
-export interface MoveJson {
-  for: string;
-  when?: string;
-  set: AssignJson[];
-}
-
-/** A planning game's variation: what it adds, and the layers it replaces. */
-export interface PlanningVariationJson {
-  add?: {
-    /** Layers of new names, each all zeros on a board without the
-     * variation. */
-    position?: Record<string, LayerJson>;
-    define?: Record<string, string>;
-    finish?: string[];
-    deadEnds?: Record<string, string>;
-    /** Assignments added to a move of the description's, by its name. */
-    moves?: Record<string, { set: AssignJson[] }>;
-  };
-  replace?: { position?: Record<string, LayerJson> };
-}
-
-/**
- * A planning game's description: a position, the moves that change it, the
- * finish, a lost position, and what proves a position can no longer finish,
- * as `description.schema.json` states it.
- */
-export interface PlanningJson {
-  game: string;
-  help?: HelpJson;
-  produces: string;
-  sizes: Record<string, SizeRange>;
-  space: {
-    /** The board as a rectangle, or, in its place, a count of cells with no
-     * geometry. */
-    grid?: GridJson;
-    cells?: string;
-    units: string[];
-    /** Relations the board deals, each a set of cells for each cell. */
-    relations?: Record<string, "dealt">;
-    /** A size the board deals: how many faces, a second sort of element. */
-    faces?: string;
-    tables?: Record<string, TableJson>;
-  };
-  position: Record<string, LayerJson>;
-  given?: string[];
-  define?: Record<string, string>;
-  /** Definitions the game reads beside the rules, each of cells, its last
-   * parameter the cell: compiled to the cells it holds of. */
-  views?: string[];
-  freedom: { kind: "permute" | "transition" };
-  moves: Record<string, MoveJson>;
-  finish: string[];
-  lose?: string[];
-  /** Each claim by id: a formula true only of a position from which no line
-   * of moves finishes. */
-  deadEnds?: Record<string, string>;
-  deal?: Record<string, string>;
-  /** Kinds of step the game's planner emits (`StatedStep`), by id. */
-  steps?: Record<string, StatedStep>;
-  variations?: Record<string, PlanningVariationJson>;
-}
+/** A planning game's description: a position, the moves that change it, the
+ * finish, a lost position, and what proves a position can no longer finish. */
+export type PlanningJson = Stated<
+  Pick<
+    Game,
+    | "game"
+    | "help"
+    | "produces"
+    | "sizes"
+    | "space"
+    | "given"
+    | "define"
+    | "freedom"
+    | "deal"
+    | "steps"
+    | "variations"
+    | PlanningOnly
+  >,
+  "produces" | "sizes" | "space" | "position" | "freedom" | "moves" | "finish"
+>;
 
 /** A planning description with the named variations applied, in order: an
  * added finish, claim or assignment marked with the variation it needs. */
