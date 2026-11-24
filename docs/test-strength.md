@@ -124,7 +124,7 @@ What the harness does that the ad-hoc probe does not:
 standing as `npm run metrics` and `npm run mutation`. Adding a case is
 welcome. Adding one because a module scores badly is score-chasing.
 
-**Only `--verify` is gated.** It runs in the commit gate's fail-fast prefix
+**Only `--verify` is gated.** It runs in the commit gate's fast prefix
 and checks that every anchor still **applies** and the test-file floor holds,
 never what the probe would find. Without it, a refactor of a probed line
 would silently shrink the corpus and the harness would report success: a

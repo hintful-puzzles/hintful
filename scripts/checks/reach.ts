@@ -37,6 +37,12 @@ const TEST_ROOTS = ["src", "vite-plugins"];
 const SCRIPT = /\.[mc]?[jt]s$/;
 const LEAF_OR_SCRIPT = /\.(?:[mc]?[jt]s|json)$/;
 const GAME_PATH = /^src\/(?:generated\/)?games\/([^/]+)\//;
+/** Where every compiled module is written (`src/describe/sources.ts`), and
+ * each game's. */
+const GENERATED = "src/generated";
+const GENERATED_GAMES = `${GENERATED}/games`;
+/** What `npm run describe` runs: what it reads decides every compiled module. */
+const COMPILER = "scripts/describe.ts";
 
 /** The game whose directory holds `file` (repo-relative), or `null`. A game's
  * compiled module, generated outside its directory, is the game's too. */
@@ -75,6 +81,14 @@ function gameIds(): string[] {
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
     .sort();
+}
+
+/** The games born from their descriptions: each has the module `npm run
+ * describe` writes to register it, and no other game does. */
+export function bornGames(): string[] {
+  return gameIds().filter((id) =>
+    existsSync(path.join(ROOT, GENERATED_GAMES, id, `${id}.game.ts`)),
+  );
 }
 
 /**
@@ -334,6 +348,12 @@ export function reach(start: string, { cutAtGames = false } = {}): Reach {
         if (SCRIPT.test(target)) queue.push(target);
       }
     }
+    // A compiled module says what the compiler wrote, and imports none of it:
+    // a change to the compiler reaches whatever reads the module.
+    if (file.startsWith(`${GENERATED}/`) && !out.files.has(COMPILER)) {
+      out.files.add(COMPILER);
+      queue.push(COMPILER);
+    }
   }
   return out;
 }
@@ -359,7 +379,7 @@ export function readsAsText(r: Reach, file: string): boolean {
 }
 
 /** The snapshot file vitest writes for `test`, which only that test reads. */
-function snapshotOf(test: string): string {
+export function snapshotOf(test: string): string {
   return path.join(path.dirname(test), "__snapshots__", `${path.basename(test)}.snap`);
 }
 
@@ -389,6 +409,9 @@ interface CommitPlan {
  * case in a file outside `whole` then depends on the path only through its
  * game, so skipping the cases of the games outside scope cannot hide a failure
  * the commit caused.
+ *
+ * A game's own walk starts from its compiled modules as well as its directory,
+ * since a game born from its description has no code anywhere else.
  */
 export function commitPlan(staged: readonly string[]): CommitPlan | null {
   const scope = new Set<string>();
@@ -405,10 +428,15 @@ export function commitPlan(staged: readonly string[]): CommitPlan | null {
       if (others.some((p) => testReads(test, own, p))) whole.add(test);
     }
     for (const id of gameIds()) {
-      const walks = walk(
+      const walks = [
         path.join(ROOT, "src", "games", id),
-        (f) => /\.[mc]?[jt]s$/.test(f) && !f.endsWith(".test.ts"),
-      ).map((f) => reach(path.relative(ROOT, f)));
+        path.join(ROOT, GENERATED_GAMES, id),
+      ]
+        .filter((dir) => existsSync(dir))
+        .flatMap((dir) =>
+          walk(dir, (f) => /\.[mc]?[jt]s$/.test(f) && !f.endsWith(".test.ts")),
+        )
+        .map((f) => reach(path.relative(ROOT, f)));
       if (others.some((p) => walks.some((w) => reaches(w, p)))) scope.add(id);
     }
   }

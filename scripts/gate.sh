@@ -9,10 +9,11 @@
 # above it, below, and that is the only prose copy there is.
 #
 # Order and semantics:
-#   1. Fast fail-fast prefix — the typechecks, then biome, then the cheap node
-#      guards, ordered roughly cheapest-first. A type, lint, formatting, spelling
-#      or guard failure fails here in seconds without spending the heavy
-#      branches. The biome scope is per-commit (staged files, when the hook sets
+#   1. Fast prefix — the typechecks, then biome, then the cheap node guards,
+#      ordered roughly cheapest-first. Every step runs, and a type, lint,
+#      formatting, spelling or guard refusal is named beside every other one
+#      before the run stops, without spending the heavy branches
+#      (section 0b). The biome scope is per-commit (staged files, when the hook sets
 #      GATE_BIOME_STAGED=1) or whole-tree (CI / manual `npm run gate`) — see the
 #      branch below. Guards that read `docs/` or `AGENTS.md` MUST live in this
 #      prefix rather than in vitest; see the documentation-only shortcut below
@@ -119,6 +120,20 @@ if [ "${GATE_PRECOMMIT:-}" = "1" ] && [ -z "${GATE_SINCE:-}" ] && [ -n "$changed
     echo "  Stage them as they stand (\`git add\`), or restore them to what is staged."
     exit 1
   fi
+  # A snapshot the commit does not carry is the baseline its tests are judged
+  # against, so a rebaselined one left unstaged passes a commit that CI then
+  # fails. It is a test's own output, never another session's work in
+  # progress, so it is refused.
+  snapshots=$(
+    printf '%s\n' "$unstaged" | grep -vFx -e "$changed" | grep '/__snapshots__/' || true
+    git ls-files --others --exclude-standard -- '*/__snapshots__/*'
+  )
+  if [ -n "$snapshots" ]; then
+    echo "✗ the tests read these snapshots, which the commit does not carry:"
+    printf '%s\n' "$snapshots" | sed 's/^/    /'
+    echo "  Stage them, or restore them (\`git restore\`, or delete one that is untracked)."
+    exit 1
+  fi
   # A tracked file the commit does not stage is read as it stands too. It may
   # be another session's work, so it is named, not refused.
   others=$(printf '%s\n' "$unstaged" | grep -vFx -e "$changed" | grep . || true)
@@ -165,14 +180,17 @@ if [ -n "${GATE_SINCE:-}" ]; then
   # wrote them down, and the push then owes its whole plan.
   owed=""
   [ -s node_modules/.cache/test-cost/deferred ] && owed="--owed"
+  # Unasked, the push runs only the snapshot guards of its plan (section 1d-ii).
+  snapshots_only="--snapshots"
+  [ "${GATE_PUSH_TESTS:-}" = "1" ] && snapshots_only=""
   # The plan follows imports through the compiled modules, so they are
   # written before it is made (section 1 says what they are).
   node scripts/describe.ts --quiet
-  # shellcheck disable=SC2086 # empty, or one flag.
-  plan=$(node scripts/checks/select-tests.ts --since "$GATE_SINCE" $owed 2>/dev/null) || plan="ALL"
+  # shellcheck disable=SC2086 # empty, or one flag each.
+  plan=$(node scripts/checks/select-tests.ts --since "$GATE_SINCE" $owed $snapshots_only 2>/dev/null) || plan="ALL"
   [ -n "$plan" ] || plan="ALL"
   if [ "$plan" = "NOTHING" ]; then
-    echo "✓ this push's commits ran every test it can have broken."
+    echo "✓ this push's commits ran every test it runs."
     ci_notice
     exit 0
   fi
@@ -184,6 +202,8 @@ if [ -n "${GATE_SINCE:-}" ]; then
   if [ "${GATE_PUSH_TESTS:-}" = "1" ]; then
     echo "The push runs what its commits left to it: every game's cases of the"
     echo "cross-game sweeps a commit to shared code reaches. Once a push, not a commit."
+  elif ! git diff --quiet HEAD; then
+    echo "! the push's snapshot guards read the working tree, which has uncommitted changes."
   fi
 fi
 
@@ -197,21 +217,26 @@ sh "$(dirname -- "$0")/reap-orphaned-workers.sh" || true
 
 # --- 0b. How a step of the fast prefix runs. ---
 #
-# The gate stops at the first refusal, so a commit that owes four fixes
-# learned of them one gated attempt at a time: a word game's last commit took
-# eight attempts over forty minutes, every refusal a check of seconds.
-# `npm run fast-checks` sets GATE_KEEP_GOING and runs the same steps, through
-# the same function, past every refusal, and ends by naming each one with the
-# command that reproduces it; it then stops before the tests and the build.
-# One list, two ways of running it: a second copy would drift from this one.
+# **The prefix runs to its end and names every refusal before it stops.** A
+# gate that stopped at its first refusal taught a commit owing four fixes of
+# them one gated attempt at a time: a word game's last commit took eight
+# attempts over forty minutes, every refusal a check of seconds. So a step
+# that refuses is written down and the next one runs; `prefix_verdict` then
+# names each refusal with the command that reproduces it, and stops the run
+# before the tests and the build. Each step's output streams as it runs, so
+# the prefix costs what it did when everything passes.
 #
-# Where a refusal has one right answer and a fixer, the keep-going run applies
-# it first (`fix`), to files the working tree has changed, and names each file
-# it wrote. The gate itself never writes.
+# `npm run fast-checks` sets GATE_KEEP_GOING and runs the same steps, through
+# the same function, on everything the working tree changed and not only on
+# what is staged. It first writes the fixes that have one right answer
+# (`npm run fix`, `scripts/fix.sh`), holds each step's output to its
+# refusals, and stops before the tests and the build. One list, two ways of
+# running it: a second copy would drift from this one. The gate itself never
+# writes.
 #
 # A step that needs an earlier one keeps its place after it; the steps that
 # every other reads (the descriptions' modules) are not steps, and a failure
-# there ends the keep-going run as it ends the gate.
+# there ends the run at once.
 #
 # A shard of CI's suite runs no step: the checks part runs each of them once.
 refused=""
@@ -220,14 +245,8 @@ step_as() {
   shift
   [ -z "$shard" ] || return 0
   if [ "${GATE_KEEP_GOING:-}" != "1" ]; then
-    # The refusal is where a session learns the command exists.
-    "$@" || {
-      step_rc=$?
-      echo ""
-      echo "✗ the gate stops at its first refusal. \`npm run fast-checks\` names every one at once"
-      echo "  and writes the fixes that have one right answer."
-      exit $step_rc
-    }
+    "$@" || refused="$refused  $reproducer
+"
     return 0
   fi
   step_log=$(mktemp)
@@ -245,18 +264,19 @@ step_as() {
   rm -f "$step_log"
 }
 step() { step_as "$*" "$@"; }
-# `fix <files> <command>...`: run a fixer and name each of the files it changed.
-sums() { for f in "$@"; do [ -f "$f" ] && cksum "$f"; done; }
-fix() {
-  [ "${GATE_KEEP_GOING:-}" = "1" ] || return 0
-  fix_files=$1
-  shift
-  # shellcheck disable=SC2086 # newline-separated paths, no globs.
-  fix_before=$(sums $fix_files)
-  "$@" >/dev/null 2>&1 || true
-  # shellcheck disable=SC2086
-  sums $fix_files | grep -vxF -e "$fix_before" | sed "s|^[0-9]* [0-9]* |✎ fixed by $2: |" || true
+# Stop here, naming every refusal so far, if any step refused.
+prefix_verdict() {
+  [ -n "$refused" ] || return 0
+  echo ""
+  echo "✗ refused by $(printf '%s' "$refused" | grep -c .) of the gate's fast checks; each refusal is above, and each reruns with:"
+  printf '%s' "$refused"
+  echo "  \`npm run fix\` writes the fixes that have one right answer (formatting, import order,"
+  echo "  a spec's subject order); the tests and the build did not start."
+  exit 1
 }
+if [ "${GATE_KEEP_GOING:-}" = "1" ]; then
+  sh "$(dirname -- "$0")/fix.sh"
+fi
 
 # --- 1. Fast fail-fast prefix. ---
 #
@@ -296,16 +316,13 @@ step node scripts/checks/typescript-projects.mjs
 # that is the backstop for a --no-verify bypass and the thing that forces a
 # tree-wide reformat when biome itself is upgraded. Do not scope those down.
 # The keep-going run takes the files the working tree changed, which the next
-# commit stages, and writes biome's safe fixes into them first.
+# commit stages, after `fix.sh` has written biome's safe fixes into them.
 if [ "${GATE_BIOME_STAGED:-}" = "1" ]; then
   step npx biome check --staged --no-errors-on-unmatched
 elif [ "${GATE_KEEP_GOING:-}" = "1" ]; then
   biome_files=$(printf '%s\n' "$changed" | while read -r f; do [ -f "$f" ] && echo "$f"; done || true)
   if [ -n "$biome_files" ]; then
     # shellcheck disable=SC2086 # newline-separated paths, no globs.
-    fix "$biome_files" npx biome check --write --no-errors-on-unmatched \
-      --files-ignore-unknown=true $biome_files
-    # shellcheck disable=SC2086
     step_as "npx biome check <the $(printf '%s\n' "$biome_files" | wc -l | tr -d ' ') changed files>" \
       npx biome check --no-errors-on-unmatched --files-ignore-unknown=true $biome_files
   fi
@@ -452,12 +469,6 @@ step node scripts/checks/absence-spelling.mjs
 # the loss silently, and this line would still print a cheerful pass. `npx`
 # resolves the pinned devDependency, which is why the version is a fact the repo
 # states rather than a property of the machine.
-#
-# The keep-going run first puts each game's spec in subject order (section
-# 1c-000): `--fix` moves whole requirements and changes no word, and doing it
-# here means the lines the checks below report are where the reader finds them.
-fix "$(ls openspec/specs/*/spec.md openspec/changes/*/specs/*/spec.md 2>/dev/null)" \
-  node scripts/checks/spec-subjects.mjs --fix
 step node scripts/checks/openspec-version.mjs
 step npx --no-install openspec validate --all --strict
 
@@ -486,7 +497,7 @@ step node scripts/checks/spec-citations.mjs
 # appends the requirements a delta adds, which puts a spec out of order, and
 # archiving is a documentation-only commit, so the check is here and reads the
 # recorded surface of each `Game` where a test would have read the object.
-# The keep-going run has applied its `--fix` ahead of section 1c.
+# `npm run fix` applies its `--fix`.
 step node scripts/checks/spec-subjects.mjs
 
 # --- 1c-i. The deploy's build-only run. ---
@@ -497,6 +508,7 @@ step node scripts/checks/spec-subjects.mjs
 # minutes of delay per push and no check (owner, 2026-09-27). The build here
 # is the artifact that ships, with the deploy-time environment.
 if [ "${GATE_BUILD_ONLY:-}" = "1" ]; then
+  prefix_verdict
   npx vite build
   exit 0
 fi
@@ -556,28 +568,32 @@ fi
 # and the whole gate runs. The default is "run everything"; this is the
 # exception, and it fails closed.
 if [ "${GATE_PRECOMMIT:-}" = "1" ] && doc_only; then
+  prefix_verdict
   echo "✓ documentation-only commit — skipping vitest and vite build."
   echo "  (CI runs the full gate on push; \`npm run gate\` runs it here.)"
   ci_notice
   exit 0
 fi
 
-# --- 1d-ii. The push runs the fast checks, and the tests only when asked. ---
+# --- 1d-ii. The push runs the fast checks and the snapshot guards. ---
 #
 # Measured 2026-11-15 over the last 100 runs of CI's gate: 19 failed, 16 of them
 # on a cross-game hint sweep (`npm run test:hint-sweeps` runs those whole) and 3 on
 # a cost budget that only the CI runners can judge. A push's narrowed run
 # found neither before CI did, and a session waiting on it waited minutes for
-# a verdict CI gives anyway. So the push is the prefix above, which is what a
-# commit has passed already plus whatever the later commits changed, and the
-# plan below (the tests the commits left out) runs only on request:
-# `GATE_PUSH_TESTS=1 git push`. CI is the whole run, and the next commit and
-# push print its red verdict (`ci_notice`).
+# a verdict CI gives anyway. So the push's whole plan (the tests the commits
+# left out) runs only on request: `GATE_PUSH_TESTS=1 git push`.
+#
+# Unasked, it runs the plan's snapshot guards (section 0a), and no build: a
+# snapshot records every game, so an engine commit moves it in games no
+# commit staged, and over 2026-11-22 to 11-24 the capability surface alone
+# turned CI red after green hooks eight times. They cost seconds. CI is the
+# whole run, and the next commit and push print its red verdict (`ci_notice`).
+push_snapshots=""
 if [ -n "${GATE_SINCE:-}" ] && [ "${GATE_PUSH_TESTS:-}" != "1" ]; then
-  echo "✓ the push ran the fast checks. The tests are CI's: \`GATE_PUSH_TESTS=1 git push\`"
-  echo "  runs the ones the commits left out here, \`npm run test:hint-sweeps\` the hint sweeps."
-  ci_notice
-  exit 0
+  push_snapshots=1
+  echo "The push runs the fast checks and its snapshot guards. The rest is CI's:"
+  echo "  \`GATE_PUSH_TESTS=1 git push\` runs what the commits left out, \`npm run test:hint-sweeps\` the hint sweeps."
 fi
 
 # --- 1e. Which tests does this commit run? (the local hooks only) ---
@@ -673,6 +689,9 @@ fi
 # would report a narrow plan that looks like health. ~1s.
 step node scripts/checks/source-scans.ts --verify
 step node scripts/checks/select-tests.ts --verify
+# The prefix ends here, and a refusal anywhere in it stops the run. The
+# keep-going run goes on to the scan pass, which is its last step.
+[ "${GATE_KEEP_GOING:-}" = "1" ] || prefix_verdict
 # CI's checks part ends with the build, which the shards do not run.
 if [ "$ci_part" = checks ]; then
   npx vite build
@@ -709,14 +728,10 @@ run_tests() {
 # and it ends here: the tests and the build are what the commit is for.
 if [ "${GATE_KEEP_GOING:-}" = "1" ]; then
   step_as "GATE_TEST_PASS=scan npx vitest run --update=none" run_tests scan
+  prefix_verdict
   echo ""
-  if [ -z "$refused" ]; then
-    echo "✓ every fast check of the gate passes. The commit runs the tests and the build."
-    exit 0
-  fi
-  echo "✗ refused by $(printf '%s' "$refused" | grep -c .) of the gate's fast checks; each refusal is above, and each reruns with:"
-  printf '%s' "$refused"
-  exit 1
+  echo "✓ every fast check of the gate passes. The commit runs the tests and the build."
+  exit 0
 fi
 if ! run_tests scan; then
   echo ""
@@ -732,13 +747,16 @@ build_rc=0
 # captured log is printed only on failure, avoiding two interleaved streams.
 build_log=$(mktemp)
 trap 'rm -f "$build_log" "$TEST_COST_RUN"' EXIT
-if [ -z "$shard" ]; then
+# A shard of CI's suite and a push's snapshot run build nothing.
+build=""
+[ -n "$shard" ] || [ -n "$push_snapshots" ] || build=1
+if [ -n "$build" ]; then
   $NICE npx vite build >"$build_log" 2>&1 &
   build_pid=$!
 fi
 
 run_tests main || vitest_rc=$?
-[ -n "$shard" ] || wait "$build_pid" || build_rc=$?
+[ -z "$build" ] || wait "$build_pid" || build_rc=$?
 if [ "$build_rc" -ne 0 ]; then
   echo ""
   echo "✗ vite build failed (exit $build_rc):"
@@ -751,8 +769,9 @@ if [ "$vitest_rc" -ne 0 ] || [ "$build_rc" -ne 0 ]; then
   exit 1
 fi
 # Every file's CPU time against its budget, and the suite's where it all ran.
-# Recorded too, for the next hook's plan; a push that ran clears what the
-# commits left it. A shard of CI's suite writes its costs for the suite part.
+# Recorded too, for the next hook's plan; a push that ran its whole plan
+# clears what the commits left it. A shard of CI's suite writes its costs for
+# the suite part.
 if [ -n "$shard" ]; then
   cost_report="shard $TEST_COST_RUN $shard"
 else
@@ -764,5 +783,7 @@ if ! node scripts/checks/test-cost.ts $cost_report; then
   echo "gate failed on the cost budget"
   exit 1
 fi
-[ -n "${GATE_SINCE:-}" ] && rm -f node_modules/.cache/test-cost/deferred
+if [ -n "${GATE_SINCE:-}" ] && [ -z "$push_snapshots" ]; then
+  rm -f node_modules/.cache/test-cost/deferred
+fi
 ci_notice

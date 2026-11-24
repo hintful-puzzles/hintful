@@ -40,5 +40,5 @@ A review of the 68 migration sessions of 2026-11-22 to 11-24 (owner-asked,
 ## Impact
 
 `scripts/gate.sh`, `scripts/checks/select-tests.ts`, `.husky/`,
-`package.json`, a new `scripts/spec-delta.ts`, `docs/testing.md`
+`package.json`, a new `scripts/spec-delta.mjs` and `scripts/fix.sh`, `docs/testing.md`
 § "What runs when", `docs/work-management.md`. No player-visible change.

@@ -12,7 +12,7 @@ which goes last.
 halts and debriefs the owner: what each change did, what it measured,
 what is left, and whether the migration is good to proceed.
 
-- [ ] 0.1 `the-commit-catches-what-ci-would`
+- [x] 0.1 `the-commit-catches-what-ci-would`
 - [ ] 0.2 `session-tools-for-the-flip`
 - [ ] 0.3 `fill-engine-by-concern`
 - [ ] 0.4 `one-way-to-say-a-setting`

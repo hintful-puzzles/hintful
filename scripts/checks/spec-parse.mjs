@@ -6,6 +6,9 @@
 import { readdirSync, readFileSync } from "node:fs";
 
 export const SPECS_DIR = "openspec/specs";
+/** The longest requirement `openspec validate --strict` passes, as
+ * {@link ruleChars} counts it. */
+export const LONGEST = 500;
 
 const REQUIREMENT = /^### Requirement:\s*(.+?)\s*$/;
 const SCENARIO = /^#### Scenario:\s*(.+?)\s*$/;

@@ -1,7 +1,7 @@
 # The push runs the gate's fast checks (scripts/gate.sh, told which commit the
-# remote already has: GATE_SINCE) and no test. CI's gate is the whole run, and
-# measured over its last 100 runs it found what a push's narrowed tests would
-# have missed: scripts/gate.sh § "1d-ii" has the figures. The tests a commit
+# remote already has: GATE_SINCE) and the snapshot guards its commits reach,
+# and no other test. CI's gate is the whole run: scripts/gate.sh § "1d-ii"
+# says why the push runs no more. The tests a commit
 # left out run here only on request, `GATE_PUSH_TESTS=1 git push`, for a push
 # that carries a change to shared code and wants the verdict before CI's.
 #

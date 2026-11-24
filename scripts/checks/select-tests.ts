@@ -27,10 +27,12 @@
  * **A commit's plan is the part of that which is its own.** With no flag the
  * paths are the staged ones, and per-game work runs for the games the commit
  * stages and for no other: a game's own test files, and the `<id>: …` cases of
- * the cross-game guards. The games an engine path merely reaches wait for the
- * push, which is what keeps a commit to the midend from costing every game's
- * boards (`build-pipeline`, "A commit runs the per-game work of the games it
- * stages"). One kind of file still runs `whole` in a commit: a test file that
+ * the cross-game guards. The hand-written games an engine path merely reaches
+ * wait for the push, which is what keeps a commit to the midend from costing
+ * every game's boards (`build-pipeline`, "A commit runs the per-game work of
+ * the games it stages"). A game born from its description is staged by any
+ * commit to the code it is made of, since it has no other. One kind of file
+ * still runs `whole` in a commit: a test file that
  * is itself staged, since it is what the author just wrote. Every test in a
  * selected file that is not titled for a game runs too, which is where a scan
  * of the engine's own text reports.
@@ -89,11 +91,13 @@ import ts from "typescript";
 import { compiledPath } from "../../src/describe/sources.ts";
 import {
   allTestFiles,
+  bornGames,
   commitPlan,
   gameOf,
   ROOT,
   reach,
   readsAsText,
+  snapshotOf,
   testReads,
 } from "./reach.ts";
 
@@ -275,16 +279,23 @@ function wholePlan(change: Change, graph: Graph): string[] {
 /** A commit's plan: the header says what it leaves to the push. */
 function commitLines(change: Change, graph: Graph): string[] {
   if (change.paths.length === 0) return ["ALL"];
-  const mine = new Set(change.paths.map(gameOf).filter((id) => id !== null));
+  const staged = new Set(change.paths.map(gameOf).filter((id) => id !== null));
+  const cases = commitPlan(change.paths.filter((p) => !change.prose.has(p)));
+  const modeled = change.paths.every((p) => SELECTABLE.some((s) => p.startsWith(s)));
+  // No game reaches the change (a help page, a stylesheet), so no game's
+  // boards are at stake and there is nothing to leave to the push.
+  if (modeled && cases === null) return wholePlan(change, graph);
+  // A born game has no file of its own that an engine or compiler change
+  // stages: the change is the game's code, so its cases are this commit's.
+  const born = new Set(bornGames());
+  const mine = new Set([
+    ...staged,
+    ...(cases?.scope.filter((id) => born.has(id) && !staged.has(id)) ?? []),
+  ]);
   const own = (f: string) => {
     const id = gameOf(f);
     return id === null || mine.has(id);
   };
-  const modeled = change.paths.every((p) => SELECTABLE.some((s) => p.startsWith(s)));
-  // No game reaches the change (a help page, a stylesheet), so no game's
-  // boards are at stake and there is nothing to leave to the push.
-  if (modeled && commitPlan(change.paths.filter((p) => !change.prose.has(p))) === null)
-    return wholePlan(change, graph);
   // Another game's test file runs where it reaches a staged game's own path,
   // through the registry: that is the commit's work and not the push's.
   const games: Change = {
@@ -344,6 +355,24 @@ function pushLines(change: Change, graph: Graph): string[] {
   return leavesOut(commitLines(change, graph), push) ? push : ["NOTHING"];
 }
 
+/**
+ * The part of a push's plan that a push runs unasked: the guards outside the
+ * game directories that hold a snapshot. A snapshot records what every game
+ * is, so an engine change moves it in games no commit staged, and it costs
+ * seconds where the rest of the plan costs minutes.
+ */
+function snapshotGuards(lines: readonly string[]): string[] {
+  const all = lines.includes("ALL")
+    ? allTestFiles().map((f) => `whole ${f}`)
+    : lines.filter((l) => !l.startsWith("scope "));
+  const kept = all.filter((l) => {
+    const file = l.slice(l.indexOf(" ") + 1);
+    return gameOf(file) === null && existsSync(path.join(ROOT, snapshotOf(file)));
+  });
+  if (kept.length === 0) return ["NOTHING"];
+  return [...lines.filter((l) => l.startsWith("scope ")), ...kept];
+}
+
 /** The paths that are one game's, tracked or not: its directory, its
  * description and help page among them, and its icons. */
 function gamePaths(id: string): string[] {
@@ -396,6 +425,7 @@ function verify(): void {
     facts(wholePlan(changed(paths, prose), NO_GRAPH));
   const commit = (paths: string[]) => facts(commitLines(changed(paths), NO_GRAPH));
   const owed = (paths: string[]) => pushLines(changed(paths), NO_GRAPH);
+  const born = bornGames();
 
   const game = push(["src/games/pearl/hint.ts"]);
   expect(
@@ -492,10 +522,10 @@ function verify(): void {
   );
   const ownMidend = commit(["src/engine/midend/midend.ts"]);
   expect(
-    ownMidend.scope.length === 0 &&
+    ownMidend.scope.every((id) => born.includes(id)) &&
       ownMidend.narrow.includes("src/guards/hint-resume.test.ts") &&
       !ownMidend.lines.some((l) => l.includes(" src/games/pearl/")),
-    "a commit to the midend runs hint-resume with no game's cases, and no game's own tests",
+    "a commit to the midend runs hint-resume with no hand-written game's cases, and no such game's own tests",
   );
   expect(
     owed(["src/engine/midend/midend.ts"]).includes(
@@ -504,12 +534,47 @@ function verify(): void {
     "the push that carries a midend commit runs hint-resume whole",
   );
   const both = commit(["src/engine/midend/midend.ts", "src/games/pearl/hint.ts"]);
+  // Another game's tests run where they reach Pearl's path through the
+  // registry, as for Pearl alone; the midend adds a born game's, and no other.
+  const pearlAlone = commit(["src/games/pearl/hint.ts"]);
+  const stray = [...both.whole, ...both.narrow].filter((f) => {
+    const id = gameOf(f);
+    return (
+      id !== null &&
+      id !== "pearl" &&
+      !born.includes(id) &&
+      ![...pearlAlone.whole, ...pearlAlone.narrow].includes(f)
+    );
+  });
   expect(
-    both.scope.join() === "pearl" &&
+    both.scope.every((id) => id === "pearl" || born.includes(id)) &&
+      both.scope.includes("pearl") &&
       both.lines.some((l) => l.includes(" src/games/pearl/")) &&
-      !both.lines.some((l) => l.includes(" src/games/solo/")),
-    "a commit to the midend and to Pearl runs Pearl's cases and Pearl's tests only",
+      stray.length === 0,
+    "a commit to the midend and to Pearl runs Pearl's cases and tests, and no other hand-written game's but what Pearl alone runs",
   );
+  const snapshots = facts(snapshotGuards(owed(["src/engine/midend/midend.ts"])));
+  const snapshotFiles = [...snapshots.whole, ...snapshots.narrow];
+  expect(
+    snapshotFiles.includes("src/guards/params-stability.test.ts") &&
+      snapshotFiles.includes("src/guards/capability-surface.test.ts") &&
+      !snapshotFiles.includes("src/guards/hint-resume.test.ts") &&
+      (snapshots.narrow.length === 0 || snapshots.scope.includes("pearl")),
+    "a push of a midend commit runs the snapshot guards over every game it reaches, and no sweep",
+  );
+  // A born game is the engine's code and the compiler's output, so a commit to
+  // either is a commit to it: the capability surface moved on CI after such
+  // commits, which ran no born game's cases.
+  for (const path of ["src/engine/fill/game.ts", "src/describe/compile-fill.ts"]) {
+    const plan = commit([path]);
+    expect(
+      born.length > 0 &&
+        born.every((id) => plan.scope.includes(id)) &&
+        !plan.scope.includes("pearl") &&
+        plan.narrow.includes("src/guards/capability-surface.test.ts"),
+      `a commit to ${path} runs every born game's cases, and no hand-written game's`,
+    );
+  }
   expect(
     commit(["src/guards/hint-quality.test.ts"]).whole.includes(
       "src/guards/hint-quality.test.ts",
@@ -605,6 +670,9 @@ if (process.argv[1] === import.meta.filename) {
           : process.argv.includes("--owed")
             ? wholePlan(change, graph)
             : pushLines(change, graph);
+      // `--snapshots`: a push not asked to run its tests runs these alone.
+      if (since !== null && process.argv.includes("--snapshots"))
+        lines = lines.includes("NOTHING") ? lines : snapshotGuards(lines);
     } catch {
       // Any failure at all — vitest missing, git unavailable, a parse error —
       // resolves to the safe answer rather than to a smaller test run.

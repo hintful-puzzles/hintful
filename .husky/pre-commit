@@ -1,6 +1,6 @@
 # The gate lives in scripts/gate.sh so this hook and `npm run gate` share one
 # implementation (the build-pipeline spec requires they mirror each other).
-# A fail-fast prefix of cheap checks, then `vitest run` ∥ `vite build`
+# A prefix of cheap checks that names every refusal, then `vitest run` ∥ `vite build`
 # concurrently, failing the commit if either fails. The steps are the commands in
 # scripts/gate.sh, where each carries its reason in a comment. Deliberately
 # not repeated here — this comment was one of six

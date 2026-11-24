@@ -17,11 +17,9 @@
  * is not one, though a change may share it.
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { capabilityNames, parseSpec, specPath } from "./spec-parse.mjs";
+import { capabilityNames, LONGEST, parseSpec, specPath } from "./spec-parse.mjs";
 
 const ARCHIVE = "openspec/changes/archive";
-/** The longest requirement `openspec validate --strict` passes. */
-const LONGEST = 500;
 const DATED = /^\d{4}-\d{2}-\d{2}-(.+)$/;
 const DATE = /\b20\d\d-\d\d-\d\d\b/;
 

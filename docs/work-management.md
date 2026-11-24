@@ -192,6 +192,12 @@ Two rules make a sweep across the collection affordable:
 
 ## Before archiving
 
+- **Write a MODIFIED delta from the spec it modifies:**
+  `npm run spec-delta -- <change> <capability> "<requirement title>"` copies
+  the requirement, every scenario included, into the change's delta, and
+  says how far each requirement there is under the validator's length bound.
+  A MODIFIED block replaces the whole requirement at archive, so a scenario
+  it leaves out is deleted.
 - **Re-read every spec delta against the code.** A delta written mid-change
   states what the code was that morning, and the validator checks a delta's
   shape, never its truth.
@@ -205,7 +211,8 @@ Two rules make a sweep across the collection affordable:
   holds"), and it names every merged requirement over the validator's length
   by file, line and title, so the archive's first gated commit is the one
   that lands.
-- **No script of ours writes into a change directory.** Archiving renames it.
+- **No script of ours writes into a change directory of its own accord.**
+  Archiving renames it. `spec-delta` writes only to the change it is named.
 
 ## Pushing and deploying
 
@@ -215,7 +222,8 @@ deploys, and the deployment is how the owner looks at player-visible work, so
 work the owner is waiting to look at is a reason to end the session's commits
 there and push.
 
-- **The push costs seconds, and the whole suite is CI's.** What a commit, a
+- **The push costs under a minute (its fast checks and snapshot guards),
+  and the whole suite is CI's.** What a commit, a
   push and CI each run, and what to run first before pushing shared code, is
   [`testing.md`](./testing.md) § "What runs when". CI's red verdict, which
   the next hook prints, is fixed before other work.

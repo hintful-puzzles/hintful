@@ -637,16 +637,18 @@ and their reasons.
 
 | Run | When | What it tests |
 | --- | --- | --- |
-| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and no other, up to a ceiling of CPU time. |
-| The push hook | every push | The gate's fast checks and no test. Asked with `GATE_PUSH_TESTS=1`, it also runs what the commits left out: the own tests and the cross-game cases of every game that reaches a path the push carries (nothing, when every commit was a game's own or documentation), up to its own ceiling. |
+| The commit hook | every commit | The tests that reach what the commit stages, with per-game work for the games it stages and for the born games its paths reach, and no other, up to a ceiling of CPU time. |
+| The push hook | every push | The gate's fast checks, and the guards outside the games that hold a snapshot, over every game that reaches a path the push carries: under a minute. Asked with `GATE_PUSH_TESTS=1`, it runs all of what the commits left out instead, with the build: the own tests and the cross-game cases of every such game (nothing, when every commit was a game's own or documentation), up to its own ceiling. |
 | CI | every push | Everything but the games' deep tiers, in parts: the fast checks and the build in one job, the tests in shards beside it, and their costs summed once every shard passed. Never canceled by a newer push. |
 
-- **Before a commit, `npm run fast-checks`** runs the gate's fast checks
-  past every refusal, in under a minute, and names each one with the command
-  that reruns it. The gate stops at the first, so a commit that owes four
-  learns of them in four gated attempts. It first writes the fixes with one
-  right answer (formatting, import order, a game spec's subject order) into
-  the files the working tree changed, and names them.
+- **The gate's fast checks all run before it stops.** A refusal is named
+  with every other one, each with the command that reruns it, and the tests
+  and the build do not start. `npm run fix` writes the fixes with one right
+  answer (formatting, import order, a game spec's subject order) into the
+  files the working tree changed, and names them.
+- **Before a commit, `npm run fast-checks`** runs the same checks over
+  everything the working tree changed, staged or not, after `npm run fix`,
+  and adds the source scans, in under a minute.
 - **Each hook's run has a ceiling of CPU time** (`test-cost.ts`'s `BUDGET`).
   Before any test runs, the hook prices its plan from what the last runs
   recorded here and keeps the cheapest files that fit. A test file the commit
@@ -658,21 +660,28 @@ and their reasons.
 - **A commit is tested as it will be committed.** Every check reads the
   working tree, so the commit hook refuses a staged file that differs there
   (edited after `git add`, part-staged with `git add -p`, or deleted from the
-  index but still on disk) and names it. Unstaged edits to files the commit
-  does not stage are named and allowed; the gate reads them as they stand, so
-  a commit that depends on one passes here and fails in CI.
+  index but still on disk) and names it, and so it refuses a snapshot changed
+  or new in the working tree that the commit does not stage: a rebaselined
+  snapshot left unstaged passed its commit and failed CI. Other unstaged
+  edits to files the commit does not stage are named and allowed; the gate
+  reads them as they stand, so a commit that depends on one passes here and
+  fails in CI.
 - **Per-game work** is a game's own test files and the cases a cross-game
   guard titles `<id>: …`, and it is nearly all of the suite's time.
-- **A commit to the engine tests no game's boards.** It runs the engine's own
-  tests and the whole-collection tests that are not split by game. Run the
-  guarding sweep yourself first: `npx vitest run src/guards/hint-resume.test.ts`
-  for a hint planner, the file named for the mechanic otherwise. A bare
-  `vitest` is the wide run, since only the hooks narrow.
+- **A commit to the engine tests no hand-written game's boards.** It runs
+  the engine's own tests, the whole-collection tests that are not split by
+  game, and the cases of every game born from its description that reaches
+  what it stages: a born game's code is the engine's and the compiler's, so
+  no other commit tests it. A compiler path reaches every born game, since a
+  compiled module reads what the compiler wrote. Run the guarding sweep
+  yourself first: `npx vitest run src/guards/hint-resume.test.ts` for a hint
+  planner, the file named for the mechanic otherwise. A bare `vitest` is the
+  wide run, since only the hooks narrow.
 - **A staged test file runs with every game's cases**, being what the author
   just wrote.
-- **A push that carries a change to shared code is one whole run**, and it
-  will not run over uncommitted changes to tracked files. It judges only
-  `HEAD`: a push of another commit runs nothing here.
+- **A push asked to run its tests is one whole run**, and it will not run
+  over uncommitted changes to tracked files; unasked, it names them. It
+  judges only `HEAD`: a push of another commit runs nothing here.
 - **A commit that stages only documentation** (`doc_only` in `gate.sh` lists
   the paths, `docs/` and `openspec/` among them) runs the gate's fast prefix and no test or build. `help/` and
   `README.md` are not documentation here: a test or the build reads them.
@@ -687,7 +696,14 @@ both plans to known cases. The spec is `build-pipeline`, "A commit runs the
 per-game work of the games it stages" and "The push runs what its commits
 left out, and nothing when they left nothing".
 
-**Why the push runs no test by default** (measured 2026-11-15 over the last 100
+**Why the push runs its snapshot guards** (2026-11-24, over CI's runs of
+2026-11-22 to 11-24: 13 red after green hooks). The capability surface was
+red in eight, beside params stability and the note-taking frames: snapshots
+that record every game, moved by an engine or compiler commit in games it
+did not stage. Together they cost a push about 15 seconds of CPU, and the
+push about 25 seconds more than its fast checks alone.
+
+**Why the push runs no other test by default** (measured 2026-11-15 over the last 100
 runs of CI's gate: 71 green, 19 red, 10 canceled). Of the 19, sixteen were a
 cross-game hint sweep (the hint text convention 5, hint quality 5, the hint
 walk fingerprint 3, firing replay 2, the hint frontier 1, ladder continuity 1;

@@ -21,6 +21,8 @@
     "diff": "vitest run --passWithNoTests -c scripts/checks/diff.vitest.config.mts",
     "gate": "sh scripts/gate.sh",
     "fast-checks": "GATE_KEEP_GOING=1 sh scripts/gate.sh",
+    "fix": "sh scripts/fix.sh",
+    "spec-delta": "node scripts/spec-delta.mjs",
     "test:hint-sweeps": "vitest run src/guards/hint-text-convention.test.ts src/guards/hint-quality.test.ts src/guards/hint-walk-fingerprint.test.ts src/engine/solve/hint-frontier.test.ts src/guards/ladder-continuity.test.ts src/guards/hint-resume.test.ts",
     "test:research-guards": "vitest run -c research/vitest.guards.config.ts",
     "test:slow": "PUZZLES_SLOW_TESTS=1 vitest run --passWithNoTests",

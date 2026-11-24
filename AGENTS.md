@@ -35,10 +35,10 @@ incident only what a later session acts on: the rule, and the shape to look for.
 - **Never bypass the gate**, in whole or in part, however small the change and
   however sure you are that it is not needed. No `--no-verify`, no disabled step.
 - **Push at the session's end, or when the owner asks to see the work
-  sooner.** A commit tests only the games it stages; the push runs the fast
-  checks and no test, and CI the rest (`docs/testing.md` § "What runs when").
-  After a change to shared code run `npm run test:hint-sweeps` first. An
-  archive goes in with the change's last commit.
+  sooner.** What a commit, the push and CI each test is `docs/testing.md`
+  § "What runs when". After a change to shared code run
+  `npm run test:hint-sweeps` first. An archive goes in with the change's
+  last commit.
 - **A green suite does not show that a game plays correctly.** Run the app
   before calling game-facing or UI work done: rendering, animation, input and
   wording included. A shortfall is never called "cosmetic" or "out of scope",
