@@ -16,15 +16,7 @@
  */
 
 import { compileExpr } from "./compile-expr.ts";
-import {
-  blocksOf,
-  boxesDealtBy,
-  dealOf,
-  derivedClues,
-  markWhileOf,
-  numbersOf,
-  playOf,
-} from "./compile-fill.ts";
+import { fillOf } from "./compile-fill.ts";
 import {
   answerSet,
   type ClueKind,
@@ -64,6 +56,7 @@ import {
   withEveryVariation,
 } from "./description.ts";
 import { type Binder, type Expr, parse } from "./expr.ts";
+import { blocksOf, boxesDealtBy } from "./fill/partitions.ts";
 
 // --- modules ----------------------------------------------------------------
 
@@ -378,13 +371,7 @@ export function compileGame(
   const check = Out.own("isAnswer", () => answerCheck(json, d, env));
   const broken = Out.own("violations", () => violationsOf(json, d, env));
   const measured = grid === null ? (e: Expr) => e : measuredBy(grid);
-  const fill = Out.own("", () => [
-    ...markWhileOf(json, env, measured),
-    ...derivedClues(json, d, env, measured),
-    ...playOf(json, d, env, measured),
-    ...dealOf(json, d, env, measured),
-    ...numbersOf(json, d, env, measured),
-  ]);
+  const fill = Out.own("", () => fillOf(json, d, env, measured));
   // Kept by a technique or by the rules alone (Signpost's `nextGiven`).
   const kept = env.kept?.defs ?? new Map();
   for (const fn of kept.keys())

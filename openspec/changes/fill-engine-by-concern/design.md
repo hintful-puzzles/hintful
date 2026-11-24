@@ -174,6 +174,19 @@ of the segment kinds. That copy has already drifted: it lacks `always`
 and `both`. So `IdSegmentJson` becomes `IdSegment`, and `segmentKinds` a
 method of each kind.
 
+As built (2.4, the move): `compile-fill.ts` is the runner, 312 lines:
+`fillOf` writes the five parts in their order, `dealOf` assembles `deal`,
+and `clueMaxOf` writes `clueMax`. `fill/` holds `emit.ts` (what every part
+writes with), `values.ts` (a kind's values off its range), `id-checks.ts`,
+`locations.ts` (universes, `partsOf`, signs, gaps and the margins'
+exports), `hide.ts`, `partitions.ts`, `sample.ts`, `clue-steps.ts` (latin,
+first kind, one kind), `params.ts`, `menu.ts`, `notes.ts`, `play.ts`,
+`numbers.ts` and `derive.ts`, the largest at 450 lines. A sample's checks
+moved out of `dealOf` as one call, so a description with a latin error and
+a sample error now hears of the sample's first. Every born game's module is
+the same byte for byte: HEAD's compiler, run over the split one's output,
+writes none of 140.
+
 ### 6. Clue locations (2.5): per registry, unless 2.4 shows otherwise
 
 A location (lines, slots, corners, edges, parts) has a part in each of

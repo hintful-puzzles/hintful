@@ -565,7 +565,11 @@ function verify(): void {
   // A born game is the engine's code and the compiler's output, so a commit to
   // either is a commit to it: the capability surface moved on CI after such
   // commits, which ran no born game's cases.
-  for (const path of ["src/engine/fill/game.ts", "src/describe/compile-fill.ts"]) {
+  for (const path of [
+    "src/engine/fill/game.ts",
+    "src/describe/compile-fill.ts",
+    "src/describe/fill/derive.ts",
+  ]) {
     const plan = commit([path]);
     expect(
       born.length > 0 &&

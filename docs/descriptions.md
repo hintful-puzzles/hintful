@@ -184,7 +184,8 @@ research tools all read through it; the app never does.
   along `L`, in order. `Dealt` keeps the kind as `ListClues`. The checker
   deals one a line, up to as many members as the line has room for runs.
 - **What the engine's fill board reads** (`engine/fill/`,
-  [`compile-fill.ts`](../src/describe/compile-fill.ts)). The cell mark that
+  [`compile-fill.ts`](../src/describe/compile-fill.ts), a module a concept
+  in [`fill/`](../src/describe/fill/)). The cell mark that
   names a clue may say `while:`, what it needs to stand: an edit drops every
   mark its new values break (Tents' link, `value(at) = 1`). A deal that
   samples an answer says how in `deal.sample`, and the compiler then writes
