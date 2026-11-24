@@ -150,10 +150,10 @@ a long run of them.
 
 ### Requirement: A born game's deal setting is a param by its letter
 
-`deal.thorough` SHALL be a setting in the params by its letter, written only
-where it is off and read as on where it is absent, so an upstream ID reads
-as upstream reads it. A menu board SHALL have it on where it is narrower
-than `offFrom`.
+A `flag` setting with `written: off` SHALL be written as its letter and
+`0` only where it is off and read as on where it is absent, so an upstream
+ID reads as upstream reads it. A menu board SHALL have it on where it is
+narrower than the setting's `onBelow`. `deal.thorough` MAY name such a flag.
 
 #### Scenario: Mosaic's largest board is dealt quickly
 
@@ -194,9 +194,10 @@ kind as upstream does, a digit a number and a letter a run without one.
 ### Requirement: A born game's dealt cells and modifiers are its description's
 
 A clue kind `play.dealt` names, meaning `value(at) = v`, SHALL be dealt as
-fixed values in its cells, which no button changes. A modifier in
-`play.modifiers` SHALL put its variation in the params by its letter, and
-the params SHALL refuse a board its `most` bounds or one off `sizes.step`.
+fixed values in its cells, which no button changes. A `flag` setting with
+`gives: variation` SHALL put the variation of its name in the params by its
+letter, and the params SHALL refuse a board its `most` or `bounds` bound or
+one off `sizes.step`.
 
 #### Scenario: Unruly's unique boards are bounded
 
@@ -338,11 +339,12 @@ cell.
 ### Requirement: A born game's params may give a size beyond the grid's
 
 A size the rules read that the grid is not measured in SHALL be given by
-the params, as `play.sizes` declares it: its letter, and a ruleset for each
-value, which the Custom dialog offers as the game mode and the help's
-`{{rulesets}}` lists. A ruleset's `least` SHALL refuse a narrower board,
-naming the ruleset. A preset board SHALL give the size after its `WxH` by
-its letter. Every technique and rule that reads the size SHALL get it.
+the params, as a `choice` setting with `gives: size` declares it: its
+letter, and a ruleset for each choice, which the Custom dialog offers as
+the game mode and the help's `{{rulesets}}` lists. A choice's `least` SHALL
+refuse a narrower board, naming the ruleset. A preset board SHALL give the
+size after its `WxH` by its letter. Every technique and rule that reads the
+size SHALL get it.
 
 #### Scenario: Star Battle's stars
 
@@ -418,12 +420,12 @@ short of where the search proves one answer.
 
 ### Requirement: A born game's deal may take options
 
-A description's `deal.options` MAY name settings of the deal by letter: a
-number in a range, or one of named choices, each with a default, and a choice
-with the size bounds it alone binds, a tier's among them. The Custom dialog
-SHALL offer each and the params SHALL write each after the size. A label
-SHALL name one only where it is not a preset board's own (`7x7s4`), or the
-default on any other board. A `tierFlag` letter MAY stand for a tier.
+A setting with no `gives` is the deal's alone: a `number` in a range, or a
+`choice` of named choices, each with a default, and a choice with the size
+bounds it alone binds, a tier's among them. The Custom dialog SHALL offer
+each and the params SHALL write each after the size. A label SHALL name one
+only where it is not a preset board's own (`7x7s4`), or the default on any
+other board. A `tierFlag` letter MAY stand for a tier.
 
 #### Scenario: Light Up's options
 
@@ -484,10 +486,11 @@ one of its kind, so a meaning that reads other clues is written once.
 
 `deal.hide` MAY name several kinds, whose clues SHALL be hidden in one random
 order across them, each kept hidden while the ladder finishes the board.
-With `deal.hideFirst`, every clue of the kinds it names SHALL instead be
-tried at each tier before any clue of the rest, each side in a random
-order. `deal.stripFrom: everyClue` SHALL start every draw of a search tier from
-every clue, not from a board hidden at the lowest tier that finishes it.
+`deal.hide` SHALL be one kind, a list of them, or by kind how it is hidden,
+in the deal's order. A kind hidden `first` SHALL have every clue tried at
+each tier before any clue of a kind without, each side in a random order.
+`deal.stripFrom: everyClue` SHALL start every search-tier draw from every
+clue.
 
 #### Scenario: Sticks hides lengths and block numbers together
 
@@ -497,7 +500,7 @@ every clue, not from a board hidden at the lowest tier that finishes it.
 #### Scenario: Squares go before sums
 
 - **WHEN** a `flanking` board is dealt at Normal, its givens hidden
-  first (`hideFirst: [given]`)
+  first (`hide: { given: { first: true }, flank: … }`)
 - **THEN** it shows fewer givens and more sums than the same deal in one
   random order
 
@@ -510,22 +513,22 @@ every clue, not from a board hidden at the lowest tier that finishes it.
 
 ### Requirement: A born game may order a kind's hide by a formula
 
-With `deal.hideBy`, a kind's clues SHALL take the places the shuffle gave
+With a hidden kind's `by`, its clues SHALL take the places the shuffle gave
 that kind in the order of the stated formula of `at`, the higher first,
 those alike in a random order; the kinds stay mixed as the shuffle put them.
 
 #### Scenario: Larger givens go first
 
 - **WHEN** `ordering` boards are dealt at Normal, its givens ranked by
-  their numbers (`hideBy: { given: "clue(given, at)" }`)
+  their numbers (`hide: { given: { by: "clue(given, at)" }, greater }`)
 - **THEN** the givens they keep are smaller than the same deals hiding at
   random keep
 
 ### Requirement: A born game's run code may write a clue after a letter
 
-A digits segment's `after` MAY write, straight after a letter's cell, one
-digit for a clue of a named kind on it, absent where it has none, and the
-reading SHALL refuse a digit past the kind's largest.
+A run-letter stream's code MAY name a kind whose digit follows it, written
+straight after the code for a clue of that kind on its cell, absent where
+it has none, and the reading SHALL refuse a digit past the kind's largest.
 
 #### Scenario: Sticks' numbered block
 
@@ -599,7 +602,7 @@ of the cells no clue fixes SHALL be drawn again.
 
 ### Requirement: A born game's run code may write another kind as a number
 
-A digits segment's `also` MAY name a number, past the segment kind's
+A run-letter stream's code MAY be a number, past the segment's own kind's
 largest, that SHALL be read as a clue of another kind at its cell, and
 written for one there.
 
@@ -646,9 +649,11 @@ line longer than two holds one value alone.
 
 ### Requirement: A born game's kind may be read and never dealt
 
-A kind named in `deal.never` SHALL never be dealt, and SHALL be read from an
-ID that holds it. A `dots` segment with `before` SHALL be read only after
-that text, and SHALL write nothing where no cell holds its kind.
+A kind `deal.never` names whole SHALL never be dealt, and SHALL be read from
+an ID that holds it; values it names of a kind at cells SHALL never be
+derived, and SHALL be read from an ID. A `dots` segment with `before` SHALL
+be read only after that text, and SHALL write nothing where no cell holds
+its kind.
 
 #### Scenario: Pattern's given squares
 
@@ -702,7 +707,7 @@ row or column, one single in both where there is one.
 
 ### Requirement: A born game's piece may hide its number
 
-A value named by `play.hides` SHALL hide its cell's number, and its
+A value named by `play.covers` SHALL hide its cell's number, and its
 preference SHALL show it smaller; a press in the half tile round the grid
 SHALL flip the preference and make no move. `play.wrap` SHALL carry the
 cursor over the grid's edge.
@@ -714,11 +719,11 @@ cursor over the grid's edge.
 
 ### Requirement: A born game's params may give a tally of pieces
 
-`play.tally` SHALL name a clue at the board of two fields, a length and its
-count, that the params give: a size by its letter after the grid's and the
-counts after a comma at the end, one of the longest and one more of each
-shorter by default. Params SHALL be refused where the size is not smaller
-than a side, no piece is counted, or the pieces cannot be laid.
+A `tally` setting SHALL name a clue at the board of two fields, a length
+and its count, that the params give: a size by its letter after the grid's
+and the counts after a comma at the end, one of the longest and one more of
+each shorter by default. Params SHALL be refused where the size is not
+smaller than a side, no piece is counted, or the pieces cannot be laid.
 
 #### Scenario: Boats' fleet
 
@@ -740,10 +745,9 @@ and red where more are.
 
 ### Requirement: A born game's hide may be the player's setting
 
-`deal.hideFlag` SHALL be a setting written after the tier by its letter,
-under which the deal hides its `kind` in one random order with `deal.hide`'s,
-and refuses a board that hides none of it. `deal.withhold` SHALL name values
-a deal never derives.
+A hidden kind's `when` SHALL name a flag setting, written after the tier by
+its letter, under which alone the deal hides the kind, in one random order
+with the others, and refuses a board that hides none of it.
 
 #### Scenario: Remove numbers
 
@@ -754,9 +758,9 @@ a deal never derives.
 ### Requirement: A born game's ID may close and hide numbers and name values by letters
 
 `numbers` SHALL write `hidden`'s character for a clue not shown and, where
-`closed`, a comma after each. A `glyphs` segment SHALL write a cell kind's
-values by letters, runs of empty cells `a` to `z` between them and the last
-run dropped.
+`closed`, a comma after each. A run-letter stream SHALL write a cell kind's
+values by codes, runs of empty cells `a` to `z` between them, and with
+`lastRun: false` the last run dropped but for its whole runs of 26.
 
 #### Scenario: An upstream Boats ID
 
@@ -830,8 +834,8 @@ square's. The appearance preference SHALL draw the values flat.
 
 ### Requirement: A born game may hide a kind only from a tier up
 
-`deal.hideFrom` MAY name a tier for a kind of `hide`: a board below that
-tier SHALL show every clue of the kind.
+A hidden kind's `from` MAY name a tier: a board below that tier SHALL show
+every clue of the kind.
 
 #### Scenario: Every sum at Easy
 
@@ -840,13 +844,13 @@ tier SHALL show every clue of the kind.
 
 ### Requirement: A born game may hide a kind whole on a small board below a tier
 
-`deal.hideWhole` MAY name, for a kind of `hide`, a tier other than the
-lowest and size bounds in `play.bounds`' measures: a board below that tier
-and within those bounds SHALL show no clue of the kind, its answer drawn
-again until the board finishes without them. Elsewhere the kind SHALL be
-hidden as without the setting. The compiler SHALL refuse a kind the deal does
-not hide, a tier the game lacks or its lowest, and a measure it does not
-know.
+A hidden kind's `whole` MAY name a tier other than the lowest, a variation,
+and size bounds in `play.bounds`' measures: a board below that tier, with
+that variation on and within those bounds, each where named, SHALL show no
+clue of the kind, its answer drawn again until the board finishes without
+them. Elsewhere the kind SHALL be hidden as without it. The compiler SHALL
+refuse a tier the game lacks or its lowest, a variation it lacks, and a
+measure it does not know.
 
 #### Scenario: Towers' small Easy boards
 
@@ -1034,12 +1038,11 @@ its ID SHALL write it, and its hint SHALL mark it there.
 
 ### Requirement: A born game may deal one kind of clue an element, of the kinds switched on
 
-A born game's `deal.firstKind` SHALL keep, at each element, the clue of the
-first of its kinds the answer makes there, and no other of them. A born
-game's `deal.kindLetters` SHALL give each of its kinds a check box in
-Custom and a letter after the tier in a full ID, written only where some
-kind is off and read in the letters' order; a board SHALL deal no clue of a
-kind switched off, a board with none on SHALL be refused, and a board's
+`deal.oneKind` with `pick: first` SHALL keep, at each element, the clue
+of the first of its kinds the answer makes there, and no other. A `set` setting SHALL give each of its members a check box
+in Custom and a letter after the tier in a full ID, written only where some
+member is off and read in the letters' order; a board SHALL deal no clue of
+a kind switched off, a board with none on SHALL be refused, and a board's
 name SHALL say the shorter of the kinds on and the kinds off.
 
 #### Scenario: A parity where a sum holds
@@ -1236,3 +1239,21 @@ a concept adds a module and does not add a branch to a shared function.
 - **THEN** it is added as one new module, its line in the engine's registry
   and the compiler's check keyed beside it, which the typecheck demands, and
   no existing segment kind's module changes
+
+### Requirement: A setting the params give is stated one way
+
+A description SHALL state every setting its params give (a flag, a number or a choice, with its letter, its Custom field and what it gates) through one settings concept, and the description language SHALL NOT offer a second key for a setting of the same kind.
+
+#### Scenario: A variation and a deal option
+
+- **WHEN** one description has a modifier that adds a rule and an option that changes only the deal
+- **THEN** both are stated as settings, differing in what they gate
+
+### Requirement: A game ID is read and written by one codec
+
+The params and description of a born game SHALL be encoded and decoded by one codec whose segment kinds are named for what they encode, and a byte layout upstream's IDs need SHALL be a property of a segment kind, never a segment kind of its own.
+
+#### Scenario: An upstream ID with a quirk
+
+- **WHEN** an upstream game ID with a layout only one game uses is loaded
+- **THEN** it reads through a segment kind other games also use, with the quirk stated as that kind's property
