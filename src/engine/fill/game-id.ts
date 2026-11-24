@@ -56,6 +56,7 @@ import {
   settingItem,
   settingRefusal,
   settingSegment,
+  sizesOf,
 } from "./params/settings.ts";
 import {
   type FillTally,
@@ -267,13 +268,6 @@ export const givenOf = (
   deal.tally === undefined
     ? sizesOf(p)
     : { ...sizesOf(p), [deal.tally.kind]: tallyClue(deal.tally, p) };
-
-/** The variations `p` has on. */
-export const variationsOf = (p: FillParams): readonly string[] => p.variations ?? [];
-
-/** The sizes beyond the grid's that `p` gives. */
-export const sizesOf = (p: FillParams): Readonly<Record<string, number>> =>
-  p.sizes ?? {};
 
 /** Each clue kind's largest value at an element (`clueMax`); a partition has
  * none. A kind at a partition's parts reads the part's cells off `cl`, the

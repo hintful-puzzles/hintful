@@ -56,8 +56,6 @@ import {
   fillParams,
   partitionOfKind,
   partKindsOf,
-  sizesOf,
-  variationsOf,
 } from "./game-id.ts";
 import { gapClueAt, gapKindsOf } from "./gaps.ts";
 import {
@@ -73,6 +71,8 @@ import { type NumberInput, numberInput, numeral, typedUi } from "./numbers.ts";
 import { setBlocks } from "./params/blocks.ts";
 import type { FillBounds } from "./params/bounds.ts";
 import type { FillModifier } from "./params/modifiers.ts";
+import { variationsOf } from "./params/modifiers.ts";
+import { sizesOf } from "./params/settings.ts";
 import { tallyClue, tallyDefault } from "./params/tally.ts";
 import { withThorough } from "./params/thorough.ts";
 import {

@@ -16,12 +16,8 @@ import {
 import { type Clues, spaceOf } from "../fill/board.ts";
 import type { DealtFillModule } from "../fill/deal.ts";
 import { encodeDesc } from "../fill/desc.ts";
-import {
-  type FillDeal,
-  type FillParams,
-  givenOf,
-  variationsOf,
-} from "../fill/game-id.ts";
+import { type FillDeal, type FillParams, givenOf } from "../fill/game-id.ts";
+import { variationsOf } from "../fill/params/modifiers.ts";
 import type { AnyGame } from "./enrollment.ts";
 
 /** The most grids one cell is enumerated over: two values on sixteen

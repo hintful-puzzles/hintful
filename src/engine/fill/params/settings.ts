@@ -6,6 +6,10 @@ import { letters, num, type ParamsSegment } from "../../game-id/params-codec.ts"
 import { RULESET_KW, rulesetItem } from "../../game-id/ruleset.ts";
 import type { FillParams } from "../game-id.ts";
 
+/** The sizes beyond the grid's that `p` gives. */
+export const sizesOf = (p: FillParams): Readonly<Record<string, number>> =>
+  p.sizes ?? {};
+
 /** A size beyond the grid's that the params give (`play.sizes`): its letter
  * in the params, before the number, or its `letters`, one written bare a
  * value, `""` written as nothing (Seismic's Tectonic `T`); and the Custom

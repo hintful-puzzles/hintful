@@ -4,8 +4,11 @@
 import type { ParamConfigItem } from "../../contract/game.ts";
 import { modifierItem } from "../../game-id/modifier.ts";
 import { flag, type ParamsSegment } from "../../game-id/params-codec.ts";
-import { type FillParams, variationsOf } from "../game-id.ts";
+import type { FillParams } from "../game-id.ts";
 import { beyond, type SizeBounds } from "./bounds.ts";
+
+/** The variations `p` has on. */
+export const variationsOf = (p: FillParams): readonly string[] => p.variations ?? [];
 
 /** A variation the player may switch on (`play.modifiers`). */
 export interface FillModifier {

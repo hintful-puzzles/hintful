@@ -46,14 +46,14 @@ import {
   type FillDeal,
   type FillParams,
   givenOf,
-  sizesOf,
-  variationsOf,
 } from "./game-id.ts";
 import { type GrowSizes, growPartition } from "./grow.ts";
 import { latinNumbers } from "./latin-numbers.ts";
 import { type OneKindModule, oneKindEach } from "./one-kind.ts";
 import { within } from "./params/bounds.ts";
+import { variationsOf } from "./params/modifiers.ts";
 import { optionOf, symmetricOf, symmetryOf } from "./params/options.ts";
+import { sizesOf } from "./params/settings.ts";
 import { piecesOf } from "./params/tally.ts";
 import {
   type BuiltSample,

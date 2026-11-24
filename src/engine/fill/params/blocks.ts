@@ -3,7 +3,9 @@ import { isDigit, parseLeadingInt } from "../../game-id/decimal.ts";
 import { parseConfigInt } from "../../game-id/params.ts";
 import type { ParamsSegment } from "../../game-id/params-codec.ts";
 import { type Ruleset, rulesetItem } from "../../game-id/ruleset.ts";
-import { type FillParams, sizesOf, variationsOf } from "../game-id.ts";
+import type { FillParams } from "../game-id.ts";
+import { variationsOf } from "./modifiers.ts";
+import { sizesOf } from "./settings.ts";
 
 /**
  * A board sized by its blocks (`play.blocks`): the params give how many
