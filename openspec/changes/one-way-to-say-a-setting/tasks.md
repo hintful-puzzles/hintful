@@ -1,6 +1,7 @@
 ## Next
 
-3.2, the desc segment kinds folded (design.md § "One codec"). Open: none.
+4.1, the one-user keys renamed or folded (design.md § "The one-user
+keys", § "The hide keys"). Open: none.
 
 ## 1. Design
 
@@ -19,7 +20,9 @@
 
 - [x] 3.1 `params-codec.ts`' header: a setting kind's shape is its own
       segment beside the factories (Solo's symmetry, Boats' fleet).
-- [ ] 3.2 The one-user segment kinds folded per 1.2.
+- [x] 3.2 `digits`, `glyphs` and `codes` one stream, `parts` on its
+      codes; `runs` kept (design.md § "One codec"); `after`, `also` and
+      `glyphs`' requirements MODIFIED in the delta.
 
 ## 4. Keys and fixtures
 

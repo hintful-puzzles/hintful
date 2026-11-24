@@ -1,8 +1,8 @@
 /**
  * What a kind of desc segment is (`desc.ts` runs them, in the order the
  * description's `id:` lists its segments): how it writes the clues it holds,
- * and how it reads them back. A segment kind is one module of this folder and
- * one line of `desc.ts`'s registry.
+ * and how it reads them back. A segment kind is one module of this folder,
+ * registered in `desc.ts` under each key its entries may be read by.
  */
 
 import type { DescReader } from "../../game-id/desc-reader.ts";

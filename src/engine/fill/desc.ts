@@ -1,7 +1,7 @@
 /**
  * A fill game's desc: the clues, by the segments the description's `id:`
  * lists, after cspuz's serializer combinators. Each segment kind is a module
- * of `segments/` and a line of {@link SEGMENT_KINDS}. Tents' `id:` keeps
+ * of `segments/`, in {@link SEGMENT_KINDS} by each key that names it. Tents' `id:` keeps
  * upstream's grammar byte for byte, so its IDs and shared links do not change
  * (`openspec/changes/a-game-from-its-description-alone`, design.md § 8).
  */
@@ -19,33 +19,32 @@ import type { ClueMax, FillDeal } from "./game-id.ts";
 import type { GrowSizes } from "./grow.ts";
 import { blocks } from "./segments/blocks.ts";
 import { cells } from "./segments/cells.ts";
-import { codes } from "./segments/codes.ts";
-import { digits } from "./segments/digits.ts";
 import { dots } from "./segments/dots.ts";
-import { glyphs } from "./segments/glyphs.ts";
 import { lists } from "./segments/lists.ts";
 import { numbers } from "./segments/numbers.ts";
 import { parts } from "./segments/parts.ts";
 import { records } from "./segments/records.ts";
 import { runs } from "./segments/runs.ts";
 import type { SegmentKind } from "./segments/segment.ts";
+import { stream } from "./segments/stream.ts";
 import { walls } from "./segments/walls.ts";
 
-/** Every segment kind, by the key an `id:` entry of it holds and no other
- * kind's entry does. */
+/** Every segment kind, by the key an `id:` entry of it holds. The stream is
+ * read by either of its two, since an entry of it may hold its own kind, its
+ * codes, or both; they come last, as a `parts` entry holds `codes` too, and
+ * a kind is read by the first of these keys its entry holds. */
 const SEGMENT_KINDS = {
   blocks,
   cells,
-  codes,
-  digits,
   dots,
-  glyphs,
   lists,
   numbers,
   parts,
   records,
   runs,
   walls,
+  codes: stream,
+  digits: stream,
 } as const;
 
 type Kinds = typeof SEGMENT_KINDS;

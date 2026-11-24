@@ -1060,7 +1060,46 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(/play done: count is no clue kind drawn in a gap/);
   });
 
-  it("refuses a clue at a slot beside a line's clue, and digits behind a mark holding another kind", () => {
+  it("refuses a stream's codes that could not be read back", () => {
+    const source = "src/engine/testing/fixtures/walling/walling.description.yaml";
+    const walling = sources.get(source);
+    if (walling === undefined || !isFormal(walling)) throw new Error("no walling");
+    type Json = { id: Record<string, unknown>[] };
+    const compileWalling = (edit: (j: Json) => void) => () => {
+      const j = structuredClone(walling) as unknown as Json;
+      edit(j);
+      return compileGame(
+        j as never,
+        [...sources.values()].filter(isLibrary),
+        source,
+        "../../engine/describe-runtime.ts",
+        "./step-voice.ts",
+      );
+    };
+    expect(compileWalling(() => {})).not.toThrow();
+    expect(
+      compileWalling((j) => {
+        j.id[0] = { ...j.id[0], lastRun: false };
+      }),
+    ).toThrow(/a stream whose last run is left off comes last/);
+    expect(
+      compileWalling((j) => {
+        j.id[0] = { ...j.id[0], codes: { "3": "wall 0" } };
+      }),
+    ).toThrow(/3 written for another kind, which a clue of number may be/);
+    expect(
+      compileWalling((j) => {
+        j.id[0] = { ...j.id[0], apart: "B" };
+      }),
+    ).toThrow(/the code B begins with the stream's apart/);
+    expect(
+      compileWalling((j) => {
+        j.id[0] = { ...j.id[0], codes: { B: "wall 0", W: "wall 0" } };
+      }),
+    ).toThrow(/two codes of one value of wall/);
+  });
+
+  it("refuses a clue at a slot beside a line's clue, and writes a stream behind a mark with another kind", () => {
     const source = "src/engine/testing/fixtures/flanking/flanking.description.yaml";
     const flanking = sources.get(source);
     if (flanking === undefined || !isFormal(flanking)) throw new Error("no flanking");
@@ -1087,12 +1126,14 @@ describe("what the fill board reads of a description", () => {
     ).toThrow(
       /clue flank: a clue at a slot is drawn in the margins, where a line's clue is/,
     );
-    expect(() =>
+    // Behind its mark, a stream is written where any of its kinds has a
+    // clue, so it may hold another.
+    expect(
       compileFlanking((j) => {
         j.clues["mark"] = { at: "cell", value: "range(0, 0)", means: "true" };
-        j.id[1] = { ...j.id[1], letters: { B: "mark" } };
+        j.id[1] = { ...j.id[1], codes: { B: "mark 0" } };
       }),
-    ).toThrow(/id: digits of given after ,, written only where given has a clue/);
+    ).toContain('"codes":{"B":"mark 0"}');
     expect(compileFlanking(() => {})).toContain('"hideFirst":["given"]');
     const hiding = (first: string[]) => () =>
       compileFlanking((j) => {

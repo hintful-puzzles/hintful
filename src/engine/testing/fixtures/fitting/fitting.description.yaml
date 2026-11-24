@@ -73,7 +73,7 @@ id:
   - { blocks: cage, before: ",", counts: false }
   - parts: cage
     before: ","
-    letters: { a: sum }
+    codes: { a: sum }
   - { digits: given, before: "," }
 tiers: [Easy]
 names:

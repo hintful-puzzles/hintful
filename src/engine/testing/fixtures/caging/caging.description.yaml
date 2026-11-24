@@ -77,7 +77,7 @@ id:
   - blocks: cage
   - parts: cage
     before: ","
-    letters: { a: sum, m: product }
+    codes: { a: sum, m: product }
 tiers: [Easy, Normal]
 names:
   dup: "a placed number's row and column"

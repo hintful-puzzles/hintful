@@ -83,6 +83,7 @@ id:
   - { digits: given }
   - codes: { A: sum, S: difference, S0: "same 0", E: "parity 0", O: "parity 1" }
     before: ","
+    always: true
 tiers: [Easy, Normal]
 names:
   dup: "a placed number's row and column"

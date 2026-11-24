@@ -1712,12 +1712,28 @@
               },
               {
                 "type": "object",
-                "required": ["digits"],
+                "anyOf": [{ "required": ["digits"] }, { "required": ["codes"] }],
                 "additionalProperties": false,
-                "description": "A clue kind at cells as upstream's run code of Mosaic: a digit a cell's clue, a letter `a`-`z` a run of 1 to 26 cells without one, the last run written too. With `apart`, a clue is a whole number and `apart` comes between two with no run between them (Range's `_`). `letters` names, by a capital letter, a one-valued kind at cells written in the same stream (Light Up's `B`, a wall with no number).",
+                "description": "The run-letter stream (`engine/fill/segments/stream.ts`): a clue an element, between runs of 1 to 26 elements without one written `a`-`z`, the last run written too. `digits` names the kind written as its number, a digit (upstream Mosaic's), and `codes` each other kind's code. A number is one digit unless the stream has `apart` or no kind of its own: with `apart`, `apart` comes between two numbers with no run between them (Range's `_`).",
                 "properties": {
                   "digits": {
                     "type": "string"
+                  },
+                  "codes": {
+                    "description": "By code, what it writes: a kind, its number following the code (Mathrax's `A`, a sum); a kind and one of its values, the code whole (`parity 0`, Light Up's `B` as `wall 0`); or that and a kind whose digit may follow it on its element (Sticks' `B` as `block 0, joins`). The longest code that matches is read. A code that is a number stands whole for a kind in place of one of `digits`' own, past its largest (Bricks' `7`, `hole 0`).",
+                    "type": "object",
+                    "propertyNames": {
+                      "pattern": "^([A-Z][A-Z0-9]*|[0-9]+)$"
+                    },
+                    "minProperties": 1,
+                    "additionalProperties": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z]+( [0-9]+(, [A-Za-z]+)?)?$"
+                    }
+                  },
+                  "lastRun": {
+                    "const": false,
+                    "description": "The last run is left off, but for its whole 26s, and the stream comes last (upstream Boats')."
                   },
                   "apart": {
                     "type": "string",
@@ -1727,40 +1743,11 @@
                   "before": {
                     "type": "string",
                     "minLength": 1,
-                    "description": "Written before the segment, and the segment only where a clue of the kind is dealt (Towers' `,` before its givens), unless `always`."
+                    "description": "Written before the segment, and the segment only where a clue of its kinds is dealt (Towers' `,` before its givens), unless `always`."
                   },
                   "always": {
                     "const": true,
-                    "description": "With `before`, the segment is written where no clue of the kind is dealt too, as one run of blanks (Seismic's `,zj`)."
-                  },
-                  "letters": {
-                    "type": "object",
-                    "propertyNames": {
-                      "pattern": "^[A-Z]$"
-                    },
-                    "additionalProperties": {
-                      "type": "string"
-                    }
-                  },
-                  "after": {
-                    "description": "By letter, the clue kind whose number may follow the letter, on the letter's cell.",
-                    "type": "object",
-                    "propertyNames": {
-                      "pattern": "^[A-Z]$"
-                    },
-                    "additionalProperties": {
-                      "type": "string"
-                    }
-                  },
-                  "also": {
-                    "description": "By number, a one-valued clue kind at a cell written as that number, past the segment's own kind's largest (Bricks' unknown number, `7`).",
-                    "type": "object",
-                    "propertyNames": {
-                      "pattern": "^[0-9]+$"
-                    },
-                    "additionalProperties": {
-                      "type": "string"
-                    }
+                    "description": "With `before`, the segment is written where no clue of its kinds is dealt too, as its runs of blanks (Seismic's `,zj`, Mathrax's `,`)."
                   }
                 }
               },
@@ -1792,26 +1779,6 @@
                   "closed": {
                     "const": true,
                     "description": "A comma after every element, the last too, rather than between two (Boats')."
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "required": ["glyphs", "values"],
-                "additionalProperties": false,
-                "description": "A clue kind at cells, each clue a capital letter standing for one of its values, between runs of 1 to 26 cells without one written `a`-`z`; a last run is left off (upstream's Boats).",
-                "properties": {
-                  "glyphs": {
-                    "type": "string"
-                  },
-                  "values": {
-                    "type": "object",
-                    "propertyNames": {
-                      "pattern": "^[A-Z]$"
-                    },
-                    "additionalProperties": {
-                      "type": "integer"
-                    }
                   }
                 }
               },
@@ -1855,9 +1822,9 @@
               },
               {
                 "type": "object",
-                "required": ["parts", "letters"],
+                "required": ["parts", "codes"],
                 "additionalProperties": false,
-                "description": "A clue a part of the dealt partition `parts`, in the order of the parts' first cells: the letter of its kind, by `letters`, then its number (upstream Keen's). With `before`, it follows that mark.",
+                "description": "A clue a part of the dealt partition `parts`, in the order of the parts' first cells: its kind's code, by `codes` as a stream's codes say a kind its number follows, then its number (upstream Keen's). With `before`, it follows that mark.",
                 "properties": {
                   "parts": {
                     "type": "string"
@@ -1867,39 +1834,16 @@
                     "minLength": 1,
                     "maxLength": 1
                   },
-                  "letters": {
-                    "type": "object",
-                    "propertyNames": {
-                      "pattern": "^[a-z]$"
-                    },
-                    "minProperties": 1,
-                    "additionalProperties": {
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "required": ["codes"],
-                "additionalProperties": false,
-                "description": "A clue an element of its kinds' one place, in the space's order, between runs of 1 to 26 elements without one written `a`-`z`, a last run written too (upstream Mathrax's): each clue its code, by `codes`, a kind's name followed by the clue's number, or a kind and one of its values (`parity 0`) standing whole. The longest code that matches is read. With `before`, it follows that mark.",
-                "properties": {
                   "codes": {
                     "type": "object",
                     "propertyNames": {
-                      "pattern": "^[A-Z][A-Z0-9]*$"
+                      "pattern": "^[A-Za-z]+$"
                     },
                     "minProperties": 1,
                     "additionalProperties": {
                       "type": "string",
-                      "pattern": "^[A-Za-z]+( [0-9]+)?$"
+                      "pattern": "^[A-Za-z]+$"
                     }
-                  },
-                  "before": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 1
                   }
                 }
               }

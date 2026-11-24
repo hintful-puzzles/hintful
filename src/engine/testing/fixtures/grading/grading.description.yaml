@@ -54,7 +54,7 @@ id:
   - blocks: cage
   - parts: cage
     before: ","
-    letters: { a: sum }
+    codes: { a: sum }
   - { digits: given, before: "," }
 tiers: [Easy, Normal]
 # The cages' readings grade on a scale of their own.

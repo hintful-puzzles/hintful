@@ -211,7 +211,7 @@ settings:
 # letter a run of squares.
 id:
   - digits: number
-    letters: { B: wall }
+    codes: { B: wall 0 }
 tierLetters: "012"
 # Upstream's IDs from before the tiers ask for the recursive solver with a
 # bare `r`.

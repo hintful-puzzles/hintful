@@ -215,6 +215,7 @@ id:
   - { digits: given }
   - codes: { A: sum, S: difference, S0: "equal 0", M: product, D: quotient, E: "parity 0", O: "parity 1" }
     before: ","
+    always: true
 tierLetters: entr
 tiers: [Easy, Normal, Tricky, Unreasonable]
 # The clue readings, cell by cell and each cell's corners in turn: M is what

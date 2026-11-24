@@ -1168,7 +1168,8 @@ phases of a draw, each a module of `deal/` (a sampler a line of
 order, the hide, the acceptance), with the search tier's runners and the
 climb beside them. `desc.ts` is
 its desc, from the description's `id:`: a segment kind is a module of
-`segments/` and a line of `desc.ts`'s registry. `game-id.ts` is its params,
+`segments/` in `desc.ts`'s registry, under each key that names it (the
+run-letter stream under `digits` and `codes`). `game-id.ts` is its params,
 each setting a module of `params/` that `fillParams` places in the params'
 grammar. What a game's module holds for these is the compiler's
 `describe/compile-fill.ts`, which writes its parts in their order, each

@@ -24,7 +24,7 @@ What they found, against the proposal's figures:
   refusals).
 - 12 segment kinds, 6 with one user (as the proposal says): `runs` (Tents),
   `lists` (Pattern), `cells` (Singles), `glyphs` (Boats), `parts` (Keen),
-  `codes` (Mathrax).
+  `codes` (Mathrax). After 3.2, 10: `glyphs` and `codes` are the stream.
 - `play:` keys with one user: `shape`, `tally` (Boats), `labels`
   (Kakurasu), `sweepWith`, `wash` (Light Up), `hides`, `wrap` (Singles),
   `blocks` (Solo), `links`, `glance`, `askBefore` (Tents). `deal:` keys with
@@ -127,13 +127,29 @@ it cannot state is a `ParamsSegment` of `params/`, as the codec intends.
 Task 3.1 is then: `params-codec.ts`' header says so, and stops listing
 Solo's symmetry and Boats' fleet as inexpressible.
 
-The desc's segment kinds fold by what they encode (task 3.2): `runs`,
-`glyphs` and `codes` are one encoding, a cell stream of skips `a`–`z` and a
-clue written as its code with an optional number, and `digits`' `letters`,
-`after` and `also` are its codes too. They become one kind with a `codes`
-property; `parts` (Keen's letter and number a part) takes the same codes.
-The segment's own design is written there, with the bytes held by the `ids`
-cases.
+The desc's segment kinds fold by what they encode (task 3.2, done
+2026-11-24). `digits`, `glyphs` and `codes` were one encoding: a stream of
+elements, a run letter `a`–`z` skipping 1 to 26 and a clue its own kind's
+number or another kind's code. They are one kind, the stream
+(`engine/fill/segments/stream.ts`), an `id:` entry holding `digits` (its
+own kind), `codes` (the others), or both; `digits`' `letters`, `after` and
+`also` are codes in the one grammar of `code-said.ts` (`wall 0`,
+`block 0, joins`, a number code `7: hole 0`). What differed is a property:
+Boats' dropped last run is `lastRun: false`, and Mathrax's mark written on
+every board is `always: true`, as Seismic's was; behind a mark a stream is
+written where any of its kinds has a clue, so the refusal of a second kind
+there is gone. `parts` takes the same codes (`codes: { a: sum }`).
+
+**`runs` stays its own kind**, against the census's first reading: Tents'
+letter is a gap *and* the clue after it (`_` none, `a`–`y` 1 to 25), `z`
+is 25 with no clue, and the last letter ends the cells with a clue past
+them. Folding it would take a property for each of those, which is a kind
+under another name. Its bytes are upstream's, and a second kind of the same
+shape (a one-valued marker as the gaps between) could adopt it.
+
+The fold held every ID: the `ids` cases, and a differential dealing four
+seeds on every preset of the six games and four fixtures whose `id:`
+changed, under HEAD and the change, the game IDs compared byte for byte.
 
 ### The one-user keys
 

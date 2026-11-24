@@ -126,7 +126,7 @@ deal:
 id:
   - digits: number
     apart: "_"
-    also: { "7": hole }
+    codes: { "7": hole 0 }
 # Upstream's letters: `n` its Normal, which is Unreasonable here.
 tierLetters: en
 # Upstream's Tricky dealt only Normal boards, which are Unreasonable here.

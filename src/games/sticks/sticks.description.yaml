@@ -221,8 +221,7 @@ settings:
 id:
   - digits: length
     apart: _
-    letters: { B: block }
-    after: { B: joins }
+    codes: { B: "block 0, joins" }
 tiers: [Easy, Unreasonable]
 # Every step tries a line one way in a square (`hor`: across) and finds it
 # breaks a rule, so the line runs the other way.

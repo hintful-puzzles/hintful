@@ -196,7 +196,7 @@ id:
   - blocks: cage
   - parts: cage
     before: ","
-    letters: { a: sum, m: product, s: difference, d: quotient }
+    codes: { a: sum, m: product, s: difference, d: quotient }
 tierLetters: enhxu
 tiers: [Easy, Normal, Tricky, Hard, Unreasonable]
 names:

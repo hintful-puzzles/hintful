@@ -113,8 +113,8 @@ id:
     order: columns
     hidden: "-"
     closed: true
-  - glyphs: seg
-    values: { W: 2, V: 3, S: 4, E: 5, M: 6 }
+  - codes: { W: seg 2, V: seg 3, S: seg 4, E: seg 5, M: seg 6 }
+    lastRun: false
 tiers: [Easy]
 names:
   corner: "no two pieces touching at a corner"

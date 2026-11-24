@@ -313,8 +313,9 @@ id:
     order: columns
     hidden: "-"
     closed: true
-  - glyphs: seg
-    values: { W: 2, V: 3, T: 4, B: 5, C: 6, L: 7, R: 8, S: 9 }
+  - codes:
+      { W: seg 2, V: seg 3, T: seg 4, B: seg 5, C: seg 6, L: seg 7, R: seg 8, S: seg 9 }
+    lastRun: false
 tierLetters: enth
 tiers: [Easy, Normal, Tricky, Hard]
 # A line's count, by its number shown: the group a count kind reads.

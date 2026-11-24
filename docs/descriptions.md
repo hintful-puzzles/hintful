@@ -347,9 +347,8 @@ research tools all read through it; the app never does.
   step beyond its line's end (`engine/fill/slots.ts`). It is printed in a rim
   round the text's grid, and `id:`'s `numbers` writes it with `between: "/"`;
   `digits`' `before` is written, with its segment, always with `always`
-  (Seismic's `,zj` on a board with no givens), else only where its kind has a
-  clue (Towers' givens after `,`), and holds no other kind (`flanking` is the
-  fixture). A clue at a corner (`at: corner`, where four squares meet,
+  (Seismic's `,zj` on a board with no givens), else only where one of its
+  kinds has a clue (Towers' givens after `,`; `flanking` is the fixture). A clue at a corner (`at: corner`, where four squares meet,
   Mathrax's) is dealt over the corners, drawn on a disc there by its
   `play.signs` (a word a value where the sign is a list, the sign alone for
   a kind of one value, `engine/fill/corners.ts`) over the hint's marks, red
@@ -489,7 +488,7 @@ research tools all read through it; the app never does.
   `ramp` raising the share as draws are refused. A one-valued marker under a
   number (a numbered wall's bare wall) needs no word: the answer deals it on
   every such cell, and `digits` writes the number where one is shown and the
-  marker's capital (`letters`) where it is hidden. `play.wash` washes each open cell
+  marker's code (`codes: { B: wall 0 }`) where it is hidden. `play.wash` washes each open cell
   its formula holds of: drawn under its piece, read as the secondary value
   by the rules, left open by Solve and never a hint's step, with a
   preference for drawing a secondary piece there. A technique run on
@@ -519,8 +518,8 @@ research tools all read through it; the app never does.
   board finishes without it (Towers' Easy boards up to 5x5, which show no
   given, as upstream's; Solo's Killer boards, `killing` the fixture); `stripFrom: everyClue` starts every search-tier draw from every clue,
   where the lowest tier's boards leave the search too little to strip.
-  `digits`' `after: { B: kind }` writes one digit of that kind straight
-  after a letter's cell (Sticks' `B2`). A bar painter `across` or `down`
+  A stream's code may name a kind whose digit follows it on its cell
+  (`codes: { B: "block 0, joins" }`, Sticks' `B2`). A bar painter `across` or `down`
   names an axis, which makes a drag run along its row or column and an
   arrow with Ctrl or Shift stroke a line along or across the move; `{each}`
   in a step is the number its square shows, of the first kind in `numbers`.
@@ -531,8 +530,9 @@ research tools all read through it; the app never does.
   State a rule over a row's run by the row and a place along it, not by its
   cell, so a break is drawn as one bar ("Where a rule breaks"). A build's
   `order: upward`, `share` and `least` lay the value bottom row first at a
-  chance, drawing again below a least share; `digits`' `also: { "7": kind }`
-  reads a number past the segment's range as another kind's clue, and
+  chance, drawing again below a least share; a stream's number code
+  (`codes: { "7": hole 0 }`) reads a number past the segment's range as
+  another kind's clue, and
   `tierAliases` a retired tier letter. A line kind whose meaning is `T = v`
   for a list `T` (Pattern's runs) is a list clue: derived whole, written by
   `id:`'s `lists` one line a `/` and one number a `.` (`order: columns`
@@ -562,8 +562,8 @@ research tools all read through it; the app never does.
   too, and a board hiding none of it is drawn again; `deal.withhold` names
   values a kind is never derived as (Boats' shapeless segment). `numbers`'
   `hidden` writes a clue not shown and `closed` a comma after each; a
-  `glyphs` segment writes a kind's values by letters with runs of empty
-  cells between. `play.shape` draws a kind as its cell's piece, never a
+  stream of `codes` alone writes a kind's values by letters with runs of
+  empty cells between, and `lastRun: false` leaves its last run off. `play.shape` draws a kind as its cell's piece, never a
   number: a painter that `runs` is told the sides it joins along its line,
   a given cell's from the answer.
   The compiler writes `<id>.game.ts`, `fillGame` of the module, and
