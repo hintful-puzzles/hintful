@@ -1,3 +1,6 @@
+**Waits** for `describe-the-whole-catalog` § "0. The refactor first"
+(owner, 2026-11-24).
+
 ## 1. Design
 
 Read from the code on 2026-11-23:

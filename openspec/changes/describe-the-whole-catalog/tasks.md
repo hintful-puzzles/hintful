@@ -1,3 +1,25 @@
+## 0. The refactor first
+
+The owner, 2026-11-24, after a review of the migration's sessions: the
+refactoring below goes before any other open change, the migration
+included (`born-candidate-note-family-rest`, `zoom-and-pan-the-board`,
+`show-a-solved-board-on-first-open` and `one-model-for-moving-pieces`
+wait). Each session picks the change of these it judges best to take
+next; `fill-engine-by-concern` goes before `a-fill-board-of-any-slot`,
+which goes last.
+
+**The session that archives the last of them does not hand on.** It
+halts and debriefs the owner: what each change did, what it measured,
+what is left, and whether the migration is good to proceed.
+
+- [ ] 0.1 `the-commit-catches-what-ci-would`
+- [ ] 0.2 `session-tools-for-the-flip`
+- [ ] 0.3 `fill-engine-by-concern`
+- [ ] 0.4 `one-way-to-say-a-setting`
+- [ ] 0.5 `the-compiler-reads-meaning`
+- [ ] 0.6 `the-description-documented-once`
+- [ ] 0.7 `a-fill-board-of-any-slot`
+
 ## 1. The route
 
 Each task files a group's change when the one before it is archived, never

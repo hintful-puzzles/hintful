@@ -1,3 +1,6 @@
+**Waits** for `describe-the-whole-catalog` § "0. The refactor first"
+(owner, 2026-11-24).
+
 ## 1. Design
 
 - [ ] 1.1 Prior art, by a subagent: zoom and pan on a canvas puzzle board
