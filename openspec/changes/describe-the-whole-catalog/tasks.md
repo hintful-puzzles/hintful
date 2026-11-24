@@ -21,7 +21,7 @@ what is left, and whether the migration is good to proceed.
       tasks.md 4.1; and 0.1's 2.3, whether the push runs its fitted plan)
 - [x] 0.3 `fill-engine-by-concern`
 - [x] 0.4 `one-way-to-say-a-setting`
-- [ ] 0.5 `the-compiler-reads-meaning`
+- [x] 0.5 `the-compiler-reads-meaning`
 - [ ] 0.6 `the-description-documented-once`
 - [ ] 0.7 `a-fill-board-of-any-slot`
 

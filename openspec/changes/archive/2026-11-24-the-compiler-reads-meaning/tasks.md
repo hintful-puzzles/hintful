@@ -1,6 +1,6 @@
 ## Next
 
-5.1, then 5.2. Open: none.
+Done. Open: none.
 
 ## 1. Design
 
@@ -34,6 +34,7 @@
 
 ## 5. Close
 
-- [ ] 5.1 `npm run test:hint-sweeps`; deals that moved listed.
-- [ ] 5.2 Archive, and take the next change from
+- [x] 5.1 `npm run test:hint-sweeps` green, no pin moved; no deal moved
+      (design.md § "4.1").
+- [x] 5.2 Archive, and take the next change from
       `describe-the-whole-catalog` § "0. The refactor first".
