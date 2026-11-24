@@ -13,6 +13,21 @@ identical design reasoning; an item with its own non-obvious decisions stays
 separate. Keep a change's tasks current as you implement, and conclude the
 change in the session that finishes the work.
 
+## A change's tasks open with what is next
+
+A session taking a change reads its `tasks.md` first, so the file is kept
+short enough to read before anything else (2026-11-24: half the migration's
+sessions compacted mid-task, each having read a change whose tasks reached
+41 KB, most of it finished steps).
+
+- **It opens with `## Next`**: the next task, what it waits for, and the
+  open questions, at most a screen. A session updates it whenever it stops.
+- **A finished task is one line**, naming its commits; what was learned is
+  in the commit's message, a decision in the change's `design.md`, a rule
+  in the guide it binds. A long finished task is condensed when it is
+  checked.
+- `scripts/checks/tasks-next.mjs`, in the gate, holds both bounds.
+
 ## No approval step, and you archive your own work
 
 Scaffold a change and go on into its implementation in the same session. The

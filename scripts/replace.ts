@@ -5,13 +5,16 @@
  *     npm run replace -- <spec.yaml>
  *
  * A spec is a list of edits, each `{ old, new, files: [..] }` (or `file:`),
- * with `all: true` where every occurrence is meant; YAML's `|-` block keeps a
- * multi-line literal exactly, so it holds what a shell argument cannot. Write
- * it in the session's scratchpad. Edits apply in order, a later one seeing
- * what an earlier one left.
+ * with `all: true` where every occurrence is meant. A YAML block holds a
+ * multi-line literal that a shell argument cannot, and keeps the literal's own
+ * indentation only with an indicator counted from the key's column: under
+ * `  old: |2`, a line written at six spaces keeps two (`|2-` drops the final
+ * newline). Write the spec in the session's scratchpad. Edits apply in
+ * order, a later one seeing what an earlier one left.
  *
  * It refuses, and writes nothing at all, where any edit's `old` is absent
- * from a file it names, or occurs there more than once without `all`, or
+ * from a file it names (naming the first of its lines that is not there),
+ * or occurs there more than once without `all`, or
  * equals its `new`, or where a file is outside this repository. A match that
  * is not unique is the edit a person did not mean: the shell's `sed -i`
  * rewrites none or forty sites as happily as one.
@@ -74,6 +77,21 @@ const occurrences = (text: string, old: string): number[] => {
     at.push(i);
   return at;
 };
+/** Where an absent `old` stops matching: the first of its lines that does
+ * not follow the ones before it anywhere in `text`. */
+function divergence(text: string, old: string): string {
+  const lines = old.split("\n");
+  let prefix = "";
+  for (const [i, line] of lines.entries()) {
+    const next = i === lines.length - 1 ? prefix + line : `${prefix + line}\n`;
+    if (!text.includes(next))
+      return i === 0
+        ? `its first line is not there: ${JSON.stringify(line)}`
+        : `its line ${i + 1} does not follow the ones before it: ${JSON.stringify(line)}`;
+    prefix = next;
+  }
+  return "every line is there, in another order";
+}
 const lineOf = (text: string, index: number): number =>
   text.slice(0, index).split("\n").length;
 const linesIn = (s: string): number =>
@@ -97,7 +115,8 @@ function main(): void {
         refuse(`${which}${file} is outside this repository`);
       const text = texts.get(full) ?? readFileSync(full, "utf8");
       const at = occurrences(text, edit.old);
-      if (at.length === 0) refuse(`${which}${rel}: old is not there`);
+      if (at.length === 0)
+        refuse(`${which}${rel}: old is not there; ${divergence(text, edit.old)}`);
       if (at.length > 1 && !edit.all)
         refuse(
           `${which}${rel}: old occurs ${at.length} times (lines ${at.map((k) => lineOf(text, k)).join(", ")}); give more context, or --all / all: true if every one is meant`,

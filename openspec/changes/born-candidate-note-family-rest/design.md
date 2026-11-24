@@ -203,6 +203,24 @@ whole-part moves and marks (Magnets), and a space of parts (Map). Their
 successor, filed when this change is archived, takes Undead, Rome,
 Magnets, Crossing and then Map.
 
+## What each flip changed for a player
+
+For the family's figures (task 3.1) and its debrief; what each flip added
+to the engine is in its commit.
+
+- **Solo** (13f27ca01): saves break (pre-approved); the full params write
+  Easy's `dt`; `kx`, an order upstream never writes, is not read; two runs
+  of blanks in a row read as one, as upstream reads them, where the port
+  refused them; the blocks are tinted with the region fills and the cages
+  dashed in ink inside them; a label reads "3x3 Normal, X" for "3x3 X
+  Normal"; the hint's words are the description's `says` and the walk's
+  `steps`; a 4 Jigsaw has no Normal or Tricky and a 2x2 Killer nothing
+  above Easy, as upstream's generator deals none; the text of a Killer
+  board prints its blocks and each row's totals, not its cages; the Killer
+  preset's full form is `3x3kdt`, the default symmetry, where it was
+  `3x3ka` (Killer hides every given, so no board differs). Solo's sizes are
+  named apart from `c`, which `given:` reads as its cell.
+
 ## Open Questions
 
 - **Group's header drag, dividers and diagonal multifill**: they are

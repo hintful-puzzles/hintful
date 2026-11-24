@@ -1,3 +1,7 @@
+## Next
+
+§ 0, the refactor, a change at a time; then 1.2.1. Open: none.
+
 ## 0. The refactor first
 
 The owner, 2026-11-24, after a review of the migration's sessions: the
@@ -13,7 +17,8 @@ halts and debriefs the owner: what each change did, what it measured,
 what is left, and whether the migration is good to proceed.
 
 - [x] 0.1 `the-commit-catches-what-ci-would`
-- [ ] 0.2 `session-tools-for-the-flip`
+- [x] 0.2 `session-tools-for-the-flip` (for the debrief: its archived
+      tasks.md 4.1; and 0.1's 2.3, whether the push runs its fitted plan)
 - [ ] 0.3 `fill-engine-by-concern`
 - [ ] 0.4 `one-way-to-say-a-setting`
 - [ ] 0.5 `the-compiler-reads-meaning`

@@ -12,7 +12,12 @@
  *
  * The games still make the moves the midend keeps out and still give the
  * answers it overrules, which is what the sweep is trusted on: it counts
- * both, and the games it was first seen to convict are pinned.
+ * both, and over the whole collection it must find some of each, or it could
+ * report a clean history by reaching none. Which games they are is not kept:
+ * a game born from its description stops making them, and a list of games
+ * was edited by each such move (2026-11-24: Group, Crossing, Signpost and
+ * Tracks answered nothing to an input that changed the frame; Abcd,
+ * Galaxies, Group, Loopy and Untangle made moves that changed nothing).
  */
 
 import { describe, expect, it } from "vitest";
@@ -22,29 +27,7 @@ import {
   REGISTERED_GAMES,
 } from "../engine/testing/enrollment.ts";
 import { type InputAnswers, inputAnswers } from "../engine/testing/input-probe.ts";
-import { inSweep } from "../engine/testing/slow.ts";
-
-/**
- * Games that make a move that leaves the board as it was, which the midend
- * keeps out. Each is a positive the sweep must find, or it could report an
- * empty history of such moves by reaching none: a game here that stops making
- * the move comes off the list, and the list is never left empty.
- */
-const MAKES_AN_UNCHANGED_MOVE = ["abcd", "galaxies", "group", "loopy", "untangle"];
-
-/**
- * Games that answer "nothing happened" to an input that changed the frame,
- * each with the input. The midend claims it for them, and these are the
- * positives the sweep must find, or it could report no frame left unclaimed
- * by reaching none: a game that begins to answer for itself comes off the
- * list, and the list is never left empty.
- */
-const ANSWERS_NOTHING_AND_CHANGES_THE_FRAME: Record<string, string> = {
-  crossing: "a key that puts the held number down",
-  group: "a drag along the legend",
-  signpost: "a press that hides the cursor",
-  tracks: "a press that hides the cursor",
-};
+import { itOverWholeSweep } from "../engine/testing/slow.ts";
 
 describe("what an input's answer leaves behind", () => {
   // Swept a game at a time and on first asking, so a run scoped to one game
@@ -88,20 +71,19 @@ describe("what an input's answer leaves behind", () => {
     });
   }
 
-  it("still sees the moves the midend keeps out", () => {
-    expect(MAKES_AN_UNCHANGED_MOVE.length).toBeGreaterThan(0);
+  itOverWholeSweep("still sees the moves the midend keeps out", () => {
+    const making = REGISTERED_GAMES.filter(([id]) => answers(id).unchanged > 0);
     expect(
-      MAKES_AN_UNCHANGED_MOVE.filter(inSweep).filter(
-        (id) => answers(id).unchanged === 0,
-      ),
-    ).toEqual([]);
+      making.length,
+      "no game made a move that left the board as it was: the sweep may reach none",
+    ).toBeGreaterThan(0);
   });
 
-  it("still sees the inputs the midend claims for a game", () => {
-    const positives = Object.keys(ANSWERS_NOTHING_AND_CHANGES_THE_FRAME);
-    expect(positives.length).toBeGreaterThan(0);
+  itOverWholeSweep("still sees the inputs the midend claims for a game", () => {
+    const claimed = REGISTERED_GAMES.filter(([id]) => answers(id).claimedForGame > 0);
     expect(
-      positives.filter(inSweep).filter((id) => answers(id).claimedForGame === 0),
-    ).toEqual([]);
+      claimed.length,
+      "no game answered nothing to an input that changed the frame: the sweep may reach none",
+    ).toBeGreaterThan(0);
   });
 });

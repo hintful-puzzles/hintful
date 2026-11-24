@@ -1,3 +1,7 @@
+## Next
+
+1.1, where the compiler's analysis keys on spelling. Open: none.
+
 ## 1. Design
 
 - [ ] 1.1 Where analysis keys on spelling: grep the compiler for matches on

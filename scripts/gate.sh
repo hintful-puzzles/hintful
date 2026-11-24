@@ -399,6 +399,14 @@ step node scripts/checks/guide-paths.mjs
 # documentation-only commit.
 step node scripts/checks/brief-size.mjs
 
+# --- 1b-iii-a'. A change's tasks open with what is next. ~0s. ---
+#
+# A session taking a change reads its tasks first, and a tasks.md of 41 KB of
+# finished steps cost the migration's sessions their context. Here for the
+# reason the guards above are: a change's tasks are a documentation-only
+# commit.
+step node scripts/checks/tasks-next.mjs
+
 # --- 1b-iii-b. A guide's opening names its sections, and a citation lands. ~0s. ---
 #
 # A session reads a guide's opening and then the one section it needs, so a

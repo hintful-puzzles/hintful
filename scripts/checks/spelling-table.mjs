@@ -350,20 +350,9 @@ export const RULES = [
  * `sgt-puzzles-LICENCE` is not covered by an allowance for `LICENCE`.
  */
 export const QUOTATIONS = {
-  behaviour: ["src/utils/sentry.ts", "AGENTS.md", "openspec/specs/repo-layout/spec.md"],
-  midend_colours: ["openspec/specs/repo-layout/spec.md"],
-  // Upstream names its notice file `LICENCE`; ours are `*-LICENSE`, and the
-  // token is matched whole, so `sgt-puzzles-LICENCE` would still be reported.
-  LICENCE: ["openspec/specs/ts-migration/spec.md"],
-  // The spelling requirement names two former identifiers as examples of
-  // what the substring scan catches — the one place the rule quotes its
-  // own subject.
-  ncolours: ["openspec/specs/repo-layout/spec.md"],
-  colourToOKLCH: ["openspec/specs/repo-layout/spec.md"],
+  behaviour: ["src/utils/sentry.ts"],
   game_colours: [
-    "AGENTS.md",
     "openspec/specs/repo-layout/spec.md",
-    "openspec/specs/ts-engine/spec.md",
     "src/games/group/render.ts",
     "src/games/loopy/render.ts",
     "src/games/map/render.ts",
@@ -374,34 +363,21 @@ export const QUOTATIONS = {
     "src/games/sokoban/render.ts",
   ],
   frontend_default_colour: [
-    "AGENTS.md",
-    "openspec/specs/repo-layout/spec.md",
-    "docs/rendering.md",
     "src/engine/color/color-mkhighlight.ts",
     "src/engine/contract/game.ts",
-    "src/games/loopy/render.ts",
     "src/games/netslide/render.ts",
     "src/puzzle/board-background.test.ts",
   ],
-  midend_serialise: [
-    "openspec/specs/ts-engine/spec.md",
-    "openspec/changes/derive-completion-from-the-position/specs/ts-engine/spec.md",
-    "src/engine/midend/save.ts",
-  ],
+  midend_serialise: ["openspec/specs/ts-engine/spec.md", "src/engine/midend/save.ts"],
   midend_deserialise: ["src/puzzle/puzzle.ts"],
   highlight_colour: ["src/games/twiddle/render.ts"],
-  check_neighbours: ["openspec/specs/tracks/spec.md"],
-  raise_colour: ["src/games/slide/render.ts"],
   net_neighbour: ["src/games/net/loops.ts"],
-  neighbour_fn_t: ["src/engine/board/findloop.ts"],
   nc_colour: ["openspec/specs/guess/spec.md"],
   has_incentre: ["src/engine/board/grid/grid-core.ts"],
   grid_find_incentre: ["src/engine/board/grid/grid-geometry.ts"],
   face_colour: ["src/engine/generate/loopgen.ts"],
   colour_mix: ["src/engine/color/color-mkhighlight.ts"],
   can_colour_face: ["src/engine/generate/loopgen.ts"],
-  bridges_neighbour: ["src/games/bridges/solver.ts"],
-  alloc_find_neighbour: ["src/games/dominosa/generator.ts"],
 };
 
 /** Every rule, compiled once. */

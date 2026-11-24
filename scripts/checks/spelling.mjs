@@ -21,6 +21,10 @@
  * 4. Reports every other hit with file and line, and fails.
  * 5. Fails on the count of files scanned before anything else, so an
  *    unmatched listing cannot report health over nothing.
+ * 6. Fails on an allowance that let nothing through: its file is gone (a
+ *    game born from its description deletes its modules) or no longer
+ *    quotes the name, and an allowance kept for nothing would cover a new
+ *    hit there unseen.
  *
  * Usage: `node scripts/checks/spelling.mjs`. Exit 1 on any report.
  */
@@ -75,10 +79,15 @@ function tokenAt(text, offset) {
   return text.slice(a, b);
 }
 
+/** Each allowance that let a hit through, as `token file`. */
+const used = new Set();
+
 function allowed(file, text, offset) {
   const token = tokenAt(text, offset);
   if (ARCHIVE_IDS.some((id) => token.includes(id))) return true;
-  return QUOTATIONS[token]?.includes(file) ?? false;
+  if (!(QUOTATIONS[token]?.includes(file) ?? false)) return false;
+  used.add(`${token} ${file}`);
+  return true;
 }
 
 const hits = [];
@@ -109,4 +118,19 @@ if (hits.length) {
   );
   process.exit(1);
 }
-console.log(`✓ spelling: ${scanned} files, no British stem outside an allowance.`);
+const unused = Object.entries(QUOTATIONS).flatMap(([token, inFiles]) =>
+  inFiles.filter((f) => !used.has(`${token} ${f}`)).map((f) => `${token} in ${f}`),
+);
+if (unused.length) {
+  console.error(
+    `spelling: ${unused.length} allowance(s) in spelling-table.mjs's QUOTATIONS allowed nothing:`,
+  );
+  for (const u of unused) console.error(`  ${u}`);
+  console.error(
+    "remove each file from its token's list (the file, or the quotation in it, is gone), and a token whose list empties",
+  );
+  process.exit(1);
+}
+console.log(
+  `✓ spelling: ${scanned} files, no British stem outside an allowance, and every allowance used.`,
+);

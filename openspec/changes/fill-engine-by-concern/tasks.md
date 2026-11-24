@@ -1,3 +1,9 @@
+## Next
+
+1.1, the concepts of the four files. Open: none. Goes before
+`a-fill-board-of-any-slot` (`describe-the-whole-catalog` § "0. The
+refactor first").
+
 ## 1. Design
 
 - [ ] 1.1 Read the four files and list their concepts: per concept, the

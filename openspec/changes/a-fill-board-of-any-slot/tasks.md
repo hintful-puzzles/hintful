@@ -1,3 +1,8 @@
+## Next
+
+The last of `describe-the-whole-catalog` § "0. The refactor first", after
+`fill-engine-by-concern`. Then 1.1. Open: none.
+
 ## 1. Design
 
 - [ ] 1.1 Read the regions and lines groups' games (their specs and the

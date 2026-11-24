@@ -1,5 +1,8 @@
+## Next
+
 **Waits** for `describe-the-whole-catalog` § "0. The refactor first"
-(owner, 2026-11-24).
+(owner, 2026-11-24). Then 1.2, which design.md § "A callout is a narrated
+step with no move" drafts. Open: design.md § "Open".
 
 ## 1. Design
 
@@ -19,13 +22,8 @@ Read from the code on 2026-11-23:
   deal another on Play. That fits a board dealt for this visit only; the
   session may still use it there.
 
-- [x] 1.1 How the example board is made and shown, and returned from:
-      a second midend in the view's place, or the live one with the
-      player's board set aside. Where the example comes from: dealt at
-      the opened size and solved, or a fixed board the description names
-      (needed if a callout's target must be guaranteed, such as a Guess
-      game that took several questions). Record the choice and why in a
-      design.md for this change.
+- [x] 1.1 The example is a second puzzle, played to its end by the game's
+      own hint (design.md § "Decisions"; 6aef4c447).
 - [ ] 1.2 The callouts' form in the description: under `help:`, each a
       sentence and the part it names, in the description's own terms (a
       clue kind, a value, a given, a unit), which the engine resolves to

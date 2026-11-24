@@ -1,5 +1,7 @@
+## Next
+
 **Waits** for `describe-the-whole-catalog` § "0. The refactor first"
-(owner, 2026-11-24).
+(owner, 2026-11-24). Then 1.1. Open: none yet.
 
 ## 1. Design
 

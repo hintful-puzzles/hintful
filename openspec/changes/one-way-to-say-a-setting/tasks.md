@@ -1,3 +1,7 @@
+## Next
+
+1.1, the census. Open: none.
+
 ## 1. Design
 
 - [ ] 1.1 The census, as queries in design.md: every key of `play:` and
