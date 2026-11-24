@@ -1,6 +1,8 @@
 ## Next
 
-3.1, the four properties (design.md § "3.1"). Open: none.
+3.1, the four properties: design.md § "3.1" says what each needs, the
+range first. Solo's 16-value hint wording is to be seen in the app.
+Open: none.
 
 ## 1. Design
 

@@ -94,3 +94,35 @@ answers in ten needs a sampler that builds them in, which the refusal says.
 The hand-written generators whose solvers ask a compiled `isAnswer` (Path,
 Net, Rome, Slant and others) keep their retry bound: they leave with the
 migration onto the fill deal, which is where this refusal lives.
+
+## 3.1 The four properties (read 2026-11-24)
+
+What each bug was, what would catch it planted again, and the cheapest
+tier that does:
+
+- **A range past 31** (973039781): `x in range(lo, hi)` built
+  `rangeMask(lo, hi)`, whose `1 << d` wraps at 32, so a cage total of 32
+  or more was in no range. The compiler now compares a number with the
+  ends, but `rangeMask` still wraps for any caller. It throws on a bound
+  outside 0 to 31, and a property test over every pair of bounds from -2
+  to 40 asks for the exact set or the throw. Planted again (the compiler's
+  comparison reverted), Keen's derivation throws.
+- **Emitted and read names** (5d92bb887, `_sp` emitted and `sp` read): the
+  generated modules are typechecked by the gate (`npm run typecheck` reads
+  `src/generated/`), so a name read and never bound fails in every module
+  that has the form. Planted again (`play.ts`'s `param("sp", …)` back to
+  `_sp`), the typecheck of `squaring` fails. No test adds to that; the
+  hand-written `_cl` and `_c` beside it are the same shape and the same
+  check covers them.
+- **Numerals in wording** ("sum to g"): a stated clause says a number term
+  in digits (`String(n)`, the fill hint gives no `value`), and Keen's and
+  Mathrax's clue numbers say `{numeral …}`. The other direction is open: a
+  board of numbers past 9 draws 10 on as letters (`digitKeyCode`), so
+  Solo's 16-value board draws `c` where its hint says `12`. Check it in
+  the app; if so, a value term is said as the board draws it and a count
+  or a clue in digits, and which a term is is the wording compiler's to
+  know from the term's sort.
+- **Per-tier clue kinds** (the `ordering` Normal deal): to find in the log
+  (`git log -S` on `deal/one-kind.ts` and `hide.ts`); the property is that
+  every kind a technique on the ladder up to the asked tier reads is dealt
+  at that tier.
