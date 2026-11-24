@@ -243,17 +243,6 @@ export const slideRaised = (src: Color, limit: Color): Color => [
  * rather than as something placed on it. */
 export const sokobanPit = (lowlight: Color): Color => divide(lowlight, 2);
 
-// --- solo ---------------------------------------------------------------
-
-/** Solo's **killer cages** — the dotted regions of a Killer grid. Half the board
- * in red and green with the blue pulled much further down, which is what makes
- * it a khaki that stays distinct from both the grid and the pencil marks. */
-export const soloKiller = (background: Color): Color => [
-  0.5 * background[0],
-  0.5 * background[1],
-  0.1 * background[2],
-];
-
 // --- tracks -------------------------------------------------------------
 
 /**

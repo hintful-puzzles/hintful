@@ -6,7 +6,7 @@
  * requirement in both directions. It cannot see provenance (a game writing a
  * literal that happens to equal a token passes), and once every color is a token
  * it cannot see anything at all, because a derived color has no value to look up
- * — `mkhighlightSpecific(GRID_DARK)` and `soloKiller(bg)` are correct and
+ * — `mkhighlightSpecific(GRID_DARK)` and `sokobanPit(lowlight)` are correct and
  * unmatchable. So the value guard keeps the jobs value is good at (no two shared
  * roles hold one value; every derived role stays visible against both host
  * backgrounds) and this one reads the source.

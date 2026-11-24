@@ -149,18 +149,11 @@ describe("the per-commit preset slice is derived, and did not collapse", () => {
       (rows.find((r) => r.id === id)?.slice ?? []).some((e) =>
         f(e.params as Record<string, unknown>),
       );
-    expect(
-      carries("solo", (p) => p["killer"] === true),
-      "no Solo Killer board",
-    ).toBe(true);
-    expect(
-      carries("solo", (p) => p["xtype"] === true),
-      "no Solo X board",
-    ).toBe(true);
-    expect(
-      carries("solo", (p) => p["r"] === 1),
-      "no Solo jigsaw board",
-    ).toBe(true);
+    const variation = (name: string) => (p: Record<string, unknown>) =>
+      (p["variations"] as readonly string[] | undefined)?.includes(name) === true;
+    expect(carries("solo", variation("Killer")), "no Solo Killer board").toBe(true);
+    expect(carries("solo", variation("X")), "no Solo X board").toBe(true);
+    expect(carries("solo", variation("Jigsaw")), "no Solo jigsaw board").toBe(true);
     expect(
       carries(
         "seismic",
